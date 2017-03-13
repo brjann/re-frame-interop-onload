@@ -10,5 +10,6 @@
     #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
     #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
     (GET "/messages" [errors :as req] (m/messages-page req errors))
-    #_(POST "/messages" [& params :as req] (new-message params req))
+    (POST "/messages" [& params :as req] (m/new-message! params req))
+    (POST "/message-save-draft" [& params :as req] (m/x-save-draft! params req))
     #_(GET "/charts" req (charts-page req))))
