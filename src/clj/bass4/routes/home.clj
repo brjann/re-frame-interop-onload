@@ -1,5 +1,6 @@
 (ns bass4.routes.home
   (:require [bass4.layout :as layout]
+            [bass4.services.auth :as auth]
             [compojure.core :refer [defroutes GET POST]]
             [bass4.db.core :as db]
             [ring.util.http-response :as response]
@@ -17,13 +18,9 @@
   (layout/render "about.html"))
 
 (defn handle-login [req params]
-              "Login successful")
+  (auth/login! req params))
 
 (defroutes home-routes
   (GET "/" [] (home-page))
   (GET "/about" [] (about-page))
-  (GET "/test" [] "hejsan")
-  (GET "/login" [] (login-page))
-  (POST "/login" [& params :as req]
-        (handle-login req params)))
-
+  (GET "/test" [] "hejsan"))
