@@ -13,6 +13,7 @@
            :stop (conman/disconnect! *db*))
 
 (conman/bind-connection *db* "sql/auth.sql")
+(conman/bind-connection *db* "sql/messages.sql")
 
 (defn to-date [^java.sql.Date sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% for item in messages %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <p class="category">Sent by {{item.sender-name}} on {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}}</p>
+            </div>
+
+            <div class="content">
+                <p>{{item.text}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="content">
+                <form method="post">
+                    {% csrf-field %}
+                    <div class="form-group">
+                        <label>New message</label>
+                        <textarea class="form-control" placeholder="Write your message here" name="message" rows="5"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-fill btn-info">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

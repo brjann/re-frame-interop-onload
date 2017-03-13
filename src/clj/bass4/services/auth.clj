@@ -21,7 +21,7 @@
 
 (defn login! [{:keys [session]} {:keys [username password]}]
   (if-let [id (authenticate-by-username username password)]
-    (-> (response/found "/about")
+    (-> (response/found "/user/messages")
         (assoc :session (assoc session :identity id)))
     (response/unauthorized {:result :unauthorized
                             :message "login failure"})))
