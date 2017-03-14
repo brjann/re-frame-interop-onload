@@ -4,16 +4,16 @@
             [bass4.services.user :as user]
             [ring.util.http-response :as response]))
 
-(defn messages-page [{user-id :identity} errors]
-  (let [user (user/get-user user-id)
+(defn messages-page [user errors]
+  (let [user-id (:user-id user)
         messages (messages-service/get-all-messages user-id)
         draft (messages-service/get-draft user-id)]
     (messages-view/messages-page user messages draft errors)))
 
-(defn save-message [{:keys [subject text]} {user-id :identity}]
+(defn save-message [{:keys [user-id]} {:keys [subject text]}]
   (messages-service/save-message! user-id subject text)
   (response/ok {:result :ok}))
 
-(defn save-draft [{:keys [subject text]} {user-id :identity}]
+(defn save-draft [{:keys [user-id]} {:keys [subject text]}]
   (messages-service/save-draft! user-id subject text)
   (response/ok {:result :ok}))

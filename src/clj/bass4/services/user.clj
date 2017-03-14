@@ -2,4 +2,6 @@
   (:require [bass4.db.core :as db]))
 
 (defn get-user [user-id]
-  (db/get-user {:id user-id}))
+  (when user-id
+    (if-let [user (db/get-user {:id user-id})]
+      (assoc user :user-id (:objectid user)))))
