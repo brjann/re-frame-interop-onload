@@ -7,7 +7,7 @@
         <h3>{{item.subject}}</h3>
         <div class="card">
             <div class="header">
-                <p>{%trb messages/sent-by%} {{item.sender-name}} | {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}} {%endtrb%}</p>
+                <p>{%trb messages/sent-by%} {{item.sender-name}} | {{item.send-datetime|datetime-ns}} {%endtrb%}</p>
             </div>
             <div class="content">
                 <p>{{item.text}}</p>
