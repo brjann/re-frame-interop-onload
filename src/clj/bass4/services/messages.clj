@@ -26,6 +26,9 @@
     (db/save-message-draft! {:message-id message-id :subject subject :text text})
     message-id))
 
+(defn- get-draft [user-id]
+  (db/get-message-draft {:user-id user-id}))
+
 ;; API functions
 (defn new-message! [{:keys [subject text]} {user-id :identity}]
   (save-message! user-id subject text)
@@ -35,13 +38,15 @@
   (save-draft! user-id subject text)
   (response/ok {:result :ok}))
 
-(defn messages-page [{:keys [identity]} errors]
-  (let [user (db/get-user {:id identity})
-        messages (db/get-all-messages {:user-id identity})]
+(defn messages-page [{user-id :identity} errors]
+  (let [user (db/get-user {:id user-id})
+        messages (db/get-all-messages {:user-id user-id})]
     (layout/render
       "messages.html"
       {:user user
        :title "Messages"
        :active_messages true
        :messages messages
+       :draft (get-draft user-id)
        :errors errors})))
+

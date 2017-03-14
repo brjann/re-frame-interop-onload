@@ -16,7 +16,7 @@ FROM c_message AS cm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
   LEFT JOIN c_therapist as ct ON lcm.LinkeeId = ct.ObjectId
   JOIN c_participant as cp ON cp.ObjectId = :user-id
-WHERE cm.ParentId = :user-id AND cm.Draft = 0 ORDER BY cm.SendTime DESC
+WHERE cm.ParentId = :user-id AND cm.Draft = 0 ORDER BY cm.SendTime ASC;
 
 -- :name get-message-draft :? :1
 -- :doc get draft message for a specific user
@@ -28,20 +28,20 @@ SELECT
 FROM c_message AS cm
   LEFT JOIN links_c_message AS lcm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
-WHERE cm.ParentId = :user-id AND cm.Draft = 1 AND lcm.LinkeeId = :user-id LIMIT 1
+WHERE cm.ParentId = :user-id AND cm.Draft = 1 AND lcm.LinkeeId = :user-id LIMIT 1;
 
 
 -- :name save-message! :! :n
 -- :doc creates a new message record
 UPDATE c_message
 SET MessageText = :text, SendTime = unix_timestamp(now()), Subject = :subject, Changed = unix_timestamp(now()), Draft = 0
-WHERE ObjectId = :message-id
+WHERE ObjectId = :message-id;
 
 -- :name save-message-draft! :! :n
 -- :doc creates a new message record
 UPDATE c_message
 SET MessageText = :text, SendTime = unix_timestamp(now()), Changed = unix_timestamp(now()), Subject = :subject, Draft = 1
-WHERE ObjectId = :message-id
+WHERE ObjectId = :message-id;
 
 -- :name set-message-sender! :! :n
 -- :doc set sender of message

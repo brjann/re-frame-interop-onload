@@ -4,9 +4,10 @@
 {% for item in messages %}
 <div class="row">
     <div class="col-md-12">
+        <h3>{{item.subject}}</h3>
         <div class="card">
             <div class="header">
-                <p class="category">Sent by {{item.sender-name}} on {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}}</p>
+                <p>Sent by {{item.sender-name}} on {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}}</p>
             </div>
             <div class="content">
                 <p>{{item.text}}</p>
@@ -17,14 +18,17 @@
 {% endfor %}
 
 <div class="row">
+    <h2>New message</h2>
     <div class="col-md-12">
         <div class="card">
             <div class="content">
                 <form method="post" class="message">
                     {% csrf-field %}
                     <div class="form-group">
-                        <label>New message</label>
-                        <textarea class="form-control" placeholder="Write your message here" name="text" rows="5"></textarea>
+                        <input type="text" class="form-control" placeholder="Message subject" name="subject" value = "{{draft.subject}}">
+                    </div>
+                    <div class="form-group">
+                        <textarea class="form-control" placeholder="Message text" name="text" rows="5">{{draft.text}}</textarea>
                     </div>
                     <button type="submit" class="btn btn-fill btn-info">Submit</button>
                 </form>
