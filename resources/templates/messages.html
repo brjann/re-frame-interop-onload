@@ -7,7 +7,7 @@
         <h3>{{item.subject}}</h3>
         <div class="card">
             <div class="header">
-                <p>Sent by {{item.sender-name}} on {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}}</p>
+                <p>{%trb messages/sent-by%} {{item.sender-name}} | {{item.send-datetime|date:"yyyy-MM-dd HH:mm:ss"}} {%endtrb%}</p>
             </div>
             <div class="content">
                 <p>{{item.text}}</p>
@@ -25,13 +25,13 @@
                 <form method="post" class="message">
                     {% csrf-field %}
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Message subject" name="subject" value = "{{draft.subject}}">
+                        <input type="text" class="form-control" placeholder="{%tr messages/subject %}" name="subject" value = "{{draft.subject}}">
                     </div>
                     <div class="form-group">
-                        <textarea class="form-control" placeholder="Message text" name="text" rows="5">{{draft.text}}</textarea>
+                        <textarea class="form-control" placeholder="{%tr messages/text %}" name="text" rows="5">{{draft.text}}</textarea>
                     </div>
-                    <button type="submit" class="btn btn-fill btn-info">Submit</button>
-                    <button type="button" class="btn btn-fill btn-warning" id = "draft-button"><span class="fa fa-spinner"></span>Save draft</button>
+                    <button type="submit" class="btn btn-fill btn-info">{%tr submit %}</button>
+                    <button type="button" class="btn btn-fill btn-warning" id = "draft-button"><span class="fa fa-spinner"></span>{%tr messages/save-draft %}</button>
                 </form>
             </div>
         </div>

@@ -1,4 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<p>{{name}}</p>
+<p>{%tr messages/farewell Sven Jansson | Jag mår bra %}</p>
+<p>{%trb messages/farewell %}{{name}} Hejsan {%endtrb%}</p>
   <img src="{{servlet-context}}/img/warning_clojure.png"></img>
 {% endblock %}
