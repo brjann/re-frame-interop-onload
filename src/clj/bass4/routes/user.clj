@@ -19,14 +19,14 @@
     (context "/user" [:as req]
       (if-let [user (user/get-user (:identity req))]
         (routes
+          (GET "/messages" [] (messages-response/messages-page user))
+          (POST "/messages" [& params] (messages-response/save-message (:user-id user) (:subject params) (:text params)))
+          (POST "/message-save-draft" [& params] (messages-response/save-draft (:user-id user) (:subject params) (:text params))))
           #_(GET "/" req (dashboard-page req))
           #_(GET "/profile" [errors :as req] (profile-page req errors))
           #_(GET "/modules" req (modules-page req))
           #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
           #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
           #_(GET "/charts" req (charts-page req))
-          (GET "/messages" [errors] (messages-response/messages-page user errors))
-          (POST "/messages" [& params] (messages-response/save-message user params))
-          (POST "/message-save-draft" [& params] (messages-response/save-draft user params)))
         (routes
           (ANY "*" [] "no such user")))))

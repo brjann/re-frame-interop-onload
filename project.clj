@@ -29,7 +29,8 @@
                  [ring/ring-defaults "0.2.3"]
                  [selmer "1.10.6"]
                  [com.taoensso/tempura "1.1.1"]
-                 [clj-time "0.13.0"]]
+                 [clj-time "0.13.0"]
+                 [prismatic/schema "1.1.3"]]
 
   :min-lein-version "2.0.0"
 

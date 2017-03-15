@@ -13,7 +13,8 @@
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [buddy.auth.backends.session :refer [session-backend]])
-  (:import [javax.servlet ServletContext]))
+  (:import [javax.servlet ServletContext]
+           (clojure.lang ExceptionInfo)))
 
 (defn wrap-context [handler]
   (fn [request]
@@ -56,6 +57,18 @@
       ;; disable wrap-formats for websockets
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
+
+; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
+(defn wrap-schema-error [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch ExceptionInfo e
+        (if (= (:type (.data e)) :schema.core/error)
+          (error-page {:status 400
+                       :title "Bad request!"
+                       :message (.getMessage e)})
+          (throw e))))))
 
 (defn on-error [request response]
   (error-page
