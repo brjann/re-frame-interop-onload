@@ -1,7 +1,8 @@
 (ns bass4.routes.user
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.responses.messages :as messages-response]
-            [bass4.services.user :as user]))
+            [bass4.services.user :as user]
+            [bass4.services.auth :as auth]))
 
 #_(defroutes user-routes
   (context "/user" []
@@ -16,17 +17,21 @@
     #_(GET "/charts" req (charts-page req))))
 
 (def user-routes
-    (context "/user" [:as req]
-      (if-let [user (user/get-user (:identity req))]
-        (routes
-          (GET "/messages" [] (messages-response/messages-page user))
-          (POST "/messages" [& params] (messages-response/save-message (:user-id user) (:subject params) (:text params)))
-          (POST "/message-save-draft" [& params] (messages-response/save-draft (:user-id user) (:subject params) (:text params))))
-          #_(GET "/" req (dashboard-page req))
-          #_(GET "/profile" [errors :as req] (profile-page req errors))
-          #_(GET "/modules" req (modules-page req))
-          #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
-          #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
-          #_(GET "/charts" req (charts-page req))
+    (context "/user" [:as request]
+      (if-let [user (user/get-user (:identity request))]
+        (if (auth/double-authed? (:session request))
+          (routes
+            (GET "/" [] "this is the dashboard")
+            (GET "/messages" [] (messages-response/messages-page user))
+            (POST "/messages" [& params] (messages-response/save-message (:user-id user) (:subject params) (:text params)))
+            (POST "/message-save-draft" [& params] (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+            #_(GET "/" req (dashboard-page req))
+            #_(GET "/profile" [errors :as req] (profile-page req errors))
+            #_(GET "/modules" req (modules-page req))
+            #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
+            #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
+            #_(GET "/charts" req (charts-page req)))
+          (routes
+            (ANY "*" [] "you need to double auth!")))
         (routes
           (ANY "*" [] "no such user")))))

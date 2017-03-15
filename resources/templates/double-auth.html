@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <META name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+
+    <!-- styles -->
+    {% style "/assets/bootstrap/css/bootstrap.min.css" %}
+    {% style "/assets/font-awesome/css/font-awesome.min.css" %}
+
+    {% style "/css/screen.css" %}
+</head>
+<body>
+
+<div class="container">
+    <h1>Login</h1>
+    <p>Please provide your double authentication code ({{double-auth-code}}).</p>
+    <form method="post">
+        {% csrf-field %}
+        <div class="form-group row">
+            <div class="col-sm-12">
+                <input type="text" class="form-control" id="code" name = "code" placeholder="Code">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Continue</button>
+    </form>
+</div>
+
+<!-- scripts -->
+{% script "/assets/jquery/jquery.min.js" %}
+{% script "/assets/tether/dist/js/tether.min.js" %}
+{% script "/assets/bootstrap/js/bootstrap.min.js" %}
+
+<script type="text/javascript">
+    var context = "{{servlet-context}}";
+</script>
+{% block page-scripts %}
+{% endblock %}
+</body>
+</html>

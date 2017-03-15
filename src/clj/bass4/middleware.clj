@@ -58,18 +58,6 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
-(defn wrap-schema-error [handler]
-  (fn [req]
-    (try
-      (handler req)
-      (catch ExceptionInfo e
-        (if (= (:type (.data e)) :schema.core/error)
-          (error-page {:status 400
-                       :title "Bad request!"
-                       :message (.getMessage e)})
-          (throw e))))))
-
 (defn on-error [request response]
   (error-page
     {:status 403
@@ -97,3 +85,22 @@
             (dissoc :session)))
       wrap-context
       wrap-internal-error))
+
+
+
+;; ----------------
+;;  BASS4 handlers
+;; ----------------
+
+; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
+
+(defn wrap-schema-error [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch ExceptionInfo e
+        (if (= (:type (.data e)) :schema.core/error)
+          (error-page {:status 400
+                       :title "Bad request!"
+                       :message (.getMessage e)})
+          (throw e))))))
