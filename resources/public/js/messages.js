@@ -14,9 +14,9 @@ $(document).ready(function(){
 				message_saving = true;
 				spinner.addClass("fa-spin");
 
+				// TODO: The spinner keeps spinning.
 				$.post("/user/message-save-draft",
 					{
-						//"__anti-forgery-token": csrf.val(),
 						text: text_input.val(),
 						subject: subject_input.val()
 					},

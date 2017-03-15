@@ -5,7 +5,7 @@
             [ring.util.http-response :as response]
             [bass4.responses.auth :as auth-response]))
 
-
+;; TODO: Separate into views and responses
 (defn login-page []
   (layout/render
     "login.html"))

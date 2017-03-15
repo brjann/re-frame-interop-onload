@@ -73,19 +73,6 @@
         (wrap-authentication backend)
         (wrap-authorization backend))))
 
-(defn wrap-base [handler]
-  (-> ((:middleware defaults) handler)
-      wrap-auth
-      wrap-webjars
-      wrap-flash
-      (wrap-session {:cookie-attrs {:http-only true}})
-      (wrap-defaults
-        (-> site-defaults
-            (assoc-in [:security :anti-forgery] false)
-            (dissoc :session)))
-      wrap-context
-      wrap-internal-error))
-
 
 
 ;; ----------------
@@ -104,3 +91,29 @@
                        :title "Bad request!"
                        :message (.getMessage e)})
           (throw e))))))
+
+;; TODO: This should not be applied to js and css-files
+;; TODO: http://stackoverflow.com/questions/8861181/clear-all-fields-in-a-form-upon-going-back-with-browser-back-button
+(defn wrap-reload-headers [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (update-in response
+                 [:headers] #(assoc %1
+                               "Cache-Control" "no-cache, no-store, must-revalidate"
+                               "Expires" "Mon, 26 Jul 1997 05:00:00 GMT"
+                               "Pragma" "no-cache")))))
+
+
+(defn wrap-base [handler]
+  (-> ((:middleware defaults) handler)
+      wrap-auth
+      wrap-webjars
+      wrap-flash
+      (wrap-session {:cookie-attrs {:http-only true}})
+      (wrap-defaults
+        (-> site-defaults
+            (assoc-in [:security :anti-forgery] false)
+            (dissoc :session)))
+      wrap-reload-headers
+      wrap-context
+      wrap-internal-error))
