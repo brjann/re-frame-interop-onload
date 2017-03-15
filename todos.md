@@ -22,7 +22,8 @@ Used schema and forced validation of functions that accept GET and POST
 ### Specs
  
  - Client side error handling in forms and ajax
- - Responses
+ - Responses _{:result :ok}_
+ - Page title
  - Logging
  - Database exceptions
  - SQL injection

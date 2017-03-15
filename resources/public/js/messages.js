@@ -15,7 +15,8 @@ $(document).ready(function(){
 				spinner.addClass("fa-spin");
 
 				$.post("/user/message-save-draft",
-					{"__anti-forgery-token": csrf.val(),
+					{
+						//"__anti-forgery-token": csrf.val(),
 						text: text_input.val(),
 						subject: subject_input.val()
 					},

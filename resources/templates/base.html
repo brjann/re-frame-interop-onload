@@ -51,9 +51,10 @@
     {% script "/assets/tether/dist/js/tether.min.js" %}
     {% script "/assets/bootstrap/js/bootstrap.min.js" %}
       {% script "/js/spinners.js" %}
-
+      {% script "/js/bass4.js" %}
     <script type="text/javascript">
-      var context = "{{servlet-context}}";
+		 var csrfToken = "{{csrf-token}}";
+         var context = "{{servlet-context}}";
     </script>
     {% block page-scripts %}
     {% endblock %}
