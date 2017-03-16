@@ -1,8 +1,9 @@
 (ns bass4.services.auth
   (:require [bass4.db.core :as db]
             [ring.util.http-response :as response]
-            #_[buddy.hashers :as hashers]
-            [clojure.tools.logging :as log]))
+    #_[buddy.hashers :as hashers]
+            [clojure.tools.logging :as log]
+            [bass4.services.user :as user]))
 
 #_(defn authenticate [id password]
     (when-let [user (db/get-user {:id id})]
@@ -75,3 +76,20 @@
 (defn logout! []
   (-> (response/found "/login")
       (assoc :session nil)))
+
+
+;; -------------
+;;  DOUBLE AUTH
+;; -------------
+
+
+(defn not-authenticated? [session]
+  (or (nil? (:identity session))
+      (nil? (user/get-user (:identity session)))))
+
+(defn not-double-auth-ok? [session]
+  (or (not (double-auth-required?))
+      (nil? (:double-auth-code session))))
+
+(defn double-auth-done? [session]
+  (:double-authed session))

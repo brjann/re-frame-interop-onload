@@ -5,3 +5,7 @@
   (layout/render
     "double-auth.html"
     {:double-auth-code double-auth-code}))
+
+(defn login-page []
+  (layout/render
+    "login.html"))
