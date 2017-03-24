@@ -1,3 +1,4 @@
+// TODO: Handle offline mode and session re-auth and session timeout
 var message_saving = false;
 $(document).ready(function(){
 	$("form.message").each(

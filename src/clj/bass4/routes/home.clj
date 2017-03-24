@@ -23,4 +23,5 @@
 (defroutes home-routes
   (GET "/" [] (home-page))
   (GET "/about" [] (about-page))
-  (GET "/test" [:as req] (str (:session req))))
+  (GET "/test" [:as req] (str (:session req)))
+  (GET "/timeout" [:as req] (response/status (response/ok) 418)))

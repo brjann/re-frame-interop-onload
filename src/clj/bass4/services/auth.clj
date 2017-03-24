@@ -3,7 +3,8 @@
             [ring.util.http-response :as response]
     #_[buddy.hashers :as hashers]
             [clojure.tools.logging :as log]
-            [bass4.services.user :as user]))
+            [bass4.services.user :as user]
+            [clj-time.core :as t]))
 
 #_(defn authenticate [id password]
     (when-let [user (db/get-user {:id id})]
@@ -27,6 +28,7 @@
       #(get password-chars %1)
       (repeatedly 3 #(rand-int (- (count password-chars) 1))))))
 
+;; TODO: Remove this logging
 (defn double-authed? [session]
   (clojure.tools.logging/error session)
   (clojure.tools.logging/error (boolean (:double-authed session)))
@@ -53,11 +55,38 @@
     (response/unauthorized {:result :unauthorized
                             :message "login failure"})))
 
+(defn- new-session-map [id add-double-auth]
+  (merge
+    {:identity          id
+     :auth-timeout      nil
+     :last-request-time (t/now)}
+    (when add-double-auth
+      {:double-authed    nil
+       :double-auth-code (double-auth-code)})))
+
 (defn login! [{:keys [session]} {:keys [username password]}]
+  (if-let [id (authenticate-by-username username password)]
+    (if (double-auth-required?)
+      (-> (response/found "/double-auth")
+          (assoc :session
+                 (merge session
+                   (new-session-map id true))))
+
+      ;; TODO: Can't figure out how to do this in two steps
+      (-> (response/found "/user/messages")
+          (assoc :session (merge session (new-session-map id false)))))
+    (response/unauthorized {:result :unauthorized
+                            :message "login failure"})))
+
+#_(defn login! [{:keys [session]} {:keys [username password]}]
     (if-let [id (authenticate-by-username username password)]
       (if (double-auth-required?)
         (-> (response/found "/double-auth")
-            (assoc :session (assoc session :identity id :double-authed nil :double-auth-code (double-auth-code))))
+            (assoc :session
+                   (assoc session
+                     :identity id
+                     :double-authed nil
+                     :double-auth-code (double-auth-code))))
 
         ;; TODO: Can't figure out how to do this in two steps
         (-> (response/found "/user/messages")
@@ -93,3 +122,29 @@
 
 (defn double-auth-done? [session]
   (:double-authed session))
+
+
+;; -------------
+;;  AUTH TIMEOUT
+;; -------------
+
+#_(defn auth-timeout? [request]
+  (let [last-request-time (:last-request-time (:session request))]
+    (if (nil? last-request-time)
+      (assoc-in request [:session :last-request-time] (t/now))
+      (do
+        (log/error (str "last request time" last-request-time))
+        (log/error (str "time elapsed" (t/interval last-request-time (t/now))))
+        (handler (assoc-in request [:session :last-request-time] (t/now)))))))
+#_(defn wrap-auth-timeout [handler]
+    (fn [request]
+      (log/error "auth-timeout")
+      (if (:identity (:session request))
+        (let [last-request-time (:last-request-time (:session request))]
+          (if (nil? last-request-time)
+            (handler (assoc-in request [:session :last-request-time] (t/now)))
+            (do
+              (log/error (str "last request time" last-request-time))
+              (log/error (str "time elapsed" (t/interval last-request-time (t/now))))
+              (handler (assoc-in request [:session :last-request-time] (t/now))))))
+        (handler request ))))

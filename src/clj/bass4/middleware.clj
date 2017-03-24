@@ -12,7 +12,8 @@
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
-            [buddy.auth.backends.session :refer [session-backend]])
+            [buddy.auth.backends.session :refer [session-backend]]
+            [clj-time.core :as t])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -104,8 +105,30 @@
                                "Pragma" "no-cache")))))
 
 
+(def auth-timeout 20)
+
+(defn wrap-auth-timeout [handler]
+  (fn [request]
+    (handler
+      (if (get-in request [:session :identity])
+        (if (get-in request [:session :auth-timeout])
+          request
+          (let [last-request-time (get-in request [:session :last-request-time])]
+            (if (nil? last-request-time)
+              (assoc-in request [:session :last-request-time] (t/now))
+              (let [time-elapsed (t/in-seconds (t/interval last-request-time (t/now)))]
+                (log/error (str "time elapsed" time-elapsed))
+                (if (> time-elapsed auth-timeout)
+                  (-> request
+                      ;; TODO: Remove key instead of setting to nil
+                      (assoc-in [:session :last-request-time] nil)
+                      (assoc-in [:session :auth-timeout] true))
+                  (assoc-in request [:session :last-request-time] (t/now)))))))
+        request))))
+
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      wrap-auth-timeout
       wrap-auth
       wrap-webjars
       wrap-flash
