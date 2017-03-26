@@ -9,3 +9,7 @@
 (defn login-page []
   (layout/render
     "login.html"))
+
+(defn re-auth-page []
+  (layout/render
+    "re-auth.html"))

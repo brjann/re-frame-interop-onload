@@ -3,7 +3,8 @@
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
             [bass4.services.auth :as auth]
-            [bass4.responses.posts :as posts]))
+            [bass4.responses.posts :as posts]
+            [ring.util.http-response :as response]))
 
 #_(defroutes user-routes
   (context "/user" []
@@ -36,7 +37,7 @@
             (routes
               (ANY "*" [] "you need to double auth!")))
           (routes
-            (GET "*" [] "you need to re-auth!")
+            (GET "*" [] (response/found "/re-auth"))
             (POST "*" [] (posts/re-auth))))
         (routes
           (ANY "*" [] "no such user")))))

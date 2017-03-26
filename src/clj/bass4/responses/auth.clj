@@ -29,5 +29,12 @@
       (response/found "/double-auth"))))
 
 ;; TODO: Add schema validation
-(defn handle-login [req params]
-  (auth-service/login! req params))
+(defn handle-login [request params]
+  (auth-service/login! request params))
+
+(defn re-auth [request]
+  (if (get-in request (:session :auth-timeout))
+    (auth-view/re-auth-page)
+    (if (get-in request (:session :identity))
+      (response/found "/user/")
+      (response/found "/login"))))

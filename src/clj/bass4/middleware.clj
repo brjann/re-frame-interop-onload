@@ -105,26 +105,33 @@
                                "Pragma" "no-cache")))))
 
 
-(def auth-timeout 20)
+(def auth-timeout-limit 20)
 
 (defn wrap-auth-timeout [handler]
   (fn [request]
-    (handler
-      (if (get-in request [:session :identity])
-        (if (get-in request [:session :auth-timeout])
-          request
-          (let [last-request-time (get-in request [:session :last-request-time])]
-            (if (nil? last-request-time)
-              (assoc-in request [:session :last-request-time] (t/now))
-              (let [time-elapsed (t/in-seconds (t/interval last-request-time (t/now)))]
-                (log/error (str "time elapsed" time-elapsed))
-                (if (> time-elapsed auth-timeout)
-                  (-> request
-                      ;; TODO: Remove key instead of setting to nil
-                      (assoc-in [:session :last-request-time] nil)
-                      (assoc-in [:session :auth-timeout] true))
-                  (assoc-in request [:session :last-request-time] (t/now)))))))
-        request))))
+    (log/debug (:session request))
+    (let [session (:session request)
+          now (t/now)
+          last-request-time (:last-request-time session)
+          auth-timeout (cond
+                         (:auth-timeout session) true
+                         (nil? last-request-time) nil
+                         (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+                           (log/error (str "present time" last-request-time))
+                           (log/error (str "time elapsed" time-elapsed))
+                           (> time-elapsed auth-timeout-limit)) true
+                         :else nil)
+          response (handler (assoc-in request [:session :auth-timeout] auth-timeout))
+          session-map {:last-request-time now :auth-timeout
+                                          (if (contains? (:session response) :auth-timeout)
+                                            (:auth-timeout (:session response))
+                                            auth-timeout)}]
+      (log/debug (:session response))
+      (log/debug session-map)
+      (assoc response :session (if (nil? (:session response))
+                                 (merge session session-map)
+                                 (merge (:session response) session-map))))))
+
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)

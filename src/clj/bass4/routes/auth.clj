@@ -15,4 +15,9 @@
   (GET "/double-auth" [:as request]
     (auth-response/double-auth-page (:session request)))
   (POST "/double-auth" [& params :as request]
-    (auth-response/double-auth-check (:code params) (:session request))))
+    (auth-response/double-auth-check (:code params) (:session request)))
+  (GET "/re-auth" [:as request]
+    (auth-response/re-auth (:session request)))
+  (POST "/re-auth" [:as request]
+    (POST "*" [:as request] (-> (response/found "/user/")
+                                (assoc :session (merge (:session request) {:auth-timeout nil}))))))

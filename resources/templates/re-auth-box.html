@@ -1,0 +1,12 @@
+<h1>Authenticate again</h1>
+<p>Please provide your password to continue to use the system.</p>
+<form method="post">
+    {% csrf-field %}
+    <div class="form-group row">
+        <label for="password" class="col-sm-2 col-form-label">Password</label>
+        <div class="col-sm-10">
+            <input type="password" class="form-control" id="password" name = "password" placeholder="Password">
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>

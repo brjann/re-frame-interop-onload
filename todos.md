@@ -4,10 +4,13 @@
  - Timeout
  - Re-authenticate
  - Attack detector
+ - The draft saver keeps the timeout from happening. Is that OK?
+ - Invalid anti-forgery token after login - not OK.
 
 # Ajax handling
 
 - POST intermediate handler
+    - Create middle-ware for ajax interception
 - Re-post on re-authenticate
 - Ajax intermediate? Perhaps wait with that?
  
