@@ -14,8 +14,8 @@
 
 (s/defn ^:always-validate save-message [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-message! user-id subject text)
-  #_(response/found "/user/messages")
-  (posts/found "/user/messages"))
+  (response/found "/user/messages")
+  #_(posts/found "/user/messages"))
 
 (s/defn ^:always-validate save-draft [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-draft! user-id subject text)

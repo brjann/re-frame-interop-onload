@@ -74,8 +74,6 @@
         (wrap-authentication backend)
         (wrap-authorization backend))))
 
-
-
 ;; ----------------
 ;;  BASS4 handlers
 ;; ----------------
@@ -105,11 +103,27 @@
                                "Pragma" "no-cache")))))
 
 
-(def auth-timeout-limit 20)
+(defn wrap-ajax-post [handler]
+  (fn [request]
+    (let [requested-with (get (:headers request) "x-requested-with" "")
+          request-method (:request-method request)
+          ajax-post? (and (= (clojure.string/lower-case requested-with) "xmlhttprequest")
+                         (= request-method :post))
+          response (handler request)]
+      (if (and ajax-post?
+               (= (:status response) 302))
+        (let [location (get (:headers response) "Location")
+              new-map {:status 200
+                       :headers {}
+                       :body (str "found " location)}]
+          (merge response new-map))
+        response))))
+
+;; TODO: Move this to configuration file
+(def auth-timeout-limit 120)
 
 (defn wrap-auth-timeout [handler]
   (fn [request]
-    (log/debug (:session request))
     (let [session (:session request)
           now (t/now)
           last-request-time (:last-request-time session)
@@ -117,17 +131,15 @@
                          (:auth-timeout session) true
                          (nil? last-request-time) nil
                          (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                           (log/error (str "present time" last-request-time))
-                           (log/error (str "time elapsed" time-elapsed))
                            (> time-elapsed auth-timeout-limit)) true
                          :else nil)
           response (handler (assoc-in request [:session :auth-timeout] auth-timeout))
-          session-map {:last-request-time now :auth-timeout
-                                          (if (contains? (:session response) :auth-timeout)
-                                            (:auth-timeout (:session response))
-                                            auth-timeout)}]
+          session-map {:last-request-time now
+                       :auth-timeout (if (contains? (:session response) :auth-timeout)
+                                         (:auth-timeout (:session response))
+                                         auth-timeout)}]
+      (log/debug session)
       (log/debug (:session response))
-      (log/debug session-map)
       (assoc response :session (if (nil? (:session response))
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
@@ -136,6 +148,7 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       wrap-auth-timeout
+      wrap-ajax-post
       wrap-auth
       wrap-webjars
       wrap-flash

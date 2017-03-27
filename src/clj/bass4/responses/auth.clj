@@ -3,7 +3,8 @@
             [bass4.views.auth :as auth-view]
             [bass4.services.user :as user]
             [ring.util.http-response :as response]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [clojure.tools.logging :as log]))
 
 (defn- double-auth-redirect [session]
   (cond
@@ -32,9 +33,9 @@
 (defn handle-login [request params]
   (auth-service/login! request params))
 
-(defn re-auth [request]
-  (if (get-in request (:session :auth-timeout))
+(defn re-auth [session]
+  (if (:auth-timeout session)
     (auth-view/re-auth-page)
-    (if (get-in request (:session :identity))
+    (if (:identity session)
       (response/found "/user/")
       (response/found "/login"))))

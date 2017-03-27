@@ -20,4 +20,10 @@
     (auth-response/re-auth (:session request)))
   (POST "/re-auth" [:as request]
     (POST "*" [:as request] (-> (response/found "/user/")
-                                (assoc :session (merge (:session request) {:auth-timeout nil}))))))
+                                (assoc :session (merge (:session request) {:auth-timeout nil})))))
+  ;; TODO: Make available only in developer mode
+  (GET "/timeout" [:as request]
+    (-> (response/found "/re-auth")
+        (assoc :session
+               (merge (:session request)
+                      {:auth-timeout true})))))

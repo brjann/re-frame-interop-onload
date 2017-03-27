@@ -22,11 +22,17 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 	re-auth: the post has not been received. you need to re-authenticate and re-post
  */
 
-function post_receiver(data){
-	console.log(data);
+function post_success(data, textStatus, jqXHR){
+	console.log(jqXHR);
 	var response = data.split(" ");
 	if(response[0] == "found"){
 		window.location.href = response[1];
+	}
+}
+
+function post_error(jqXHR){
+	if(jqXHR.status == 440){
+		alert("You have been timed-out!");
 	}
 }
 
@@ -35,11 +41,21 @@ $(document).ready(function(){
 		$(this).submit(function(event){
 			event.preventDefault();
 			var post = $(this).serializeArray();
-			$.post(
+			/*$.post(
 				document.URL,
 				post,
 				post_receiver
+			);*/
+			$.ajax(
+				document.URL,
+				{
+					method: "post",
+					data: post,
+					success: post_success,
+					error: post_error
+				}
 			);
+
 		});
 	})
 });

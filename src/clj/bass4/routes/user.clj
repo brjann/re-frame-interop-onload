@@ -38,6 +38,9 @@
               (ANY "*" [] "you need to double auth!")))
           (routes
             (GET "*" [] (response/found "/re-auth"))
-            (POST "*" [] (posts/re-auth))))
+            #_(POST "*" [] (posts/re-auth))
+            (POST "*" [] {:status 440
+                          :headers {}
+                          :body ""})))
         (routes
           (ANY "*" [] "no such user")))))

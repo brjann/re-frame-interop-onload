@@ -1,11 +1,16 @@
 #Login
 
  - SMS auth
- - Timeout
+ - Session timeout
+    - Configuration
  - Re-authenticate
+    - Configuration
+    - Save URL in GET
  - Attack detector
  - The draft saver keeps the timeout from happening. Is that OK?
  - Invalid anti-forgery token after login - not OK.
+ - Remove auto-completes in forms
+
 
 # Ajax handling
 
