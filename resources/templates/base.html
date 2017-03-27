@@ -46,8 +46,33 @@
       {% endblock %}
     </div>
 
+      <!-- Re-auth modal box-->
+      <div class="modal" id="re-auth-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog modal-sm" role="document">
+              <div class="modal-content">
+                  <form method="post" action="/re-auth-ajax">
+                  <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <h4 class="modal-title" id="myModalLabel">Authenticate again</h4>
+                  </div>
+                  <div class="modal-body">
+                      <p>Please provide your password to continue to use the system.</p>
+                          {% csrf-field %}
+                          <div class="form-group row">
+                              <input type="password" class="form-control" id="password" name = "password" placeholder="Password">
+                          </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="submit" class="btn btn-primary">Login</button>
+                  </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+
     <!-- scripts -->
-    {% script "/assets/jquery/jquery.min.js" %}
+    {% script "/js/jquery/jquery-3.2.0.min.js" %}
+     <!-- {% script "/js/jquery/jquery-ui-1.12.1/jquery-ui.min.js" %} -->
     {% script "/assets/tether/dist/js/tether.min.js" %}
     {% script "/assets/bootstrap/js/bootstrap.min.js" %}
       {% script "/js/spinners.js" %}

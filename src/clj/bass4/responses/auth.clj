@@ -39,3 +39,12 @@
     (if (:identity session)
       (response/found "/user/")
       (response/found "/login"))))
+
+;; TODO: Add errors
+(defn check-re-auth [session password]
+  (when (:auth-timeout session)
+    (when-let [user-id (:identity session)]
+      (if (auth-service/authenticate-by-user-id user-id password)
+        (-> (response/found "/user/")
+            (assoc :session (merge session {:auth-timeout nil})))
+        (auth-view/re-auth-page)))))

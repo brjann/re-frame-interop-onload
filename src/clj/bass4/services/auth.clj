@@ -28,6 +28,11 @@
     (boolean (:double-authed session))
     false))
 
+(defn authenticate-by-user-id [user-id password]
+  (when-let [user (db/get-user-by-user-id {:user-id user-id})]
+    (when (= (:password user) password)
+      (:objectid user))))
+
 (defn authenticate-by-username [username password]
   (when-let [user (db/get-user-by-username {:username username})]
     (when (= (:password user) password)

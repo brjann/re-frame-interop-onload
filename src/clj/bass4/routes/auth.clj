@@ -18,8 +18,13 @@
     (auth-response/double-auth-check (:code params) (:session request)))
   (GET "/re-auth" [:as request]
     (auth-response/re-auth (:session request)))
-  (POST "/re-auth" [:as request]
+  #_(POST "/re-auth" [&params :as request]
     (POST "*" [:as request] (-> (response/found "/user/")
+                                (assoc :session (merge (:session request) {:auth-timeout nil})))))
+  (POST "/re-auth" [& params :as request]
+    (auth-response/check-re-auth (:session request) (:password params) ))
+  (POST "/re-auth-ajax" [:as request]
+    (POST "*" [:as request] (-> (response/ok)
                                 (assoc :session (merge (:session request) {:auth-timeout nil})))))
   ;; TODO: Make available only in developer mode
   (GET "/timeout" [:as request]

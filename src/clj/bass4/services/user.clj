@@ -3,5 +3,5 @@
 
 (defn get-user [user-id]
   (when user-id
-    (if-let [user (db/get-user {:id user-id})]
+    (if-let [user (db/get-user-by-user-id {:user-id user-id})]
       (assoc user :user-id (:objectid user)))))

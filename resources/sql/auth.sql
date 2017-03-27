@@ -1,7 +1,7 @@
--- :name get-user :? :1
+-- :name get-user-by-user-id :? :1
 -- :doc retrieve a user given the id.
 SELECT * FROM c_participant
-WHERE ObjectId = :id
+WHERE ObjectId = :user-id;
 
 
 -- :name get-user-by-username :? :1
