@@ -11,18 +11,31 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 	re-auth: the post has not been received. you need to re-authenticate and re-post
  */
 
-function post_success(data, textStatus, jqXHR){
-	console.log("success");
-	var response = data.split(" ");
-	if(response[0] == "found"){
-		window.location.href = response[1];
+function post_success(this_){
+	return function(data, textStatus, jqXHR) {
+		var response = data.split(" ");
+		if (response[0] == "found") {
+			window.location.href = response[1];
+		}
 	}
 }
 
-function post_error(jqXHR){
-	console.log("error");
-	if(jqXHR.status == 440){
-		$("#re-auth-modal").modal();
+function post_error(this_){
+	return function(jqXHR) {
+		if (jqXHR.status == 440) {
+			$("#re-auth-modal").modal();
+		}
+
+		if (jqXHR.status == 422) {
+			console.log(jqXHR);
+			var text = jqXHR.responseText;
+			if(text != ""){
+				console.log("[data-show=" + text + "]");
+				console.log(this_);
+				console.log($(this_).find("[data-show=error]"));
+				$(this_).find("[data-show=" + text + "]").show();
+			}
+		}
 	}
 }
 
@@ -78,8 +91,8 @@ $(document).ready(function(){
 					{
 						method: "post",
 						data: post,
-						success: post_success,
-						error: post_error
+						success: post_success(this),
+						error: post_error(this)
 					}
 				);
 			});

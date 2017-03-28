@@ -23,10 +23,17 @@
   (-> (response/found "/login")
       (assoc :session nil)))
 
-(defn re-auth440
-  ([] (re-auth440 ""))
+(defn re-auth-440
+  ([] (re-auth-440 ""))
   ([body]
    {:status 440
+    :headers {}
+    :body body}))
+
+(defn error-422
+  ([] (error-422 ""))
+  ([body]
+   {:status 422
     :headers {}
     :body body}))
 
@@ -63,7 +70,7 @@
                         (new-session-map id true))))
       (-> (response/found "/user/messages")
           (assoc :session (merge session (new-session-map id false)))))
-    (auth-view/login-page true)))
+    (error-422 "error")))
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)
@@ -91,4 +98,4 @@
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> (response/ok)
             (assoc :session (merge session {:auth-timeout nil})))
-        (re-auth440)))))
+        (re-auth-440)))))

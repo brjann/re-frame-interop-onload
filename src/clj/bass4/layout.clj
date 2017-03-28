@@ -42,7 +42,8 @@
    :headers {"Content-Type" "text/html; charset=utf-8"}
    :body    (parser/render-file "error.html" error-details)})
 
-(parser/add-tag! :tr
+(parser/add-tag!
+  :tr
   (fn [args context-map]
     (i18n/tr [(keyword (first args))]
              (split (join " " (rest args)) #"[|]"))))

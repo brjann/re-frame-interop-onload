@@ -44,6 +44,6 @@
         (routes
           (GET "*" [:as request]
             (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))
-          (POST "*" [] (auth-response/re-auth440))))
+          (POST "*" [] (auth-response/re-auth-440))))
       (routes
         (ANY "*" [] "no such user")))))

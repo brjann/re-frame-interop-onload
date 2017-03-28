@@ -2,23 +2,20 @@
 {% block content %}
 
 <div class="container">
-    <h1>Login</h1>
-    {% if error %}
-    <div class="alert alert-danger" role="alert">
-        Wrong username or password
-    </div>
-    {% endif %}
-    <p>Please provide your username and password to log on to the system.</p>
+    <h1>{%tr login/login %}</h1>
+    <p>{%tr login/please-provide %}</p>
     <form method="post">
-        {% csrf-field %}
+        <div class="alert alert-danger hidden" data-show = "error" role="alert">
+            {%tr login/password-error %}
+        </div>
         <div class="form-group row">
-            <label for="username" class="col-sm-2 col-form-label">Email</label>
+            <label for="username" class="col-sm-2 col-form-label">{%tr username %}</label>
             <div class="col-sm-10">
                 <input type="text" class="form-control required" id="username" name = "username" placeholder="Username">
             </div>
         </div>
         <div class="form-group row">
-            <label for="password" class="col-sm-2 col-form-label">Password</label>
+            <label for="password" class="col-sm-2 col-form-label">{%tr password %}</label>
             <div class="col-sm-10">
                 <input type="password" class="form-control required" id="password" name = "password" placeholder="Password">
             </div>
