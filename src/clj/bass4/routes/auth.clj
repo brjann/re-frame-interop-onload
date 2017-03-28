@@ -17,10 +17,10 @@
   (POST "/double-auth" [& params :as request]
     (auth-response/double-auth-check (:code params) (:session request)))
 
-  (GET "/re-auth" [:as request]
-    (auth-response/re-auth (:session request)))
+  (GET "/re-auth" [& params :as request]
+    (auth-response/re-auth (:session request) (:return-url params)))
   (POST "/re-auth" [& params :as request]
-    (auth-response/check-re-auth (:session request) (:password params) ))
+    (auth-response/check-re-auth (:session request) (:password params) (:return-url params)))
   (POST "/re-auth-ajax" [& params :as request]
     (auth-response/check-re-auth-ajax (:session request) (:password params) ))
   ;; TODO: Make available only in developer mode

@@ -13,11 +13,15 @@
 
 
 # Ajax handling
+- Spinner
 
-- POST intermediate handler
-    - Create middle-ware for ajax interception
+## Wait
 - Re-post on re-authenticate
-- Ajax intermediate? Perhaps wait with that?
+
+## Done
+    - Create middle-ware for ajax interception
+    - POST intermediate handler
+
  
 #Messages
 

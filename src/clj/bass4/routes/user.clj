@@ -4,7 +4,9 @@
             [bass4.services.user :as user]
             [bass4.services.auth :as auth]
             [bass4.responses.posts :as posts]
-            [ring.util.http-response :as response]))
+            [ring.util.http-response :as response]
+            [ring.util.request :as request]
+            [ring.util.codec :as codec]))
 
 #_(defroutes user-routes
   (context "/user" []
@@ -25,9 +27,12 @@
           (if (auth/double-authed? (:session request))
             (routes
               (GET "/" [] "this is the dashboard")
-              (GET "/messages" [] (messages-response/messages-page user))
-              (POST "/messages" [& params] (messages-response/save-message (:user-id user) (:subject params) (:text params)))
-              (POST "/message-save-draft" [& params] (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+              (GET "/messages" []
+                (messages-response/messages-page user))
+              (POST "/messages" [& params]
+                (messages-response/save-message (:user-id user) (:subject params) (:text params)))
+              (POST "/message-save-draft" [& params]
+                (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
               #_(GET "/" req (dashboard-page req))
               #_(GET "/profile" [errors :as req] (profile-page req errors))
               #_(GET "/modules" req (modules-page req))
@@ -37,8 +42,8 @@
             (routes
               (ANY "*" [] "you need to double auth!")))
           (routes
-            (GET "*" [] (response/found "/re-auth"))
-            #_(POST "*" [] (posts/re-auth))
+            (GET "*" [:as request]
+              (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))
             (POST "*" [] {:status 440
                           :headers {}
                           :body ""})))

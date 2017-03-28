@@ -10,6 +10,7 @@
   (layout/render
     "login.html"))
 
-(defn re-auth-page []
+(defn re-auth-page [return-url]
   (layout/render
-    "re-auth.html"))
+    "re-auth.html"
+    {:return-url return-url}))

@@ -39,21 +39,26 @@
 (defn handle-login [request params]
   (auth-service/login! request params))
 
-(defn re-auth [session]
+(defn re-auth [session return-url]
   (if (:auth-timeout session)
-    (auth-view/re-auth-page)
+    (auth-view/re-auth-page return-url)
     (if (:identity session)
       (response/found "/user/")
       (response/found "/login"))))
 
 ;; TODO: Add errors
-(defn check-re-auth [session password]
+;; TODO: Validate URL
+;; [commons-validator "1.5.1"]
+;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
+(defn check-re-auth [session password return-url]
   (when (:auth-timeout session)
     (when-let [user-id (:identity session)]
       (if (auth-service/authenticate-by-user-id user-id password)
-        (-> (response/found "/user/")
+        (-> (response/found (if (nil? return-url)
+                              "/user/"
+                              return-url))
             (assoc :session (merge session {:auth-timeout nil})))
-        (auth-view/re-auth-page)))))
+        (auth-view/re-auth-page return-url)))))
 
 (defn check-re-auth-ajax [session password]
   (when (:auth-timeout session)

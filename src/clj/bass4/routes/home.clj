@@ -4,6 +4,7 @@
             [compojure.core :refer [defroutes GET POST]]
             [bass4.db.core :as db]
             [ring.util.http-response :as response]
+            [ring.util.request :as request]
             [clojure.java.io :as io]))
 
 (defn home-page []
@@ -23,5 +24,6 @@
 (defroutes home-routes
   (GET "/" [] (home-page))
   (GET "/about" [] (about-page))
-  (GET "/test" [:as req] (str (:session req)))
-  (GET "/timeout" [:as req] (response/status (response/ok) 418)))
+  (GET "/session" [:as req] (str (:session req)))
+  (GET "/request" [:as req] (str req))
+  (GET "/test" [:as req] (request/request-url req)))
