@@ -63,8 +63,7 @@
                         (new-session-map id true))))
       (-> (response/found "/user/messages")
           (assoc :session (merge session (new-session-map id false)))))
-    (response/unauthorized {:result :unauthorized
-                            :message "login failure"})))
+    (auth-view/login-page true)))
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)
