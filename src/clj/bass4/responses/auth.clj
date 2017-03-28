@@ -4,7 +4,8 @@
             [bass4.services.user :as user]
             [ring.util.http-response :as response]
             [schema.core :as s]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clj-time.core :as t]))
 
 (defn- double-auth-redirect [session]
   (cond
@@ -13,6 +14,15 @@
     ;should this be more complex? double auth may be broken
     (auth-service/not-double-auth-ok? session) "/login"))
 
+(defn double-authed? [session]
+  (if (auth-service/double-auth-required?)
+    (boolean (:double-authed session))
+    false))
+
+(defn logout! []
+  (-> (response/found "/login")
+      (assoc :session nil)))
+
 (defn re-auth440
   ([] re-auth440 "")
   ([body]
@@ -20,7 +30,7 @@
     :headers {}
     :body body}))
 
-(defn double-auth-page [session]
+(defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]
     (response/found redirect)
     (auth-view/double-auth (:double-auth-code session))))
@@ -35,9 +45,26 @@
       ;; TODO: Add error message to double auth
       (response/found "/double-auth"))))
 
-;; TODO: Add schema validation
-(defn handle-login [request params]
-  (auth-service/login! request params))
+(defn- new-session-map [id add-double-auth]
+  (merge
+    {:identity          id
+     :auth-timeout      nil
+     :last-request-time (t/now)}
+    (when add-double-auth
+      {:double-authed    nil
+       :double-auth-code (auth-service/double-auth-code)})))
+
+(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
+  (if-let [id (auth-service/authenticate-by-username username password)]
+    (if (auth-service/double-auth-required?)
+      (-> (response/found "/double-auth")
+          (assoc :session
+                 (merge session
+                        (new-session-map id true))))
+      (-> (response/found "/user/messages")
+          (assoc :session (merge session (new-session-map id false)))))
+    (response/unauthorized {:result :unauthorized
+                            :message "login failure"})))
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)
@@ -48,6 +75,7 @@
 
 ;; TODO: Add errors
 ;; TODO: Validate URL
+;; TODO: Add schema validation
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
 (defn check-re-auth [session password return-url]

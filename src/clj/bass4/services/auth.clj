@@ -13,7 +13,7 @@
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
-(defn- double-auth-code []
+(defn double-auth-code []
   (clojure.string/join
     ""
     (map
@@ -22,11 +22,6 @@
 
 (defn double-auth-required? []
   true)
-
-(defn double-authed? [session]
-  (if (double-auth-required?)
-    (boolean (:double-authed session))
-    false))
 
 (defn authenticate-by-user-id [user-id password]
   (when-let [user (db/get-user-by-user-id {:user-id user-id})]
@@ -37,33 +32,6 @@
   (when-let [user (db/get-user-by-username {:username username})]
     (when (= (:password user) password)
       (:objectid user))))
-
-(defn- new-session-map [id add-double-auth]
-  (merge
-    {:identity          id
-     :auth-timeout      nil
-     :last-request-time (t/now)}
-    (when add-double-auth
-      {:double-authed    nil
-       :double-auth-code (double-auth-code)})))
-
-;; TODO: response/found should not be here.
-(defn login! [{:keys [session]} {:keys [username password]}]
-  (if-let [id (authenticate-by-username username password)]
-    (if (double-auth-required?)
-      (-> (response/found "/double-auth")
-          (assoc :session
-                 (merge session
-                   (new-session-map id true))))
-      (-> (response/found "/user/messages")
-          (assoc :session (merge session (new-session-map id false)))))
-    (response/unauthorized {:result :unauthorized
-                            :message "login failure"})))
-
-(defn logout! []
-  (-> (response/found "/login")
-      (assoc :session nil)))
-
 
 ;; -------------
 ;;  DOUBLE AUTH

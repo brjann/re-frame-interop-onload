@@ -18,9 +18,6 @@
 (defn about-page []
   (layout/render "about.html" {:name "Sven Jansson"}))
 
-(defn handle-login [req params]
-  (auth/login! req params))
-
 (defroutes home-routes
   (GET "/" [] (home-page))
   (GET "/about" [] (about-page))

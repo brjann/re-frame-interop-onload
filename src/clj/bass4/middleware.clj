@@ -120,7 +120,7 @@
         response))))
 
 ;; TODO: Move this to configuration file
-(def auth-timeout-limit 120)
+(def auth-timeout-limit (* 10 60))
 
 (defn wrap-auth-timeout [handler]
   (fn [request]
@@ -128,6 +128,8 @@
           now (t/now)
           last-request-time (:last-request-time session)
           auth-timeout (cond
+                         ;; TODO: Only randomize timeout when in development mode
+                         (= (rand-int 200) 10) true
                          (:auth-timeout session) true
                          (nil? last-request-time) nil
                          (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]

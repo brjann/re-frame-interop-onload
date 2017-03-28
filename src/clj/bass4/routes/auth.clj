@@ -9,11 +9,11 @@
 (defroutes auth-routes
   (GET "/login" []
     (auth-view/login-page))
-  (POST "/login" [& params :as req]
-    (auth-response/handle-login req params))
+  (POST "/login" [& params :as request]
+    (auth-response/handle-login (:session request) (:username params) (:password params)))
 
   (GET "/double-auth" [:as request]
-    (auth-response/double-auth-page (:session request)))
+    (auth-response/double-auth (:session request)))
   (POST "/double-auth" [& params :as request]
     (auth-response/double-auth-check (:code params) (:session request)))
 

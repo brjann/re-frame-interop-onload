@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
-            [bass4.services.auth :as auth]
+            [bass4.responses.auth :as auth-response]
             [bass4.responses.posts :as posts]
             [ring.util.http-response :as response]
             [ring.util.request :as request]
@@ -24,7 +24,7 @@
     (context "/user" [:as request]
       (if-let [user (user/get-user (:identity request))]
         (if (not (get-in request [:session :auth-timeout]))
-          (if (auth/double-authed? (:session request))
+          (if (auth-response/double-authed? (:session request))
             (routes
               (GET "/" [] "this is the dashboard")
               (GET "/messages" []
@@ -44,8 +44,6 @@
           (routes
             (GET "*" [:as request]
               (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))
-            (POST "*" [] {:status 440
-                          :headers {}
-                          :body ""})))
+            (POST "*" [] (auth-response/re-auth440))))
         (routes
           (ANY "*" [] "no such user")))))
