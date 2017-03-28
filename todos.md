@@ -5,11 +5,14 @@
     - Configuration
  - Re-authenticate
     - Configuration
-    - Save URL in GET
  - Attack detector
  - The draft saver keeps the timeout from happening. Is that OK?
  - Invalid anti-forgery token after login - not OK.
  - Remove auto-completes in forms
+
+## Done
+ - Re-authenticate
+    - Save URL in GET
 
 
 # Ajax handling
@@ -19,8 +22,8 @@
 - Re-post on re-authenticate
 
 ## Done
-    - Create middle-ware for ajax interception
-    - POST intermediate handler
+- Create middle-ware for ajax interception
+- POST intermediate handler
 
  
 #Messages
@@ -33,16 +36,21 @@
  - Force reload
 
 #Basics
+- Fix HTML templating
 
 ###i18n
 
-Tags and filter plugins in Selmer that utilize Tempura
+- Add translations to all templates
+- Add handling of missing translation
+ 
+## Done
 
- - Add translations to all templates
- - Add handling of missing translation
+- Tags and filter plugins in Selmer that utilize Tempura
 
-###Server side GET and POST errors
 
+#Server side GET and POST errors
+
+## Done
 Used schema and forced validation of functions that accept GET and POST
 
 ### Specs

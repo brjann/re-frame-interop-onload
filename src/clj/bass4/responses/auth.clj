@@ -72,9 +72,7 @@
       (response/found "/user/")
       (response/found "/login"))))
 
-;; TODO: Add errors
 ;; TODO: Validate URL
-;; TODO: Add schema validation
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
 (s/defn ^:always-validate check-re-auth [session password :- s/Str return-url]
@@ -87,10 +85,10 @@
             (assoc :session (merge session {:auth-timeout nil})))
         (auth-view/re-auth-page return-url true)))))
 
-(defn check-re-auth-ajax [session password]
+(s/defn check-re-auth-ajax [session password :- s/Str]
   (when (:auth-timeout session)
     (when-let [user-id (:identity session)]
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> (response/ok)
             (assoc :session (merge session {:auth-timeout nil})))
-        (re-auth440 "password")))))
+        (re-auth440)))))
