@@ -27,13 +27,10 @@ function post_error(this_){
 		}
 
 		if (jqXHR.status == 422) {
-			console.log(jqXHR);
 			var text = jqXHR.responseText;
 			if(text != ""){
-				console.log("[data-show=" + text + "]");
-				console.log(this_);
-				console.log($(this_).find("[data-show=error]"));
 				$(this_).find("[data-show=" + text + "]").show();
+				$(this_).find("[data-clear=" + text + "]").val("");
 			}
 		}
 	}
