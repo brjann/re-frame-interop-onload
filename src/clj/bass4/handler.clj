@@ -16,7 +16,6 @@
 (def app-routes
   (routes
     (-> #'auth-routes
-        (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes middleware/wrap-schema-error))
     (-> #'home-routes

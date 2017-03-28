@@ -141,8 +141,6 @@
                        :auth-timeout (if (contains? (:session response) :auth-timeout)
                                          (:auth-timeout (:session response))
                                          auth-timeout)}]
-      (log/debug session)
-      (log/debug (:session response))
       (assoc response :session (if (nil? (:session response))
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))

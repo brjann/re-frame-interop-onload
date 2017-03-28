@@ -7,12 +7,12 @@
     - Configuration
  - Attack detector
  - The draft saver keeps the timeout from happening. Is that OK?
- - Invalid anti-forgery token after login - not OK.
  - Remove auto-completes in forms
 
 ## Done
  - Re-authenticate
     - Save URL in GET
+ - Anti-forgery token is not used with login.
 
 
 # Ajax handling
@@ -31,6 +31,7 @@
 
 - Highlight unread messages
 - Response that new message has been sent
+- Auto save does not work
  
 #HTTP
 
@@ -40,7 +41,11 @@
 - Fix HTML templating
 - Form validation https://webdesign.tutsplus.com/tutorials/html5-form-validation-with-the-pattern-attribute--cms-25145
 
-###i18n
+##Done 
+-  Basic validation of required form fields
+
+
+#i18n
 
 - Add translations to all templates
 - Add handling of missing translation
@@ -55,9 +60,8 @@
 ## Done
 Used schema and forced validation of functions that accept GET and POST
 
-### Specs
- 
- - Client side error handling in forms and ajax
+
+# Specs 
  - Responses _{:result :ok}_
  - Page title
  - Logging
