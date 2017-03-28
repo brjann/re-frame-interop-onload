@@ -21,29 +21,29 @@
     #_(GET "/charts" req (charts-page req))))
 
 (def user-routes
-    (context "/user" [:as request]
-      (if-let [user (user/get-user (:identity request))]
-        (if (not (get-in request [:session :auth-timeout]))
-          (if (auth-response/double-authed? (:session request))
-            (routes
-              (GET "/" [] "this is the dashboard")
-              (GET "/messages" []
-                (messages-response/messages-page user))
-              (POST "/messages" [& params]
-                (messages-response/save-message (:user-id user) (:subject params) (:text params)))
-              (POST "/message-save-draft" [& params]
-                (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
-              #_(GET "/" req (dashboard-page req))
-              #_(GET "/profile" [errors :as req] (profile-page req errors))
-              #_(GET "/modules" req (modules-page req))
-              #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
-              #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
-              #_(GET "/charts" req (charts-page req)))
-            (routes
-              (ANY "*" [] "you need to double auth!")))
+  (context "/user" [:as request]
+    (if-let [user (user/get-user (:identity request))]
+      (if (not (get-in request [:session :auth-timeout]))
+        (if (auth-response/double-authed? (:session request))
           (routes
-            (GET "*" [:as request]
-              (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))
-            (POST "*" [] (auth-response/re-auth440))))
+            (GET "/" [] "this is the dashboard")
+            (GET "/messages" []
+              (messages-response/messages-page user))
+            (POST "/messages" [& params]
+              (messages-response/save-message (:user-id user) (:subject params) (:text params)))
+            (POST "/message-save-draft" [& params]
+              (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+            #_(GET "/" req (dashboard-page req))
+            #_(GET "/profile" [errors :as req] (profile-page req errors))
+            #_(GET "/modules" req (modules-page req))
+            #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
+            #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
+            #_(GET "/charts" req (charts-page req)))
+          (routes
+            (ANY "*" [] "you need to double auth!")))
         (routes
-          (ANY "*" [] "no such user")))))
+          (GET "*" [:as request]
+            (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))
+          (POST "*" [] (auth-response/re-auth440))))
+      (routes
+        (ANY "*" [] "no such user")))))

@@ -14,56 +14,28 @@
       {% style "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" %}
   </head>
   <body>
-      <!-- navbar -->
-      <nav class="navbar navbar-dark bg-primary" role="navigation">
-          <button class="navbar-toggler hidden-sm-up"
-                  type="button"
-                  data-toggle="collapse"
-                  data-target="#collapsing-navbar">
-              &#9776;
-          </button>
-          <div class="collapse navbar-toggleable-xs" id="collapsing-navbar">
-              <a class="navbar-brand" href="{{servlet-context}}/">bass4</a>
-              <ul class="nav navbar-nav">
-                  <li class="nav-item">
-                      <a href="{{servlet-context}}/"
-                         class="nav-link{% ifequal page "home.html" %} active{%endifequal%}">
-                      home
-                      </a>
-                  </li>
-                  <li class="nav-item">
-                      <a href="{{servlet-context}}/about"
-                         class="nav-link{% ifequal page "about.html" %} active{%endifequal%}">
-                      about
-                      </a>
-                  </li>
-              </ul>
-          </div>
-      </nav>
 
-    <div class="container">
       {% block content %}
       {% endblock %}
-    </div>
 
       <!-- Re-auth modal box-->
       <div class="modal" id="re-auth-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
           <div class="modal-dialog modal-sm" role="document">
               <div class="modal-content">
                   <form method="post" id = "re-auth-modal-form" action="/re-auth-ajax" onsubmit="return re_auth_modal_submit();" class="no-ajax">
-                  <div class="modal-header">
-                      <h4 class="modal-title" id="myModalLabel">Authenticate again</h4>
-                  </div>
-                  <div class="modal-body">
-                      <p>Please provide your password to continue to use the system.</p>
+                      <div class="modal-header">
+                          <h4 class="modal-title" id="myModalLabel">Authenticate again</h4>
+                      </div>
+                      <div class="modal-body">
+                          <p>Please provide your password to continue to use the system.</p>
                           {% csrf-field %}
                           <div class="form-group">
                               <input type="password" class="form-control" id="re-auth-modal-password" name = "password" placeholder="Password">
                           </div>
-                  </div>
-                  <div class="modal-footer">
-                      <button type="submit" class="btn btn-primary">Login</button>
-                  </div>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary">Login</button>
+                      </div>
                   </form>
               </div>
           </div>

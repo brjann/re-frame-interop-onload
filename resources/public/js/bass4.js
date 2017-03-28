@@ -12,6 +12,7 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
  */
 
 function post_success(data, textStatus, jqXHR){
+	console.log("success");
 	var response = data.split(" ");
 	if(response[0] == "found"){
 		window.location.href = response[1];
@@ -19,6 +20,7 @@ function post_success(data, textStatus, jqXHR){
 }
 
 function post_error(jqXHR){
+	console.log("error");
 	if(jqXHR.status == 440){
 		$("#re-auth-modal").modal();
 	}
@@ -80,7 +82,6 @@ $(document).ready(function(){
 						error: post_error
 					}
 				);
-
 			});
 		}
 	})

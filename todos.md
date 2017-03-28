@@ -38,11 +38,11 @@
  - Force reload
 
 #Basics
-- Fix HTML templating
 - Form validation https://webdesign.tutsplus.com/tutorials/html5-form-validation-with-the-pattern-attribute--cms-25145
 
 ##Done 
--  Basic validation of required form fields
+- All HTML templates now based on base.html
+- Basic validation of required form fields
 
 
 #i18n

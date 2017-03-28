@@ -24,7 +24,7 @@
       (assoc :session nil)))
 
 (defn re-auth440
-  ([] re-auth440 "")
+  ([] (re-auth440 ""))
   ([body]
    {:status 440
     :headers {}
