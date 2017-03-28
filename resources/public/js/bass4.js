@@ -2,17 +2,6 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 	jqxhr.setRequestHeader("x-csrf-token", csrfToken);
 });
 
-
-/* function _ajax(url, settings){
-	var error = settings.error;
-	var success = settings.success;
-	if(error !== undefined){
-
-	}
-}
-	*/
-
-
 /*
 	Redirects are followed by the ajax request. So POST route should not answer with
 	response/found (302). But rather with response/ok (200) and then a string with further
@@ -23,7 +12,6 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
  */
 
 function post_success(data, textStatus, jqXHR){
-	console.log(jqXHR);
 	var response = data.split(" ");
 	if(response[0] == "found"){
 		window.location.href = response[1];
@@ -79,3 +67,49 @@ $(document).ready(function(){
 		}
 	})
 });
+
+
+/*
+--------------------
+   RE-AUTH MODAL
+--------------------
+ */
+
+function re_auth_modal_success(){
+	// Close spinner?
+}
+
+function re_auth_modal_error(jqXHR){
+	if(jqXHR.status == 440){
+		$("#re-auth-modal-form").addClass("has-danger");
+		$("#re-auth-modal").modal();
+	}
+}
+
+function re_auth_modal_submit(){
+	event.preventDefault();
+
+	var form = $("#re-auth-modal-form");
+	var password = $("#re-auth-modal-password");
+
+	if(password.val() == ""){
+		return false;
+	}
+
+	var post = form.serializeArray();
+	form.removeClass("has-danger");
+	$("#re-auth-modal").modal('hide');
+	password.val("");
+
+	$.ajax(
+		form.attr("action"),
+		{
+			method: "post",
+			data: post,
+			success: re_auth_modal_success,
+			error: re_auth_modal_error
+		}
+	);
+
+	return true;
+}

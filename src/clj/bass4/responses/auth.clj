@@ -11,8 +11,14 @@
     (auth-service/not-authenticated? session) "/login"
     (auth-service/double-auth-done? session) "/user/"
     ;should this be more complex? double auth may be broken
-    (auth-service/not-double-auth-ok? session) "/login")
-  )
+    (auth-service/not-double-auth-ok? session) "/login"))
+
+(defn re-auth440
+  ([] re-auth440 "")
+  ([body]
+   {:status 440
+    :headers {}
+    :body body}))
 
 (defn double-auth-page [session]
   (if-let [redirect (double-auth-redirect session)]
@@ -48,3 +54,11 @@
         (-> (response/found "/user/")
             (assoc :session (merge session {:auth-timeout nil})))
         (auth-view/re-auth-page)))))
+
+(defn check-re-auth-ajax [session password]
+  (when (:auth-timeout session)
+    (when-let [user-id (:identity session)]
+      (if (auth-service/authenticate-by-user-id user-id password)
+        (-> (response/ok)
+            (assoc :session (merge session {:auth-timeout nil})))
+        (re-auth440 "password")))))

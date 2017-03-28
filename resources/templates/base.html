@@ -50,16 +50,15 @@
       <div class="modal" id="re-auth-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
           <div class="modal-dialog modal-sm" role="document">
               <div class="modal-content">
-                  <form method="post" action="/re-auth-ajax">
+                  <form method="post" id = "re-auth-modal-form" action="/re-auth-ajax" onsubmit="return re_auth_modal_submit();" class="noajax">
                   <div class="modal-header">
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                       <h4 class="modal-title" id="myModalLabel">Authenticate again</h4>
                   </div>
                   <div class="modal-body">
                       <p>Please provide your password to continue to use the system.</p>
                           {% csrf-field %}
-                          <div class="form-group row">
-                              <input type="password" class="form-control" id="password" name = "password" placeholder="Password">
+                          <div class="form-group">
+                              <input type="password" class="form-control" id="re-auth-modal-password" name = "password" placeholder="Password">
                           </div>
                   </div>
                   <div class="modal-footer">
