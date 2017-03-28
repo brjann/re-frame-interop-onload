@@ -15,6 +15,11 @@
 
 <div class="container">
     <h1>Authenticate again</h1>
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        Wrong password
+    </div>
+    {% endif %}
     <p>Please provide your password to continue to use the system.</p>
     <form method="post">
         {% csrf-field %}

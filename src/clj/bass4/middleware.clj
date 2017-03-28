@@ -78,8 +78,8 @@
 ;;  BASS4 handlers
 ;; ----------------
 
-; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 
+; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 (defn wrap-schema-error [handler]
   (fn [req]
     (try
@@ -88,6 +88,7 @@
         (if (= (:type (.data e)) :schema.core/error)
           (error-page {:status 400
                        :title "Bad request!"
+                       ;; TODO: This should only be included in development mode
                        :message (.getMessage e)})
           (throw e))))))
 

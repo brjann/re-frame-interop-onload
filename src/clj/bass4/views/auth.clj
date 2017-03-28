@@ -13,7 +13,9 @@
       "login.html"
       {:error error})))
 
-(defn re-auth-page [return-url]
-  (layout/render
-    "re-auth.html"
-    {:return-url return-url}))
+(defn re-auth-page
+  ([return-url] (re-auth-page return-url false))
+  ([return-url error] (layout/render
+     "re-auth.html"
+     {:return-url return-url
+      :error error})))
