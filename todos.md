@@ -17,6 +17,7 @@
 
 # Ajax handling
 - Spinner
+- No internet connection
 
 ## Wait
 - Re-post on re-authenticate
@@ -37,6 +38,7 @@
 
 #Basics
 - Fix HTML templating
+- Form validation https://webdesign.tutsplus.com/tutorials/html5-form-validation-with-the-pattern-attribute--cms-25145
 
 ###i18n
 

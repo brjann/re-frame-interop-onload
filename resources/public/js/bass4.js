@@ -26,7 +26,7 @@ function post_error(jqXHR){
 
 $(document).ready(function(){
 	$("form").each(function(){
-		if(!$(this).hasClass("noajax")) {
+		if(!$(this).hasClass("no-ajax")) {
 
 			// Save form's own submit function
 			var formsubmit;
@@ -35,6 +35,24 @@ $(document).ready(function(){
 				this.onsubmit = null;
 			}
 			$(this).submit(function (event) {
+
+				var validation_failed = false;
+				$(this).find(".required").each(function(){
+					if($(this).val() == ""){
+						$(this).parent().addClass('has-danger');
+						$(this).change(function(){
+							$(this).parent().removeClass("has-danger");
+						});
+						validation_failed = true;
+					}
+					else{
+						$(this).parent().removeClass('has-danger');
+					}
+				});
+				if(validation_failed){
+					return false;
+				}
+
 
 				event.preventDefault();
 
