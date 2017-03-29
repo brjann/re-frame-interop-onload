@@ -6,12 +6,9 @@
     "double-auth.html"
     {:double-auth-code double-auth-code}))
 
-(defn login-page
-  ([] (login-page false))
-  ([error]
-    (layout/render
-      "login.html"
-      {:error error})))
+(defn login-page []
+  (layout/render
+    "login.html"))
 
 (defn re-auth-page
   ([return-url] (re-auth-page return-url false))
