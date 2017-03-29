@@ -13,7 +13,8 @@
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [buddy.auth.backends.session :refer [session-backend]]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [bass4.db.core :as db])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -79,7 +80,6 @@
 ;; ----------------
 
 
-; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 (defn wrap-schema-error [handler]
   (fn [req]
     (try
@@ -145,9 +145,28 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
+(defn wrap-db [handler]
+  (fn [request]
+    (with-bindings {#'db/*db* (db/resolve-db request)}
+      (handler request))))
 
+;;
+;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
+;; ORDER OF MIDDLEWARE WRAPPERS
+;;
+;; If wrappers are provided in this order
+;; wrap-1
+;; wrap-2
+;;
+;; Then wrapper 2 will call wrapper 1, i.e.,:
+;;
+;; wrap-2 BEFORE calling handler arg
+;; wrap-1 BEFORE calling handler arg
+;; wrap-1 AFTER calling handler arg
+;; wrap-2 AFTER calling handler arg
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      wrap-db
       wrap-auth-timeout
       wrap-ajax-post
       wrap-auth

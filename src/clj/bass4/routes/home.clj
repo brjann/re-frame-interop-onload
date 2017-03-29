@@ -25,4 +25,4 @@
   (GET "/about" [] (about-page))
   (GET "/session" [:as req] (str (:session req)))
   (GET "/request" [:as req] (str req))
-  (GET "/test" [:as req] (request/request-url req)))
+  (GET "/test" [:as req] (str (:server-name req))))

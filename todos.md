@@ -59,10 +59,11 @@
 #Server side GET and POST errors
 
 ## Done
-Used schema and forced validation of functions that accept GET and POST
+- Used schema and forced validation of functions that accept GET and POST
 
 # Other
  - Page title
  - Logging
  - Database exceptions
  - SQL injection
+ - WTF? http://stackoverflow.com/questions/26515700/mysql-jdbc-driver-5-1-33-time-zone-issue
