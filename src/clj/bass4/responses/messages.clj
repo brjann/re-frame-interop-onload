@@ -19,4 +19,4 @@
 
 (s/defn ^:always-validate save-draft [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-draft! user-id subject text)
-  (response/ok))
+  (response/ok "ok"))

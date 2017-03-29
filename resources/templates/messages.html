@@ -22,7 +22,7 @@
     <div class="col-md-12">
         <div class="card">
             <div class="content">
-                <form method="post" class="message">
+                <form method="post" id="new-message-form">
                     <div class="form-group">
                         <input type="text" class="form-control required" placeholder="{%tr messages/subject %}" name="subject" value = "{{draft.subject}}">
                     </div>
@@ -30,7 +30,10 @@
                         <textarea class="form-control required" placeholder="{%tr messages/text %}" name="text" rows="5">{{draft.text}}</textarea>
                     </div>
                     <button type="submit" class="btn btn-fill btn-info">{%tr submit %}</button>
-                    <button type="button" class="btn btn-fill btn-warning" id = "draft-button"><span class="fa fa-spinner"></span>{%tr messages/save-draft %}</button>
+                    <button type="button" class="btn btn-fill btn-warning" id = "draft-button">
+                        {%tr messages/save-draft %}
+                        <span class="fa fa-spinner fa-spin" style="display: none;" id ="new-message-spinner"></span>
+                    </button>
                 </form>
             </div>
         </div>
