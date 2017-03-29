@@ -5,7 +5,8 @@
             [bass4.db.core :as db]
             [ring.util.http-response :as response]
             [ring.util.request :as request]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [bass4.bass-locals :as locals]))
 
 (defn home-page []
   (layout/render
@@ -16,7 +17,8 @@
     "login.html"))
 
 (defn about-page []
-  (layout/render "about.html" {:name "Sven Jansson"}))
+  (layout/render
+    "about.html"))
 
 (defroutes home-routes
   (GET "/" [] (home-page))
