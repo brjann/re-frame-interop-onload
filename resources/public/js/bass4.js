@@ -22,25 +22,97 @@ function post_success(this_){
 
 var re_auth_hidden_form;
 
-function post_error(this_){
+function post_error(form){
 	return function(jqXHR) {
 		if (jqXHR.status == 440) {
 			//$("#re-auth-modal").modal();
 			$("#main-body").hide();
 			$("#re-auth-box").show();
-			re_auth_hidden_form = this_;
+			re_auth_hidden_form = form;
 		}
+		form_events(form, jqXHR);
+	}
+}
 
-		if (jqXHR.status == 422) {
-			var text = jqXHR.responseText;
-			if(text != ""){
-				$(this_).find("[data-show-on=" + text + "]").show();
-				$(this_).find("input[data-clear-on=" + text + "]").val("");
-			}
+function form_events(form, jqXHR){
+	if (jqXHR.status == 422) {
+		var event_text = jqXHR.responseText;
+		if(event_text != ""){
+			$(form).find("[data-show-on=" + event_text + "]").show();
+			$(form).find("input[data-clear-on=" + event_text + "]").val("");
 		}
 	}
 }
 
+$(document).ready(function(){
+	$("form").each(function(){
+
+		var no_ajax = $(this).hasClass("no-ajax");
+		var no_validate = $(this).hasClass("no-validate");
+		if(!no_ajax || !no_validate) {
+
+			// Save form's own submit function
+			var formsubmit;
+			if(this.onsubmit != null){
+				formsubmit = this.onsubmit;
+				this.onsubmit = null;
+			}
+			$(this).submit(function (event) {
+
+				event.preventDefault();
+
+				if(!no_validate) {
+					var validation_failed = false;
+					$(this).find(".required").each(function () {
+						if ($(this).val() == "") {
+							$(this).parent().addClass('has-danger');
+							$(this).change(function () {
+								$(this).parent().removeClass("has-danger");
+							});
+							validation_failed = true;
+						}
+						else {
+							$(this).parent().removeClass('has-danger');
+						}
+					});
+					if (validation_failed) {
+						return false;
+					}
+				}
+
+				// If form has own submit function, call it
+				// if it returns false, then abort.
+				if(formsubmit !== undefined){
+					if(!formsubmit()){
+						return false;
+					}
+				}
+
+				if(!no_ajax){
+					var post = $(this).serializeArray();
+					var url;
+					if (this.action != "") {
+						url = this.action;
+					}
+					else {
+						url = document.URL;
+					}
+					$.ajax(
+						url,
+						{
+							method: "post",
+							data: post,
+							success: post_success(this),
+							error: post_error(this)
+						}
+					);
+				}
+			});
+		}
+	})
+});
+
+/*
 $(document).ready(function(){
 	$("form").each(function(){
 		if(!$(this).hasClass("no-ajax")) {
@@ -101,7 +173,7 @@ $(document).ready(function(){
 		}
 	})
 });
-
+*/
 
 /*
 --------------------
@@ -113,12 +185,23 @@ function re_auth_modal_success(){
 	// Close spinner?
 }
 
+/*
 function re_auth_modal_error(jqXHR){
 	if(jqXHR.status == 440){
 		$("#re-auth-modal-form").addClass("has-danger");
 		$("#re-auth-modal").modal();
 	}
 }
+*/
+
+function re_auth_modal_error(jqXHR){
+	if(jqXHR.status == 422){
+		form_events($("#re-auth-box").find("form"), jqXHR);
+		$("#main-body").hide();
+		$("#re-auth-box").show();
+	}
+}
+
 
 function re_auth_modal_submit(){
 	event.preventDefault();

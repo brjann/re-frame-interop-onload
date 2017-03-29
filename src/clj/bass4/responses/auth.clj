@@ -118,4 +118,5 @@
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> (response/ok)
             (assoc :session (merge session {:auth-timeout nil})))
-        (re-auth-440)))))
+        #_(re-auth-440)
+        (error-422 "error")))))
