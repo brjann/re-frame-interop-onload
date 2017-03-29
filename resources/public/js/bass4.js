@@ -11,8 +11,12 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 	re-auth: the post has not been received. you need to re-authenticate and re-post
  */
 
-function post_success(this_){
+function post_success(form){
 	return function(data, textStatus, jqXHR) {
+		if($(form).data("on-success") != undefined){
+			var on_success = eval($(form).data("on-success"));
+			on_success.call(form, data, textStatus, jqXHR);
+		}
 		var response = data.split(" ");
 		if (response[0] == "found") {
 			window.location.href = response[1];
@@ -23,7 +27,11 @@ function post_success(this_){
 var re_auth_hidden_form;
 
 function post_error(form){
-	return function(jqXHR) {
+	return function(jqXHR, textStatus, errorThrown) {
+		if(jqXHR.status == 200){
+			console.log("FAKE ERROR");
+			return false;
+		}
 		if (jqXHR.status == 440) {
 			//$("#re-auth-modal").modal();
 			$("#main-body").hide();
@@ -31,6 +39,11 @@ function post_error(form){
 			re_auth_hidden_form = form;
 		}
 		form_events(form, jqXHR);
+
+		if($(form).data("on-error") != undefined){
+			var on_error = eval($(form).data("on-error"));
+			on_error.call(form, jqXHR, textStatus, errorThrown);
+		}
 	}
 }
 
@@ -120,7 +133,8 @@ $(document).ready(function(){
  */
 
 function re_auth_modal_success(){
-	// Close spinner?
+	$(this).find(".alert").hide();
+	$(this).find("input").val("");
 }
 
 /*
@@ -142,22 +156,24 @@ function re_auth_modal_error(jqXHR){
 
 
 function re_auth_modal_submit(){
+	$("#re-auth-box").hide();
+	$("#main-body").show();
+	$(re_auth_hidden_form).find("button[type=submit]").first().focus();
+
+	return true;
+}
+
+/*
+function re_auth_modal_submit(){
 	event.preventDefault();
 
 	var form = $("#re-auth-modal-form");
 	var password = $("#re-auth-modal-password");
 
-	if(password.val() == ""){
-		return false;
-	}
-
 	var post = form.serializeArray();
-	form.removeClass("has-danger");
-	//$("#re-auth-modal").modal('hide');
 	$("#re-auth-box").hide();
 	$("#main-body").show();
 	$(re_auth_hidden_form).find("button[type=submit]").first().focus();
-	password.val("");
 
 	$.ajax(
 		form.attr("action"),
@@ -170,4 +186,9 @@ function re_auth_modal_submit(){
 	);
 
 	return true;
+}
+*/
+
+function test(){
+	console.log("the test");
 }

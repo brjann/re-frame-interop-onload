@@ -116,7 +116,7 @@
   (when (:auth-timeout session)
     (when-let [user-id (:identity session)]
       (if (auth-service/authenticate-by-user-id user-id password)
-        (-> (response/ok)
+        (-> (response/ok "ok")
             (assoc :session (merge session {:auth-timeout nil})))
         #_(re-auth-440)
         (error-422 "error")))))

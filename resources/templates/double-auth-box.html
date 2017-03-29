@@ -1,13 +1,13 @@
 <!-- Re-auth modal box-->
 <div class="container hidden" id ="re-auth-box">
     <h1 class="modal-title" id="myModalLabel">{%tr login/re-auth %}</h1>
-    <form method="post" id = "re-auth-modal-form" action="/re-auth-ajax" onsubmit="return re_auth_modal_submit();" class="no-ajax">
+    <form method="post" id = "re-auth-modal-form" action="/re-auth-ajax" onsubmit="return re_auth_modal_submit();" data-on-error = "re_auth_modal_error" data-on-success = "re_auth_modal_success">
         <div class="alert alert-danger hidden" data-show-on="error" role="alert">
             {%tr login/password-error %}
         </div>
         <p>{%tr login/please-re-auth-form %}</p>
         <div class="form-group">
-            <input type="password" class="form-control required" id="re-auth-modal-password" name = "password" placeholder="{%tr password %}">
+            <input type="password" class="form-control required" id="re-auth-modal-password" data-clear-on="error" name = "password" placeholder="{%tr password %}">
         </div>
         <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
     </form>
