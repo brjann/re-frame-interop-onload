@@ -150,6 +150,7 @@
     (with-bindings {#'db/*db* (db/resolve-db request)}
       (handler request))))
 
+;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836
 (defn wrap-timer [handler]
   (fn [request]
     (let [time-start (t/now)
