@@ -3,7 +3,6 @@
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
             [bass4.responses.auth :as auth-response]
-            [bass4.responses.posts :as posts]
             [ring.util.http-response :as response]
             [ring.util.request :as request]
             [ring.util.codec :as codec]))
