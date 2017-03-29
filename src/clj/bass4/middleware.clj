@@ -150,6 +150,13 @@
     (with-bindings {#'db/*db* (db/resolve-db request)}
       (handler request))))
 
+(defn wrap-timer [handler]
+  (fn [request]
+    (let [time-start (t/now)
+          response (handler request)
+          diff (t/in-millis (t/interval time-start (t/now)))]
+      #_(log/info (str "Render time " diff))
+      response)))
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -179,4 +186,5 @@
             (dissoc :session)))
       wrap-reload-headers
       wrap-context
-      wrap-internal-error))
+      wrap-internal-error
+      wrap-timer))

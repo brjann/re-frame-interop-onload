@@ -1,7 +1,5 @@
 (ns bass4.services.messages
-  (:require [bass4.layout :as layout]
-            [bass4.db.core :as db]
-            [ring.util.http-response :as response]))
+  (:require [bass4.db.core :as db]))
 
 (defn- create-message-placeholder [user-id]
   (let [message-id

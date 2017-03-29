@@ -6,15 +6,15 @@
  - Re-authenticate
     - Configuration
  - Attack detector
- - The draft saver keeps the timeout from happening. Is that OK?
- - Remove auto-completes in login
+ - Remove auto-completes in login?
  - CSRF twice in layout/render?
 
 ## Done
  - Re-authenticate
     - Save URL in GET
  - Anti-forgery token is not used with login.
- - Remove auto-completes in double-auth
+ - Removed auto-completes in double-auth
+
 
 
 # Ajax handling
@@ -28,12 +28,20 @@
 - Create middle-ware for ajax interception
 - POST intermediate handler
  
+ 
+ 
 #Messages
 
 - Highlight unread messages
 - Response that new message has been sent
-- Auto save does not work
- 
+- The draft saver keeps the timeout from happening. Is that OK?
+
+
+# Done
+- Auto saving of message draft
+
+
+
 #HTTP
 
  - Force reload

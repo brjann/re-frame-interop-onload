@@ -45,6 +45,7 @@
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
 (conman/bind-connection *db* "sql/messages.sql")
+(conman/bind-connection *db* "sql/treatment.sql")
 
 (defn to-date [^java.sql.Date sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))

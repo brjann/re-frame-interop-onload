@@ -31,7 +31,8 @@
                  [selmer "1.10.6"]
                  [com.taoensso/tempura "1.1.2"]
                  [clj-time "0.13.0"]
-                 [prismatic/schema "1.1.3"]]
+                 [prismatic/schema "1.1.3"]
+                 [org.flatland/ordered "1.5.4"]]
 
   :min-lein-version "2.0.0"
 
