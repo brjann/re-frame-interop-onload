@@ -18,9 +18,12 @@
               :save-draft "Save draft"}
     :login
             {:login "Login"
-             :please-provide
+             :please-username-password
                     "Please provide your username and password to log on to the system."
-             :password-error "Wrong username or password"}}})
+             :username-password-error "Wrong username or password"
+             :please-double-auth "Please provide your double authentication code"
+             :code "Code"
+             :code-error "Wrong code provided"}}})
 
 (defn tr
   ([resource-ids] (tr resource-ids []))

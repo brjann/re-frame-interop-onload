@@ -15,7 +15,7 @@
   (GET "/double-auth" [:as request]
     (auth-response/double-auth (:session request)))
   (POST "/double-auth" [& params :as request]
-    (auth-response/double-auth-check (:code params) (:session request)))
+    (auth-response/double-auth-check (:session request) (:code params)))
 
   (GET "/re-auth" [& params :as request]
     (auth-response/re-auth (:session request) (:return-url params)))

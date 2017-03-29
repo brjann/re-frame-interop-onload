@@ -8,6 +8,7 @@
  - Attack detector
  - The draft saver keeps the timeout from happening. Is that OK?
  - Remove auto-completes in forms
+ - CSRF twice in layout/render?
 
 ## Done
  - Re-authenticate

@@ -7,28 +7,10 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]))
 
-(defn- double-auth-redirect [session]
-  (cond
-    (auth-service/not-authenticated? session) "/login"
-    (auth-service/double-auth-done? session) "/user/"
-    ;should this be more complex? double auth may be broken
-    (auth-service/not-double-auth-ok? session) "/login"))
-
-(defn double-authed? [session]
-  (if (auth-service/double-auth-required?)
-    (boolean (:double-authed session))
-    false))
-
+;; TODO: Add logout function
 (defn logout! []
   (-> (response/found "/login")
       (assoc :session nil)))
-
-(defn re-auth-440
-  ([] (re-auth-440 ""))
-  ([body]
-   {:status 440
-    :headers {}
-    :body body}))
 
 (defn error-422
   ([] (error-422 ""))
@@ -37,20 +19,11 @@
     :headers {}
     :body body}))
 
-(defn double-auth [session]
-  (if-let [redirect (double-auth-redirect session)]
-    (response/found redirect)
-    (auth-view/double-auth (:double-auth-code session))))
 
-;; TODO: Add schema validation
-(defn double-auth-check [code session]
-  (if-let [redirect (double-auth-redirect session)]
-    (response/found redirect)
-    (if (= code (:double-auth-code session))
-      (-> (response/found "/user/")
-          (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
-      ;; TODO: Add error message to double auth
-      (response/found "/double-auth"))))
+
+;; ------------
+;;    LOGIN
+;; ------------
 
 (defn- new-session-map [id add-double-auth]
   (merge
@@ -71,6 +44,50 @@
       (-> (response/found "/user/messages")
           (assoc :session (merge session (new-session-map id false)))))
     (error-422 "error")))
+
+
+
+;; ------------------
+;;    DOUBLE-AUTH
+;; ------------------
+
+(defn- double-auth-redirect [session]
+  (cond
+    (auth-service/not-authenticated? session) "/login"
+    (auth-service/double-auth-done? session) "/user/"
+    ;should this be more complex? double auth may be broken
+    (auth-service/not-double-auth-ok? session) "/login"))
+
+(defn double-authed? [session]
+  (if (auth-service/double-auth-required?)
+    (boolean (:double-authed session))
+    false))
+
+(defn double-auth [session]
+  (if-let [redirect (double-auth-redirect session)]
+    (response/found redirect)
+    (auth-view/double-auth (:double-auth-code session))))
+
+(s/defn ^:always-validate double-auth-check [session code :- s/Str]
+  (if-let [redirect (double-auth-redirect session)]
+    (response/found redirect)
+    (if (= code (:double-auth-code session))
+      (-> (response/found "/user/")
+          (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
+      (error-422 "error"))))
+
+
+
+;; -------------
+;;    RE-AUTH
+;; -------------
+
+(defn re-auth-440
+  ([] (re-auth-440 ""))
+  ([body]
+   {:status 440
+    :headers {}
+    :body body}))
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)

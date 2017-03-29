@@ -3,21 +3,21 @@
 
 <div class="container">
     <h1>{%tr login/login %}</h1>
-    <p>{%tr login/please-provide %}</p>
+    <p>{%tr login/please-username-password %}</p>
     <form method="post">
-        <div class="alert alert-danger hidden" data-show = "error" role="alert">
-            {%tr login/password-error %}
+        <div class="alert alert-danger hidden" data-show-on = "error" role="alert">
+            {%tr login/username-password-error %}
         </div>
         <div class="form-group row">
             <label for="username" class="col-sm-2 col-form-label">{%tr username %}</label>
             <div class="col-sm-10">
-                <input type="text" class="form-control required" data-clear = "error" id="username" name = "username" placeholder="Username">
+                <input type="text" class="form-control required" data-clear-on = "error" id="username" name = "username" placeholder="{%tr username %}">
             </div>
         </div>
         <div class="form-group row">
             <label for="password" class="col-sm-2 col-form-label">{%tr password %}</label>
             <div class="col-sm-10">
-                <input type="password" class="form-control required" data-clear = "error" id="password" name = "password" placeholder="Password">
+                <input type="password" class="form-control required" data-clear-on = "error" id="password" name = "password" placeholder="{%tr password %}">
             </div>
         </div>
         <button type="submit" class="btn btn-primary">Login</button>

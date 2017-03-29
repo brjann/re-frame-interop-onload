@@ -29,8 +29,8 @@ function post_error(this_){
 		if (jqXHR.status == 422) {
 			var text = jqXHR.responseText;
 			if(text != ""){
-				$(this_).find("[data-show=" + text + "]").show();
-				$(this_).find("input[data-clear=" + text + "]").val("");
+				$(this_).find("[data-show-on=" + text + "]").show();
+				$(this_).find("input[data-clear-on=" + text + "]").val("");
 			}
 		}
 	}
