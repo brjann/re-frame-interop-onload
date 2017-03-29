@@ -9,6 +9,7 @@
    {:submit "Submit"
     :username "Username"
     :password "Password"
+    :continue "Continue"
     :date-time
              {:datetime-ns "yyyy-MM-dd HH:mm"}
     :messages
@@ -23,7 +24,10 @@
              :username-password-error "Wrong username or password"
              :please-double-auth "Please provide your double authentication code"
              :code "Code"
-             :code-error "Wrong code provided"}}})
+             :code-error "Wrong code provided"
+             :re-auth "Authenticate again"
+             :password-error "Wrong password"
+             :please-password "Please provide your password to continue to use the system."}}})
 
 (defn tr
   ([resource-ids] (tr resource-ids []))

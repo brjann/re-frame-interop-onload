@@ -107,7 +107,7 @@
                               "/user/"
                               return-url))
             (assoc :session (merge session {:auth-timeout nil})))
-        (auth-view/re-auth-page return-url true)))))
+        (error-422 "error")))))
 
 (s/defn check-re-auth-ajax [session password :- s/Str]
   (when (:auth-timeout session)
