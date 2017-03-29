@@ -3,8 +3,7 @@
             [bass4.views.messages :as messages-view]
             [bass4.services.user :as user]
             [ring.util.http-response :as response]
-            [schema.core :as s]
-            [bass4.responses.posts :as posts]))
+            [schema.core :as s]))
 
 (defn messages-page [user]
   (let [user-id (:user-id user)
@@ -14,8 +13,7 @@
 
 (s/defn ^:always-validate save-message [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-message! user-id subject text)
-  (response/found "/user/messages")
-  #_(posts/found "/user/messages"))
+  (response/found "/user/messages"))
 
 (s/defn ^:always-validate save-draft [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-draft! user-id subject text)
