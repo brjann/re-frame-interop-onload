@@ -40,20 +40,20 @@
 
 #Basics
 - Form validation https://webdesign.tutsplus.com/tutorials/html5-form-validation-with-the-pattern-attribute--cms-25145
+- Timezone settings
 
 ##Done 
 - All HTML templates now based on base.html
 - Basic validation of required form fields
 
-
 #i18n
 
 - Add translations to all templates
-- Add handling of missing translation
  
 ## Done
 
 - Tags and filter plugins in Selmer that utilize Tempura
+- Added handling of missing translation
 
 
 #Server side GET and POST errors
@@ -61,9 +61,7 @@
 ## Done
 Used schema and forced validation of functions that accept GET and POST
 
-
-# Specs 
- - Responses _{:result :ok}_
+# Other
  - Page title
  - Logging
  - Database exceptions

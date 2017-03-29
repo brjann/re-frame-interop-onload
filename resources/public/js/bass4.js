@@ -20,10 +20,15 @@ function post_success(this_){
 	}
 }
 
+var re_auth_hidden_form;
+
 function post_error(this_){
 	return function(jqXHR) {
 		if (jqXHR.status == 440) {
-			$("#re-auth-modal").modal();
+			//$("#re-auth-modal").modal();
+			$("#main-body").hide();
+			$("#re-auth-box").show();
+			re_auth_hidden_form = this_;
 		}
 
 		if (jqXHR.status == 422) {
@@ -127,7 +132,10 @@ function re_auth_modal_submit(){
 
 	var post = form.serializeArray();
 	form.removeClass("has-danger");
-	$("#re-auth-modal").modal('hide');
+	//$("#re-auth-modal").modal('hide');
+	$("#re-auth-box").hide();
+	$("#main-body").show();
+	$(re_auth_hidden_form).find("button[type=submit]").first().focus();
 	password.val("");
 
 	$.ajax(

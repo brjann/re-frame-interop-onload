@@ -28,7 +28,8 @@
              :code-error "Wrong code provided"
              :re-auth "Authenticate again"
              :password-error "Wrong password"
-             :please-password "Please provide your password to continue to use the system."}}})
+             :please-re-auth "Please provide your password to continue to use the system."
+             :please-re-auth-form "Your password is needed before you can submit your data."}}})
 
 (defn tr
   ([resource-ids] (tr resource-ids []))
