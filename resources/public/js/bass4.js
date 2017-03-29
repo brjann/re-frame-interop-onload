@@ -82,6 +82,7 @@ $(document).ready(function(){
 
 				// If form has own submit function, call it
 				// if it returns false, then abort.
+				// TODO: This possibly fails if function wants normal submission. Because of event.preventDefault
 				if(formsubmit !== undefined){
 					if(!formsubmit()){
 						return false;
@@ -111,69 +112,6 @@ $(document).ready(function(){
 		}
 	})
 });
-
-/*
-$(document).ready(function(){
-	$("form").each(function(){
-		if(!$(this).hasClass("no-ajax")) {
-
-			// Save form's own submit function
-			var formsubmit;
-			if(this.onsubmit != null){
-				formsubmit = this.onsubmit;
-				this.onsubmit = null;
-			}
-			$(this).submit(function (event) {
-
-				var validation_failed = false;
-				$(this).find(".required").each(function(){
-					if($(this).val() == ""){
-						$(this).parent().addClass('has-danger');
-						$(this).change(function(){
-							$(this).parent().removeClass("has-danger");
-						});
-						validation_failed = true;
-					}
-					else{
-						$(this).parent().removeClass('has-danger');
-					}
-				});
-				if(validation_failed){
-					return false;
-				}
-
-
-				event.preventDefault();
-
-				// If form has own submit function, call it
-				// if it returns false, then abort.
-				if(formsubmit !== undefined){
-					if(!formsubmit()){
-						return false;
-					}
-				}
-				var post = $(this).serializeArray();
-				var url;
-				if (this.action != "") {
-					url = this.action;
-				}
-				else {
-					url = document.URL;
-				}
-				$.ajax(
-					url,
-					{
-						method: "post",
-						data: post,
-						success: post_success(this),
-						error: post_error(this)
-					}
-				);
-			});
-		}
-	})
-});
-*/
 
 /*
 --------------------
