@@ -7,13 +7,14 @@
     - Configuration
  - Attack detector
  - The draft saver keeps the timeout from happening. Is that OK?
- - Remove auto-completes in forms
+ - Remove auto-completes in login
  - CSRF twice in layout/render?
 
 ## Done
  - Re-authenticate
     - Save URL in GET
  - Anti-forgery token is not used with login.
+ - Remove auto-completes in double-auth
 
 
 # Ajax handling
@@ -26,7 +27,6 @@
 ## Done
 - Create middle-ware for ajax interception
 - POST intermediate handler
-
  
 #Messages
 
