@@ -7,10 +7,6 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]))
 
-;; TODO: Add logout function
-(defn logout! []
-  (-> (response/found "/login")
-      (assoc :session nil)))
 
 (defn error-422
   ([] (error-422 ""))
@@ -20,6 +16,13 @@
     :body body}))
 
 
+;; -------------
+;;    LOGOUT
+;; -------------
+
+(defn logout []
+  (-> (response/found "/login")
+      (assoc :session nil)))
 
 ;; ------------
 ;;    LOGIN

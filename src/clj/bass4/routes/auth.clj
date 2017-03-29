@@ -7,6 +7,9 @@
             [bass4.responses.auth :as auth-response]))
 
 (defroutes auth-routes
+  (GET "/logout" [& params]
+    (auth-response/logout))
+
   (GET "/login" [& params]
     (auth-view/login-page (:error params)))
   (POST "/login" [& params :as request]

@@ -10,6 +10,7 @@
     :username "Username"
     :password "Password"
     :continue "Continue"
+    :logout "Logout"
     :date-time
              {:datetime-ns "yyyy-MM-dd HH:mm"}
     :messages
