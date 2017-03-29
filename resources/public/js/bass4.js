@@ -137,24 +137,13 @@ function re_auth_modal_success(){
 	$(this).find("input").val("");
 }
 
-/*
-function re_auth_modal_error(jqXHR){
-	if(jqXHR.status == 440){
-		$("#re-auth-modal-form").addClass("has-danger");
-		$("#re-auth-modal").modal();
-	}
-}
-*/
-
 function re_auth_modal_error(jqXHR){
 	if(jqXHR.status == 422){
-		form_events($("#re-auth-box").find("form"), jqXHR);
 		$("#main-body").hide();
 		$("#re-auth-box").show();
 	}
 }
 
-
 function re_auth_modal_submit(){
 	$("#re-auth-box").hide();
 	$("#main-body").show();
@@ -162,32 +151,6 @@ function re_auth_modal_submit(){
 
 	return true;
 }
-
-/*
-function re_auth_modal_submit(){
-	event.preventDefault();
-
-	var form = $("#re-auth-modal-form");
-	var password = $("#re-auth-modal-password");
-
-	var post = form.serializeArray();
-	$("#re-auth-box").hide();
-	$("#main-body").show();
-	$(re_auth_hidden_form).find("button[type=submit]").first().focus();
-
-	$.ajax(
-		form.attr("action"),
-		{
-			method: "post",
-			data: post,
-			success: re_auth_modal_success,
-			error: re_auth_modal_error
-		}
-	);
-
-	return true;
-}
-*/
 
 function test(){
 	console.log("the test");
