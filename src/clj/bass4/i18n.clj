@@ -11,6 +11,7 @@
     :password "Password"
     :continue "Continue"
     :logout "Logout"
+    :offline-warning "You seem to be offline. Please make sure you are online before posting."
     :date-time
              {:datetime-ns "yyyy-MM-dd HH:mm"}
     :messages

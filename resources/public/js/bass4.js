@@ -5,10 +5,7 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 /*
 	Redirects are followed by the ajax request. So POST route should not answer with
 	response/found (302). But rather with response/ok (200) and then a string with further
-	instructions.
-	ok: the post was received
-	found [url]: the post was received and here is your new url
-	re-auth: the post has not been received. you need to re-authenticate and re-post
+	instructions. found [url]: the post was received and here is your new url
  */
 
 function post_success(form){
@@ -28,12 +25,17 @@ var re_auth_hidden_form;
 
 function post_error(form){
 	return function(jqXHR, textStatus, errorThrown) {
+		if(jqXHR.status == 0){
+			alert(str_offline_warning);
+			return false;
+		}
+
 		if(jqXHR.status == 200){
 			console.log("FAKE ERROR");
 			return false;
 		}
+
 		if (jqXHR.status == 440) {
-			//$("#re-auth-modal").modal();
 			$("#main-body").hide();
 			$("#re-auth-box").show();
 			re_auth_hidden_form = form;
