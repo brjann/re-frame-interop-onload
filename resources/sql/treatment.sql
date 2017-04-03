@@ -25,3 +25,16 @@ FROM c_treatment AS ct
     ON lct.LinkeeId = cm.ObjectId
 WHERE ct.ObjectId = :treatment-id
 ORDER BY lct.SortOrder;
+
+-- :name get-module-worksheets :? :*
+-- :doc get worksheets belonging to module-ids
+SELECT
+  ctc.ObjectId AS `worksheet-id`,
+  ctc.`Name` AS `worksheet-name`
+FROM c_module as cm
+  JOIN links_c_module AS lcm
+    ON cm.ObjectId = lcm.LinkerId
+  JOIN c_treatmentcontent AS ctc
+    ON lcm.LinkeeId = ctc.ObjectId
+WHERE lcm.LinkerId IN(:v*:module-ids) AND lcm.PropertyName = "Worksheets"
+ORDER BY lcm.SortOrder, cm.SortOrder;

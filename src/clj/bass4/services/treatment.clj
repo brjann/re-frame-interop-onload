@@ -17,17 +17,25 @@
   (let [treatment-id (:treatment-id treatment)]
     (db/get-treatment-modules {:treatment-id treatment-id})))
 
-(defn get-active-module-ids [treatment]
-  (->> treatment
-       :module-accesses
-       (filterv (fn [[k v]] (not= 0 v)))
-       (mapv first)))
+(defn get-active-module-ids [treatment treatment-modules]
+  (let [available-module-ids (mapv #(:module-id %) treatment-modules)]
+    (->> treatment
+         :module-accesses
+         (filterv (fn [[k v]] (not= 0 v)))
+         (mapv first)
+         ;; TODO: This is not needed - because tag-active-modules operates on available modules
+         set
+         (clojure.set/intersection (set available-module-ids)))))
 
 (defn tag-active-modules [treatment-modules active-module-ids]
   (map #(if (some #{(:module-id %)} active-module-ids)
           (assoc % :active true)
           (assoc % :active false))
        treatment-modules))
+
+#_(defn get-active-worksheets [active-module-ids]
+  (let [active-ids (get-active-module-ids treatment)]
+    (db/get-module-worksheets {:module-ids active-ids})))
 
 (defn user-treatment-info [user-id]
   (let [treatments (user-treatments user-id)
@@ -36,8 +44,3 @@
         treatment-modules (mapv tag-active-modules treatment-modules active-module-ids)
         treatments (mapv #(assoc %1 :modules %2) treatments treatment-modules)]
     treatments))
-
-
-#_(defn get-active-worksheets [treatment]
-  (let [active-ids (get-active-module-ids treatment)]
-    (db/get-active-worksheets {:module-ids active-ids})))
