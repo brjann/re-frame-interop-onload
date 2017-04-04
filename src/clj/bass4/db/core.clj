@@ -4,11 +4,23 @@
     [conman.core :as conman]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
-    [bass4.bass-locals :as locals])
+    [bass4.bass-locals :as locals]
+    [clojure.tools.logging :as log])
   (:import [java.sql
             BatchUpdateException
             PreparedStatement]))
 
+
+(defn connect2!
+  [pool-specs]
+  (reduce merge
+          (map (fn [pool-spec]
+                 {(keyword (key pool-spec))
+                  (delay
+                    (do
+                      (log/info (str "Attaching " (val pool-spec)))
+                      (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})))})
+               pool-specs)))
 
 (defn database-urls []
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
@@ -17,29 +29,38 @@
 (defn connect!
   [pool-specs]
   (reduce merge (map (fn [pool-spec]
-                       {(keyword (key pool-spec)) (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})}) pool-specs)))
+                       {(keyword (key pool-spec))
+                        (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})}) pool-specs)))
+
+(defn disconnect2!
+  [db-connections]
+  (doall
+    (map (fn [db]
+           (when (realized? (val db))
+             (do
+               (log/info (str "Detaching " (key db)))
+               (conman/disconnect! @(val db)))))
+         db-connections)))
 
 ;; Disconnect from all databases in db-connections
 (defn disconnect!
   [db-connections]
-  (map (fn [db] (conman/disconnect! (val db))) db-connections))
+  (doall (map (fn [db] (conman/disconnect! (val db))) db-connections)))
 
 ;; Establish connections to all databases
 ;; and store connections in *dbs*
-(defstate ^:dynamic *dbs*
+#_(defstate ^:dynamic *dbs*
     :start (connect!
              (database-urls))
     :stop (disconnect! *dbs*))
 
-
-  #_(defstate ^:dynamic *db*
-           :start (conman/connect! {:jdbc-url (env :database-url)})
-           :stop (conman/disconnect! *db*))
+(defstate ^:dynamic *dbs*
+  :start (connect2!
+           (database-urls))
+  :stop (disconnect2! *dbs*))
 
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
-;; The queries file defines the query get-user which
-;; returns user by user id
 (def ^:dynamic *db* nil)
 
 (conman/bind-connection *db* "sql/bass.sql")
@@ -69,5 +90,5 @@
                    (get db-mappings host)
                    (:default db-mappings))]
     (if (contains? *dbs* matching)
-      (get *dbs* matching)
-      (throw (Exception. (str "No db present for key " matching))))))
+      @(get *dbs* matching)
+      (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))

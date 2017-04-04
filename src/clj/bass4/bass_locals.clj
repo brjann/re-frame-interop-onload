@@ -39,3 +39,8 @@
   ([bass-path port]
    (let [configs (reduce merge (map parse-local (get-locals bass-path)))]
      (into {} (filter #(not (nil? (val %))) (zipmap (keys configs) (map (partial build-db-url port) (vals configs))))))))
+
+#_(defn get-bass-db-configs [x y]
+  {:db2 "jdbc:mysql://localhost:3300/fibro?user=root&password=root"
+   :db3 "jdbc:mysql://localhost:3300/internetpsykologi?user=root&password=root"
+   :db1 "jdbc:mysql://localhost:3300/panik2017?user=root&password=root"})

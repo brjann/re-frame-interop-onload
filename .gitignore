@@ -7,6 +7,7 @@ pom.xml
 *.class
 /.lein-*
 profiles.clj
+prod-config.edn
 /.env
 .nrepl-port
 /log
