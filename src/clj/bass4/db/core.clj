@@ -11,6 +11,8 @@
             PreparedStatement]))
 
 
+;; (alter-var-root (var bass4.db.core/*db*) (fn [x] @(:db1 bass4.db.core/*dbs*)))
+
 (defn connect!
   [pool-specs]
   (reduce merge
@@ -61,7 +63,8 @@
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
 (conman/bind-connection *db* "sql/messages.sql")
-(conman/bind-connection *db* "sql/treatment.sql")
+(conman/bind-connection *db* "sql/treatments.sql")
+(conman/bind-connection *db* "sql/instruments.sql")
 
 (defn to-date [^java.sql.Date sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))

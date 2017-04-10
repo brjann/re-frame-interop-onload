@@ -24,7 +24,6 @@
                          (db/get-linked-treatments {:user-id user-id}))]
     treatments))
 
-;; (alter-var-root (var bass4.db.core/*db*) (fn [x] @(:db1 bass4.db.core/*dbs*)))
 
 (defn add-treatment-modules [treatment-access]
   (assoc treatment-access :modules (db/get-treatment-modules {:treatment-id (:treatment-id treatment-access)})))
