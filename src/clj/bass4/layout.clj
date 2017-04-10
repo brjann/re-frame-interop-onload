@@ -9,7 +9,8 @@
             [clojure.string :refer [split join]]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [bass4.services.bass :as bass-service]))
 
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
@@ -26,7 +27,8 @@
         (assoc params
           :page template
           :csrf-token *anti-forgery-token*
-          :servlet-context *app-context*)))
+          :servlet-context *app-context*
+          :title (bass-service/project-title))))
     "text/html; charset=utf-8"))
 
 (defn error-page

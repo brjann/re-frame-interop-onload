@@ -11,7 +11,7 @@
             PreparedStatement]))
 
 
-(defn connect2!
+(defn connect!
   [pool-specs]
   (reduce merge
           (map (fn [pool-spec]
@@ -26,13 +26,13 @@
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
 
 ;; Connects to all databases in pool-specs
-(defn connect!
+#_(defn connect!
   [pool-specs]
   (reduce merge (map (fn [pool-spec]
                        {(keyword (key pool-spec))
                         (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})}) pool-specs)))
 
-(defn disconnect2!
+(defn disconnect!
   [db-connections]
   (doall
     (map (fn [db]
@@ -43,21 +43,16 @@
          db-connections)))
 
 ;; Disconnect from all databases in db-connections
-(defn disconnect!
+#_(defn disconnect!
   [db-connections]
   (doall (map (fn [db] (conman/disconnect! (val db))) db-connections)))
 
 ;; Establish connections to all databases
 ;; and store connections in *dbs*
-#_(defstate ^:dynamic *dbs*
+(defstate ^:dynamic *dbs*
     :start (connect!
              (database-urls))
     :stop (disconnect! *dbs*))
-
-(defstate ^:dynamic *dbs*
-  :start (connect2!
-           (database-urls))
-  :stop (disconnect2! *dbs*))
 
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
@@ -85,7 +80,11 @@
 
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
-        host (keyword (:server-name request))
+        ;;host (keyword (:server-name request))
+        host (keyword
+               (first (filter identity
+                              [(get-in request [:headers "x-forwarded-host"])
+                               (:server-name request)])))
         matching (if (contains? db-mappings host)
                    (get db-mappings host)
                    (:default db-mappings))]
