@@ -6,41 +6,49 @@
   (merge m {k (into {} (php->clj (get m k)))}))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
+;; TODO: Merge info from several ongoing treatments
+
+(defn map-map [f m]
+  (let [ks (keys m)
+        vs (vals m)]
+    (zipmap ks (mapv f vs))))
+
+(defn val-to-int [m k]
+  (merge m {k (into {} (map-map #(if (integer? %) % (Integer/parseInt %))
+                                (get m k)))}))
+
 (defn user-treatments [user-id]
-  (let [treatments (mapv #(unserialize-key % :module-accesses)
+  (let [treatments (mapv #(-> %
+                              (unserialize-key :module-accesses)
+                              (val-to-int :module-accesses))
                          (db/get-linked-treatments {:user-id user-id}))]
     treatments))
 
-;; (alter-var-root (var bass4.db.core/*db*) (fn [x] (:db1 bass4.db.core/*dbs*)))
+;; (alter-var-root (var bass4.db.core/*db*) (fn [x] @(:db1 bass4.db.core/*dbs*)))
 
-(defn get-treatment-modules [treatment]
-  (let [treatment-id (:treatment-id treatment)]
-    (db/get-treatment-modules {:treatment-id treatment-id})))
+(defn add-treatment-modules [treatment-access]
+  (assoc treatment-access :modules (db/get-treatment-modules {:treatment-id (:treatment-id treatment-access)})))
 
-(defn get-active-module-ids [treatment treatment-modules]
-  (let [available-module-ids (mapv #(:module-id %) treatment-modules)]
-    (->> treatment
-         :module-accesses
-         (filterv (fn [[k v]] (not= 0 v)))
-         (mapv first)
-         ;; TODO: This is not needed - because tag-active-modules operates on available modules
-         set
-         (clojure.set/intersection (set available-module-ids)))))
+(defn tag-active-modules [treatment-access]
+  (let [active-modules-ids
+        (->> treatment-access
+             :module-accesses
+             (filterv (fn [[k v]] (not= 0 v)))
+             (mapv first))
+        tagged (mapv #(if (some #{(:module-id %)} active-modules-ids)
+                         (assoc % :active true)
+                         (assoc % :active false))
+                      (:modules treatment-access))]
+    (assoc treatment-access :modules tagged :active-module-ids active-modules-ids)))
 
-(defn tag-active-modules [treatment-modules active-module-ids]
-  (map #(if (some #{(:module-id %)} active-module-ids)
-          (assoc % :active true)
-          (assoc % :active false))
-       treatment-modules))
 
-#_(defn get-active-worksheets [active-module-ids]
-  (let [active-ids (get-active-module-ids treatment)]
-    (db/get-module-worksheets {:module-ids active-ids})))
+(defn add-active-worksheets [treatment-access]
+    (assoc treatment-access :worksheets (db/get-module-worksheets {:module-ids (:active-module-ids treatment-access)})))
 
 (defn user-treatment-info [user-id]
-  (let [treatments (user-treatments user-id)
-        treatment-modules (mapv get-treatment-modules treatments)
-        active-module-ids (mapv get-active-module-ids treatments)
-        treatment-modules (mapv tag-active-modules treatment-modules active-module-ids)
-        treatments (mapv #(assoc %1 :modules %2) treatments treatment-modules)]
-    treatments))
+  (let [tx-info (mapv #(-> %
+                     add-treatment-modules
+                     tag-active-modules
+                     add-active-worksheets) (user-treatments user-id))]
+    tx-info))
+

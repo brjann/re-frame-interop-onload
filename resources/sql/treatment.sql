@@ -28,7 +28,7 @@ ORDER BY lct.SortOrder;
 
 -- :name get-module-worksheets :? :*
 -- :doc get worksheets belonging to module-ids
-SELECT
+SELECT DISTINCT
   ctc.ObjectId AS `worksheet-id`,
   ctc.`Name` AS `worksheet-name`
 FROM c_module as cm
