@@ -65,6 +65,8 @@ SELECT
   END
     AS `layout-id`,
   OptionSeparator AS `option-separator`,
-  SortOrder AS `sort-order`
+  SortOrder AS `sort-order`,
+  VASMinLabel AS `vas-min-label`,
+  VASMaxLabel AS `vas-max-label`
 FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;

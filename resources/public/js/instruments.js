@@ -146,10 +146,11 @@ function parse_response(element, response){
 
 	// VAS
 	if(response_type == "VS"){
-		return sprintf("<div class='slider-label-left'>Min</div>" +
+		return sprintf("<div class='slider-container'><div class='slider-label-left'>%s</div>" +
 			"<div data-input = '%s' class = 'slider'></div>" +
-			"<div class='slider-label-right'>Max</div>" +
-			"<input type = 'hidden' name = '%s' value = '-1'>", name, name);
+			"<div class='slider-label-right'>%s</div>" +
+			"<input type = 'hidden' name = '%s' value = '-1'></div>",
+			response["vas-min-label"], name, response["vas-max-label"], name);
 	}
 }
 

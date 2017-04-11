@@ -19,8 +19,11 @@ div#instrument .cell .option.single{
     padding: 5px 2px 5px 2px;
 }
 
+
 div#instrument .slider{
-    margin: 5px 0 5px 0;
+    display: inline-block;
+    text-align: center;
+    width: 410px;
 }
 
 .ui-slider-horizontal {
@@ -33,20 +36,22 @@ div#instrument .slider{
     width: 16px;
 }
 
-.slider-label-left {
+div#instrument .slider-label-left {
     text-align: right;
+    padding-right: 5px;
     display: inline-block;
     width: 100px;
 }
 
-.slider-label-right {
+div#instrument .slider-label-right {
     text-align: left;
+    padding-left: 5px;
     display: inline-block;
     width: 100px;
 }
 
-.slider {
-    display: inline-block;
-    text-align: center;
-    width: 410px;
+div#instrument .slider-container {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    vertical-align: middle;
 }
