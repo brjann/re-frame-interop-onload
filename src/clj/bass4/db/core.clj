@@ -21,6 +21,7 @@
                   (delay
                     (do
                       (log/info (str "Attaching " (val pool-spec)))
+                      ;;TODO: &serverTimezone=UTC WTF????
                       (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})))})
                pool-specs)))
 

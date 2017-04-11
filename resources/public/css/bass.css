@@ -1,0 +1,13 @@
+.hidden {
+    display: none;
+}
+
+div#instrument {
+    font-size: 12px;
+}
+
+div#instrument .cell{
+    display: inline-block;
+    vertical-align: top;
+    padding: 5px 2px 5px 2px;
+}

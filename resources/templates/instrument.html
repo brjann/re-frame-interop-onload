@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <div id = "instrument">
+        <h2 id = "instrument-show-name"></h2>
+        <div id="instrument-container"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page-scripts %}
+<script src="/js/instruments.js"></script>
+<script type="text/javascript">
+	var instrument = {{instrument|json|safe}};
+</script>
+{% endblock %}

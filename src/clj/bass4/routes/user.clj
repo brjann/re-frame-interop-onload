@@ -32,6 +32,8 @@
               (messages-response/save-message (:user-id user) (:subject params) (:text params)))
             (POST "/message-save-draft" [& params]
               (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+            (GET "/instrument/:instrument-id" [instrument-id &params]
+              (bass4.layout/render "instrument.html" {:instrument (bass4.services.instruments/get-instrument instrument-id)}))
             #_(GET "/" req (dashboard-page req))
             #_(GET "/profile" [errors :as req] (profile-page req errors))
             #_(GET "/modules" req (modules-page req))

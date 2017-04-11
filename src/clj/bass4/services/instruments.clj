@@ -2,45 +2,81 @@
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]))
 
+(defn key-map-list
+  ([s k]
+   (key-map-list s k {}))
+  ([s k m]
+   (if-not (seq s)
+     m
+     (recur (rest s)
+            k
+            (assoc m (get (first s) k) (first s))))))
+
 (defn item-elements
   [bass-element]
-  (select-keys bass-element [:item-id :name :text :response-id :sort-order]))
+  (select-keys bass-element [:item-id :name :text :response-id :sort-order :layout-id]))
 
 
 (defn options
   [{:keys [option-values option-labels]}]
   (filter (comp (complement empty?) :value) (map (fn [x y] {:value x :label y}) (php->clj option-values) (php->clj option-labels))))
 
+#_(defn cells
+  [{:keys [cell-widths cell-alignments]}]
+  (map (fn [x y] {:cell-width x :cell-alignment y}) (php->clj cell-widths) (php->clj cell-alignments)))
+
+(defn cells
+  [{:keys [cell-widths cell-alignments]}]
+  (map (fn [x y] {:cell-width x :cell-alignment y}) (mapv #(if (empty? %) "*" %) (php->clj cell-widths)) (php->clj cell-alignments)))
+
+(defn table-elements
+  [instrument-id]
+  (map (fn [x] {:page-break (:page-break x) :cells (cells x) :sort-order (:sort-order x)})
+       (db/get-instrument-tables {:instrument-id instrument-id})))
+
 (defn response-def
   [bass-element]
   (-> bass-element
-      (select-keys [:response-type])
+      (select-keys [:response-type :option-separator])
       (assoc :options (options bass-element))
       (assoc :response-id (:item-id bass-element))))
+
+(defn layout-def
+  [bass-element]
+  (select-keys bass-element [:layout-id :layout]))
 
 (defn instrument-elements-and-responses
   [instrument-id]
   (let [bass-elements (db/get-instrument-items {:instrument-id instrument-id})
-        items (map item-elements bass-elements)
-        responses (map response-def (filter :option-values bass-elements))
-        statics (db/get-instrument-statics {:instrument-id instrument-id})
-        elements (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics)))]
+        items         (map item-elements bass-elements)
+        responses     (key-map-list
+                        (map response-def (filter :option-values bass-elements))
+                        :response-id)
+        layouts       (key-map-list
+                        (map layout-def (filter :layout bass-elements))
+                        :layout-id)
+        statics       (db/get-instrument-statics {:instrument-id instrument-id})
+        tables        (table-elements instrument-id)
+        elements      (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
     {:elements elements
-     :responses responses}
+     :responses responses
+     :layouts layouts}
     ))
 
 (defn instrument-def
   [instrument-id]
   (let [instrument (db/get-instrument {:instrument-id instrument-id})
-        {:keys [elements responses]} (instrument-elements-and-responses instrument-id)]
+        {:keys [elements responses layouts]} (instrument-elements-and-responses instrument-id)]
     (when instrument
       {:name (:name instrument)
        :abbreviation (:abbreviation instrument)
        :show-name (:show-name instrument)
        :elements elements
-       :responses responses})))
+       :responses responses
+       :layouts layouts})))
 
 (defn get-instrument [instrument-id]
+  (println instrument-id)
   (let [instrument (instrument-def instrument-id)]
     instrument))
 
