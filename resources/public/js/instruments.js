@@ -28,8 +28,17 @@ $(document).ready(function(){
 				}
 			})
 		}
-	)
+	);
+	init_sliders();
 });
+
+function init_sliders(){
+	$(".slider")
+		.slider({min: 0, max: 401})
+		.bind('slidechange', function(event,ui){console.log(ui.value)})
+		.children(".ui-slider-handle").css('visibility', 'hidden');
+
+}
 
 function parse_cells(cells){
 	var stars = [];
@@ -41,7 +50,6 @@ function parse_cells(cells){
 		else sum = sum + parseInt(cell["cell-width"]);
 	});
 	var star_width = (700 - sum) / stars.length;
-	console.log(star_width);
 	$.each(stars, function(x, cell_index){
 		cells[cell_index]["cell-width"] = star_width;
 	});
@@ -57,6 +65,8 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 	var parts = layout.split("[TD");
 	return $.map(parts, function(content, index){
 		var colspan = 1;
+
+		// Parse [TD X] where X is colspan for this cell.
 		if(content.indexOf("]") >= 0 && (content.indexOf("[") == -1 || content.indexOf("[") < content.indexOf("]"))){
 			colspan = parseInt(content.substr(0, content.indexOf("]"))) || 1;
 			content = content.substr(content.indexOf("]") + 1, content.length);
@@ -70,43 +80,65 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 		// Set width and alignment of cell
 		var settings = '';
 		if(curr_cell < cells.length){
+
 			// Fetch alignment from first cell if colspan > 1
 			if(cells[curr_cell]["cell-alignment"] != ""){
-				settings = settings + "text-align: " + cells[curr_cell]["cell-alignment"] + ";"
+				settings += "text-align: " + cells[curr_cell]["cell-alignment"] + ";"
 			}
+
+			// Merge widths for all cells in colspan
 			var width = 0;
 			for(var i = 0; i < colspan; i++){
-				width = width + parseInt(cells[curr_cell] ? cells[curr_cell]["cell-width"] : 0);
+				width += parseInt(cells[curr_cell] ? cells[curr_cell]["cell-width"] : 0);
 				curr_cell++;
 			}
-			settings = settings + "width: " + width + "px;";
+
+			settings += "width: " + width + "px;";
 		}
-		return "<div class = 'cell' style='" + settings + "'>" + content + "</div>";
+		return sprintf("<div class = 'cell' style='%s'>%s</div>", settings, content);
 	});
 }
 
 function parse_response(element, response){
 	var break_separator = response["option-separator"].toLowerCase() == "<br>";
 	var response_type = response["response-type"];
+	var name = "item-" + element["item-id"];
+
+	// Checkboxes and text
 	if(response_type == "RD" || response_type == "CB"){
 		return $.map(response.options, function(option){
 			var str;
 			if(response_type == "RD"){
-				str = "<input type = 'radio' name = '" + element["item-id"] + "' value = '" + escape_string(option.value) + "'>";
+				str = sprintf("<input type = 'radio' name = '%s' value = '%s'>", name, escape_string(option.value));
 			}
 			else{
-				var name = element["item-id"] + "_" + escape_string(option.value);
-				str = "<input type = 'hidden' name = '" + name + "' value='0'>\n" +
-					"<input type = 'checkbox' name = '" + name + "' value = '1'>";
+				var cb_name = name + "_" + escape_string(option.value);
+				str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
+					"<input type = 'checkbox' name = '%s' value = '1'>", cb_name, cb_name);
 			}
 			if(option.label != undefined){
 				str = str + " " + option.label;
 			}
 			if(break_separator){
-				str = "<div class='option single'>" + str + " </div>";
+				str = sprintf("<div class='option single'>%s</div>", str);
 			}
 			return str;
 		}).join((break_separator ? "" : "[TD]") + "\n");
+	}
+
+	// Small text
+	if(response_type == "ST"){
+		return sprintf("<input type = 'text' name = '%s'>", name);
+	}
+
+	// Large text
+	if(response_type == "TX"){
+		return sprintf("<textarea cols='60' rows='5' name='%s'></textarea>", name);
+	}
+
+	// VAS
+	if(response_type == "VS"){
+		return sprintf("<div class = 'slider' style = 'width:400px'></div><input type = 'hidden' name = '%s' value = '-1'>", name);
 	}
 }
 

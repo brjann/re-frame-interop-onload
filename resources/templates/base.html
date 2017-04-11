@@ -6,6 +6,7 @@
     <title>{{title}}</title>
 
     <!-- styles -->
+    {% style "/js/jquery-ui-slider/jquery-ui.css" %}
     {% style "/assets/bootstrap/css/bootstrap.min.css" %}
     {% style "/assets/font-awesome/css/font-awesome.min.css" %}
 
@@ -22,10 +23,11 @@
   {% include "re-auth-box.html" %}
   <!-- scripts -->
     {% script "/js/jquery/jquery-3.2.0.min.js" %}
-     <!-- {% script "/js/jquery/jquery-ui-1.12.1/jquery-ui.min.js" %} -->
+    {% script "/js/jquery-ui-slider/jquery-ui.min.js" %}
     {% script "/assets/tether/dist/js/tether.min.js" %}
     {% script "/assets/bootstrap/js/bootstrap.min.js" %}
       {% script "/js/bass4.js" %}
+  {% script "/js/sprintf.min.js" %}
     <script type="text/javascript">
 		 var csrfToken = "{{csrf-token}}";
          var context = "{{servlet-context}}";

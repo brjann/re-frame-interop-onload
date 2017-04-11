@@ -2,6 +2,7 @@
 {% block content %}
 
 <div class="container">
+    <div id="slider"></div>
     <div id = "instrument">
         <h2 id = "instrument-show-name"></h2>
         <div id="instrument-container"></div>
@@ -13,6 +14,9 @@
 {% block page-scripts %}
 <script src="/js/instruments.js"></script>
 <script type="text/javascript">
+	$( function() {
+		$( "#slider" ).slider();
+	} );
 	var instrument = {{instrument|json|safe}};
 </script>
 {% endblock %}
