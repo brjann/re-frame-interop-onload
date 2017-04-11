@@ -23,7 +23,7 @@ $(document).ready(function(){
 					}
 					else response_html = "";
 
-					var element_html = parse_element_layout(element, layout, response_html, cells, (response == undefined || response["option-separator"].toLowerCase() == '<br>'));
+					var element_html = parse_element_layout(element, layout, response_html, cells, is_break_separator(response));
 					row_div.append(element_html);
 				}
 			})
@@ -107,8 +107,12 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 	});
 }
 
+function is_break_separator(response){
+	return (response == undefined || (response["option-separator"] || "<br>").toLowerCase() == '<br>')
+}
+
 function parse_response(element, response){
-	var break_separator = response["option-separator"].toLowerCase() == "<br>";
+	var break_separator = is_break_separator(response);
 	var response_type = response["response-type"];
 	var name = "item-" + element["item-id"];
 

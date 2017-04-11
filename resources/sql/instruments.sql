@@ -34,11 +34,29 @@ SELECT
   name,
   text,
   CASE
-  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
-    THEN LayoutString
-  ELSE NULL
+    WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+      THEN ObjectId
+    ELSE LayoutElement
+  END
+    AS `layout-id`,
+  CASE
+    WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+      THEN LayoutString
+    ELSE NULL
   END
     AS `layout`,
+  CASE
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
+    THEN ObjectId
+  ELSE ResponseDefElement
+  END
+    AS `response-id`,
+  CASE
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
+    THEN ResponseType
+  ELSE NULL
+  END
+    AS `response-type`,
   CASE
     WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
       THEN OptionValues
@@ -46,27 +64,29 @@ SELECT
   END
     AS `option-values`,
   CASE
-    WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
-      THEN OptionLabels
-    ELSE NULL
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
+    THEN OptionLabels
+  ELSE NULL
   END
     AS `option-labels`,
-  ResponseType AS `response-type`,
   CASE
-    WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
-          THEN ObjectId
-    ELSE ResponseDefElement
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "RD" OR ResponseType = "CB")
+    THEN OptionSeparator
+  ELSE NULL
   END
-    AS `response-id`,
+    AS `option-separator`,
   CASE
-  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
-    THEN ObjectId
-  ELSE LayoutElement
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "VS")
+    THEN VASMinLabel
+  ELSE NULL
   END
-    AS `layout-id`,
-  OptionSeparator AS `option-separator`,
-  SortOrder AS `sort-order`,
-  VASMinLabel AS `vas-min-label`,
-  VASMaxLabel AS `vas-max-label`
+    AS `vas-min-label`,
+  CASE
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "VS")
+    THEN VASMaxLabel
+  ELSE NULL
+  END
+    AS `vas-max-label`,
+  SortOrder AS `sort-order`
 FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;
