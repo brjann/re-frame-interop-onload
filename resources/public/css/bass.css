@@ -16,5 +16,5 @@ div#instrument .cell{
 
 div#instrument .cell .option.single{
     display: block;
-    padding: 3px;
+    padding: 5px 2px 5px 2px;
 }

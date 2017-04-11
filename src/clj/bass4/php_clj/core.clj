@@ -80,8 +80,10 @@
 
   Example: (php->clj \"a:2:{i:0;i:1;i:1;i:2;}\")"
   [php]
-  (let [reader (r/buffered-input-stream php)]
-    (reader->clj reader)))
+  (if (empty? php)
+    []
+    (let [reader (r/buffered-input-stream php)]
+      (reader->clj reader))))
 
 (defn- encode-string [^String clj]
   (let [bytes (-> clj .getBytes count)]

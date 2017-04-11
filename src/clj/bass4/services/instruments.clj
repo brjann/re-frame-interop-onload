@@ -21,13 +21,9 @@
   [{:keys [option-values option-labels]}]
   (filter (comp (complement empty?) :value) (map (fn [x y] {:value x :label y}) (php->clj option-values) (php->clj option-labels))))
 
-#_(defn cells
-  [{:keys [cell-widths cell-alignments]}]
-  (map (fn [x y] {:cell-width x :cell-alignment y}) (php->clj cell-widths) (php->clj cell-alignments)))
-
 (defn cells
   [{:keys [cell-widths cell-alignments]}]
-  (map (fn [x y] {:cell-width x :cell-alignment y}) (mapv #(if (empty? %) "*" %) (php->clj cell-widths)) (php->clj cell-alignments)))
+  (map (fn [x y] {:cell-width x :cell-alignment y}) (mapv #(if (or (empty? %) (= "0" %)) "*" %) (php->clj cell-widths)) (php->clj cell-alignments)))
 
 (defn table-elements
   [instrument-id]

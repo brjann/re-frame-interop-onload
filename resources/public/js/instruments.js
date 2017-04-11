@@ -87,9 +87,18 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 
 function parse_response(element, response){
 	var break_separator = response["option-separator"].toLowerCase() == "<br>";
-	if(response["response-type"] == "RD"){
+	var response_type = response["response-type"];
+	if(response_type == "RD" || response_type == "CB"){
 		return $.map(response.options, function(option){
-			var str = "<input type = 'radio' name = '" + element["item-id"] + "' value = '" + escape_string(option.value) + "'>";
+			var str;
+			if(response_type == "RD"){
+				str = "<input type = 'radio' name = '" + element["item-id"] + "' value = '" + escape_string(option.value) + "'>";
+			}
+			else{
+				var name = element["item-id"] + "_" + escape_string(option.value);
+				str = "<input type = 'hidden' name = '" + name + "' value='0'>\n" +
+					"<input type = 'checkbox' name = '" + name + "' value = '1'>";
+			}
 			if(option.label != undefined){
 				str = str + " " + option.label;
 			}
