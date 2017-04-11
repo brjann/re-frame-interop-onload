@@ -128,8 +128,18 @@ function parse_response(element, response){
 				str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
 					"<input type = 'checkbox' name = '%s' value = '1'>", cb_name, cb_name);
 			}
-			if(option.label != undefined){
-				str = str + " " + option.label;
+			if(option.label != ""){
+				str += " " + option.label;
+			}
+			if(option.specification){
+				var spec_name = [name, escape_string(option.value), "spec"].join("_");
+				str += "<br>" + option["specification-text"];
+				if(option["specification-big"]){
+					str += sprintf("<br><textarea cols='22' rows='3' name='%s'></textarea>", spec_name);
+				}
+				else{
+					str += sprintf("&nbsp;<input type='text' name='%s'>", spec_name);
+				}
 			}
 			if(is_break_separator(response)){
 				str = sprintf("<div class='option single'>%s</div>", str);

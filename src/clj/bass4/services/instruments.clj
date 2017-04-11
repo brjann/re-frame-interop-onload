@@ -17,12 +17,12 @@
   (select-keys bass-element [:item-id :name :text :response-id :sort-order :layout-id]))
 
 (defn make-option
-  [value label specification-label specification-big?]
-  (let [specification? (not (empty? specification-label))]
+  [value label specification-text specification-big?]
+  (let [specification? (not (empty? specification-text))]
     {:value value
      :label label
      :specification specification?
-     :specification-label (if specification? specification-label nil)
+     :specification-text (if specification? specification-text nil)
      :specification-big (if specification? specification-big? nil)}))
 
 (defn options
