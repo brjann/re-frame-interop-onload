@@ -146,7 +146,9 @@ function parse_response(element, response){
 
 	// VAS
 	if(response_type == "VS"){
-		return sprintf("<div data-input = '%s' class = 'slider'></div>" +
+		return sprintf("<div class='slider-label-left'>Min</div>" +
+			"<div data-input = '%s' class = 'slider'></div>" +
+			"<div class='slider-label-right'>Max</div>" +
 			"<input type = 'hidden' name = '%s' value = '-1'>", name, name);
 	}
 }

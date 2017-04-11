@@ -32,3 +32,21 @@ div#instrument .slider{
     height: 16px;
     width: 16px;
 }
+
+.slider-label-left {
+    text-align: right;
+    display: inline-block;
+    width: 100px;
+}
+
+.slider-label-right {
+    text-align: left;
+    display: inline-block;
+    width: 100px;
+}
+
+.slider {
+    display: inline-block;
+    text-align: center;
+    width: 410px;
+}
