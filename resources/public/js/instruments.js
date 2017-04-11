@@ -131,6 +131,7 @@ function parse_response(element, response){
 			if(option.label != ""){
 				str += " " + option.label;
 			}
+			// TODO: When data input, select corresponding radiobutton/checkbox
 			if(option.specification){
 				var spec_name = [name, escape_string(option.value), "spec"].join("_");
 				str += "<br>" + option["specification-text"];

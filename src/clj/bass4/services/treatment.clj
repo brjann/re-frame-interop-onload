@@ -1,9 +1,7 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]))
-
-(defn unserialize-key [m k]
-  (merge m {k (into {} (php->clj (get m k)))}))
+            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.services.bass :refer [unserialize-key]]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Merge info from several ongoing treatments

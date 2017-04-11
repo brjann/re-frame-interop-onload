@@ -1,6 +1,7 @@
 (ns bass4.services.instruments
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]))
+            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.services.bass :refer [unserialize-key]]))
 
 (defn key-map-list
   ([s k]
@@ -14,7 +15,10 @@
 
 (defn item-elements
   [bass-element]
-  (select-keys bass-element [:item-id :name :text :response-id :sort-order :layout-id]))
+  (unserialize-key
+    (select-keys bass-element
+                 [:item-id :name :text :response-id :sort-order :layout-id :option-jumps])
+    :option-jumps))
 
 (defn make-option
   [value label specification-text specification-big?]
@@ -26,7 +30,7 @@
      :specification-big (if specification? specification-big? nil)}))
 
 (defn options
-  [{:keys [option-values option-labels option-specifications option-specifications-big]}]
+  [{:keys [option-values option-labels option-specifications option-specifications-big option-jumps]}]
   (filter (comp (complement empty?) :value)
           (map make-option
                (php->clj option-values)
@@ -86,7 +90,6 @@
        :layouts layouts})))
 
 (defn get-instrument [instrument-id]
-  (println instrument-id)
   (let [instrument (instrument-def instrument-id)]
     instrument))
 

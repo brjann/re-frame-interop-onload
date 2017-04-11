@@ -58,13 +58,13 @@ SELECT
   END
     AS `response-type`,
   CASE
-    WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
-      THEN OptionValues
-    ELSE NULL
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("RD", "CB")
+    THEN OptionValues
+  ELSE NULL
   END
     AS `option-values`,
   CASE
-  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("RD", "CB")
     THEN OptionLabels
   ELSE NULL
   END
@@ -87,6 +87,12 @@ SELECT
   ELSE NULL
   END
     AS `option-specifications-big`,
+  CASE
+  WHEN ResponseType IN ("RD", "CB")
+    THEN OptionJumps
+  ELSE NULL
+  END
+    AS `option-jumps`,
   CASE
   WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "VS")
     THEN VASMinLabel

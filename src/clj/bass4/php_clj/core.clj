@@ -81,7 +81,7 @@
   Example: (php->clj \"a:2:{i:0;i:1;i:1;i:2;}\")"
   [php]
   (if (empty? php)
-    []
+    nil
     (let [reader (r/buffered-input-stream php)]
       (reader->clj reader))))
 
