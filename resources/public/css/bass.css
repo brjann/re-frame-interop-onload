@@ -11,3 +11,9 @@ div#instrument .cell{
     vertical-align: top;
     padding: 5px 2px 5px 2px;
 }
+
+
+div#instrument .cell .option.single{
+    display: block;
+    padding: 3px;
+}

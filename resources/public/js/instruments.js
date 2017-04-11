@@ -35,7 +35,6 @@ function parse_cells(cells){
 	var stars = [];
 	var sum = 0;
 	$.each(cells, function(index, cell){
-		console.log(cell["cell-width"]);
 		if(cell["cell-width"] == "*"){
 			stars.push(index);
 		}
@@ -82,20 +81,23 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 			}
 			settings = settings + "width: " + width + "px;";
 		}
-		//return "<div style='display: inline-block; vertical-align: top;" + settings + "'>" + content + "</div>";
 		return "<div class = 'cell' style='" + settings + "'>" + content + "</div>";
 	});
 }
 
 function parse_response(element, response){
+	var break_separator = response["option-separator"].toLowerCase() == "<br>";
 	if(response["response-type"] == "RD"){
 		return $.map(response.options, function(option){
 			var str = "<input type = 'radio' name = '" + element["item-id"] + "' value = '" + escape_string(option.value) + "'>";
 			if(option.label != undefined){
 				str = str + " " + option.label;
 			}
+			if(break_separator){
+				str = "<div class='option single'>" + str + " </div>";
+			}
 			return str;
-		}).join((response["option-separator"] || "<br>") + "\n");
+		}).join((break_separator ? "" : "[TD]") + "\n");
 	}
 }
 
