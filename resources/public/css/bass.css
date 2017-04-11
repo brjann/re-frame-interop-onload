@@ -3,7 +3,8 @@
 }
 
 div#instrument {
-    font-size: 12px;
+    font-size: 11.2px;
+    font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
 div#instrument .cell{
