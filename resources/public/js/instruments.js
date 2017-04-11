@@ -112,11 +112,11 @@ function is_break_separator(response){
 }
 
 function parse_response(element, response){
-	var break_separator = is_break_separator(response);
 	var response_type = response["response-type"];
 	var name = "item-" + element["item-id"];
 
-	// Checkboxes and text
+	// TODO: Fix so second line of option label is not under input (e.g., MADRS)
+	// Radiobuttons and checkboxes
 	if(response_type == "RD" || response_type == "CB"){
 		return $.map(response.options, function(option){
 			var str;
@@ -131,11 +131,11 @@ function parse_response(element, response){
 			if(option.label != undefined){
 				str = str + " " + option.label;
 			}
-			if(break_separator){
+			if(is_break_separator(response)){
 				str = sprintf("<div class='option single'>%s</div>", str);
 			}
 			return str;
-		}).join((break_separator ? "" : "[TD]") + "\n");
+		}).join((is_break_separator(response) ? "" : "[TD]") + "\n");
 	}
 
 	// Small text

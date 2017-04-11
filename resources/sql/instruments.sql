@@ -70,11 +70,23 @@ SELECT
   END
     AS `option-labels`,
   CASE
-  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "RD" OR ResponseType = "CB")
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("RD", "CB")
     THEN OptionSeparator
   ELSE NULL
   END
     AS `option-separator`,
+  CASE
+    WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("RD", "CB")
+      THEN OptionSpecifications
+    ELSE NULL
+  END
+    AS `option-specifications`,
+  CASE
+  WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("RD", "CB")
+    THEN OptionBigSpecifications
+  ELSE NULL
+  END
+    AS `option-specifications-big`,
   CASE
   WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND (ResponseType = "VS")
     THEN VASMinLabel

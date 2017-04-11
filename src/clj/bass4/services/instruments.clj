@@ -16,10 +16,23 @@
   [bass-element]
   (select-keys bass-element [:item-id :name :text :response-id :sort-order :layout-id]))
 
+(defn make-option
+  [value label specification-label specification-big?]
+  (let [specification? (not (empty? specification-label))]
+    {:value value
+     :label label
+     :specification specification?
+     :specification-label (if specification? specification-label nil)
+     :specification-big (if specification? specification-big? nil)}))
 
 (defn options
-  [{:keys [option-values option-labels]}]
-  (filter (comp (complement empty?) :value) (map (fn [x y] {:value x :label y}) (php->clj option-values) (php->clj option-labels))))
+  [{:keys [option-values option-labels option-specifications option-specifications-big]}]
+  (filter (comp (complement empty?) :value)
+          (map make-option
+               (php->clj option-values)
+               (php->clj option-labels)
+               (php->clj option-specifications)
+               (php->clj option-specifications-big))))
 
 (defn cells
   [{:keys [cell-widths cell-alignments]}]
