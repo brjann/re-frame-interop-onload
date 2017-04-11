@@ -1,7 +1,11 @@
 (ns bass4.services.instruments
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
-            [bass4.services.bass :refer [unserialize-key]]))
+            [bass4.services.bass :refer [unserialize-key map-map]]))
+
+(defn keep-matching
+  [f m]
+  (zipmap (keep-indexed #(when (f %2) %1) m) (filter f m)))
 
 (defn key-map-list
   ([s k]
@@ -13,12 +17,34 @@
             k
             (assoc m (get (first s) k) (first s))))))
 
-(defn item-elements
+#_(defn item-elements
   [bass-element]
   (unserialize-key
     (select-keys bass-element
                  [:item-id :name :text :response-id :sort-order :layout-id :option-jumps])
-    :option-jumps))
+    :option-jumps
+    (fn [m] (keep-matching #(< 0 %) m))))
+
+(defn jumper-fn
+  [item-ids current-id]
+  (fn [jump-to]
+    (subvec item-ids
+            (+ 1 (first (keep-indexed #(when(= current-id %2) %1) item-ids)))
+            (first (keep-indexed #(when(= jump-to %2) %1) item-ids)))))
+
+(defn item-elements
+  [bass-elements]
+  (let [item-ids (mapv :item-id bass-elements)]
+    (map (fn [bass-element]
+           (let [current-id (:item-id bass-element)]
+             (unserialize-key
+               (select-keys bass-element
+                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps])
+               :option-jumps
+               (fn [m] (map-map
+                         (jumper-fn item-ids current-id)
+                         (keep-matching #(< 0 %) m))))))
+         bass-elements)))
 
 (defn make-option
   [value label specification-text specification-big?]
@@ -62,9 +88,10 @@
 (defn instrument-elements-and-responses
   [instrument-id]
   (let [bass-elements (db/get-instrument-items {:instrument-id instrument-id})
-        items         (map item-elements bass-elements)
+        items         #_(map item-elements bass-elements)
+                      (item-elements bass-elements)
         responses     (key-map-list
-                        (map response-def (filter :option-values bass-elements))
+                        (map response-def (filter :response-type bass-elements))
                         :response-id)
         layouts       (key-map-list
                         (map layout-def (filter :layout bass-elements))

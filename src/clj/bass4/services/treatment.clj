@@ -1,15 +1,10 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
-            [bass4.services.bass :refer [unserialize-key]]))
+            [bass4.services.bass :refer [unserialize-key map-map]]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Merge info from several ongoing treatments
-
-(defn map-map [f m]
-  (let [ks (keys m)
-        vs (vals m)]
-    (zipmap ks (mapv f vs))))
 
 (defn val-to-int [m k]
   (merge m {k (into {} (map-map #(if (integer? %) % (Integer/parseInt %))
