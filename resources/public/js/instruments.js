@@ -33,12 +33,20 @@ $(document).ready(function(){
 });
 
 function init_sliders(){
-	$(".slider")
-		.slider({min: 0, max: 401})
-		.bind('slidechange', function(event,ui){console.log(ui.value)})
-		.children(".ui-slider-handle").css('visibility', 'hidden');
-
+	$(".slider").each(function(){
+		$(this)
+			.slider({min: 0, max: 401})
+			.bind('slidechange', function(event,ui){slider_change(this, ui)})
+			.children(".ui-slider-handle").css('visibility', 'hidden');
+	})
 }
+
+function slider_change(slider, ui){
+	ui.handle.style.visibility = "visible";
+	var input = $("input[name=" + $(slider).data('input') + "]");
+	input.val(ui.value > 0 ? ui.value - 1 : 0);
+}
+
 
 function parse_cells(cells){
 	var stars = [];
@@ -138,7 +146,8 @@ function parse_response(element, response){
 
 	// VAS
 	if(response_type == "VS"){
-		return sprintf("<div class = 'slider' style = 'width:400px'></div><input type = 'hidden' name = '%s' value = '-1'>", name);
+		return sprintf("<div data-input = '%s' class = 'slider'></div>" +
+			"<input type = 'hidden' name = '%s' value = '-1'>", name, name);
 	}
 }
 
