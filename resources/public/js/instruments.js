@@ -39,9 +39,30 @@ $(document).ready(function(){
 					var element_html = parse_element_layout(element, layout, response_html, cells, is_break_separator(response));
 					row_div.append(element_html);
 				}
-			})
+			});
+			$(this).find(":radio").parent().addClass("has-option").click(function(event){
+				input = $(event.target).find(":input");
+				if (!input.prop("disabled")) {
+					input.prop("checked", true).click();
+					// $('form').trigger('checkform.areYouSure');
+				}
+			});
+			$(this).find(":checkbox").parent().addClass("has-option").click(function(event){
+				input = $(event.target).find(":input");
+				if (!input.prop("disabled")) {
+					input.click();
+					// $('form').trigger('checkform.areYouSure');
+				}
+			});
+
+			/*
+			$(this).find(":radio, :checkbox").parent()
+				.addClass('has-option')
+				.click();
+				*/
 		}
 	);
+
 	init_sliders();
 });
 

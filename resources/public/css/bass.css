@@ -55,3 +55,7 @@ div#instrument .slider-container {
     margin-bottom: 5px;
     vertical-align: middle;
 }
+
+div#instrument .has-option:hover{
+    background-color: #DDDDDD;
+}
