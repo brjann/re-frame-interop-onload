@@ -51,18 +51,26 @@ $(document).ready(function(){
 			$(this).find(":checkbox").parent()
 				.addClass("has-option")
 				.click(checkbox_parent_click);
-			$(this).find(":input").change(item_change);
+			$(this).find(":input").not(".spec").change(item_change);
+			$(this).find(":input.spec").change(spec_change);
 		}
 	);
 
 	init_sliders();
 });
 
+function spec_change(event){
+	$(event.target).prevAll(":input").first().click();
+}
+
 function radio_parent_click(event){
 	var input = $(event.target).find(":radio");
 	if (input.length && !input.prop("disabled")) {
-		input.prop("checked", true).click();
-		item_change.call(input.get(0));
+		input.click();
+
+		// TODO: The code in BASS is more complicated - why? Browser compatibility?
+		//input.prop("checked", true).click();
+		//item_change.call(input.get(0));
 		// $('form').trigger('checkform.areYouSure');
 	}
 }
@@ -225,12 +233,12 @@ function parse_response(element, response){
 
 				// Big specification
 				if(option["specification-big"]){
-					str += sprintf("<br><textarea cols='22' rows='3' name='%s'></textarea>", spec_name);
+					str += sprintf("<br><textarea class='spec' cols='22' rows='3' name='%s'></textarea>", spec_name);
 				}
 
 				// Small specification
 				else{
-					str += sprintf("&nbsp;<input type='text' name='%s'>", spec_name);
+					str += sprintf("&nbsp;<input type='text' class='spec' name='%s'>", spec_name);
 				}
 			}
 
