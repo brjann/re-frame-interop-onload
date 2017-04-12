@@ -1,4 +1,6 @@
 /*
+	FINISHED:
+		- Hovering
 	TODO:
 		- Page breaks
 		- Jumps
@@ -6,7 +8,7 @@
 		- Regexp
 		- Optional items
 		- Borders
-		- Hovering / completed
+		- Completed
 		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
 		- Are you sure
@@ -44,30 +46,34 @@ $(document).ready(function(){
 
 			$(this).find(":radio").parent()
 				.addClass("has-option")
-				.click(function(event){
-					var input = $(event.target).find(":radio");
-					if (input.length && !input.prop("disabled")) {
-						input.prop("checked", true).click();
-						item_change.call(input.get(0));
-						// $('form').trigger('checkform.areYouSure');
-					}
-				});
+				.click(radio_parent_click);
 
 			$(this).find(":checkbox").parent()
 				.addClass("has-option")
-				.click(function(event){
-					var input = $(event.target).find(":checkbox");
-					if (input.length && !input.prop("disabled")) {
-						input.click();
-						// $('form').trigger('checkform.areYouSure');
-					}
-				});
+				.click(checkbox_parent_click);
 			$(this).find(":input").change(item_change);
 		}
 	);
 
 	init_sliders();
 });
+
+function radio_parent_click(event){
+	var input = $(event.target).find(":radio");
+	if (input.length && !input.prop("disabled")) {
+		input.prop("checked", true).click();
+		item_change.call(input.get(0));
+		// $('form').trigger('checkform.areYouSure');
+	}
+}
+
+function checkbox_parent_click(event){
+	var input = $(event.target).find(":checkbox");
+	if (input.length && !input.prop("disabled")) {
+		input.click();
+		// $('form').trigger('checkform.areYouSure');
+	}
+}
 
 function item_change(){
 	var item_div = $(this).closest('.item-div');
