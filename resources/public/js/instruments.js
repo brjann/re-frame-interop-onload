@@ -9,6 +9,7 @@
 		- Hovering / completed
 		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
+		- Are you sure
  */
 
 $(document).ready(function(){
@@ -24,7 +25,7 @@ $(document).ready(function(){
 					cells = parse_cells(element.cells);
 				}
 				else{
-					var row_div = $("<div style='width: 700px'></div>").appendTo(table_div);
+					var row_div = $("<div class = 'item-div' style='width: 700px'></div>").appendTo(table_div);
 
 					var layout_obj = instrument.layouts[element["layout-id"]];
 					// TODO: This probably allows empty items to get a div
@@ -40,31 +41,57 @@ $(document).ready(function(){
 					row_div.append(element_html);
 				}
 			});
-			$(this).find(":radio").parent().addClass("has-option").click(function(event){
-				input = $(event.target).find(":input");
-				if (!input.prop("disabled")) {
-					input.prop("checked", true).click();
-					// $('form').trigger('checkform.areYouSure');
-				}
-			});
-			$(this).find(":checkbox").parent().addClass("has-option").click(function(event){
-				input = $(event.target).find(":input");
-				if (!input.prop("disabled")) {
-					input.click();
-					// $('form').trigger('checkform.areYouSure');
-				}
-			});
 
-			/*
-			$(this).find(":radio, :checkbox").parent()
-				.addClass('has-option')
-				.click();
-				*/
+			$(this).find(":radio").parent()
+				.addClass("has-option")
+				.click(function(event){
+					var input = $(event.target).find(":radio");
+					if (input.length && !input.prop("disabled")) {
+						input.prop("checked", true).click();
+						item_change.call(input.get(0));
+						// $('form').trigger('checkform.areYouSure');
+					}
+				});
+
+			$(this).find(":checkbox").parent()
+				.addClass("has-option")
+				.click(function(event){
+					var input = $(event.target).find(":checkbox");
+					if (input.length && !input.prop("disabled")) {
+						input.click();
+						// $('form').trigger('checkform.areYouSure');
+					}
+				});
+			$(this).find(":input").change(item_change);
 		}
 	);
 
 	init_sliders();
 });
+
+function item_change(){
+	var item_div = $(this).closest('.item-div');
+	var has_value;
+	if($(this).is(":checkbox, :radio")){
+		has_value = $(this).prop("checked");
+	}
+	else{
+		has_value = $(this).val() != "";
+	}
+	if($(this).is(":checkbox")){
+		item_div.data("has-data", (item_div.data("has-data") || 0) + (has_value ? 1 : -1));
+	}
+	else {
+		item_div.data("has-data", has_value);
+	}
+
+	if(item_div.data("has-data")){
+		item_div.addClass('has-data');
+	}
+	else{
+		item_div.removeClass('has-data');
+	}
+}
 
 function init_sliders(){
 	$(".slider").each(function(){
@@ -79,6 +106,7 @@ function slider_change(slider, ui){
 	ui.handle.style.visibility = "visible";
 	var input = $("input[name=" + $(slider).data('input') + "]");
 	input.val(ui.value > 0 ? ui.value - 1 : 0);
+	$(slider).closest('.item-div').addClass('has-data');
 }
 
 
@@ -104,9 +132,7 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 	layout = layout.replace(/\[(Q|T)]/, element.text);
 	layout = layout.replace(/\[X]/, response_html);
 	var curr_cell = 0;
-	console.log(layout);
 	var parts = layout.split("[TD");
-	console.log(parts);
 	return $.map(parts, function(content, index){
 		var colspan = 1;
 

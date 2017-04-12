@@ -59,3 +59,7 @@ div#instrument .slider-container {
 div#instrument .has-option:hover{
     background-color: #DDDDDD;
 }
+
+div#instrument .item-div.has-data{
+    background-color: #EEEEEE;
+}
