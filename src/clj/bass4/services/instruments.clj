@@ -74,7 +74,7 @@
   [bass-element]
   (-> bass-element
       ;; TODO: Only select relevant keys depending on response-type
-      (select-keys [:response-type :option-separator :vas-min-label :vas-max-label :range-min :range-max :range-error-text :regexp])
+      (select-keys [:response-type :option-separator :vas-min-label :vas-max-label :range-min :range-max :check-error-text :regexp])
       (assoc :options (options bass-element))
       (assoc :response-id (:item-id bass-element))))
 

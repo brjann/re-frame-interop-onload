@@ -4,6 +4,7 @@
 		- Jumps
 		- Min-max
 		- Regexp
+		- Optional items
 		- Borders
 		- Hovering / completed
 		- When data input into specification, select corresponding radiobutton/checkbox
@@ -82,14 +83,22 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 	layout = layout.replace(/\[(Q|T)]/, element.text);
 	layout = layout.replace(/\[X]/, response_html);
 	var curr_cell = 0;
+	console.log(layout);
 	var parts = layout.split("[TD");
+	console.log(parts);
 	return $.map(parts, function(content, index){
 		var colspan = 1;
 
-		// Parse [TD X] where X is colspan for this cell.
-		if(content.indexOf("]") >= 0 && (content.indexOf("[") == -1 || content.indexOf("[") < content.indexOf("]"))){
-			colspan = parseInt(content.substr(0, content.indexOf("]"))) || 1;
-			content = content.substr(content.indexOf("]") + 1, content.length);
+		// The first part cannot have closing ]
+		if(index > 0){
+			// Parse [TD X] where X is colspan for this cell.
+			// TODO: Clean this mess up. If index > 0 it should be safe to remove the first ]
+			//if(content.indexOf("]") >= 0 && (content.indexOf("[") == -1 || content.indexOf("[") < content.indexOf("]"))){
+				//if(content.substr(0, content.indexOf("]")).match(/([0-9]|\s)+/)) {
+					colspan = parseInt(content.substr(0, content.indexOf("]"))) || 1;
+					content = content.substr(content.indexOf("]") + 1, content.length);
+				//}
+			//}
 		}
 
 		// Stretch out last cell if option-separator is <br> or response isn't present
@@ -133,32 +142,46 @@ function parse_response(element, response){
 		return $.map(response.options, function(option, index){
 			var str;
 			var jumps = '';
+
 			// Check jumps
 			if(element["option-jumps"][index] != undefined){
 				jumps = element["option-jumps"][index].join();
 			}
 
+			// Radio button
 			if(response_type == "RD"){
 				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s'>", name, escape_string(option.value), jumps);
 			}
+
+			// Checkbox
 			else{
 				var cb_name = name + "_" + escape_string(option.value);
 				str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
-					"<input type = 'checkbox' name = '%s' value = '1'>", cb_name, cb_name);
+					"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s'>", cb_name, cb_name, jumps);
 			}
+
+			// Trailing option label
 			if(option.label != ""){
 				str += " " + option.label;
 			}
+
+			// Add specification
 			if(option.specification){
 				var spec_name = [name, escape_string(option.value), "spec"].join("_");
 				str += "<br>" + option["specification-text"];
+
+				// Big specification
 				if(option["specification-big"]){
 					str += sprintf("<br><textarea cols='22' rows='3' name='%s'></textarea>", spec_name);
 				}
+
+				// Small specification
 				else{
 					str += sprintf("&nbsp;<input type='text' name='%s'>", spec_name);
 				}
 			}
+
+			// If using break_separator enclose in div with class single
 			if(is_break_separator(response)){
 				str = sprintf("<div class='option single'>%s</div>", str);
 			}
@@ -166,14 +189,35 @@ function parse_response(element, response){
 		}).join((is_break_separator(response) ? "" : "[TD]") + "\n");
 	}
 
-	// Small text
-	if(response_type == "ST"){
-		return sprintf("<input type = 'text' name = '%s'>", name);
-	}
+	// Texts
+	if(response_type == "ST" || response_type == "TX"){
 
-	// Large text
-	if(response_type == "TX"){
-		return sprintf("<textarea cols='60' rows='5' name='%s'></textarea>", name);
+		// Min-max check
+		//TODO: This does not allow for only min or only max
+		var check = '';
+		if(response["range-min"] != null && response["range-min"] != null){
+			check = sprintf("data-range-min = '%d' data-range-max = '%d'", response["range-min"], response["range-max"]);
+		}
+
+		// Regexp check
+		else if(response.regexp != ""){
+			check = sprintf("data-regexp = '%s'", escapeHtml(response.regexp));
+		}
+
+		// Check failed text
+		if(check != "" && response["check-error-text"] != ""){
+			check += sprintf("data-check-error = '%s'", escape_string(response["check-error-text"]));
+		}
+
+		// Small text
+		if(response_type == "ST"){
+			return sprintf("<input type = 'text' name = '%s' %s>", name, check);
+		}
+
+		// Large text
+		else{
+			return sprintf("<textarea cols='60' rows='5' name='%s' %s></textarea>", name, check);
+		}
 	}
 
 	// VAS
@@ -191,4 +235,22 @@ function escape_string(str){
 		return "";
 	}
 	return JSON.stringify(str).slice(1, -1);
+}
+
+var entityMap = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#39;',
+	'/': '&#x2F;',
+	'`': '&#x60;',
+	'=': '&#x3D;',
+	'$': '&#36'
+};
+
+function escapeHtml (string) {
+	return String(string).replace(/[&<>"'`=\/$]/g, function (s) {
+		return entityMap[s];
+	});
 }

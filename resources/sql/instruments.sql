@@ -127,7 +127,7 @@ SELECT
     THEN RangeErrorText
   ELSE NULL
   END
-    AS `range-error-text`,
+    AS `check-error-text`,
 
   CASE
   WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0) AND ResponseType IN ("TX", "ST")
