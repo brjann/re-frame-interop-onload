@@ -17,14 +17,6 @@
             k
             (assoc m (get (first s) k) (first s))))))
 
-#_(defn item-elements
-  [bass-element]
-  (unserialize-key
-    (select-keys bass-element
-                 [:item-id :name :text :response-id :sort-order :layout-id :option-jumps])
-    :option-jumps
-    (fn [m] (keep-matching #(< 0 %) m))))
-
 (defn jumper-fn
   [item-ids current-id]
   (fn [jump-to]
@@ -66,7 +58,12 @@
 
 (defn cells
   [{:keys [cell-widths cell-alignments]}]
-  (map (fn [x y] {:cell-width x :cell-alignment y}) (mapv #(if (or (empty? %) (= "0" %)) "*" %) (php->clj cell-widths)) (php->clj cell-alignments)))
+  (map
+    (fn [x y] {:cell-width x :cell-alignment y})
+    (mapv
+      #(if (or (empty? %) (= "0" %)) "*" %)
+      (php->clj cell-widths))
+    (php->clj cell-alignments)))
 
 (defn table-elements
   [instrument-id]
@@ -77,7 +74,7 @@
   [bass-element]
   (-> bass-element
       ;; TODO: Only select relevant keys depending on response-type
-      (select-keys [:response-type :option-separator :vas-min-label :vas-max-label])
+      (select-keys [:response-type :option-separator :vas-min-label :vas-max-label :range-min :range-max :range-error-text :regexp])
       (assoc :options (options bass-element))
       (assoc :response-id (:item-id bass-element))))
 

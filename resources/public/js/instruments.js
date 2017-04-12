@@ -1,4 +1,15 @@
-var message_saving = false;
+/*
+	TODO:
+		- Page breaks
+		- Jumps
+		- Min-max
+		- Regexp
+		- Borders
+		- Hovering / completed
+		- When data input into specification, select corresponding radiobutton/checkbox
+		- Validation/submission
+ */
+
 $(document).ready(function(){
 	$("#instrument").each(
 		function(){
@@ -138,7 +149,6 @@ function parse_response(element, response){
 			if(option.label != ""){
 				str += " " + option.label;
 			}
-			// TODO: When data input, select corresponding radiobutton/checkbox
 			if(option.specification){
 				var spec_name = [name, escape_string(option.value), "spec"].join("_");
 				str += "<br>" + option["specification-text"];
