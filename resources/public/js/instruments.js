@@ -15,6 +15,7 @@ $(document).ready(function(){
 					var row_div = $("<div style='width: 700px'></div>").appendTo(table_div);
 
 					var layout_obj = instrument.layouts[element["layout-id"]];
+					// TODO: This probably allows empty items to get a div
 					var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
 					var response = instrument.responses[element["response-id"]];
 					var response_html;
@@ -89,7 +90,7 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 		var settings = '';
 		if(curr_cell < cells.length){
 
-			// Fetch alignment from first cell if colspan > 1
+			// Fetch alignment from first cell even if colspan > 1
 			if(cells[curr_cell]["cell-alignment"] != ""){
 				settings += "text-align: " + cells[curr_cell]["cell-alignment"] + ";"
 			}
@@ -116,12 +117,18 @@ function parse_response(element, response){
 	var name = "item-" + element["item-id"];
 
 	// TODO: Fix so second line of option label is not under input (e.g., MADRS)
-	// Radiobuttons and checkboxes
+	// Radio buttons and checkboxes
 	if(response_type == "RD" || response_type == "CB"){
-		return $.map(response.options, function(option){
+		return $.map(response.options, function(option, index){
 			var str;
+			var jumps = '';
+			// Check jumps
+			if(element["option-jumps"][index] != undefined){
+				jumps = element["option-jumps"][index].join();
+			}
+
 			if(response_type == "RD"){
-				str = sprintf("<input type = 'radio' name = '%s' value = '%s'>", name, escape_string(option.value));
+				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s'>", name, escape_string(option.value), jumps);
 			}
 			else{
 				var cb_name = name + "_" + escape_string(option.value);

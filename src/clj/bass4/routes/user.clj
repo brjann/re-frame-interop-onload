@@ -3,6 +3,7 @@
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
             [bass4.responses.auth :as auth-response]
+            [bass4.services.instruments :as instruments]
             [ring.util.http-response :as response]
             [ring.util.request :as request]
             [ring.util.codec :as codec]))
@@ -33,7 +34,7 @@
             (POST "/message-save-draft" [& params]
               (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
             (GET "/instrument/:instrument-id" [instrument-id &params]
-              (bass4.layout/render "instrument.html" {:instrument (bass4.services.instruments/get-instrument instrument-id)}))
+              (bass4.layout/render "instrument.html" {:instrument (instruments/get-instrument instrument-id)}))
             #_(GET "/" req (dashboard-page req))
             #_(GET "/profile" [errors :as req] (profile-page req errors))
             #_(GET "/modules" req (modules-page req))
