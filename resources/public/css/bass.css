@@ -63,3 +63,11 @@ div#instrument .has-option:hover{
 div#instrument .item-div.has-data{
     background-color: #EEEEEE;
 }
+
+div#instrument .item-div.jumped-over{
+    background-color: #BBBBBB;
+}
+
+div#instrument .item-div{
+    width: 700px;
+}

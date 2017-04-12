@@ -27,7 +27,11 @@ $(document).ready(function(){
 					cells = parse_cells(element.cells);
 				}
 				else{
-					var row_div = $("<div class = 'item-div' style='width: 700px'></div>").appendTo(table_div);
+					var item_attrs = '';
+					if(element["item-id"] != undefined){
+						item_attrs = "class = 'item-div' id = 'item-" + element['item-id'] + "'";
+					}
+					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(table_div);
 
 					var layout_obj = instrument.layouts[element["layout-id"]];
 					// TODO: This probably allows empty items to get a div
@@ -105,6 +109,52 @@ function item_change(){
 	else{
 		item_div.removeClass('has-data');
 	}
+
+	handle_jumps($(this), item_div, has_value);
+}
+
+function handle_jumps(input, item_div, has_value){
+	var jump_container = input.is(":radio") ? item_div : input;
+
+	// Remove old jumps
+	var affected = toggle_jumps(jump_container, -1);
+	jump_container.removeData("prev-jumps");
+
+	if(has_value && input.data('jumps')){
+		jump_container.data("prev-jumps", String(input.data("jumps")).split(','));
+		affected = affected.concat(toggle_jumps(jump_container, 1));
+	}
+
+	$.each(affected, function(index, jumpee){
+		if(jumpee.data('jump-stack') > 0){
+			jumpee.addClass('jumped-over');
+			/*
+			 This is to prevent disabled options from disabling other options.
+			 TODO: Consider if all values should be cleared and saved if things are enabled again
+			 */
+			// http://stackoverflow.com/questions/7055729/onchange-event-not-fire-when-the-change-come-from-another-function
+			jumpee.find(":radio:checked, :checkbox:checked").prop("checked", false).change();
+			jumpee.find(":input").prop("disabled", true);
+			jumpee.find(".slider").slider("disable");
+		}
+		else{
+			jumpee.removeClass('jumped-over');
+			jumpee.find(":input").prop("disabled", false);
+			jumpee.find(".slider").slider("enable");
+		}
+	})
+}
+
+function toggle_jumps(jump_container, mod){
+	var affected = [];
+	$.each(jump_container.data("prev-jumps"), function(index, item_id){
+		var jumpee = $("#item-" + item_id);
+		if(jumpee){
+			jumpee.data('jump-stack', (jumpee.data('jump-stack') || 0) + mod);
+			affected.push(jumpee);
+		}
+	});
+	return affected;
 }
 
 function init_sliders(){
