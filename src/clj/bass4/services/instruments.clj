@@ -106,7 +106,11 @@
   (let [instrument (db/get-instrument {:instrument-id instrument-id})
         {:keys [elements responses layouts]} (instrument-elements-and-responses instrument-id)]
     (when instrument
-      {:name (:name instrument)
+      (merge instrument
+             {:elements elements
+              :responses responses
+              :layouts layouts})
+      #_{:name (:name instrument)
        :abbreviation (:abbreviation instrument)
        :show-name (:show-name instrument)
        :elements elements

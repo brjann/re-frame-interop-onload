@@ -4,7 +4,20 @@
 SELECT
   FullName AS name,
   ShowName AS `show-name`,
-  Abbreviation
+  Abbreviation AS `abbreviation`,
+  CASE
+  WHEN (ClassicMode IS NULL)
+    THEN 1
+  ELSE ClassicMode
+  END
+    AS `classic`,
+  CASE
+  WHEN (ResponsiveMode IS NULL)
+    THEN 0
+  ELSE ResponsiveMode
+  END
+    AS `responsive`
+
 FROM c_instrument
 WHERE ObjectId = :instrument-id;
 

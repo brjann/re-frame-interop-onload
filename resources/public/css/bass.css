@@ -2,19 +2,19 @@
     display: none;
 }
 
-div#instrument {
+div#instrument.classic {
     font-size: 11.2px;
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
-div#instrument .cell{
+div#instrument .col{
     display: inline-block;
     vertical-align: top;
     padding: 5px 2px 5px 2px;
 }
 
 
-div#instrument .cell .option.single{
+div#instrument .col .option.line{
     display: block;
     padding: 5px 2px 5px 2px;
 }
