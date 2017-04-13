@@ -12,6 +12,9 @@
 		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
 		- Are you sure
+		- No distance between number and question in mobile mode
+		- Gray area does not cover whole cell in desktop mode
+		- Does non-responsive work?
  */
 
 
@@ -25,6 +28,9 @@ $(document).ready(function(){
 			var show_name = instrument["show-name"];
 			$("#instrument-show-name").text(show_name);
 
+			// TODO: Remove debug
+			$("#instrument-show-name").click(function(){toggle_size($("#instrument"))});
+
 			// TODO: There seems to be at least one too many div levels?
 			var instrument_div = $("#instrument-container");
 
@@ -35,6 +41,8 @@ $(document).ready(function(){
 			if(instrument.responsive){
 				$(this).addClass('responsive');
 			}
+
+			$(this).addClass('desktop');
 
 			var table_div = $("<div></div>").appendTo(instrument_div);
 			$.each(instrument.elements, function(index, element){
@@ -55,13 +63,19 @@ $(document).ready(function(){
 					var response = instrument.responses[element["response-id"]];
 					var response_html;
 					if(element["item-id"] != undefined){
-						response.responsive = instrument.responsive;
 						response_html = parse_response(element, response);
 					}
 					else response_html = "";
-					layout.responsive = instrument.responsive;
 
 					var element_html = parse_element_layout(element, layout, response_html, cells, is_break_separator(response));
+					console.log(element_html);
+					if(element_html.indexOf("<!--desktop-->") >= 0){
+						console.log("hej");
+						row_div.addClass('desktop-only');
+					}
+					else if(element_html.indexOf("<!--mobile-->") >= 0){
+						row_div.addClass('mobile-only');
+					}
 					row_div.append(element_html);
 				}
 			});
@@ -79,16 +93,17 @@ $(document).ready(function(){
 				.click(checkbox_parent_click);
 			$(this).find(":input").not(".spec").change(item_change);
 			$(this).find(":input.spec").change(spec_change);
+
+			$(this).find(".col:has(.cell)").addClass('cell');
+			//$(this).find(".col:has(.content)").addClass('content');
 		}
 	);
 
 	init_sliders();
 
 	$(window).resize(update_size);
-	update_size();
+	resize($('#instrument'));
 });
-
-
 
 function parse_cells(cells){
 	var stars = [];
@@ -108,8 +123,8 @@ function parse_cells(cells){
 
 // TODO: $('#div-id')[0].scrollWidth >  $('#div-id').innerWidth()
 function parse_element_layout(element, layout, response_html, cells, stretch_out){
-	layout = layout.replace(/\[N]/, element.name);
-	layout = layout.replace(/\[(Q|T)]/, element.text);
+	layout = layout.replace(/\[N]/, "<span class = 'content'>" + element.name + "</span>");
+	layout = layout.replace(/\[(Q|T)]/, "<span class = 'content'>" + element.text + "</span>");
 	layout = layout.replace(/\[X]/, response_html);
 	var curr_cell = 0;
 	var parts = layout.split("[TD");
@@ -133,13 +148,12 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 			colspan = cells.length - curr_cell;
 		}
 
-		// Set width and alignment of cell
-		var settings = '';
+		var data = '';
 		if(curr_cell < cells.length){
 
 			// Fetch alignment from first cell even if colspan > 1
 			if(cells[curr_cell]["cell-alignment"] != ""){
-				settings += "text-align: " + cells[curr_cell]["cell-alignment"] + ";"
+				data += "data-align = '" + cells[curr_cell]["cell-alignment"] + "'";
 			}
 
 			// Merge widths for all cells in colspan
@@ -149,10 +163,10 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 				curr_cell++;
 			}
 
-			settings += "width: " + width + "px;";
+			data += "data-width = '" + width + "px'";
 		}
-		return sprintf("<div class = 'col' style='%s'>%s</div>", settings, content);
-	});
+		return sprintf("<div class = 'col' %s>%s</div>", data, content);
+	}).join("");
 }
 
 function is_break_separator(response){
@@ -400,17 +414,46 @@ function toggle_jumps(jump_container, mod){
  * RESPONSIVE RESIZING
  ***********************/
 
-var currentwidth = null;
-function update_size() {
+function update_size(event) {
 	var width = $(window).width();
-	//width = 700;
-	if (width <= 750 && currentwidth != "small") {
-		$('.instrument').removeClass("big").addClass("small");
-		currentwidth = "small";
+	var instrument = $('#instrument');
+	if (width <= 750 && instrument.hasClass('desktop')) {
+		toggle_size(instrument);
 	}
 	else
-	if (width > 750 && currentwidth != "big") {
-		$('.instrument').removeClass("small").addClass("big");
-		currentwidth = "big";
+	if (width > 750 && instrument.hasClass('mobile')) {
+		toggle_size(instrument);
 	}
+}
+
+function resize(instrument){
+	if (instrument.hasClass('desktop')) {
+		$(".col").each(function(){
+			$(this).width($(this).data('width'));
+			$(this).css('text-align', $(this).data('align'));
+		})
+	}
+	else
+	if (instrument.hasClass('mobile')) {
+		$(".col").each(function(){
+			$(this).css('text-align', '');
+			if($(this).hasClass('.cell')){
+				$(this).width('100%');
+			}
+			else{
+				$(this).width('auto');
+			}
+		})
+	}
+}
+
+function toggle_size(instrument){
+	if (instrument.hasClass('desktop')) {
+		instrument.removeClass("desktop").addClass("mobile");
+	}
+	else
+	if (instrument.hasClass('mobile')) {
+		instrument.removeClass("mobile").addClass("desktop");
+	}
+	resize(instrument);
 }

@@ -2,23 +2,80 @@
     display: none;
 }
 
+
+/***********************
+    Instrument layout
+ ***********************/
+
 div#instrument.classic {
     font-size: 11.2px;
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
-
-div#instrument .col{
-    display: inline-block;
-    vertical-align: top;
-    padding: 5px 2px 5px 2px;
-}
-
 
 div#instrument .col .option.line{
     display: block;
     padding: 5px 2px 5px 2px;
 }
 
+div#instrument.desktop .item-div{
+    width: 700px;
+}
+
+
+div#instrument.desktop .col.cell .option-label{
+    display: none;
+}
+
+/*
+div#instrument.desktop .col{
+    display: inline-block;
+    padding: 5px 0px 5px 0px;
+}
+*/
+
+div#instrument .col{
+    display: inline-block;
+    vertical-align: top;
+    padding: 5px 0 5px 0;
+}
+
+div#instrument.desktop .mobile-only{
+    display: none;
+}
+
+div#instrument.mobile .desktop-only{
+    display: none;
+}
+
+div#instrument.mobile .item-div{
+    width: 100%;
+}
+
+div#instrument.mobile .col.cell, div#instrument .option.line{
+    display: block;
+    padding: 5px 2px 5px 2px;
+}
+
+/*
+div#instrument.mobile .col.cell .option.cell{
+    display: block;
+}
+
+div#instrument.mobile .col.content{
+    display: inline;
+    vertical-align: top;
+    padding: 5px 2px 5px 2px;
+}
+
+div#instrument.mobile .col.cell .option-label{
+    display: initial;
+}
+*/
+
+
+/***********************
+        Slider
+ ***********************/
 
 div#instrument .slider{
     display: inline-block;
@@ -56,6 +113,10 @@ div#instrument .slider-container {
     vertical-align: middle;
 }
 
+/***********************
+    Interactive colors
+ ***********************/
+
 div#instrument .has-option:hover{
     background-color: #DDDDDD;
 }
@@ -64,10 +125,6 @@ div#instrument .item-div.has-data{
     background-color: #EEEEEE;
 }
 
-div#instrument .item-div.jumped-over{
+div#instrument .item-div.jumped-over {
     background-color: #BBBBBB;
-}
-
-div#instrument .item-div{
-    width: 700px;
 }
