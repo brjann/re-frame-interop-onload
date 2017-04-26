@@ -78,6 +78,11 @@ $(document).ready(function(){
 					else if(element_html.indexOf("<!--mobile-->") >= 0){
 						row_div.addClass('mobile-only');
 					}
+					/*
+					if(!is_break_separator(response)){
+
+					}
+					*/
 					row_div.append(element_html);
 				}
 			});
@@ -125,8 +130,15 @@ function parse_cells(cells){
 
 // TODO: $('#div-id')[0].scrollWidth >  $('#div-id').innerWidth()
 function parse_element_layout(element, layout, response_html, cells, stretch_out){
+	/*
 	layout = layout.replace(/\[N]/, "<span class = 'content'>" + element.name + "</span>");
 	layout = layout.replace(/\[(Q|T)]/, "<span class = 'content'>" + element.text + "</span>");
+	layout = layout.replace(/\[X]/, response_html);
+	*/
+	// TODO: The name should be sent to the browser in unescaped format and be escaped here instead
+	layout = layout.replace(/\[N]/, element.name);
+	// TODO: The text should be sent to the browser in unescaped format and be escaped here instead
+	layout = layout.replace(/\[(Q|T)]/, element.text);
 	layout = layout.replace(/\[X]/, response_html);
 	var curr_cell = 0;
 	var parts = layout.split("[TD");
@@ -167,7 +179,8 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 
 			data += "data-width = '" + width + "px'";
 		}
-		return sprintf("<div class = 'col' %s>%s</div>", data, content);
+		// return sprintf("<div class = 'col' %s>%s</div>", data, content);
+		return sprintf("<div class = 'col' %s><div class='content'>%s</div></div>", data, content);
 	}).join("");
 }
 
