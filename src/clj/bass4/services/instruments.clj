@@ -24,7 +24,7 @@
             (+ 1 (first (keep-indexed #(when(= current-id %2) %1) item-ids)))
             (first (keep-indexed #(when(= jump-to %2) %1) item-ids)))))
 
-(defn item-elements
+(defn process-item-elements
   [bass-elements]
   (let [item-ids (mapv :item-id bass-elements)]
     (map (fn [bass-element]
@@ -82,26 +82,55 @@
   [bass-element]
   (select-keys bass-element [:layout-id :layout]))
 
+(defn layout-map
+  [elements]
+  (key-map-list
+    (map layout-def (filter :layout elements))
+    :layout-id))
+
 (defn instrument-elements-and-responses
   [instrument-id]
-  (let [bass-elements (db/get-instrument-items {:instrument-id instrument-id})
-        items         #_(map item-elements bass-elements)
-                      (item-elements bass-elements)
-        responses     (key-map-list
-                        (map response-def (filter :response-type bass-elements))
-                        :response-id)
-        layouts       (key-map-list
-                        (map layout-def (filter :layout bass-elements))
-                        :layout-id)
-        statics       (db/get-instrument-statics {:instrument-id instrument-id})
-        tables        (table-elements instrument-id)
-        elements      (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
+  (let [item-elements   (db/get-instrument-items {:instrument-id instrument-id})
+        items           (process-item-elements item-elements)
+        responses       (key-map-list
+                          (map response-def (filter :response-type item-elements))
+                          :response-id)
+        layouts         (layout-map item-elements)
+        static-elements (db/get-instrument-statics {:instrument-id instrument-id})
+        statics         (mapv #(select-keys % [:text :sort-order :name]) static-elements)
+        static-layouts  (layout-map static-elements)
+        tables          (table-elements instrument-id)
+        elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
     {:elements elements
      :responses responses
-     :layouts layouts}
+     :layouts layouts
+     :static-layouts static-layouts}
     ))
 
-(defn instrument-def
+#_(defn instrument-elements-and-responses
+    [instrument-id]
+    (let [items-elements  (db/get-instrument-items {:instrument-id instrument-id})
+          items           (item-elements items-elements)
+          responses       (key-map-list
+                            (map response-def (filter :response-type items-elements))
+                            :response-id)
+          layouts         (key-map-list
+                            (map layout-def (filter :layout items-elements))
+                            :layout-id)
+          static-elements (db/get-instrument-statics {:instrument-id instrument-id})
+          statics         (mapv #(select-keys % [:text :sort-order :name]) static-elements)
+          static-layouts  (key-map-list
+                            (map layout-def (filter :layout static-elements))
+                            :layout-id)
+          tables          (table-elements instrument-id)
+          elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
+      {:elements elements
+       :responses responses
+       :layouts layouts
+       :static-layouts static-layouts}
+      ))
+
+#_(defn instrument-def
   [instrument-id]
   (let [instrument (db/get-instrument {:instrument-id instrument-id})
         {:keys [elements responses layouts]} (instrument-elements-and-responses instrument-id)]
@@ -109,34 +138,18 @@
       (merge instrument
              {:elements elements
               :responses responses
-              :layouts layouts})
-      #_{:name (:name instrument)
-       :abbreviation (:abbreviation instrument)
-       :show-name (:show-name instrument)
-       :elements elements
-       :responses responses
-       :layouts layouts})))
+              :layouts layouts}))))
+
+(defn instrument-def
+  [instrument-id]
+  (when-let [instrument (db/get-instrument {:instrument-id instrument-id})]
+    (merge instrument
+           (instrument-elements-and-responses instrument-id))))
 
 (defn get-instrument [instrument-id]
   (let [instrument (instrument-def instrument-id)]
     instrument))
 
 
-#_(defn get-instrument-bar
-    [instrument-id]
-    {:title "PHQ-9" :abbreviation "PHQ-9"
-     :items [
-             {:text "<em>Detta frågeformulär är viktigt för att kunna ge dig bästa möjliga hälsovård. Dina svar kommer att underlätta förståelsen för problem som du kan  ha.</em>"}
-             {:name "1" :text "Lite intresse eller glädje i att göra saker" :response {:type "RD"
-                                                                                       :options [
-                                                                                                 {:value 0 :label "0. Inte alls"}
-                                                                                                 {:value 1 :label "1. Flera dagar"}
-                                                                                                 {:value 2 :label "2. Mer än hälften av dagarna"}
-                                                                                                 {:value 3 :label "3. Nästan varje dag"}]}}
-             {:name "2" :text "Känt dig nedstämd, deprimerad, eller känt att framtiden ser hopplös ut." :response {:type "RD"
-                                                                                                                   :options [
-                                                                                                                             {:value 0 :label "0. Inte alls"}
-                                                                                                                             {:value 1 :label "1. Flera dagar"}
-                                                                                                                             {:value 2 :label "2. Mer än hälften av dagarna"}
-                                                                                                                             {:value 3 :label "3. Nästan varje dag"}]}}]})
+
 

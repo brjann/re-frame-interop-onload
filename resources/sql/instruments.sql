@@ -26,6 +26,22 @@ WHERE ObjectId = :instrument-id;
 -- :doc
 SELECT
   text,
+  name,
+
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN ObjectId
+  ELSE LayoutElement
+  END
+    AS `layout-id`,
+
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN LayoutString
+  ELSE NULL
+  END
+    AS `layout`,
+
   SortOrder AS `sort-order`
 FROM c_instrumentstaticelement
 WHERE ParentId = :instrument-id;

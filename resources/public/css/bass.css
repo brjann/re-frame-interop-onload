@@ -17,8 +17,13 @@ div#instrument .col .option.line{
     padding: 5px 2px 5px 2px;
 }
 
+/*
+    Wider than 700 px to cover for the 2px side-padding per column
+    800px = 25 cols
+    Alternative would be to wrap all texts in spans with side-padding
+ */
 div#instrument.desktop .item-div{
-    width: 700px;
+    width: 800px;
 }
 
 
@@ -33,10 +38,14 @@ div#instrument.desktop .col{
 }
 */
 
+
+/*
+    Tried 2px side-padding
+ */
 div#instrument .col{
     display: inline-block;
     vertical-align: top;
-    padding: 5px 0 5px 0;
+    padding: 5px 2px 5px 2px;
 }
 
 div#instrument.desktop .mobile-only{
@@ -47,8 +56,13 @@ div#instrument.mobile .desktop-only{
     display: none;
 }
 
+/*
+    An experiment to add max-width here to not
+    stretch out in the 800px "padding-compensating" width
+ */
 div#instrument.mobile .item-div{
     width: 100%;
+    max-width: 700px;
 }
 
 div#instrument.mobile .col.cell, div#instrument .option.line{
