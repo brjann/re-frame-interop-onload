@@ -97,7 +97,7 @@
                           :response-id)
         layouts         (layout-map item-elements)
         static-elements (db/get-instrument-statics {:instrument-id instrument-id})
-        statics         (mapv #(select-keys % [:text :sort-order :name]) static-elements)
+        statics         (mapv #(select-keys % [:text :name :layout-id :sort-order]) static-elements)
         static-layouts  (layout-map static-elements)
         tables          (table-elements instrument-id)
         elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]

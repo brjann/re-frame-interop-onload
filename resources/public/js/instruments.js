@@ -52,12 +52,16 @@ $(document).ready(function(){
 				}
 				else{
 					var item_attrs = '';
+					var layout_obj;
 					if(element["item-id"] != undefined){
+						layout_obj = instrument.layouts[element["layout-id"]];
 						item_attrs = "class = 'item-div' id = 'item-" + element['item-id'] + "'";
+					}
+					else{
+						layout_obj = instrument["static-layouts"][element["layout-id"]];
 					}
 					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(table_div);
 
-					var layout_obj = instrument.layouts[element["layout-id"]];
 					// TODO: This probably allows empty items to get a div
 					var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
 					var response = instrument.responses[element["response-id"]];
@@ -68,9 +72,7 @@ $(document).ready(function(){
 					else response_html = "";
 
 					var element_html = parse_element_layout(element, layout, response_html, cells, is_break_separator(response));
-					console.log(element_html);
 					if(element_html.indexOf("<!--desktop-->") >= 0){
-						console.log("hej");
 						row_div.addClass('desktop-only');
 					}
 					else if(element_html.indexOf("<!--mobile-->") >= 0){
