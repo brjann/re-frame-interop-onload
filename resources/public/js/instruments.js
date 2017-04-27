@@ -42,6 +42,10 @@ $(document).ready(function(){
 				$(this).addClass('responsive');
 			}
 
+			if(instrument['first-col-is-number']){
+				$(this).addClass('first-col-is-number');
+			}
+
 			//$(this).addClass('desktop');
 
 			var table_div = $('<div class="table"></div>').appendTo(instrument_div);
@@ -102,7 +106,7 @@ $(document).ready(function(){
 			$(this).find(":input.spec").change(spec_change);
 
 			$(this).find(".col:has(.cell)").addClass('cell');
-			if($(this).hasClass('responsive') && $(this).hasClass('first-col-number')){
+			if($(this).hasClass('responsive') && $(this).hasClass('first-col-is-number')){
 				$(this).find('.table').children().each(handle_first_col);
 			}
 		}
