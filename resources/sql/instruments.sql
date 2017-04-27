@@ -75,8 +75,8 @@ WHERE ParentId = :instrument-id;
 -- :name get-instrument-tables :? :*
 -- :doc
 SELECT
-  CellWidths as `cell-widths`,
-  CellAlignments as `cell-alignments`,
+  CellWidths as `col-widths`,
+  CellAlignments as `col-alignments`,
   PageBreak `page-break`,
   SortOrder AS `sort-order`
 FROM c_instrumenttableelement

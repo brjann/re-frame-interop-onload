@@ -56,18 +56,18 @@
                (php->clj option-specifications)
                (php->clj option-specifications-big))))
 
-(defn cells
-  [{:keys [cell-widths cell-alignments]}]
+(defn cols
+  [{:keys [col-widths col-alignments]}]
   (map
-    (fn [x y] {:cell-width x :cell-alignment y})
+    (fn [x y] {:col-width x :col-alignment y})
     (mapv
       #(if (or (empty? %) (= "0" %)) "*" %)
-      (php->clj cell-widths))
-    (php->clj cell-alignments)))
+      (php->clj col-widths))
+    (php->clj col-alignments)))
 
 (defn table-elements
   [instrument-id]
-  (map (fn [x] {:page-break (:page-break x) :cells (cells x) :sort-order (:sort-order x)})
+  (map (fn [x] {:page-break (:page-break x) :cols (cols x) :sort-order (:sort-order x)})
        (db/get-instrument-tables {:instrument-id instrument-id})))
 
 (defn response-def

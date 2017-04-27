@@ -24,7 +24,7 @@
 $(document).ready(function(){
 	$("#instrument").each(
 		function(){
-			var cells = [];
+			var cols = [];
 			var show_name = instrument["show-name"];
 			$("#instrument-show-name").text(show_name);
 
@@ -54,9 +54,8 @@ $(document).ready(function(){
 					page_div = $('<div class="page"></div>').appendTo(instrument_div);
 				}
 
-				// TODO: Rename all uses of "cell" to "col"
-				if(element.cells != undefined){
-					cells = parse_cells(element.cells);
+				if(element.cols != undefined){
+					cols = parse_cols(element.cols);
 				}
 				else{
 					var item_attrs = '';
@@ -81,7 +80,7 @@ $(document).ready(function(){
 					}
 					else response_html = "";
 
-					var element_html = parse_element_layout(element, layout, response_html, cells, is_break_separator(response));
+					var element_html = parse_element_layout(element, layout, response_html, cols, is_break_separator(response));
 					if(element_html.indexOf("<!--desktop-->") >= 0){
 						row_div.addClass('desktop-only');
 					}
@@ -140,24 +139,24 @@ function handle_first_col(index, div){
 	}
 }
 
-function parse_cells(cells){
+function parse_cols(cols){
 	var stars = [];
 	var sum = 0;
-	$.each(cells, function(index, cell){
-		if(cell["cell-width"] == "*"){
+	$.each(cols, function(index, col){
+		if(col["col-width"] == "*"){
 			stars.push(index);
 		}
-		else sum = sum + parseInt(cell["cell-width"]);
+		else sum = sum + parseInt(col["col-width"]);
 	});
 	var star_width = (700 - sum) / stars.length;
-	$.each(stars, function(x, cell_index){
-		cells[cell_index]["cell-width"] = star_width;
+	$.each(stars, function(x, col_index){
+		cols[col_index]["col-width"] = star_width;
 	});
-	return cells;
+	return cols;
 }
 
 // TODO: $('#div-id')[0].scrollWidth >  $('#div-id').innerWidth()
-function parse_element_layout(element, layout, response_html, cells, stretch_out){
+function parse_element_layout(element, layout, response_html, cols, stretch_out){
 	/*
 	layout = layout.replace(/\[N]/, "<span class = 'content'>" + element.name + "</span>");
 	layout = layout.replace(/\[(Q|T)]/, "<span class = 'content'>" + element.text + "</span>");
@@ -168,14 +167,14 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 	// TODO: The text should be sent to the browser in unescaped format and be escaped here instead
 	layout = layout.replace(/\[(Q|T)]/, element.text);
 	layout = layout.replace(/\[X]/, response_html);
-	var curr_cell = 0;
+	var curr_col = 0;
 	var parts = layout.split("[TD");
 	return $.map(parts, function(content, index){
 		var colspan = 1;
 
 		// The first part cannot have closing ]
 		if(index > 0){
-			// Parse [TD X] where X is colspan for this cell.
+			// Parse [TD X] where X is colspan for this col.
 			// TODO: Clean this mess up. If index > 0 it should be safe to remove the first ]
 			//if(content.indexOf("]") >= 0 && (content.indexOf("[") == -1 || content.indexOf("[") < content.indexOf("]"))){
 			//if(content.substr(0, content.indexOf("]")).match(/([0-9]|\s)+/)) {
@@ -183,24 +182,24 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 			content = content.substr(content.indexOf("]") + 1, content.length);
 		}
 
-		// Stretch out last cell if option-separator is <br> or response isn't present
-		if(index == parts.length - 1 && curr_cell < cells.length - 1 && stretch_out){
-			colspan = cells.length - curr_cell;
+		// Stretch out last col if option-separator is <br> or response isn't present
+		if(index == parts.length - 1 && curr_col < cols.length - 1 && stretch_out){
+			colspan = cols.length - curr_col;
 		}
 
 		var data = '';
-		if(curr_cell < cells.length){
+		if(curr_col < cols.length){
 
-			// Fetch alignment from first cell even if colspan > 1
-			if(cells[curr_cell]["cell-alignment"] != ""){
-				data += "data-align = '" + cells[curr_cell]["cell-alignment"] + "'";
+			// Fetch alignment from first col even if colspan > 1
+			if(cols[curr_col]["col-alignment"] != ""){
+				data += "data-align = '" + cols[curr_col]["col-alignment"] + "'";
 			}
 
-			// Merge widths for all cells in colspan
+			// Merge widths for all cols in colspan
 			var width = 0;
 			for(var i = 0; i < colspan; i++){
-				width += parseInt(cells[curr_cell] ? cells[curr_cell]["cell-width"] : 0);
-				curr_cell++;
+				width += parseInt(cols[curr_col] ? cols[curr_col]["col-width"] : 0);
+				curr_col++;
 			}
 
 			data += "data-width = '" + width + "px'";
