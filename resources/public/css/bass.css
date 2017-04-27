@@ -12,6 +12,11 @@ div#instrument.classic {
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
+div#instrument .instrument-show-name {
+    width: 100%;
+    text-align: center;
+}
+
 /*
 
 This style is defined below - seems redundant
@@ -85,8 +90,13 @@ div#instrument.desktop div.navigator div.right{
     text-align: right;
 }
 
-div#instrument.responsive.mobile div.navigator div.left button{
+div#instrument div.navigator div.left button{
     margin-right: 10px;
+}
+
+div#instrument div.navigator button{
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 /*

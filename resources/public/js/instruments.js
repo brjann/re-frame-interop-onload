@@ -26,10 +26,10 @@ $(document).ready(function(){
 		function(){
 			var cols = [];
 			var show_name = instrument["show-name"];
-			$("#instrument-show-name").text(show_name);
+			$(this).find(".instrument-show-name").html('<h2>' + show_name + '</h2>');
 
 			// TODO: Remove debug
-			$("#instrument-show-name").click(function(){toggle_size($("#instrument"))});
+			$(this).find(".instrument-show-name").click(function(){toggle_size($("#instrument"))});
 
 			var instrument_div = $("#instrument-elements");
 
@@ -49,7 +49,7 @@ $(document).ready(function(){
 			var page_div;
 			$.each(instrument.elements, function(index, element){
 
-				if(element['page-break'] == 1 || index == 1){
+				if(element['page-break'] == 1 || index == 0){
 					page_div = $('<div class="page"></div>').appendTo(instrument_div);
 				}
 
