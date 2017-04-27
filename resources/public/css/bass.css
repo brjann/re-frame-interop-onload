@@ -21,7 +21,7 @@ div#instrument.desktop > div{
     width: 700px;
 }
 
-div#instrument.desktop.responsive .col.cell .option-label{
+div#instrument.responsive.desktop .col.cell .option-label{
     display: none;
 }
 
@@ -39,19 +39,19 @@ div#instrument .col{
     padding: 5px 0 5px 0;
 }
 
-div#instrument.desktop .mobile-only{
+div#instrument.responsive.desktop .mobile-only{
     display: none;
 }
 
-div#instrument.mobile .desktop-only{
+div#instrument.responsive.mobile .desktop-only{
     display: none;
 }
 
-div#instrument.mobile .item-div{
+div#instrument.responsive.mobile .item-div{
     width: 100%;
 }
 
-div#instrument.mobile .col.cell, div#instrument .option.line{
+div#instrument.responsive.mobile .col.cell, div#instrument .option.line{
     display: block;
     padding: 5px 2px 5px 2px;
 }
