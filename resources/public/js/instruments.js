@@ -128,9 +128,14 @@ function init_instrument(instrument){
 	}
 
 	var pages = instrument.find('.page');
+
+	pages.each(init_pages(pages));
+}
+
+function init_pages(pages){
 	var page_count = pages.length;
 
-	pages.each(function(index){
+	return function(index){
 		var page = $(this);
 
 		var left_div = $('<div class="left"></div>');
@@ -170,7 +175,7 @@ function init_instrument(instrument){
 		if(index > 0){
 			page.hide();
 		}
-	})
+	}
 }
 
 function button(text){
