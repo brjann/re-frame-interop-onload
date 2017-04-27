@@ -42,7 +42,7 @@ $(document).ready(function(){
 				$(this).addClass('responsive');
 			}
 
-			$(this).addClass('desktop');
+			//$(this).addClass('desktop');
 
 			var table_div = $("<div></div>").appendTo(instrument_div);
 			$.each(instrument.elements, function(index, element){
@@ -497,11 +497,11 @@ function set_desktop(instrument){
 
 function toggle_size(instrument){
 	if (instrument.hasClass('desktop')) {
-		instrument.removeClass("desktop").addClass("mobile");
+		set_mobile(instrument)
 	}
 	else
 	if (instrument.hasClass('mobile')) {
-		instrument.removeClass("mobile").addClass("desktop");
+		set_desktop(instrument)
 	}
 	paint_instrument(instrument);
 }
