@@ -17,7 +17,7 @@ div#instrument .col .option.line{
     padding: 5px 2px 5px 2px;
 }
 
-div#instrument.desktop .item-div{
+div#instrument.desktop > div{
     width: 700px;
 }
 

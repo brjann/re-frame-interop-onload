@@ -109,7 +109,10 @@ $(document).ready(function(){
 	init_sliders();
 
 	$(window).resize(resize);
-	update_size($('#instrument'));
+	update_size(true);
+	/*
+	paint_instrument($('#instrument'));
+	*/
 });
 
 function parse_cells(cells){
@@ -428,20 +431,42 @@ function toggle_jumps(jump_container, mod){
 /***********************
  * RESPONSIVE RESIZING
  ***********************/
-
+/*
 function resize(event) {
 	var width = $(window).width();
 	var instrument = $('#instrument.responsive');
-	if (width <= 750 && instrument.hasClass('desktop')) {
+	if (width <= 800 && instrument.hasClass('desktop')) {
 		toggle_size(instrument);
 	}
 	else
-	if (width > 750 && instrument.hasClass('mobile')) {
+	if (width > 800 && instrument.hasClass('mobile')) {
 		toggle_size(instrument);
 	}
 }
+*/
 
-function update_size(instrument){
+function resize(event) {
+	update_size();
+}
+
+function update_size(force_paint){
+	if(force_paint == undefined){
+		force_paint = false;
+	}
+	var width = $(window).width();
+	var instrument = $('#instrument');
+	if (width <= 800 && instrument.hasClass('responsive') && (instrument.hasClass('desktop') || force_paint)) {
+		set_mobile(instrument);
+		paint_instrument(instrument);
+	}
+	else
+	if ((width > 800 || !instrument.hasClass('responsive')) && (instrument.hasClass('mobile') || force_paint)) {
+		set_desktop(instrument);
+		paint_instrument(instrument);
+	}
+}
+
+function paint_instrument(instrument){
 	if (instrument.hasClass('desktop')) {
 		$(".col").each(function(){
 			$(this).width($(this).data('width'));
@@ -478,5 +503,5 @@ function toggle_size(instrument){
 	if (instrument.hasClass('mobile')) {
 		instrument.removeClass("mobile").addClass("desktop");
 	}
-	update_size(instrument);
+	paint_instrument(instrument);
 }
