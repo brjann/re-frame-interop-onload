@@ -5,8 +5,8 @@
 		- Jumps
 		- Borders
 		- No distance between number and question in mobile mode
-	TODO:
 		- Page breaks
+	TODO:
 		- Min-max
 		- Regexp
 		- Optional items

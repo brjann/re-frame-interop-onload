@@ -74,12 +74,19 @@ div#instrument div.navigate{
 */
 
 div#instrument div.navigator div{
-    width: 50%;
     display: inline-block;
 }
 
-div#instrument div.navigator div.right{
+div#instrument.desktop div.navigator div{
+    width: 50%;
+}
+
+div#instrument.desktop div.navigator div.right{
     text-align: right;
+}
+
+div#instrument.responsive.mobile div.navigator div.left button{
+    margin-right: 10px;
 }
 
 /*
