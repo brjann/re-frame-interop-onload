@@ -66,6 +66,7 @@ SELECT
   END
     AS `border-top-width`,
 
+  PageBreak AS `page-break`,
   SortOrder AS `sort-order`
 
 FROM c_instrumentstaticelement
@@ -221,6 +222,7 @@ SELECT
   END
     AS `vas-max-label`,
 
+  PageBreak AS `page-break`,
   SortOrder AS `sort-order`
 FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;

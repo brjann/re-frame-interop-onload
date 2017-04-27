@@ -1,18 +1,18 @@
 /*
 	FINISHED:
 		- Hovering
-		 - Jumps
-		 - Borders
+		- Completed
+		- Jumps
+		- Borders
+		- No distance between number and question in mobile mode
 	TODO:
 		- Page breaks
 		- Min-max
 		- Regexp
 		- Optional items
-		- Completed
 		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
 		- Are you sure
-		- No distance between number and question in mobile mode
 		- Gray area does not cover whole cell in desktop mode
 		- Does non-responsive work?
  */
@@ -47,10 +47,14 @@ $(document).ready(function(){
 			}
 
 			//$(this).addClass('desktop');
-
-			var table_div = $('<div class="table"></div>').appendTo(instrument_div);
+			var page_div;
 			$.each(instrument.elements, function(index, element){
-				// Rename all uses of "cell" to "col"
+
+				if(element['page-break'] == 1 || index == 1){
+					page_div = $('<div class="page"></div>').appendTo(instrument_div);
+				}
+
+				// TODO: Rename all uses of "cell" to "col"
 				if(element.cells != undefined){
 					cells = parse_cells(element.cells);
 				}
@@ -64,7 +68,7 @@ $(document).ready(function(){
 					else{
 						layout_obj = instrument["static-layouts"][element["layout-id"]];
 					}
-					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(table_div);
+					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(page_div);
 
 					// TODO: This probably allows empty items to get a div
 					// var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
@@ -113,7 +117,7 @@ $(document).ready(function(){
 
 			$(this).find(".col:has(.cell)").addClass('cell');
 			if($(this).hasClass('responsive') && $(this).hasClass('first-col-is-number')){
-				$(this).find('.table').children().each(handle_first_col);
+				$(this).find('.page').children().each(handle_first_col);
 			}
 		}
 	);

@@ -31,7 +31,7 @@
            (let [current-id (:item-id bass-element)]
              (unserialize-key
                (select-keys bass-element
-                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps])
+                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps :page-break])
                :option-jumps
                (fn [m] (map-map
                          (jumper-fn item-ids current-id)
@@ -97,7 +97,7 @@
                           :response-id)
         layouts         (layout-map item-elements)
         static-elements (db/get-instrument-statics {:instrument-id instrument-id})
-        statics         (mapv #(select-keys % [:text :name :layout-id :sort-order]) static-elements)
+        statics         (mapv #(select-keys % [:text :name :layout-id :sort-order :page-break]) static-elements)
         static-layouts  (layout-map static-elements)
         tables          (table-elements instrument-id)
         elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
