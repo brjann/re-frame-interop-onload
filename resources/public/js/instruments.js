@@ -6,15 +6,17 @@
 		- Borders
 		- No distance between number and question in mobile mode
 		- Page breaks
-	TODO:
+		- When data input into specification, select corresponding radiobutton/checkbox
+	   - Non-responsive instrument
+
+	TODO: Fix these issues
 		- Min-max
+		- Handling of "empty" items
 		- Regexp
 		- Optional items
-		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
 		- Are you sure
 		- Gray area does not cover whole cell in desktop mode
-		- Does non-responsive work?
  */
 
 
