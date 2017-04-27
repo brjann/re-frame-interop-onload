@@ -32,7 +32,7 @@ $(document).ready(function(){
 			$("#instrument-show-name").click(function(){toggle_size($("#instrument"))});
 
 			// TODO: There seems to be at least one too many div levels?
-			var instrument_div = $("#instrument-container");
+			var instrument_div = $("#instrument-elements");
 
 			if(instrument.classic){
 				$(this).addClass('classic');
@@ -44,7 +44,7 @@ $(document).ready(function(){
 
 			//$(this).addClass('desktop');
 
-			var table_div = $("<div></div>").appendTo(instrument_div);
+			var table_div = $('<div class="table"></div>').appendTo(instrument_div);
 			$.each(instrument.elements, function(index, element){
 				// Rename all uses of "cell" to "col"
 				if(element.cells != undefined){
@@ -102,7 +102,9 @@ $(document).ready(function(){
 			$(this).find(":input.spec").change(spec_change);
 
 			$(this).find(".col:has(.cell)").addClass('cell');
-			//$(this).find(".col:has(.content)").addClass('content');
+			if($(this).hasClass('responsive') && $(this).hasClass('first-col-number')){
+				$(this).find('.table').children().each(handle_first_col);
+			}
 		}
 	);
 
@@ -110,10 +112,19 @@ $(document).ready(function(){
 
 	$(window).resize(resize);
 	update_size(true);
-	/*
-	paint_instrument($('#instrument'));
-	*/
 });
+
+function handle_first_col(index, div){
+	div = $(div);
+	if(div.children().length > 1){
+		var first = div.children().first();
+		first.addClass('desktop-only');
+		var contents = $('<span>' + first.children().first().html() + ' </span>');
+		contents.removeClass('content').addClass('mobile-only');
+		var second = div.children().eq(1).children().first();
+		second.prepend(contents);
+	}
+}
 
 function parse_cells(cells){
 	var stars = [];
@@ -156,8 +167,6 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 			//if(content.substr(0, content.indexOf("]")).match(/([0-9]|\s)+/)) {
 			colspan = parseInt(content.substr(0, content.indexOf("]"))) || 1;
 			content = content.substr(content.indexOf("]") + 1, content.length);
-			//}
-			//}
 		}
 
 		// Stretch out last cell if option-separator is <br> or response isn't present
@@ -182,7 +191,6 @@ function parse_element_layout(element, layout, response_html, cells, stretch_out
 
 			data += "data-width = '" + width + "px'";
 		}
-		// return sprintf("<div class = 'col' %s>%s</div>", data, content);
 		return sprintf("<div class = 'col' %s><div class='content'>%s</div></div>", data, content);
 	}).join("");
 }
