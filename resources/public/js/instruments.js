@@ -103,13 +103,27 @@ $(document).ready(function(){
 
 			$(this).find(".col:has(.cell)").addClass('cell');
 			//$(this).find(".col:has(.content)").addClass('content');
-		}
-	);
+
+			if(!$(this).hasClass('responsive')){
+				$(this).addClass('desktop');
+				update_size($(this));
+			}
+			else{
+				resize();
+			}
+			/*
+			if($(this).hasClass('responsive')){
+				update_size();
+			}
+			else{
+				resize($(this));
+			}
+			*/
+		});
 
 	init_sliders();
 
-	$(window).resize(update_size);
-	resize($('#instrument'));
+	$(window).resize(resize);
 });
 
 function parse_cells(cells){
@@ -219,7 +233,8 @@ function parse_response(element, response){
 			// Trailing option label
 			if(option.label != ""){
 				// TODO: The labels should be sent to the browser in unescaped format and be escaped here instead
-				str += sprintf("<span class='option-label %s'>&nbsp;%s</span>", is_break_separator(response) ? '' : 'mobile', option.label);
+				// str += sprintf("<span class='option-label %s'>&nbsp;%s</span>", is_break_separator(response) ? '' : 'mobile', option.label);
+				str += sprintf("<span class='option-label'>&nbsp;%s</span>", option.label);
 			}
 
 			// Add specification
@@ -429,19 +444,21 @@ function toggle_jumps(jump_container, mod){
  * RESPONSIVE RESIZING
  ***********************/
 
-function update_size(event) {
+function resize(event) {
 	var width = $(window).width();
 	var instrument = $('#instrument');
-	if (width <= 750 && instrument.hasClass('desktop')) {
-		toggle_size(instrument);
-	}
-	else
-	if (width > 750 && instrument.hasClass('mobile')) {
-		toggle_size(instrument);
+	if(instrument) {
+		console.log("xxx");
+		if (width <= 750 && !instrument.hasClass('mobile')) {
+			toggle_size(instrument);
+		}
+		else if (width > 750 && !instrument.hasClass('desktop')) {
+			toggle_size(instrument);
+		}
 	}
 }
 
-function resize(instrument){
+function update_size(instrument){
 	if (instrument.hasClass('desktop')) {
 		$(".col").each(function(){
 			$(this).width($(this).data('width'));
@@ -470,5 +487,5 @@ function toggle_size(instrument){
 	if (instrument.hasClass('mobile')) {
 		instrument.removeClass("mobile").addClass("desktop");
 	}
-	resize(instrument);
+	update_size(instrument);
 }

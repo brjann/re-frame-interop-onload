@@ -21,8 +21,7 @@ div#instrument.desktop .item-div{
     width: 700px;
 }
 
-
-div#instrument.desktop .col.cell .option-label{
+div#instrument.desktop.responsive .col.cell .option-label{
     display: none;
 }
 
