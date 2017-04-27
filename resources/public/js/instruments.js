@@ -1,13 +1,13 @@
 /*
 	FINISHED:
 		- Hovering
+		 - Jumps
+		 - Borders
 	TODO:
 		- Page breaks
-		- Jumps
 		- Min-max
 		- Regexp
 		- Optional items
-		- Borders
 		- Completed
 		- When data input into specification, select corresponding radiobutton/checkbox
 		- Validation/submission
@@ -67,7 +67,9 @@ $(document).ready(function(){
 					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(table_div);
 
 					// TODO: This probably allows empty items to get a div
-					var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
+					// var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
+					var layout = layout_obj.layout || "[T]";
+
 					var response = instrument.responses[element["response-id"]];
 					var response_html;
 					if(element["item-id"] != undefined){
@@ -82,11 +84,15 @@ $(document).ready(function(){
 					else if(element_html.indexOf("<!--mobile-->") >= 0){
 						row_div.addClass('mobile-only');
 					}
-					/*
-					if(!is_break_separator(response)){
 
+					if(layout_obj['border-bottom-width'] > 0){
+						row_div.css('border-bottom-style', 'solid').css('border-bottom-width', layout_obj['border-bottom-width']);
 					}
-					*/
+
+					if(layout_obj['border-top-width'] > 0){
+						row_div.css('border-bottom-style', 'solid').css('border-top-width', layout_obj['border-top-width']);
+					}
+
 					row_div.append(element_html);
 				}
 			});

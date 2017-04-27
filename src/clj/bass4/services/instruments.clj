@@ -80,7 +80,7 @@
 
 (defn layout-def
   [bass-element]
-  (select-keys bass-element [:layout-id :layout]))
+  (select-keys bass-element [:layout-id :layout :border-bottom-width :border-top-width]))
 
 (defn layout-map
   [elements]

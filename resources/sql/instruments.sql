@@ -52,7 +52,22 @@ SELECT
   END
     AS `layout`,
 
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN BorderBottomWidth
+  ELSE NULL
+  END
+    AS `border-bottom-width`,
+
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN BorderTopWidth
+  ELSE NULL
+  END
+    AS `border-top-width`,
+
   SortOrder AS `sort-order`
+
 FROM c_instrumentstaticelement
 WHERE ParentId = :instrument-id;
 
@@ -73,6 +88,7 @@ SELECT
   name,
   text,
 
+  -- LAYOUT --
   CASE
     WHEN (LayoutElement IS NULL OR LayoutElement = 0)
       THEN ObjectId
@@ -86,6 +102,20 @@ SELECT
     ELSE NULL
   END
     AS `layout`,
+
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN BorderBottomWidth
+  ELSE NULL
+  END
+    AS `border-bottom-width`,
+
+  CASE
+  WHEN (LayoutElement IS NULL OR LayoutElement = 0)
+    THEN BorderTopWidth
+  ELSE NULL
+  END
+    AS `border-top-width`,
 
   CASE
   WHEN (ResponseDefElement IS NULL OR ResponseDefElement = 0)
