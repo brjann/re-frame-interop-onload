@@ -12,10 +12,15 @@ div#instrument.classic {
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
 
+/*
+
+This style is defined below - seems redundant
+
 div#instrument .col .option.line{
     display: block;
     padding: 5px 2px 5px 2px;
 }
+*/
 
 div#instrument.desktop > div{
     width: 700px;
@@ -46,6 +51,7 @@ div#instrument.responsive.desktop .mobile-only{
 div#instrument.responsive.mobile .desktop-only{
     display: none;
 }
+
 
 div#instrument.responsive.mobile .item-div{
     width: 100%;
