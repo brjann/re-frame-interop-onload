@@ -67,6 +67,20 @@ div#instrument .content{
     padding-right: 2px;
 }
 
+/*
+div#instrument div.navigate{
+    width: 100%;
+}
+*/
+
+div#instrument div.navigator div{
+    width: 50%;
+    display: inline-block;
+}
+
+div#instrument div.navigator div.right{
+    text-align: right;
+}
 
 /*
 div#instrument.mobile .col.cell .option.cell{

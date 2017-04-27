@@ -7,6 +7,8 @@
 (def tempura-dictionary
   {:en
    {:submit "Submit"
+    :next "Next"
+    :previous "Previous"
     :username "Username"
     :password "Password"
     :continue "Continue"

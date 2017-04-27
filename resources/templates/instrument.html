@@ -3,7 +3,7 @@
 
 <div class="container">
     <div id = "instrument">
-        <h2 id = "instrument-show-name"></h2>
+        <h2 id="instrument-show-name"></h2>
         <div id="instrument-elements"></div>
     </div>
 </div>
@@ -13,6 +13,9 @@
 {% block page-scripts %}
 <script src="/js/instruments.js"></script>
 <script type="text/javascript">
-	var instrument = {{instrument|json|safe}};
+	 var instrument = {{instrument|json|safe}};
+     var text_submit = "{%tr submit %}";
+	 var text_next = "{%tr next %}";
+	 var text_previous = "{%tr previous %}";
 </script>
 {% endblock %}

@@ -124,12 +124,61 @@ function init_instrument(instrument){
 
 	instrument.find(".col:has(.cell)").addClass('cell');
 	if(instrument.hasClass('responsive') && instrument.hasClass('first-col-is-number')){
-		instrument.find('.page').children().each(handle_first_col);
+		instrument.find('.page').children().not('.navigator').each(handle_first_col);
 	}
+
+	var pages = instrument.find('.page');
+	var page_count = pages.length;
+
+	pages.each(function(index){
+		var page = $(this);
+
+		var left_div = $('<div class="left"></div>');
+		var right_div = $('<div class="right"></div>');
+		var navigate_div = $('<div></div>');
+
+		// Next or submit
+		var right_button;
+		if(index == page_count - 1){
+			right_button = button(text_submit);
+		}
+		else{
+			right_button = button(text_next);
+			right_button.click(function(){
+				page.hide();
+				pages.eq(index + 1).show();
+			});
+		}
+		right_div.append(right_button);
+
+		// Previous or nothing
+		if(index > 0){
+			var left_button = button(text_previous);
+			left_button.click(function(){
+				page.hide();
+				pages.eq(index - 1).show();
+			});
+			left_div.append(left_button);
+		}
+
+		navigate_div.append(left_div, right_div);
+		navigate_div.addClass('navigator');
+
+		page.prepend(navigate_div);
+		page.append(navigate_div.clone(true));
+
+		if(index > 0){
+			page.hide();
+		}
+	})
 }
 
-function handle_first_col(index, div){
-	div = $(div);
+function button(text){
+	return $('<button type="button" class="btn btn-primary">' + text + '</button>');
+}
+
+function handle_first_col(index){
+	var div = $(this);
 	if(div.children().length > 1){
 		var first = div.children().first();
 		first.addClass('desktop-only');

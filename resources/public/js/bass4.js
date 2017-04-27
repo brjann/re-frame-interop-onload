@@ -26,7 +26,7 @@ var re_auth_hidden_form;
 function post_error(form){
 	return function(jqXHR, textStatus, errorThrown) {
 		if(jqXHR.status == 0){
-			alert(str_offline_warning);
+			alert(text_offline_warning);
 			return false;
 		}
 
