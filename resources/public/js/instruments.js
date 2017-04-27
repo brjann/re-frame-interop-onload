@@ -31,7 +31,6 @@ $(document).ready(function(){
 			// TODO: Remove debug
 			$("#instrument-show-name").click(function(){toggle_size($("#instrument"))});
 
-			// TODO: There seems to be at least one too many div levels?
 			var instrument_div = $("#instrument-elements");
 
 			if(instrument.classic){
@@ -99,25 +98,7 @@ $(document).ready(function(){
 					row_div.append(element_html);
 				}
 			});
-
-			// TODO: Or by adding click to children...
-			$(this).find(".option-label")
-				.click(function(){$(this).parent().click()});
-
-			$(this).find(":radio").parent()
-				.addClass("has-option")
-				.click(radio_parent_click);
-
-			$(this).find(":checkbox").parent()
-				.addClass("has-option")
-				.click(checkbox_parent_click);
-			$(this).find(":input").not(".spec").change(item_change);
-			$(this).find(":input.spec").change(spec_change);
-
-			$(this).find(".col:has(.cell)").addClass('cell');
-			if($(this).hasClass('responsive') && $(this).hasClass('first-col-is-number')){
-				$(this).find('.page').children().each(handle_first_col);
-			}
+			init_instrument($(this));
 		}
 	);
 
@@ -126,6 +107,26 @@ $(document).ready(function(){
 	$(window).resize(resize);
 	update_size(true);
 });
+
+function init_instrument(instrument){
+	instrument.find(".option-label")
+		.click(function(){instrument.parent().click()});
+
+	instrument.find(":radio").parent()
+		.addClass("has-option")
+		.click(radio_parent_click);
+
+	instrument.find(":checkbox").parent()
+		.addClass("has-option")
+		.click(checkbox_parent_click);
+	instrument.find(":input").not(".spec").change(item_change);
+	instrument.find(":input.spec").change(spec_change);
+
+	instrument.find(".col:has(.cell)").addClass('cell');
+	if(instrument.hasClass('responsive') && instrument.hasClass('first-col-is-number')){
+		instrument.find('.page').children().each(handle_first_col);
+	}
+}
 
 function handle_first_col(index, div){
 	div = $(div);
@@ -361,10 +362,6 @@ function radio_parent_click(event){
 	var input = $(event.target).find(":radio");
 	if (input.length && !input.prop("disabled")) {
 		input.click();
-
-		// TODO: The code in BASS is more complicated - why? Browser compatibility?
-		//input.prop("checked", true).click();
-		//item_change.call(input.get(0));
 		// $('form').trigger('checkform.areYouSure');
 	}
 }
