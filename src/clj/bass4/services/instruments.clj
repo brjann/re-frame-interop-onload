@@ -31,7 +31,7 @@
            (let [current-id (:item-id bass-element)]
              (unserialize-key
                (select-keys bass-element
-                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps :page-break])
+                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps :page-break :optional])
                :option-jumps
                (fn [m] (map-map
                          (jumper-fn item-ids current-id)

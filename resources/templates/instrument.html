@@ -13,9 +13,14 @@
 {% block page-scripts %}
 <script src="/js/instruments.js"></script>
 <script type="text/javascript">
-	 var instrument = {{instrument|json|safe}};
-     var text_submit = "{%tr submit %}";
-	 var text_next = "{%tr next %}";
-	 var text_previous = "{%tr previous %}";
+   var instrument = {{instrument|json|safe}};
+   var text_submit = "{%tr submit %}";
+   var text_next = "{%tr next %}";
+   var text_previous = "{%tr previous %}";
+   var text_range_error = "{%tr instrument/range-error %}";
+   var text_range_error_max = "{%tr instrument/range-error-max %}";
+   var text_range_error_min = "{%tr instrument/range-error-max %}";
+   var text_pattern_error = "{%tr instrument/pattern-error %}";
+   var text_must_answer = "{%tr instrument/must-answer %}";
 </script>
 {% endblock %}

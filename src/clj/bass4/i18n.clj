@@ -14,6 +14,12 @@
     :continue "Continue"
     :logout "Logout"
     :offline-warning "You seem to be offline. Please make sure you are online before posting."
+    :instrument
+            {:range-error "You must supply a value between %s and %s."
+             :range-error-max "You must supply a value of %s or more"
+             :range-error-min "You must supply a value of %s or less"
+             :pattern-error "Your answer does not match the specified pattern"
+             :must-answer "You must provide an answer."}
     :date-time
              {:datetime-ns "yyyy-MM-dd HH:mm"}
     :messages

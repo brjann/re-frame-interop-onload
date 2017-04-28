@@ -12,6 +12,7 @@
 	TODO: Fix these issues
 		- Min-max
 		- Handling of "empty" items
+		- Cannot click text labels of radiobuttons and checkboxes
 		- Regexp
 		- Optional items
 		- Validation/submission
@@ -78,6 +79,8 @@ $(document).ready(function(){
 					var response_html;
 					if(element["item-id"] != undefined){
 						response_html = parse_response(element, response);
+						row_div.data('response-type', response['response-type']);
+						row_div.data('optional', element['optional']);
 					}
 					else response_html = "";
 
@@ -341,7 +344,7 @@ function parse_response(element, response){
 
 		// Check failed text
 		if(check != "" && response["check-error-text"] != ""){
-			check += sprintf("data-check-error = '%s'", escape_html(response["check-error-text"]));
+			check += sprintf("data-error-text = '%s'", escape_html(response["check-error-text"]));
 		}
 
 		// Small text
@@ -405,6 +408,84 @@ function slider_change(slider, ui){
 	$(slider).closest('.item-div').addClass('has-data');
 }
 
+
+
+/***********************
+ *   FORM VALIDATION
+ ***********************/
+
+function validate_item(item_div){
+	// TODO: Jumped over
+
+	//var item_div = $(this);
+	switch (item_div.data('response-type')){
+		case 'TX':
+		case 'ST':
+			return validate_text(item_div);
+			break;
+		case 'RD':
+		case 'CB':
+			return validate_radio(item_div);
+	}
+}
+
+function validate_radio(item_div) {
+
+}
+
+function validate_text(item_div) {
+	var input = item_div.find(':input');
+	var min = input.data('range-min');
+	var max = input.data('range-max');
+	var regexp = input.data('regexp');
+
+	// Trim whitespace from value
+	var val = input.val().trim();
+
+	// Optional items can have empty value
+	if(val.length == 0 && item_div.data('optional') == 1){
+		// TODO: Remove
+		return 'OK optional';
+	}
+
+	if(val.length == 0){
+		return text_must_answer;
+	}
+
+	var error_text = input.data('error-text');
+
+	if(min != undefined || max != undefined){
+		var int_val = parseInt(val);
+
+		if(min != undefined && max != undefined){
+			if(int_val > max || int_val < min || isNaN(int_val)){
+				console.log(3);
+				return error_text || sprintf(text_range_error, min, max);
+			}
+		}
+
+		else if(min != undefined){
+			if(int_val < min || isNaN(int_val)){
+				return error_text || sprintf(text_range_error_min, min);
+			}
+		}
+
+		else if(int_val > max || isNaN(int_val)){
+			return error_text || sprintf(text_range_error_max, max);
+		}
+	}
+
+	if(regexp != undefined){
+		var pattern = new RegExp(regexp);
+		if(!pattern.test(val)){
+			return error_text || text_pattern_error;
+		}
+	}
+
+	// TODO: Remove
+	return 'OK';
+
+}
 
 /***********************
  * INTERACTIVE BEHAVIOR
