@@ -12,7 +12,6 @@
 	TODO: Fix these issues
 		- Min-max
 		- Handling of "empty" items
-		- Cannot click text labels of radiobuttons and checkboxes
 		- Regexp
 		- Optional items
 		- Validation/submission
@@ -118,13 +117,11 @@ function init_instrument(instrument){
 	instrument.find(".option-label")
 		.click(function(){instrument.parent().click()});
 
-	instrument.find(":radio").parent()
+	// TODO: These two are identical now - should be combined into one implementation
+	instrument.find(":radio, :checkbox").parent()
 		.addClass("has-option")
-		.click(radio_parent_click);
+		.click(checker_parent_click);
 
-	instrument.find(":checkbox").parent()
-		.addClass("has-option")
-		.click(checkbox_parent_click);
 	instrument.find(":input").not(".spec").change(item_change);
 	instrument.find(":input.spec").change(spec_change);
 
@@ -134,7 +131,6 @@ function init_instrument(instrument){
 	}
 
 	var pages = instrument.find('.page');
-
 	pages.each(init_pages(pages));
 }
 
@@ -525,16 +521,18 @@ function spec_change(event){
 	}
 }
 
-function radio_parent_click(event){
-	var input = $(event.target).find(":radio");
-	if (input.length && !input.prop("disabled")) {
-		input.click();
-		// $('form').trigger('checkform.areYouSure');
+function checker_parent_click(event){
+	var target = $(event.target);
+	var parent;
+	if(target.hasClass('has-option')){
+		parent = target;
 	}
-}
+	else if(target.hasClass('option-label')){
+		parent = target.parent();
+	}
+	if(parent == undefined) return;
 
-function checkbox_parent_click(event){
-	var input = $(event.target).find(":checkbox");
+	var input = parent.find(":radio, :checkbox");
 	if (input.length && !input.prop("disabled")) {
 		input.click();
 		// $('form').trigger('checkform.areYouSure');
