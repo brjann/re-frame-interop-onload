@@ -13,12 +13,12 @@
 		- Min-max
 		- Handling of "empty" items
 		- Cannot click text labels of radiobuttons and checkboxes
-		- Specifying an answer unclicks checkbox
 		- Regexp
 		- Optional items
 		- Validation/submission
 		- Are you sure
 		- Gray area does not cover whole cell in desktop mode
+		- What happens if multiple radiobuttons have spec and there are values in all specs
  */
 
 
@@ -519,7 +519,10 @@ function validate_text(item_div) {
  ***********************/
 
 function spec_change(event){
-	$(event.target).prevAll(":input").first().click();
+	var checker = $(event.target).prevAll(":input").first();
+	if($(event.target).val().length && !checker.is(':checked')){
+		checker.click();
+	}
 }
 
 function radio_parent_click(event){
