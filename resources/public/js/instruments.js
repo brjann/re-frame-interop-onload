@@ -13,6 +13,7 @@
 		- Min-max
 		- Handling of "empty" items
 		- Cannot click text labels of radiobuttons and checkboxes
+		- Specifying an answer unclicks checkbox
 		- Regexp
 		- Optional items
 		- Validation/submission
@@ -290,14 +291,14 @@ function parse_response(element, response){
 
 			// Radio button
 			if(response_type == "RD"){
-				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s'>", name, escape_html(option.value), jumps);
+				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s' data-has-specification = '%s'>", name, escape_html(option.value), jumps, option.specification);
 			}
 
 			// Checkbox
 			else{
 				var cb_name = name + "_" + escape_html(option.value);
 				str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
-					"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s'>", cb_name, cb_name, jumps);
+					"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, cb_name, jumps, option.specification);
 			}
 
 			// Trailing option label
@@ -430,7 +431,32 @@ function validate_item(item_div){
 }
 
 function validate_radio(item_div) {
+	var checked = item_div.find(":input:checked");
+	if(checked.length == 0){
 
+		// Optional items can nothing selected
+		if (item_div.data('optional')) {
+			// TODO: Remove
+			return 'OK optional';
+		}
+
+		return text_must_answer;
+	}
+
+	// Look for missing specifications
+	checked.each(function(){
+		var input = $(this);
+		if(input.data('has-specification')){
+			var spec_name = input.prop('name') + '_spec';
+			var spec_input = item_div.find('[name="' + spec_name + '"]');
+			if(spec_input.val().trim().length == 0){
+				input.parents('div.option').addClass('alert-danger');
+			}
+		}
+	});
+
+	// TODO: Remove
+	return 'OK';
 }
 
 function validate_text(item_div) {
@@ -442,15 +468,17 @@ function validate_text(item_div) {
 	// Trim whitespace from value
 	var val = input.val().trim();
 
-	// Optional items can have empty value
-	if(val.length == 0 && item_div.data('optional') == 1){
-		// TODO: Remove
-		return 'OK optional';
-	}
+	if (val.length == 0) {
 
-	if(val.length == 0){
+		// Optional items can have empty value
+		if (item_div.data('optional')) {
+			// TODO: Remove
+			return 'OK optional';
+		}
+
 		return text_must_answer;
 	}
+
 
 	var error_text = input.data('error-text');
 
@@ -484,7 +512,6 @@ function validate_text(item_div) {
 
 	// TODO: Remove
 	return 'OK';
-
 }
 
 /***********************
