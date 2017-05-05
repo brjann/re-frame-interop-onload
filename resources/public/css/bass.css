@@ -171,3 +171,8 @@ div#instrument .item-div.has-data{
 div#instrument .item-div.jumped-over {
     background-color: #BBBBBB;
 }
+
+div#instrument .item-error {
+    margin-bottom: 0;
+    margin-top: 16px;
+}

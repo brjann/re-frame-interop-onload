@@ -20,7 +20,8 @@
              :range-error-min "You must supply a value of %s or less."
              :pattern-error "Your answer does not match the specified pattern."
              :must-answer "You must provide an answer."
-             :must-specify "You must provide a specification to your answer."}
+             :must-specify-1 "You must provide a specification to your answer."
+             :must-specify-m "You must provide specifications to your answers."}
     :date-time
              {:datetime-ns "yyyy-MM-dd HH:mm"}
     :messages

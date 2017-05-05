@@ -172,6 +172,10 @@
 ;; wrap-1 BEFORE calling handler arg
 ;; wrap-1 AFTER calling handler arg
 ;; wrap-2 AFTER calling handler arg
+;;
+;; i.e., wrapper 2 modifies the session going into wrapper 1,
+;; and wrapper 1 modifies the response returned to wrapper 2.
+
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       wrap-db

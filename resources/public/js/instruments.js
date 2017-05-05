@@ -107,7 +107,7 @@ $(document).ready(function(){
 		}
 	);
 
-	init_sliders();
+	sliders_init();
 
 	$(window).resize(resize);
 	update_size(true);
@@ -389,7 +389,7 @@ function escape_html (string) {
  ***********************/
 
 
-function init_sliders(){
+function sliders_init(){
 	$(".slider").each(function(){
 		$(this)
 			.slider({min: 0, max: 401})
@@ -406,13 +406,37 @@ function slider_change(slider, ui){
 }
 
 
-
 /***********************
  *   FORM VALIDATION
  ***********************/
 
+function validate_page(page_div){
+	page_div.find('div.option').removeClass('alert-warning');
+	page_div.find('.item-error').remove();
+	var error_items = $(page_div.find('.item-div').filter(
+		function(){
+			var item_div = $(this);
+			var error = validate_item(item_div) || '';
+			if(error.length > 0 && error.substring(0, 2) != 'OK'){
+				item_set_error(item_div, error);
+				return true;
+			}
+			return false;
+		}));
+}
+
+function item_set_error(item_div, error){
+	item_div.removeClass('has-data');
+	var error_div = $(sprintf('<div class = "item-error alert alert-danger" role="alert">%s</div>', error));
+	item_div.before(error_div);
+}
+
 function validate_item(item_div){
-	// TODO: Jumped over
+
+	if(item_div.hasClass('jumped-over')){
+		// TODO: Remove
+		return 'OK jumped over'
+	}
 
 	//var item_div = $(this);
 	switch (item_div.data('response-type')){
@@ -422,38 +446,12 @@ function validate_item(item_div){
 			break;
 		case 'RD':
 		case 'CB':
-			return validate_radio(item_div);
+			return validate_checker(item_div);
+		case 'VS':
+			return validate_vas(item_div);
 	}
 }
 
-function validate_radio(item_div) {
-	var checked = item_div.find(":input:checked");
-	if(checked.length == 0){
-
-		// Optional items can nothing selected
-		if (item_div.data('optional')) {
-			// TODO: Remove
-			return 'OK optional';
-		}
-
-		return text_must_answer;
-	}
-
-	// Look for missing specifications
-	checked.each(function(){
-		var input = $(this);
-		if(input.data('has-specification')){
-			var spec_name = input.prop('name') + '_spec';
-			var spec_input = item_div.find('[name="' + spec_name + '"]');
-			if(spec_input.val().trim().length == 0){
-				input.parents('div.option').addClass('alert-danger');
-			}
-		}
-	});
-
-	// TODO: Remove
-	return 'OK';
-}
 
 function validate_text(item_div) {
 	var input = item_div.find(':input');
@@ -510,13 +508,80 @@ function validate_text(item_div) {
 	return 'OK';
 }
 
+function validate_checker(item_div) {
+	var checked = item_div.find(":input:checked");
+	if(checked.length == 0){
+
+		// Optional items can nothing selected
+		if (item_div.data('optional')) {
+			// TODO: Remove
+			return 'OK optional';
+		}
+
+		return text_must_answer;
+	}
+
+	// Look for missing specifications
+	var missing_specs = checked.filter(spec_checker(item_div));
+
+	if(missing_specs.length){
+		missing_specs.each(function(){
+			spec_set_alert($(this));
+		});
+		return (missing_specs.length > 1) ? text_specification_missing_m : text_specification_missing_1;
+	}
+
+	// TODO: Remove
+	return 'OK';
+}
+
+function spec_set_alert(spec){
+	spec.parents('div.option').addClass('alert-warning');
+}
+
+function spec_reset_alert(spec){
+	spec.parents('div.option').removeClass('alert-warning');
+}
+
+function spec_checker(item_div){
+	return function(){
+		var input = $(this);
+		if(input.data('has-specification')){
+			var spec_name = input.prop('name') + '_spec';
+			var spec_input = item_div.find('[name="' + spec_name + '"]');
+			if(spec_input.val().trim().length == 0){
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
+function validate_vas(item_div){
+	var input = item_div.find(':input');
+	var val = input.val();
+	if(val.length == 0 || val == -1){
+		if (item_div.data('optional')) {
+			// TODO: Remove
+			return 'OK optional';
+		}
+
+		return text_must_answer;
+	}
+
+	// TODO: Remove
+	return 'OK';
+}
+
 /***********************
  * INTERACTIVE BEHAVIOR
  ***********************/
 
 function spec_change(event){
-	var checker = $(event.target).prevAll(":input").first();
-	if($(event.target).val().length && !checker.is(':checked')){
+	var spec = $(event.target);
+	spec_reset_alert(spec);
+	var checker = spec.prevAll(":input").first();
+	if(spec.val().length && !checker.is(':checked')){
 		checker.click();
 	}
 }
