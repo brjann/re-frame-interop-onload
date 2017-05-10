@@ -8,16 +8,18 @@
 		- Page breaks
 		- When data input into specification, select corresponding radiobutton/checkbox
 	   - Non-responsive instrument
+		- Min-max
+	 	- Regexp
+	 	- Optional items
 
 	TODO: Fix these issues
-		- Min-max
 		- Handling of "empty" items
-		- Regexp
-		- Optional items
 		- Validation/submission
+		- Scroll to top error item
 		- Are you sure
 		- Gray area does not cover whole cell in desktop mode
 		- What happens if multiple radiobuttons have spec and there are values in all specs
+		- Find better feedback color than green
  */
 
 
@@ -117,13 +119,15 @@ function init_instrument(instrument){
 	instrument.find(".option-label")
 		.click(function(){instrument.parent().click()});
 
-	// TODO: These two are identical now - should be combined into one implementation
 	instrument.find(":radio, :checkbox").parent()
 		.addClass("has-option")
 		.click(checker_parent_click);
 
-	instrument.find(":input").not(".spec").change(item_change);
+	// Activate item change also for specs to add has-data class
+	// after specification missing error
+	//instrument.find(":input").not(".spec").change(item_change);
 	instrument.find(":input.spec").change(spec_change);
+	instrument.find(":input").change(item_change);
 
 	instrument.find(".col:has(.cell)").addClass('cell');
 	if(instrument.hasClass('responsive') && instrument.hasClass('first-col-is-number')){
@@ -402,13 +406,23 @@ function slider_change(slider, ui){
 	ui.handle.style.visibility = "visible";
 	var input = $("input[name=" + $(slider).data('input') + "]");
 	input.val(ui.value > 0 ? ui.value - 1 : 0);
-	$(slider).closest('.item-div').addClass('has-data');
+	var item_div = $(slider).closest('.item-div');
+	item_div.addClass('has-data');
+	$('#error-' + item_div.prop('id')).remove();
 }
 
 
 /***********************
  *   FORM VALIDATION
  ***********************/
+
+/**
+ * Error types
+ *
+ * - Answer missing.
+ * - Range/pattern error.
+ * - Specification missing.
+ */
 
 function validate_page(page_div){
 	page_div.find('div.option').removeClass('alert-warning');
@@ -427,7 +441,7 @@ function validate_page(page_div){
 
 function item_set_error(item_div, error){
 	item_div.removeClass('has-data');
-	var error_div = $(sprintf('<div class = "item-error alert alert-danger" role="alert">%s</div>', error));
+	var error_div = $(sprintf('<div class = "item-error alert alert-danger" id="error-%s" role="alert">%s</div>', item_div.prop('id'), error));
 	item_div.before(error_div);
 }
 
@@ -466,8 +480,7 @@ function validate_text(item_div) {
 
 		// Optional items can have empty value
 		if (item_div.data('optional')) {
-			// TODO: Remove
-			return 'OK optional';
+			return;
 		}
 
 		return text_must_answer;
@@ -481,7 +494,6 @@ function validate_text(item_div) {
 
 		if(min != undefined && max != undefined){
 			if(int_val > max || int_val < min || isNaN(int_val)){
-				console.log(3);
 				return error_text || sprintf(text_range_error, min, max);
 			}
 		}
@@ -503,9 +515,6 @@ function validate_text(item_div) {
 			return error_text || text_pattern_error;
 		}
 	}
-
-	// TODO: Remove
-	return 'OK';
 }
 
 function validate_checker(item_div) {
@@ -514,8 +523,7 @@ function validate_checker(item_div) {
 
 		// Optional items can nothing selected
 		if (item_div.data('optional')) {
-			// TODO: Remove
-			return 'OK optional';
+			return;
 		}
 
 		return text_must_answer;
@@ -530,9 +538,6 @@ function validate_checker(item_div) {
 		});
 		return (missing_specs.length > 1) ? text_specification_missing_m : text_specification_missing_1;
 	}
-
-	// TODO: Remove
-	return 'OK';
 }
 
 function spec_set_alert(spec){
@@ -588,7 +593,9 @@ function spec_change(event){
 	spec_reset_alert(spec);
 	var checker = spec.prevAll(":input").first();
 	if(spec.val().length && !checker.is(':checked')){
-		checker.click();
+		// To avoid double triggering of changed event
+		//checker.click();
+		checker.prop('checked', true);
 	}
 }
 
@@ -612,6 +619,7 @@ function checker_parent_click(event){
 
 function item_change(){
 	var item_div = $(this).closest('.item-div');
+	$('#error-' + item_div.prop('id')).remove();
 	var has_value;
 	if($(this).is(":checkbox, :radio")){
 		has_value = $(this).prop("checked");
@@ -672,6 +680,7 @@ function toggle_jumps(jump_container, mod){
 	var affected = [];
 	$.each(jump_container.data("prev-jumps"), function(index, item_id){
 		var jumpee = $("#item-" + item_id);
+		$('#error-' + jumpee.prop('id')).remove();
 		if(jumpee){
 			jumpee.data('jump-stack', (jumpee.data('jump-stack') || 0) + mod);
 			affected.push(jumpee);

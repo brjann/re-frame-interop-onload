@@ -15,7 +15,8 @@
  - Anti-forgery token is not used with login.
  - Removed auto-completes in double-auth
 
-
+# Instruments
+- Allow only min or only max
 
 # Ajax handling
 - Spinner
