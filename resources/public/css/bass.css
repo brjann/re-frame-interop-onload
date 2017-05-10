@@ -60,6 +60,7 @@ div#instrument.responsive.mobile .desktop-only{
 
 div#instrument.responsive.mobile .item-div{
     width: 100%;
+    margin-top: 10px;
 }
 
 div#instrument.responsive.mobile .col.cell, div#instrument .option.line{
@@ -165,7 +166,8 @@ div#instrument .has-option:hover{
 }
 
 div#instrument .item-div.has-data{
-    background-color: #EEEEEE;
+    #background-color: #EEEEEE;
+    background-color: greenyellow;
 }
 
 div#instrument .item-div.jumped-over {

@@ -3,6 +3,7 @@
             [bass4.php_clj.core :refer [php->clj]]
             [bass4.services.bass :refer [unserialize-key map-map]]))
 
+;; TODO: Should be able to use get-in instead of filter if matching keys are saved.
 (defn keep-matching
   [f m]
   (zipmap (keep-indexed #(when (f %2) %1) m) (filter f m)))
@@ -104,8 +105,7 @@
     {:elements elements
      :responses responses
      :layouts layouts
-     :static-layouts static-layouts}
-    ))
+     :static-layouts static-layouts}))
 
 #_(defn instrument-elements-and-responses
     [instrument-id]

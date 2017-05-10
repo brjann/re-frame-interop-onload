@@ -548,8 +548,14 @@ function spec_checker(item_div){
 		var input = $(this);
 		if(input.data('has-specification')){
 			var spec_name = input.prop('name') + '_spec';
+			/*
 			var spec_input = item_div.find('[name="' + spec_name + '"]');
 			if(spec_input.val().trim().length == 0){
+				return true;
+			}
+			*/
+			var val = item_div.find('[name="' + spec_name + '"]').val() || '';
+			if(val.trim().length == 0){
 				return true;
 			}
 		}
