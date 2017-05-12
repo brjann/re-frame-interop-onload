@@ -11,11 +11,12 @@
 		- Min-max
 	 	- Regexp
 	 	- Optional items
+	   - Validation
+		- Scroll to top error item
 
 	TODO: Fix these issues
 		- Handling of "empty" items
-		- Validation/submission
-		- Scroll to top error item
+		- submission
 		- Are you sure
 		- Gray area does not cover whole cell in desktop mode
 		- What happens if multiple radiobuttons have spec and there are values in all specs
@@ -32,6 +33,7 @@ $(document).ready(function(){
 			var cols = [];
 			var show_name = instrument["show-name"];
 			$(this).find(".instrument-show-name").html('<h2>' + show_name + '</h2>');
+			$(this).addClass('instrument');
 
 			// TODO: Remove debug
 			$(this).find(".instrument-show-name").click(function(){toggle_size($("#instrument"))});
@@ -153,14 +155,18 @@ function init_pages(pages){
 		if(index == page_count - 1) {
 			right_button = button(text_submit);
 			right_button.click(function () {
-
+				if(validate_page(page)){
+					submit_instrument(page.closest('.instrument'));
+				}
 			});
 		}
 		else{
 			right_button = button(text_next);
 			right_button.click(function(){
-				page.hide();
-				pages.eq(index + 1).show();
+				if(validate_page(page)){
+					page.hide();
+					pages.eq(index + 1).show();
+				}
 			});
 		}
 		right_div.append(right_button);
@@ -705,19 +711,6 @@ function toggle_jumps(jump_container, mod){
 /***********************
  * RESPONSIVE RESIZING
  ***********************/
-/*
-function resize(event) {
-	var width = $(window).width();
-	var instrument = $('#instrument.responsive');
-	if (width <= 800 && instrument.hasClass('desktop')) {
-		toggle_size(instrument);
-	}
-	else
-	if (width > 800 && instrument.hasClass('mobile')) {
-		toggle_size(instrument);
-	}
-}
-*/
 
 function resize(event) {
 	update_size();
@@ -778,4 +771,12 @@ function toggle_size(instrument){
 		set_desktop(instrument)
 	}
 	paint_instrument(instrument);
+}
+
+/***********************
+ *   DATA SUBMISSION
+ ***********************/
+
+function submit_instrument(instrument_div){
+
 }
