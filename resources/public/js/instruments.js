@@ -150,8 +150,11 @@ function init_pages(pages){
 
 		// Next or submit
 		var right_button;
-		if(index == page_count - 1){
+		if(index == page_count - 1) {
 			right_button = button(text_submit);
+			right_button.click(function () {
+
+			});
 		}
 		else{
 			right_button = button(text_next);
@@ -431,12 +434,21 @@ function validate_page(page_div){
 		function(){
 			var item_div = $(this);
 			var error = validate_item(item_div) || '';
-			if(error.length > 0 && error.substring(0, 2) != 'OK'){
+			if(error.length > 0){
 				item_set_error(item_div, error);
 				return true;
 			}
 			return false;
 		}));
+
+	if(error_items.length){
+		var first_error = $('#error-' + error_items.first().prop('id'));
+		$('html,body').animate({
+				scrollTop: first_error.offset().top},
+			'slow');
+		return false;
+	}
+	return true;
 }
 
 function item_set_error(item_div, error){
@@ -448,8 +460,7 @@ function item_set_error(item_div, error){
 function validate_item(item_div){
 
 	if(item_div.hasClass('jumped-over')){
-		// TODO: Remove
-		return 'OK jumped over'
+		return;
 	}
 
 	//var item_div = $(this);
