@@ -3,6 +3,11 @@
 
 <div class="container">
     <div id = "instrument">
+        <div class="hidden">
+            <form method="get" action="/instrument/post/{{instrument-id}}">
+                <input type="hidden" name="answers">
+            </form>
+        </div>
         <div class="instrument-show-name"></div>
         <div id="instrument-elements"></div>
     </div>

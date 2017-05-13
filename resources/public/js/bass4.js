@@ -3,6 +3,7 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
 });
 
 /*
+	TODO: Is this still true???
 	Redirects are followed by the ajax request. So POST route should not answer with
 	response/found (302). But rather with response/ok (200) and then a string with further
 	instructions. found [url]: the post was received and here is your new url
@@ -30,6 +31,7 @@ function post_error(form){
 			return false;
 		}
 
+		// http://stackoverflow.com/questions/6186770/ajax-request-returns-200-ok-but-an-error-event-is-fired-instead-of-success
 		if(jqXHR.status == 200){
 			console.log("FAKE ERROR");
 			return false;
@@ -61,6 +63,11 @@ function form_events(form, jqXHR){
 
 $(document).ready(function(){
 	$("form").each(function(){
+
+		// Don't tamper with get forms
+		if($(this).prop('method') == 'get'){
+			return;
+		}
 
 		var no_ajax = $(this).hasClass("no-ajax");
 		var no_validate = $(this).hasClass("no-validate");

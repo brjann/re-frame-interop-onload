@@ -306,8 +306,9 @@ function parse_response(element, response){
 			// Checkbox
 			else{
 				var cb_name = name + "_" + escape_html(option.value);
-				str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
-					"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, cb_name, jumps, option.specification);
+				//str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
+				//	"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, cb_name, jumps, option.specification);
+				str = sprintf("<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, jumps, option.specification)
 			}
 
 			// Trailing option label
@@ -373,7 +374,7 @@ function parse_response(element, response){
 		return sprintf("<div class='slider-container'><div class='slider-label-left'>%s</div>" +
 			"<div data-input = '%s' class = 'slider'></div>" +
 			"<div class='slider-label-right'>%s</div>" +
-			"<input type = 'hidden' name = '%s' value = '-1'></div>",
+			"<input type = 'hidden' class = 'vas' name = '%s' value = '-1'></div>",
 			response["vas-min-label"], name, response["vas-max-label"], name);
 	}
 }
@@ -565,18 +566,17 @@ function spec_reset_alert(spec){
 	spec.parents('div.option').removeClass('alert-warning');
 }
 
+function spec_find(input){
+	var spec_name = input.prop('name') + (input.prop('type') == 'radio' ? '_' + input.val() : '') + '_spec';
+	return input.closest('.item-div').find('[name="' + spec_name + '"]')
+}
+
+// TODO: item_div not needed
 function spec_checker(item_div){
 	return function(){
 		var input = $(this);
 		if(input.data('has-specification')){
-			var spec_name = input.prop('name') + '_spec';
-			/*
-			var spec_input = item_div.find('[name="' + spec_name + '"]');
-			if(spec_input.val().trim().length == 0){
-				return true;
-			}
-			*/
-			var val = item_div.find('[name="' + spec_name + '"]').val() || '';
+			var val = spec_find(input).val() || '';
 			if(val.trim().length == 0){
 				return true;
 			}
@@ -585,20 +585,32 @@ function spec_checker(item_div){
 	}
 }
 
+/*
+function spec_checker(item_div){
+	return function(){
+		var input = $(this);
+		if(input.data('has-specification')){
+			var spec_name = input.prop('name') + '_spec';
+			var val = item_div.find('[name="' + spec_name + '"]').val() || '';
+			if(val.trim().length == 0){
+				return true;
+			}
+		}
+		return false;
+	}
+}
+*/
+
 function validate_vas(item_div){
 	var input = item_div.find(':input');
 	var val = input.val();
 	if(val.length == 0 || val == -1){
 		if (item_div.data('optional')) {
-			// TODO: Remove
-			return 'OK optional';
+			return;
 		}
 
 		return text_must_answer;
 	}
-
-	// TODO: Remove
-	return 'OK';
 }
 
 /***********************
@@ -778,5 +790,45 @@ function toggle_size(instrument){
  ***********************/
 
 function submit_instrument(instrument_div){
+	var form = instrument_div.find('form');
+	form.find(':input').val(JSON.stringify(collect_answers(instrument_div)));
+	form.submit();
+}
 
+function collect_answers(instrument_div){
+	var all_answers = {};
+	instrument_div.find(':input').not('.spec').each(function () {
+		if($(this).closest("div.item-div").hasClass('jumped-over')){
+			return;
+		}
+		var id = this.name.substr(5, this.name.length);
+		if (this.type == 'radio') {
+			if ($(this).prop('checked')) {
+				all_answers[id] = $(this).val();
+				if($(this).data('has-specification')){
+					all_answers[id + "_spec"] = spec_find($(this)).val();
+				}
+			}
+		}
+		else if (this.type == 'checkbox') {
+			if ($(this).prop('checked')) {
+				all_answers[id] = '1';
+				if($(this).data('has-specification')){
+					all_answers[id + "_spec"] = spec_find($(this)).val();
+				}
+			}
+			else {
+				all_answers[id] = '0';
+			}
+		}
+		else if ($(this).hasClass('vas')){
+			if($(this).val() >= 0){
+				all_answers[id] = $(this).val();
+			}
+		}
+		else {
+			all_answers[id] = $(this).val();
+		}
+	});
+	return all_answers;
 }

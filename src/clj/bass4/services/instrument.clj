@@ -1,4 +1,4 @@
-(ns bass4.services.instruments
+(ns bass4.services.instrument
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
             [bass4.services.bass :refer [unserialize-key map-map]]))
@@ -149,7 +149,5 @@
 (defn get-instrument [instrument-id]
   (let [instrument (instrument-def instrument-id)]
     instrument))
-
-
 
 
