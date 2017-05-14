@@ -802,7 +802,7 @@ function submit_instrument(instrument_div){
 function collect_answers(instrument_div){
 	var items = {};
 	var specifications = {};
-	instrument_div.find('.instrument-elements :input').not('.spec').each(function () {
+	instrument_div.find('.instrument-elements .item-div :input').not('.spec').each(function () {
 		if($(this).closest("div.item-div").hasClass('jumped-over')){
 			return;
 		}

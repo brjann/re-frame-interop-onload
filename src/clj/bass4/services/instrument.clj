@@ -7,7 +7,7 @@
 
 
 ;; ------------------------
-;;    INSTRUMENT BUILDER
+;;    INSTRUMENT PARSER
 ;; ------------------------
 
 ;; TODO: Should be able to use select-in instead of filter if matching keys are saved.
@@ -165,7 +165,7 @@
        :exports exports}
       )))
 
-(defn get-instrument-scoring
+(defn get-scoring
   [instrument-id]
   (let [{scoring-string :scoring default-value :default-value} (db/get-instrument-scoring {:instrument-id instrument-id})]
     (when (> (count scoring-string) 0)
@@ -217,5 +217,5 @@
 
 (defn score-instrument
   [items instrument-id]
-  (if-let [scoring (get-instrument-scoring instrument-id)]
+  (if-let [scoring (get-scoring instrument-id)]
     (score-items items scoring)))

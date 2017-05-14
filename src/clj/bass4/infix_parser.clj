@@ -1,5 +1,6 @@
 (ns bass4.infix-parser
-  (:require [clojure.math.numeric-tower :as math]))
+  (:require [clojure.math.numeric-tower :as math]
+            [clojure.string :as s]))
 
 ;; Adapted from
 ;; http://eddmann.com/posts/infix-calculator-in-clojure/
@@ -76,20 +77,27 @@
          (throw (Exception. (str "Var " token " not found"))))
        (read-string token)))))
 
+(defn str->num
+  [s]
+  (cond
+    (number? s) s
+    (nil? s) nil
+    (re-find #"^\d*\.?\d*$" (s/trim s)) (read-string s)))
+
 (defn token-resolver
   ([namespace] (token-resolver namespace (constantly nil)))
   ([namespace missing-fn]
    (fn
      [token]
-     (if-let [res (if (nil? (re-find #"^\d*\.?\d*$" token))
-                    (or (namespace token)
-                        (missing-fn token))
-                    (read-string token))]
+     (if-let [res (or
+                    (str->num token)
+                    (str->num (namespace token))
+                    (str->num (missing-fn token)))]
        res
        (throw (Exception. (str "Var " token " not found")))))))
 
 (defn rpn
-  ([tokens] (rpn tokens (token-resolver)))
+  ([tokens] (rpn tokens (token-resolver {})))
   ([tokens token-resolver-fn]
    (let [truthy? (partial not= 0)
          bool01 (fn [x] (if x 1 0))
