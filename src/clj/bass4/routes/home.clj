@@ -24,7 +24,7 @@
 (defroutes home-routes
   (GET "/" [] (home-page))
   (GET "/instrument/post/:instrument-id" [instrument-id & params]
-    (instruments/post-answers instrument-id (:answers params)))
+    (instruments/post-answers instrument-id (:items params) (:specifications params)))
   (GET "/instrument/:instrument-id" [instrument-id &params]
     (instruments/instrument-page instrument-id))
   (GET "/about" [] (about-page))

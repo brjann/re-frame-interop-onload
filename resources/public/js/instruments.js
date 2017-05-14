@@ -38,7 +38,7 @@ $(document).ready(function(){
 			// TODO: Remove debug
 			$(this).find(".instrument-show-name").click(function(){toggle_size($("#instrument"))});
 
-			var instrument_div = $("#instrument-elements");
+			var instrument_div = $(this).find(".instrument-elements");
 
 			if(instrument.classic){
 				$(this).addClass('classic');
@@ -790,45 +790,50 @@ function toggle_size(instrument){
  ***********************/
 
 function submit_instrument(instrument_div){
-	var form = instrument_div.find('form');
-	form.find(':input').val(JSON.stringify(collect_answers(instrument_div)));
+	var form = instrument_div.find('form.submitter');
+	var answers = collect_answers(instrument_div);
+	var items = answers[0];
+	var specifications = answers[1];
+	form.find(':input[name=items]').val(JSON.stringify(items));
+	form.find(':input[name=specifications]').val(JSON.stringify(specifications));
 	form.submit();
 }
 
 function collect_answers(instrument_div){
-	var all_answers = {};
-	instrument_div.find(':input').not('.spec').each(function () {
+	var items = {};
+	var specifications = {};
+	instrument_div.find('.instrument-elements :input').not('.spec').each(function () {
 		if($(this).closest("div.item-div").hasClass('jumped-over')){
 			return;
 		}
 		var id = this.name.substr(5, this.name.length);
 		if (this.type == 'radio') {
 			if ($(this).prop('checked')) {
-				all_answers[id] = $(this).val();
+				items[id] = $(this).val();
 				if($(this).data('has-specification')){
-					all_answers[id + "_spec"] = spec_find($(this)).val();
+					specifications[id + '_' + $(this).val()] = spec_find($(this)).val();
 				}
 			}
 		}
 		else if (this.type == 'checkbox') {
 			if ($(this).prop('checked')) {
-				all_answers[id] = '1';
+				items[id] = '1';
 				if($(this).data('has-specification')){
-					all_answers[id + "_spec"] = spec_find($(this)).val();
+					specifications[id] = spec_find($(this)).val();
 				}
 			}
 			else {
-				all_answers[id] = '0';
+				items[id] = '0';
 			}
 		}
 		else if ($(this).hasClass('vas')){
 			if($(this).val() >= 0){
-				all_answers[id] = $(this).val();
+				items[id] = $(this).val();
 			}
 		}
 		else {
-			all_answers[id] = $(this).val();
+			items[id] = $(this).val();
 		}
 	});
-	return all_answers;
+	return [items, specifications];
 }

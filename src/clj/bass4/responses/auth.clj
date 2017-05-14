@@ -8,12 +8,20 @@
             [clj-time.core :as t]))
 
 
+;;
+;; https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+;; 422 Unprocessable Entity (WebDAV; RFC 4918)
+;; The request was well-formed but was unable to be followed due to semantic errors.
+;;
+;; Used to communicate back to form that there was something wrong with
+;; the posted data. For example erroneous username-password combination
+;;
 (defn error-422
   ([] (error-422 ""))
   ([body]
-   {:status 422
+   {:status  422
     :headers {}
-    :body body}))
+    :body    body}))
 
 
 ;; -------------
@@ -88,9 +96,9 @@
 (defn re-auth-440
   ([] (re-auth-440 ""))
   ([body]
-   {:status 440
+   {:status  440
     :headers {}
-    :body body}))
+    :body    body}))
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)
@@ -100,6 +108,7 @@
       (response/found "/login"))))
 
 ;; TODO: Validate URL
+;; TODO: Why 2 whens ? What is response if conditions are not satisfied?
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
 (s/defn ^:always-validate check-re-auth [session password :- s/Str return-url]
@@ -112,6 +121,7 @@
             (assoc :session (merge session {:auth-timeout nil})))
         (error-422 "error")))))
 
+;; TODO: Why 2 whens ? What is response if conditions are not satisfied?
 (s/defn check-re-auth-ajax [session password :- s/Str]
   (when (:auth-timeout session)
     (when-let [user-id (:identity session)]

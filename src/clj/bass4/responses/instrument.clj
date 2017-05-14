@@ -9,6 +9,8 @@
 
 ;; TODO: Add input spec
 ;; TODO: Handle exception if answers cannot be parsed as JSON
-(defn post-answers [instrument-id answers]
-  (let [a (json/read-str answers)]
-    (bass4.layout/render "instrument-answers.html" {:answers a :info (json/read-str "dfjksn4l?++:\"sdfsdf")})))
+(defn post-answers [instrument-id items specifications]
+  (let [items-map (json/read-str items)
+        specifications-map (json/read-str specifications)
+        instrument (instruments/get-instrument instrument-id)]
+    (bass4.layout/render "instrument-answers.html" {:items items-map :specifications specifications-map})))
