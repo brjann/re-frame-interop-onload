@@ -33,7 +33,8 @@
                  [clj-time "0.13.0"]
                  [prismatic/schema "1.1.3"]
                  [org.flatland/ordered "1.5.4"]
-                 [org.clojure/math.numeric-tower "0.0.4"]]
+                 [org.clojure/math.numeric-tower "0.0.4"]
+                 [org.clojure/data.json "0.2.6"]]
 
   :min-lein-version "2.0.0"
 
