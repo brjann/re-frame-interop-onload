@@ -5,9 +5,6 @@
 (defn project-title []
   (:title (db/get-project-title)))
 
-#_(defn unserialize-key [m k]
-  (merge m {k (into {} (php->clj (get m k)))}))
-
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
   ([m k f]
@@ -22,3 +19,14 @@
   (let [ks (keys m)
         vs (vals m)]
     (zipmap ks (mapv f vs))))
+
+(defn subs+
+  "Returns the substring of s beginning at start inclusive, and ending
+  at end (defaults to length of string), exclusive.
+  Does not throw exception if bounds are incorrect
+  Returns nil if start is out of range or start is larger than end
+  If end is out of range, end is set to range"
+  ([s start] (subs+ s start (count s)))
+  ([s start end]
+   (when (and (<= start (count s)) (<= start end))
+     (subs s start (min end (count s))))))

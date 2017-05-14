@@ -1,9 +1,15 @@
 (ns bass4.services.instrument
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
-            [bass4.services.bass :refer [unserialize-key map-map]]))
+            [bass4.services.bass :refer [unserialize-key map-map subs+]]
+            [clojure.string :as s]))
 
-;; TODO: Should be able to use get-in instead of filter if matching keys are saved.
+
+;; ------------------------
+;;    INSTRUMENT BUILDER
+;; ------------------------
+
+;; TODO: Should be able to use select-in instead of filter if matching keys are saved.
 (defn keep-matching
   [f m]
   (zipmap (keep-indexed #(when (f %2) %1) m) (filter f m)))
@@ -107,39 +113,6 @@
      :layouts layouts
      :static-layouts static-layouts}))
 
-#_(defn instrument-elements-and-responses
-    [instrument-id]
-    (let [items-elements  (db/get-instrument-items {:instrument-id instrument-id})
-          items           (item-elements items-elements)
-          responses       (key-map-list
-                            (map response-def (filter :response-type items-elements))
-                            :response-id)
-          layouts         (key-map-list
-                            (map layout-def (filter :layout items-elements))
-                            :layout-id)
-          static-elements (db/get-instrument-statics {:instrument-id instrument-id})
-          statics         (mapv #(select-keys % [:text :sort-order :name]) static-elements)
-          static-layouts  (key-map-list
-                            (map layout-def (filter :layout static-elements))
-                            :layout-id)
-          tables          (table-elements instrument-id)
-          elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
-      {:elements elements
-       :responses responses
-       :layouts layouts
-       :static-layouts static-layouts}
-      ))
-
-#_(defn instrument-def
-  [instrument-id]
-  (let [instrument (db/get-instrument {:instrument-id instrument-id})
-        {:keys [elements responses layouts]} (instrument-elements-and-responses instrument-id)]
-    (when instrument
-      (merge instrument
-             {:elements elements
-              :responses responses
-              :layouts layouts}))))
-
 (defn instrument-def
   [instrument-id]
   (when-let [instrument (db/get-instrument {:instrument-id instrument-id})]
@@ -151,3 +124,47 @@
     instrument))
 
 
+
+;; ------------------------
+;;     SCORING PARSER
+;; ------------------------
+
+(defn- scoring-exports
+  [lines]
+  (when-let [sums-line (first (filterv #(= (subs+ % 0 5) "#sums") lines))]
+    (-> sums-line
+        (subs 5)
+        (s/replace #" " "")
+        (s/split #","))))
+
+(defn- scoring-parse-expression
+  [expression-line]
+  (let [[var expression] (mapv s/trim (s/split expression-line #"=" 2))]
+    (when (and (> (count var) 0) (> (count expression) 0))
+      (if (= (subs+ expression 0 2) "if")
+        (let [if-expr (s/split (subs expression 2) #",")]
+          (when (= (count if-expr) 3)
+            {:var  var
+             :test (if-expr 0)
+             :true (if-expr 1)
+             :false (if-expr 2)}))
+        {:var var :expression expression}))))
+
+(defn- scoring-expressions
+  [lines]
+  (when-let [expression-lines (filterv #(not= (subs % 0 1) "#") lines)]
+    expression-lines))
+
+(defn- parse-scoring
+  [scoring-string]
+  (let [lines (filterv #(not= (count %) 0) (mapv (comp s/lower-case s/trim) (s/split-lines scoring-string)))
+        exports (scoring-exports lines)]
+    (when exports
+      {:expressions (remove nil? (mapv scoring-parse-expression (scoring-expressions lines)))
+       :exports exports}
+      )))
+
+(defn get-instrument-scoring
+  [instrument-id]
+  (when-let [scoring-string (:scoring (db/get-instrument-scoring {:instrument-id instrument-id}))]
+    (parse-scoring scoring-string)))

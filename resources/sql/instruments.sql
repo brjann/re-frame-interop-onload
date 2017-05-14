@@ -227,3 +227,10 @@ SELECT
   SortOrder AS `sort-order`
 FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;
+
+
+-- :name get-instrument-scoring :? :1
+-- :doc get scoring formula of instrument
+SELECT ExpressionsById AS `scoring`
+FROM c_instrumentscoring
+WHERE ParentId = :instrument-id

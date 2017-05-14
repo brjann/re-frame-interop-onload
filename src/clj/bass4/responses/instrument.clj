@@ -12,5 +12,6 @@
 (defn post-answers [instrument-id items specifications]
   (let [items-map (json/read-str items)
         specifications-map (json/read-str specifications)
-        instrument (instruments/get-instrument instrument-id)]
+        instrument (instruments/get-instrument instrument-id)
+        item-names (map #(select-keys % [:item-id :name]) (filter :response-id (:elements instrument)))]
     (bass4.layout/render "instrument-answers.html" {:items items-map :specifications specifications-map})))
