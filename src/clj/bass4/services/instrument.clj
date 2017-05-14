@@ -178,20 +178,6 @@
 
 
 ;; Returns 0 in case of exception or nil result
-#_(defn expression-resolver
-  [default]
-  (fn
-    [expression namespace]
-    (or (try
-          (infix/calc expression
-                      (infix/token-resolver
-                        namespace
-                        (fn [token]
-                          (when (= "$" (subs token 0 1))
-                            default))))
-          (catch Exception e 0)) 0)))
-
-;; Returns 0 in case of exception or nil result
 (defn- expression-resolver
     [default-value]
     (fn
