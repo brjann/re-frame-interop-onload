@@ -2,6 +2,7 @@
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
             [bass4.services.bass :refer [unserialize-key map-map subs+]]
+            [bass4.infix-parser :as infix]
             [clojure.string :as s]))
 
 
@@ -137,9 +138,9 @@
         (s/replace #" " "")
         (s/split #","))))
 
-(defn- scoring-parse-expression
-  [expression-line]
-  (let [[var expression] (mapv s/trim (s/split expression-line #"=" 2))]
+(defn- scoring-parse-statement
+  [statement-line]
+  (let [[var expression] (mapv s/trim (s/split statement-line #"=" 2))]
     (when (and (> (count var) 0) (> (count expression) 0))
       (if (= (subs+ expression 0 2) "if")
         (let [if-expr (s/split (subs expression 2) #",")]
@@ -150,21 +151,85 @@
              :false (if-expr 2)}))
         {:var var :expression expression}))))
 
-(defn- scoring-expressions
+(defn- scoring-statements
   [lines]
-  (when-let [expression-lines (filterv #(not= (subs % 0 1) "#") lines)]
-    expression-lines))
+  (when-let [statement-lines (filterv #(not= (subs % 0 1) "#") lines)]
+    statement-lines))
 
 (defn- parse-scoring
   [scoring-string]
   (let [lines (filterv #(not= (count %) 0) (mapv (comp s/lower-case s/trim) (s/split-lines scoring-string)))
         exports (scoring-exports lines)]
     (when exports
-      {:expressions (remove nil? (mapv scoring-parse-expression (scoring-expressions lines)))
+      {:statements (remove nil? (mapv scoring-parse-statement (scoring-statements lines)))
        :exports exports}
       )))
 
 (defn get-instrument-scoring
   [instrument-id]
-  (when-let [scoring-string (:scoring (db/get-instrument-scoring {:instrument-id instrument-id}))]
-    (parse-scoring scoring-string)))
+  (let [{scoring-string :scoring default-value :default-value} (db/get-instrument-scoring {:instrument-id instrument-id})]
+    (when (> (count scoring-string) 0)
+      (assoc (parse-scoring scoring-string) :default-value (or default-value 0)))))
+
+
+;; ------------------------
+;;     ANSWERS SCORING
+;; ------------------------
+
+
+;; Returns 0 in case of exception or nil result
+#_(defn expression-resolver
+  [default]
+  (fn
+    [expression namespace]
+    (or (try
+          (infix/calc expression
+                      (infix/token-resolver
+                        namespace
+                        (fn [token]
+                          (when (= "$" (subs token 0 1))
+                            default))))
+          (catch Exception e 0)) 0)))
+
+;; Returns 0 in case of exception or nil result
+(defn- expression-resolver
+    [default-value]
+    (fn
+      [expression namespace]
+      (or (try
+            (infix/calc
+              expression
+              (infix/token-resolver
+                namespace
+                (fn [token]
+                  ;; In BASS, missing items are scored as default-value
+                  ;; and missing variables are scored as 0
+                  (if (= "$" (subs token 0 1))
+                    default-value
+                    0))))
+            (catch Exception e 0)) 0)))
+
+(defn- statement-resolver
+  [default-value]
+  (let [expression-resolver-fn (expression-resolver default-value)]
+    (fn
+      [namespace statement]
+      (let [var (:var statement)
+            val (if-let [test (:test statement)]
+                  (if (not= (expression-resolver-fn test namespace) 0)
+                    (expression-resolver-fn (:true statement) namespace)
+                    (expression-resolver-fn (:false statement) namespace))
+                  (expression-resolver-fn (:expression statement) namespace))]
+        (assoc namespace var val)))))
+
+(defn score-items
+  [items {:keys [statements default-value exports]}]
+  (let [$items (zipmap (map #(str "$" %) (keys items)) (vals items))]
+    (select-keys
+      (reduce (statement-resolver default-value) $items statements)
+      exports)))
+
+(defn score-instrument
+  [items instrument-id]
+  (if-let [scoring (get-instrument-scoring instrument-id)]
+    (score-items items scoring)))

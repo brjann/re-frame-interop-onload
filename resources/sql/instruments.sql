@@ -231,6 +231,8 @@ WHERE ParentId = :instrument-id;
 
 -- :name get-instrument-scoring :? :1
 -- :doc get scoring formula of instrument
-SELECT ExpressionsById AS `scoring`
+SELECT
+  ExpressionsById AS `scoring`,
+  MissingValueValue AS `default-value`
 FROM c_instrumentscoring
 WHERE ParentId = :instrument-id

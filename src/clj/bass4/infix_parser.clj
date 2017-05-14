@@ -1,10 +1,5 @@
-(ns bass4.shunting-yard
+(ns bass4.infix-parser
   (:require [clojure.math.numeric-tower :as math]))
-
-#_(defn- to-chars
-  [x]
-  (clojure.string/split (clojure.string/replace x " " "") #""))
-
 
 ;; Adapted from
 ;; http://eddmann.com/posts/infix-calculator-in-clojure/
@@ -67,7 +62,7 @@
                [[] () true]
                tokens))))
 
-(defn token-resolver
+#_(defn token-resolver
   ([] (token-resolver {}))
   ([namespace] (token-resolver namespace nil))
   ([namespace default]
@@ -80,6 +75,18 @@
          res
          (throw (Exception. (str "Var " token " not found"))))
        (read-string token)))))
+
+(defn token-resolver
+  ([namespace] (token-resolver namespace (constantly nil)))
+  ([namespace missing-fn]
+   (fn
+     [token]
+     (if-let [res (if (nil? (re-find #"^\d*\.?\d*$" token))
+                    (or (namespace token)
+                        (missing-fn token))
+                    (read-string token))]
+       res
+       (throw (Exception. (str "Var " token " not found")))))))
 
 (defn rpn
   ([tokens] (rpn tokens (token-resolver)))
@@ -109,10 +116,10 @@
          [] tokens)))))
 
 (defn calc
-  ([expr] (calc expr {}))
-  ([expr namespace]
+  ([expr] (calc expr (token-resolver {})))
+  ([expr token-resolver-fn]
    (-> expr
        tokenize
        parse-tokens
-       (rpn (token-resolver namespace)))))
+       (rpn token-resolver-fn))))
 
