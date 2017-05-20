@@ -1,6 +1,6 @@
-DROP PROCEDURE IF EXISTS create_bass_object_multiple;
+DROP PROCEDURE IF EXISTS create_bass_objects;
 DELIMITER //
-CREATE PROCEDURE create_bass_object_multiple
+CREATE PROCEDURE create_bass_objects
 (IN NewClass CHAR(45), ParentId INT, ParentProperty CHAR(100), HowMany INT)
 BEGIN
 

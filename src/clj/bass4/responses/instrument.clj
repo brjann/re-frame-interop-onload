@@ -1,7 +1,7 @@
 (ns bass4.responses.instrument
   (:require [bass4.services.instrument :as instruments]
             [ring.util.http-response :as response]
-            [bass4.services.bass :refer [json-safe]]
+            [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]))
 
 (defn instrument-page [instrument-id]
@@ -13,7 +13,7 @@
     (let [items (json-safe items-str)
           specifications (json-safe specifications-str)]
       (if (or (nil? items) (nil? specifications))
-        (bass4.services.bass/error-400-page)
+        (bass4.layout/error-400-page)
         (let [item-names (map #(select-keys % [:item-id :name]) (filter :response-id (:elements instrument)))
               sums (instruments/score-items items (instruments/get-scoring instrument-id))]
           (instruments/save-test-answers! instrument-id items specifications sums item-names)

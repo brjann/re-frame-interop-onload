@@ -1,7 +1,7 @@
 (ns bass4.services.instrument
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj clj->php]]
-            [bass4.services.bass :refer [unserialize-key map-map subs+]]
+            [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list]]
             [bass4.infix-parser :as infix]
             [clojure.string :as s]))
 
@@ -9,21 +9,6 @@
 ;; ------------------------
 ;;    INSTRUMENT PARSER
 ;; ------------------------
-
-;; TODO: Should be able to use select-in instead of filter if matching keys are saved.
-(defn keep-matching
-  [f m]
-  (zipmap (keep-indexed #(when (f %2) %1) m) (filter f m)))
-
-(defn key-map-list
-  ([s k]
-   (key-map-list s k {}))
-  ([s k m]
-   (if-not (seq s)
-     m
-     (recur (rest s)
-            k
-            (assoc m (get (first s) k) (first s))))))
 
 (defn jumper-fn
   [item-ids current-id]

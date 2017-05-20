@@ -1,7 +1,7 @@
 (ns bass4.middleware
   (:require [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
-            [bass4.layout :refer [*app-context* error-page]]
+            [bass4.layout :refer [*app-context* error-page error-400-page]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
@@ -87,7 +87,7 @@
       (catch ExceptionInfo e
         (if (= (:type (.data e)) :schema.core/error)
           ;; TODO: Message should only be included in development mode
-          (bass4.services.bass/error-400-page (.getMessage e))
+          (error-400-page (.getMessage e))
           (throw e))))))
 
 ;; TODO: This should not be applied to js and css-files

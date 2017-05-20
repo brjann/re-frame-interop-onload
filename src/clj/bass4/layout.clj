@@ -44,6 +44,13 @@
    :headers {"Content-Type" "text/html; charset=utf-8"}
    :body    (parser/render-file "error.html" error-details)})
 
+(defn error-400-page
+  ([] (error-400-page nil))
+  ([message]
+   (error-page {:status  400
+                       :title   "Bad request!"
+                       :message message})))
+
 (parser/add-tag!
   :tr
   (fn [args context-map]
