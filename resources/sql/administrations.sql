@@ -53,7 +53,8 @@ SELECT
     CompetingAssessmentsAllowSwallow AS `allow-swallow`,
     CompetingAssessmentsShowTextsIfSwallowed AS `show-texts-if-swallowed`,
     WelcomeText AS `welcome-text`,
-    ThankYouText AS `thank-you-text`
+    ThankYouText AS `thank-you-text`,
+   ShuffleInstruments AS `shuffle-instruments`
 
 FROM c_assessment
 WHERE parentid = :assessment-series-id
@@ -74,12 +75,14 @@ SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
     cpa.ObjectId AS `participant-administration-id`,
-    (CASE
+
+  (CASE
      WHEN cpa.AssessmentIndex IS NULL
          THEN cga.AssessmentIndex
      ELSE cpa.AssessmentIndex
      END) AS `assessment-index`,
-    (CASE
+
+  (CASE
      WHEN cpa.Active IS NULL AND cga.Active IS NULL
          THEN NULL
      ELSE
@@ -89,14 +92,31 @@ SELECT
           ELSE 1
           END)
      END) AS `active`,
-    (CASE
+
+  (CASE
      WHEN cpa.DateCompleted IS NULL
          THEN 0
      ELSE cpa.DateCompleted
      END ) AS `date-completed`,
-    from_unixtime(cpa.`Date`) AS `participant-activation-date`,
-    cga.ObjectId AS `group-administration-id`,
-    from_unixtime(cga.Date) AS `group-activation-date`
+
+  (CASE
+   WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cpa.`Date`)
+   END) AS `participant-activation-date`,
+
+  cga.ObjectId AS `group-administration-id`,
+
+  (CASE
+   WHEN cga.Date IS NULL OR cga.Date = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cga.Date)
+   END) AS `group-activation-date`
+
 FROM c_assessment as ca
     LEFT JOIN (c_participantadministration as cpa)
         ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
@@ -158,3 +178,15 @@ WHERE
     lca.LinkerId = :assessment-id
 ORDER BY
     lca.SortOrder
+
+
+-- :name get-new-round-id :? :1
+-- :doc Get the max new round id
+SELECT
+  max(RoundId) + 1 AS `round-id`
+FROM assessment_rounds;
+
+-- :name insert-assessment-round! :! :n
+-- :doc Tuple Param List
+INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Text, InstrumentId, AdministrationId)
+VALUES :t*:rows

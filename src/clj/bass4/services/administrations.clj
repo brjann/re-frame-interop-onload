@@ -1,9 +1,10 @@
 (ns bass4.services.administrations
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list]]
+            [bass4.utils :refer [key-map-list map-map]]
             [clj-time.coerce]
-            [bass4.services.bass :refer [create-bass-objects-without-parent!]]))
+            [bass4.services.bass :refer [create-bass-objects-without-parent!]]
+            [taoensso.nippy :as nippy]))
 
 
 ;; ------------------------------
@@ -71,7 +72,7 @@
     (filter #(nil? (:participant-administration-id %)) matching-administrations)))
 
 (defn- add-missing-administrations
-  [matching-administrations user-id]
+  [user-id matching-administrations]
   (let [missing-administrations (get-missing-administrations matching-administrations)]
     (if (> (count missing-administrations) 0)
       (insert-new-into-old (create-missing-administrations! user-id missing-administrations) matching-administrations)
@@ -97,13 +98,12 @@
     (or (> time-limit 0) (and (zero? is-record) (= repetition-type "INTERVAL")))
     (apply min (filter (complement zero?) [time-limit repetition-interval]))))
 
-
 (defn- get-activation-date [administration assessment]
-  (t/plus (clj-time.coerce/from-sql-date
-            (if (= (:scope assessment) 0)
-              (:participant-activation-date administration)
-              (:group-activation-date administration))) (t/hours (:activation-hour assessment))))
-
+  (when-let [activation-date (if (= (:scope assessment) 0)
+                               (:participant-activation-date administration)
+                               (:group-activation-date administration))]
+    (t/plus (clj-time.coerce/from-sql-date
+              activation-date) (t/hours (:activation-hour assessment)))))
 
 (defn- check-next-status [{:keys [repetition-type]} next-administration-status]
   (if (nil? next-administration-status)
@@ -129,7 +129,7 @@
              :else (let [activation-date (get-activation-date administration assessment)
                          time-limit (get-time-limit assessment)]
                      (cond
-                       (t/equal? (t/epoch) activation-date) "AS_NO_DATE"
+                       (nil? activation-date) "AS_NO_DATE"
                        (t/before? (t/now) activation-date) "AS_WAITING"
                        (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit)))) "AS_DATE_PASSED"
                        :else "AS_PENDING")))})
@@ -141,11 +141,8 @@
           current-assessment (get assessments (:assessment-id current-administration))]
       (cons (get-administration-status current-administration (last (first next-administrations)) current-assessment) next-administrations))))
 
-(defn- process-administrations [administrations assessments]
-  (flatten (map #(get-assessment-statuses % assessments)
-                (map #(sort-by :assessment-index (val %)) administrations))))
 
-(defn- filter-pending [assessment-statuses]
+(defn- filter-pending-assessments [assessment-statuses]
   (filter #(and
              (= (:status %) "AS_PENDING")
              (zero? (:is-record %))
@@ -158,7 +155,7 @@
 
 
 (defn- collect-assessment-administrations
-  [pending-assessments administrations]
+  [administrations pending-assessments]
 
   ;; This function assumes that there is a row for all missing administrations
   ;; with a nil-value for participant-administration-id. I can't imagine that
@@ -180,21 +177,114 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
+;; TODO: Add "komplettera mätning" instruments
 (defn- add-instruments [administrations]
-  (map #(assoc % :instruments (db/get-assessment-instruments {:assessment-id (:assessment-id %)})) administrations))
+  (map #(assoc % :instruments (map :instrument-id (db/get-assessment-instruments {:assessment-id (:assessment-id %)}))) administrations))
 
-(defn- get-pending-administrations [user-id]
+
+(defn merge-batches
+  [coll val]
+  (if (and (seq coll) (= (:allow-swallow val) 1))
+    (concat (butlast coll) (list (concat (last coll) (list val))))
+    (concat coll (list (list val)))))
+
+
+;; ------------------------
+;;     ROUNDS CREATION
+;; ------------------------
+
+
+(defn batch-texts
+  [text-name]
+  (fn
+    [batch]
+    (pr-str (remove
+                    #(some (partial = %) [nil ""])
+                    (map-indexed
+                      (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
+                      batch)))))
+
+(defn assessment-instruments
+  [assessment]
+  (if (= (:shuffle-instruments assessment) 1) (shuffle (:instruments assessment)) (:instruments assessment)))
+
+(defn batch-instruments
+  [batch]
+  (flatten
+    (map (fn [assessment]
+           (map #(do {:administration-id (:participant-administration-id assessment) :instrument-id %})
+                (assessment-instruments assessment)))
+         batch)))
+
+(defn batch-steps
+  [idx batch]
+  (let [welcome {:text ((batch-texts :welcome-text) batch)}
+        thank-you {:text ((batch-texts :thank-you-text) batch)}
+        instruments (batch-instruments batch)]
+    (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
+
+(defn step-row
+  [user-id]
+  (fn [idx step]
+    (merge
+      {:time              (clj-time.coerce/to-sql-date (t/now))
+       :user-id           user-id
+       :batch-id          nil
+       :step              idx
+       :text              nil
+       :instrument-id     nil
+       :administration-id nil}
+      step)))
+
+;; TODO: Fix concurrency with insert
+(defn save-round!
+  [round]
+  (let [round-id (or (:round-id (db/get-new-round-id)) 0)]
+    (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))})))
+
+(defn- get-pending-assessments [user-id]
   (let
+    ;; NOTE that administrations is a map of lists
+    ;; administrations within one assessment battery
     [{:keys [administrations assessments]} (get-user-administrations user-id)
-     pending-administrations (-> administrations
-                                 (process-administrations assessments)
-                                 filter-pending
-                                 (collect-assessment-administrations administrations)
-                                 (add-missing-administrations user-id))]
-    {:administrations pending-administrations
-     :assessments assessments}))
+     pending-assessments (->> (vals administrations)
+                              ;; Sort administrations by their assessment-index
+                              (map #(sort-by :assessment-index %))
+                              ;; Return assessment (!) statuses
+                              (map #(get-assessment-statuses % assessments))
+                              ;; Remove lists within list
+                              flatten
+                              ;; Keep the assessments that are AS_PENDING
+                              (filter-pending-assessments)
+                              ;; Find corresponding administrations
+                              (collect-assessment-administrations administrations)
+                              ;; Add any missing administrations
+                              (add-missing-administrations user-id)
+                              ;; Merge assessment and administration info into one map
+                              (map #(merge % (get assessments (:assessment-id %))))
+                              ;; Sort assessments by priority
+                              (sort-by :priority)
+                              add-instruments
+                              ;; Create rounds of merged assessments, according to "allow-swallow" setting
+                              (reduce merge-batches ())
+                              ;; Create round steps
+                              (map-indexed batch-steps)
+                              ;; Remove lists within batches
+                              flatten
+                              ;; Create step db rows
+                              (map-indexed (step-row user-id))
+                              ;; Finally (save-round!)
+                              )]
+    pending-assessments))
 
-(defn get-administrations [user-id]
-  (let [administrations (get-pending-administrations user-id)]
-    (map #(select-keys % [:assessment-id :participant-administration-id :assessment-index :instruments])
-         (add-instruments (:administrations administrations)))))
+
+
+(def x (get-pending-assessments 535759))
+;(def administrations (:administrations y))
+;(def assessments (:assessments y))
+;(def x administrations)
+;(def x (vals x))
+;(def x (mapv #(sort-by :assessment-index %) x))
+;(def administration (first (nth x 4)))
+;(def assessment (get assessments (:assessment-id administration)))
+;(def activation-date (get-activation-date administration assessment))
