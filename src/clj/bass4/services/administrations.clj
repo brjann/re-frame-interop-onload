@@ -50,6 +50,32 @@
     (map #(assoc %1 :participant-administration-id %2) missing-administrations new-object-ids)))
 
 
+(defn- insert-new-into-old
+  [new-administrations old-administrations]
+  (map
+    (fn [old]
+      (if (nil? (:participant-administration-id old))
+        (conj old (first (filter
+                           #(and
+                              (= (:assessment-id old) (:assessment-id %1))
+                              (= (:assessment-index old) (:assessment-index %1)))
+                           new-administrations)))
+        old)
+      )
+    old-administrations))
+
+(defn- get-missing-administrations
+  [matching-administrations]
+  (map
+    #(select-keys % [:assessment-id :assessment-index])
+    (filter #(nil? (:participant-administration-id %)) matching-administrations)))
+
+(defn- add-missing-administrations
+  [matching-administrations user-id]
+  (let [missing-administrations (get-missing-administrations matching-administrations)]
+    (if (> (count missing-administrations) 0)
+      (insert-new-into-old (create-missing-administrations! user-id missing-administrations) matching-administrations)
+      matching-administrations)))
 
 ;; ------------------------
 ;;    XXXX
@@ -154,46 +180,18 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
-
-(defn- insert-new-into-old
-  [new-administrations old-administrations]
-  (map
-    (fn [old]
-      (if (nil? (:participant-administration-id old))
-        (conj old (first (filter
-                           #(and
-                              (= (:assessment-id old) (:assessment-id %1))
-                              (= (:assessment-index old) (:assessment-index %1)))
-                           new-administrations)))
-        old)
-      )
-    old-administrations))
-
-(defn- get-missing-administrations
-  [matching-administrations]
-  (map
-    #(select-keys % [:assessment-id :assessment-index])
-    (filter #(nil? (:participant-administration-id %)) matching-administrations)))
-
-(defn- handle-missing-administrations
-  [matching-administrations user-id]
-  (let [missing-administrations (get-missing-administrations matching-administrations)]
-    (if (> (count missing-administrations) 0)
-      (insert-new-into-old (create-missing-administrations! user-id missing-administrations) matching-administrations)
-      matching-administrations)))
-
 (defn- add-instruments [administrations]
   (map #(assoc % :instruments (db/get-assessment-instruments {:assessment-id (:assessment-id %)})) administrations))
 
 (defn- get-pending-administrations [user-id]
   (let
     [{:keys [administrations assessments]} (get-user-administrations user-id)
-     pending-assessments (filter-pending (process-administrations administrations assessments))
-     matching-administrations (handle-missing-administrations
-                                (collect-assessment-administrations pending-assessments administrations)
-                                user-id)]
-
-    {:administrations matching-administrations
+     pending-administrations (-> administrations
+                                 (process-administrations assessments)
+                                 filter-pending
+                                 (collect-assessment-administrations administrations)
+                                 (add-missing-administrations user-id))]
+    {:administrations pending-administrations
      :assessments assessments}))
 
 (defn get-administrations [user-id]
