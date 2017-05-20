@@ -229,10 +229,31 @@ FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;
 
 
+-- :name get-instrument-test-answers :? :1
+-- :doc get test answers of instrument
+SELECT
+  ObjectId AS `answers-id`
+FROM c_instrumentanswers
+WHERE ParentId = :instrument-id;
+
+
 -- :name get-instrument-scoring :? :1
 -- :doc get scoring formula of instrument
 SELECT
   ExpressionsById AS `scoring`,
   MissingValueValue AS `default-value`
 FROM c_instrumentscoring
-WHERE ParentId = :instrument-id
+WHERE ParentId = :instrument-id;
+
+
+-- :name save-instrument-answers! :! :n
+-- :doc save instrument answers
+UPDATE c_instrumentanswers
+  SET
+    Items = :items,
+    Specifications = :specifications,
+    Sums = :sums,
+    ItemNames = :item-names,
+    DateCompleted = unix_timestamp(now()),
+    Changed = unix_timestamp(now())
+  WHERE ObjectId = :answers-id;

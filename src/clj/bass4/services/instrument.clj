@@ -1,6 +1,6 @@
 (ns bass4.services.instrument
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.php_clj.core :refer [php->clj clj->php]]
             [bass4.services.bass :refer [unserialize-key map-map subs+]]
             [bass4.infix-parser :as infix]
             [clojure.string :as s]))
@@ -124,7 +124,8 @@
   (let [instrument (instrument-def instrument-id)]
     instrument))
 
-
+(defn get-instrument-test-answers [instrument-id]
+  (get-instrument-test-answers {:instrument-id instrument-id}))
 
 ;; ------------------------
 ;;     SCORING PARSER
@@ -219,3 +220,17 @@
   [items instrument-id]
   (if-let [scoring (get-scoring instrument-id)]
     (score-items items scoring)))
+
+(defn save-answers!
+  [answers-id items specifications sums item-names]
+  (db/save-instrument-answers!
+    {:answers-id answers-id
+     :items (clj->php items)
+     :specifications (clj->php specifications)
+     :sums (clj->php sums)
+     :item-names (clj->php item-names)}))
+
+(defn save-test-answers!
+  [instrument-id items specifications sums item-names]
+  (if-let [answers-id (:answers-id (db/get-instrument-test-answers {:instrument-id instrument-id}))]
+    (save-answers! answers-id items specifications sums item-names)))

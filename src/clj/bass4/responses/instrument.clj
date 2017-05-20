@@ -8,7 +8,6 @@
   (bass4.layout/render "instrument.html" {:instrument (instruments/get-instrument instrument-id) :instrument-id instrument-id}))
 
 ;; TODO: Add input spec
-;; TODO: Handle exception if answers cannot be parsed as JSON
 (defn post-answers [instrument-id items-str specifications-str]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (let [items (json-safe items-str)
@@ -17,4 +16,7 @@
         (bass4.services.bass/error-400-page)
         (let [item-names (map #(select-keys % [:item-id :name]) (filter :response-id (:elements instrument)))
               sums (instruments/score-items items (instruments/get-scoring instrument-id))]
-          (bass4.layout/render "instrument-answers.html" {:items items :specifications specifications :sums sums}))))))
+          (instruments/save-test-answers! instrument-id items specifications sums item-names)
+          (bass4.layout/render
+            "instrument-answers.html"
+            {:items items :specifications specifications :sums sums}))))))
