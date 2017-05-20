@@ -93,12 +93,13 @@
     <orderEntry type="library" name="Leiningen: org.clojure/clojurescript:0.0-2069" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/core.cache:0.6.5" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/core.memoize:0.5.9" level="project" />
-    <orderEntry type="library" name="Leiningen: org.clojure/data.json:0.2.3" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/data.json:0.2.6" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/data.priority-map:0.0.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/google-closure-library-third-party:0.0-20130212-95c19e7f0f5f" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/google-closure-library:0.0-20130212-95c19e7f0f5f" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/java.classpath:0.2.3" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/java.jdbc:0.6.1" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/math.numeric-tower:0.0.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.cli:0.3.5" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.logging:0.3.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.macro:0.1.5" level="project" />

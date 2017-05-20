@@ -1,6 +1,7 @@
 (ns bass4.services.bass
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]))
+            [bass4.php_clj.core :refer [php->clj]]
+            [clojure.data.json :as json]))
 
 (defn project-title []
   (:title (db/get-project-title)))
@@ -30,3 +31,15 @@
   ([s start end]
    (when (and (<= start (count s)) (<= start end))
      (subs s start (min end (count s))))))
+
+(defn json-safe
+  [json]
+  (try (json/read-str json)
+       (catch Exception e nil)))
+
+(defn error-400-page
+  ([] (error-400-page nil))
+  ([message]
+   (bass4.layout/error-page {:status  400
+                             :title   "Bad request!"
+                             :message message})))

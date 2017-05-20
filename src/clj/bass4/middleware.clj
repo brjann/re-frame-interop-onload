@@ -86,10 +86,8 @@
       (handler req)
       (catch ExceptionInfo e
         (if (= (:type (.data e)) :schema.core/error)
-          (error-page {:status 400
-                       :title "Bad request!"
-                       ;; TODO: This should only be included in development mode
-                       :message (.getMessage e)})
+          ;; TODO: Message should only be included in development mode
+          (bass4.services.bass/error-400-page (.getMessage e))
           (throw e))))))
 
 ;; TODO: This should not be applied to js and css-files
