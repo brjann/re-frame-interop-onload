@@ -302,6 +302,9 @@
        (vals)
        (flatten)))
 
+(defn text-shown!
+  [step]
+  (db/set-text-shown! {:id (:id step)}))
 
 ;; 1. When user logs in - create round entries
 ;; 2. If created round entries > 0, set :assessments-pending in session to true

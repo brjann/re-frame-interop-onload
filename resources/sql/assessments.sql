@@ -152,7 +152,7 @@ WHERE ObjectId = :administration-id
 
 
 -- :name delete-participant-administration! :! :1
--- :doc Update an object with new parent in objectlist
+-- :doc
 DELETE FROM c_participantadministration WHERE ObjectId = :administration-id
 
 
@@ -192,7 +192,7 @@ FROM assessment_rounds;
 
 -- :name insert-assessment-round! :! :n
 -- :doc insert assessment rounds from tuple param list
-INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Text, InstrumentId, AdministrationId)
+INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Texts, InstrumentId, AdministrationId)
 VALUES :t*:rows;
 
 -- :name unlock-tables! :! :n
@@ -214,3 +214,8 @@ FROM assessment_rounds WHERE
   AND
   RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
 ORDER BY step;
+
+
+-- :name set-text-shown! :! :n
+-- :doc
+UPDATE assessment_rounds SET Completed = now() WHERE Id = :id
