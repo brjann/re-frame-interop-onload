@@ -4,7 +4,7 @@
             [bass4.utils :refer [key-map-list map-map]]
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [taoensso.nippy :as nippy]))
+            [clojure.java.jdbc :as jdbc]))
 
 
 ;; ------------------------------
@@ -177,7 +177,6 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
-;; TODO: Add "komplettera mätning" instruments
 (defn- add-instruments [administrations]
   (map #(assoc % :instruments (map :instrument-id (db/get-assessment-instruments {:assessment-id (:assessment-id %)}))) administrations))
 
@@ -221,12 +220,14 @@
   (let [welcome {:text ((batch-texts :welcome-text) batch)}
         thank-you {:text ((batch-texts :thank-you-text) batch)}
         instruments (batch-instruments batch)]
+    ;; Does not handle empty stuff? Use concat instead of list
     (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
 
 (defn step-row
   [user-id]
   (fn [idx step]
     (merge
+      ;; TODO: What is the timezone of this? UTC?
       {:time              (clj-time.coerce/to-sql-date (t/now))
        :user-id           user-id
        :batch-id          nil
@@ -236,55 +237,83 @@
        :administration-id nil}
       step)))
 
-;; TODO: Fix concurrency with insert
 (defn save-round!
   [round]
-  (let [round-id (or (:round-id (db/get-new-round-id)) 0)]
-    (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))})))
+  (try
+    ;; Lock table to make sure that round-id is unique
+    (db/lock-assessment-rounds-table!)
+    (let [round-id (or (:round-id (db/get-new-round-id)) 0)]
+      (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))}))
+    (finally
+      (db/unlock-tables!))))
 
-(defn- get-pending-assessments [user-id]
+
+(defn get-pending-assessments [user-id]
   (let
     ;; NOTE that administrations is a map of lists
     ;; administrations within one assessment battery
-    [{:keys [administrations assessments]} (get-user-administrations user-id)
-     pending-assessments (->> (vals administrations)
-                              ;; Sort administrations by their assessment-index
-                              (map #(sort-by :assessment-index %))
-                              ;; Return assessment (!) statuses
-                              (map #(get-assessment-statuses % assessments))
-                              ;; Remove lists within list
-                              flatten
-                              ;; Keep the assessments that are AS_PENDING
-                              (filter-pending-assessments)
-                              ;; Find corresponding administrations
-                              (collect-assessment-administrations administrations)
-                              ;; Add any missing administrations
-                              (add-missing-administrations user-id)
-                              ;; Merge assessment and administration info into one map
-                              (map #(merge % (get assessments (:assessment-id %))))
-                              ;; Sort assessments by priority
-                              (sort-by :priority)
-                              add-instruments
-                              ;; Create rounds of merged assessments, according to "allow-swallow" setting
-                              (reduce merge-batches ())
-                              ;; Create round steps
-                              (map-indexed batch-steps)
-                              ;; Remove lists within batches
-                              flatten
-                              ;; Create step db rows
-                              (map-indexed (step-row user-id))
-                              ;; Finally (save-round!)
-                              )]
-    pending-assessments))
+    ;; TODO: What if no administrations?
+    [{:keys [administrations assessments]} (get-user-administrations user-id)]
+    (->> (vals administrations)
+         ;; Sort administrations by their assessment-index
+         (map #(sort-by :assessment-index %))
+         ;; Return assessment (!) statuses
+         (map #(get-assessment-statuses % assessments))
+         ;; Remove lists within list
+         (flatten)
+         ;; Keep the assessments that are AS_PENDING
+         (filter-pending-assessments)
+         ;; TODO: What if no administrations?
+         ;; Find corresponding administrations
+         (collect-assessment-administrations administrations)
+         ;; Add any missing administrations
+         (add-missing-administrations user-id)
+         ;; Merge assessment and administration info into one map
+         (map #(merge % (get assessments (:assessment-id %))))
+         ;; TODO: Add "komplettera mätning" instruments
+         ;; TODO: Remove already completed instruments
+         (add-instruments))))
 
+(defn get-assessment-round
+  [user-id pending-assessments]
+  (->> pending-assessments
+       ;; Sort assessments by priority
+       (sort-by :priority)
+       ;; Create rounds of merged assessments, according to "allow-swallow" setting
+       (reduce merge-batches ())
+       ;; Create round steps
+       (map-indexed batch-steps)
+       ;; Remove lists within batches
+       (flatten)
+       ;; Create step db rows
+       (map-indexed (step-row user-id))))
 
+(defn create-assessment-round-entries!
+  "Returns number of round entries created"
+  [user-id]
+  (let [pending-assessments (get-pending-assessments user-id)]
+    (when (seq pending-assessments)
+      (save-round! (get-assessment-round user-id pending-assessments)))))
 
-(def x (get-pending-assessments 535759))
-;(def administrations (:administrations y))
-;(def assessments (:assessments y))
-;(def x administrations)
-;(def x (vals x))
-;(def x (mapv #(sort-by :assessment-index %) x))
-;(def administration (first (nth x 4)))
-;(def assessment (get assessments (:assessment-id administration)))
-;(def activation-date (get-activation-date administration assessment))
+;; 1. When user logs in - create round entries
+;; 2. If created round entries > 0, set :assessments-pending in session to true
+;; 3. Whenever trying to access /user, check if :assessments-pending is true
+;; 4. If so, check if there are assessment round entries in table
+;;    no -> change session and redirect
+;; 5. If yes, hand over control to assessment shower
+;;
+;; Concurrency issues
+;; - If
+
+;; When creating session - Get and save rounds
+;; When loading page - Check if there are round steps available
+;; Before showing text step - check that batch includes instruments where completed = 0
+;;  - Else mark whole batch as completed
+;; When showing text step - mark as shown
+;; When instrument is finished
+;; - Update all instances of instrument in round where completed = 0
+;; http://stackoverflow.com/questions/3312361/does-this-lock-the-database/3312790#3312790
+;; http://stackoverflow.com/questions/4358732/is-incrementing-a-field-in-mysql-atomic
+;; - If affected_rows > 0, then save answers to c_instrumentanswers
+;; - If affected_rows > 1, then include "copy of" (how to handle more than 2 copies - unclear)
+;;

@@ -177,8 +177,12 @@ FROM c_instrument AS ci
 WHERE
     lca.LinkerId = :assessment-id
 ORDER BY
-    lca.SortOrder
+    lca.SortOrder;
 
+
+-- :name lock-assessment-rounds-table! :! :n
+-- :doc Lock the table for writing
+LOCK TABLES assessment_rounds WRITE;
 
 -- :name get-new-round-id :? :1
 -- :doc Get the max new round id
@@ -189,4 +193,7 @@ FROM assessment_rounds;
 -- :name insert-assessment-round! :! :n
 -- :doc Tuple Param List
 INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Text, InstrumentId, AdministrationId)
-VALUES :t*:rows
+VALUES :t*:rows;
+
+-- :name unlock-tables! :! :n
+UNLOCK TABLES;

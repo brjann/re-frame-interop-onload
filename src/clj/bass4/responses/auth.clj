@@ -2,6 +2,7 @@
   (:require [bass4.services.auth :as auth-service]
             [bass4.views.auth :as auth-view]
             [bass4.services.user :as user]
+            [bass4.services.administrations :as administrations]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [clojure.tools.logging :as log]
@@ -36,27 +37,25 @@
 ;;    LOGIN
 ;; ------------
 
-(defn- new-session-map [id add-double-auth]
-  (merge
-    {:identity          id
-     :auth-timeout      nil
-     :last-request-time (t/now)}
-    (when add-double-auth
-      {:double-authed    nil
-       :double-auth-code (auth-service/double-auth-code)})))
+(defn- new-session-map [user-id add-double-auth]
+  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
+    (merge
+      {:assessments-pending (> rounds-count 0)
+       :identity          user-id
+       :auth-timeout      nil
+       :last-request-time (t/now)}
+      (when add-double-auth
+        {:double-authed    nil
+         :double-auth-code (auth-service/double-auth-code)}))))
 
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
-  (if-let [id (auth-service/authenticate-by-username username password)]
+  (if-let [user-id (auth-service/authenticate-by-username username password)]
     (if (auth-service/double-auth-required?)
       (-> (response/found "/double-auth")
-          (assoc :session
-                 (merge session
-                        (new-session-map id true))))
+          (assoc :session (merge session (new-session-map user-id true))))
       (-> (response/found "/user/messages")
-          (assoc :session (merge session (new-session-map id false)))))
+          (assoc :session (merge session (new-session-map user-id false)))))
     (error-422 "error")))
-
-
 
 ;; ------------------
 ;;    DOUBLE-AUTH
