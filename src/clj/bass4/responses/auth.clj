@@ -2,7 +2,7 @@
   (:require [bass4.services.auth :as auth-service]
             [bass4.views.auth :as auth-view]
             [bass4.services.user :as user]
-            [bass4.services.administrations :as administrations]
+            [bass4.services.assessments :as administrations]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [clojure.tools.logging :as log]

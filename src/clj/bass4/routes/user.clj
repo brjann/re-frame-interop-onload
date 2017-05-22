@@ -24,7 +24,7 @@
     (if-let [user (user/get-user (:identity request))]
       (if (not (get-in request [:session :auth-timeout]))
         (if (auth-response/double-authed? (:session request))
-          (if (:assessments-pending request)
+          (if (:assessments-pending (:session request))
             (ANY "*" [] "You have assessments pending!")
             (routes
               (GET "/" [] "this is the dashboard")

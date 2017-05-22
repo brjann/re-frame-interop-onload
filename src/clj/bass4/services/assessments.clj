@@ -1,4 +1,4 @@
-(ns bass4.services.administrations
+(ns bass4.services.assessments
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map]]
@@ -246,7 +246,6 @@
       (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))}))
     (finally
       (db/unlock-tables!))))
-
 
 (defn get-pending-assessments [user-id]
   (let
