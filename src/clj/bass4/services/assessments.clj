@@ -298,6 +298,7 @@
   (->> (db/get-current-assessment-round {:user-id user-id})
        (group-by :batch-id)
        ;; Removes empty batches (only texts, no instruments)
+       ;; TODO: This also removes valid thank-you texts!
        (filter #(seq (filter :instrument-id (val %1))))
        (vals)
        (flatten)))
@@ -305,6 +306,10 @@
 (defn step-completed!
   [step]
   (db/set-step-completed! {:id (:id step)}))
+
+(defn instrument-completed!
+  [user-id instrument-id]
+  (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id}))
 
 ;; 1. When user logs in - create round entries
 ;; 2. If created round entries > 0, set :assessments-pending in session to true

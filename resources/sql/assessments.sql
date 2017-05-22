@@ -209,7 +209,8 @@ SELECT
   instrumentid as `instrument-id`,
   texts,
   step
-FROM assessment_rounds WHERE
+FROM assessment_rounds
+WHERE
   (Completed = 0 OR Completed IS NULL)
   AND
   RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
@@ -219,3 +220,13 @@ ORDER BY step;
 -- :name set-step-completed! :! :n
 -- :doc
 UPDATE assessment_rounds SET Completed = now() WHERE Id = :id
+
+
+-- :name set-instrument-completed! :! :n
+-- :doc
+UPDATE assessment_rounds SET Completed = now()
+WHERE
+  (InstrumentId = :instrument-id)
+  AND
+  RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id)
+

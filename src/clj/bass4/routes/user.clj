@@ -26,7 +26,14 @@
       (if (not (get-in request [:session :auth-timeout]))
         (if (auth-response/double-authed? (:session request))
           (if (:assessments-pending (:session request))
-            (ANY "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
+            (routes
+              (GET "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
+              (POST "*" [& params] (assessments-response/instrument-answers
+                                     (:user-id user)
+                                     (:session request)
+                                     (:instrument-id params)
+                                     (:items params)
+                                     (:specifications params))))
             (routes
               (GET "/" [] "this is the dashboard")
               (GET "/messages" []

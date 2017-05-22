@@ -29,14 +29,28 @@
       (text-page step)
       (instrument-page step))))
 
+(defn- assessments-completed
+  [session]
+  (-> (response/found "/user")
+      (assoc :session (merge session {:assessments-pending false}))))
+
+(defn- instrument-completed
+  [user-id instrument-id session]
+  (assessments-service/instrument-completed! user-id instrument-id)
+  (-> (response/found "/user")
+      #_(assoc :session (merge session {:assessments-pending false}))))
 
 (defn handle-assessments
   [user-id session]
-  (log/debug "handle-assessments")
   (let [round (assessments-service/get-assessment-round user-id)]
-    (log/debug (seq round))
     (if-not (seq round)
-      (-> (response/found "/user")
-          (assoc :session (merge session {:assessments-pending false})))
+      (assessments-completed session)
       (assessment-page round))))
 
+;; TODO: Add input validation
+(defn instrument-answers
+  [user-id session instrument-id items specifications]
+  (let [round (assessments-service/get-assessment-round user-id)]
+    (if-not (seq round)
+      (assessments-completed session)
+      (instrument-completed user-id instrument-id session))))
