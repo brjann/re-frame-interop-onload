@@ -216,6 +216,6 @@ FROM assessment_rounds WHERE
 ORDER BY step;
 
 
--- :name set-text-shown! :! :n
+-- :name set-step-completed! :! :n
 -- :doc
 UPDATE assessment_rounds SET Completed = now() WHERE Id = :id

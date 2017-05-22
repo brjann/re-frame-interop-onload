@@ -4,7 +4,8 @@
 <div class="container">
     <div id = "instrument">
         <div class="hidden">
-            <form method="get" class="submitter" action="/instrument/post/{{instrument-id}}">
+            <form method="get" class="submitter" action="">
+                <input type="hidden" name="instrument-id" value="{{instrument-id}}">
                 <input type="hidden" name="items">
                 <input type="hidden" name="specifications">
             </form>

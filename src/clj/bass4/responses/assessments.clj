@@ -2,21 +2,32 @@
   (:require [bass4.services.assessments :as assessments-service]
             [ring.util.http-response :as response]
             [bass4.utils :refer [json-safe]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.instrument :as instruments]))
 
 (defn- text-page
   [step]
-  (assessments-service/text-shown! step)
+  (assessments-service/step-completed! step)
   (bass4.layout/render "assessment-text.html"
                        {:texts (try (clojure.edn/read-string (:texts step))
                                     (catch Exception e ""))}))
+
+(defn- instrument-page
+  [step]
+  (let [instrument-id (:instrument-id step)]
+    (if-let [instrument (instruments/get-instrument instrument-id)]
+      (bass4.layout/render "instrument.html" {:instrument instrument :instrument-id instrument-id})
+      (do
+        ;; Could not find instrument - return error screen and mark step as completed
+        (assessments-service/step-completed! step)
+        (bass4.layout/error-page (str "Instrument " instrument-id " not found"))))))
 
 (defn- assessment-page
   [round]
   (let [step (first round)]
     (if (nil? (:instrument-id step))
       (text-page step)
-      "all is well!")))
+      (instrument-page step))))
 
 
 (defn handle-assessments
