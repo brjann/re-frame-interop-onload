@@ -201,6 +201,7 @@
       (reduce (statement-resolver default-value) $items statements)
       exports)))
 
+;; TODO: Verify correct instrument answers have been posted
 (defn score-instrument
   [items instrument-id]
   (if-let [scoring (get-scoring instrument-id)]

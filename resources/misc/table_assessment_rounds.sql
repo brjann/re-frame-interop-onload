@@ -5,7 +5,7 @@ CREATE TABLE `assessment_rounds` (
   `UserId` int(11) DEFAULT NULL,
   `BatchId` int(11) DEFAULT NULL,
   `Step` int(11) DEFAULT NULL,
-  `Text` text,
+  `Texts` text,
   `InstrumentId` int(11) DEFAULT NULL,
   `AdministrationId` int(11) DEFAULT NULL,
   `AnswersId` int(11) DEFAULT NULL,

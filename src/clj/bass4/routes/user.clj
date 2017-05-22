@@ -3,6 +3,7 @@
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
             [bass4.responses.auth :as auth-response]
+            [bass4.responses.assessments :as assessments-response]
             [ring.util.http-response :as response]
             [ring.util.request :as request]
             [ring.util.codec :as codec]))
@@ -25,7 +26,7 @@
       (if (not (get-in request [:session :auth-timeout]))
         (if (auth-response/double-authed? (:session request))
           (if (:assessments-pending (:session request))
-            (ANY "*" [] "You have assessments pending!")
+            (ANY "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
             (routes
               (GET "/" [] "this is the dashboard")
               (GET "/messages" []

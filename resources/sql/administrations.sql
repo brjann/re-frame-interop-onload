@@ -191,9 +191,26 @@ SELECT
 FROM assessment_rounds;
 
 -- :name insert-assessment-round! :! :n
--- :doc Tuple Param List
+-- :doc insert assessment rounds from tuple param list
 INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Text, InstrumentId, AdministrationId)
 VALUES :t*:rows;
 
 -- :name unlock-tables! :! :n
 UNLOCK TABLES;
+
+
+-- :name get-current-assessment-round :? :*
+-- :doc Tuple Param List
+SELECT
+  id,
+  userid as `user-id`,
+  administrationid as `administration-id`,
+  batchid as `batch-id`,
+  instrumentid as `instrument-id`,
+  texts,
+  step
+FROM assessment_rounds WHERE
+  (Completed = 0 OR Completed IS NULL)
+  AND
+  RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
+ORDER BY step;

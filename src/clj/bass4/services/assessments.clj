@@ -217,8 +217,8 @@
 
 (defn batch-steps
   [idx batch]
-  (let [welcome {:text ((batch-texts :welcome-text) batch)}
-        thank-you {:text ((batch-texts :thank-you-text) batch)}
+  (let [welcome {:texts ((batch-texts :welcome-text) batch)}
+        thank-you {:texts ((batch-texts :thank-you-text) batch)}
         instruments (batch-instruments batch)]
     ;; Does not handle empty stuff? Use concat instead of list
     (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
@@ -232,7 +232,7 @@
        :user-id           user-id
        :batch-id          nil
        :step              idx
-       :text              nil
+       :texts             nil
        :instrument-id     nil
        :administration-id nil}
       step)))
@@ -273,7 +273,7 @@
          ;; TODO: Remove already completed instruments
          (add-instruments))))
 
-(defn get-assessment-round
+(defn generate-assessment-round
   [user-id pending-assessments]
   (->> pending-assessments
        ;; Sort assessments by priority
@@ -292,7 +292,16 @@
   [user-id]
   (let [pending-assessments (get-pending-assessments user-id)]
     (when (seq pending-assessments)
-      (save-round! (get-assessment-round user-id pending-assessments)))))
+      (save-round! (generate-assessment-round user-id pending-assessments)))))
+
+(defn get-assessment-round [user-id]
+  (->> (db/get-current-assessment-round {:user-id user-id})
+       (group-by :batch-id)
+       ;; Removes empty batches (only texts, no instruments)
+       (filter #(seq (filter :instrument-id (val %1))))
+       (vals)
+       (flatten)))
+
 
 ;; 1. When user logs in - create round entries
 ;; 2. If created round entries > 0, set :assessments-pending in session to true
