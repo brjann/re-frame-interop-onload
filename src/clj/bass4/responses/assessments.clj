@@ -16,7 +16,11 @@
   [step]
   (let [instrument-id (:instrument-id step)]
     (if-let [instrument (instruments/get-instrument instrument-id)]
-      (bass4.layout/render "instrument.html" {:instrument instrument :instrument-id instrument-id})
+      (bass4.layout/render "instrument.html"
+                           {:instrument instrument
+                            :instrument-id instrument-id
+                            :order (:instrument-order step)
+                            :count (:instrument-count step)})
       (do
         ;; Could not find instrument - return error screen and mark step as completed
         (assessments-service/step-completed! step)

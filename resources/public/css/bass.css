@@ -7,9 +7,14 @@
     Instrument layout
  ***********************/
 
-div#instrument.classic {
+div#instrument.classic .instrument-elements{
     font-size: 11.2px;
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+div#instrument .order-count {
+    width: 100%;
+    text-align: center;
 }
 
 div#instrument .instrument-show-name {

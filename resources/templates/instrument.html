@@ -10,6 +10,9 @@
                 <input type="hidden" name="specifications">
             </form>
         </div>
+        {% ifunequal order nil %}
+        <div class="order-count">{% trb instrument/order-count %}{{order}}|{{count}}{% endtrb %}</div>
+        {% endifunequal %}
         <div class="instrument-show-name"></div>
         <div class="instrument-elements"></div>
     </div>

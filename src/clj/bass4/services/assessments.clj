@@ -79,11 +79,10 @@
       (insert-new-into-old (create-missing-administrations! user-id missing-administrations) matching-administrations)
       matching-administrations)))
 
-;; ------------------------
-;;    XXXX
-;; ------------------------
 
-
+;; ------------------------
+;; GET PENDING ASSESSMENTS
+;; ------------------------
 
 (defn- get-user-administrations
   [user-id]
@@ -182,17 +181,42 @@
   (map #(assoc % :instruments (map :instrument-id (db/get-assessment-instruments {:assessment-id (:assessment-id %)}))) administrations))
 
 
-(defn merge-batches
-  [coll val]
-  (if (and (seq coll) (= (:allow-swallow val) 1))
-    (concat (butlast coll) (list (concat (last coll) (list val))))
-    (concat coll (list (list val)))))
+(defn get-pending-assessments [user-id]
+  (let
+    ;; NOTE that administrations is a map of lists
+    ;; administrations within one assessment battery
+    ;; TODO: What if no administrations?
+    [{:keys [administrations assessments]} (get-user-administrations user-id)]
+    (->> (vals administrations)
+         ;; Sort administrations by their assessment-index
+         (map #(sort-by :assessment-index %))
+         ;; Return assessment (!) statuses
+         (map #(get-assessment-statuses % assessments))
+         ;; Remove lists within list
+         (flatten)
+         ;; Keep the assessments that are AS_PENDING
+         (filter-pending-assessments)
+         ;; TODO: What if no administrations?
+         ;; Find corresponding administrations
+         (collect-assessment-administrations administrations)
+         ;; Add any missing administrations
+         (add-missing-administrations user-id)
+         ;; Merge assessment and administration info into one map
+         (map #(merge % (get assessments (:assessment-id %))))
+         ;; TODO: Add "komplettera mätning" instruments
+         ;; TODO: Remove already completed instruments
+         (add-instruments))))
 
 
 ;; ------------------------
 ;;     ROUNDS CREATION
 ;; ------------------------
 
+(defn merge-batches
+  [coll val]
+  (if (and (seq coll) (= (:allow-swallow val) 1))
+    (concat (butlast coll) (list (concat (last coll) (list val))))
+    (concat coll (list (list val)))))
 
 (defn batch-texts
   [text-name]
@@ -248,31 +272,6 @@
     (finally
       (db/unlock-tables!))))
 
-(defn get-pending-assessments [user-id]
-  (let
-    ;; NOTE that administrations is a map of lists
-    ;; administrations within one assessment battery
-    ;; TODO: What if no administrations?
-    [{:keys [administrations assessments]} (get-user-administrations user-id)]
-    (->> (vals administrations)
-         ;; Sort administrations by their assessment-index
-         (map #(sort-by :assessment-index %))
-         ;; Return assessment (!) statuses
-         (map #(get-assessment-statuses % assessments))
-         ;; Remove lists within list
-         (flatten)
-         ;; Keep the assessments that are AS_PENDING
-         (filter-pending-assessments)
-         ;; TODO: What if no administrations?
-         ;; Find corresponding administrations
-         (collect-assessment-administrations administrations)
-         ;; Add any missing administrations
-         (add-missing-administrations user-id)
-         ;; Merge assessment and administration info into one map
-         (map #(merge % (get assessments (:assessment-id %))))
-         ;; TODO: Add "komplettera mätning" instruments
-         ;; TODO: Remove already completed instruments
-         (add-instruments))))
 
 (defn generate-assessment-round
   [user-id pending-assessments]
@@ -295,37 +294,31 @@
     (when (seq pending-assessments)
       (save-round! (generate-assessment-round user-id pending-assessments)))))
 
+
+;; ------------------------
+;;  ROUNDS ADMINISTRATION
+;; ------------------------
+
 (defn get-assessment-round [user-id]
-  (->> (db/get-current-assessment-round {:user-id user-id})
-
-       ;; Add total number of instruments to each step
-       #_((fn [x]
-          (let [instrument-count (count (remove nil? (distinct (map :instrument-id x))))]
-            (map #(assoc % :instrument-count instrument-count) x))))
-       #_((fn [x]
-          (let [instruments (remove nil? (distinct (map :instrument-id x)))]
-            (map #(merge % {:instrument-count (count instruments)
-                            :instrument-order (inc (first (indices (partial = (:instrument-id %)) instruments)))})
-                 x))))
-
-       ((fn [x]
-          (let [instruments (remove nil? (distinct (map :instrument-id x)))]
-            (map #(merge % {:instrument-count (count instruments)
-                            :instrument-order (->> instruments
-                                                   (indices (partial = (:instrument-id %)))
-                                                   (first)
-                                                   (fnil+ inc))})
-                 x))))
-
-       ;; Remove already completed instruments
-       (filter (comp not :completed))
-
-       ;; The following removes empty batches (only texts, no instruments).
-       ;; Keep texts that should be shown.
-       (group-by :batch-id)
-       (filter #(seq (filter (some-fn :instrument-id :must-show-texts) (val %1))))
-       (vals)
-       (flatten)))
+  (let [order-count (fn [x]
+                      (let [instruments (remove nil? (distinct (map :instrument-id x)))]
+                        (map #(merge % {:instrument-count (count instruments)
+                                        :instrument-order (->> instruments
+                                                               (indices (partial = (:instrument-id %)))
+                                                               (first)
+                                                               (fnil+ inc))})
+                             x)))]
+    (->> (db/get-current-assessment-round {:user-id user-id})
+         ;; Add instrument order and total number of instruments to each step
+         (order-count)
+         ;; Remove already completed instruments
+         (filter (comp not :completed))
+         ;; The following removes empty batches (only texts, no instruments).
+         ;; Keep texts that should be shown.
+         (group-by :batch-id)
+         (filter #(seq (filter (some-fn :instrument-id :must-show-texts) (val %1))))
+         (vals)
+         (flatten))))
 
 (defn batch-must-show-texts!
   [step]
