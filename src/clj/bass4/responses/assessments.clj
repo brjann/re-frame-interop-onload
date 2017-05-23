@@ -20,6 +20,7 @@
       (do
         ;; Could not find instrument - return error screen and mark step as completed
         (assessments-service/step-completed! step)
+        ;; TODO: This error page does not work - see documentation for for error-page
         (bass4.layout/error-page (str "Instrument " instrument-id " not found"))))))
 
 (defn- assessment-page
@@ -27,7 +28,7 @@
   (let [step (first round)]
     ;; This makes sure that the thank-you text is shown.
     ;; Bad separation of concern but difficult to place elsewhere
-    (assessments-service/batch-must-show! step)
+    (assessments-service/batch-must-show-texts! step)
     (if (nil? (:instrument-id step))
       (text-page step)
       (instrument-page step))))

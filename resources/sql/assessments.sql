@@ -208,6 +208,12 @@ SELECT
   administrationid as `administration-id`,
   batchid as `batch-id`,
   (CASE
+   WHEN completed IS NULL OR completed = 0
+     THEN NULL
+   ELSE
+     1
+   END) AS `completed`,
+  (CASE
    WHEN instrumentid IS NULL OR instrumentid = 0
      THEN NULL
    ELSE
@@ -215,37 +221,39 @@ SELECT
    END) AS `instrument-id`,
   texts,
   (CASE
-   WHEN mustshow IS NULL OR mustshow = 0
+   WHEN mustshowtexts IS NULL OR mustshowtexts = 0
      THEN NULL
    ELSE
-     mustshow
-   END) AS `must-show`,
+     mustshowtexts
+   END) AS `must-show-texts`,
   step
 FROM assessment_rounds
 WHERE
-  (Completed = 0 OR Completed IS NULL)
-  AND
+--  (Completed = 0 OR Completed IS NULL)
+--  AND
   RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
 ORDER BY step;
 
 
 -- :name set-step-completed! :! :n
 -- :doc
-UPDATE assessment_rounds SET Completed = now() WHERE Id = :id;
+UPDATE assessment_rounds SET Completed = UTC_TIMESTAMP() WHERE Id = :id;
 
 
 -- :name set-instrument-completed! :! :n
 -- :doc
-UPDATE assessment_rounds SET Completed = now()
+UPDATE assessment_rounds SET Completed = UTC_TIMESTAMP()
 WHERE
   (InstrumentId = :instrument-id)
   AND
   RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id);
 
--- :name set-batch-must-show! :! :n
+-- :name set-batch-must-show-texts! :! :n
 -- :doc
-UPDATE assessment_rounds SET MustShow = 1
+UPDATE assessment_rounds SET MustShowTexts = 1
 WHERE
   (BatchId = :batch-id)
   AND
-  (RoundId = :round-id);
+  (RoundId = :round-id)
+  AND
+  (Texts != "");

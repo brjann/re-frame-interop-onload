@@ -297,15 +297,25 @@
 
 (defn get-assessment-round [user-id]
   (->> (db/get-current-assessment-round {:user-id user-id})
+
+       ;; Add total number of instruments to each step
+       ((fn [x]
+          (let [instrument-count (count (remove nil? (distinct (map :instrument-id x))))]
+            (map #(assoc % :instrument-count instrument-count) x))))
+
+       ;; Remove already completed instruments
+       (filter (comp not :completed))
+
+       ;; The following removes empty batches (only texts, no instruments).
+       ;; Keep texts that should be shown.
        (group-by :batch-id)
-       ;; Removes empty batches (only texts, no instruments)
-       (filter #(seq (filter (some-fn :instrument-id :must-show) (val %1))))
+       (filter #(seq (filter (some-fn :instrument-id :must-show-texts) (val %1))))
        (vals)
        (flatten)))
 
-(defn batch-must-show!
+(defn batch-must-show-texts!
   [step]
-  (db/set-batch-must-show! {:round-id (:round-id step) :batch-id (:batch-id step)}))
+  (db/set-batch-must-show-texts! {:round-id (:round-id step) :batch-id (:batch-id step)}))
 
 (defn step-completed!
   [step]
