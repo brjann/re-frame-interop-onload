@@ -1,7 +1,7 @@
 (ns bass4.services.assessments
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list map-map]]
+            [bass4.utils :refer [key-map-list map-map indices fnil+]]
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
@@ -299,9 +299,23 @@
   (->> (db/get-current-assessment-round {:user-id user-id})
 
        ;; Add total number of instruments to each step
-       ((fn [x]
+       #_((fn [x]
           (let [instrument-count (count (remove nil? (distinct (map :instrument-id x))))]
             (map #(assoc % :instrument-count instrument-count) x))))
+       #_((fn [x]
+          (let [instruments (remove nil? (distinct (map :instrument-id x)))]
+            (map #(merge % {:instrument-count (count instruments)
+                            :instrument-order (inc (first (indices (partial = (:instrument-id %)) instruments)))})
+                 x))))
+
+       ((fn [x]
+          (let [instruments (remove nil? (distinct (map :instrument-id x)))]
+            (map #(merge % {:instrument-count (count instruments)
+                            :instrument-order (->> instruments
+                                                   (indices (partial = (:instrument-id %)))
+                                                   (first)
+                                                   (fnil+ inc))})
+                 x))))
 
        ;; Remove already completed instruments
        (filter (comp not :completed))

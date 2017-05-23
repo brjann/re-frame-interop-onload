@@ -49,3 +49,11 @@
             k
             (assoc m (get (first s) k) (first s))))))
 
+;; https://stackoverflow.com/questions/8641305/find-index-of-an-element-matching-a-predicate-in-clojure
+(defn indices [pred coll]
+  (keep-indexed #(when (pred %2) %1) coll))
+
+(defn fnil+ [f x]
+  "Returns nil if x is nil, else (f x)"
+  (when-not (nil? x)
+    (f x)))
