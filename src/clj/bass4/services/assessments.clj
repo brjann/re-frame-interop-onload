@@ -21,6 +21,7 @@
 
 (defn- delete-administration!
   [administration-id]
+  (log/info "Deleting surplus administrations " administration-id)
   (db/delete-object-from-objectlist! {:object-id administration-id})
   (db/delete-participant-administration! {:administration-id administration-id}))
 

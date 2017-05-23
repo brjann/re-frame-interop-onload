@@ -7,7 +7,7 @@ SELECT
 FROM c_participant AS cp
     LEFT JOIN c_group AS cg
         ON (cp.`Group` = cg.ObjectId)
-WHERE cp.ObjectId = :user-id
+WHERE cp.ObjectId = :user-id;
 
 
 -- :name get-assessment-series-assessments :? :*
@@ -153,7 +153,7 @@ WHERE ObjectId = :administration-id;
 
 -- :name delete-participant-administration! :! :1
 -- :doc
-DELETE FROM c_participantadministration WHERE ObjectId = :administration-id
+DELETE FROM c_participantadministration WHERE ObjectId = :administration-id;
 
 
 -- :name get-administration-by-assessment-and-index :? :1
