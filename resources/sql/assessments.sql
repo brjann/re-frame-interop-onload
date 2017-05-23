@@ -136,7 +136,7 @@ ON DUPLICATE KEY UPDATE
 Assessment = VALUES(Assessment),
 AssessmentIndex = VALUES(AssessmentIndex),
 Active = VALUES(Active),
-Deleted = VALUES(Deleted)
+Deleted = VALUES(Deleted);
 
 
 -- :name update-new-participant-administration! :! :1
@@ -148,7 +148,7 @@ SET
     AssessmentIndex = :assessment-index,
 Active = 1,
 Deleted = 0
-WHERE ObjectId = :administration-id
+WHERE ObjectId = :administration-id;
 
 
 -- :name delete-participant-administration! :! :1
@@ -204,10 +204,22 @@ UNLOCK TABLES;
 SELECT
   id,
   userid as `user-id`,
+  roundid as `round-id`,
   administrationid as `administration-id`,
   batchid as `batch-id`,
-  instrumentid as `instrument-id`,
+  (CASE
+   WHEN instrumentid IS NULL OR instrumentid = 0
+     THEN NULL
+   ELSE
+     instrumentid
+   END) AS `instrument-id`,
   texts,
+  (CASE
+   WHEN mustshow IS NULL OR mustshow = 0
+     THEN NULL
+   ELSE
+     mustshow
+   END) AS `must-show`,
   step
 FROM assessment_rounds
 WHERE
@@ -219,7 +231,7 @@ ORDER BY step;
 
 -- :name set-step-completed! :! :n
 -- :doc
-UPDATE assessment_rounds SET Completed = now() WHERE Id = :id
+UPDATE assessment_rounds SET Completed = now() WHERE Id = :id;
 
 
 -- :name set-instrument-completed! :! :n
@@ -228,5 +240,12 @@ UPDATE assessment_rounds SET Completed = now()
 WHERE
   (InstrumentId = :instrument-id)
   AND
-  RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id)
+  RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id);
 
+-- :name set-batch-must-show! :! :n
+-- :doc
+UPDATE assessment_rounds SET MustShow = 1
+WHERE
+  (BatchId = :batch-id)
+  AND
+  (RoundId = :round-id);

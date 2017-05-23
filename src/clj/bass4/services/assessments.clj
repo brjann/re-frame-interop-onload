@@ -4,7 +4,8 @@
             [bass4.utils :refer [key-map-list map-map]]
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log]))
 
 
 ;; ------------------------------
@@ -113,26 +114,26 @@
 
 
 (defn- get-administration-status [administration next-administration-status assessment]
-  {:assessment-id (:assessment-id assessment)
+  {:assessment-id    (:assessment-id assessment)
    :assessment-index (:assessment-index administration)
-   :is-record (:is-record assessment)
-   :assessment-name (:assessment-name assessment)
-   :clinician-rated (:clinician-rated assessment)
-   :status (cond
-             (= (:participant-administration-id administration) (:group-administration-id administration) nil) "AS_ALL_MISSING"
-             (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration))) "AS_OWN_MISSING"
-             (and (= (:scope assessment) 1) (nil? (:group-administration-id administration))) "AS_GROUP_MISSING"
-             (> (:date-completed administration) 0) "AS_COMPLETED"
-             (> (:assessment-index administration) (:repetitions assessment)) "AS_SUPERFLUOUS"
-             (zero? (:active administration)) "AS_INACTIVE"
-             (check-next-status assessment next-administration-status) "AS_DATE_PASSED"
-             :else (let [activation-date (get-activation-date administration assessment)
-                         time-limit (get-time-limit assessment)]
-                     (cond
-                       (nil? activation-date) "AS_NO_DATE"
-                       (t/before? (t/now) activation-date) "AS_WAITING"
-                       (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit)))) "AS_DATE_PASSED"
-                       :else "AS_PENDING")))})
+   :is-record        (:is-record assessment)
+   :assessment-name  (:assessment-name assessment)
+   :clinician-rated  (:clinician-rated assessment)
+   :status           (cond
+                       (= (:participant-administration-id administration) (:group-administration-id administration) nil) "AS_ALL_MISSING"
+                       (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration))) "AS_OWN_MISSING"
+                       (and (= (:scope assessment) 1) (nil? (:group-administration-id administration))) "AS_GROUP_MISSING"
+                       (> (:date-completed administration) 0) "AS_COMPLETED"
+                       (> (:assessment-index administration) (:repetitions assessment)) "AS_SUPERFLUOUS"
+                       (zero? (:active administration)) "AS_INACTIVE"
+                       (check-next-status assessment next-administration-status) "AS_DATE_PASSED"
+                       :else (let [activation-date (get-activation-date administration assessment)
+                                   time-limit (get-time-limit assessment)]
+                               (cond
+                                 (nil? activation-date) "AS_NO_DATE"
+                                 (t/before? (t/now) activation-date) "AS_WAITING"
+                                 (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit)))) "AS_DATE_PASSED"
+                                 :else "AS_PENDING")))})
 
 (defn- get-assessment-statuses [administrations assessments]
   (when (seq administrations)
@@ -198,10 +199,10 @@
   (fn
     [batch]
     (pr-str (remove
-                    #(some (partial = %) [nil ""])
-                    (map-indexed
-                      (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
-                      batch)))))
+              #(some (partial = %) [nil ""])
+              (map-indexed
+                (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
+                batch)))))
 
 (defn assessment-instruments
   [assessment]
@@ -298,10 +299,13 @@
   (->> (db/get-current-assessment-round {:user-id user-id})
        (group-by :batch-id)
        ;; Removes empty batches (only texts, no instruments)
-       ;; TODO: This also removes valid thank-you texts!
-       (filter #(seq (filter :instrument-id (val %1))))
+       (filter #(seq (filter (some-fn :instrument-id :must-show) (val %1))))
        (vals)
        (flatten)))
+
+(defn batch-must-show!
+  [step]
+  (db/set-batch-must-show! {:round-id (:round-id step) :batch-id (:batch-id step)}))
 
 (defn step-completed!
   [step]
@@ -310,6 +314,7 @@
 (defn instrument-completed!
   [user-id instrument-id]
   (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id}))
+
 
 ;; 1. When user logs in - create round entries
 ;; 2. If created round entries > 0, set :assessments-pending in session to true

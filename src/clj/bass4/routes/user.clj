@@ -20,6 +20,7 @@
     (POST "/message-save-draft" [& params :as req] (messages-response/save-draft params req))
     #_(GET "/charts" req (charts-page req))))
 
+;; TODO: Posts after you have been logged out because of timeout simply don't work. 403 forbidden
 (def user-routes
   (context "/user" [:as request]
     (if-let [user (user/get-user (:identity request))]

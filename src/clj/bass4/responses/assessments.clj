@@ -25,6 +25,9 @@
 (defn- assessment-page
   [round]
   (let [step (first round)]
+    ;; This makes sure that the thank-you text is shown.
+    ;; Bad separation of concern but difficult to place elsewhere
+    (assessments-service/batch-must-show! step)
     (if (nil? (:instrument-id step))
       (text-page step)
       (instrument-page step))))
@@ -53,4 +56,5 @@
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
+      ;; TODO: Validate input
       (instrument-completed user-id instrument-id session))))

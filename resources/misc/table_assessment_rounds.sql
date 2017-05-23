@@ -5,11 +5,11 @@ CREATE TABLE `assessment_rounds` (
   `UserId` int(11) DEFAULT NULL,
   `BatchId` int(11) DEFAULT NULL,
   `Step` int(11) DEFAULT NULL,
-  `Texts` text,
   `InstrumentId` int(11) DEFAULT NULL,
+  `Texts` text,
   `AdministrationId` int(11) DEFAULT NULL,
-  `AnswersId` int(11) DEFAULT NULL,
-  `Completed` int(11) DEFAULT NULL,
+  `Completed` datetime DEFAULT NULL,
+  `MustShow` tinyint(4) DEFAULT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `RoundIdStep` (`RoundId`,`Step`)
-);
+)
