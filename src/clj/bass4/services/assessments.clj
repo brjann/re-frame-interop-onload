@@ -185,7 +185,8 @@
   (let
     ;; NOTE that administrations is a map of lists
     ;; administrations within one assessment battery
-    ;; TODO: What if no administrations?
+    ;;
+    ;; Amazingly enough, this all works even with no pending administrations
     [{:keys [administrations assessments]} (get-user-administrations user-id)]
     (->> (vals administrations)
          ;; Sort administrations by their assessment-index
@@ -196,7 +197,6 @@
          (flatten)
          ;; Keep the assessments that are AS_PENDING
          (filter-pending-assessments)
-         ;; TODO: What if no administrations?
          ;; Find corresponding administrations
          (collect-assessment-administrations administrations)
          ;; Add any missing administrations
@@ -291,8 +291,9 @@
   "Returns number of round entries created"
   [user-id]
   (let [pending-assessments (get-pending-assessments user-id)]
-    (when (seq pending-assessments)
-      (save-round! (generate-assessment-round user-id pending-assessments)))))
+    (if (seq pending-assessments)
+      (save-round! (generate-assessment-round user-id pending-assessments))
+      0)))
 
 
 ;; ------------------------
