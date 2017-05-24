@@ -180,8 +180,22 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
-(defn- add-instruments [administrations]
-  (map #(assoc % :instruments (map :instrument-id (db/get-assessment-instruments {:assessment-id (:assessment-id %)}))) administrations))
+;; TODO: Remove clinician assessed instruments
+;; TODO: Mark empty administrations as completed
+(defn- add-instruments [assessments]
+  (let [completed-instruments (->> {:administration-ids (map :participant-administration-id assessments)}
+                                   (db/get-administration-completed-instruments)
+                                   (group-by :administration-id)
+                                   (map-map #(map :instrument-id %)))
+        assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
+                                    (db/get-assessments-instruments)
+                                    (group-by :assessment-id)
+                                    (map-map #(map :instrument-id %)))]
+    (map #(assoc % :instruments (into []
+                                      (clojure.set/difference
+                                        (set (get assessment-instruments (:assessment-id %)))
+                                        (set (get completed-instruments (:participant-administration-id %))))))
+         assessments)))
 
 
 (defn get-pending-assessments [user-id]

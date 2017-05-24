@@ -128,7 +128,8 @@
           last-request-time (:last-request-time session)
           auth-timeout (cond
                          ;; TODO: Only randomize timeout when in development mode
-                         (= (rand-int 200) 10) true
+                         (= (rand-int 200) 10) (do (log/info "Random timeout")
+                                                   true)
                          (:auth-timeout session) true
                          (nil? last-request-time) nil
                          (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]

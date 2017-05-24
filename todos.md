@@ -8,6 +8,7 @@
  - Attack detector
  - Remove auto-completes in login?
  - CSRF twice in layout/render?
+ - Senast inloggad
 
 ## Done
  - Re-authenticate

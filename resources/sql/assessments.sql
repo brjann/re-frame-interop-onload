@@ -64,7 +64,7 @@ WHERE parentid = :assessment-series-id
 SELECT cti.Assessments as `assessment-series-id` FROM c_participant AS cp
     JOIN c_treatmentinterface AS cti
         ON cp.ParentInterface = cti.ObjectId
-WHERE cp.ObjectId = :user-id
+WHERE cp.ObjectId = :user-id;
 
 -- :name get-user-administrations :? :*
 -- :doc Gets the participant and group administrations for a user.
@@ -179,6 +179,20 @@ WHERE
 ORDER BY
     lca.SortOrder;
 
+-- :name get-assessments-instruments :? :*
+-- :doc Get assessment's instrument
+SELECT
+  ObjectId AS `instrument-id`,
+  lca.LinkerId AS `assessment-id`
+FROM c_instrument AS ci
+  JOIN
+  links_c_assessment AS lca
+    ON ci.ObjectId = lca.LinkeeId AND lca.PropertyName = "Instruments"
+WHERE
+  lca.LinkerId IN(:v*:assessment-ids)
+ORDER BY
+  lca.SortOrder;
+
 
 -- :name lock-assessment-rounds-table! :! :n
 -- :doc Lock the table for writing
@@ -200,7 +214,7 @@ UNLOCK TABLES;
 
 
 -- :name get-current-assessment-round :? :*
--- :doc Tuple Param List
+-- :doc
 SELECT
   id,
   userid as `user-id`,
@@ -257,3 +271,11 @@ WHERE
   (RoundId = :round-id)
   AND
   (Texts != "");
+
+-- :name get-administration-completed-instruments :? :*
+SELECT
+  ParentId AS `administration-id`,
+  Instrument AS `instrument-id`
+  FROM c_instrumentanswers
+WHERE
+ParentId IN(:v*:administration-ids) AND DateCompleted > 0;
