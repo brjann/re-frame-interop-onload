@@ -48,9 +48,12 @@
         answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
+          (assessments-service/administrations-completed! round instrument-id)
           (-> (response/found "/user")
               #_(assoc :session (merge session {:assessments-pending false}))))
-      (bass4.layout/error-400-page))))
+      (do
+        (log/error "Something went wrong")
+        (response/found "/user")))))
 
 (defn handle-assessments
   [user-id session]

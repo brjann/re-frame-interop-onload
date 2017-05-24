@@ -1,7 +1,7 @@
 (ns bass4.services.assessments
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list map-map indices fnil+ diff]]
+            [bass4.utils :refer [key-map-list map-map indices fnil+ diff in?]]
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
@@ -180,7 +180,6 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
-;; TODO: Mark empty administrations as completed
 (defn- add-instruments [assessments]
   (let [administration-ids (map :participant-administration-id assessments)
         assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
@@ -327,6 +326,26 @@
 ;;  ROUNDS ADMINISTRATION
 ;; ------------------------
 
+;; 1. When user logs in - create round entries
+;; 2. If created round entries > 0, set :assessments-pending in session to true
+;; 3. Whenever trying to access /user, check if :assessments-pending is true
+;; 4. If so, check if there are assessment round entries in table
+;;    no -> change session and redirect
+;; 5. If yes, hand over control to assessment shower
+;;
+;; Concurrency scenarios
+;; 1. Repeated/parallel submission of data. Will overwrite old answers in the interval
+;; between the retrieval of rounds and set round instruments completed
+;; Repeated submission is moderately likely in the case of DB/connection slowness.
+;; Parallel login is very unlikely.
+;; Impact limited - repeated submissions are likely of same answers.
+;;
+;; 2. Parallel login. If login occurs before answers have been saved, then
+;; a new round will be generated where the instruments are not considered completed.
+;; Very unlikely.
+;; Impact moderate - user has to answer instruments again
+;;
+
 (defn get-assessment-round [user-id]
   (let [order-count (fn [x]
                       (let [instruments (remove nil? (distinct (map :instrument-id x)))]
@@ -356,43 +375,17 @@
   [step]
   (db/set-step-completed! {:id (:id step)}))
 
-;; Concurrency scenarios
-;; 1. Repeated/parallel submission of data. Will overwrite old answers in the interval
-;; between the retrieval of rounds and set round instruments completed
-;; Repeated submission is moderately likely in the case of DB/connection slowness.
-;; Parallel login is very unlikely.
-;; Impact limited - repeated submissions are likely of same answers.
-;;
-;; 2. Parallel login. If login occurs before answers have been saved, then
-;; a new round will be generated where the instruments are not considered completed.
-;; Very unlikely.
-;; Impact moderate - user has to answer instruments again
-;;
 (defn instrument-completed!
   [user-id administration-ids instrument-id answers-map]
   (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id})
   (instrument-answers/save-administrations-answers! administration-ids instrument-id answers-map))
 
-
-;; 1. When user logs in - create round entries
-;; 2. If created round entries > 0, set :assessments-pending in session to true
-;; 3. Whenever trying to access /user, check if :assessments-pending is true
-;; 4. If so, check if there are assessment round entries in table
-;;    no -> change session and redirect
-;; 5. If yes, hand over control to assessment shower
-;;
-;; Concurrency issues
-;; - If
-
-;; When creating session - Get and save rounds
-;; When loading page - Check if there are round steps available
-;; Before showing text step - check that batch includes instruments where completed = 0
-;;  - Else mark whole batch as completed
-;; When showing text step - mark as shown
-;; When instrument is finished
-;; - Update all instances of instrument in round where completed = 0
-;; http://stackoverflow.com/questions/3312361/does-this-lock-the-database/3312790#3312790
-;; http://stackoverflow.com/questions/4358732/is-incrementing-a-field-in-mysql-atomic
-;; - If affected_rows > 0, then save answers to c_instrumentanswers
-;; - If affected_rows > 1, then include "copy of" (how to handle more than 2 copies - unclear)
-;;
+(defn administrations-completed!
+  [round completed-instrument-id]
+  (let [non-empty (->> round
+                       (remove #(= completed-instrument-id (:instrument-id %)))
+                       (map :administration-id)
+                       (distinct))
+        empty-administration-ids (diff (map :administration-id round) non-empty)]
+    (when (seq empty-administration-ids)
+      (db/set-administration-complete! {:administration-ids empty-administration-ids}))))

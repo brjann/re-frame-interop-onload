@@ -69,3 +69,9 @@
 (defn diff
   [s1 s2]
   (filter #(not (some (partial = %) s2)) s1))
+
+;; https://stackoverflow.com/questions/3249334/test-whether-a-list-contains-a-specific-value-in-clojure
+(defn in?
+  "true if coll contains m"
+  [coll m]
+  (some #(= m %) coll))
