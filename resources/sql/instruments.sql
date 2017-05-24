@@ -229,15 +229,6 @@ SELECT
 FROM c_instrumentitemelement
 WHERE ParentId = :instrument-id;
 
-
--- :name get-instrument-test-answers :? :1
--- :doc get test answers of instrument
-SELECT
-  ObjectId AS `answers-id`
-FROM c_instrumentanswers
-WHERE ParentId = :instrument-id;
-
-
 -- :name get-instrument-scoring :? :1
 -- :doc get scoring formula of instrument
 SELECT

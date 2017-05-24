@@ -46,7 +46,6 @@
       (:answers-id answers))))
 
 
-
 ;; ------------------------------
 ;;         SAVE ANSWERS
 ;; ------------------------------
@@ -67,3 +66,11 @@
                     items
                     specifications
                     sums))) administration-ids))
+
+(defn get-answers
+  [administration-id instrument-id]
+  (let [answers (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})]
+    (merge answers
+           {:items (php->clj (:items answers))
+            :specifications (php->clj (:specifications answers))
+            :sums (php->clj (:sums answers))})))

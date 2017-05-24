@@ -210,5 +210,5 @@
 
 (defn save-test-answers!
   [instrument-id items specifications sums]
-  (if-let [answers-id (:answers-id (db/get-instrument-test-answers {:instrument-id instrument-id}))]
+  (if-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
     (instrument-answers/save-answers! answers-id items specifications sums)))

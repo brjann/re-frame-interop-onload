@@ -1,6 +1,12 @@
 -- :name get-instrument-answers-by-administration :? :1
 -- :doc
-SELECT ObjectId AS `answers-id`
+SELECT
+  ObjectId AS `answers-id`,
+  DateCompleted AS `date-completed`,
+  items,
+  specifications,
+  sums,
+  instrument AS `instrument-id`
 FROM c_instrumentanswers
 WHERE
   ParentId = :administration-id AND
