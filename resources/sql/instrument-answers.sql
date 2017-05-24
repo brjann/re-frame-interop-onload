@@ -1,4 +1,4 @@
--- :name get-instrument-answers :? :1
+-- :name get-instrument-answers-by-administration :? :1
 -- :doc
 SELECT ObjectId AS `answers-id`
 FROM c_instrumentanswers

@@ -29,8 +29,7 @@
     (db/create-instrument-answers! {:answers-id answers-id :administration-id administration-id :instrument-id instrument-id})
     (db/update-objectlist-parent! {:object-id answers-id :parent-id administration-id})
     answers-id
-    (catch Exception e nil
-                       (delete-answers! answers-id)
+    (catch Exception e (delete-answers! answers-id)
                        (:answers-id (db/get-instrument-answers {:administration-id administration-id :instrument-id instrument-id})))))
 
 (defn- create-answers!
@@ -41,7 +40,7 @@
 
 (defn- instrument-answers-id
   [administration-id instrument-id]
-  (let [answers (db/get-instrument-answers {:administration-id administration-id :instrument-id instrument-id})]
+  (let [answers (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})]
     (if-not (seq answers)
       (create-answers! administration-id instrument-id)
       (:answers-id answers))))
