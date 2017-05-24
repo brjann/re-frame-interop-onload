@@ -1,7 +1,7 @@
 (ns bass4.services.assessments
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list map-map indices fnil+]]
+            [bass4.utils :refer [key-map-list map-map indices fnil+ diff]]
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
@@ -180,21 +180,26 @@
           (get administrations assessment-id)))
       pending-assessments)))
 
-;; TODO: Remove clinician assessed instruments
 ;; TODO: Mark empty administrations as completed
 (defn- add-instruments [assessments]
-  (let [completed-instruments (->> {:administration-ids (map :participant-administration-id assessments)}
-                                   (db/get-administration-completed-instruments)
-                                   (group-by :administration-id)
-                                   (map-map #(map :instrument-id %)))
+  (let [administration-ids (map :participant-administration-id assessments)
         assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
                                     (db/get-assessments-instruments)
                                     (group-by :assessment-id)
+                                    (map-map #(map :instrument-id %)))
+        completed-instruments (->> {:administration-ids administration-ids}
+                                   (db/get-administration-completed-instruments)
+                                   (group-by :administration-id)
+                                   (map-map #(map :instrument-id %)))
+        additional-instruments (->> {:administration-ids administration-ids}
+                                    (db/get-administration-additional-instruments)
+                                    (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))]
-    (map #(assoc % :instruments (into []
-                                      (clojure.set/difference
-                                        (set (get assessment-instruments (:assessment-id %)))
-                                        (set (get completed-instruments (:participant-administration-id %))))))
+    (map #(assoc % :instruments (diff
+                                  (concat
+                                    (get assessment-instruments (:assessment-id %))
+                                    (get additional-instruments (:participant-administration-id %)))
+                                  (get completed-instruments (:participant-administration-id %))))
          assessments)))
 
 
@@ -220,8 +225,6 @@
          (add-missing-administrations user-id)
          ;; Merge assessment and administration info into one map
          (map #(merge % (get assessments (:assessment-id %))))
-         ;; TODO: Add "komplettera mätning" instruments
-         ;; TODO: Remove already completed instruments
          (add-instruments))))
 
 

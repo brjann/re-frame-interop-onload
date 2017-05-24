@@ -65,3 +65,7 @@
     (integer? s) s
     (nil? s) nil
     (re-find #"^\d+$" (s/trim s)) (read-string s)))
+
+(defn diff
+  [s1 s2]
+  (filter #(not (some (partial = %) s2)) s1))

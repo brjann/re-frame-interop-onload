@@ -194,6 +194,20 @@ ORDER BY
   lca.SortOrder;
 
 
+-- :name get-administration-additional-instruments :? :*
+-- :doc EXCEPT clinician assessed
+SELECT
+  LinkeeId AS `instrument-id`,
+  LinkerId as `administration-id`
+FROM links_c_participantadministration AS lcp
+  JOIN c_instrument AS ci
+    ON linkeeid = objectid
+WHERE linkerid IN(:v*:administration-ids)
+      AND propertyname = "AdditionalInstruments"
+      AND ClinicianAssessed = 0
+ORDER BY lcp.SortOrder;
+
+
 -- :name lock-assessment-rounds-table! :! :n
 -- :doc Lock the table for writing
 LOCK TABLES assessment_rounds WRITE;
