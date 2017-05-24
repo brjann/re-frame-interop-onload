@@ -180,7 +180,7 @@ ORDER BY
     lca.SortOrder;
 
 -- :name get-assessments-instruments :? :*
--- :doc Get assessment's instrument
+-- :doc Get assessment's instrument - EXCEPT clinician assessed
 SELECT
   ObjectId AS `instrument-id`,
   lca.LinkerId AS `assessment-id`
@@ -189,7 +189,7 @@ FROM c_instrument AS ci
   links_c_assessment AS lca
     ON ci.ObjectId = lca.LinkeeId AND lca.PropertyName = "Instruments"
 WHERE
-  lca.LinkerId IN(:v*:assessment-ids)
+  lca.LinkerId IN(:v*:assessment-ids) AND ci.ClinicianAssessed = 0
 ORDER BY
   lca.SortOrder;
 
