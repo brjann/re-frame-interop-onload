@@ -35,6 +35,7 @@
             (db/update-new-participant-administration!
               {:administration-id administration-id :user-id user-id :assessment-id assessment-id :assessment-index assessment-index})
             (db/update-objectlist-parent! {:object-id administration-id :parent-id user-id})
+            (db/link-property-reverse! {:linkee-id administration-id :property-name "Assessment" :linker-class "cParticipantAdministration"})
             administration-id
             ;; If that fails, then delete the placeholder and return instead the
             ;; duplicate administration's id.
@@ -335,7 +336,8 @@
 ;; 1. Repeated/parallel submission of data. Will overwrite old answers in the interval
 ;; between the retrieval of rounds and set round instruments completed
 ;; Repeated submission is moderately likely in the case of DB/connection slowness.
-;; Impact limited - repeated submission is likely of same answers.
+;; Parallel login is very unlikely.
+;; Impact limited - repeated submissions are likely of same answers.
 ;;
 ;; 2. Parallel login. If login occurs before answers have been saved, then
 ;; a new round will be generated where the instruments are not considered completed.

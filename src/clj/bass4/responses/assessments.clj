@@ -65,5 +65,4 @@
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
-      ;; TODO: Validate input
       (instrument-completed user-id round instrument-id items specifications))))

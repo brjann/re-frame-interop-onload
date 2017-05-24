@@ -28,6 +28,7 @@
   (try
     (db/create-instrument-answers! {:answers-id answers-id :administration-id administration-id :instrument-id instrument-id})
     (db/update-objectlist-parent! {:object-id answers-id :parent-id administration-id})
+    (db/link-property-reverse! {:linkee-id instrument-id :property-name "Instrument" :linker-class "cInstrumentAnswers"})
     answers-id
     (catch Exception e (delete-answers! answers-id)
                        (:answers-id (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})))))
@@ -51,20 +52,26 @@
 ;; ------------------------------
 
 (defn save-answers!
-  [answers-id {:keys [items specifications sums]}]
-  (db/save-instrument-answers!
-    {:answers-id answers-id
-     :items (clj->php items)
-     :specifications (clj->php specifications)
-     :sums (clj->php sums)}))
+  ([answers-id answers-map]
+    (save-answers! answers-id answers-map nil))
+  ([answers-id {:keys [items specifications sums]} copy-of]
+   (db/save-instrument-answers!
+     {:answers-id     answers-id
+      :items          (clj->php items)
+      :specifications (clj->php specifications)
+      :sums           (clj->php sums)
+      :copy-of        copy-of})
+    (when copy-of
+      (db/link-property-reverse! {:linkee-id answers-id :property-name "CopyOf" :linker-class "cInstrumentAnswers"}))))
 
 (defn save-administrations-answers!
   [administration-ids instrument-id answers-map]
-  #_(if (> (count administration-ids) 1))
-  (mapv (fn [adm-id] (let [answers-id (instrument-answers-id adm-id instrument-id)]
-                  (save-answers!
-                    answers-id
-                    answers-map))) administration-ids))
+  ;; TODO: Allocates them one by one - instrument-answers-id would have to be rewritten if unwanted
+  (let [answers-ids (map #(instrument-answers-id % instrument-id) administration-ids)
+        copy-ofs (if (> (count answers-ids) 1)
+                   (cons (second answers-ids) (repeat (dec (count answers-ids)) (first answers-ids)))
+                   '(nil))]
+    (mapv #(save-answers! %1 answers-map %2) answers-ids copy-ofs)))
 
 (defn get-answers
   [administration-id instrument-id]

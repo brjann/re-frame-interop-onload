@@ -12,8 +12,12 @@ UPDATE objectlist SET ParentId = :parent-id WHERE ObjectId = :object-id
 
 -- :name delete-object-from-objectlist! :! :1
 -- :doc Update an object with new parent in objectlist
-DELETE FROM objectlist WHERE ObjectId = :object-id
-
+DELETE FROM objectlist WHERE ObjectId = :object-id;
 
 -- :name get-project-title :? :1
 SELECT title FROM c_project WHERE ObjectId = 100;
+
+-- :name link-property-reverse! :! :1
+-- :doc
+INSERT IGNORE INTO links_properties_reverse
+  (LinkeeId, PropertyName, LinkerClass) VALUES(:linkee-id, :property-name, :linker-class);

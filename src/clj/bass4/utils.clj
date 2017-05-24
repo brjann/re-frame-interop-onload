@@ -1,6 +1,7 @@
 (ns bass4.utils
   (:require [clojure.data.json :as json]
-            [bass4.php_clj.core :refer [php->clj]]))
+            [bass4.php_clj.core :refer [php->clj]]
+            [clojure.string :as s]))
 
 
 (defn unserialize-key
@@ -57,3 +58,10 @@
   "Returns nil if x is nil, else (f x)"
   (when-not (nil? x)
     (f x)))
+
+(defn str->int
+  [s]
+  (cond
+    (integer? s) s
+    (nil? s) nil
+    (re-find #"^\d+$" (s/trim s)) (read-string s)))

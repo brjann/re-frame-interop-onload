@@ -32,6 +32,7 @@ SET
   Items = :items,
   Specifications = :specifications,
   Sums = :sums,
+  CopyOf = :copy-of,
   DateCompleted = unix_timestamp(UTC_TIMESTAMP()),
   Changed = unix_timestamp(UTC_TIMESTAMP())
 --  DateCompleted = unix_timestamp(now()),

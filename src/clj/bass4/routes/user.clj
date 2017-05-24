@@ -2,6 +2,7 @@
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.responses.messages :as messages-response]
             [bass4.services.user :as user]
+            [bass4.utils :refer [str->int]]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.assessments :as assessments-response]
             [ring.util.http-response :as response]
@@ -32,7 +33,7 @@
               (POST "*" [& params] (assessments-response/post-instrument-answers
                                      (:user-id user)
                                      (:session request)
-                                     (:instrument-id params)
+                                     (str->int (:instrument-id params))
                                      (:items params)
                                      (:specifications params))))
             (routes
