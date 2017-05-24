@@ -299,3 +299,18 @@ ParentId IN(:v*:administration-ids) AND DateCompleted > 0;
 UPDATE c_participantadministration
   SET DateCompleted = unix_timestamp(now())
 WHERE ObjectId IN(:v*:administration-ids);
+
+-- :name get-dependent-assessments :? :*
+SELECT
+  ca2.ObjectId AS `assessment-id`,
+  ca2.OffsetDays AS `offset-days`
+FROM
+  c_participantadministration AS cpa
+  JOIN
+  c_assessment AS ca1
+    ON (cpa.Assessment = ca1.ObjectId)
+  JOIN
+  c_assessment AS ca2
+    ON (ca2.OffsetAssessment = ca1.ObjectId AND ca2.OffsetDynamic = 1)
+WHERE
+  cpa.ObjectId IN(:v*:administration-ids)

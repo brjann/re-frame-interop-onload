@@ -204,7 +204,8 @@
 (defn- complete-empty-administrations!
   [assessments]
   (let [empty-administration-ids (map :participant-administration-id (filter #(empty? (:instruments %)) assessments))]
-    (db/set-administration-complete! {:administration-ids empty-administration-ids})))
+    (when (seq empty-administration-ids)
+      (db/set-administration-complete! {:administration-ids empty-administration-ids}))))
 
 
 (defn get-pending-assessments [user-id]
@@ -345,6 +346,10 @@
 ;; Very unlikely.
 ;; Impact moderate - user has to answer instruments again
 ;;
+
+(defn dependent-assessments
+  [administration-ids]
+  (db/get-dependent-assessments {:administration-ids administration-ids}))
 
 (defn get-assessment-round [user-id]
   (let [order-count (fn [x]
