@@ -18,3 +18,16 @@ WHERE
 -- :name delete-instrument-answers! :! :1
 -- :doc
 DELETE FROM c_instrumentanswers WHERE ObjectId = :answers-id;
+
+-- :name save-instrument-answers! :! :n
+-- :doc save instrument answers
+UPDATE c_instrumentanswers
+SET
+  Items = :items,
+  Specifications = :specifications,
+  Sums = :sums,
+  DateCompleted = unix_timestamp(UTC_TIMESTAMP()),
+  Changed = unix_timestamp(UTC_TIMESTAMP())
+--  DateCompleted = unix_timestamp(now()),
+--  Changed = unix_timestamp(now())
+WHERE ObjectId = :answers-id;

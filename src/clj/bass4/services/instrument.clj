@@ -3,6 +3,7 @@
             [bass4.php_clj.core :refer [php->clj clj->php]]
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list]]
             [bass4.infix-parser :as infix]
+            [bass4.services.instrument-answers :as instrument-answers]
             [clojure.string :as s]))
 
 
@@ -194,6 +195,7 @@
                   (expression-resolver-fn (:expression statement) namespace))]
         (assoc namespace var val)))))
 
+;; TODO: Verify correct instrument answers have been posted
 (defn score-items
   [items {:keys [statements default-value exports]}]
   (let [$items (zipmap (map #(str "$" %) (keys items)) (vals items))]
@@ -201,22 +203,12 @@
       (reduce (statement-resolver default-value) $items statements)
       exports)))
 
-;; TODO: Verify correct instrument answers have been posted
 (defn score-instrument
   [items instrument-id]
   (if-let [scoring (get-scoring instrument-id)]
     (score-items items scoring)))
 
-(defn save-answers!
-  [answers-id items specifications sums item-names]
-  (db/save-instrument-answers!
-    {:answers-id answers-id
-     :items (clj->php items)
-     :specifications (clj->php specifications)
-     :sums (clj->php sums)
-     :item-names (clj->php item-names)}))
-
 (defn save-test-answers!
-  [instrument-id items specifications sums item-names]
+  [instrument-id items specifications sums]
   (if-let [answers-id (:answers-id (db/get-instrument-test-answers {:instrument-id instrument-id}))]
-    (save-answers! answers-id items specifications sums item-names)))
+    (instrument-answers/save-answers! answers-id items specifications sums)))

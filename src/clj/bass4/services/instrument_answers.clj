@@ -2,10 +2,13 @@
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+]]
-            [clj-time.coerce]
+            [bass4.php_clj.core :refer [php->clj clj->php]]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]))
+
+;; ------------------------------
+;;    CREATE MISSING ANSWERS
+;; ------------------------------
 
 (defn- create-answers-object!
   []
@@ -36,9 +39,32 @@
       (first)
       (update-created-answers! administration-id instrument-id)))
 
-(defn instrument-answers
+(defn- instrument-answers-id
   [administration-id instrument-id]
   (let [answers (db/get-instrument-answers {:administration-id administration-id :instrument-id instrument-id})]
     (if-not (seq answers)
       (create-answers! administration-id instrument-id)
       (:answers-id answers))))
+
+
+
+;; ------------------------------
+;;         SAVE ANSWERS
+;; ------------------------------
+
+(defn save-answers!
+  [answers-id items specifications sums]
+  (db/save-instrument-answers!
+    {:answers-id answers-id
+     :items (clj->php items)
+     :specifications (clj->php specifications)
+     :sums (clj->php sums)}))
+
+(defn save-administrations-answers!
+  [administration-ids instrument items specifications sums]
+  (mapv (fn [x] (let [answers-id (instrument-answers-id x instrument)]
+                  (save-answers!
+                    answers-id
+                    items
+                    specifications
+                    sums))) administration-ids))
