@@ -293,3 +293,9 @@ SELECT
   FROM c_instrumentanswers
 WHERE
 ParentId IN(:v*:administration-ids) AND DateCompleted > 0;
+
+-- :name set-administration-complete! :! :n
+-- :doc
+UPDATE c_participantadministration
+  SET DateCompleted = unix_timestamp(now())
+WHERE ObjectId IN(:v*:administration-ids);

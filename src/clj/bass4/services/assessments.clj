@@ -202,6 +202,11 @@
                                   (get completed-instruments (:participant-administration-id %))))
          assessments)))
 
+(defn- complete-empty-administrations!
+  [assessments]
+  (let [empty-administration-ids (map :participant-administration-id (filter #(empty? (:instruments %)) assessments))]
+    (db/set-administration-complete! {:administration-ids empty-administration-ids})))
+
 
 (defn get-pending-assessments [user-id]
   (let
@@ -312,7 +317,9 @@
   [user-id]
   (let [pending-assessments (get-pending-assessments user-id)]
     (if (seq pending-assessments)
-      (save-round! (generate-assessment-round user-id pending-assessments))
+      (do
+        (complete-empty-administrations! pending-assessments)
+        (save-round! (generate-assessment-round user-id pending-assessments)))
       0)))
 
 
