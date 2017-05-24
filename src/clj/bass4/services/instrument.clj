@@ -1,7 +1,7 @@
 (ns bass4.services.instrument
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj clj->php]]
-            [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list]]
+            [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [bass4.infix-parser :as infix]
             [bass4.services.instrument-answers :as instrument-answers]
             [clojure.string :as s]))
@@ -209,6 +209,17 @@
     (score-items items scoring)))
 
 (defn save-test-answers!
-  [instrument-id items specifications sums]
+  [instrument-id answers-map]
   (if-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
-    (instrument-answers/save-answers! answers-id items specifications sums)))
+    (instrument-answers/save-answers! answers-id answers-map)))
+
+(defn parse-answers-post
+  [instrument-id items-str specifications-str]
+  (let [instrument (get-instrument instrument-id)
+        items (json-safe items-str)
+        specifications (json-safe specifications-str)]
+    (if (or (nil? items) (nil? specifications) (nil? instrument))
+      nil
+      {:items items
+       :specifications specifications
+       :sums (score-items items (get-scoring instrument-id))})))

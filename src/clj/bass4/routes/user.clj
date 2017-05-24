@@ -29,7 +29,7 @@
           (if (:assessments-pending (:session request))
             (routes
               (GET "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
-              (POST "*" [& params] (assessments-response/instrument-answers
+              (POST "*" [& params] (assessments-response/post-instrument-answers
                                      (:user-id user)
                                      (:session request)
                                      (:instrument-id params)

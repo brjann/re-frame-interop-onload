@@ -5,7 +5,8 @@
             [clj-time.coerce]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.instrument-answers :as instrument-answers]))
 
 
 ;; ------------------------------
@@ -330,9 +331,21 @@
   [step]
   (db/set-step-completed! {:id (:id step)}))
 
+;; Concurrency scenarios
+;; 1. Repeated/parallel submission of data. Will overwrite old answers in the interval
+;; between the retrieval of rounds and set round instruments completed
+;; Repeated submission is moderately likely in the case of DB/connection slowness.
+;; Impact limited - repeated submission is likely of same answers.
+;;
+;; 2. Parallel login. If login occurs before answers have been saved, then
+;; a new round will be generated where the instruments are not considered completed.
+;; Very unlikely.
+;; Impact moderate - user has to answer instruments again
+;;
 (defn instrument-completed!
-  [user-id instrument-id]
-  (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id}))
+  [user-id administration-ids instrument-id answers-map]
+  (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id})
+  (instrument-answers/save-administrations-answers! administration-ids instrument-id answers-map))
 
 
 ;; 1. When user logs in - create round entries

@@ -30,7 +30,7 @@
     (db/update-objectlist-parent! {:object-id answers-id :parent-id administration-id})
     answers-id
     (catch Exception e (delete-answers! answers-id)
-                       (:answers-id (db/get-instrument-answers {:administration-id administration-id :instrument-id instrument-id})))))
+                       (:answers-id (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})))))
 
 (defn- create-answers!
   [administration-id instrument-id]
@@ -51,7 +51,7 @@
 ;; ------------------------------
 
 (defn save-answers!
-  [answers-id items specifications sums]
+  [answers-id {:keys [items specifications sums]}]
   (db/save-instrument-answers!
     {:answers-id answers-id
      :items (clj->php items)
@@ -59,13 +59,12 @@
      :sums (clj->php sums)}))
 
 (defn save-administrations-answers!
-  [administration-ids instrument items specifications sums]
-  (mapv (fn [adm-id] (let [answers-id (instrument-answers-id adm-id instrument)]
+  [administration-ids instrument-id answers-map]
+  #_(if (> (count administration-ids) 1))
+  (mapv (fn [adm-id] (let [answers-id (instrument-answers-id adm-id instrument-id)]
                   (save-answers!
                     answers-id
-                    items
-                    specifications
-                    sums))) administration-ids))
+                    answers-map))) administration-ids))
 
 (defn get-answers
   [administration-id instrument-id]

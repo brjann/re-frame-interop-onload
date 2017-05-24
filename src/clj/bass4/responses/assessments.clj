@@ -43,10 +43,14 @@
       (assoc :session (merge session {:assessments-pending false}))))
 
 (defn- instrument-completed
-  [user-id instrument-id session]
-  (assessments-service/instrument-completed! user-id instrument-id)
-  (-> (response/found "/user")
-      #_(assoc :session (merge session {:assessments-pending false}))))
+  [user-id round instrument-id items-str specifications-str]
+  (let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))
+        answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
+    (if-not (or (empty? administration-ids) (nil? answers-map))
+      (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
+          (-> (response/found "/user")
+              #_(assoc :session (merge session {:assessments-pending false}))))
+      (bass4.layout/error-400-page))))
 
 (defn handle-assessments
   [user-id session]
@@ -56,10 +60,10 @@
       (assessment-page round))))
 
 ;; TODO: Add input validation
-(defn instrument-answers
+(defn post-instrument-answers
   [user-id session instrument-id items specifications]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       ;; TODO: Validate input
-      (instrument-completed user-id instrument-id session))))
+      (instrument-completed user-id round instrument-id items specifications))))
