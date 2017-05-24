@@ -60,7 +60,7 @@
 
 (defn save-administrations-answers!
   [administration-ids instrument items specifications sums]
-  (mapv (fn [x] (let [answers-id (instrument-answers-id x instrument)]
+  (mapv (fn [adm-id] (let [answers-id (instrument-answers-id adm-id instrument)]
                   (save-answers!
                     answers-id
                     items

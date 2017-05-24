@@ -111,7 +111,7 @@
     instrument))
 
 (defn get-instrument-test-answers [instrument-id]
-  (get-instrument-test-answers {:instrument-id instrument-id}))
+  (instrument-answers/get-answers instrument-id instrument-id))
 
 ;; ------------------------
 ;;     SCORING PARSER

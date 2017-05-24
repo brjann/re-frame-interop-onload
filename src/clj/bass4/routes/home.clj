@@ -25,8 +25,10 @@
   (GET "/" [] (home-page))
   (POST "/instrument/:instrument-id" [instrument-id & params]
     (instruments/post-answers instrument-id (:items params) (:specifications params)))
-  (GET "/instrument/:instrument-id" [instrument-id &params]
+  (GET "/instrument/:instrument-id" [instrument-id]
     (instruments/instrument-page instrument-id))
+  (GET "/instrument/summary/:instrument-id" [instrument-id]
+    (instruments/summary-page instrument-id))
   (GET "/about" [] (about-page))
   (GET "/session" [:as req] (str (:session req)))
   (GET "/request" [:as req] (str req))
