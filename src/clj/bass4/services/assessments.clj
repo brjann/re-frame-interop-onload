@@ -2,7 +2,7 @@
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in?]]
-            [clj-time.coerce]
+            [clj-time.coerce :as tc]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
@@ -214,23 +214,24 @@
     ;; administrations within one assessment battery
     ;;
     ;; Amazingly enough, this all works even with no pending administrations
-    [{:keys [administrations assessments]} (get-user-administrations user-id)]
-    (->> (vals administrations)
-         ;; Sort administrations by their assessment-index
-         (map #(sort-by :assessment-index %))
-         ;; Return assessment (!) statuses
-         (map #(get-assessment-statuses % assessments))
-         ;; Remove lists within list
-         (flatten)
-         ;; Keep the assessments that are AS_PENDING
-         (filter-pending-assessments)
-         ;; Find corresponding administrations
-         (collect-assessment-administrations administrations)
-         ;; Add any missing administrations
-         (add-missing-administrations user-id)
-         ;; Merge assessment and administration info into one map
-         (map #(merge % (get assessments (:assessment-id %))))
-         (add-instruments))))
+    [{:keys [administrations assessments]} (get-user-administrations user-id)
+     pending-assessments (->> (vals administrations)
+          ;; Sort administrations by their assessment-index
+          (map #(sort-by :assessment-index %))
+          ;; Return assessment (!) statuses
+          (map #(get-assessment-statuses % assessments))
+          ;; Remove lists within list
+          (flatten)
+          ;; Keep the assessments that are AS_PENDING
+          (filter-pending-assessments)
+          ;; Find corresponding administrations
+          (collect-assessment-administrations administrations)
+          ;; Add any missing administrations
+          (add-missing-administrations user-id)
+          ;; Merge assessment and administration info into one map
+          (map #(merge % (get assessments (:assessment-id %)))))]
+    (when (seq pending-assessments)
+      (add-instruments pending-assessments))))
 
 
 ;; ------------------------
@@ -273,12 +274,19 @@
     ;; Does not handle empty stuff? Use concat instead of list
     (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
 
+;;
+;; REGARDING TIME ZONES
+;;
+;; BASS saves assessment start dates in local time,
+;; i.e., an assessment that starts in a Swedish database on May 24
+;; is recorded as starting on May 23 22:00 GMT.
+;;
 (defn step-row
   [user-id]
   (fn [idx step]
     (merge
       ;; TODO: What is the timezone of this? UTC?
-      {:time              (clj-time.coerce/to-sql-date (t/now))
+      {:time              (tc/to-sql-date (t/now))
        :user-id           user-id
        :batch-id          nil
        :step              idx

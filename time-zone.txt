@@ -1,0 +1,173 @@
+https://stackoverflow.com/questions/5989539/when-to-use-datetime-or-timestamp
+
+"If you store a TIMESTAMP value, and then change the time zone and retrieve the value, the retrieved value is different from the value you stored."
+"So if you are using an application across timezones, and need the date/time to reflect individual users settings, use Timestamp. If you need consistency regardless of timezone, use Datetime"
+
+YES: If I change timezone (SET time_zone = "-02:00";), then the values returned by TimeStamp change - but not DateTime.
+
+DateTime in PHP
+- DateTime fields are literally interpreted by PHP. Which means that they need to be converted to current timezone to be displayed correctly.
+
+In summary
+- For information exchange between PHP and Clojure: Use UNIX_TIMESTAMP(NOW()) or (tc/to-epoch (t/now)) - That is NOT DateTime BUT Integer!
+- For information kept within Clojure only: DateTime (tc/to-sql-date (t/now))
+
+
+# Table
+CREATE TABLE `TimeTable` (
+  `idTimeTable` int(11) NOT NULL AUTO_INCREMENT,
+  `DateTimeNow` datetime DEFAULT NULL,
+  `TimeStampNow` timestamp NULL DEFAULT NULL,
+  `DateTimeUTC` datetime DEFAULT NULL,
+  `TimeStampUTC` timestamp NULL DEFAULT NULL,
+  `UnixNow` int(11) DEFAULT NULL,
+  `UnixUTC` int(11) DEFAULT NULL,
+  `DateTimeCLJNow` datetime DEFAULT NULL,
+  `TimeStampCLJNow` timestamp NULL DEFAULT NULL,
+  `DateTimeCLJEpoch` datetime DEFAULT NULL,
+  `TimeStampCLJEpoch` timestamp NULL DEFAULT NULL,
+  `UnixCLJNow` int(11) DEFAULT NULL,
+  `UnixCLJEpoch` int(11) DEFAULT NULL,
+  `DateTimeCLJTZ` datetime DEFAULT NULL,
+  `TimeStampCLJTZ` timestamp NULL DEFAULT NULL,
+  `UnixCLJTZ` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idTimeTable`)
+) ENGINE=InnoDB
+
+# SQL Query
+
+INSERT INTO TimeTable
+(
+ `DateTimeNow`,
+ `TimeStampNow`,
+ `DateTimeUTC`,
+ `TimeStampUTC`,
+ `UnixNow`,
+ `UnixUTC`,
+ `DateTimeCLJNow`,
+ `TimeStampCLJNow`,
+ `DateTimeCLJEpoch`,
+ `TimeStampCLJEpoch`,
+ `UnixCLJNow`,
+ `UnixCLJEpoch`,
+ `DateTimeCLJTZ`,
+ `TimeStampCLJTZ`,
+ `UnixCLJTZ`)
+VALUES
+  (now(),
+    now(),
+    utc_timestamp(),
+    utc_timestamp(),
+    unix_timestamp(now()),
+    unix_timestamp(utc_timestamp()),
+    :datetime,
+    :datetime,
+    from_unixtime(:epoch),
+    from_unixtime(:epoch),
+    unix_timestamp(:datetime),
+    :epoch,
+    :datetime-tz,
+    :datetime-tz,
+    unix_timestamp(:datetime-tz)
+);
+
+# Insert call
+(db/insert-times!
+  {:datetime    (tc/to-sql-date (t/now))
+   :epoch       (tc/to-epoch (t/now))
+   :datetime-tz (tc/to-sql-date (t/to-time-zone (t/now) (t/time-zone-for-id "Europe/Stockholm")))})
+
+# SQL
+Call:
+SELECT *, from_unixtime(UnixNow), from_unixtime(UnixUTC), from_unixtime(UnixCLJNow), from_unixtime(UnixCLJEpoch), from_unixtime(UnixCLJTZ) FROM panik2017.TimeTable;
+
+DateTimeNow, 2017-05-25 11:55:16
+TimeStampNow, 2017-05-25 11:55:16
+DateTimeUTC, 2017-05-25 09:55:16
+TimeStampUTC, 2017-05-25 09:55:16
+UnixNow, 1495706116
+UnixUTC, 1495698916
+DateTimeCLJNow, 2017-05-25 09:55:17
+TimeStampCLJNow, 2017-05-25 09:55:17,
+DateTimeCLJEpoch, 2017-05-25 11:55:16,
+TimeStampCLJEpoch, 2017-05-25 11:55:16,
+UnixCLJNow, 1495698917,
+UnixCLJEpoch, 1495706116,
+DateTimeCLJTZ, 2017-05-25 09:55:17,
+TimeStampCLJTZ, 2017-05-25 09:55:17,
+UnixCLJTZ, 1495698917,
+from_unixtime(UnixNow),2017-05-25 11:55:16,
+from_unixtime(UnixUTC), 2017-05-25 09:55:16,
+from_unixtime(UnixCLJNow), 2017-05-25 09:55:17,
+from_unixtime(UnixCLJEpoch), 2017-05-25 11:55:16,
+from_unixtime(UnixCLJTZ) 2017-05-25 09:55:17
+
+
+
+# CLJ
+Call: (map-map #(t/to-time-zone % (t/time-zone-for-id "Europe/Stockholm")) (map-map #(if (number? %) (tc/from-long (* 1000 %)) (tc/from-sql-date %)) (first (db/get-times!))))
+:datetimeutc #object[org.joda.time.DateTime 0xf3fbe32 "2017-05-25T11:55:16.000+02:00"] RIGHT,
+
+:timestamputc #object[org.joda.time.DateTime 0x101cfa1d "2017-05-25T11:55:16.000+02:00"] RIGHT,
+
+:timestampcljtz #object[org.joda.time.DateTime 0x4bcaaf8 "2017-05-25T11:55:17.000+02:00"] RIGHT,
+
+:datetimecljtz #object[org.joda.time.DateTime 0x5e11df55 "2017-05-25T11:55:17.000+02:00"] RIGHT,
+
+:datetimecljnow #object[org.joda.time.DateTime 0x777d6d1c "2017-05-25T11:55:17.000+02:00"] RIGHT,
+
+:timestampcljnow #object[org.joda.time.DateTime 0x4027643c "2017-05-25T11:55:17.000+02:00"] RIGHT
+
+:unixnow #object[org.joda.time.DateTime 0x16f7ee50 "2017-05-25T11:55:16.000+02:00"] RIGHT,
+
+:unixcljepoch #object[org.joda.time.DateTime 0x773d3fa9 "2017-05-25T11:55:16.000+02:00"] RIGHT,
+
+
+ :datetimecljepoch #object[org.joda.time.DateTime 0xf83b351 "2017-05-25T13:55:16.000+02:00"] WRONG,
+
+ :unixcljnow #object[org.joda.time.DateTime 0x5a406ca2 "2017-05-25T09:55:17.000+02:00"] WRONG,
+
+ :timestampnow #object[org.joda.time.DateTime 0x648b7adf "2017-05-25T13:55:16.000+02:00"] WRONG,
+
+ :unixutc #object[org.joda.time.DateTime 0x76005424 "2017-05-25T09:55:16.000+02:00"] WRONG,
+
+ :datetimenow #object[org.joda.time.DateTime 0x5dc0e3b1 "2017-05-25T13:55:16.000+02:00"] WRONG,
+
+ :timestampcljepoch #object[org.joda.time.DateTime 0x62a22754 "2017-05-25T13:55:16.000+02:00"] WRONG,
+
+ :unixcljtz #object[org.joda.time.DateTime 0x2d7ad529 "2017-05-25T09:55:17.000+02:00"] WRONG,
+
+
+# PHP
+Call:
+            $res = returnSQLResults("SELECT * FROM TimeTable")[0];
+      	    $x = array_map(
+      	        function($x){
+      	            if(is_natural($x))
+      	                return date('Y-m-d H:i:s', $x);
+      	            else return $x;}
+      	            , $res);
+      	    echo print_it($x);
+
+  [DateTimeNow] => 2017-05-25 11:55:16 RIGHT
+  [TimeStampNow] => 2017-05-25 11:55:16 RIGHT
+  [UnixNow] => 2017-05-25 11:55:16 RIGHT
+  [DateTimeCLJEpoch] => 2017-05-25 11:55:16 RIGHT
+  [TimeStampCLJEpoch] => 2017-05-25 11:55:16 RIGHT
+  [UnixCLJEpoch] => 2017-05-25 11:55:16 RIGHT
+  [DateTimeUTC] => 2017-05-25 09:55:16 WRONG
+  [TimeStampUTC] => 2017-05-25 09:55:16 WRONG
+  [UnixUTC] => 2017-05-25 09:55:16 WRONG
+  [DateTimeCLJNow] => 2017-05-25 09:55:17 WRONG
+  [TimeStampCLJNow] => 2017-05-25 09:55:17 WRONG
+  [UnixCLJNow] => 2017-05-25 09:55:17 WRONG
+  [DateTimeCLJTZ] => 2017-05-25 09:55:17 WRONG
+  [TimeStampCLJTZ] => 2017-05-25 09:55:17 WRONG
+  [UnixCLJTZ] => 2017-05-25 09:55:17 WRONG
+
+
+
+
+
+
+

@@ -14,8 +14,11 @@ UPDATE objectlist SET ParentId = :parent-id WHERE ObjectId = :object-id
 -- :doc Update an object with new parent in objectlist
 DELETE FROM objectlist WHERE ObjectId = :object-id;
 
--- :name get-project-title :? :1
+-- :name get-db-title :? :1
 SELECT title FROM c_project WHERE ObjectId = 100;
+
+-- :name get-db-time-zone :? :1
+SELECT timezone AS `time-zone` FROM c_project WHERE ObjectId = 100;
 
 -- :name link-property-reverse! :! :1
 -- :doc

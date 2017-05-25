@@ -2,6 +2,7 @@
   (:require [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
             [bass4.layout :refer [*app-context* error-page error-400-page]]
+            [bass4.services.bass :as bass]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
@@ -149,6 +150,13 @@
     (with-bindings {#'db/*db* (db/resolve-db request)}
       (handler request))))
 
+(defn wrap-time-zone [handler]
+  (fn [request]
+    (let [time-zone (bass/db-time-zone)]
+      (log/info (str "Time-zone: " time-zone))
+      (with-bindings {#'bass/*time-zone* time-zone}
+        (handler request)))))
+
 ;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836
 (defn wrap-timer [handler]
   (fn [request]
@@ -177,6 +185,7 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      wrap-time-zone
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post

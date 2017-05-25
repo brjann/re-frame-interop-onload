@@ -9,8 +9,10 @@
             [clojure.string :refer [split join]]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clj-time.coerce :as c]
-            [bass4.services.bass :as bass-service]))
+            [clj-time.coerce :as tc]
+            [bass4.services.bass :as bass-service]
+            [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass]))
 
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
@@ -28,7 +30,7 @@
           :page template
           :csrf-token *anti-forgery-token*
           :servlet-context *app-context*
-          :title (bass-service/project-title))))
+          :title (bass-service/db-title))))
     "text/html; charset=utf-8"))
 
 (defn error-page
@@ -50,6 +52,13 @@
    (error-page {:status  400
                        :title   "Bad request!"
                        :message message})))
+(defn time-zone
+  []
+  (try
+    (t/time-zone-for-id bass/*time-zone*)
+    (catch Exception e
+      (log/error "Time zone illegal: " bass/*time-zone*)
+      (t/default-time-zone))))
 
 (parser/add-tag!
   :tr
@@ -67,4 +76,4 @@
 (filters/add-filter!
   :datetime-ns
   (fn [val]
-    (f/unparse (f/formatter (i18n/tr [:date-time/datetime-ns])) (c/from-date val))))
+    (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (time-zone)) (tc/from-date val))))

@@ -313,4 +313,4 @@ FROM
   c_assessment AS ca2
     ON (ca2.OffsetAssessment = ca1.ObjectId AND ca2.OffsetDynamic = 1)
 WHERE
-  cpa.ObjectId IN(:v*:administration-ids)
+  cpa.ObjectId IN(:v*:administration-ids);
