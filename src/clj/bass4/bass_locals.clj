@@ -37,7 +37,7 @@
 
 (defn- db-config [port config]
   (when-let [db-url (build-db-url port config)]
-    {:db-url db-url :db-time-zone (:DB_TIME_ZONE config)}))
+    {:db-url db-url :db-time-zone (:DB_TIME_ZONE config) :db-lang (:LANGUAGE config)}))
 
 (defn get-bass-db-configs
   ([bass-path] (get-bass-db-configs bass-path 3306))
