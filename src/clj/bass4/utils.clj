@@ -14,10 +14,24 @@
         (assoc {} k)
         (merge m))))
 
+(defn arity [f]
+  (let [m (first (.getDeclaredMethods (class f)))
+        p (.getParameterTypes m)]
+    (alength p)))
+
 (defn map-map [f m]
   (let [ks (keys m)
         vs (vals m)]
     (zipmap ks (mapv f vs))))
+
+(defn filter-map [f m]
+  (->> (filter #(f (val %)) m)
+       (into {})))
+
+(defn map-map-keys [f m]
+  (let [ks (keys m)
+        vs (vals m)]
+    (zipmap ks (mapv f vs ks))))
 
 (defn subs+
   "Returns the substring of s beginning at start inclusive, and ending

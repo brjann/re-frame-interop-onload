@@ -4,6 +4,7 @@
             [luminus.http-server :as http]
             [luminus-migrations.core :as migrations]
             [bass4.config :refer [env]]
+            [bass4.i18n]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.tools.logging :as log]
             [mount.core :as mount])
@@ -47,6 +48,10 @@
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]
+  (start-app args))
+
+;; Migrations not used
+#_(defn -main [& args]
   (cond
     (some #{"migrate" "rollback"} args)
     (do

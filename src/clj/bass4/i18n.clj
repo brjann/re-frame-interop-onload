@@ -1,53 +1,41 @@
 (ns bass4.i18n
   (:require [selmer.parser :as parser]
             [taoensso.tempura :as tempura]
+            [bass4.utils :refer [map-map map-map-keys filter-map]]
             [clj-time.core :as t]
-            [clj-time.format :as f]))
+            [clj-time.format :as f]
+            [clojure.java.io :as io]
+            [clojure.edn :as edn]
+            [clojure.string :as s]
+            [mount.core :refer [defstate]]
+            [clojure.tools.logging :as log])
+  (:import [java.io.File]))
 
-(def tempura-dictionary
-  {:en
-   {:submit "Submit"
-    :next "Next"
-    :previous "Previous"
-    :username "Username"
-    :password "Password"
-    :continue "Continue"
-    :logout "Logout"
-    :offline-warning "You seem to be offline. Please make sure you are online before posting."
-    :instrument
-            {:range-error "You must supply a value between %s and %s."
-             :range-error-max "You must supply a value of %s or more."
-             :range-error-min "You must supply a value of %s or less."
-             :pattern-error "Your answer does not match the specified pattern."
-             :must-answer "You must provide an answer."
-             :must-specify-1 "You must provide a specification to your answer."
-             :must-specify-m "You must provide specifications to your answers."
-             :order-count "Instrument %1 of %2"}
-    :date-time
-             {:datetime-ns "yyyy-MM-dd HH:mm"}
-    :messages
-             {:sent-by "Sent by %1 on %2"
-              :subject "Message subject"
-              :text "Message text"
-              :save-draft "Save draft"}
-    :login
-            {:login "Login"
-             :please-username-password
-                    "Please provide your username and password to log on to the system."
-             :username-password-error "Wrong username or password"
-             :please-double-auth "Please provide your double authentication code"
-             :code "Code"
-             :code-error "Wrong code provided"
-             :re-auth "Authenticate again"
-             :password-error "Wrong password"
-             :please-re-auth "Please provide your password to continue to use the system."
-             :please-re-auth-form "Your password is needed before you can submit your data."}}})
+(defn ls [d]
+  (remove #(.isDirectory %) (.listFiles d)))
+
+(defn load-langs
+  ([] (load-langs (io/file (System/getProperty "user.dir") "i18n")))
+  ([dir]
+   (->> (ls dir)
+        (map #(vector (-> (.getName %)
+                          (s/replace  #"[.]edn$" "")
+                          (keyword))  %))
+        (into {})
+        (map-map slurp)
+        (map-map-keys #(try (edn/read-string %1)
+                            (catch Exception e
+                              (log/error (str "Could not read language file " %2)))))
+        (filter-map identity))))
+
+(defstate i18n-map
+  :start (load-langs))
 
 (defn tr
   ([resource-ids] (tr resource-ids []))
   ([resource-ids resource-args]
           (tempura/tr
-            {:dict tempura-dictionary
+            {:dict i18n-map
              :missing-resource-fn
                    (fn
                      [{:keys [opts locales resource-ids resource-args]}]
@@ -55,4 +43,6 @@
             [:en]
             resource-ids
             resource-args)))
+
+
 
