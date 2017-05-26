@@ -7,6 +7,8 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.config :refer [env]]
+            [bass4.bass-locals :as bass-locals]
+            [bass4.utils :refer [filter-map]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
@@ -14,6 +16,7 @@
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [buddy.auth.backends.session :refer [session-backend]]
+            [cprop.tools]
             [clj-time.core :as t]
             [bass4.db.core :as db])
   (:import [javax.servlet ServletContext]
@@ -150,11 +153,18 @@
     (with-bindings {#'db/*db* (db/resolve-db request)}
       (handler request))))
 
-(defn wrap-db [handler]
+#_(defn wrap-db [handler]
   (fn [request]
     (let [db-config (db/resolve-db request)]
       (binding [db/*db* @(:db-conn db-config)
                 bass/*time-zone* (or (:db-time-zone db-config) bass/*time-zone*)]
+        (handler request)))))
+
+(defn wrap-db [handler]
+  (fn [request]
+    (let [db-config (db/resolve-db request)]
+      (binding [db/*db* @(:db-conn db-config)
+                bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
         (handler request)))))
 
 ;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836

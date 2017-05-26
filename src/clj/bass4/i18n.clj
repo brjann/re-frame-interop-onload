@@ -2,6 +2,7 @@
   (:require [selmer.parser :as parser]
             [taoensso.tempura :as tempura]
             [bass4.utils :refer [map-map map-map-keys filter-map]]
+            [bass4.bass-locals :as locals]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.java.io :as io]
@@ -40,7 +41,7 @@
                    (fn
                      [{:keys [opts locales resource-ids resource-args]}]
                      (str "Missing translation keys: " resource-ids))}
-            [:en]
+            [(locals/language)]
             resource-ids
             resource-args)))
 

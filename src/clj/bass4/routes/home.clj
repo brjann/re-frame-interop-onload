@@ -31,6 +31,6 @@
   (GET "/instrument/summary/:instrument-id" [instrument-id]
     (instruments/summary-page instrument-id))
   (GET "/about" [] (about-page))
-  (GET "/session" [:as req] (str "Session: " (:session req) "\nTime-zone: " bass/*time-zone*))
+  (GET "/session" [:as req] (str "Session: " (:session req) "\nTime-zone: " (locals/time-zone)))
   (GET "/request" [:as req] (str req))
   (GET "/test" [:as req] (str (:server-name req))))

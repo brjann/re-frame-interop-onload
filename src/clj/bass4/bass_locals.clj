@@ -2,6 +2,21 @@
   (:require [ring.util.codec :refer [url-encode]]
             [bass4.utils :refer [map-map]]))
 
+(def db-defaults
+  {:time-zone "America/Puerto_Rico"
+   :language "se"})
+
+(def ^:dynamic *db-config*
+  db-defaults)
+
+(defn time-zone
+  []
+  (:time-zone *db-config*))
+
+(defn language
+  []
+  (:language *db-config*))
+
 (def regex-local (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
                    (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
 
@@ -37,7 +52,7 @@
 
 (defn- db-config [port config]
   (when-let [db-url (build-db-url port config)]
-    {:db-url db-url :db-time-zone (:DB_TIME_ZONE config) :db-lang (:LANGUAGE config)}))
+    {:db-url db-url :time-zone (:DB_TIME_ZONE config) :lang (:LANGUAGE config)}))
 
 (defn get-bass-db-configs
   ([bass-path] (get-bass-db-configs bass-path 3306))

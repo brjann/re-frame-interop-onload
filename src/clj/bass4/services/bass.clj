@@ -1,5 +1,6 @@
 (ns bass4.services.bass
   (:require [bass4.db.core :as db]
+            [bass4.bass-locals :as locals]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [clj-time.coerce :as tc]))
@@ -16,14 +17,12 @@
                                      :count count}))]
     (range (inc (- last-object-id count)) (inc last-object-id))))
 
-(def ^:dynamic *time-zone* "America/Puerto_Rico")
-
 (defn time-zone
   []
   (try
-    (t/time-zone-for-id *time-zone*)
+    (t/time-zone-for-id (locals/time-zone))
     (catch Exception e
-      (log/error "Time zone illegal: " *time-zone*)
+      (log/error "Time zone illegal: " (locals/time-zone))
       (t/default-time-zone))))
 
 (defn local-midnight
@@ -31,7 +30,7 @@
   ([date-time]
    (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
 
-(defn init-repl
+#_(defn init-repl
     ([] (init-repl :db1))
     ([db-name]
      (alter-var-root (var db/*db*) (constantly @(get-in db/*dbs* [db-name :db-conn])))
