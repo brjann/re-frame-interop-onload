@@ -12,7 +12,11 @@
             PreparedStatement]))
 
 
-;; (alter-var-root (var bass4.db.core/*db*) (fn [x] @(:db1 bass4.db.core/*dbs*)))
+(defn init-repl
+  []
+  (alter-var-root (var bass4.db.core/*db*) (constantly @(get-in bass4.db.core/*dbs* [:db1 :db-conn])))
+  (alter-var-root (var bass4.services.bass/*time-zone*) (constantly (get-in bass4.db.core/*dbs* [:db1 :db-time-zone]))))
+
 
 #_(defn connect!
   [pool-specs]
