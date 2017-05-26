@@ -1,7 +1,7 @@
 (ns bass4.services.assessments
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list map-map indices fnil+ diff in?]]
+            [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
             [clj-time.coerce :as tc]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
@@ -363,14 +363,21 @@
 ;; - the start time should be compared to (t/now)
 ;;
 
-#_(db/set-administration-dates! {:dates (map #(vector (:participant-administration-id %) (:start-time %)) x)})
+(defn- start-date-representation
+  [date-time]
+  (tc/to-epoch (bass/local-midnight date-time)))
 
-(defn dependent-assessments
+(defn dependent-assessments!
+  "Activates any assessments depending on completed assessments (by administration id)"
   [user-id administration-ids]
   (let [assessments (->> (db/get-dependent-assessments {:administration-ids administration-ids})
-                         (map #(assoc % :start-time (tc/to-epoch (t/plus (bass/local-midnight) (t/days (:offset-days %)))))))]
+                         (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
+                                                        (start-date-representation)))))]
     (when (seq assessments)
-      (create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments)))))
+      (->> (create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments))
+           (map #(select-values % [:participant-administration-id :start-time]))
+           (assoc {} :dates)
+           (db/set-administration-dates!)))))
 
 (defn get-assessment-round [user-id]
   (let [order-count (fn [x]
@@ -414,4 +421,5 @@
                        (distinct))
         empty-administration-ids (diff (map :administration-id round) non-empty)]
     (when (seq empty-administration-ids)
-      (db/set-administration-complete! {:administration-ids empty-administration-ids}))))
+      (db/set-administration-complete! {:administration-ids empty-administration-ids})
+      (dependent-assessments! user-id empty-administration-ids))))

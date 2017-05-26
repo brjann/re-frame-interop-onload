@@ -27,8 +27,9 @@
       (t/default-time-zone))))
 
 (defn local-midnight
-  []
-  (t/with-time-at-start-of-day (t/to-time-zone (t/now) (time-zone))))
+  ([] (local-midnight (t/now)))
+  ([date-time]
+   (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
 
 (defn init-repl
     ([] (init-repl :db1))
