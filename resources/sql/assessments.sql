@@ -314,3 +314,13 @@ FROM
     ON (ca2.OffsetAssessment = ca1.ObjectId AND ca2.OffsetDynamic = 1)
 WHERE
   cpa.ObjectId IN(:v*:administration-ids);
+
+
+-- :name set-administration-dates! :! :1
+-- :doc
+INSERT INTO c_participantadministration
+(ObjectId, Date)
+VALUES :t*:dates
+ON DUPLICATE KEY UPDATE
+  ObjectId = VALUES(ObjectId),
+  Date = VALUES(Date);

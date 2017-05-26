@@ -1,6 +1,7 @@
 (ns bass4.db.core
   (:require
     [clojure.java.jdbc :as jdbc]
+    [bass4.utils :refer [map-map]]
     [conman.core :as conman]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
@@ -13,7 +14,7 @@
 
 ;; (alter-var-root (var bass4.db.core/*db*) (fn [x] @(:db1 bass4.db.core/*dbs*)))
 
-(defn connect!
+#_(defn connect!
   [pool-specs]
   (reduce merge
           (map (fn [pool-spec]
@@ -25,7 +26,19 @@
                       (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})))})
                pool-specs)))
 
-(defn database-urls []
+(defn connect!
+  [pool-specs]
+  (map-map
+    (fn [pool-spec]
+      (assoc pool-spec :db-conn
+               (delay
+                 (do
+                   (log/info (str "Attaching " (:db-url pool-spec)))
+                   ;;TODO: &serverTimezone=UTC WTF????
+                   (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
+       pool-specs))
+
+(defn database-configs []
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
 
 ;; Connects to all databases in pool-specs
@@ -39,10 +52,11 @@
   [db-connections]
   (doall
     (map (fn [db]
-           (when (realized? (val db))
-             (do
-               (log/info (str "Detaching " (key db)))
-               (conman/disconnect! @(val db)))))
+           (let [db-conn (:db-conn (val db))]
+             (when (realized? db-conn)
+               (do
+                 (log/info (str "Detaching " (key db)))
+                 (conman/disconnect! @db-conn)))))
          db-connections)))
 
 ;; Disconnect from all databases in db-connections
@@ -54,7 +68,7 @@
 ;; and store connections in *dbs*
 (defstate ^:dynamic *dbs*
     :start (connect!
-             (database-urls))
+             (database-configs))
     :stop (disconnect! *dbs*))
 
 ;; Bind queries to *db* dynamic variable which is bound
@@ -95,5 +109,5 @@
                    (get db-mappings host)
                    (:default db-mappings))]
     (if (contains? *dbs* matching)
-      @(get *dbs* matching)
+      (get *dbs* matching)
       (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))

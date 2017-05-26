@@ -7,7 +7,8 @@
             [ring.util.request :as request]
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
-            [bass4.responses.instrument :as instruments]))
+            [bass4.responses.instrument :as instruments]
+            [bass4.services.bass :as bass]))
 
 (defn home-page []
   (layout/render
@@ -30,6 +31,6 @@
   (GET "/instrument/summary/:instrument-id" [instrument-id]
     (instruments/summary-page instrument-id))
   (GET "/about" [] (about-page))
-  (GET "/session" [:as req] (str (:session req)))
+  (GET "/session" [:as req] (str "Session: " (:session req) "\nTime-zone: " bass/*time-zone*))
   (GET "/request" [:as req] (str req))
   (GET "/test" [:as req] (str (:server-name req))))

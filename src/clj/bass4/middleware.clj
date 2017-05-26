@@ -145,10 +145,17 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
-(defn wrap-db [handler]
+#_(defn wrap-db [handler]
   (fn [request]
     (with-bindings {#'db/*db* (db/resolve-db request)}
       (handler request))))
+
+(defn wrap-db [handler]
+  (fn [request]
+    (let [db-config (db/resolve-db request)]
+      (binding [db/*db* @(:db-conn db-config)
+                bass/*time-zone* (or (:db-time-zone db-config) bass/*time-zone*)]
+        (handler request)))))
 
 (defn wrap-time-zone [handler]
   (fn [request]
@@ -185,7 +192,7 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
-      wrap-time-zone
+      #_wrap-time-zone
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post

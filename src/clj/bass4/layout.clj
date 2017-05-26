@@ -52,13 +52,6 @@
    (error-page {:status  400
                        :title   "Bad request!"
                        :message message})))
-(defn time-zone
-  []
-  (try
-    (t/time-zone-for-id bass/*time-zone*)
-    (catch Exception e
-      (log/error "Time zone illegal: " bass/*time-zone*)
-      (t/default-time-zone))))
 
 (parser/add-tag!
   :tr
@@ -76,4 +69,4 @@
 (filters/add-filter!
   :datetime-ns
   (fn [val]
-    (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (time-zone)) (tc/from-date val))))
+    (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (bass/time-zone)) (tc/from-date val))))

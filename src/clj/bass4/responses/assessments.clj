@@ -48,7 +48,7 @@
         answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
-          (assessments-service/administrations-completed! round instrument-id)
+          (assessments-service/administrations-completed! user-id round instrument-id)
           (-> (response/found "/user")
               #_(assoc :session (merge session {:assessments-pending false}))))
       (do

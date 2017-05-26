@@ -1,5 +1,6 @@
 (ns bass4.bass-locals
-  (:require [ring.util.codec :refer [url-encode]]))
+  (:require [ring.util.codec :refer [url-encode]]
+            [bass4.utils :refer [map-map]]))
 
 (def regex-local (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
                    (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
@@ -34,11 +35,18 @@
             "?user=" (url-encode user)
             "&password=" (url-encode password))))))
 
+(defn- db-config [port config]
+  (when-let [db-url (build-db-url port config)]
+    {:db-url db-url :db-time-zone (:DB_TIME_ZONE config)}))
+
 (defn get-bass-db-configs
   ([bass-path] (get-bass-db-configs bass-path 3306))
   ([bass-path port]
    (let [configs (reduce merge (map parse-local (get-locals bass-path)))]
-     (into {} (filter #(not (nil? (val %))) (zipmap (keys configs) (map (partial build-db-url port) (vals configs))))))))
+     (->> configs
+          (map-map (partial db-config port))
+          (filter #(val %))
+          (into {})))))
 
 #_(defn get-bass-db-configs [x y]
   {:db2 "jdbc:mysql://localhost:3300/fibro?user=root&password=root"

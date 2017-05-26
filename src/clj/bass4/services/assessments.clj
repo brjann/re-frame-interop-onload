@@ -6,6 +6,7 @@
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass]
             [bass4.services.instrument-answers :as instrument-answers]))
 
 
@@ -46,6 +47,8 @@
         missing-administrations))
 
 (defn- create-missing-administrations!
+  "user-id
+  [{:assessment-id 666 :assessment-index 0}]"
   [user-id missing-administrations]
   (let [new-object-ids
         (update-created-administrations!
@@ -274,13 +277,6 @@
     ;; Does not handle empty stuff? Use concat instead of list
     (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
 
-;;
-;; REGARDING TIME ZONES
-;;
-;; BASS saves assessment start dates in local time,
-;; i.e., an assessment that starts in a Swedish database on May 24
-;; is recorded as starting on May 23 22:00 GMT.
-;;
 (defn step-row
   [user-id]
   (fn [idx step]
@@ -355,9 +351,26 @@
 ;; Impact moderate - user has to answer instruments again
 ;;
 
+;;
+;; ASSESSMENT START TIME
+;;
+;; BASS saves assessment start dates in UTC time,
+;; i.e., an assessment that starts in a Swedish database on May 24
+;; is recorded as starting on May 23 22:00 GMT.
+;;
+;; Which means that
+;; - the start time should be created as UTC corresponding to midnight in selected timezone
+;; - the start time should be compared to (t/now)
+;;
+
+#_(db/set-administration-dates! {:dates (map #(vector (:participant-administration-id %) (:start-time %)) x)})
+
 (defn dependent-assessments
-  [administration-ids]
-  (db/get-dependent-assessments {:administration-ids administration-ids}))
+  [user-id administration-ids]
+  (let [assessments (->> (db/get-dependent-assessments {:administration-ids administration-ids})
+                         (map #(assoc % :start-time (tc/to-epoch (t/plus (bass/local-midnight) (t/days (:offset-days %)))))))]
+    (when (seq assessments)
+      (create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments)))))
 
 (defn get-assessment-round [user-id]
   (let [order-count (fn [x]
@@ -394,7 +407,7 @@
   (instrument-answers/save-administrations-answers! administration-ids instrument-id answers-map))
 
 (defn administrations-completed!
-  [round completed-instrument-id]
+  [user-id round completed-instrument-id]
   (let [non-empty (->> round
                        (remove #(= completed-instrument-id (:instrument-id %)))
                        (map :administration-id)
