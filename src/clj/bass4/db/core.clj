@@ -12,26 +12,8 @@
             PreparedStatement]))
 
 
-(defn init-repl
-  []
-  (alter-var-root (var bass4.db.core/*db*) (constantly @(get-in bass4.db.core/*dbs* [:db1 :db-conn])))
-  (alter-var-root (var bass4.services.bass/*time-zone*) (constantly (get-in bass4.db.core/*dbs* [:db1 :db-time-zone]))))
-
-
-#_(defn connect!
-  [pool-specs]
-  (reduce merge
-          (map (fn [pool-spec]
-                 {(keyword (key pool-spec))
-                  (delay
-                    (do
-                      (log/info (str "Attaching " (val pool-spec)))
-                      ;;TODO: &serverTimezone=UTC WTF????
-                      (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})))})
-               pool-specs)))
-
 (defn connect!
-  [pool-specs]
+  [db-config]
   (map-map
     (fn [pool-spec]
       (assoc pool-spec :db-conn
@@ -40,18 +22,12 @@
                    (log/info (str "Attaching " (:db-url pool-spec)))
                    ;;TODO: &serverTimezone=UTC WTF????
                    (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
-       pool-specs))
+       db-config))
 
 (defn database-configs []
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
 
-;; Connects to all databases in pool-specs
-#_(defn connect!
-  [pool-specs]
-  (reduce merge (map (fn [pool-spec]
-                       {(keyword (key pool-spec))
-                        (conman/connect! {:jdbc-url (str (val pool-spec) "&serverTimezone=UTC")})}) pool-specs)))
-
+;; Disconnect from all databases in db-connections
 (defn disconnect!
   [db-connections]
   (doall
@@ -63,10 +39,6 @@
                  (conman/disconnect! @db-conn)))))
          db-connections)))
 
-;; Disconnect from all databases in db-connections
-#_(defn disconnect!
-  [db-connections]
-  (doall (map (fn [db] (conman/disconnect! (val db))) db-connections)))
 
 ;; Establish connections to all databases
 ;; and store connections in *dbs*

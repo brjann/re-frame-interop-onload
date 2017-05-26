@@ -157,13 +157,6 @@
                 bass/*time-zone* (or (:db-time-zone db-config) bass/*time-zone*)]
         (handler request)))))
 
-(defn wrap-time-zone [handler]
-  (fn [request]
-    (let [time-zone (bass/db-time-zone)]
-      (log/info (str "Time-zone: " time-zone))
-      (with-bindings {#'bass/*time-zone* time-zone}
-        (handler request)))))
-
 ;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836
 (defn wrap-timer [handler]
   (fn [request]
@@ -192,7 +185,6 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
-      #_wrap-time-zone
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post

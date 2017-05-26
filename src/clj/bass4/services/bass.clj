@@ -7,9 +7,6 @@
 (defn db-title []
   (:title (db/get-db-title)))
 
-(defn db-time-zone []
-  (:time-zone (db/get-db-time-zone)))
-
 ;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!
   [class-name, property-name, count]
@@ -32,3 +29,9 @@
 (defn local-midnight
   []
   (t/with-time-at-start-of-day (t/to-time-zone (t/now) (time-zone))))
+
+(defn init-repl
+    ([] (init-repl :db1))
+    ([db-name]
+     (alter-var-root (var db/*db*) (constantly @(get-in db/*dbs* [db-name :db-conn])))
+     (alter-var-root (var *time-zone*) (constantly (or (get-in db/*dbs* [db-name :db-time-zone]) *time-zone*)))))

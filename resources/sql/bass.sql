@@ -17,9 +17,6 @@ DELETE FROM objectlist WHERE ObjectId = :object-id;
 -- :name get-db-title :? :1
 SELECT title FROM c_project WHERE ObjectId = 100;
 
--- :name get-db-time-zone :? :1
-SELECT timezone AS `time-zone` FROM c_project WHERE ObjectId = 100;
-
 -- :name link-property-reverse! :! :1
 -- :doc
 INSERT IGNORE INTO links_properties_reverse
