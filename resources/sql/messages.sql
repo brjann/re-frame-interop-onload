@@ -46,3 +46,13 @@ WHERE ObjectId = :message-id;
 -- :name set-message-sender! :! :n
 -- :doc set sender of message
 CALL create_bass_link(:message-id, :user-id, "Sender", "cMessage", "cParticipant")
+
+-- :name get-message-by-id :? :1
+-- :doc
+SELECT
+  cm.ObjectId AS `message-id`,
+  MessageText AS `text`,
+  Subject,
+  from_unixtime(CASE WHEN SendTime IS NULL THEN 0 ELSE SendTime END) AS `saved-datetime`
+FROM c_message AS cm
+WHERE cm.ObjectId = :message-id;

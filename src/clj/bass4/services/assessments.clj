@@ -155,7 +155,7 @@
              (zero? (:clinician-rated %)))
           assessment-statuses))
 
-(defn matching-administration
+(defn- matching-administration
   [assessment-index administrations]
   (filter #(= (:assessment-index %) assessment-index) administrations))
 
@@ -241,13 +241,13 @@
 ;;     ROUNDS CREATION
 ;; ------------------------
 
-(defn merge-batches
+(defn- merge-batches
   [coll val]
   (if (and (seq coll) (= (:allow-swallow val) 1))
     (concat (butlast coll) (list (concat (last coll) (list val))))
     (concat coll (list (list val)))))
 
-(defn batch-texts
+(defn- batch-texts
   [text-name]
   (fn
     [batch]
@@ -257,11 +257,11 @@
                 (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
                 batch)))))
 
-(defn assessment-instruments
+(defn- assessment-instruments
   [assessment]
   (if (= (:shuffle-instruments assessment) 1) (shuffle (:instruments assessment)) (:instruments assessment)))
 
-(defn batch-instruments
+(defn- batch-instruments
   [batch]
   (flatten
     (map (fn [assessment]
@@ -269,7 +269,7 @@
                 (assessment-instruments assessment)))
          batch)))
 
-(defn batch-steps
+(defn- batch-steps
   [idx batch]
   (let [welcome {:texts ((batch-texts :welcome-text) batch)}
         thank-you {:texts ((batch-texts :thank-you-text) batch)}
@@ -277,7 +277,7 @@
     ;; Does not handle empty stuff? Use concat instead of list
     (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
 
-(defn step-row
+(defn- step-row
   [user-id]
   (fn [idx step]
     (merge
@@ -291,7 +291,7 @@
        :administration-id nil}
       step)))
 
-(defn save-round!
+(defn- save-round!
   [round]
   (try
     ;; Lock table to make sure that round-id is unique
@@ -300,7 +300,6 @@
       (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))}))
     (finally
       (db/unlock-tables!))))
-
 
 (defn generate-assessment-round
   [user-id pending-assessments]
