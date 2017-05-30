@@ -33,5 +33,5 @@
 #_(defn init-repl
     ([] (init-repl :db1))
     ([db-name]
-     (alter-var-root (var db/*db*) (constantly @(get-in db/*dbs* [db-name :db-conn])))
-     (alter-var-root (var *time-zone*) (constantly (or (get-in db/*dbs* [db-name :db-time-zone]) *time-zone*)))))
+     (alter-var-root (var db/*db*) (constantly @(get-in db/db-configs [db-name :db-conn])))
+     (alter-var-root (var *time-zone*) (constantly (or (get-in db/db-configs [db-name :db-time-zone]) *time-zone*)))))

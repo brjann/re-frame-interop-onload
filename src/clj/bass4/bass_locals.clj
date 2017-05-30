@@ -63,7 +63,8 @@
           (filter #(val %))
           (into {})))))
 
-#_(defn get-bass-db-configs [x y]
-  {:db2 "jdbc:mysql://localhost:3300/fibro?user=root&password=root"
-   :db3 "jdbc:mysql://localhost:3300/internetpsykologi?user=root&password=root"
-   :db1 "jdbc:mysql://localhost:3300/panik2017?user=root&password=root"})
+#_(defn init-repl
+    ([] (init-repl :db1))
+    ([db-name]
+     (alter-var-root (var db/*db*) (constantly @(get-in db/db-configs [db-name :db-conn])))
+     (alter-var-root (var *time-zone*) (constantly (or (get-in db/db-configs [db-name :db-time-zone]) *time-zone*)))))
