@@ -99,3 +99,28 @@
   ([db-name]
    (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
    (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))))
+
+(defn sql-wrapper
+  [fn this db sqlvec options]
+  (let [res (apply fn [this db sqlvec options])]
+    #_(log/debug this "\n" db "\n" sqlvec "\n" options "\n" res)
+    res)
+  )
+
+(defn sql-wrapper-query
+  [this db sqlvec options]
+  (sql-wrapper hugsql.adapter/query this db sqlvec options))
+
+(defn sql-wrapper-execute
+  [this db sqlvec options]
+  (sql-wrapper hugsql.adapter/execute this db sqlvec options))
+
+(defmethod hugsql.core/hugsql-command-fn :! [sym] 'bass4.db.core/sql-wrapper-execute)
+(defmethod hugsql.core/hugsql-command-fn :execute [sym] 'bass4.db.core/sql-wrapper-execute)
+(defmethod hugsql.core/hugsql-command-fn :i! [sym] 'bass4.db.core/sql-wrapper-execute)
+(defmethod hugsql.core/hugsql-command-fn :insert [sym] 'bass4.db.core/sql-wrapper-execute)
+(defmethod hugsql.core/hugsql-command-fn :<! [sym] 'bass4.db.core/sql-wrapper-query)
+(defmethod hugsql.core/hugsql-command-fn :returning-execute [sym] 'bass4.db.core/sql-wrapper-query)
+(defmethod hugsql.core/hugsql-command-fn :? [sym] 'bass4.db.core/sql-wrapper-query)
+(defmethod hugsql.core/hugsql-command-fn :query [sym] 'bass4.db.core/sql-wrapper-query)
+(defmethod hugsql.core/hugsql-command-fn :default [sym] 'bass4.db.core/sql-wrapper-query)
