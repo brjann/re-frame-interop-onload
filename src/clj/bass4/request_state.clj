@@ -21,5 +21,5 @@
   [handler request]
   (binding [*request-state* (atom {})]
     (let [res (handler request)]
-      (log/debug *request-state*)
+      #_(log/debug *request-state*)
       res)))

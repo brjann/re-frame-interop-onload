@@ -1,17 +1,17 @@
 (ns bass4.db.core
   (:require
     [clojure.java.jdbc :as jdbc]
-    [bass4.utils :refer [map-map]]
+    [bass4.utils :refer [map-map filter-map]]
     [conman.core :as conman]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
     [bass4.bass-locals :as locals]
     [clojure.tools.logging :as log]
-    [bass4.request-state :as request-state])
+    [bass4.request-state :as request-state]
+    [bass4.bass-locals :as bass-locals])
   (:import [java.sql
             BatchUpdateException
             PreparedStatement]))
-
 
 (defn connect!
   [db-config]
@@ -80,6 +80,11 @@
   (set-parameter [v ^PreparedStatement stmt idx]
     (.setTimestamp stmt idx (java.sql.Timestamp. (.getTime v)))))
 
+
+;;-------------
+;; DB RESOLVING
+;;-------------
+
 (defn request-host
   [request]
   (first (filter identity
@@ -95,15 +100,31 @@
       (get db-configs matching)
       (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))
 
+;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
+;; occur after this file has changed? It seems that mount stops and starts the
+;; db-connection AFTER the *db* variable has been bound to a db-connection. This
+;; closes the old connection and creates a new one. Which is used at the next
+;; request, explaining why it works again then. This should not affect the production
+;; environment.
+(defn db-wrapper
+  [handler request]
+  (let [db-config (resolve-db request)]
+    (binding [*db* @(:db-conn db-config)
+              bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
+      (handler request))))
+
 (defn init-repl
   ([] (init-repl :db1))
   ([db-name]
    (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
    (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))))
 
+;---------------
+; SQL WRAPPER
+;---------------
 (defn sql-wrapper
-  [fn this db sqlvec options]
-  (let [res (apply fn [this db sqlvec options])]
+  [f this db sqlvec options]
+  (let [res (apply f [this db sqlvec options])]
     (request-state/swap-state! :sql-count inc 0)
     res))
 

@@ -150,20 +150,13 @@
                                  (merge (:session response) session-map))))))
 
 
-
-#_(defn wrap-request-state [handler]
-  (request-state/request-state-wrapper handler))
-
 (defn wrap-request-state [handler]
   (fn [request]
     (request-state/request-state-wrapper handler request)))
 
 (defn wrap-db [handler]
   (fn [request]
-    (let [db-config (db/resolve-db request)]
-      (binding [db/*db* @(:db-conn db-config)
-                bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
-        (handler request)))))
+    (db/db-wrapper handler request)))
 
 ;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836
 (defn wrap-timer [handler]

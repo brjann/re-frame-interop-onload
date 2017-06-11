@@ -5,7 +5,7 @@
 
   :dependencies [[buddy "1.3.0"]
                  [compojure "1.5.2"]
-                 [conman "0.6.3"]
+                 [conman "0.6.6"]
                  [cprop "0.1.10"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
