@@ -17,7 +17,7 @@
   []
   (:language *db-config*))
 
-(def regex-local (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
+(def regex-php-constant (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
                    (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
 
 (defn- get-locals [bass-path]
@@ -34,10 +34,14 @@
     (when match
       (assoc (parse-local-rec matcher) (keyword (un-escape (nth match 1))) (un-escape (nth match 6))))))
 
+(defn- parse-php-constants
+  [file]
+  (let [matcher (re-matcher regex-php-constant (slurp file))]
+    (parse-local-rec matcher)))
+
 (defn- parse-local [file]
-  (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
-    (let [matcher (re-matcher regex-local (slurp file) )]
-      (hash-map (keyword db-name) (parse-local-rec matcher)))))
+    (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
+      {(keyword db-name) (parse-php-constants file)}))
 
 ;; TODO: Do Latin1 connections need to be handled?
 (defn- build-db-url
@@ -62,9 +66,3 @@
           (map-map (partial db-config port))
           (filter #(val %))
           (into {})))))
-
-#_(defn init-repl
-    ([] (init-repl :db1))
-    ([db-name]
-     (alter-var-root (var db/*db*) (constantly @(get-in db/db-configs [db-name :db-conn])))
-     (alter-var-root (var *time-zone*) (constantly (or (get-in db/db-configs [db-name :db-time-zone]) *time-zone*)))))
