@@ -101,18 +101,11 @@
    (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
    (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))))
 
-(defn swap-key!
-  [atom key fn val-if-empty]
-  (swap! atom #(assoc % key (fn (or (get % key) val-if-empty)))))
-
 (defn sql-wrapper
   [fn this db sqlvec options]
   (let [res (apply fn [this db sqlvec options])]
-    #_(Thread/sleep 4000)
-    #_(swap! *request-state* #(assoc % :sql-count (inc (or (:sql-count %) 0))))
-    (swap-key! request-state/*request-state* :sql-count inc 0)
-    res)
-  )
+    (request-state/swap-state! :sql-count inc 0)
+    res))
 
 (defn sql-wrapper-query
   [this db sqlvec options]

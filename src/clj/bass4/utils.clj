@@ -101,3 +101,7 @@
          ret# ~expr
          elapsed# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]
      {:val ret# :time elapsed#}))
+
+(defn swap-key!
+  [atom key f val-if-empty]
+  (swap! atom #(assoc % key (f (or (get % key) val-if-empty)))))
