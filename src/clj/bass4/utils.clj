@@ -93,3 +93,11 @@
 ;; http://blog.jayfields.com/2011/01/clojure-select-keys-select-values-and.html
 (defn select-values [map ks]
   (reduce #(conj %1 (map %2)) [] ks))
+
+(defmacro time+
+  "Evaluates expr and returns a map with a :val and :time keys"
+  [expr]
+  `(let [start# (. System (nanoTime))
+         ret# ~expr
+         elapsed# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]
+     {:val ret# :time elapsed#}))

@@ -18,7 +18,8 @@
             [buddy.auth.backends.session :refer [session-backend]]
             [cprop.tools]
             [clj-time.core :as t]
-            [bass4.db.core :as db])
+            [bass4.db.core :as db]
+            [bass4.request-state :as request-state])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -148,17 +149,14 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
-#_(defn wrap-db [handler]
-  (fn [request]
-    (with-bindings {#'db/*db* (db/resolve-db request)}
-      (handler request))))
 
-#_(defn wrap-db [handler]
+
+#_(defn wrap-request-state [handler]
+  (request-state/request-state-wrapper handler))
+
+(defn wrap-request-state [handler]
   (fn [request]
-    (let [db-config (db/resolve-db request)]
-      (binding [db/*db* @(:db-conn db-config)
-                bass/*time-zone* (or (:db-time-zone db-config) bass/*time-zone*)]
-        (handler request)))))
+    (request-state/request-state-wrapper handler request)))
 
 (defn wrap-db [handler]
   (fn [request]
@@ -209,4 +207,5 @@
       wrap-reload-headers
       wrap-context
       wrap-internal-error
+      wrap-request-state
       wrap-timer))
