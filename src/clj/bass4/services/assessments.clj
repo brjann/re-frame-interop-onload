@@ -248,14 +248,16 @@
     (concat coll (list (list val)))))
 
 (defn- batch-texts
-  [text-name]
-  (fn
-    [batch]
-    (pr-str (remove
-              #(some (partial = %) [nil ""])
-              (map-indexed
-                (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
-                batch)))))
+    [text-name]
+    (fn
+      [batch]
+      (let [texts (remove
+                    #(some (partial = %) [nil ""])
+                    (map-indexed
+                      (fn [idx assessment] (when (or (= idx 0) (= (:show-texts-if-swallowed assessment))) (get assessment text-name)))
+                      batch))]
+        (when (seq texts)
+          {:texts (pr-str texts)}))))
 
 (defn- assessment-instruments
   [assessment]
@@ -270,12 +272,12 @@
          batch)))
 
 (defn- batch-steps
-  [idx batch]
-  (let [welcome {:texts ((batch-texts :welcome-text) batch)}
-        thank-you {:texts ((batch-texts :thank-you-text) batch)}
-        instruments (batch-instruments batch)]
-    ;; Does not handle empty stuff? Use concat instead of list
-    (map #(merge {:batch-id idx} %) (flatten (list welcome instruments thank-you)))))
+    [idx batch]
+    (let [welcome ((batch-texts :welcome-text) batch)
+          thank-you ((batch-texts :thank-you-text) batch)
+          instruments (batch-instruments batch)]
+      ;; Does not handle empty stuff? Use concat instead of list
+      (map #(merge {:batch-id idx} %) (flatten (remove empty? (list welcome instruments thank-you))))))
 
 (defn- step-row
   [user-id]

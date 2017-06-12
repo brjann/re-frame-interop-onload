@@ -35,13 +35,13 @@
       (assoc (parse-local-rec matcher) (keyword (un-escape (nth match 1))) (un-escape (nth match 6))))))
 
 (defn- parse-php-constants
-  [file]
-  (let [matcher (re-matcher regex-php-constant (slurp file))]
+  [text]
+  (let [matcher (re-matcher regex-php-constant text)]
     (parse-local-rec matcher)))
 
 (defn- parse-local [file]
     (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
-      {(keyword db-name) (parse-php-constants file)}))
+      {(keyword db-name) (parse-php-constants (slurp file))}))
 
 ;; TODO: Do Latin1 connections need to be handled?
 (defn- build-db-url
