@@ -13,7 +13,7 @@
               :must-answer "You must provide an answer."
               :must-specify-1 "You must provide a specification to your answer."
               :must-specify-m "You must provide specifications to your answers."
-              :order-count "Instrument %1 of %2"}
+              :order-count "Questionnaire %1 of %2"}
  :date-time {:datetime-ns "yyyy-MM-dd HH:mm"}
  :messages {:sent-by "Sent by %1 on %2"
             :subject "Mssage subject"
