@@ -13,17 +13,24 @@
             BatchUpdateException
             PreparedStatement]))
 
+;; Bind queries to *db* dynamic variable which is bound
+;; to each clients database before executing queries
+(def ^:dynamic *db* nil)
+(def ^:dynamic *db-common* nil)
+
 (defn connect!
   [db-config]
-  (map-map
-    (fn [pool-spec]
-      (assoc pool-spec :db-conn
-               (delay
-                 (do
-                   (log/info (str "Attaching " (:db-url pool-spec)))
-                   ;;TODO: &serverTimezone=UTC WTF????
-                   (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
-       db-config))
+  (let [res (map-map
+              (fn [pool-spec]
+                (assoc pool-spec :db-conn
+                                 (delay
+                                   (do
+                                     (log/info (str "Attaching " (:db-url pool-spec)))
+                                     ;;TODO: &serverTimezone=UTC WTF????
+                                     (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
+              db-config)]
+    (alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
+    res))
 
 (defn database-configs []
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
@@ -42,20 +49,11 @@
 
 
 ;; Establish connections to all databases
-;; and store connections in *dbs*
-#_(defstate ^:dynamic *dbs*
-    :start (connect!
-             (database-configs))
-    :stop (disconnect! *dbs*))
-
+;; and store connections in db-configs
 (defstate db-configs
   :start (connect!
            (database-configs))
   :stop (disconnect! db-configs))
-
-;; Bind queries to *db* dynamic variable which is bound
-;; to each clients database before executing queries
-(def ^:dynamic *db* nil)
 
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
@@ -64,6 +62,7 @@
 (conman/bind-connection *db* "sql/instruments.sql")
 (conman/bind-connection *db* "sql/assessments.sql")
 (conman/bind-connection *db* "sql/instrument-answers.sql")
+(conman/bind-connection *db-common* "sql/common.sql")
 
 (defn to-date [^java.sql.Date sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))
