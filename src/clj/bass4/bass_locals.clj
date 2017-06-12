@@ -25,7 +25,7 @@
 
 (defn parse-local [file]
     (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
-      {(keyword db-name) (parse-php-constants (slurp file))}))
+      {(keyword db-name) (assoc (parse-php-constants (slurp file)) :name db-name)}))
 
 (defn- build-db-url
   [host port name user password]
@@ -44,7 +44,7 @@
 
 (defn db-config [port config]
   (when-let [db-url (db-url port config)]
-    {:db-url db-url :time-zone (:DB_TIME_ZONE config) :lang (:LANGUAGE config)}))
+    {:db-url db-url :time-zone (:DB_TIME_ZONE config) :lang (:LANGUAGE config) :name (:name config)}))
 
 (defn get-bass-db-configs
   ([bass-path] (get-bass-db-configs bass-path 3306))

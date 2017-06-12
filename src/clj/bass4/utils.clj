@@ -106,6 +106,10 @@
   [atom key f val-if-empty]
   (swap! atom #(assoc % key (f (or (get % key) val-if-empty)))))
 
+(defn set-key!
+  [atom key val]
+  (swap! atom #(assoc % key val)))
+
 ;; -----------------
 ;; PHP define PARSER
 ;; -----------------

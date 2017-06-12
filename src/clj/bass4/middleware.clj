@@ -8,7 +8,7 @@
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.config :refer [env]]
             [bass4.bass-locals :as bass-locals]
-            [bass4.utils :refer [filter-map]]
+            [bass4.utils :refer [filter-map time+]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
@@ -158,14 +158,6 @@
   (fn [request]
     (db/db-wrapper handler request)))
 
-;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L3836
-(defn wrap-timer [handler]
-  (fn [request]
-    (let [time-start (t/now)
-          response (handler request)
-          diff (t/in-millis (t/interval time-start (t/now)))]
-      #_(log/info (str "Render time " diff))
-      response)))
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -200,5 +192,5 @@
       wrap-reload-headers
       wrap-context
       wrap-internal-error
-      wrap-request-state
-      wrap-timer))
+      #_wrap-timer
+      wrap-request-state))

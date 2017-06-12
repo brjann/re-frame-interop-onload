@@ -92,7 +92,6 @@
 
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
-        ;;host (keyword (:server-name request))
         host (keyword (request-host request))
         matching (or (get db-mappings host) (:default db-mappings))]
     (if (contains? db-configs matching)
@@ -108,6 +107,7 @@
 (defn db-wrapper
   [handler request]
   (let [db-config (resolve-db request)]
+    (request-state/set-state! :name (:name db-config))
     (binding [*db* @(:db-conn db-config)
               bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
       (handler request))))
