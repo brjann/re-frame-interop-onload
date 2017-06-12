@@ -117,7 +117,8 @@
   ([] (init-repl :db1))
   ([db-name]
    (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
-   (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))))
+   (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))
+   (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))
 
 ;---------------
 ; SQL WRAPPER
