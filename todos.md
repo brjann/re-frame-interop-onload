@@ -13,7 +13,7 @@
 ## Done
  - Re-authenticate
     - Save URL in GET
- - Anti-forgery token is not used with login.
+ - Anti-forgery token is no longer used with login.
  - Removed auto-completes in double-auth
  
  
@@ -27,13 +27,11 @@
 - Spinner
 - Access forbidden 304
 
-## Wait
-- Re-post on re-authenticate
-
 ## Done
 - Create middle-ware for ajax interception
 - POST intermediate handler
 - No internet connection
+- DISCARD Re-post on re-authenticate
  
  
  
@@ -56,12 +54,11 @@
 
 #Basics
 - Form validation https://webdesign.tutsplus.com/tutorials/html5-form-validation-with-the-pattern-attribute--cms-25145
-- Timezone settings
 
 ##Done 
 - All HTML templates now based on base.html
 - Basic validation of required form fields
-
+- Timezone settings are in local_xxx.php
 
 
 #i18n
@@ -78,10 +75,10 @@
 - Used schema and forced validation of functions that accept GET and POST
 
 # Other
- - Logging
  - Database exceptions
  - SQL injection
  - WTF? http://stackoverflow.com/questions/26515700/mysql-jdbc-driver-5-1-33-time-zone-issue
  
- ## Done
-  - Page title
+## Done
+- Logging of pageloads
+- Page title
