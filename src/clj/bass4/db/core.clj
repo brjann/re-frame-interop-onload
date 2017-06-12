@@ -127,6 +127,7 @@
   [f this db sqlvec options]
   (let [res (apply f [this db sqlvec options])]
     (request-state/swap-state! :sql-count inc 0)
+    #_(log/debug this)
     res))
 
 (defn sql-wrapper-query

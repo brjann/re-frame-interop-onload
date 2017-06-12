@@ -11,9 +11,10 @@
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clj-time.core :as t]
-            [bass4.services.user :as user]))
+            [bass4.services.user :as user]
+            [bass4.test.utils :refer [get-edn] :as test-utils]))
 
-(use-fixtures
+#_(use-fixtures
   :once
   (fn [f]
     (mount/start
@@ -22,6 +23,10 @@
     #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
     (bass4.db.core/init-repl :db1)
     (f)))
+
+(use-fixtures
+    :once
+    test-utils/test-fixtures)
 
 #_(deftest test-users
   (jdbc/with-db-transaction [t-conn *db*]
@@ -44,7 +49,7 @@
            (db/get-user t-conn {:id "1"})))))
 
 
-#_(bass4.db.core/init-repl :db1)
+
 
 (deftest my-foo
   (is (= 1 1)))
@@ -59,11 +64,6 @@
       (is (= 1 1))
       (is (= "Message" (:text message))))))
 
-(defn get-edn
-  [edn]
-  (-> (io/file (System/getProperty "user.dir") "test/test-edns" (str edn ".edn"))
-      (slurp)
-      (edn/read-string)))
 
 (deftest edn-1
   (is (= (get-edn "edn-1") {:group-name nil :group-id nil})))
@@ -75,24 +75,4 @@
 
 (deftest redefs-1
   (is (= (get-redefs-1) {:objectid 9, :user-id 9})))
-
-(defn get-ass-1-pending
-  []
-  (with-redefs [t/now (constantly (t/date-time 2017 05 30 17 16 00))
-                db/get-user-group (constantly {:group-name nil :group-id nil})
-                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
-                db/get-assessment-series-assessments (constantly (get-edn "ass-1-series-ass"))
-                db/get-user-administrations (constantly (get-edn "ass-1-adms"))]
-    (assessments/get-pending-assessments 535795)))
-
-(defn get-ass-1-rounds
-  [pending]
-  (with-redefs [t/now (constantly (t/date-time 1986 10 14))]
-    (doall (assessments/generate-assessment-round 234 pending))))
-
-(deftest ass-1
-  (let [pending (get-ass-1-pending)]
-    (is (= (get-edn "ass-1-res") pending))
-    (is (= (get-ass-1-rounds pending)
-             (get-edn "ass-1-rounds")))))
 
