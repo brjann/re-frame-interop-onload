@@ -131,7 +131,7 @@
     (request-state/swap-state! :sql-count inc 0)
     (when *log-queries*
       (log/debug sqlvec)
-      (log/debug res))
+      (log/debug (pr-str res)))
     res))
 
 (defn sql-wrapper-query

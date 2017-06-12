@@ -29,3 +29,71 @@
            (is (= (get-ass-1-rounds pending)
                   (get-edn "ass-1-rounds")))))
 
+(defn get-ass-3-pending
+  []
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
+                db/get-assessment-series-assessments (constantly (get-edn "ass-3-series-ass"))
+                db/get-user-administrations (constantly (get-edn "ass-3-adms"))
+                db/get-assessments-instruments (constantly (get-edn "ass-3-instruments"))
+                db/get-administration-completed-instruments (constantly ())
+                db/get-administration-additional-instruments (constantly ())]
+    (assessments/get-pending-assessments 535899)))
+
+(defn get-ass-3-rounds
+  [pending]
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (doall (assessments/generate-assessment-round 535899 pending))))
+
+(deftest ass-3
+  (let [pending (get-ass-3-pending)]
+    (is (= (get-edn "ass-3-res") pending))
+    (is (= (get-ass-3-rounds pending)
+           (get-edn "ass-3-rounds")))))
+
+(defn get-ass-4-pending
+  []
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
+                db/get-assessment-series-assessments (constantly (get-edn "ass-4-series-ass"))
+                db/get-user-administrations (constantly (get-edn "ass-4-adms"))
+                db/get-assessments-instruments (constantly (get-edn "ass-4-instruments"))
+                db/get-administration-completed-instruments (constantly ())
+                db/get-administration-additional-instruments (constantly ())]
+    (assessments/get-pending-assessments 536048)))
+
+(defn get-ass-4-rounds
+  [pending]
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (doall (assessments/generate-assessment-round 536048 pending))))
+
+(deftest ass-4
+  (let [pending (get-ass-4-pending)]
+    (is (= (get-edn "ass-4-res") pending))
+    (is (= (get-ass-4-rounds pending)
+           (get-edn "ass-4-rounds")))))
+
+(defn get-ass-5-pending
+  []
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
+                db/get-assessment-series-assessments (constantly (get-edn "ass-5-series-ass"))
+                db/get-user-administrations (constantly (get-edn "ass-5-adms"))
+                db/get-assessments-instruments (constantly (get-edn "ass-5-instruments"))
+                db/get-administration-completed-instruments (constantly '({:administration-id 536049, :instrument-id 286}))
+                db/get-administration-additional-instruments (constantly ())]
+    (assessments/get-pending-assessments 536048)))
+
+(defn get-ass-5-rounds
+  [pending]
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (doall (assessments/generate-assessment-round 536048 pending))))
+
+(deftest ass-5
+  (let [pending (get-ass-5-pending)]
+    (is (= (get-edn "ass-5-res") pending))
+    (is (= (get-ass-5-rounds pending)
+           (get-edn "ass-5-rounds")))))

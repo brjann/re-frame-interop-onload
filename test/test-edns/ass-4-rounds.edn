@@ -1,0 +1,28 @@
+({:time #inst"2017-06-12T09:40:00.000-00:00",
+  :user-id 536048,
+  :batch-id 0,
+  :step 0,
+  :texts "(\"Welcome top-priority\")",
+  :instrument-id nil,
+  :administration-id nil}
+  {:time #inst"2017-06-12T09:40:00.000-00:00",
+   :user-id 536048,
+   :batch-id 0,
+   :step 1,
+   :texts nil,
+   :instrument-id 286,
+   :administration-id 536049}
+  {:time #inst"2017-06-12T09:40:00.000-00:00",
+   :user-id 536048,
+   :batch-id 0,
+   :step 2,
+   :texts nil,
+   :instrument-id 4743,
+   :administration-id 536049}
+  {:time #inst"2017-06-12T09:40:00.000-00:00",
+   :user-id 536048,
+   :batch-id 0,
+   :step 3,
+   :texts "(\"Thanks top-priority\")",
+   :instrument-id nil,
+   :administration-id nil})
