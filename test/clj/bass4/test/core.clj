@@ -1,4 +1,4 @@
-(ns bass4.test.utils
+(ns bass4.test.core
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [mount.core :as mount]

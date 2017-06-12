@@ -12,7 +12,7 @@
             [clojure.edn :as edn]
             [clj-time.core :as t]
             [bass4.services.user :as user]
-            [bass4.test.utils :refer [get-edn] :as test-utils]))
+            [bass4.test.core :refer [get-edn test-fixtures]]))
 
 #_(use-fixtures
   :once
@@ -26,7 +26,7 @@
 
 (use-fixtures
     :once
-    test-utils/test-fixtures)
+    test-fixtures)
 
 #_(deftest test-users
   (jdbc/with-db-transaction [t-conn *db*]

@@ -2,12 +2,12 @@
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.services.assessments :as assessments]
-            [bass4.test.utils :refer [get-edn] :as test-utils]
+            [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]))
 
 (use-fixtures
   :once
-  test-utils/test-fixtures)
+  test-fixtures)
 
 (defn get-ass-1-pending
   []
