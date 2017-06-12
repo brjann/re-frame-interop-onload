@@ -38,6 +38,8 @@
 
   :min-lein-version "2.0.0"
 
+  ;; https://yobriefca.se/blog/2014/04/29/managing-environment-variables-in-clojure/
+  ;; .lein-env is initialized by leiningen to include the map from profiles.clj
   :jvm-opts ["-server" "-Dconf=.lein-env"]
   :source-paths ["src/clj"]
   :test-paths ["test/clj"]

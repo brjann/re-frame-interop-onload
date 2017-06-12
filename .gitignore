@@ -13,3 +13,4 @@ prod-config.edn
 /log
 /.idea
 *.iml
+local.edn
