@@ -1,6 +1,6 @@
 (ns bass4.bass-locals
   (:require [ring.util.codec :refer [url-encode]]
-            [bass4.utils :refer [map-map]]))
+            [bass4.utils :refer [map-map parse-php-constants]]))
 
 (def db-defaults
   {:time-zone "America/Puerto_Rico"
@@ -17,27 +17,10 @@
   []
   (:language *db-config*))
 
-(def regex-php-constant (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
-                   (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
 
 (defn- get-locals [bass-path]
   (->> (.listFiles (clojure.java.io/file bass-path))
        (filter #(clojure.string/starts-with? (.getName %) "local_"))))
-
-(defn- un-escape [str]
-  (-> (subs str 1 (dec (count str)))
-      (clojure.string/replace  #"\\([^\\])" "$1")
-      (clojure.string/replace  "\\\\" "\\")))
-
-(defn- parse-local-rec [matcher]
-  (let [match (re-find matcher)]
-    (when match
-      (assoc (parse-local-rec matcher) (keyword (un-escape (nth match 1))) (un-escape (nth match 6))))))
-
-(defn- parse-php-constants
-  [text]
-  (let [matcher (re-matcher regex-php-constant text)]
-    (parse-local-rec matcher)))
 
 (defn- parse-local [file]
     (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]

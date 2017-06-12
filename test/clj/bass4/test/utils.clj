@@ -104,6 +104,11 @@
   (is (= [1 2] (diff [1 2 3] [3 4 5])))
   (is (= [0 1 2] (diff [0 1 2 3] [3 4 5]))))
 ;
+
+
+(deftest t-parse-php-constants
+  (is (= {:jag "är glad", :hejsan "hoppsan"} (parse-php-constants "define(\"hejsan\", \"hoppsan\");\ndefine(\"jag\", \"är glad\");")))
+  (is (= {:jag "är glad", :hejsan "hoppsan"} (parse-php-constants "define('hejsan', \"hoppsan\");\ndefine(\"jag\", \"är glad\");"))))
 ;;; https://stackoverflow.com/questions/3249334/test-whether-a-list-contains-a-specific-value-in-clojure
 ;(defn in?
 ;  "true if coll contains m"

@@ -105,3 +105,25 @@
 (defn swap-key!
   [atom key f val-if-empty]
   (swap! atom #(assoc % key (f (or (get % key) val-if-empty)))))
+
+;; -----------------
+;; PHP define PARSER
+;; -----------------
+(def regex-php-constant (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
+                          (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
+
+(defn- un-escape [str]
+  (-> (subs str 1 (dec (count str)))
+      (clojure.string/replace  #"\\([^\\])" "$1")
+      (clojure.string/replace  "\\\\" "\\")))
+
+(defn- parse-constants-rec [matcher]
+  (let [match (re-find matcher)]
+    (when match
+      (assoc (parse-constants-rec matcher) (keyword (un-escape (nth match 1))) (un-escape (nth match 6))))))
+
+(defn parse-php-constants
+  [text]
+  (let [matcher (re-matcher regex-php-constant text)]
+    (parse-constants-rec matcher)))
+
