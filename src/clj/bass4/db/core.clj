@@ -1,7 +1,7 @@
 (ns bass4.db.core
   (:require
     [clojure.java.jdbc :as jdbc]
-    [bass4.utils :refer [map-map filter-map]]
+    [bass4.utils :refer [map-map filter-map time+]]
     [conman.core :as conman]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
@@ -126,12 +126,13 @@
 
 (defn sql-wrapper
   [f this db sqlvec options]
-  (let [res (apply f [this db sqlvec options])]
+  (let [{:keys [val time]} (time+ (apply f [this db sqlvec options]))]
     (request-state/swap-state! :sql-count inc 0)
+    (request-state/swap-state! :sql-times #(conj % time) [])
     (when *log-queries*
       (log/debug sqlvec)
-      (log/debug (pr-str res)))
-    res))
+      (log/debug (pr-str val)))
+    val))
 
 (defn sql-wrapper-query
   [this db sqlvec options]

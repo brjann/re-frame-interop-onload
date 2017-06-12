@@ -43,7 +43,8 @@
       {:assessments-pending (> rounds-count 0)
        :identity          user-id
        :auth-timeout      nil
-       :last-request-time (t/now)}
+       :last-request-time (t/now)
+       :session-start     (t/now)}
       (when add-double-auth
         {:double-authed    nil
          :double-auth-code (auth-service/double-auth-code)}))))

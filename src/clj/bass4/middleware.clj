@@ -19,7 +19,8 @@
             [cprop.tools]
             [clj-time.core :as t]
             [bass4.db.core :as db]
-            [bass4.request-state :as request-state])
+            [bass4.request-state :as request-state]
+            [clj-time.coerce :as tc])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -149,10 +150,31 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
+(defn request-state-wrapper
+  [handler request]
+  (binding [request-state/*request-state* (atom {})]
+    (let [{:keys [val time]} (time+ (handler request))
+          req-state (request-state/get-state)]
+      ;; Only save if request is tied to specific database
+      (when (:name req-state)
+        (db/save-pageload! {:db-name         (:name req-state),
+                            :remote-ip       (:remote-addr request),
+                            :sql-time        (/ (apply + (:sql-times req-state)) 1000),
+                            :sql-max-time    (/ (apply max (:sql-times req-state)) 1000),
+                            :user-id         (:user-id req-state),
+                            :render-time     (/ time 1000),
+                            :response-size   (count (:body val)),
+                            :clojure-version (str "Clojure " (clojure-version)),
+                            :error-count     0,
+                            :error-messages  "",
+                            :source-file     (:path-info request),
+                            :session-start   (tc/to-epoch (:session-start req-state)),
+                            :user-agent      (get-in request [:headers "user-agent"])}))
+      val)))
 
 (defn wrap-request-state [handler]
   (fn [request]
-    (request-state/request-state-wrapper handler request)))
+    (request-state-wrapper handler request)))
 
 (defn wrap-db [handler]
   (fn [request]
