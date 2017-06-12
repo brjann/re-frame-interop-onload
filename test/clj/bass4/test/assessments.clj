@@ -97,3 +97,35 @@
     (is (= (get-edn "ass-5-res") pending))
     (is (= (get-ass-5-rounds pending)
            (get-edn "ass-5-rounds")))))
+
+(defn get-ass-6-pending
+  []
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (assessments/get-pending-assessments 536124)))
+
+(defn get-ass-6-rounds
+  [pending]
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (doall (assessments/generate-assessment-round 536124 pending))))
+
+(deftest ass-6
+  (let [pending (get-ass-6-pending)]
+    (is (= (get-edn "ass-6-res") pending))
+    (is (= (get-ass-6-rounds pending)
+           (get-edn "ass-6-rounds")))))
+
+(defn get-ass-7-pending
+  []
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (assessments/get-pending-assessments 536140)))
+
+(defn get-ass-7-rounds
+  [pending]
+  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+    (doall (assessments/generate-assessment-round 536140 pending))))
+
+(deftest ass-7
+  (let [pending (get-ass-7-pending)]
+    (is (= (get-edn "ass-7-res") pending))
+    (is (= (get-ass-7-rounds pending)
+           (get-edn "ass-7-rounds")))))
