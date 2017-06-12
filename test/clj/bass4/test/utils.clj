@@ -99,6 +99,10 @@
 ;(defn diff
 ;  [s1 s2]
 ;  (filter #(not (some (partial = %) s2)) s1))
+
+(deftest t-diff
+  (is (= [1 2] (diff [1 2 3] [3 4 5])))
+  (is (= [0 1 2] (diff [0 1 2 3] [3 4 5]))))
 ;
 ;;; https://stackoverflow.com/questions/3249334/test-whether-a-list-contains-a-specific-value-in-clojure
 ;(defn in?
