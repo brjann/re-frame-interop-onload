@@ -16,5 +16,5 @@
     #'bass4.config/env
     #'bass4.db.core/db-configs)
   #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
-  (bass4.db.core/init-repl :db1)
+  (bass4.db.core/init-repl :test)
   (f))
