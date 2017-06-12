@@ -123,11 +123,15 @@
 ;---------------
 ; SQL WRAPPER
 ;---------------
+(def ^:dynamic *log-queries* false)
+
 (defn sql-wrapper
   [f this db sqlvec options]
   (let [res (apply f [this db sqlvec options])]
     (request-state/swap-state! :sql-count inc 0)
-    #_(log/debug this)
+    (when *log-queries*
+      (log/debug sqlvec)
+      (log/debug res))
     res))
 
 (defn sql-wrapper-query
