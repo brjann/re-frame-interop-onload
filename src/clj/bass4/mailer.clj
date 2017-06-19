@@ -9,6 +9,7 @@
    (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
          args        (into {}
                            (filter second
-                                   {"to" to "subject" subject "message" message "reply-to" reply-to}))]
-     (println (str mailer-path))
-     (clojure.java.shell/sh "php" (str mailer-path) :in (clj->php args)))))
+                                   {"to" to "subject" subject "message" message "reply-to" reply-to}))
+         res (clojure.java.shell/sh "php" (str mailer-path) :in (clj->php args))]
+     (when (not= 0 {:exit res})
+       (throw (Exception. (str (:out res))))))))

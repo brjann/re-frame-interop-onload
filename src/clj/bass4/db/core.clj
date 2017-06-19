@@ -130,8 +130,8 @@
     (request-state/swap-state! :sql-count inc 0)
     (request-state/swap-state! :sql-times #(conj % time) [])
     (when *log-queries*
-      (log/debug sqlvec)
-      (log/debug (pr-str val)))
+      (log/info sqlvec)
+      (log/info (pr-str val)))
     val))
 
 (defn sql-wrapper-query
