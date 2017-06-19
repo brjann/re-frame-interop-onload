@@ -6,6 +6,7 @@
             [ring.util.http-response :as http-response]
             [ring.util.response :as response]
             [ring.util.request :as request]
+            [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
@@ -35,6 +36,11 @@
           (-> (http-response/found "/re-auth")
               (assoc :session
                      (merge (:session request)
-                            {:auth-timeout true})))))
+                            {:auth-timeout true}))))
+        (GET "/set-session" [& params :as request]
+          (-> (http-response/found "/debug/session")
+              (assoc :session
+                     (merge (:session request)
+                            (map-map #(if-let [x (str->int %)] x %) params))))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

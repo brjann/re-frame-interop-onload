@@ -55,7 +55,7 @@
                   #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
                   #_(GET "/charts" req (charts-page req))))
               (routes
-                (ANY "*" [] "you need to double auth!")))
+                (ANY "*" [] (response/found "/double-auth"))))
             (routes
               (GET "*" [:as request]
                 (response/found (str "/re-auth?return-url=" (codec/url-encode (request/request-url request)))))

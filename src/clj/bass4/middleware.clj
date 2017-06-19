@@ -190,7 +190,7 @@
                             :clojure-version (str "Clojure " (clojure-version)),
                             :error-count     (:error-count req-state)
                             :error-messages  (:error-messages req-state)
-                            :source-file     (:path-info request),
+                            :source-file     (:uri request),
                             :session-start   (tc/to-epoch (:session-start req-state)),
                             :user-agent      (get-in request [:headers "user-agent"])}))
       val)))
@@ -243,6 +243,7 @@
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)
             (dissoc :session)))
+      ;; TODO: Place before webjars or even further up
       wrap-reload-headers
       wrap-context
       wrap-internal-error

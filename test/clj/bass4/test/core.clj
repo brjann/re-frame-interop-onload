@@ -14,7 +14,8 @@
   [f]
   (mount/start
     #'bass4.config/env
-    #'bass4.db.core/db-configs)
+    #'bass4.db.core/db-configs
+    #'bass4.i18n/i18n-map)
   #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
   (bass4.db.core/init-repl :test)
   (f))

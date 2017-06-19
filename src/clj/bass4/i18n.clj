@@ -35,15 +35,15 @@
 (defn tr
   ([resource-ids] (tr resource-ids []))
   ([resource-ids resource-args]
-          (tempura/tr
-            {:dict i18n-map
-             :missing-resource-fn
-                   (fn
-                     [{:keys [opts locales resource-ids resource-args]}]
-                     (str "Missing translation keys: " resource-ids))}
-            [(locals/language)]
-            resource-ids
-            resource-args)))
+   (tempura/tr
+     {:dict i18n-map
+      :missing-resource-fn
+            (fn
+              [{:keys [opts locales resource-ids resource-args]}]
+              (str "Missing translation keys: " resource-ids))}
+     [(locals/language)]
+     resource-ids
+     resource-args)))
 
 
 
