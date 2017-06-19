@@ -9,15 +9,13 @@
             [clj-time.core :as t]))
 
 
-;;
-;; https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-;; 422 Unprocessable Entity (WebDAV; RFC 4918)
-;; The request was well-formed but was unable to be followed due to semantic errors.
-;;
-;; Used to communicate back to form that there was something wrong with
-;; the posted data. For example erroneous username-password combination
-;;
 (defn error-422
+  "https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+  422 Unprocessable Entity (WebDAV; RFC 4918)
+  The request was well-formed but was unable to be followed due to semantic errors.
+
+  Used to communicate back to form that there was something wrong with
+  the posted data. For example erroneous username-password combination"
   ([] (error-422 ""))
   ([body]
    {:status  422

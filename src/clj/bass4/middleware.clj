@@ -160,6 +160,9 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
+;; I would like to place this in the request-state namespace, however
+;; that creates a circular dependency because db also uses the request-state
+;; Don't really know how to handle that...
 (defn request-state-wrapper
   [handler request]
   (binding [request-state/*request-state* (atom {})]
