@@ -82,6 +82,7 @@
     (response/found redirect)
     (if (= code (:double-auth-code session))
       (-> (response/found "/user/")
+          ;; TODO: Why is this 1 and not true?
           (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
       (error-422 "error"))))
 
