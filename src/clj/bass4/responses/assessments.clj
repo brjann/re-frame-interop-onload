@@ -4,7 +4,8 @@
             [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]
             [bass4.services.instrument :as instruments]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [schema.core :as s]))
 
 (defn- text-page
   [step]
@@ -63,9 +64,8 @@
       (assessments-completed session)
       (assessment-page round))))
 
-;; TODO: Add input validation
-(defn post-instrument-answers
-  [user-id session instrument-id items specifications]
+(s/defn ^:always-validate post-instrument-answers
+  [user-id session instrument-id :- s/Int items :- s/Str specifications :- s/Str]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
