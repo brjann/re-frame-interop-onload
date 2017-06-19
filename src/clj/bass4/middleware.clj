@@ -8,7 +8,7 @@
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.config :refer [env]]
             [bass4.bass-locals :as bass-locals]
-            [bass4.utils :refer [filter-map time+]]
+            [bass4.utils :refer [filter-map time+ nil-zero?]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
@@ -42,28 +42,6 @@
                 ;; instead
                 (:app-context env))]
       (handler request))))
-
-
-(defn internal-error-wrapper
-  [handler req]
-  (try
-    (handler req)
-    (catch Throwable t
-      (log/error t)
-      (request-state/swap-state! :error-count inc 0)
-      (request-state/swap-state! :error-messages #(if % (clojure.string/join "\n----------------\n" [% (str t)]) (str t)) nil)
-      (try
-        (mail! (env :email-error) "Error in BASS4" (str t))
-        (catch Exception x
-          (log/error "Could not send error email to: " (env :email-error) "\nError: " x)))
-      (error-page {:status 500
-                   :title "Something very bad has happened!"
-                   :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))))
-
-
-(defn wrap-internal-error [handler]
-  (fn [req]
-    (internal-error-wrapper handler req)))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
@@ -101,6 +79,22 @@
 ;;  BASS4 handlers
 ;; ----------------
 
+
+(defn internal-error-wrapper
+  [handler req]
+  (try
+    (handler req)
+    (catch Throwable t
+      (log/error t)
+      (request-state/record-error! t)
+      (error-page {:status 500
+                   :title "Something very bad has happened!"
+                   :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))))
+
+
+(defn wrap-internal-error [handler]
+  (fn [req]
+    (internal-error-wrapper handler req)))
 
 (defn wrap-schema-error [handler]
   (fn [req]
@@ -173,6 +167,14 @@
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (:name req-state)
+        (when-not (nil-zero? (:error-count req-state))
+          (try
+            (mail!
+              (env :email-error)
+              "Error in BASS4"
+              (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
+            (catch Exception x
+              (log/error "Could not send error email to: " (env :email-error) "\nError: " x))))
         (db/save-pageload! {:db-name         (:name req-state),
                             :remote-ip       (:remote-addr request),
                             :sql-time        (when (:sql-times req-state)

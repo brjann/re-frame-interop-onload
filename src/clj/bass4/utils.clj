@@ -131,3 +131,6 @@
   (let [matcher (re-matcher regex-php-constant text)]
     (parse-constants-rec matcher)))
 
+(defn nil-zero?
+  [x]
+  (or (nil? x) (zero? x)))

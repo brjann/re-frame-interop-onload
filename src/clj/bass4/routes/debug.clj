@@ -11,7 +11,8 @@
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
             [bass4.services.bass :as bass]
-            [clojure.pprint]))
+            [clojure.pprint]
+            [bass4.request-state :as request-state]))
 
 
 (defn text-response
@@ -24,7 +25,9 @@
       (routes
         (GET "/timezone" [:as req] (text-response (locals/time-zone)))
         (GET "/session" [:as req] (text-response (:session req)))
-        (GET "/error" [:as req] (str "Ten divided by zero: " (/ 10 0)))
+        (GET "/error" [:as req] (do
+                                  (request-state/record-error! "An evil error message")
+                                  (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (text-response req))
         (GET "/test" [:as req] (text-response (:server-name req)))
         (GET "/env" [:as req] (text-response env)))

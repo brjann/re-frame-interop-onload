@@ -3,7 +3,8 @@
             [ring.util.http-response :as response]
             [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]
-            [bass4.services.instrument :as instruments]))
+            [bass4.services.instrument :as instruments]
+            [bass4.request-state :as request-state]))
 
 (defn- text-page
   [step]
@@ -24,8 +25,8 @@
       (do
         ;; Could not find instrument - return error screen and mark step as completed
         (assessments-service/step-completed! step)
-        ;; TODO: This error page does not work - see documentation for for error-page
-        (bass4.layout/error-page (str "Instrument " instrument-id " not found"))))))
+        (request-state/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
+        (response/found "/user")))))
 
 (defn- assessment-page
   [round]
@@ -52,7 +53,7 @@
           (-> (response/found "/user")
               #_(assoc :session (merge session {:assessments-pending false}))))
       (do
-        (log/error "Something went wrong")
+        (request-state/record-error! "Something went wrong")
         (response/found "/user")))))
 
 (defn handle-assessments
