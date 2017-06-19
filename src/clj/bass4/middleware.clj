@@ -53,8 +53,8 @@
       (request-state/swap-state! :error-messages #(if % (clojure.string/join "\n----------------\n" [% (str t)]) (str t)) nil)
       (try
         (mail! (env :email-error) "Error in BASS4" (str t))
-        (catch Throwable t
-          (log/error "Could not send error email to " (env :email-error))))
+        (catch Exception x
+          (log/error "Could not send error email to: " (env :email-error) "\nError: " x)))
       (error-page {:status 500
                    :title "Something very bad has happened!"
                    :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))))

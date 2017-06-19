@@ -12,5 +12,6 @@
                            (filter second
                                    {"to" to "subject" subject "message" message "reply-to" reply-to}))
          res (shell/sh "php" (str mailer-path) :in (clj->php args))]
-     (when (not= 0 {:exit res})
+     res
+     (when (not= 0 (:exit res))
        (throw (Exception. (str (:out res))))))))
