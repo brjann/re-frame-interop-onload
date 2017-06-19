@@ -21,6 +21,7 @@
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
+            [clojure.string]
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc])
   (:import [javax.servlet ServletContext]
@@ -48,6 +49,8 @@
     (handler req)
     (catch Throwable t
       (log/error t)
+      (request-state/swap-state! :error-count inc 0)
+      (request-state/swap-state! :error-messages #(if % (clojure.string/join "\n----------------\n" [% (str t)]) (str t)) nil)
       (try
         (mail! (env :email-error) "Error in BASS4" (str t))
         (catch Throwable t
@@ -179,8 +182,8 @@
                             :render-time     (/ time 1000),
                             :response-size   (count (:body val)),
                             :clojure-version (str "Clojure " (clojure-version)),
-                            :error-count     0,
-                            :error-messages  "",
+                            :error-count     (:error-count req-state)
+                            :error-messages  (:error-messages req-state)
                             :source-file     (:path-info request),
                             :session-start   (tc/to-epoch (:session-start req-state)),
                             :user-agent      (get-in request [:headers "user-agent"])}))
