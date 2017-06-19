@@ -2,9 +2,11 @@
   (:require [bass4.layout :as layout]
             [bass4.services.auth :as auth-service]
             [bass4.views.auth :as auth-view]
-            [compojure.core :refer [defroutes GET POST]]
+            [compojure.core :refer [defroutes context GET POST routes]]
             [ring.util.http-response :as response]
-            [bass4.responses.auth :as auth-response]))
+            [bass4.responses.auth :as auth-response]
+            [bass4.services.user :as user]
+            [bass4.request-state :as request-state]))
 
 (defroutes auth-routes
   (GET "/logout" [& params]

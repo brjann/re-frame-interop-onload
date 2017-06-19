@@ -22,6 +22,7 @@
 # Instruments
 - Allow only min or only max
 - Images from file.php
+- Page X of Y
 
 # Ajax handling
 - Spinner

@@ -106,25 +106,25 @@
       (response/found "/user/")
       (response/found "/login"))))
 
-;; TODO: Validate URL
-;; TODO: Why 2 whens ? What is response if conditions are not satisfied?
-;; [commons-validator "1.5.1"]
-;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
-(s/defn ^:always-validate check-re-auth [session password :- s/Str return-url]
+(defn handle-re-auth
+  [session password response]
   (when (:auth-timeout session)
     (when-let [user-id (:identity session)]
       (if (auth-service/authenticate-by-user-id user-id password)
-        (-> (response/found (if (nil? return-url)
-                              "/user/"
-                              return-url))
+        (-> response
             (assoc :session (merge session {:auth-timeout nil})))
         (error-422 "error")))))
 
+;; TODO: Validate URL
+;; [commons-validator "1.5.1"]
+;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
+(s/defn ^:always-validate check-re-auth
+  [session password :- s/Str return-url]
+  (handle-re-auth session password
+                  (response/found (if (nil? return-url)
+                         "/user/"
+                         return-url))))
+
 ;; TODO: Why 2 whens ? What is response if conditions are not satisfied?
 (s/defn check-re-auth-ajax [session password :- s/Str]
-  (when (:auth-timeout session)
-    (when-let [user-id (:identity session)]
-      (if (auth-service/authenticate-by-user-id user-id password)
-        (-> (response/ok "ok")
-            (assoc :session (merge session {:auth-timeout nil})))
-        (error-422 "error")))))
+  (handle-re-auth session password (response/ok "ok")))

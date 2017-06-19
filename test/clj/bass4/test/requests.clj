@@ -42,6 +42,13 @@
       (visit "/re-auth" :request-method :post :params {:password 535899})
       (has (status? 302))))
 
+(deftest request-re-auth-pwd-redirect
+  (is (= true (-> (session (app))
+                  (visit "/debug/set-session" :params {:identity 535899 :double-authed 1 :auth-timeout true})
+                  (visit "/re-auth" :request-method :post :params {:password 535899 :return-url "/user/messages"})
+                  (get-in [:response :headers "Location"])
+                  (.contains "/user/messages")))))
+
 (deftest request-re-auth-pwd-ajax
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 535899 :double-authed 1 :auth-timeout true})
@@ -50,3 +57,7 @@
       (visit "/re-auth-ajax" :request-method :post :params {:password 535899})
       (has (status? 200))))
 
+(deftest request-re-auth-pwd-unnecessary
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
+      (visit "/re-auth" :request-method :post :params {:password 535899})))
