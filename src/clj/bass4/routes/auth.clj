@@ -25,11 +25,4 @@
   (POST "/re-auth" [& params :as request]
     (auth-response/check-re-auth (:session request) (:password params) (:return-url params)))
   (POST "/re-auth-ajax" [& params :as request]
-    (auth-response/check-re-auth-ajax (:session request) (:password params) ))
-  ;; TODO: Make available only in developer mode
-
-  (GET "/timeout" [:as request]
-    (-> (response/found "/re-auth")
-        (assoc :session
-               (merge (:session request)
-                      {:auth-timeout true})))))
+    (auth-response/check-re-auth-ajax (:session request) (:password params) )))

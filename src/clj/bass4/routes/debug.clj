@@ -30,6 +30,11 @@
                                   (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (text-response req))
         (GET "/test" [:as req] (text-response (:server-name req)))
-        (GET "/env" [:as req] (text-response env)))
+        (GET "/env" [:as req] (text-response env))
+        (GET "/timeout" [:as request]
+          (-> (http-response/found "/re-auth")
+              (assoc :session
+                     (merge (:session request)
+                            {:auth-timeout true})))))
       (routes
         (ANY "*" [] "Not in debug mode")))))
