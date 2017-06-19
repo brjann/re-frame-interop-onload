@@ -96,13 +96,15 @@
   (str "i:" clj ";"))
 
 (defn- encode-map [clj]
-  (str (reduce (fn [php keyval]
-                 (str php
-                      (clj->php (key keyval))
-                      (clj->php (val keyval))))
-               (str "a:" (count clj) ":{")
-               clj)
-       "}"))
+  (if (seq (filter keyword? (keys clj)))
+    (throw (Exception. "Cannot serialize keywords into PHP"))
+    (str (reduce (fn [php keyval]
+                   (str php
+                        (clj->php (key keyval))
+                        (clj->php (val keyval))))
+                 (str "a:" (count clj) ":{")
+                 clj)
+         "}")))
 
 (defn- encode-collection [clj]
   (str "a:"
