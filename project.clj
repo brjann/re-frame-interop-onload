@@ -38,8 +38,8 @@
 
   :min-lein-version "2.0.0"
 
-  ;; https://yobriefca.se/blog/2014/04/29/managing-environment-variables-in-clojure/
   ;; .lein-env is initialized by leiningen to include the map from profiles.clj
+  ;; https://yobriefca.se/blog/2014/04/29/managing-environment-variables-in-clojure/
   :jvm-opts ["-server" "-Dconf=.lein-env"]
   :source-paths ["src/clj"]
   :test-paths ["test/clj"]
@@ -48,6 +48,8 @@
   :main bass4.core
   :migratus {:store :database :db ~(get (System/getenv) "DATABASE_URL")}
 
+  ;; Difference between plugins and dependencies:
+  ;; https://www.quora.com/In-Clojure-whats-the-difference-between-plugins-dependencies-require-use-import-etc
   :plugins [[lein-cprop "1.0.1"]
             [migratus-lein "0.4.4"]
             [lein-immutant "2.1.0"]]
