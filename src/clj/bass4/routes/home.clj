@@ -1,9 +1,10 @@
 (ns bass4.routes.home
   (:require [bass4.layout :as layout]
             [bass4.services.auth :as auth]
-            [compojure.core :refer [defroutes GET POST]]
+            [compojure.core :refer [defroutes routes context GET POST ANY]]
             [bass4.db.core :as db]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
+            [ring.util.response :as response]
             [ring.util.request :as request]
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
@@ -13,10 +14,6 @@
 (defn home-page []
   (layout/render
     "home.html" {:docs (-> "docs/docs.md" io/resource slurp)}))
-
-(defn login-page []
-  (layout/render
-    "login.html"))
 
 (defn about-page []
   (layout/render
@@ -30,8 +27,5 @@
     (instruments/instrument-page instrument-id))
   (GET "/instrument/summary/:instrument-id" [instrument-id]
     (instruments/summary-page instrument-id))
-  (GET "/about" [] (about-page))
-  (GET "/session" [:as req] (str "Session: " (:session req) "\nTime-zone: " (locals/time-zone)))
-  (GET "/error" [:as req] (str "Ten divided by zero: " (/ 10 0)))
-  (GET "/request" [:as req] (str req))
-  (GET "/test" [:as req] (str (:server-name req))))
+  (GET "/about" [] (about-page)))
+

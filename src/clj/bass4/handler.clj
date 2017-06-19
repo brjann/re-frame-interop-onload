@@ -4,6 +4,7 @@
             [bass4.routes.home :refer [home-routes]]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :refer [user-routes]]
+            [bass4.routes.debug :refer [debug-routes]]
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
@@ -27,6 +28,8 @@
         (wrap-routes middleware/wrap-formats)
         (wrap-routes middleware/wrap-restricted)
         (wrap-routes middleware/wrap-schema-error))
+    (-> #'debug-routes
+        (wrap-routes middleware/wrap-formats))
     (route/not-found
       (:body
         (error-page {:status 404
