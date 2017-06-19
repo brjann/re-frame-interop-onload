@@ -106,24 +106,15 @@
       (response/found "/user/")
       (response/found "/login"))))
 
-; TODO: Why 2 whens ? What is response if conditions are not satisfied?
-#_(defn handle-re-auth
-  [session password response]
-  (when (:auth-timeout session)
-    (when-let [user-id (:identity session)]
-      (if (auth-service/authenticate-by-user-id user-id password)
-        (-> response
-            (assoc :session (merge session {:auth-timeout nil})))
-        (error-422 "error")))))
-
 (defn handle-re-auth
   [session password response]
   (if-let [user-id (:identity session)]
-    (when (:auth-timeout session)
+    (if (:auth-timeout session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
             (assoc :session (merge session {:auth-timeout nil})))
-        (error-422 "error")))
+        (error-422 "error"))
+      response)
     (response/forbidden)))
 
 ;; TODO: Validate URL

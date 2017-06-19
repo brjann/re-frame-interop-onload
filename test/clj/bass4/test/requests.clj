@@ -62,7 +62,21 @@
       (visit "/re-auth" :request-method :post :params {:password 535899})
       (has (status? 403))))
 
-(deftest request-re-auth-pwd-unauthorized
+(deftest request-re-auth-pwd-ajax-unauthorized
   (-> (session (app))
       (visit "/re-auth-ajax" :request-method :post :params {:password 535899})
       (has (status? 403))))
+
+(deftest request-re-auth-pwd-unnecessary-wrong
+  "User is not timed out and it should not matter what password is sent"
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
+      (visit "/re-auth" :request-method :post :params {:password 23254})
+      (has (status? 302))))
+
+(deftest request-re-auth-pwd-unnecessary-right
+  "User is not timed out and it should not matter what password is sent"
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
+      (visit "/re-auth" :request-method :post :params {:password 535899})
+      (has (status? 302))))
