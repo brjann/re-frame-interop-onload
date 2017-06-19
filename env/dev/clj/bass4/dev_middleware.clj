@@ -6,5 +6,9 @@
 (defn wrap-dev [handler]
   (-> handler
       wrap-reload
+      ;; For selmer parsing errors
       wrap-error-page
-      wrap-exceptions))
+
+      ;; Instead included in bass4.middleware, contingent on being in debug or development mode.
+      ;wrap-exceptions
+      ))

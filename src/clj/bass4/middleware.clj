@@ -23,7 +23,8 @@
             [bass4.mailer :refer [mail!]]
             [clojure.string]
             [bass4.request-state :as request-state]
-            [clj-time.coerce :as tc])
+            [clj-time.coerce :as tc]
+            [prone.middleware :refer [wrap-exceptions]])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -197,6 +198,13 @@
   (fn [request]
     (db/db-wrapper handler request)))
 
+(defn wrap-debug-exceptions
+  [handler]
+  (fn [request]
+    (if (or (env :debug-mode) (env :dev))
+      ((wrap-exceptions handler) request)
+      (handler request))))
+
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -217,6 +225,8 @@
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
+      ;wrap-exceptions
+      wrap-debug-exceptions
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post
