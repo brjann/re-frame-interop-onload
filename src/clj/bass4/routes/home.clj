@@ -32,5 +32,6 @@
     (instruments/summary-page instrument-id))
   (GET "/about" [] (about-page))
   (GET "/session" [:as req] (str "Session: " (:session req) "\nTime-zone: " (locals/time-zone)))
+  (GET "/error" [:as req] (str "Ten divided by zero: " (/ 10 0)))
   (GET "/request" [:as req] (str req))
   (GET "/test" [:as req] (str (:server-name req))))
