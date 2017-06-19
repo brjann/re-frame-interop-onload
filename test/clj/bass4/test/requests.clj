@@ -57,7 +57,12 @@
       (visit "/re-auth-ajax" :request-method :post :params {:password 535899})
       (has (status? 200))))
 
-(deftest request-re-auth-pwd-unnecessary
+(deftest request-re-auth-pwd-unauthorized
   (-> (session (app))
-      (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
-      (visit "/re-auth" :request-method :post :params {:password 535899})))
+      (visit "/re-auth" :request-method :post :params {:password 535899})
+      (has (status? 403))))
+
+(deftest request-re-auth-pwd-unauthorized
+  (-> (session (app))
+      (visit "/re-auth-ajax" :request-method :post :params {:password 535899})
+      (has (status? 403))))
