@@ -1,16 +1,5 @@
-#Login
 
- - SMS auth
- - Session timeout
-    - Configuration
- - Re-authenticate
-    - Configuration
- - Attack detector
- - Remove auto-completes in login?
- - CSRF twice in layout/render?
- - Senast inloggad
-
-## Done
+# Login - Done
  - Re-authenticate
     - Save URL in GET
  - Anti-forgery token is no longer used with login.

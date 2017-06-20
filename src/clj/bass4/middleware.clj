@@ -43,7 +43,23 @@
                 (:app-context env))]
       (handler request))))
 
+(def ^:dynamic *skip-csrf* false)
+(defn csrf-wrapper
+  [handler request]
+  (if *skip-csrf*
+    (handler request)
+    ((wrap-anti-forgery
+       handler
+       {:error-response
+        (error-page
+          {:status 403
+           :title  "Invalid anti-forgery token"})}) request)))
+
 (defn wrap-csrf [handler]
+    (fn [request]
+      (csrf-wrapper handler request)))
+
+#_(defn wrap-csrf [handler]
   (wrap-anti-forgery
     handler
     {:error-response
