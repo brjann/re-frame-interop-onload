@@ -48,6 +48,10 @@ function post_error(form){
 			}
 		}
 
+		if(jqXHR.status == 500 || jqXHR.status == 404){
+			alert(text_try_reloading);
+		}
+
 		if (jqXHR.status == 440) {
 			$("#main-body").hide();
 			$("#re-auth-box").show();
