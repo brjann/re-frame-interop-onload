@@ -34,5 +34,8 @@
          :page-not-found-longer "The page you requested could not be found."
          :go-back "Try going back in your browser"
          :or-login "or go to the login page"
+         :login "Go to the login page"
          :timeout-hard "You have been logged out. You will be redirected to the login page."
-         :try-reload "Something is wrong and your data cannot be submitted. Try resubmitting again or reloading the page."}}
+         :try-reload "Something is wrong and your data cannot be submitted. Try resubmitting again or reloading the page."
+         :not-authorized "Not authorized."
+         :not-authorized-longer "You are not authorized to view this page."}}

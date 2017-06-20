@@ -5,11 +5,29 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]))
 
-
-(deftest request-403-error
+(deftest request-404-get
   (-> (session (app))
-      (visit "/debug/403" :request-method :post :params {:password 535899})
+      (visit "/xxx404")
+      (has (status? 404))
+      (has (some-text? "go to"))))
+
+(deftest request-403-error-post
+  (-> (session (app))
+      (visit "/debug/403" :request-method :post)
       (has (status? 403))))
+
+(deftest request-403-get
+  (-> (session (app))
+      (visit "/debug/403")
+      (has (status? 403))
+      (has (some-text? "Go to"))))
+
+(deftest request-403-get-logged-in
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
+      (visit "/debug/403")
+      (has (status? 403))
+      (has (some-text? "go to"))))
 
 (deftest request-found
   (-> (session (app))

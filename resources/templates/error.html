@@ -47,7 +47,8 @@
                     {% if message %}
                     <h4 class="text-danger">{{message}}</h4>
                     {% endif %}
-                    {% ifequal status 404 %}{% tr error/go-back %} <a href="/login">{% tr error/or-login %}</a>{% endifequal %}
+                    {% block status-message %}
+                    {% endblock %}
                 </div>
             </div>
         </div>

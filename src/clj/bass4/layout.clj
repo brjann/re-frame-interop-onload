@@ -43,10 +43,21 @@
 
    returns a response map with the error page as the body
    and the status specified by the status key"
-  [error-details]
-  {:status  (:status error-details)
-   :headers {"Content-Type" "text/html; charset=utf-8"}
-   :body    (parser/render-file "error.html" error-details)})
+  ([error-details] (error-page error-details "error.html"))
+  ([error-details html]
+   {:status  (:status error-details)
+    :headers {"Content-Type" "text/html; charset=utf-8"}
+    :body    (parser/render-file html error-details)}))
+
+
+(defn error-403-page
+  ([] (error-403-page nil))
+  ([user-id] (error-403-page user-id (i18n/tr [:error/not-authorized-longer])))
+  ([user-id message]
+   (error-page {:status  403
+                :title   (i18n/tr [:error/not-authorized])
+                :message message}
+               (if user-id "error-back-or-login.html" "error-login.html"))))
 
 (defn error-400-page
   ([] (error-400-page nil))
@@ -60,7 +71,8 @@
   ([message]
    (error-page {:status  404
                 :title   (i18n/tr [:error/page-not-found])
-                :message message})))
+                :message message}
+               "error-back-or-login.html")))
 
 (parser/add-tag!
   :tr

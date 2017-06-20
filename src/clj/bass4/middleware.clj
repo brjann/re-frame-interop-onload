@@ -24,7 +24,8 @@
             [clojure.string]
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc]
-            [prone.middleware :refer [wrap-exceptions]])
+            [prone.middleware :refer [wrap-exceptions]]
+            [bass4.layout :as layout])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -76,15 +77,6 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn on-error [request response]
-  (error-page
-    {:status 403
-     :title (str "Access to " (:uri request) " is not authorized")}))
-
-(defn wrap-restricted [handler]
-  (restrict handler {:handler authenticated?
-                     :on-error on-error}))
-
 (defn wrap-auth [handler]
   (let [backend (session-backend)]
     (-> handler
@@ -100,6 +92,18 @@
 ;;
 ;;
 ;; ----------------
+
+(defn on-error [request response]
+  (layout/error-403-page (get-in request [:session :identity]))
+  #_(error-page
+      {:status 403
+       :title (str "Access to " (:uri request) " is not authorized")}))
+
+(defn wrap-restricted [handler]
+  (restrict handler {:handler authenticated?
+                     :on-error on-error}))
+
+
 
 
 (defn internal-error-wrapper
