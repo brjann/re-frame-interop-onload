@@ -9,6 +9,7 @@
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
+            [bass4.utils :refer [str->int]]
             [bass4.services.bass :as bass]))
 
 (defn home-page []
@@ -22,7 +23,7 @@
 (defroutes home-routes
   (GET "/" [] (home-page))
   (POST "/instrument/:instrument-id" [instrument-id & params]
-    (instruments/post-answers instrument-id (:items params) (:specifications params)))
+    (instruments/post-answers (str->int instrument-id) (:items params) (:specifications params)))
   (GET "/instrument/:instrument-id" [instrument-id]
     (instruments/instrument-page instrument-id))
   (GET "/instrument/summary/:instrument-id" [instrument-id]
