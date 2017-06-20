@@ -150,31 +150,30 @@
           (merge response new-map))
         response))))
 
-;; TODO: Move this to configuration file
-(def auth-timeout-limit (* 10 60))
+(defn auth-timeout-wrapper
+  [handler request]
+  (let [session (:session request)
+        now (t/now)
+        last-request-time (:last-request-time session)
+        auth-timeout-limit (or (env :timeout-soft) (* 30 60))
+        auth-timeout (cond
+                       (:auth-timeout session) true
+                       (nil? last-request-time) nil
+                       (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+                         (> time-elapsed auth-timeout-limit)) true
+                       :else nil)
+        response (handler (assoc-in request [:session :auth-timeout] auth-timeout))
+        session-map {:last-request-time now
+                     :auth-timeout (if (contains? (:session response) :auth-timeout)
+                                     (:auth-timeout (:session response))
+                                     auth-timeout)}]
+    (assoc response :session (if (nil? (:session response))
+                               (merge session session-map)
+                               (merge (:session response) session-map)))))
 
 (defn wrap-auth-timeout [handler]
   (fn [request]
-    (let [session (:session request)
-          now (t/now)
-          last-request-time (:last-request-time session)
-          auth-timeout (cond
-                         ;; TODO: Only randomize timeout when in development mode
-                         (= (rand-int 200) 10) (do (log/info "Random timeout")
-                                                   true)
-                         (:auth-timeout session) true
-                         (nil? last-request-time) nil
-                         (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                           (> time-elapsed auth-timeout-limit)) true
-                         :else nil)
-          response (handler (assoc-in request [:session :auth-timeout] auth-timeout))
-          session-map {:last-request-time now
-                       :auth-timeout (if (contains? (:session response) :auth-timeout)
-                                         (:auth-timeout (:session response))
-                                         auth-timeout)}]
-      (assoc response :session (if (nil? (:session response))
-                                 (merge session session-map)
-                                 (merge (:session response) session-map))))))
+    (auth-timeout-wrapper handler request)))
 
 ;; I would like to place this in the request-state namespace, however
 ;; that creates a circular dependency because db also uses the request-state
@@ -271,8 +270,8 @@
       wrap-webjars
       wrap-flash
       wrap-session-state
-      wrap-session
-      (wrap-session {:cookie-attrs {:http-only true}})
+      ;; Default absolute time-out to 2 hours
+      (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)
