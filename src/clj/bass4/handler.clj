@@ -30,11 +30,7 @@
         (wrap-routes middleware/wrap-schema-error))
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
-    (layout/route-not-found)
-    #_(route/not-found
-      (:body
-        (error-page {:status 404
-                     :title "page not found"})))))
-
+    ;; Replacement for route/not-found
+    (layout/route-not-found)))
 
 (defn app [] (middleware/wrap-base #'app-routes))
