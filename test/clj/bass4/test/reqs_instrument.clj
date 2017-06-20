@@ -15,3 +15,8 @@
       (has (status? 400))
       (visit "/instrument/1647" :request-method :post :params {:items "{}" :specifications "{}"})
       (has (status? 302))))
+
+(deftest request-wrong-instrument
+  (-> (session (app))
+      (visit "/instrument/hell-is-here")
+      (has (status? 404))))

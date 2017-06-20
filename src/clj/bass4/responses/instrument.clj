@@ -6,9 +6,11 @@
             [bass4.layout :as layout]))
 
 (defn instrument-page [instrument-id]
-  (bass4.layout/render "instrument.html" {:instrument (instruments/get-instrument instrument-id) :instrument-id instrument-id}))
+  (if-let [instrument (instruments/get-instrument instrument-id)]
+    (layout/render "instrument.html" {:instrument instrument :instrument-id instrument-id})
+    (layout/error-page {:status 404
+                 :title "Instrument not found"})))
 
-;; TODO: Add input spec and return proper error
 (s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]
     (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
       (do
@@ -18,6 +20,7 @@
       (layout/error-400-page)))
 
 (defn summary-page [instrument-id]
+  ;; There is no way to check if the instrument actually exists.
   (if-let [answers (instruments/get-instrument-test-answers instrument-id)]
     (bass4.layout/render
       "instrument-answers.html"
