@@ -16,7 +16,7 @@
               :order-count "Questionnaire %1 of %2"}
  :date-time {:datetime-ns "yyyy-MM-dd HH:mm"}
  :messages {:sent-by "Sent by %1 on %2"
-            :subject "Mssage subject"
+            :subject "Message subject"
             :text "Message text"
             :save-draft "Save draft"}
  :login {:login "Login"
@@ -34,4 +34,5 @@
          :page-not-found-longer "The page you requested could not be found."
          :go-back "Try going back in your browser"
          :or-login "or go to the login page"
-         :timeout-hard "You have been logged out. You will be redirected to the login page."}}
+         :timeout-hard "You have been logged out. You will be redirected to the login page."
+         :try-reload "Something is wrong and your data cannot be submitted. Try resubmitting again or reloading the page."}}

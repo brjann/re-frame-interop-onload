@@ -92,7 +92,13 @@
         (wrap-authorization backend))))
 
 ;; ----------------
-;;  BASS4 handlers
+;;
+;;
+;;
+;;  BASS4 HANDLERS
+;;
+;;
+;;
 ;; ----------------
 
 
@@ -112,6 +118,8 @@
   (fn [req]
     (internal-error-wrapper handler req)))
 
+
+
 (defn wrap-schema-error [handler]
   (fn [req]
     (try
@@ -121,6 +129,8 @@
           ;; TODO: Message should only be included in development mode
           (error-400-page (.getMessage e))
           (throw e))))))
+
+
 
 ;; TODO: This should not be applied to js and css-files
 ;; TODO: http://stackoverflow.com/questions/8861181/clear-all-fields-in-a-form-upon-going-back-with-browser-back-button
@@ -134,21 +144,71 @@
                                "Pragma" "no-cache")))))
 
 
+
+;; ----------------
+;;  AJAX POST
+;; ----------------
+
+(defn- is-ajax-post?
+  [request]
+  (let [requested-with (get (:headers request) "x-requested-with" "")
+        request-method (:request-method request)]
+    (and (= (clojure.string/lower-case requested-with) "xmlhttprequest")
+         (= request-method :post))))
+
+(defn- ajax-found
+  [response]
+  (let [location (get (:headers response) "Location")
+        new-map  {:status  200
+                  :headers {}
+                  :body    (str "found " location)}]
+    (merge response new-map)))
+
+(defn- ajax-403-logged-in
+  [request response]
+  ;; Do not send email about this strange error
+  (request-state/record-error!
+    (str "403 error when posting to " (:uri request)
+         "\nUser " (get-in request [:session :identity])))
+  (merge response {:status  403
+                   :headers {}
+                   :body    "reload"}))
+
+(defn- ajax-403-not-logged-in
+  [response]
+  (merge response {:status  403
+                   :headers {}
+                   :body    "login"}))
+
+(defn ajax-post-wrapper
+  [handler request]
+  (let [ajax-post? (is-ajax-post? request)
+        response (handler request)]
+    (cond
+
+      ;; if ajax and response is 302, then send
+      ;; the special found location response instead
+      (and ajax-post? (= (:status response) 302)) (ajax-found response)
+
+      ;; The user is trying to post to
+      ;; forbidden but is not logged out.
+      ;; Save this as an error
+      (and ajax-post?
+           (= (:status response) 403)
+           (not= nil (get-in request [:session :identity])))
+      (ajax-403-logged-in request response)
+
+      (and ajax-post? (= (:status response) 403))
+      (ajax-403-not-logged-in response)
+
+      :else
+      response)))
+
 (defn wrap-ajax-post [handler]
   (fn [request]
-    (let [requested-with (get (:headers request) "x-requested-with" "")
-          request-method (:request-method request)
-          ajax-post? (and (= (clojure.string/lower-case requested-with) "xmlhttprequest")
-                         (= request-method :post))
-          response (handler request)]
-      (if (and ajax-post?
-               (= (:status response) 302))
-        (let [location (get (:headers response) "Location")
-              new-map {:status 200
-                       :headers {}
-                       :body (str "found " location)}]
-          (merge response new-map))
-        response))))
+    (ajax-post-wrapper handler request)))
+
+
 
 (defn auth-timeout-wrapper
   [handler request]
@@ -175,6 +235,41 @@
   (fn [request]
     (auth-timeout-wrapper handler request)))
 
+
+;; ----------------
+;;  REQUEST STATE
+;; ----------------
+
+(defn mail-error!
+  [req-state]
+  (if-not (env :dev-test)
+    (try
+      (mail!
+        (env :email-error)
+        "Error in BASS4"
+        (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
+      (catch Exception x
+        (log/error "Could not send error email to: " (env :email-error) "\nError: " x)))
+    (log/info "No emails in test mode")))
+
+(defn save-log!
+  [req-state request time]
+  (db/save-pageload! {:db-name         (:name req-state),
+                      :remote-ip       (:remote-addr request),
+                      :sql-time        (when (:sql-times req-state)
+                                         (/ (apply + (:sql-times req-state)) 1000)),
+                      :sql-max-time    (when (:sql-times req-state)
+                                         (/ (apply max (:sql-times req-state)) 1000)),
+                      :user-id         (:user-id req-state),
+                      :render-time     (/ time 1000),
+                      :response-size   (count (:body val)),
+                      :clojure-version (str "Clojure " (clojure-version)),
+                      :error-count     (:error-count req-state)
+                      :error-messages  (:error-messages req-state)
+                      :source-file     (:uri request),
+                      :session-start   (tc/to-epoch (:session-start req-state)),
+                      :user-agent      (get-in request [:headers "user-agent"])}))
+
 ;; I would like to place this in the request-state namespace, however
 ;; that creates a circular dependency because db also uses the request-state
 ;; Don't really know how to handle that...
@@ -185,29 +280,10 @@
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (:name req-state)
+        ;; Email errors
         (when-not (nil-zero? (:error-count req-state))
-          (try
-            (mail!
-              (env :email-error)
-              "Error in BASS4"
-              (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
-            (catch Exception x
-              (log/error "Could not send error email to: " (env :email-error) "\nError: " x))))
-        (db/save-pageload! {:db-name         (:name req-state),
-                            :remote-ip       (:remote-addr request),
-                            :sql-time        (when (:sql-times req-state)
-                                               (/ (apply + (:sql-times req-state)) 1000)),
-                            :sql-max-time    (when (:sql-times req-state)
-                                               (/ (apply max (:sql-times req-state)) 1000)),
-                            :user-id         (:user-id req-state),
-                            :render-time     (/ time 1000),
-                            :response-size   (count (:body val)),
-                            :clojure-version (str "Clojure " (clojure-version)),
-                            :error-count     (:error-count req-state)
-                            :error-messages  (:error-messages req-state)
-                            :source-file     (:uri request),
-                            :session-start   (tc/to-epoch (:session-start req-state)),
-                            :user-agent      (get-in request [:headers "user-agent"])}))
+          (mail-error! req-state))
+        (save-log! req-state request time))
       val)))
 
 (defn wrap-request-state [handler]
@@ -280,5 +356,4 @@
       wrap-reload-headers
       wrap-context
       wrap-internal-error
-      #_wrap-timer
       wrap-request-state))

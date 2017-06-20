@@ -44,6 +44,11 @@
                             (map-map #(if-let [x (str->int %)] x %) params)))))
         (GET "/delete-session" [& params :as request]
           (-> (http-response/found "/debug/session")
-              (assoc :session {}))))
+              (assoc :session {})))
+        (POST "/403" [& params :as request]
+          (layout/error-page {:status 403
+                              :body "Sorry!"}))
+        (POST "/found" []
+          (-> (http-response/found "/login"))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

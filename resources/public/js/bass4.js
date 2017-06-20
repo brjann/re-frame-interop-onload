@@ -26,6 +26,7 @@ var re_auth_hidden_form;
 
 function post_error(form){
 	return function(jqXHR, textStatus, errorThrown) {
+		var response = jqXHR.responseText;
 		if(jqXHR.status == 0){
 			alert(text_offline_warning);
 			return false;
@@ -38,8 +39,13 @@ function post_error(form){
 		}
 
 		if(jqXHR.status == 403){
-			alert(text_timeout_hard);
-			window.location.href = "/login"
+			if(response == "login"){
+				alert(text_timeout_hard);
+				window.location.href = "/login"
+			}
+			else{
+				alert(text_try_reloading);
+			}
 		}
 
 		if (jqXHR.status == 440) {
