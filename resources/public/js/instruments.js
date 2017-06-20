@@ -13,10 +13,10 @@
 	 	- Optional items
 	   - Validation
 		- Scroll to top error item
+	   - Handling of "empty" items
+      - submission
 
 	TODO: Fix these issues
-		- Handling of "empty" items
-		- submission
 		- Are you sure
 		- Gray area does not cover whole cell in desktop mode
 		- What happens if multiple radiobuttons have spec and there are values in all specs
@@ -52,7 +52,6 @@ $(document).ready(function(){
 				$(this).addClass('first-col-is-number');
 			}
 
-			//$(this).addClass('desktop');
 			var page_div;
 			$.each(instrument.elements, function(index, element){
 
@@ -73,11 +72,17 @@ $(document).ready(function(){
 					else{
 						layout_obj = instrument["static-layouts"][element["layout-id"]];
 					}
-					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(page_div);
 
-					// TODO: This probably allows empty items to get a div
-					// var layout = (layout_obj == undefined) ? "[T]" : layout_obj.layout;
 					var layout = layout_obj.layout || "[T]";
+
+					// Make sure item element's layout include [X] for painting of inputs.
+					if(element["item-id"] != undefined){
+						if(layout.indexOf('[X]') == -1){
+							return;
+						}
+					}
+
+					var row_div = $(sprintf("<div %s></div>", item_attrs)).appendTo(page_div);
 
 					var response = instrument.responses[element["response-id"]];
 					var response_html;
@@ -470,6 +475,8 @@ function validate_item(item_div){
 		return;
 	}
 
+	console.log(item_div);
+	console.log(item_div.data('response-type'));
 	//var item_div = $(this);
 	switch (item_div.data('response-type')){
 		case 'TX':
@@ -487,9 +494,11 @@ function validate_item(item_div){
 
 function validate_text(item_div) {
 	var input = item_div.find(':input');
-	var min = input.data('range-min');
-	var max = input.data('range-max');
-	var regexp = input.data('regexp');
+
+	// If, for some reason, there is no input here, then return item as valid.
+	if(input.length == 0){
+		return;
+	}
 
 	// Trim whitespace from value
 	var val = input.val().trim();
@@ -504,7 +513,9 @@ function validate_text(item_div) {
 		return text_must_answer;
 	}
 
-
+	var min = input.data('range-min');
+	var max = input.data('range-max');
+	var regexp = input.data('regexp');
 	var error_text = input.data('error-text');
 
 	if(min != undefined || max != undefined){
@@ -539,7 +550,7 @@ function validate_checker(item_div) {
 	var checked = item_div.find(":input:checked");
 	if(checked.length == 0){
 
-		// Optional items can nothing selected
+		// Optional items can have nothing selected
 		if (item_div.data('optional')) {
 			return;
 		}

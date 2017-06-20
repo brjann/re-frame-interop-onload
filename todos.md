@@ -27,6 +27,7 @@
 # Ajax handling
 - Spinner
 - Access forbidden 304
+- Server side error 500
 
 ## Done
 - Create middle-ware for ajax interception

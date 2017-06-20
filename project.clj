@@ -36,7 +36,8 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/data.json "0.2.6"]
                  [peridot "0.4.4"]
-                 [kerodon "0.8.0"]]
+                 [kerodon "0.8.0"]
+                 [prone "1.1.4"]]
 
   :min-lein-version "2.0.0"
 
@@ -66,8 +67,8 @@
    :dev           [:project/dev :profiles/dev]
    :test          [:project/dev :project/test :profiles/test]
 
-   :project/dev  {:dependencies [[prone "1.1.4"]
-                                 [ring/ring-mock "0.3.0"]
+   ;; These dependencies are only compiled into the development app
+   :project/dev  {:dependencies [[ring/ring-mock "0.3.0"]
                                  [ring/ring-devel "1.5.1"]
                                  [pjstadig/humane-test-output "0.8.1"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.20.0"]]
