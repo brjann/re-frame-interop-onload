@@ -37,6 +37,11 @@ function post_error(form){
 			return false;
 		}
 
+		if(jqXHR.status == 403){
+			alert(text_timeout_hard);
+			window.location.href = "/login"
+		}
+
 		if (jqXHR.status == 440) {
 			$("#main-body").hide();
 			$("#re-auth-box").show();

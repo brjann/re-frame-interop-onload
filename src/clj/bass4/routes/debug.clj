@@ -41,6 +41,9 @@
           (-> (http-response/found "/debug/session")
               (assoc :session
                      (merge (:session request)
-                            (map-map #(if-let [x (str->int %)] x %) params))))))
+                            (map-map #(if-let [x (str->int %)] x %) params)))))
+        (GET "/delete-session" [& params :as request]
+          (-> (http-response/found "/debug/session")
+              (assoc :session {}))))
       (routes
         (ANY "*" [] "Not in debug mode")))))
