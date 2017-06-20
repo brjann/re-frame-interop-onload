@@ -226,6 +226,22 @@
       ((wrap-exceptions handler) request)
       (handler request))))
 
+
+;; I tried to wrap around immutant.web.middleware/wrap-session
+;; but it did not work. Worked in browser but not tests.
+;; So extra wrapper instead
+(defn session-state-wrapper
+  [handler request]
+  (let [session (:session request)]
+    (request-state/set-state! :user-id (:identity session))
+    (request-state/set-state! :session-start (:session-start session)))
+  (handler request))
+
+(defn wrap-session-state
+  [handler]
+  (fn [request]
+    (session-state-wrapper handler request)))
+
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -254,6 +270,8 @@
       wrap-auth
       wrap-webjars
       wrap-flash
+      wrap-session-state
+      wrap-session
       (wrap-session {:cookie-attrs {:http-only true}})
       (wrap-defaults
         (-> site-defaults
