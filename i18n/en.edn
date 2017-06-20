@@ -31,4 +31,6 @@
          :please-re-auth-form "Your password is needed before you can submit your data."}
  :error {:something-happened "Something bad happened!"
          :page-not-found "Page not found"
-         :page-not-found-longer "The page you requested could not be found."}}
+         :page-not-found-longer "The page you requested could not be found."
+         :go-back "Try going back in your browser"
+         :or-login "or go to the login page"}}

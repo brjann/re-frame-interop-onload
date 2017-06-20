@@ -3,6 +3,7 @@
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]
             [ring.util.http-response :refer [content-type ok]]
+            [ring.util.response :refer [status]]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [bass4.i18n :as i18n]
@@ -12,7 +13,8 @@
             [clj-time.coerce :as tc]
             [bass4.services.bass :as bass-service]
             [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [compojure.response :as response]))
 
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
@@ -54,10 +56,10 @@
                        :message message})))
 
 (defn error-404-page
-  ([] (error-404-page "x" #_(i18n/tr [:error/page-not-found-longer])))
+  ([] (error-404-page (i18n/tr [:error/page-not-found-longer])))
   ([message]
-   (error-page {:status  400
-                :title   "x" #_(i18n/tr [:error/page-not-found])
+   (error-page {:status  404
+                :title   (i18n/tr [:error/page-not-found])
                 :message message})))
 
 (parser/add-tag!
@@ -77,3 +79,17 @@
   :datetime-ns
   (fn [val]
     (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (bass/time-zone)) (tc/from-date val))))
+
+(defn route-not-found
+  "Replacement function for route/not-found, which messes with the translation,
+  because it has not been loaded yet.
+  Returns a route that always returns a 404 \"Not Found\" response with the
+  error body."
+  []
+  (fn [request]
+    (let [body #_(:body (error-page {:status 404
+                                   :title  "page not found"}))
+          (error-404-page)]
+      (-> (response/render body request)
+          (status 404)
+          (cond-> (= (:request-method request) :head) (assoc :body nil))))))
