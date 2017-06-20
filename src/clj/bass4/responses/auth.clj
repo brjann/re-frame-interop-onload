@@ -1,12 +1,13 @@
 (ns bass4.responses.auth
   (:require [bass4.services.auth :as auth-service]
-            [bass4.views.auth :as auth-view]
             [bass4.services.user :as user]
             [bass4.services.assessments :as administrations]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.layout :as layout]))
+
 
 
 (defn error-422
@@ -35,6 +36,10 @@
 ;;    LOGIN
 ;; ------------
 
+(defn login-page []
+  (layout/render
+    "login.html"))
+
 (defn- new-session-map [user-id add-double-auth]
   (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
     (merge
@@ -60,6 +65,11 @@
 ;;    DOUBLE-AUTH
 ;; ------------------
 
+(defn- double-auth-page [double-auth-code]
+  (layout/render
+    "double-auth.html"
+    {:double-auth-code double-auth-code}))
+
 (defn- double-auth-redirect [session]
   (cond
     (auth-service/not-authenticated? session) "/login"
@@ -75,7 +85,7 @@
 (defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]
     (response/found redirect)
-    (auth-view/double-auth (:double-auth-code session))))
+    (double-auth-page (:double-auth-code session))))
 
 (s/defn ^:always-validate double-auth-check [session code :- s/Str]
   (if-let [redirect (double-auth-redirect session)]
@@ -92,6 +102,12 @@
 ;;    RE-AUTH
 ;; -------------
 
+(defn- re-auth-page
+  ([return-url] (re-auth-page return-url false))
+  ([return-url error] (layout/render
+                        "re-auth.html"
+                        {:return-url return-url
+                         :error error})))
 (defn re-auth-440
   ([] (re-auth-440 ""))
   ([body]
@@ -101,7 +117,7 @@
 
 (defn re-auth [session return-url]
   (if (:auth-timeout session)
-    (auth-view/re-auth-page return-url)
+    (re-auth-page return-url)
     (if (:identity session)
       (response/found "/user/")
       (response/found "/login"))))

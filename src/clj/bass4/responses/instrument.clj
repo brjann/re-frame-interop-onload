@@ -16,7 +16,6 @@
       (do
         (instruments/save-test-answers! instrument-id answers-map)
         (response/found (str "/instrument/summary/" instrument-id)))
-      ;; TODO: Add input spec and return proper error
       (layout/error-400-page)))
 
 (defn summary-page [instrument-id]

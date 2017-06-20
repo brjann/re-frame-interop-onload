@@ -43,7 +43,7 @@
                 (routes
                   (GET "/" [] "this is the dashboard")
                   (GET "/messages" []
-                    (messages-response/messages-page user))
+                    (messages-response/messages user))
                   (POST "/messages" [& params]
                     (messages-response/save-message (:user-id user) (:subject params) (:text params)))
                   (POST "/message-save-draft" [& params]

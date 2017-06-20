@@ -1,7 +1,6 @@
 (ns bass4.routes.auth
   (:require [bass4.layout :as layout]
             [bass4.services.auth :as auth-service]
-            [bass4.views.auth :as auth-view]
             [compojure.core :refer [defroutes context GET POST routes]]
             [ring.util.http-response :as response]
             [bass4.responses.auth :as auth-response]
@@ -13,7 +12,7 @@
     (auth-response/logout))
 
   (GET "/login" []
-    (auth-view/login-page))
+    (auth-response/login-page))
   (POST "/login" [& params :as request]
     (auth-response/handle-login (:session request) (:username params) (:password params)))
 

@@ -1,15 +1,24 @@
 (ns bass4.responses.messages
   (:require [bass4.services.messages :as messages-service]
-            [bass4.views.messages :as messages-view]
             [bass4.services.user :as user]
             [ring.util.http-response :as response]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [bass4.layout :as layout]))
 
-(defn messages-page [user]
+(defn- messages-page [user messages draft]
+  (layout/render
+    "messages.html"
+    {:user user
+     :title "Messages"
+     :active_messages true
+     :messages messages
+     :draft draft}))
+
+(defn messages [user]
   (let [user-id (:user-id user)
         messages (messages-service/get-all-messages user-id)
         draft (messages-service/get-draft user-id)]
-    (messages-view/messages-page user messages draft)))
+    (messages-page user messages draft)))
 
 (s/defn ^:always-validate save-message [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-message! user-id subject text)
