@@ -53,6 +53,13 @@
                        :title   "Bad request!"
                        :message message})))
 
+(defn error-404-page
+  ([] (error-404-page "x" #_(i18n/tr [:error/page-not-found-longer])))
+  ([message]
+   (error-page {:status  400
+                :title   "x" #_(i18n/tr [:error/page-not-found])
+                :message message})))
+
 (parser/add-tag!
   :tr
   (fn [args context-map]

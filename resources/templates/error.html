@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Something bad happened</title>
+    <title>{%tr error/something-happened %}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% style "/assets/bootstrap/css/bootstrap.min.css" %}
@@ -47,6 +47,7 @@
                     {% if message %}
                     <h4 class="text-danger">{{message}}</h4>
                     {% endif %}
+                    {% ifequal status 404 %}Yes!{% endifequal %}
                 </div>
             </div>
         </div>
