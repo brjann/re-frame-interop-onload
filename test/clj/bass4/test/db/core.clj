@@ -14,45 +14,10 @@
             [bass4.services.user :as user]
             [bass4.test.core :refer [get-edn test-fixtures]]))
 
-#_(use-fixtures
-  :once
-  (fn [f]
-    (mount/start
-      #'bass4.config/env
-      #'bass4.db.core/db-configs)
-    #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
-    (bass4.db.core/init-repl :db1)
-    (f)))
 
 (use-fixtures
     :once
     test-fixtures)
-
-#_(deftest test-users
-  (jdbc/with-db-transaction [t-conn *db*]
-    (jdbc/db-set-rollback-only! t-conn)
-    (is (= 1 (db/create-user!
-               t-conn
-               {:id         "1"
-                :first_name "Sam"
-                :last_name  "Smith"
-                :email      "sam.smith@example.com"
-                :pass       "pass"})))
-    (is (= {:id         "1"
-            :first_name "Sam"
-            :last_name  "Smith"
-            :email      "sam.smith@example.com"
-            :pass       "pass"
-            :admin      nil
-            :last_login nil
-            :is_active  nil}
-           (db/get-user t-conn {:id "1"})))))
-
-
-
-
-(deftest my-foo
-  (is (= 1 1)))
 
 (deftest test-save-message
   (jdbc/with-db-transaction [t-conn *db*]
