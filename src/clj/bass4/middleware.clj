@@ -131,9 +131,7 @@
       (handler req)
       (catch ExceptionInfo e
         (if (= (:type (.data e)) :schema.core/error)
-          ;; TODO: Message should only be included in development mode
-          ;; TODO: Handle this in ajax
-          (error-400-page (.getMessage e))
+          (error-400-page (when (env :debug-mode (.getMessage e))))
           (throw e))))))
 
 
@@ -215,6 +213,10 @@
     (ajax-post-wrapper handler request)))
 
 
+
+;; ----------------
+;;  TIMEOUT
+;; ----------------
 
 (defn auth-timeout-wrapper
   [handler request]
