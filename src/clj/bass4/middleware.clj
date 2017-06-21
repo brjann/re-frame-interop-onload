@@ -11,7 +11,7 @@
             [bass4.utils :refer [filter-map time+ nil-zero?]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
-            [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+            [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
@@ -114,6 +114,7 @@
       (log/error t)
       (request-state/record-error! t)
       (error-page {:status 500
+                   ;; TODO: Fix this!
                    :title "Something very bad has happened!"
                    :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))))
 
@@ -131,6 +132,7 @@
       (catch ExceptionInfo e
         (if (= (:type (.data e)) :schema.core/error)
           ;; TODO: Message should only be included in development mode
+          ;; TODO: Handle this in ajax
           (error-400-page (.getMessage e))
           (throw e))))))
 
@@ -353,9 +355,15 @@
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
-        (-> site-defaults
-            (assoc-in [:security :anti-forgery] false)
-            (dissoc :session)))
+        (->
+          ;; TODO: This results in eternal loop. Although it should not.
+          ;; https://github.com/ring-clojure/ring-defaults#proxies
+          (if (env :ssl)
+                (assoc secure-site-defaults :proxy (env :proxy))
+                site-defaults)
+          #_site-defaults
+          (assoc-in [:security :anti-forgery] false)
+          (dissoc :session)))
       ;; TODO: Place before webjars or even further up
       wrap-reload-headers
       wrap-context

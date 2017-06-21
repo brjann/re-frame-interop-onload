@@ -24,8 +24,8 @@
 - No internet connection
 - DISCARD Re-post on re-authenticate
  
- 
- 
+
+https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests*
  
 #Messages
 
