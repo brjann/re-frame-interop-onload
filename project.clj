@@ -37,7 +37,8 @@
                  [org.clojure/data.json "0.2.6"]
                  [peridot "0.4.4"]
                  [kerodon "0.8.0"]
-                 [prone "1.1.4"]]
+                 [prone "1.1.4"]
+                 [clj-http "3.6.1"]]
 
   :min-lein-version "2.0.0"
 

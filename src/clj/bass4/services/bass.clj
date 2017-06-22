@@ -8,6 +8,9 @@
 (defn db-title []
   (:title (db/get-db-title)))
 
+(defn db-sms-sender []
+  (:sms-sender (db/get-sms-sender)))
+
 ;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!
   [class-name, property-name, count]

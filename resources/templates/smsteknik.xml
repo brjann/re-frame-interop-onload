@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<smsteknik>
+    <operationtype>0</operationtype>
+    <flash>0</flash>
+    <multisms>0</multisms>
+    <maxmultisms>0</maxmultisms>
+    <compresstext>0</compresstext>
+    <udh/>
+    <smssender>{{sender}}</smssender>
+    <deliverystatustype>2</deliverystatustype>
+    <deliverystatusaddress>{{delivery-status-address}}</deliverystatusaddress>
+    <usereplynumber>0</usereplynumber>
+    <usereplyforwardtype>0</usereplyforwardtype>
+    <usereplyforwardurl/>
+    <usereplycustomid/>
+    <usee164>0</usee164>
+    <!--<udmessage><![CDATA[{{message|safe}}]]></udmessage>-->
+    <udmessage>{{message}}</udmessage>
+    <items>
+        <recipient>
+            <orgaddress>{{recipient}}</orgaddress>
+        </recipient>
+    </items>
+</smsteknik>
