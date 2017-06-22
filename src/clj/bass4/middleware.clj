@@ -113,10 +113,9 @@
     (catch Throwable t
       (log/error t)
       (request-state/record-error! t)
-      (error-page {:status 500
-                   ;; TODO: Fix this!
-                   :title "Something very bad has happened!"
-                   :message "We've dispatched a team of highly trained gnomes to take care of the problem."}))))
+      (error-page {:status  500
+                   :title   "Something bad happened!"
+                   :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
 
 (defn wrap-internal-error [handler]
@@ -131,12 +130,12 @@
       (handler req)
       (catch ExceptionInfo e
         (if (= (:type (.data e)) :schema.core/error)
-          (error-400-page (when (env :debug-mode (.getMessage e))))
+          (do
+            (request-state/record-error! (.getMessage e))
+            (error-400-page (when (env :debug-mode (.getMessage e)))))
           (throw e))))))
 
 
-
-;; TODO: This should not be applied to js and css-files
 ;; TODO: http://stackoverflow.com/questions/8861181/clear-all-fields-in-a-form-upon-going-back-with-browser-back-button
 (defn wrap-reload-headers [handler]
   (fn [request]
@@ -144,10 +143,8 @@
       (update-in response
                  [:headers] #(assoc %1
                                "Cache-Control" "no-cache, no-store, must-revalidate"
-                               "Expires" "Mon, 26 Jul 1997 05:00:00 GMT"
+                               "Expires" "Wed, 12 Jul 1978 08:00:00 GMT"
                                "Pragma" "no-cache")))))
-
-
 
 ;; ----------------
 ;;  AJAX POST
@@ -170,7 +167,6 @@
 
 (defn- ajax-403-logged-in
   [request response]
-  ;; Do not send email about this strange error
   (request-state/record-error!
     (str "403 error when posting to " (:uri request)
          "\nUser " (get-in request [:session :identity])))
@@ -351,6 +347,7 @@
       wrap-auth-timeout
       wrap-ajax-post
       wrap-auth
+      wrap-reload-headers
       wrap-webjars
       wrap-flash
       wrap-session-state
@@ -366,8 +363,6 @@
           #_site-defaults
           (assoc-in [:security :anti-forgery] false)
           (dissoc :session)))
-      ;; TODO: Place before webjars or even further up
-      wrap-reload-headers
       wrap-context
       wrap-internal-error
       wrap-request-state))

@@ -3,7 +3,8 @@
             [ring.util.http-response :as response]
             [clojure.tools.logging :as log]
             [schema.core :as s]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [bass4.request-state :as request-state]))
 
 (defn instrument-page [instrument-id]
   (if-let [instrument (instruments/get-instrument instrument-id)]
@@ -15,7 +16,9 @@
       (do
         (instruments/save-test-answers! instrument-id answers-map)
         (response/found (str "/instrument/summary/" instrument-id)))
-      (layout/error-400-page)))
+      (do
+        (request-state/record-error! "Instrument post was not in valid JSON format")
+        (layout/error-400-page))))
 
 (defn summary-page [instrument-id]
   ;; There is no way to check if the instrument actually exists.
