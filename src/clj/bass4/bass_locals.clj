@@ -50,7 +50,6 @@
   ([bass-path] (get-bass-db-configs bass-path 3306))
   ([bass-path port]
    (let [configs (reduce merge (map parse-local (get-locals bass-path)))
-         ;; TODO: Separate commons from this function
          common (parse-php-constants (slurp (io/file bass-path "local.php")))]
      (assoc (->> configs
                  (map-map (partial db-config port))

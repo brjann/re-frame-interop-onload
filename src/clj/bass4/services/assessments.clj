@@ -283,7 +283,6 @@
   [user-id]
   (fn [idx step]
     (merge
-      ;; TODO: What is the timezone of this? UTC?
       {:time              (tc/to-sql-date (t/now))
        :user-id           user-id
        :batch-id          nil
