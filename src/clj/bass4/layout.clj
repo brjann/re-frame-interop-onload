@@ -3,7 +3,7 @@
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]
             [ring.util.http-response :refer [content-type ok]]
-            [ring.util.response :refer [status]]
+            [ring.util.response :refer [status] :as ring-response]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [bass4.i18n :as i18n]
@@ -73,6 +73,10 @@
                 :title   (i18n/tr [:error/page-not-found])
                 :message message}
                "error-back-or-login.html")))
+
+(defn text-response
+  [var]
+  (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
 
 (parser/add-tag!
   :tr

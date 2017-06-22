@@ -13,25 +13,22 @@
             [bass4.responses.instrument :as instruments]
             [bass4.services.bass :as bass]
             [clojure.pprint]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [ring.util.codec :as codec]))
 
-
-(defn text-response
-  [var]
-  (response/content-type (response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
 
 (def debug-routes
   (context "/debug" [:as request]
     (if (or (env :debug-mode) (env :dev))
       (routes
-        (GET "/timezone" [:as req] (text-response (locals/time-zone)))
-        (GET "/session" [:as req] (text-response (:session req)))
+        (GET "/timezone" [:as req] (layout/text-response (locals/time-zone)))
+        (GET "/session" [:as req] (layout/text-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-state/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
-        (GET "/request" [:as req] (text-response req))
-        (GET "/test" [:as req] (text-response (:server-name req)))
-        (GET "/env" [:as req] (text-response env))
+        (GET "/request" [:as req] (layout/text-response req))
+        (GET "/test" [:as req] (layout/text-response (:server-name req)))
+        (GET "/env" [:as req] (layout/text-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")
               (assoc :session
@@ -51,6 +48,12 @@
         (GET "/403" [& params :as request]
           (layout/error-403-page (get-in request [:session :identity])))
         (POST "/found" []
-          (-> (http-response/found "/login"))))
+          (-> (http-response/found "/login")))
+        (GET "/encode" []
+          (-> (http-response/found (str "/debug/decode?url=" (codec/url-encode "/debug/encode-decode?arg1=val1&arg2=val2&arg3=path%2fto%2fresource")))))
+        (GET "/decode" [& params]
+          (-> (http-response/found (:url params))))
+        (GET "/encode-decode" [& params]
+          (layout/text-response params)))
       (routes
         (ANY "*" [] "Not in debug mode")))))
