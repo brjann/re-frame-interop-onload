@@ -8,6 +8,15 @@
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]))
 
+(deftest double-auth-generator
+  []
+  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username 536975 :password 536975})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "666777")))))
+
 (deftest double-auth-required
   (is (= false (auth-service/double-auth-required? 666)))
   (is (= false (auth-service/double-auth-required? 536821)))
