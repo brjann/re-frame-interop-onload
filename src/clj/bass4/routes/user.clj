@@ -44,6 +44,42 @@
 
 (def user-routes
   (context "/user" [:as request]
+    (let [user (get-in request [:session :user])]
+      (if (not (get-in request [:session :auth-timeout]))
+        (if (auth-response/double-authed? (:session request))
+          (if (:assessments-pending (:session request))
+            (routes
+              (GET "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
+              (POST "*" [& params] (assessments-response/post-instrument-answers
+                                     (:user-id user)
+                                     (:session request)
+                                     (str->int (:instrument-id params))
+                                     (:items params)
+                                     (:specifications params))))
+            (routes
+              (GET "/" [] "this is the dashboard")
+              (GET "/messages" []
+                (messages-response/messages user))
+              (POST "/messages" [& params]
+                (messages-response/save-message (:user-id user) (:subject params) (:text params)))
+              (POST "/message-save-draft" [& params]
+                (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+              #_(GET "/" req (dashboard-page req))
+              #_(GET "/profile" [errors :as req] (profile-page req errors))
+              #_(GET "/modules" req (modules-page req))
+              #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
+              #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
+              #_(GET "/charts" req (charts-page req))))
+          (routes
+            (ANY "*" [] (response/found "/double-auth"))))
+        (routes
+          (GET "*" [:as request]
+            (response/found (str "/re-auth?return-url=" (url-encode-x (request-string request)))))
+          (POST "*" [] (auth-response/re-auth-440)))))))
+
+;; Old user-routes which does not rely on user map being in session.
+#_(def user-routes
+  (context "/user" [:as request]
     (if-let [user (user/get-user (:identity request))]
       (if (not (get-in request [:session :auth-timeout]))
         (if (auth-response/double-authed? (:session request))

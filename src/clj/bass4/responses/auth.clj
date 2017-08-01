@@ -77,9 +77,8 @@
 
 (defn- double-auth-redirect [session]
   (cond
-    (nil? (:identity session)) "/login"
-    (not (auth-service/double-auth-required? (:identity session))) "/user/"
     (auth-service/not-authenticated? session) "/login"
+    (not (auth-service/double-auth-required? (:identity session))) "/user/"
     (auth-service/double-auth-done? session) "/user/"
     ;; If you go to double auth but double auth not requried - then redirected to
     (auth-service/double-auth-no-code session) "/login"))
@@ -87,8 +86,7 @@
 (defn double-authed? [session]
   (if (auth-service/double-auth-required? (:identity session))
     (boolean (:double-authed session))
-    ;; TODO: Should this be true?
-    false))
+    true))
 
 (defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]

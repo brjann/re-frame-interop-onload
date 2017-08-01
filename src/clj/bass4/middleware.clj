@@ -25,7 +25,8 @@
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc]
             [prone.middleware :refer [wrap-exceptions]]
-            [bass4.layout :as layout])
+            [bass4.layout :as layout]
+            [bass4.services.user :as user])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -305,6 +306,21 @@
       ((wrap-exceptions handler) request)
       (handler request))))
 
+(defn identity-wrapper
+  [handler request]
+  "Check if user in identity exists
+    yes: add user map to session
+    no: remove :identity key from from session"
+  (handler (if-let [user (user/get-user (:identity request))]
+             (assoc-in request [:session :user] user)
+             (merge request {:identity nil :session (dissoc (:session request) :identity)})))
+  #_(handler request))
+
+(defn wrap-identity
+  [handler]
+  (fn [request]
+    (identity-wrapper handler request)))
+
 
 ;; I tried to wrap around immutant.web.middleware/wrap-session
 ;; but it did not work. Worked in browser but not tests.
@@ -342,6 +358,7 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
+      wrap-identity
       wrap-debug-exceptions
       wrap-db
       wrap-auth-timeout

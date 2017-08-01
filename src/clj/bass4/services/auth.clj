@@ -45,8 +45,8 @@
 
 
 (defn not-authenticated? [session]
-  (or (nil? (:identity session))
-      (nil? (user/get-user (:identity session)))))
+  (nil? (:identity session)))
+
 
 (defn double-auth-no-code [session]
   "Returns true if double auth is not required or if double auth code has not been created.
