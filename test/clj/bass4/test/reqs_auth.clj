@@ -3,7 +3,15 @@
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
-            [kerodon.test :refer :all]))
+            [kerodon.test :refer :all]
+            [bass4.services.auth :as auth-service]))
+
+(deftest double-auth-required
+  (is (= false (auth-service/double-auth-required? 7)))
+  (is (= false (auth-service/double-auth-required? 536821)))
+  (is (= true (auth-service/double-auth-required? 535759)))
+  (is (= false (auth-service/double-auth-required? 536834)))
+  (is (= true (auth-service/double-auth-required? 536835))))
 
 (deftest request-double-authentication
   (-> (session (app))
@@ -17,6 +25,19 @@
       (visit "/debug/set-session" :params {:double-authed 1})
       (visit "/user/messages")
       (has (status? 200))))
+
+(deftest request-no-double-authentication
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 536821})
+      (visit "/user/messages")
+      (has (status? 200))))
+
+(deftest request-no-double-authentication-visit
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 536821})
+      (visit "/double-auth")
+      (get-in [:response :headers "Location"])
+      (.contains "/user/")))
 
 (deftest request-403
   (-> (session (app))

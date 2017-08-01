@@ -32,6 +32,8 @@
   (-> (response/found "/login")
       (assoc :session nil)))
 
+
+
 ;; ------------
 ;;    LOGIN
 ;; ------------
@@ -54,12 +56,15 @@
 
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user-id (auth-service/authenticate-by-username username password)]
-    (if (auth-service/double-auth-required?)
+    (if (auth-service/double-auth-required? user-id)
       (-> (response/found "/double-auth")
           (assoc :session (merge session (new-session-map user-id true))))
       (-> (response/found "/user/messages")
           (assoc :session (merge session (new-session-map user-id false)))))
     (error-422 "error")))
+
+
+
 
 ;; ------------------
 ;;    DOUBLE-AUTH
@@ -72,14 +77,17 @@
 
 (defn- double-auth-redirect [session]
   (cond
+    (nil? (:identity session)) "/login"
+    (not (auth-service/double-auth-required? (:identity session))) "/user/"
     (auth-service/not-authenticated? session) "/login"
     (auth-service/double-auth-done? session) "/user/"
-    ;should this be more complex? double auth may be broken
-    (auth-service/not-double-auth-ok? session) "/login"))
+    ;; If you go to double auth but double auth not requried - then redirected to
+    (auth-service/double-auth-no-code session) "/login"))
 
 (defn double-authed? [session]
-  (if (auth-service/double-auth-required?)
+  (if (auth-service/double-auth-required? (:identity session))
     (boolean (:double-authed session))
+    ;; TODO: Should this be true?
     false))
 
 (defn double-auth [session]
@@ -92,9 +100,9 @@
     (response/found redirect)
     (if (= code (:double-auth-code session))
       (-> (response/found "/user/")
-          ;; TODO: Why is this 1 and not true?
           (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
       (error-422 "error"))))
+
 
 
 

@@ -20,8 +20,14 @@
       #(get password-chars %1)
       (repeatedly 3 #(rand-int (- (count password-chars) 1))))))
 
-(defn double-auth-required? []
-  true)
+(defn double-auth-required? [user-id]
+  (if-let [settings (db/get-double-auth-settings {:user-id user-id})]
+    (let [{:keys [sms email user-skip allow-skip]} settings]
+      (cond
+        (and (zero? sms) (zero? email)) false
+        (and (pos? allow-skip) (pos? user-skip)) false
+        :else true))
+    false))
 
 (defn authenticate-by-user-id [user-id password]
   (when-let [user (db/get-user-by-user-id {:user-id user-id})]
@@ -42,9 +48,10 @@
   (or (nil? (:identity session))
       (nil? (user/get-user (:identity session)))))
 
-(defn not-double-auth-ok? [session]
-  (or (not (double-auth-required?))
-      (nil? (:double-auth-code session))))
+(defn double-auth-no-code [session]
+  "Returns true if double auth is not required or if double auth code has not been created.
+  Is used in the context where any of these are EXPECTED"
+  (nil? (:double-auth-code session)))
 
 (defn double-auth-done? [session]
   (:double-authed session))
