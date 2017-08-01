@@ -42,6 +42,27 @@
   (layout/render
     "login.html"))
 
+#_(defn- new-session-map [user-id add-double-auth]
+  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
+    (merge
+      {:assessments-pending (> rounds-count 0)
+       :identity          user-id
+       :auth-timeout      nil
+       :last-request-time (t/now)
+       :session-start     (t/now)}
+      (when add-double-auth
+        {:double-authed    nil
+         :double-auth-code (auth-service/double-auth-code)}))))
+
+#_(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
+  (if-let [user-id (auth-service/authenticate-by-username username password)]
+    (if (auth-service/double-auth-required? user-id)
+      (-> (response/found "/double-auth")
+          (assoc :session (merge session (new-session-map user-id true))))
+      (-> (response/found "/user/messages")
+          (assoc :session (merge session (new-session-map user-id false)))))
+    (error-422 "error")))
+
 (defn- new-session-map [user-id add-double-auth]
   (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
     (merge
@@ -80,7 +101,6 @@
     (auth-service/not-authenticated? session) "/login"
     (not (auth-service/double-auth-required? (:identity session))) "/user/"
     (auth-service/double-auth-done? session) "/user/"
-    ;; If you go to double auth but double auth not requried - then redirected to
     (auth-service/double-auth-no-code session) "/login"))
 
 (defn double-authed? [session]

@@ -36,7 +36,7 @@
 
 
 ;; TODO: Increase db sms counter
-(defn sms-sucess
+(defn sms-success
   []
   true)
 
@@ -55,4 +55,4 @@
         res    (:body (http/post url {:body xml}))]
     (if (= "0" (subs res 0 1))
       (sms-error recipient message res)
-      (sms-sucess))))
+      (sms-success))))
