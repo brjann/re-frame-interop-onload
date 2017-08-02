@@ -1,6 +1,7 @@
 (ns bass4.sms-sender
   (:require [clojure.java.io :as io]
             [bass4.config :refer [env]]
+            [bass4.mailer :refer [mail!]]
             [clj-http.client :as http]
             [ring.util.codec :as codec]
             [bass4.db.core :as db]
@@ -40,7 +41,8 @@
   []
   true)
 
-(defn send-db-sms
+;; Overwritten by other function when in debug mode
+(defn send-db-sms!
   [recipient message]
   (let [config (:common db/db-configs)
         url    (smsteknik-url

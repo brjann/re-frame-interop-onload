@@ -3,7 +3,8 @@
             [bass4.db.core :refer [*db*] :as db]
             [bass4.services.assessments :as assessments]
             [bass4.test.core :refer [get-edn test-fixtures]]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -145,3 +146,13 @@
     (is (= (get-edn "ass-8-res") pending))
     (is (= (get-edn "ass-8-rounds")
            (get-ass-8-rounds pending)))))
+
+
+(defn test1
+  []
+  (log/debug "hejsan"))
+
+(deftest xxx
+  (let [x test1]
+    (with-redefs [test1 (fn [] (log/debug "hoppsan") (x))]
+      (test1))))

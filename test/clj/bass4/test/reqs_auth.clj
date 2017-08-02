@@ -18,11 +18,11 @@
         (has (some-text? "666777")))))
 
 (deftest double-auth-required
-  (is (= false (auth-service/double-auth-required? 666)))
-  (is (= false (auth-service/double-auth-required? 536821)))
-  (is (= true (auth-service/double-auth-required? 535759)))
-  (is (= false (auth-service/double-auth-required? 536834)))
-  (is (= true (auth-service/double-auth-required? 536835))))
+  (is (false? (auth-service/double-auth-required? 666)))
+  (is (false? (auth-service/double-auth-required? 536821)))
+  (is (auth-service/double-auth-required? 535759))
+  (is (false? (auth-service/double-auth-required? 536834)))
+  (is (auth-service/double-auth-required? 536835)))
 
 (deftest user-exists
   (is (not= nil (user/get-user 536834))))

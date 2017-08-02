@@ -21,6 +21,7 @@
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
+            [bass4.sms-sender :as sms]
             [clojure.string]
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc]
@@ -255,6 +256,7 @@
         (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
       (catch Exception x
         (log/error "Could not send error email to: " (env :email-error) "\nError: " x)))
+    ;; TODO: Replace with with-redefs?
     (log/info "No emails in test mode")))
 
 (defn save-log!
@@ -299,13 +301,6 @@
   (fn [request]
     (db/db-wrapper handler request)))
 
-(defn wrap-debug-exceptions
-  [handler]
-  (fn [request]
-    (if (or (env :debug-mode) (env :dev))
-      ((wrap-exceptions handler) request)
-      (handler request))))
-
 (defn identity-wrapper
   [handler request]
   "Check if user in identity exists
@@ -321,7 +316,6 @@
   (fn [request]
     (identity-wrapper handler request)))
 
-
 ;; I tried to wrap around immutant.web.middleware/wrap-session
 ;; but it did not work. Worked in browser but not tests.
 ;; So extra wrapper instead
@@ -336,6 +330,22 @@
   [handler]
   (fn [request]
     (session-state-wrapper handler request)))
+
+(defn debug-redefs-wrapper
+  [handler request]
+  (if (or (env :debug-mode) (env :dev))
+    (with-redefs [sms/send-db-sms! (fn [recipient message]
+                                     (when (mail! (env :email-error) "SMS" (str recipient "\n" message))
+                                       (sms/sms-success)))]
+      ((wrap-exceptions handler) request))
+    (handler request)))
+
+(defn wrap-debug-redefs
+  [handler]
+  (fn [request]
+    (debug-redefs-wrapper handler request)))
+
+
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
@@ -359,7 +369,8 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       wrap-identity
-      wrap-debug-exceptions
+      #_wrap-debug-exceptions
+      wrap-debug-redefs
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post

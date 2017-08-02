@@ -26,7 +26,7 @@
       (cond
         (and (zero? sms) (zero? email)) false
         (and (pos? allow-skip) (pos? user-skip)) false
-        :else true))
+        :else settings))
     false))
 
 (defn authenticate-by-user-id [user-id password]

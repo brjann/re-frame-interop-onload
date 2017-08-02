@@ -33,11 +33,11 @@
 (deftest edn-1
   (is (= (get-edn "edn-1") {:group-name nil :group-id nil})))
 
-(defn get-redefs-1
+#_(defn get-redefs-1
   []
   (with-redefs [db/get-user-by-user-id (constantly {:objectid 9})]
     (user/get-user 3443)))
 
-(deftest redefs-1
+#_(deftest redefs-1
   (is (= (get-redefs-1) {:objectid 9, :user-id 9})))
 

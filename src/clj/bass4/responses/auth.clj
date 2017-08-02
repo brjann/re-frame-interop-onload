@@ -6,7 +6,8 @@
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [bass4.sms-sender :as sms]))
 
 
 
@@ -41,50 +42,56 @@
 (defn login-page []
   (layout/render
     "login.html"))
+;
+;(defn- new-session-map [user-id add-double-auth]
+;  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
+;    (merge
+;      {:assessments-pending (> rounds-count 0)
+;       :identity          user-id
+;       :auth-timeout      nil
+;       :last-request-time (t/now)
+;       :session-start     (t/now)}
+;      (when add-double-auth
+;        {:double-authed    nil
+;         :double-auth-code (auth-service/double-auth-code)}))))
+;
+;(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
+;  (if-let [user-id (auth-service/authenticate-by-username username password)]
+;    (if (auth-service/double-auth-required? user-id)
+;      (-> (response/found "/double-auth")
+;          (assoc :session (merge session (new-session-map user-id true))))
+;      (-> (response/found "/user/messages")
+;          (assoc :session (merge session (new-session-map user-id false)))))
+;    (error-422 "error")))
 
-#_(defn- new-session-map [user-id add-double-auth]
-  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
-    (merge
-      {:assessments-pending (> rounds-count 0)
-       :identity          user-id
-       :auth-timeout      nil
-       :last-request-time (t/now)
-       :session-start     (t/now)}
-      (when add-double-auth
-        {:double-authed    nil
-         :double-auth-code (auth-service/double-auth-code)}))))
+(defn- new-session-map
+  [user-id]
+  {:identity          user-id
+   :auth-timeout      nil
+   :last-request-time (t/now)
+   :session-start     (t/now)})
 
-#_(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
-  (if-let [user-id (auth-service/authenticate-by-username username password)]
-    (if (auth-service/double-auth-required? user-id)
-      (-> (response/found "/double-auth")
-          (assoc :session (merge session (new-session-map user-id true))))
-      (-> (response/found "/user/messages")
-          (assoc :session (merge session (new-session-map user-id false)))))
-    (error-422 "error")))
+(defn send-code
+  [user code sms email allow-both]
+  )
 
-(defn- new-session-map [user-id add-double-auth]
-  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
-    (merge
-      {:assessments-pending (> rounds-count 0)
-       :identity          user-id
-       :auth-timeout      nil
-       :last-request-time (t/now)
-       :session-start     (t/now)}
-      (when add-double-auth
-        {:double-authed    nil
-         :double-auth-code (auth-service/double-auth-code)}))))
-
+(defn double-auth-map
+  [user-id]
+  (when-let [settings (auth-service/double-auth-required? user-id)]
+    (let [code (auth-service/double-auth-code)]
+      {:double-authed    nil
+       :double-auth-code code})))
+;
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user-id (auth-service/authenticate-by-username username password)]
-    (if (auth-service/double-auth-required? user-id)
-      (-> (response/found "/double-auth")
-          (assoc :session (merge session (new-session-map user-id true))))
-      (-> (response/found "/user/messages")
-          (assoc :session (merge session (new-session-map user-id false)))))
+    (let [double-auth (double-auth-map user-id)
+          rounds      (when (< 0 (administrations/create-assessment-round-entries! user-id))
+                        {:assessments-pending true})]
+      (-> (response/found (if double-auth
+                            "/double-auth"
+                            "/user/messages"))
+          (assoc :session (merge session (new-session-map user-id) double-auth rounds))))
     (error-422 "error")))
-
-
 
 
 ;; ------------------

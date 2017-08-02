@@ -54,6 +54,8 @@
         (GET "/decode" [& params]
           (-> (http-response/found (:url params))))
         (GET "/encode-decode" [& params]
-          (layout/text-response params)))
+          (layout/text-response params))
+        (GET "/exception" []
+          (throw (Exception. "Your exception as requested."))))
       (routes
         (ANY "*" [] "Not in debug mode")))))
