@@ -37,7 +37,8 @@
 (defn authenticate-by-username [username password]
   (when-let [user (db/get-user-by-username {:username username})]
     (when (= (:password user) password)
-      (:objectid user))))
+      (assoc user :user-id (:objectid user))
+      #_(:objectid user))))
 
 ;; -------------
 ;;  DOUBLE AUTH

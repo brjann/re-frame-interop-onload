@@ -83,14 +83,14 @@
        :double-auth-code code})))
 ;
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
-  (if-let [user-id (auth-service/authenticate-by-username username password)]
-    (let [double-auth (double-auth-map user-id)
-          rounds      (when (< 0 (administrations/create-assessment-round-entries! user-id))
+  (if-let [user (auth-service/authenticate-by-username username password)]
+    (let [double-auth (double-auth-map (:user-id user))
+          rounds      (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
                         {:assessments-pending true})]
       (-> (response/found (if double-auth
                             "/double-auth"
                             "/user/messages"))
-          (assoc :session (merge session (new-session-map user-id) double-auth rounds))))
+          (assoc :session (merge session (new-session-map (:user-id user)) double-auth rounds))))
     (error-422 "error")))
 
 
