@@ -7,6 +7,7 @@ SELECT
   UserName,
   Email,
   SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both',
   `Password`
 FROM c_participant
 WHERE ObjectId = :user-id;
@@ -21,6 +22,7 @@ SELECT
   UserName,
   Email,
   SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both',
   `Password`
 FROM c_participant
 WHERE UserName = :username;

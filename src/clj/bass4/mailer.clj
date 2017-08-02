@@ -14,4 +14,19 @@
          res (shell/sh "php" (str mailer-path) :in (clj->php args))]
      res
      (when (not= 0 (:exit res))
-       (throw (Exception. (str (:out res))))))))
+       (throw (Exception. (str (:out res)))))
+     true)))
+
+
+;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
+(defn- match-regex?
+  "Check if the string matches the regex"
+  [v regex]
+  (boolean (re-matches regex v)))
+
+(defn is-email?
+  "Check if input is a valid email address"
+  [input]
+  (if (nil? input)
+    false
+    (match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))

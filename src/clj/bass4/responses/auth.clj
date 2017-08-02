@@ -7,7 +7,8 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.layout :as layout]
-            [bass4.sms-sender :as sms]))
+            [bass4.sms-sender :as sms]
+            [bass4.mailer :as mail]))
 
 
 
@@ -71,20 +72,45 @@
    :last-request-time (t/now)
    :session-start     (t/now)})
 
-(defn send-code
-  [user code sms email allow-both]
-  )
+(defn- send-methods-user
+  [user-sms user-email]
+  {:sms (not (empty? user-sms))
+   :email (mail/is-email? user-email)})
 
-(defn double-auth-map
+(defn- send-methods-general
+  [by-sms by-email allow-both]
+  {:sms   (or (pos? by-sms) (pos? allow-both))
+   :email (or (pos? by-email) (pos? allow-both))})
+
+(defn- send-code!
+    [code user-sms user-email by-sms by-email allow-both]
+    (let [methods-user (send-methods-user user-sms user-email)
+          methods-general (send-methods-general by-sms by-sms allow-both)
+          methods {:sms (and (:sms methods-user) (:sms methods-general))
+                   :email (and (:email methods-user) (:email methods-general))}]
+      (when-not (when (:sms methods)
+                  (sms/send-db-sms! user-sms code))
+        (when (:email methods)
+          (mail/mail! user-email "code" code)))))
+
+#_(defn double-auth-map
   [user-id]
   (when-let [settings (auth-service/double-auth-required? user-id)]
     (let [code (auth-service/double-auth-code)]
       {:double-authed    nil
        :double-auth-code code})))
-;
+
+(defn double-auth-map
+  [user]
+  (when-let [settings (auth-service/double-auth-required? (:user-id user))]
+    (let [code (auth-service/double-auth-code)]
+      (send-code! code (:sms-number user) (:email user) (:sms settings) (:email settings) (and (:double-auth-use-both user) (:allow-both settings)))
+      {:double-authed    nil
+       :double-auth-code code})))
+
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
-    (let [double-auth (double-auth-map (:user-id user))
+    (let [double-auth (double-auth-map user)
           rounds      (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
                         {:assessments-pending true})]
       (-> (response/found (if double-auth

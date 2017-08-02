@@ -146,13 +146,3 @@
     (is (= (get-edn "ass-8-res") pending))
     (is (= (get-edn "ass-8-rounds")
            (get-ass-8-rounds pending)))))
-
-
-(defn test1
-  []
-  (log/debug "hejsan"))
-
-(deftest xxx
-  (let [x test1]
-    (with-redefs [test1 (fn [] (log/debug "hoppsan") (x))]
-      (test1))))
