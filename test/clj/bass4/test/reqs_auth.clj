@@ -6,7 +6,11 @@
             [kerodon.test :refer :all]
             [bass4.test.core :refer [test-fixtures]]
             [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]))
+            [bass4.services.user :as user]
+            [clojure.tools.logging :as log]))
+
+
+
 
 (deftest double-auth-generator
   []
@@ -43,6 +47,13 @@
                    (visit "/debug/session")
                    (get-in [:response :body])
                    (.contains ":identity")))))
+
+(deftest double-auth-sms-sent
+  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+    (is (= true (-> (session (app))
+                    (visit "/login" :request-method :post :params {:username 536975 :password 536975})
+                    (get-in [:response :headers "debug-headers"])
+                    (.contains "666777"))))))
 
 (deftest request-double-authentication
   (-> (session (app))

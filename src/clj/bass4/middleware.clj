@@ -22,12 +22,12 @@
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
             [bass4.sms-sender :as sms]
-            [clojure.string]
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc]
             [prone.middleware :refer [wrap-exceptions]]
             [bass4.layout :as layout]
-            [bass4.services.user :as user])
+            [bass4.services.user :as user]
+            [clojure.string :as string])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -291,7 +291,10 @@
         (when-not (nil-zero? (:error-count req-state))
           (mail-error! req-state))
         (save-log! req-state request time))
-      val)))
+      ;;val
+      (if (:debug-headers req-state)
+        (assoc val :headers (assoc (:headers val) "debug-headers" (string/join "\n" (:debug-headers req-state))))
+        val))))
 
 (defn wrap-request-state [handler]
   (fn [request]
@@ -331,6 +334,7 @@
   (fn [request]
     (session-state-wrapper handler request)))
 
+
 (defn wrap-debug-exceptions
   [handler]
   (fn [request]
@@ -339,14 +343,51 @@
       (handler request))))
 
 
+;; ----------------
+;;  DEBUG REDEFS
+;; ----------------
+
+(defn debug-send-sms!
+  [recipient message]
+  (when (mail! (env :email-error) "SMS" (str "To: " recipient "\n" message))
+    (sms/sms-success)))
+
+(defn debug-wrap-mail-fn
+  [mailer-fn]
+  (fn [to subject message & args]
+    ;; Must by called with all four args to prevent stack overflow
+    (mailer-fn (env :email-error) subject (str "To: " to "\n" message) nil)))
+
+(defn test-send-sms!
+  [recipient message]
+  (request-state/swap-state! :debug-headers #(conj %1 (str "SMS to " recipient "\n" message)) [])
+  true)
+
+(defn test-mail!
+  [to subject message & args]
+  (request-state/swap-state! :debug-headers #(conj %1 (str "MAIL to " to "\n" subject "\n" message)) [])
+  true)
+
+
 (defn debug-redefs-wrapper
   [handler request]
-  (if (or (env :debug-mode) (env :dev))
-    (with-redefs [sms/send-db-sms! (fn [recipient message]
-                                     (when (mail! (env :email-error) "SMS" (str recipient "\n" message))
-                                       (sms/sms-success)))]
+  (cond
+    ;; Test environment
+    (env :dev-test)
+    (with-redefs [sms/send-db-sms! test-send-sms!
+                  mail! test-mail!]
       (handler request))
+
+    ;; Debug or development environment
+    (or (env :debug-mode) (env :dev))
+    (with-redefs [sms/send-db-sms! debug-send-sms!
+                  mail! (debug-wrap-mail-fn mail!)]
+      (handler request))
+
+    ;; Production environment
+    :else
     (handler request)))
+
 
 (defn wrap-debug-redefs
   [handler]
@@ -378,7 +419,6 @@
       ;wrap-exceptions
       wrap-identity
       wrap-debug-exceptions
-      wrap-debug-redefs
       wrap-db
       wrap-auth-timeout
       wrap-ajax-post
@@ -401,4 +441,5 @@
           (dissoc :session)))
       wrap-context
       wrap-internal-error
-      wrap-request-state))
+      wrap-request-state
+      wrap-debug-redefs))
