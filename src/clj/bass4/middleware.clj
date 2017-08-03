@@ -331,13 +331,21 @@
   (fn [request]
     (session-state-wrapper handler request)))
 
+(defn wrap-debug-exceptions
+  [handler]
+  (fn [request]
+    (if (or (env :debug-mode) (env :dev))
+      ((wrap-exceptions handler) request)
+      (handler request))))
+
+
 (defn debug-redefs-wrapper
   [handler request]
   (if (or (env :debug-mode) (env :dev))
     (with-redefs [sms/send-db-sms! (fn [recipient message]
                                      (when (mail! (env :email-error) "SMS" (str recipient "\n" message))
                                        (sms/sms-success)))]
-      ((wrap-exceptions handler) request))
+      (handler request))
     (handler request)))
 
 (defn wrap-debug-redefs
@@ -369,7 +377,7 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       wrap-identity
-      #_wrap-debug-exceptions
+      wrap-debug-exceptions
       wrap-debug-redefs
       wrap-db
       wrap-auth-timeout
