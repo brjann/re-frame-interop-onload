@@ -125,7 +125,7 @@
         :success {:redirect "/double-auth"
                   :session  {:double-authed    nil
                              :double-auth-code code}}
-        :no-method {:redirect "/double-auth-fail"}
+        :no-method {:error "no-send-method"}
         :send-error {:redirect "/user/"
                      :session  {:double-authed true}}))
     {:redirect "/user/"}))
@@ -152,13 +152,19 @@
   (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
     {:assessments-pending true}))
 
+(defn- login-response
+  [user redirect session]
+  (let [new-session (new-session-map (:user-id user))
+        rounds (assessments-map user)]
+    (-> (response/found (:redirect redirect))
+        (assoc :session (merge session new-session (:session redirect) rounds)))))
+
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
-    (let [new-session (new-session-map (:user-id user))
-          redirect    (redirect-map user)
-          rounds      (assessments-map user)]
-      (-> (response/found (:redirect redirect))
-          (assoc :session (merge session new-session (:session redirect) rounds))))
+    (let [redirect (redirect-map user)]
+      (if (:error redirect)
+        (error-422 (:error redirect))
+        (login-response user redirect session)))
     (error-422 "error")))
 
 

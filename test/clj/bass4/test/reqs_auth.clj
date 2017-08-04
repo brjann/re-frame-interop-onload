@@ -64,8 +64,8 @@
 (deftest double-auth-no-method
   (-> (session (app))
       (visit "/login" :request-method :post :params {:username "no-method" :password "no-method"})
-      (follow-redirect)
-      (has (status? 404))))
+      (has (status? 422))
+      (has (some-text? "no-send-method"))))
 
 (deftest double-auth-send-fail
   (with-redefs [debug/test-send-sms! (constantly false)
