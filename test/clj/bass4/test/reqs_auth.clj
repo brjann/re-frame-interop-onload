@@ -75,6 +75,19 @@
         (follow-redirect)
         (has (some-text? "dashboard")))))
 
+(deftest double-auth-sms-priority
+  (with-redefs [auth-service/double-auth-code (constantly "777666")]
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
+        (debug-headers-text? "SMS" "777666"))))
+
+(deftest double-auth-mail-fallback
+  (with-redefs [debug/test-send-sms! (constantly false)
+                auth-service/double-auth-code (constantly "777666")]
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
+        (debug-headers-text? "MAIL" "777666"))))
+
 (deftest request-double-authentication
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666"})
