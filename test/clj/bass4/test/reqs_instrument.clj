@@ -8,7 +8,7 @@
 
 
 (deftest request-post-answers
-  (alter-var-root #'bass4.middleware/*skip-csrf* (constantly true))
+  (alter-var-root #'bass4.middleware.core/*skip-csrf* (constantly true))
   (-> (session (app))
       (visit "/instrument/1647")
       (has (status? 200))

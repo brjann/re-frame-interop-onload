@@ -8,7 +8,8 @@
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
-            [bass4.middleware :as middleware]))
+            [bass4.middleware.core :as middleware]
+            [bass4.middleware.errors :refer [wrap-schema-error wrap-restricted]]))
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
@@ -18,16 +19,16 @@
   (routes
     (-> #'auth-routes
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes middleware/wrap-schema-error))
+        (wrap-routes wrap-schema-error))
     (-> #'home-routes
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes middleware/wrap-schema-error))
+        (wrap-routes wrap-schema-error))
     (-> #'user-routes
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes middleware/wrap-restricted)
-        (wrap-routes middleware/wrap-schema-error))
+        (wrap-routes wrap-restricted)
+        (wrap-routes wrap-schema-error))
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
     ;; Replacement for route/not-found
