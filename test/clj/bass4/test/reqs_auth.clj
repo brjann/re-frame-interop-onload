@@ -7,6 +7,7 @@
             [bass4.test.core :refer [test-fixtures debug-headers-text?]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
+            [bass4.middleware.debug-redefs :as debug]
             [clojure.tools.logging :as log]))
 
 
@@ -60,12 +61,19 @@
         (visit "/login" :request-method :post :params {:username "to-email" :password "to-email"})
         (debug-headers-text? "MAIL" "777666"))))
 
+(deftest double-auth-no-method
+  (-> (session (app))
+      (visit "/login" :request-method :post :params {:username "no-method" :password "no-method"})
+      (follow-redirect)
+      (has (status? 404))))
+
 (deftest double-auth-send-fail
-  (with-redefs [auth-service/double-auth-code (constantly "777666")]
+  (with-redefs [debug/test-send-sms! (constantly false)
+                debug/test-mail! (constantly false)]
     (-> (session (app))
-        (visit "/login" :request-method :post :params {:username "code-fail" :password "code-fail"})
+        (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
-        (has (status? 404)))))
+        (has (some-text? "dashboard")))))
 
 (deftest request-double-authentication
   (-> (session (app))
