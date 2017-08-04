@@ -19,3 +19,7 @@
   #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
   (bass4.db.core/init-repl :test)
   (f))
+
+(defn debug-headers
+  [response]
+  (or (get-in response [:response :headers "debug-headers"]) ""))
