@@ -24,3 +24,12 @@ SELECT SMSSender as `sms-sender` FROM c_project WHERE ObjectId = 100;
 -- :doc
 INSERT IGNORE INTO links_properties_reverse
   (LinkeeId, PropertyName, LinkerClass) VALUES(:linkee-id, :property-name, :linker-class);
+
+-- :name get-support-email :? :1
+SELECT
+  (CASE
+   WHEN ct.DefaultEmailRecipient = "" OR ct.DefaultEmailRecipient IS NULL
+     THEN cp.Email
+   ELSE ct.DefaultEmailRecipient
+   END ) AS email
+FROM c_treatmentinterface AS ct JOIN c_project AS cp ON cp.ObjectId = 100 WHERE ct.ObjectId = :project-id;

@@ -8,6 +8,7 @@ SELECT
   Email,
   SMSNumber AS `sms-number`,
   DoubleAuthUseBoth AS 'double-auth-use-both',
+  ParentInterface AS `project-id`,
   `Password`
 FROM c_participant
 WHERE ObjectId = :user-id;
@@ -23,6 +24,7 @@ SELECT
   Email,
   SMSNumber AS `sms-number`,
   DoubleAuthUseBoth AS 'double-auth-use-both',
+  ParentInterface AS `project-id`,
   `Password`
 FROM c_participant
 WHERE UserName = :username;

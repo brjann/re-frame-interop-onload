@@ -6,7 +6,5 @@
     (if-let [user (db/get-user-by-user-id {:user-id user-id})]
       (assoc user :user-id (:objectid user)))))
 
-
-#_(defn get-user [user-id]
-  (when user-id
-    (db/get-user-by-user-id {:user-id user-id})))
+(defn support-email [user]
+  (db/get-support-email {:project-id (:project-id user)}))
