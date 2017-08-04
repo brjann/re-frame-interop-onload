@@ -36,13 +36,13 @@
   [handler request]
   (cond
     ;; Test environment
-    (env :dev-test)
+    (or (env :dev-test) (env :dev))
     (with-redefs [sms/send-db-sms! test-send-sms!
                   mail! test-mail!]
       (handler request))
 
     ;; Debug or development environment
-    (or (env :debug-mode) (env :dev))
+    (env :debug)
     (with-redefs [sms/send-db-sms! debug-send-sms!
                   mail! (debug-wrap-mail-fn mail!)]
       (handler request))

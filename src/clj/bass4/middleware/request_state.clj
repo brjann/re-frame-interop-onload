@@ -42,7 +42,7 @@
         (save-log! req-state request time))
       ;;val
       (if (:debug-headers req-state)
-        (assoc val :headers (assoc (:headers val) "debug-headers" (string/join "\n" (:debug-headers req-state))))
+        (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
         val))))
 
 (defn wrap-request-state [handler]
