@@ -124,7 +124,7 @@
         :no-method {:redirect "/double-auth-fail"}
         :send-error {:redirect "/user/"
                      :session  {:double-authed true}}))
-    {:redirect "/user/messages"}))
+    {:redirect "/user/"}))
 
 
 ;; ------------
