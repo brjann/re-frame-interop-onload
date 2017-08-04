@@ -43,27 +43,6 @@
 (defn login-page []
   (layout/render
     "login.html"))
-;
-;(defn- new-session-map [user-id add-double-auth]
-;  (let [rounds-count (administrations/create-assessment-round-entries! user-id)]
-;    (merge
-;      {:assessments-pending (> rounds-count 0)
-;       :identity          user-id
-;       :auth-timeout      nil
-;       :last-request-time (t/now)
-;       :session-start     (t/now)}
-;      (when add-double-auth
-;        {:double-authed    nil
-;         :double-auth-code (auth-service/double-auth-code)}))))
-;
-;(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
-;  (if-let [user-id (auth-service/authenticate-by-username username password)]
-;    (if (auth-service/double-auth-required? user-id)
-;      (-> (response/found "/double-auth")
-;          (assoc :session (merge session (new-session-map user-id true))))
-;      (-> (response/found "/user/messages")
-;          (assoc :session (merge session (new-session-map user-id false)))))
-;    (error-422 "error")))
 
 (defn- new-session-map
   [user-id]
@@ -74,7 +53,7 @@
 
 (defn- send-methods-user
   [user-sms user-email]
-  {:sms (not (empty? user-sms))
+  {:sms   (not (empty? user-sms))
    :email (mail/is-email? user-email)})
 
 (defn- send-methods-general
@@ -83,40 +62,46 @@
    :email (or (pos? by-email) (pos? allow-both))})
 
 (defn- send-code!
-    [code user-sms user-email by-sms by-email allow-both]
-    (let [methods-user (send-methods-user user-sms user-email)
-          methods-general (send-methods-general by-sms by-sms allow-both)
-          methods {:sms (and (:sms methods-user) (:sms methods-general))
-                   :email (and (:email methods-user) (:email methods-general))}]
-      (when-not (when (:sms methods)
-                  (sms/send-db-sms! user-sms code))
-        (when (:email methods)
-          (mail/mail! user-email "code" code)))))
+  [code user-sms user-email by-sms by-email allow-both]
+  (let [methods-user    (send-methods-user user-sms user-email)
+        methods-general (send-methods-general by-sms by-email allow-both)
+        methods         {:sms   (and (:sms methods-user) (:sms methods-general))
+                         :email (and (:email methods-user) (:email methods-general))}]
+    (if (when (:sms methods)
+          (sms/send-db-sms! user-sms code))
+      true
+      (when (:email methods)
+        (mail/mail! user-email "code" code)))))
 
-#_(defn double-auth-map
-  [user-id]
-  (when-let [settings (auth-service/double-auth-required? user-id)]
-    (let [code (auth-service/double-auth-code)]
-      {:double-authed    nil
-       :double-auth-code code})))
 
-(defn double-auth-map
+(defn- redirect-map
   [user]
-  (when-let [settings (auth-service/double-auth-required? (:user-id user))]
+  (if-let [settings (auth-service/double-auth-required? (:user-id user))]
     (let [code (auth-service/double-auth-code)]
-      (send-code! code (:sms-number user) (:email user) (:sms settings) (:email settings) (and (:double-auth-use-both user) (:allow-both settings)))
-      {:double-authed    nil
-       :double-auth-code code})))
+      (if (send-code! code
+                      (:sms-number user)
+                      (:email user)
+                      (:sms settings)
+                      (:email settings)
+                      (and (:double-auth-use-both user) (:allow-both settings)))
+        {:redirect "/double-auth"
+         :session  {:double-authed    nil
+                    :double-auth-code code}}
+        {:redirect "/double-auth-fail"}))
+    {:redirect "/user/messages"}))
+
+(defn- assessments-map
+  [user]
+  (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
+    {:assessments-pending true}))
 
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
-    (let [double-auth (double-auth-map user)
-          rounds      (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
-                        {:assessments-pending true})]
-      (-> (response/found (if double-auth
-                            "/double-auth"
-                            "/user/messages"))
-          (assoc :session (merge session (new-session-map (:user-id user)) double-auth rounds))))
+    (let [new-session (new-session-map (:user-id user))
+          redirect    (redirect-map user)
+          rounds      (assessments-map user)]
+      (-> (response/found (:redirect redirect))
+          (assoc :session (merge session new-session (:session redirect) rounds))))
     (error-422 "error")))
 
 
@@ -166,7 +151,7 @@
   ([return-url error] (layout/render
                         "re-auth.html"
                         {:return-url return-url
-                         :error error})))
+                         :error      error})))
 (defn re-auth-440
   ([] (re-auth-440 ""))
   ([body]
@@ -199,8 +184,8 @@
   [session password :- s/Str return-url]
   (handle-re-auth session password
                   (response/found (if (nil? return-url)
-                         "/user/"
-                         return-url))))
+                                    "/user/"
+                                    return-url))))
 
 (s/defn check-re-auth-ajax [session password :- s/Str]
   (handle-re-auth session password (response/ok "ok")))

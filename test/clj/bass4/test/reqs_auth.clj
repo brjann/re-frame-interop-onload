@@ -54,6 +54,19 @@
         (visit "/login" :request-method :post :params {:username 536975 :password 536975})
         (debug-headers-text? "SMS" "666777"))))
 
+(deftest double-auth-to-email
+  (with-redefs [auth-service/double-auth-code (constantly "777666")]
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username "to-email" :password "to-email"})
+        (debug-headers-text? "MAIL" "777666"))))
+
+(deftest double-auth-send-fail
+  (with-redefs [auth-service/double-auth-code (constantly "777666")]
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username "code-fail" :password "code-fail"})
+        (follow-redirect)
+        (has (status? 404)))))
+
 (deftest request-double-authentication
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666"})
