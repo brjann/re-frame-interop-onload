@@ -87,7 +87,7 @@
   {:sms   (or (pos? by-sms) (pos? allow-both))
    :email (or (pos? by-email) (pos? allow-both))})
 
-(defn- send-by-method
+(defn- send-by-method!
   [code send-methods user-sms user-email]
   (if (when (:sms send-methods)
         (sms/send-db-sms! user-sms code))
@@ -102,23 +102,26 @@
         send-methods     {:sms   (and (:sms methods-user) (:sms methods-general))
                          :email (and (:email methods-user) (:email methods-general))}]
     (if (some identity (vals send-methods))
-       (send-by-method code send-methods user-sms user-email)
-      false)))
+      (if (send-by-method! code send-methods user-sms user-email)
+        :success
+        :send-error)
+      :no-method)))
 
 (defn- redirect-map
   [user]
   (if-let [settings (auth-service/double-auth-required? (:user-id user))]
-    (let [code (auth-service/double-auth-code)]
-      (if (send-code! code
-                      (:sms-number user)
-                      (:email user)
-                      (:sms settings)
-                      (:email settings)
-                      (and (:double-auth-use-both user) (:allow-both settings)))
-        {:redirect "/double-auth"
-         :session  {:double-authed    nil
-                    :double-auth-code code}}
-        {:redirect "/double-auth-fail"}))
+    (let [code (auth-service/double-auth-code)
+          send-res (send-code! code
+                               (:sms-number user)
+                               (:email user)
+                               (:sms settings)
+                               (:email settings)
+                               (and (:double-auth-use-both user) (:allow-both settings)))]
+      (case send-res
+        :success {:redirect "/double-auth"
+                  :session  {:double-authed    nil
+                             :double-auth-code code}}
+        :no-method {:redirect "/double-auth-fail"}))
     {:redirect "/user/messages"}))
 
 
