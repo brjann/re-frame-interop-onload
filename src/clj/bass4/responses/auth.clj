@@ -87,6 +87,13 @@
   {:sms   (or (pos? by-sms) (pos? allow-both))
    :email (or (pos? by-email) (pos? allow-both))})
 
+(defn- get-send-methods
+  [user-sms user-email by-sms by-email allow-both]
+  (let [methods-user    (send-methods-user user-sms user-email)
+        methods-general (send-methods-general by-sms by-email allow-both)]
+    {:sms   (and (:sms methods-user) (:sms methods-general))
+     :email (and (:email methods-user) (:email methods-general))}))
+
 (defn- send-by-method!
   [code send-methods user-sms user-email]
   (if (when (:sms send-methods)
@@ -97,10 +104,7 @@
 
 (defn- send-code!
   [code user-sms user-email by-sms by-email allow-both]
-  (let [methods-user    (send-methods-user user-sms user-email)
-        methods-general (send-methods-general by-sms by-email allow-both)
-        send-methods    {:sms   (and (:sms methods-user) (:sms methods-general))
-                         :email (and (:email methods-user) (:email methods-general))}]
+  (let [send-methods (get-send-methods user-sms user-email by-sms by-email allow-both)]
     (if (some identity (vals send-methods))
       (if (send-by-method! code send-methods user-sms user-email)
         :success
