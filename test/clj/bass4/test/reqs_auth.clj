@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text?]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [clojure.tools.logging :as log]))
@@ -50,10 +50,9 @@
 
 (deftest double-auth-sms-sent
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (is (true? (-> (session (app))
-                   (visit "/login" :request-method :post :params {:username 536975 :password 536975})
-                   (debug-headers)
-                   (.contains "666777"))))))
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username 536975 :password 536975})
+        (debug-headers-text? "SMS" "666777"))))
 
 (deftest request-double-authentication
   (-> (session (app))

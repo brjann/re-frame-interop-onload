@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [mount.core :as mount]
-            [bass4.db.core]))
+            [bass4.db.core]
+            [clojure.string :as string]))
 
 (defn get-edn
   [edn]
@@ -20,6 +21,13 @@
   (bass4.db.core/init-repl :test)
   (f))
 
-(defn debug-headers
-  [response]
-  (or (get-in response [:response :headers "debug-headers"]) ""))
+(defn debug-headers-text?
+  [response & strs]
+  (let [headers (or (get-in response [:response :headers "debug-headers"]) "")]
+    (clojure.test/do-report {:actual   headers
+                             :type     (if (every? #(.contains headers %) strs)
+                                         :pass
+                                         :fail)
+                             :message  ""
+                             :expected (string/join ", " strs)}))
+  response)

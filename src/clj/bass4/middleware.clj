@@ -106,9 +106,17 @@
                      :on-error on-error}))
 
 
+(defn mail-error!
+  [req-state]
+  (try
+    (mail!
+      (env :email-error)
+      "Error in BASS4"
+      (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
+    (catch Exception x
+      (log/error "Could not send error email to: " (env :email-error) "\nError: " x))))
 
-
-(defn internal-error-wrapper
+(defn catch-internal-error
   [handler req]
   (try
     (handler req)
@@ -119,6 +127,14 @@
                    :title   "Something bad happened!"
                    :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
+(defn internal-error-wrapper
+  [handler req]
+  (let [res       (catch-internal-error handler req)
+        req-state (request-state/get-state)]
+    ;; Email errors
+    (when-not (nil-zero? (:error-count req-state))
+      (mail-error! req-state))
+    res))
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -246,19 +262,6 @@
 ;;  REQUEST STATE
 ;; ----------------
 
-(defn mail-error!
-  [req-state]
-  (if-not (env :dev-test)
-    (try
-      (mail!
-        (env :email-error)
-        "Error in BASS4"
-        (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
-      (catch Exception x
-        (log/error "Could not send error email to: " (env :email-error) "\nError: " x)))
-    ;; TODO: Replace with with-redefs?
-    (log/info "No emails in test mode")))
-
 (defn save-log!
   [req-state request time]
   (db/save-pageload! {:db-name         (:name req-state),
@@ -287,9 +290,6 @@
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (:name req-state)
-        ;; Email errors
-        (when-not (nil-zero? (:error-count req-state))
-          (mail-error! req-state))
         (save-log! req-state request time))
       ;;val
       (if (:debug-headers req-state)
@@ -299,6 +299,8 @@
 (defn wrap-request-state [handler]
   (fn [request]
     (request-state-wrapper handler request)))
+
+
 
 (defn wrap-db [handler]
   (fn [request]

@@ -3,7 +3,9 @@
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
-            [kerodon.test :refer :all]))
+            [bass4.test.core :refer [test-fixtures debug-headers-text?]]
+            [kerodon.test :refer :all]
+            [clojure.tools.logging :as log]))
 
 (deftest request-404-get
   (-> (session (app))
@@ -50,4 +52,5 @@
       (visit "/debug/set-session" :params {:identity 535899 :double-authed 1})
       (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
       (has (status? 403))
-      (has (text? "reload"))))
+      (has (text? "reload"))
+      (debug-headers-text? "MAIL" "403" "/debug")))
