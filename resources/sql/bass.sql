@@ -33,3 +33,21 @@ SELECT
    ELSE ct.DefaultEmailRecipient
    END ) AS email
 FROM c_treatmentinterface AS ct JOIN c_project AS cp ON cp.ObjectId = 100 WHERE ct.ObjectId = :project-id;
+
+-- :name get-project-participant-collection :? :1
+SELECT ObjectId AS `collection-id`
+FROM c_participantscollection
+WHERE ParentId = :project - id;
+
+-- :name update-user-properties! :! :1
+/* :require [clojure.string :as string]
+            [hugsql.parameters :refer [identifier-param-quote]] */
+UPDATE c_participant
+SET
+  /*~
+  (string/join ","
+    (for [[field _] (:updates params)]
+      (str "`" (name field) "`"
+        " = :v:updates." (name field))))
+  ~*/
+  where ObjectId = :user - id
