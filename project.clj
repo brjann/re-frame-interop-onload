@@ -19,7 +19,7 @@
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.webjars.bower/tether "1.4.0"]
-                 [org.webjars/bootstrap "4.0.0-alpha.5"]
+                 [org.webjars/bootstrap "4.0.0-alpha.6"]
                  [org.webjars/font-awesome "4.7.0"]
                  [org.webjars/jquery "3.2.0"]
                  [org.webjars/jquery-ui "1.12.1"]

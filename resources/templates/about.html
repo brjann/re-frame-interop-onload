@@ -13,13 +13,12 @@
         overflow: auto;
     }
 
-    .module .navbar-nav .nav-link {
-        display: inline;
+    .module .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
         padding: 0;
     }
 
-    .module .navbar-nav .navbar-text {
-        padding: 0;
+    .module .navbar-nav {
+        flex-direction: row;
     }
 
     .navbar {
@@ -302,8 +301,6 @@
             velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
     </div>
 </div>
-
-
 {% endblock %}
 {% block page-scripts %}
 <script src="/js/js.cookie.js"></script>

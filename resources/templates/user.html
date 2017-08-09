@@ -2,35 +2,34 @@
 {% block content %}
 
 <!-- navbar -->
-      <nav class="navbar navbar-dark bg-primary" role="navigation">
-          <button class="navbar-toggler hidden-sm-up"
-                  type="button"
-                  data-toggle="collapse"
-                  data-target="#collapsing-navbar">
-              &#9776;
-          </button>
-          <div class="collapse navbar-toggleable-xs" id="collapsing-navbar">
-              <a class="navbar-brand" href="{{servlet-context}}/">bass4</a>
-              <ul class="nav navbar-nav">
-                  <li class="nav-item">
-                      <a href="{{servlet-context}}/"
-                         class="nav-link{% ifequal page "home.html" %} active{%endifequal%}">
-                      home
-                      </a>
-                  </li>
-                  <li class="nav-item">
-                      <a href="{{servlet-context}}/about"
-                         class="nav-link{% ifequal page "about.html" %} active{%endifequal%}">
-                      about
-                      </a>
-                  </li>
-              </ul>
-          </div>
-      </nav>
 
-    <div class="container">
-      {% block user-content %}
-      {% endblock %}
+<nav class="navbar navbar-toggleable-md navbar-inverse bg-primary">
+    <button id="navbar-toggler" class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+            data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
+            aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <span id="page-title" class="navbar-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Ångest och undvikande och undvikande och undvikande</span>
+    <!--<a class="navbar-brand" href="{{servlet-context}}/">Ångest och undvikande</a>-->
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+
+            <a href="{{servlet-context}}/"
+               class="nav-link{% ifequal page " home.html" %} active{%endifequal%}">
+            Home
+            </a>
+
+            <a href="{{servlet-context}}/about"
+               class="nav-link{% ifequal page " about.html" %} active{%endifequal%}">
+            about
+            </a>
+        </div>
     </div>
+</nav>
+
+<div class="container">
+    {% block user-content %}
+    {% endblock %}
+</div>
 
 {% endblock %}

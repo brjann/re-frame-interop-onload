@@ -213,3 +213,20 @@ function re_auth_modal_submit(){
 function test(){
 	console.log("the test");
 }
+
+
+function set_title_width() {
+	var toggler = $("#navbar-toggler:visible");
+	var page_title = $('#page-title');
+
+	if (toggler.length) {
+		page_title.width(toggler.offset().left - page_title.offset().left);
+	}
+	else {
+		page_title.width('');
+	}
+}
+$(document).ready(function () {
+	$(window).resize(set_title_width);
+	set_title_width();
+});
