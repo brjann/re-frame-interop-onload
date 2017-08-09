@@ -34,6 +34,7 @@ function post_error(form){
 
 		// http://stackoverflow.com/questions/6186770/ajax-request-returns-200-ok-but-an-error-event-is-fired-instead-of-success
 		if(jqXHR.status == 200){
+			// TODO: This can't remain in production
 			console.log("FAKE ERROR");
 			return false;
 		}
@@ -57,7 +58,7 @@ function post_error(form){
 			$("#re-auth-box").show();
 			re_auth_hidden_form = form;
 		}
-		form_events(form, jqXHR);
+		form_ajax_response(form, jqXHR);
 
 		if($(form).data("on-error") != undefined){
 			var on_error = eval($(form).data("on-error"));
@@ -66,11 +67,34 @@ function post_error(form){
 	}
 }
 
-function form_events(form, jqXHR){
+function form_ajax_response(form, jqXHR) {
+	// TODO: Clear previous show()??
 	if (jqXHR.status == 422) {
 		var event_text = jqXHR.responseText;
-		if(event_text != ""){
-			$(form).find("[data-show-on=" + event_text + "]").show();
+		if (event_text.substring(0, 7).toLowerCase() == "message") {
+			var message = event_text.substr(8);
+			var message_div = $(".ajax-error-message").first();
+			if (message_div) {
+				message_div.text(message).show();
+				$(form).data('on_ajax_fns').push(function () {
+					message_div.text('').hide();
+				})
+			}
+			else {
+				alert(message);
+			}
+		}
+		else if (event_text != "") {
+			//$(form).find("[data-show-on=" + event_text + "]").show();
+			$(form)
+				.find("[data-show-on=" + event_text + "]")
+				.each(function () {
+					var show_element = $(this);
+					show_element.show();
+					$(form).data('on_ajax_fns').push(function () {
+						show_element.hide();
+					})
+				});
 			$(form).find("input[data-clear-on=" + event_text + "]").val("");
 		}
 	}
@@ -79,6 +103,8 @@ function form_events(form, jqXHR){
 $(document).ready(function(){
 	$("form").each(function(){
 
+
+		// TODO: Switch use of "this" to "form" or similar
 		// Don't tamper with get forms
 		if($(this).prop('method') == 'get'){
 			return;
@@ -87,6 +113,8 @@ $(document).ready(function(){
 		var no_ajax = $(this).hasClass("no-ajax");
 		var no_validate = $(this).hasClass("no-validate");
 		if(!no_ajax || !no_validate) {
+			$(this).data('on_ajax_fns', []);
+
 
 			// Save form's own submit function
 			var formsubmit;
@@ -95,6 +123,12 @@ $(document).ready(function(){
 				this.onsubmit = null;
 			}
 			$(this).submit(function (event) {
+
+				var ajax_fns = $(this).data('on_ajax_fns');
+
+				while (ajax_fns.length) {
+					ajax_fns.pop()();
+				}
 
 				event.preventDefault();
 

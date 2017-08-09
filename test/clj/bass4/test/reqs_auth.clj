@@ -65,7 +65,7 @@
   (-> (session (app))
       (visit "/login" :request-method :post :params {:username "no-method" :password "no-method"})
       (has (status? 422))
-      (has (some-text? "no-send-method"))))
+      (has (some-text? "message"))))
 
 (deftest double-auth-send-fail
   (with-redefs [debug/test-send-sms! (constantly false)

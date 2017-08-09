@@ -1,6 +1,6 @@
 (ns bass4.responses.auth
   (:require [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [bass4.services.assessments :as administrations]
             [ring.util.http-response :as response]
             [schema.core :as s]
@@ -8,7 +8,8 @@
             [clj-time.core :as t]
             [bass4.layout :as layout]
             [bass4.sms-sender :as sms]
-            [bass4.mailer :as mail]))
+            [bass4.mailer :as mail]
+            [bass4.i18n :as i18n]))
 
 
 
@@ -111,6 +112,14 @@
         :send-error)
       :no-method)))
 
+
+;; TODO: What if no email?
+;; TODO: This is not perfect - wrong password and then no-method looks weird
+(defn- no-method-message
+  [user]
+  (let [email (user-service/support-email user)]
+    (str "message " (i18n/tr [:login/no-send-method] [email]))))
+
 (defn- redirect-map
   [user]
   (if-let [settings (auth-service/double-auth-required? (:user-id user))]
@@ -125,7 +134,7 @@
         :success {:redirect "/double-auth"
                   :session  {:double-authed    nil
                              :double-auth-code code}}
-        :no-method {:error "no-send-method"}
+        :no-method {:error (no-method-message user)}
         :send-error {:redirect "/user/"
                      :session  {:double-authed true}}))
     {:redirect "/user/"}))

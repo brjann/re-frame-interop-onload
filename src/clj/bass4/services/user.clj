@@ -7,4 +7,4 @@
       (assoc user :user-id (:objectid user)))))
 
 (defn support-email [user]
-  (db/get-support-email {:project-id (:project-id user)}))
+  (:email (db/get-support-email {:project-id (:project-id user)})))
