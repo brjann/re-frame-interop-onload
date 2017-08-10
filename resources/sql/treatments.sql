@@ -38,3 +38,35 @@ FROM c_module as cm
     ON lcm.LinkeeId = ctc.ObjectId
 WHERE lcm.LinkerId IN(:v*:module-ids) AND lcm.PropertyName = "Worksheets"
 ORDER BY lcm.SortOrder, cm.SortOrder;
+
+#
+# -- :name get-module-contents :? :*
+# -- :doc get module contents
+# SELECT
+#   PropertyName AS ContentType,
+#   ctc.ObjectId AS ContentId,
+#   ctc.`Name` AS ContentName
+# FROM links_c_module AS lcm
+#   JOIN c_treatmentcontent AS ctc
+#     ON lcm.LinkeeId = ctc.ObjectId
+# WHERE lcm.LinkerId = :module-id AND lcm.PropertyName IN ("MainTexts", "Homework", "Worksheets")
+# ORDER BY lcm.SortOrder;
+#
+# -- :name get-active-worksheets :? :*
+# -- :doc get worksheets belonging to moduleid
+# SELECT
+#   ctc.ObjectId AS worksheet_id,
+#   ctc.`Name` AS worksheet_name
+# FROM c_module as cm
+#   JOIN links_c_module AS lcm
+#     ON cm.ObjectId = lcm.LinkerId
+#   JOIN c_treatmentcontent AS ctc
+#     ON lcm.LinkeeId = ctc.ObjectId
+# WHERE lcm.LinkerId IN(:v*:module-ids) AND lcm.PropertyName = "Worksheets"
+# ORDER BY lcm.SortOrder, cm.SortOrder;
+#
+# -- :name get-worksheet :? :1
+# -- :doc get the worksheet
+# SELECT Text, `Name`, DataName, ImportData, AutoGenerateForm, Tabbed
+# FROM c_treatmentcontent
+# WHERE ObjectId = :worksheet-id
