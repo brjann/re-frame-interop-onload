@@ -9,6 +9,10 @@
             [bass4.services.user :as user]
             [clj-time.core :as t]))
 
+(use-fixtures
+  :once
+  test-fixtures)
+
 (deftest active-assessment
   (with-redefs [auth-service/double-auth-code (constantly "666777")
                 t/now (constantly (t/date-time 2017 8 2 0 0 0))]

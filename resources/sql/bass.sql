@@ -8,36 +8,44 @@ CALL create_bass_objects_without_parent(:class-name, :property-name, :count);
 
 -- :name update-objectlist-parent! :! :1
 -- :doc Update an object with new parent in objectlist
-UPDATE objectlist SET ParentId = :parent-id WHERE ObjectId = :object-id
+UPDATE objectlist
+SET ParentId = :parent-id
+WHERE ObjectId=:object-id
 
 -- :name delete-object-from-objectlist! :! :1
 -- :doc Update an object with new parent in objectlist
-DELETE FROM objectlist WHERE ObjectId = :object-id;
+DELETE FROM objectlist
+WHERE ObjectId=:object-id;
 
 -- :name get-db-title :? :1
-SELECT title FROM c_project WHERE ObjectId = 100;
+SELECT title
+FROM c_project
+WHERE ObjectId=100;
 
 -- :name get-sms-sender :? :1
-SELECT SMSSender as `sms-sender` FROM c_project WHERE ObjectId = 100;
+SELECT SMSSender AS `sms-sender`
+FROM c_project
+WHERE ObjectId=100;
 
 -- :name link-property-reverse! :! :1
 -- :doc
 INSERT IGNORE INTO links_properties_reverse
-  (LinkeeId, PropertyName, LinkerClass) VALUES(:linkee-id, :property-name, :linker-class);
+(LinkeeId, PropertyName, LinkerClass) VALUES (:linkee-id, :property-name, :linker-class);
 
 -- :name get-support-email :? :1
-SELECT
-  (CASE
-   WHEN ct.DefaultEmailRecipient = "" OR ct.DefaultEmailRecipient IS NULL
-     THEN cp.Email
-   ELSE ct.DefaultEmailRecipient
-   END ) AS email
-FROM c_treatmentinterface AS ct JOIN c_project AS cp ON cp.ObjectId = 100 WHERE ct.ObjectId = :project-id;
+SELECT (CASE
+        WHEN ct.DefaultEmailRecipient="" OR ct.DefaultEmailRecipient IS NULL
+          THEN cp.Email
+        ELSE ct.DefaultEmailRecipient
+        END) AS email
+FROM c_treatmentinterface AS ct
+  JOIN c_project AS cp ON cp.ObjectId=100
+WHERE ct.ObjectId=:project-id;
 
 -- :name get-project-participant-collection :? :1
 SELECT ObjectId AS `collection-id`
 FROM c_participantscollection
-WHERE ParentId = :project - id;
+WHERE ParentId=:project-id;
 
 -- :name update-user-properties! :! :1
 /* :require [clojure.string :as string]
@@ -50,4 +58,4 @@ SET
       (str "`" (name field) "`"
         " = :v:updates." (name field))))
   ~*/
-  where ObjectId = :user - id
+  where ObjectId=:user-id
