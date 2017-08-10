@@ -4,7 +4,6 @@
             [bass4.utils :refer [unserialize-key map-map str->int filter-map]]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
-;; TODO: Merge info from several ongoing treatments
 ;; TODO: Does probably not handle automatic module accesses
 
 
@@ -51,9 +50,13 @@
            {:modules  (add-contents-to-modules modules contents)
             :contents (into {} (map #(identity [(:content-id %) (dissoc % :module-id :type)]) contents))})))
 
+;; TODO: Merge info from several ongoing treatments
 (defn user-treatments
   [user-id]
   (let [treatment-accesses (user-treatment-accesses user-id)
         treatments         (map #(treatment-map (:treatment-id %)) treatment-accesses)]
-    {:treatment-accesses treatment-accesses
-     :treatments         treatments}))
+    {:treatment-accesses   treatment-accesses
+     :treatment-components {:messages true
+                            :modules  (:module-accesses (first treatment-accesses))}
+     :treatments           treatments}))
+
