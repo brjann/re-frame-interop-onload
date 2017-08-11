@@ -235,9 +235,8 @@ $(document).ready(function () {
  */
 
 
-// TODO: Change module-text from class to id
 function set_module_height() {
-	$('.module-text').each(
+	$('#module-text').each(
 		function () {
 			$(this).height($(window).height() - $(this).offset().top);
 		}
@@ -249,7 +248,7 @@ function set_module_height() {
 }
 
 $(document).ready(function () {
-	var module_text = $('.module-text');
+	var module_text = $('#module-text');
 	if (module_text.length) {
 		var counter = 1;
 		var drop_down = $('#module-navbar .dropdown-menu');
@@ -277,7 +276,7 @@ $(document).ready(function () {
 			set_label($(section).text());
 			Cookies.set(module_section_cookie, section);
 		});
-		set_label($(".module-text").find(":header").first().text());
+		set_label($("#module-text").find(":header").first().text());
 
 		// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
 		if (Cookies.get(module_section_cookie) !== undefined) {

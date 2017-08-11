@@ -192,7 +192,7 @@ div#instrument .item-error {
     position: relative;
 }
 
-.module .module-text {
+#module-text {
     position: relative;
     height: 200px;
     margin-top: .5rem;
