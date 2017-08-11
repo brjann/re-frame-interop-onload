@@ -41,22 +41,28 @@
     ;; TODO: Check if actually in treatment
     (routes
       (GET "/" [] "this is the dashboard")
+
+      ;; MESSAGES
       (GET "/messages" []
         (let [[template params] (messages-response/messages-page user)]
           (user-response/render-user-page treatment template params)))
       (GET "/messages" []
         (let [[template params] (messages-response/messages-page user)]
-          (user-response/render-user-page treatment template params)))
-      (GET "/modules" []
-        (let [[template params] (modules-response/modules-list user (:modules (:user-components treatment)))]
           (user-response/render-user-page treatment template params)))
       (POST "/messages" [& params]
         (messages-response/save-message (:user-id user) (:subject params) (:text params)))
       (POST "/message-save-draft" [& params]
         (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
+
+      ;; MODULES
+      (GET "/modules" []
+        (let [[template params] (modules-response/modules-list (:modules (:user-components treatment)))]
+          (user-response/render-user-page treatment template params)))
+      (GET "/module/:module-id" [module-id]
+        (let [[template params] (modules-response/module (str->int module-id) (:modules (:user-components treatment)))]
+          (user-response/render-user-page treatment template params)))
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))
-      #_(GET "/modules" req (modules-page req))
       #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
       #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
       #_(GET "/charts" req (charts-page req)))))
