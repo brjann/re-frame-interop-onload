@@ -13,16 +13,21 @@
     <!--<a class="navbar-brand" href="{{servlet-context}}/">Ångest och undvikande</a>-->
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-
-            <a href="{{servlet-context}}/"
+            <a href="/"
                class="nav-link{% ifequal page " home.html" %} active{%endifequal%}">
             Home
             </a>
 
-            <a href="{{servlet-context}}/about"
+            <a href="/about"
                class="nav-link{% ifequal page " about.html" %} active{%endifequal%}">
             about
             </a>
+            {% if messaging %}
+            <a href="/user/messages"
+               class="nav-link{% ifequal page " messages.html" %} active{%endifequal%}">
+            Messages
+            </a>
+            {% endif %}
         </div>
     </div>
 </nav>

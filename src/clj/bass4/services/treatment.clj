@@ -24,7 +24,7 @@
 (defn- user-treatment-accesses
   [user-id]
   (mapv (fn [treatment-access]
-          (unserialize-key treatment-access :module-accesses #(keys (filter-map identity (map-map val-to-bol %)))))
+          (unserialize-key treatment-access :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bol %))))))
         (db/get-linked-treatments {:user-id user-id})))
 
 (defn- categorize-contents
@@ -50,13 +50,21 @@
            {:modules  (add-contents-to-modules modules contents)
             :contents (into {} (map #(identity [(:content-id %) (dissoc % :module-id :type)]) contents))})))
 
-;; TODO: Merge info from several ongoing treatments
+(defn user-components
+  [treatment-access treatment]
+  {:modules   (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
+   :messaging true})
+
+;; TODO: For now, only the first treatment access is considered.
+;; If multiple treatments are available, the session needs to keep track
+;; of the cTreatmentAccess content in which treatment content is shown.
+;; Either in the URL or in a state. Too early to decide now - use case
+;; has never surfaced.
 (defn user-treatments
   [user-id]
-  (let [treatment-accesses (user-treatment-accesses user-id)
-        treatments         (map #(treatment-map (:treatment-id %)) treatment-accesses)]
-    {:treatment-accesses   treatment-accesses
-     :treatment-components {:messages true
-                            :modules  (:module-accesses (first treatment-accesses))}
-     :treatments           treatments}))
+  (if-let [treatment-access (first (user-treatment-accesses user-id))]
+    (let [treatment (treatment-map (:treatment-id treatment-access))]
+      {:treatment-access treatment-access
+       :user-components  (user-components treatment-access treatment)
+       :treatment        treatment})))
 

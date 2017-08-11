@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/resources" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/clj" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test/clj" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/target/base+system+user+dev+dev" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -139,7 +140,7 @@
     <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.tobereplaced/lettercase:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars.bower/tether:1.4.0" level="project" />
-    <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.0.0-alpha.5" level="project" />
+    <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.0.0-alpha.6" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/font-awesome:4.7.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/jquery-ui:1.12.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/jquery:3.2.0" level="project" />
