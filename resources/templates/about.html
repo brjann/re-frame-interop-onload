@@ -40,18 +40,14 @@
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
                aria-expanded="false">&#9776;</a>
             <div class="dropdown-menu">
-                <a class="dropdown-item" href="#s1">fat</a>
-                <a class="dropdown-item" href="#mdo">mdo</a>
-                <a class="dropdown-item" href="#one">one</a>
-                <a class="dropdown-item" href="#two">two</a>
-                <a class="dropdown-item" href="#three">three</a>
+                <!--<a class="dropdown-item" href="#s1">fat</a>-->
             </div>
             <span class="navbar-text" id="module-section-label"></span>
         </div>
 
     </nav>
-    <div data-spy="scroll" data-target="#module-navbar" data-offset="0" class="module-text">
-        <h1 id="s1">fat</h1>
+    <div class="module-text">
+        <h1>Number one</h1>
         <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
             Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
@@ -97,7 +93,7 @@
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
             heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
             irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h4 id="mdo">mdo</h4>
+        <h1>Number two</h1>
         <p>Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard. Freegan beard aliqua cupidatat
             mcsweeney's vero. Cupidatat four loko nisi, ea helvetica nulla carles. Tattooed cosby sweater food truck,
             mcsweeney's quis non freegan vinyl. Lo-fi wes anderson +1 sartorial. Carles non aesthetic exercitation quis
@@ -140,7 +136,7 @@
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
             heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
             irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h4 id="one">one</h4>
+        <h1>Number three</h1>
         <p>Occaecat commodo aliqua delectus. Fap craft beer deserunt skateboard ea. Lomo bicycle rights adipisicing banh
             mi, velit ea sunt next level locavore single-origin coffee in magna veniam. High life id vinyl, echo park
             consequat quis aliquip banh mi pitchfork. Vero VHS est adipisicing. Consectetur nisi DIY minim messenger
@@ -183,7 +179,7 @@
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
             heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
             irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h4 id="two">two</h4>
+        <h1>Number four</h1>
         <p>In incididunt echo park, officia deserunt mcsweeney's proident master cleanse thundercats sapiente veniam.
             Excepteur VHS elit, proident shoreditch +1 biodiesel laborum craft beer. Single-origin coffee wayfarers
             irure four loko, cupidatat terry richardson master cleanse. Assumenda you probably haven't heard of them art
@@ -238,7 +234,7 @@
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
             heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
             irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h4 id="three">three</h4>
+        <h4>Number five - not 1</h4>
         <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
             Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
             booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
@@ -301,41 +297,11 @@
             velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
     </div>
 </div>
+
 {% endblock %}
 {% block page-scripts %}
 <script src="/js/js.cookie.js"></script>
 <script>
-	function set_module_height() {
-		$('.module-text').each(
-			function () {
-				$(this).height($(window).height() - $(this).offset().top);
-			}
-		)
-	}
 
-	$(document).ready(function () {
-		$(window).resize(set_module_height);
-		set_module_height();
-		 var module_section_cookie = $("#module-navbar").parents(".module").attr('id') + "-section";
-
-		 $(window).on('activate.bs.scrollspy', function () {
-			 var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-			 $("#module-section-label").text($(section).text());
-			 Cookies.set(module_section_cookie, section);
-		});
-		$("#module-section-label").text($(".module-text").find(":header").first().text());
-
-		 // TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
-		 if (Cookies.get(module_section_cookie) !== undefined) {
-
-			 document.getElementById(Cookies.get(module_section_cookie).substr(1)).scrollIntoView();
-
-			 //var url = location.href;               //Save down the URL without hash.
-			 //location.href = Cookies.get(module_section_cookie);                 //Go to the target element.
-			 //history.replaceState(null, "", url);
-
-			 //window.location.hash = Cookies.get(module_section_cookie);
-		 }
-	});
 </script>
 {% endblock %}

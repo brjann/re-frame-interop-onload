@@ -184,3 +184,37 @@ div#instrument .item-error {
     margin-top: 16px;
 }
 
+/***********************
+    Modules
+ ***********************/
+
+.module {
+    position: relative;
+}
+
+.module .module-text {
+    position: relative;
+    height: 200px;
+    margin-top: .5rem;
+    overflow: auto;
+}
+
+.module .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
+    padding: 0;
+}
+
+.module .navbar-nav {
+    flex-direction: row;
+}
+
+.navbar {
+    position: relative;
+    padding: 4px 8px;
+}
+
+.module .dropdown-toggle::after {
+    content: "";
+    border-top: 0 solid;
+    border-right: 0 solid transparent;
+    border-left: 0 solid transparent;
+}

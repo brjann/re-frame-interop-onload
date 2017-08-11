@@ -1,5 +1,24 @@
 {% extends "user.html" %}
 {% block user-content %}
-{{module.module-id}}
+
+{% ifequal nil text %}
+No such module
+{% else %}
+<div class="module" id="module-111">
+    <nav id="module-navbar" class="navbar navbar-light bg-faded">
+        <div class="navbar-nav">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+               aria-expanded="false">&#9776;</a>
+            <div class="dropdown-menu">
+            </div>
+            <span class="navbar-text" id="module-section-label"></span>
+        </div>
+
+    </nav>
+    <div class="module-text">
+        {{ text|markdown }}
+    </div>
+</div>
+{% endifequal %}
 {% endblock %}
 

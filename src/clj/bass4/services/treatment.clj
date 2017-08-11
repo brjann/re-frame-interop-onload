@@ -32,7 +32,7 @@
   (let [categorized (map-map (fn [x] (map :content-id x)) (group-by :type (get contents module-id)))]
     {:worksheets (get categorized "Worksheets")
      :homework   (first (get categorized "Homework"))
-     :maintexts  (get categorized "MainTexts")}))
+     :main-texts (get categorized "MainTexts")}))
 
 (defn- add-contents-to-modules
   [modules worksheets]
@@ -41,7 +41,7 @@
            (merge module (categorize-contents contents-by-module (:module-id module))))
          modules)))
 
-(defn treatment-map
+#_(defn treatment-map
   [treatment-id]
   (let [info     (db/get-treatment-info {:treatment-id treatment-id})
         modules  (db/get-treatment-modules {:treatment-id treatment-id})
@@ -49,6 +49,30 @@
     (merge info
            {:modules  (add-contents-to-modules modules contents)
             :contents (into {} (map #(identity [(:content-id %) (dissoc % :module-id :type)]) contents))})))
+
+(defn- categorize-module-contents
+  [contents]
+  (let [categorized (group-by :type contents)]
+    {:worksheets (get categorized "Worksheets")
+     :homework   (first (get categorized "Homework"))
+     :main-texts (get categorized "MainTexts")}))
+
+(defn get-content
+  [content-id]
+  (db/get-content {:content-id content-id}))
+
+;; TODO: Remove c_module from SQL query
+(defn get-module-contents
+  [module-id]
+  (let [contents (db/get-module-contents {:module-ids [module-id]})]
+    (categorize-module-contents contents)))
+
+(defn treatment-map
+  [treatment-id]
+  (let [info    (db/get-treatment-info {:treatment-id treatment-id})
+        modules (db/get-treatment-modules {:treatment-id treatment-id})]
+    (merge info
+           {:modules modules})))
 
 (defn user-components
   [treatment-access treatment]

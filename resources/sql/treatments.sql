@@ -29,7 +29,7 @@ FROM links_c_treatment AS lct
 WHERE lct.LinkerId=:treatment-id AND lct.PropertyName="Modules"
 ORDER BY lct.SortOrder;
 
--- :name get-module-worksheets :? :*
+-- :name get-module-contents :? :*
 -- :doc get worksheets belonging to module-ids
 SELECT DISTINCT
   cm.ObjectId      AS `module-id`,
@@ -44,3 +44,10 @@ FROM c_module as cm
 WHERE lcm.LinkerId IN (:v*:module-ids)
 ORDER BY lcm.SortOrder, cm.SortOrder;
 
+-- :name get-content :? :1
+-- :doc
+SELECT
+  Text,
+  IsMarkDown AS `mark-down`
+FROM c_treatmentcontent
+WHERE ObjectId=:content-id;

@@ -230,3 +230,64 @@ $(document).ready(function () {
 	$(window).resize(set_title_width);
 	set_title_width();
 });
+
+
+/*
+ --------------
+ MODULES
+ --------------
+ */
+
+function set_module_height() {
+	$('.module-text').each(
+		function () {
+			$(this).height($(window).height() - $(this).offset().top);
+		}
+	)
+}
+
+$(document).ready(function () {
+	var module_text = $('.module-text');
+	if (module_text.length) {
+		var counter = 1;
+		var drop_down = $('#module-navbar .dropdown-menu');
+		module_text.find(':header').each(function () {
+			var header = $(this);
+			// TODO: Customize the h level
+			if (header.prop('tagName').indexOf('3') >= 0) {
+				header.attr('id', 's' + counter);
+				drop_down.append($('<a class="dropdown-item" href="#s' + counter + '">' + header.text() + '</a>'));
+				counter++;
+			}
+		});
+		module_text.scrollspy({target: '#module-navbar'});
+
+		$(window).resize(set_module_height);
+		set_module_height();
+		var module_section_cookie = $("#module-navbar").parents(".module").attr('id') + "-section";
+
+		$(window).on('activate.bs.scrollspy', function () {
+			var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
+			$("#module-section-label").text($(section).text());
+			Cookies.set(module_section_cookie, section);
+		});
+		$("#module-section-label").text($(".module-text").find(":header").first().text());
+
+		// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
+		if (Cookies.get(module_section_cookie) !== undefined) {
+
+			var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
+			if (section !== null) {
+				section.scrollIntoView();
+			}
+
+			//var url = location.href;               //Save down the URL without hash.
+			//location.href = Cookies.get(module_section_cookie);                 //Go to the target element.
+			//history.replaceState(null, "", url);
+
+			//window.location.hash = Cookies.get(module_section_cookie);
+		}
+
+	}
+
+});
