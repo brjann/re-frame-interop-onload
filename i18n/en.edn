@@ -18,7 +18,9 @@
  :messages        {:sent-by    "Sent by %1 on %2"
                    :subject    "Message subject"
                    :text       "Message text"
-                   :save-draft "Save draft"}
+                   :save-draft "Save draft"
+                   :messages   "Messages"}
+ :modules         {:modules "Modules"}
  :login           {:login                    "Login"
                    :please-username-password "Please provide your username and password to log on to the system."
                    :username-password-error  "Wrong username or password"

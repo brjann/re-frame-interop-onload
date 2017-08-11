@@ -60,7 +60,7 @@
 ;; of the cTreatmentAccess content in which treatment content is shown.
 ;; Either in the URL or in a state. Too early to decide now - use case
 ;; has never surfaced.
-(defn user-treatments
+(defn user-treatment
   [user-id]
   (if-let [treatment-access (first (user-treatment-accesses user-id))]
     (let [treatment (treatment-map (:treatment-id treatment-access))]

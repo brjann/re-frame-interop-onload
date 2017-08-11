@@ -31,3 +31,15 @@ body {
     margin-left: 1rem;
   }
 }
+
+.list {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.list.row > .col, .list.row > [class^=col-] {
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+  border: 1px solid rgba(86, 61, 124, .2);
+  background-color: rgba(86, 61, 124, .15);
+}

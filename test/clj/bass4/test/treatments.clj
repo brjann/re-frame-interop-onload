@@ -12,7 +12,7 @@
   test-fixtures)
 
 (deftest no-modules
-  (let [treatments       (treatment/user-treatments 538182)
+  (let [treatments       (treatment/user-treatment 538182)
         treatment-access (first (:treatment-accesses treatments))]
     (is (= 3958 (:treatment-id treatment-access)))
     (is (= nil (:module-accesses treatment-access)))))

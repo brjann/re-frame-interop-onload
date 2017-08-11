@@ -1,0 +1,25 @@
+{% extends "user.html" %}
+{% block user-content %}
+<h1>{%tr modules/modules %}</h1>
+{% for module in modules %}
+<div class="row list">
+    <div class="col-sm-12 col-md-6">
+        {% if module.active %}
+        <a href="/user/module/{{module.module-id}}">{{module.module-name}}</a>
+        {% else %}
+        {{module.module-name}}
+        {% endif %}
+    </div>
+    <div class="col-sm-12 col-md-6">
+        {% if module.active %}
+        Some info
+        {% else %}
+        Not available
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+
+{% endblock %}
+

@@ -4,6 +4,7 @@
             [bass4.responses.user :as user-response]
             [bass4.services.user :as user-service]
             [bass4.services.treatment :as treatment-service]
+            [bass4.responses.modules :as modules-response]
             [bass4.config :refer [env]]
             [bass4.utils :refer [str->int]]
             [bass4.responses.auth :as auth-response]
@@ -36,13 +37,19 @@
 
 (defn treatment-routes
   [user]
-  (let [treatments (treatment-service/user-treatments (:user-id user))]
+  (let [treatment (treatment-service/user-treatment (:user-id user))]
     ;; TODO: Check if actually in treatment
     (routes
       (GET "/" [] "this is the dashboard")
       (GET "/messages" []
         (let [[template params] (messages-response/messages-page user)]
-          (user-response/render-user-page treatments template params)))
+          (user-response/render-user-page treatment template params)))
+      (GET "/messages" []
+        (let [[template params] (messages-response/messages-page user)]
+          (user-response/render-user-page treatment template params)))
+      (GET "/modules" []
+        (let [[template params] (modules-response/modules-list user (:modules (:user-components treatment)))]
+          (user-response/render-user-page treatment template params)))
       (POST "/messages" [& params]
         (messages-response/save-message (:user-id user) (:subject params) (:text params)))
       (POST "/message-save-draft" [& params]
