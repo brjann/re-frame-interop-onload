@@ -212,9 +212,12 @@ div#instrument .item-error {
     padding: 4px 8px;
 }
 
+#module-section-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
 .module .dropdown-toggle::after {
-    content: "";
-    border-top: 0 solid;
-    border-right: 0 solid transparent;
-    border-left: 0 solid transparent;
+    display: none;
 }

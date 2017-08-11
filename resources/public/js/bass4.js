@@ -210,10 +210,6 @@ function re_auth_modal_submit(){
 	return true;
 }
 
-function test(){
-	console.log("the test");
-}
-
 
 function set_title_width() {
 	var toggler = $("#navbar-toggler:visible");
@@ -238,12 +234,18 @@ $(document).ready(function () {
  --------------
  */
 
+
+// TODO: Change module-text from class to id
 function set_module_height() {
 	$('.module-text').each(
 		function () {
 			$(this).height($(window).height() - $(this).offset().top);
 		}
-	)
+	);
+	var section_label = $('#module-section-label');
+	var container_width = $('#module-navbar').width();
+	section_label.width(container_width - section_label.position().left);
+
 }
 
 $(document).ready(function () {
@@ -262,16 +264,20 @@ $(document).ready(function () {
 		});
 		module_text.scrollspy({target: '#module-navbar'});
 
+		var set_label = function (label) {
+			$("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
+		};
+
 		$(window).resize(set_module_height);
 		set_module_height();
 		var module_section_cookie = $("#module-navbar").parents(".module").attr('id') + "-section";
 
 		$(window).on('activate.bs.scrollspy', function () {
 			var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-			$("#module-section-label").text($(section).text());
+			set_label($(section).text());
 			Cookies.set(module_section_cookie, section);
 		});
-		$("#module-section-label").text($(".module-text").find(":header").first().text());
+		set_label($(".module-text").find(":header").first().text());
 
 		// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
 		if (Cookies.get(module_section_cookie) !== undefined) {
