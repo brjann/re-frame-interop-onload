@@ -13,7 +13,8 @@
             [ring.util.request :as request]
             [ring.util.codec :as codec]
             [bass4.request-state :as request-state]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [bass4.i18n :as i18n]))
 
 (defn request-string
   "Return the request part of the request."
@@ -35,6 +36,12 @@
     (codec/url-encode string)))
 
 
+(defn module-routes
+  [render-fn module]
+  (routes
+    (GET "/" [] (modules-response/main-text render-fn module))
+    (GET "/homework" [] (modules-response/homework render-fn module))
+    (GET "/worksheet/:worksheet-id" [worksheet-id] (layout/text-response (str "Worksheet" worksheet-id)))))
 
 (defn treatment-routes
   [user]
@@ -56,10 +63,12 @@
       (GET "/modules" []
         (modules-response/modules-list render-fn (:modules (:user-components treatment))))
       (context "/module/:module-id" [module-id]
-        (GET "/" [] (modules-response/module render-fn (str->int module-id) (:modules (:user-components treatment))))
-        (GET "/homework" [] (layout/text-response "homework"))
-        (GET "/worksheet/:worksheet-id" [worksheet-id] (layout/text-response (str "Worksheet" worksheet-id))))
-      
+        (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
+                             (some #(and (:active %) %)))]
+          (module-routes render-fn module)
+          ;; Module not found
+          (layout/error-404-page (i18n/tr [:modules/no-module]))))
+
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))
       #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
