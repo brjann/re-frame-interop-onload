@@ -33,10 +33,10 @@
 
 (defn- homework-renderer
   [module-render-fn module-contents]
-  (if-let [module-text-id (:content-id (:homework module-contents))]
+  (if-let [homework-id (:content-id (:homework module-contents))]
     (module-render-fn
       "homework.html"
-      module-text-id)
+      homework-id)
     (layout/error-404-page (i18n/tr [:modules/no-homework]))))
 
 (defn- worksheet-renderer
@@ -50,17 +50,17 @@
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn module-content-renderer
-  [render-fn module module-contents]
+  [treatment-access render-fn module module-contents]
   (fn [template content-id]
     (let [content (treatment-service/get-content content-id)]
       (render-fn
         template
-        (assoc {:text (:text content)} :context-menu (context-menu (:module-id module) module-contents))))))
+        {:text (:text content) :data-name (:data-name content) :context-menu (context-menu (:module-id module) module-contents)}))))
 
 (defn- module-render-wrapper
   [treatment-access render-fn text-render-fn module]
   (let [module-contents  (treatment-service/get-module-contents (:module-id module))
-        module-render-fn (module-content-renderer render-fn module module-contents)]
+        module-render-fn (module-content-renderer treatment-access render-fn module module-contents)]
     (text-render-fn module-render-fn module-contents)))
 
 (defn main-text [treatment-access render-fn module]
