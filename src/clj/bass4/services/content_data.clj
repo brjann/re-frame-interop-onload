@@ -1,6 +1,11 @@
 (ns bass4.services.content-data
   (:require [bass4.db.core :as db]))
 
+
+;; ****************************
+;;   METHODS FOR LOADING DATA
+;; ****************************
+
 (defn reduce-content-map [m [x & xs :as s]]
   (if (empty? s)
     m
@@ -16,11 +21,19 @@
                            (reduce-content-map {}))})
 
 
-(defn get-content-data [data-owner-id data-names]
+#_(defn get-content-data [data-owner-id data-names]
   (reduce merge
           (map content-data-transform
                (unflatten-content-data
                  (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
+
+(defn get-content-data [data-owner-id data-names]
+  (->>
+    (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})
+    (unflatten-content-data)
+    (map content-data-transform)
+    (reduce merge)))
+
 ;
 ;
 ;
