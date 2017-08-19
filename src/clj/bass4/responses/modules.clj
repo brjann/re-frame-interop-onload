@@ -6,6 +6,7 @@
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
+            [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]))
 
 
@@ -52,10 +53,12 @@
 (defn module-content-renderer
   [treatment-access render-fn module module-contents]
   (fn [template content-id]
-    (let [content (treatment-service/get-content content-id)]
+    (let [content      (treatment-service/get-content content-id)
+          data-name    (:data-name content)
+          content-data (content-data/get-content-data (:treatment-access-id treatment-access) [data-name])]
       (render-fn
         template
-        {:text (:text content) :data-name (:data-name content) :context-menu (context-menu (:module-id module) module-contents)}))))
+        {:text (:text content) :data-name data-name :worksheet-data ((keyword data-name) content-data) :context-menu (context-menu (:module-id module) module-contents)}))))
 
 (defn- module-render-wrapper
   [treatment-access render-fn text-render-fn module]

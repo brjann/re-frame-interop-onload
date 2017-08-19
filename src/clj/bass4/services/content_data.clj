@@ -1,26 +1,26 @@
-;(ns bass4.services.content-data
-;  (:require [bass4.db.core :as db]))
-;
-;(defn reduce-content-map [m [x & xs :as s]]
-;  (if (empty? s)
-;    m
-;    (recur (merge m (assoc m (keyword (:valuename x)) (:value x))) xs)))
-;
-;(defn unflatten-content-data
-;  [s]
-;  (reduce (fn [m x] (update-in m [(keyword (:dataname x))] #(conj % x))) {} s))
-;
-;(defn content-data-transform [content-data]
-;  {(key content-data) (->> (val content-data)
-;                           (map #(select-keys % [:valuename :value]))
-;                           (reduce-content-map {}))})
-;
-;
-;(defn get-content-data [data-owner-id data-names]
-;  (reduce merge
-;          (map content-data-transform
-;               (unflatten-content-data
-;                 (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
+(ns bass4.services.content-data
+  (:require [bass4.db.core :as db]))
+
+(defn reduce-content-map [m [x & xs :as s]]
+  (if (empty? s)
+    m
+    (recur (merge m (assoc m (keyword (:valuename x)) (:value x))) xs)))
+
+(defn unflatten-content-data
+  [s]
+  (reduce (fn [m x] (update-in m [(keyword (:dataname x))] #(conj % x))) {} s))
+
+(defn content-data-transform [content-data]
+  {(key content-data) (->> (val content-data)
+                           (map #(select-keys % [:valuename :value]))
+                           (reduce-content-map {}))})
+
+
+(defn get-content-data [data-owner-id data-names]
+  (reduce merge
+          (map content-data-transform
+               (unflatten-content-data
+                 (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
 ;
 ;
 ;
