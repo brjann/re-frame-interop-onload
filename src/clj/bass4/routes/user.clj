@@ -12,7 +12,8 @@
             [ring.util.http-response :as response]
             [ring.util.request :as request]
             [ring.util.codec :as codec]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [bass4.layout :as layout]))
 
 (defn request-string
   "Return the request part of the request."
@@ -54,8 +55,11 @@
       ;; MODULES
       (GET "/modules" []
         (modules-response/modules-list render-fn (:modules (:user-components treatment))))
-      (GET "/module/:module-id/" [module-id]
-        (modules-response/module render-fn (str->int module-id) (:modules (:user-components treatment))))
+      (context "/module/:module-id" [module-id]
+        (GET "/" [] (modules-response/module render-fn (str->int module-id) (:modules (:user-components treatment))))
+        (GET "/homework" [] (layout/text-response "homework"))
+        (GET "/worksheet/:worksheet-id" [worksheet-id] (layout/text-response (str "Worksheet" worksheet-id))))
+      
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))
       #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
