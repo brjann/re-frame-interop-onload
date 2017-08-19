@@ -45,9 +45,6 @@
 
       ;; MESSAGES
       (GET "/messages" []
-        #_(let [[template params] (messages-response/messages-page user)]
-          (user-response/render-user-page treatment template params)))
-      (GET "/messages" []
         (messages-response/messages-page render-fn user))
       (POST "/messages" [& params]
         (messages-response/save-message (:user-id user) (:subject params) (:text params)))

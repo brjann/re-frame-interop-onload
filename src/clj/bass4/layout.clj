@@ -103,9 +103,7 @@
   error body."
   []
   (fn [request]
-    (let [body #_(:body (error-page {:status 404
-                                   :title  "page not found"}))
-          (error-404-page)]
+    (let [body (error-404-page)]
       (-> (response/render body request)
           (status 404)
           (cond-> (= (:request-method request) :head) (assoc :body nil))))))

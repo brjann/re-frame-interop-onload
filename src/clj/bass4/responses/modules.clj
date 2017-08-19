@@ -5,7 +5,8 @@
             [schema.core :as s]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
-            [bass4.services.treatment :as treatment-service]))
+            [bass4.services.treatment :as treatment-service]
+            [bass4.i18n :as i18n]))
 
 
 
@@ -21,12 +22,8 @@
     (let [module-contents (treatment-service/get-module-contents module-id)
           module-text-id  (:content-id (first (:main-texts module-contents)))
           text            (:text (when module-text-id (treatment-service/get-content module-text-id)))]
-      (log/debug module-contents)
-      (log/debug module-text-id)
-      (log/debug (treatment-service/get-content module-text-id))
       (render-fn
         "module.html"
         {:text text}))
-    ;; TODO: General solution for 404 error or whatever
-    ["module.html"
-     {}]))
+    ;; Module not found
+    (layout/error-404-page (i18n/tr [:modules/no-module]))))

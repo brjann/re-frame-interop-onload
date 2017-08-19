@@ -20,7 +20,8 @@
                    :text       "Message text"
                    :save-draft "Save draft"
                    :messages   "Messages"}
- :modules         {:modules "Modules"}
+ :modules         {:modules   "Modules"
+                   :no-module "This module does not exist"}
  :login           {:login                    "Login"
                    :please-username-password "Please provide your username and password to log on to the system."
                    :username-password-error  "Wrong username or password"

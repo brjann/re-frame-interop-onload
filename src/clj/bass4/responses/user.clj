@@ -14,10 +14,3 @@
       (layout/render
         template
         (merge params user-components)))))
-
-#_(defn render-user-page
-  [treatment template params]
-  (let [user-components (:user-components treatment)]
-    (layout/render
-      template
-      (merge params user-components))))
