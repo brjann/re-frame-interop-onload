@@ -20,10 +20,12 @@
                    :text       "Message text"
                    :save-draft "Save draft"
                    :messages   "Messages"}
- :modules         {:modules     "Modules"
-                   :no-module   "This module does not exist"
-                   :no-homework "This module does not have homework"
-                   :homework    "Homework"}
+ :modules         {:modules      "Modules"
+                   :module-text  "Module text"
+                   :no-module    "This module does not exist"
+                   :no-homework  "This module does not have homework"
+                   :no-worksheet "This module does not have this worksheet"
+                   :homework     "Homework"}
  :login           {:login                    "Login"
                    :please-username-password "Please provide your username and password to log on to the system."
                    :username-password-error  "Wrong username or password"

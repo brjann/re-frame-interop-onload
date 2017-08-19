@@ -41,7 +41,7 @@
   (routes
     (GET "/" [] (modules-response/main-text render-fn module))
     (GET "/homework" [] (modules-response/homework render-fn module))
-    (GET "/worksheet/:worksheet-id" [worksheet-id] (layout/text-response (str "Worksheet" worksheet-id)))))
+    (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet render-fn module (str->int worksheet-id)))))
 
 (defn treatment-routes
   [user]

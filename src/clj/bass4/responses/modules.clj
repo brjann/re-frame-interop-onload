@@ -17,39 +17,27 @@
 
 
 (defn context-menu
-  [module-contents]
-  (let [homework   (when (:homework module-contents)
-                     {:link "homework" :name (i18n/tr [:modules/homework])})
-        worksheets (map #(identity {:link (str "worksheet/" (:content-id %)) :name (:content-name %)}) (:worksheets module-contents))]
-    (remove nil? (cons homework worksheets))))
-;
-;(defn- module-main-text
-;  [module-contents]
-;  (let [module-text-id  (:content-id (first (:main-texts module-contents)))
-;        text            (:text (when module-text-id (treatment-service/get-content module-text-id)))]
-;    text))
-;
-;(defn- module-homework
-;  [module-contents]
-;  (let [module-text-id  (:content-id (:homework module-contents))
-;        text            (:text (when module-text-id (treatment-service/get-content module-text-id)))]
-;    text))
-;
-;(defn- module-page [render-fn module-id modules text-fn]
-;  (if-let [module (->> (filter #(= module-id (:module-id %)) modules)
-;                       (some #(and (:active %) %)))]
-;    ;; TODO: How to handle multiple texts
-;    (let [module-contents (treatment-service/get-module-contents module-id)
-;          module-text-id  (:content-id (first (:main-texts module-contents)))
-;          text            (text-fn module-contents)]
-;      (render-fn
-;        "module.html"
-;        {:text         text
-;         :context-menu (context-menu module-contents)}))
-;    ;; Module not found
-;    (layout/error-404-page (i18n/tr [:modules/no-module]))))
+  [module-id module-contents]
+  (let [base-path  (str "/user/module/" module-id)
+        main-text  {:link (str base-path "/")
+                    :name (i18n/tr [:modules/module-text])}
+        homework   (when (:homework module-contents)
+                     {:link (str base-path "/homework")
+                      :name (i18n/tr [:modules/homework])})
+        worksheets (map #(identity {:link (str base-path "/worksheet/" (:content-id %))
+                                    :name (:content-name %)})
+                        (:worksheets module-contents))]
+    (remove nil? (into [main-text homework] worksheets))))
 
-
+(defn worksheet-renderer
+  [worksheet-id]
+  (fn
+    [module-render-fn module-contents]
+    (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
+      (module-render-fn
+        "worksheet.html"
+        {:text (:text (treatment-service/get-content worksheet-id))})
+      (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn main-text-renderer
   ;; TODO: How to handle multiple texts
@@ -76,7 +64,7 @@
         module-render-fn (fn [template params]
                            (render-fn
                              template
-                             (assoc params :context-menu (context-menu module-contents))))]
+                             (assoc params :context-menu (context-menu (:module-id module) module-contents))))]
     (text-render-fn module-render-fn module-contents)))
 
 (defn main-text [render-fn module]
@@ -84,3 +72,6 @@
 
 (defn homework [render-fn module]
   (module-render-wrapper render-fn homework-renderer module))
+
+(defn worksheet [render-fn module worksheet-id]
+  (module-render-wrapper render-fn (worksheet-renderer worksheet-id) module))
