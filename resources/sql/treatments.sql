@@ -48,6 +48,22 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 -- :doc
 SELECT
   Text,
-  IsMarkDown AS `mark-down`
+  IsMarkDown AS `mark-down`,
+  DataName   AS `data-name`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
+
+-- :name get-content-data :? :*
+-- :doc get the content data
+SELECT *
+FROM content_data
+WHERE Id IN (SELECT MAX(Id)
+             FROM content_data
+             WHERE DataOwnerId=:data-owner-id AND DataName IN (:v*:data-names)
+             GROUP BY DataName, ValueName);
+
+-- :name save-content-data! :! :n
+-- :doc save content data
+INSERT INTO content_data
+(DataOwnerId, `Time`, DataName, ValueName, `Value`)
+VALUES :t*:content- DATA

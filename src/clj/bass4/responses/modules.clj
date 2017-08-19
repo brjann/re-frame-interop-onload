@@ -22,6 +22,23 @@
                         (:worksheets module-contents))]
     (remove nil? (into [main-text homework] worksheets))))
 
+(defn- main-text-renderer
+  ;; TODO: How to handle multiple texts
+  ;; TODO: How to handle missing texts
+  [module-render-fn module-contents]
+  (let [module-text-id (:content-id (first (:main-texts module-contents)))]
+    (module-render-fn
+      "module.html"
+      module-text-id)))
+
+(defn- homework-renderer
+  [module-render-fn module-contents]
+  (if-let [module-text-id (:content-id (:homework module-contents))]
+    (module-render-fn
+      "homework.html"
+      module-text-id)
+    (layout/error-404-page (i18n/tr [:modules/no-homework]))))
+
 (defn- worksheet-renderer
   [worksheet-id]
   (fn
@@ -29,45 +46,31 @@
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-render-fn
         "worksheet.html"
-        {:text (:text (treatment-service/get-content worksheet-id))})
+        worksheet-id)
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(defn- main-text-renderer
-  ;; TODO: How to handle multiple texts
-  ;; TODO: How to handle missing texts
-  [module-render-fn module-contents]
-  (let [module-text-id (:content-id (first (:main-texts module-contents)))
-        text           (:text (when module-text-id (treatment-service/get-content module-text-id)))]
-    (module-render-fn
-      "module.html"
-      {:text text})))
-
-(defn- homework-renderer
-  [module-render-fn module-contents]
-  (if-let [module-text-id (:content-id (:homework module-contents))]
-    (module-render-fn
-      "homework.html"
-      {:text (:text (treatment-service/get-content module-text-id))})
-    (layout/error-404-page (i18n/tr [:modules/no-homework]))))
-
+(defn module-content-renderer
+  [render-fn module module-contents]
+  (fn [template content-id]
+    (let [content (treatment-service/get-content content-id)]
+      (render-fn
+        template
+        (assoc {:text (:text content)} :context-menu (context-menu (:module-id module) module-contents))))))
 
 (defn- module-render-wrapper
-  [render-fn text-render-fn module]
+  [treatment-access render-fn text-render-fn module]
   (let [module-contents  (treatment-service/get-module-contents (:module-id module))
-        module-render-fn (fn [template params]
-                           (render-fn
-                             template
-                             (assoc params :context-menu (context-menu (:module-id module) module-contents))))]
+        module-render-fn (module-content-renderer render-fn module module-contents)]
     (text-render-fn module-render-fn module-contents)))
 
-(defn main-text [render-fn module]
-  (module-render-wrapper render-fn main-text-renderer module))
+(defn main-text [treatment-access render-fn module]
+  (module-render-wrapper treatment-access render-fn main-text-renderer module))
 
-(defn homework [render-fn module]
-  (module-render-wrapper render-fn homework-renderer module))
+(defn homework [treatment-access render-fn module]
+  (module-render-wrapper treatment-access render-fn homework-renderer module))
 
-(defn worksheet [render-fn module worksheet-id]
-  (module-render-wrapper render-fn (worksheet-renderer worksheet-id) module))
+(defn worksheet [treatment-access render-fn module worksheet-id]
+  (module-render-wrapper treatment-access render-fn (worksheet-renderer worksheet-id) module))
 
 (defn modules-list [render-fn modules]
   (render-fn

@@ -37,11 +37,11 @@
 
 
 (defn module-routes
-  [render-fn module]
+  [treatment-access render-fn module]
   (routes
-    (GET "/" [] (modules-response/main-text render-fn module))
-    (GET "/homework" [] (modules-response/homework render-fn module))
-    (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet render-fn module (str->int worksheet-id)))))
+    (GET "/" [] (modules-response/main-text treatment-access render-fn module))
+    (GET "/homework" [] (modules-response/homework treatment-access render-fn module))
+    (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
 
 (defn treatment-routes
   [user request]
@@ -65,7 +65,7 @@
       (context "/module/:module-id" [module-id]
         (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
                              (some #(and (:active %) %)))]
-          (module-routes render-fn module)
+          (module-routes (:treatment-access treatment) render-fn module)
           ;; Module not found
           (layout/error-404-page (i18n/tr [:modules/no-module]))))
 
