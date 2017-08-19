@@ -44,9 +44,9 @@
     (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet render-fn module (str->int worksheet-id)))))
 
 (defn treatment-routes
-  [user]
+  [user request]
   (let [treatment (treatment-service/user-treatment (:user-id user))
-        render-fn (user-response/user-page-renderer treatment)]
+        render-fn (user-response/user-page-renderer treatment (:uri request))]
     ;; TODO: Check if actually in treatment
     (routes
       (GET "/" [] "this is the dashboard")
@@ -93,7 +93,7 @@
         (if (auth-response/double-authed? (:session request))
           (if (:assessments-pending (:session request))
             (assessment-routes user request)
-            (treatment-routes user))
+            (treatment-routes user request))
           (routes
             (ANY "*" [] (response/found "/double-auth"))))
         (routes

@@ -9,19 +9,18 @@
             aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <span id="page-title" class="navbar-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Ångest och undvikande och undvikande och undvikande</span>
-    <!--<a class="navbar-brand" href="{{servlet-context}}/">Ångest och undvikande</a>-->
+    <span id="page-title" class="navbar-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Where are we?</span>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
             {% if messaging %}
             <a href="/user/messages"
-               class="nav-link{% ifequal page " messages.html" %} active{%endifequal%}">
+               class='nav-link{% ifequal path "/user/messages" %} active{%endifequal%}'>
             {%tr messages/messages %}
             </a>
             {% endif %}
             {% if modules %}
             <a href="/user/modules"
-               class="nav-link{% ifequal page " modules.html" %} active{%endifequal%}">
+               class='nav-link{% ifequal path "/user/modules" %} active{%endifequal%}'>
             {%tr modules/modules %}
             </a>
             {% endif %}
@@ -30,7 +29,7 @@
             {% if context-menu %}
             <div class="dropdown-divider"></div>
             {% for item in context-menu %}
-            <a href="{{item.link}}" class="nav-link">{{item.name}}</a>
+            <a href="{{item.link}}" class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
             {% endfor %}
             {% endif %}
         </div>

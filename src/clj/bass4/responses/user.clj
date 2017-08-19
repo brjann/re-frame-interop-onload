@@ -8,9 +8,9 @@
 
 
 (defn user-page-renderer
-  [treatment]
+  [treatment path]
   (fn [template params]
     (let [user-components (:user-components treatment)]
       (layout/render
         template
-        (merge params user-components)))))
+        (merge params user-components {:path path})))))
