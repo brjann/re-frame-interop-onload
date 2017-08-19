@@ -11,7 +11,9 @@
 {% block page-scripts %}
 <script type="text/javascript">
 	var bass_data = {};
-	 bass_data["content.data.{{data-name}}"] = eval("{{worksheet-data|json|safe}}");
+	 // @formatter:off
+    bass_data["content.data.{{data-name}}"] = {{worksheet-data|json|safe}};
+    // @formatter:on
 	bass_data["content.data.default"] = "{{data-name}}";
 	bass_data["content.postname"] = "content-data";
 
