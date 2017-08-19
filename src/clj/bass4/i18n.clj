@@ -41,7 +41,7 @@
             (fn
               [{:keys [opts locales resource-ids resource-args]}]
               (str "Missing translation keys: " resource-ids))}
-     [(locals/language)]
+     [(or (locals/language) "en")]
      resource-ids
      resource-args)))
 

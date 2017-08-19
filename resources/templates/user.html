@@ -25,11 +25,14 @@
             {%tr modules/modules %}
             </a>
             {% endif %}
+
+            <!-- Context menu -->
+            {% if context-menu %}
             <div class="dropdown-divider"></div>
-            <a href="#" class="nav-link active">Main text</a>
-            <a href="#" class="nav-link">Homework</a>
-            <a href="#" class="nav-link">Worksheet 1</a>
-            <a href="#" class="nav-link">Worksheet 2</a>
+            {% for item in context-menu %}
+            <a href="{{item.link}}" class="nav-link">{{item.name}}</a>
+            {% endfor %}
+            {% endif %}
         </div>
     </div>
 </nav>

@@ -54,7 +54,7 @@
       ;; MODULES
       (GET "/modules" []
         (modules-response/modules-list render-fn (:modules (:user-components treatment))))
-      (GET "/module/:module-id" [module-id]
+      (GET "/module/:module-id/" [module-id]
         (modules-response/module render-fn (str->int module-id) (:modules (:user-components treatment))))
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))

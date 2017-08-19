@@ -15,6 +15,14 @@
     "modules-list.html"
     {:modules modules}))
 
+
+(defn context-menu
+  [module-contents]
+  (let [homework   (when (:homework module-contents)
+                     {:link "homework" :name (i18n/tr [:modules/homework])})
+        worksheets (map #(identity {:link (str "worksheet/" (:content-id %)) :name (:content-name %)}) (:worksheets module-contents))]
+    (remove nil? (cons homework worksheets))))
+
 (defn module [render-fn module-id modules]
   (if-let [module (->> (filter #(= module-id (:module-id %)) modules)
                        (some #(and (:active %) %)))]
@@ -24,6 +32,7 @@
           text            (:text (when module-text-id (treatment-service/get-content module-text-id)))]
       (render-fn
         "module.html"
-        {:text text}))
+        {:text         text
+         :context-menu (context-menu module-contents)}))
     ;; Module not found
     (layout/error-404-page (i18n/tr [:modules/no-module]))))
