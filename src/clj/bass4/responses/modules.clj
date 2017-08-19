@@ -9,14 +9,7 @@
             [bass4.i18n :as i18n]))
 
 
-
-(defn modules-list [render-fn modules]
-  (render-fn
-    "modules-list.html"
-    {:modules modules}))
-
-
-(defn context-menu
+(defn- context-menu
   [module-id module-contents]
   (let [base-path  (str "/user/module/" module-id)
         main-text  {:link (str base-path "/")
@@ -29,7 +22,7 @@
                         (:worksheets module-contents))]
     (remove nil? (into [main-text homework] worksheets))))
 
-(defn worksheet-renderer
+(defn- worksheet-renderer
   [worksheet-id]
   (fn
     [module-render-fn module-contents]
@@ -39,7 +32,7 @@
         {:text (:text (treatment-service/get-content worksheet-id))})
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(defn main-text-renderer
+(defn- main-text-renderer
   ;; TODO: How to handle multiple texts
   ;; TODO: How to handle missing texts
   [module-render-fn module-contents]
@@ -49,7 +42,7 @@
       "module.html"
       {:text text})))
 
-(defn homework-renderer
+(defn- homework-renderer
   [module-render-fn module-contents]
   (if-let [module-text-id (:content-id (:homework module-contents))]
     (module-render-fn
@@ -58,7 +51,7 @@
     (layout/error-404-page (i18n/tr [:modules/no-homework]))))
 
 
-(defn module-render-wrapper
+(defn- module-render-wrapper
   [render-fn text-render-fn module]
   (let [module-contents  (treatment-service/get-module-contents (:module-id module))
         module-render-fn (fn [template params]
@@ -75,3 +68,8 @@
 
 (defn worksheet [render-fn module worksheet-id]
   (module-render-wrapper render-fn (worksheet-renderer worksheet-id) module))
+
+(defn modules-list [render-fn modules]
+  (render-fn
+    "modules-list.html"
+    {:modules modules}))
