@@ -14,15 +14,15 @@
      :messages messages
      :draft draft}))
 
-(defn messages-page [user]
+(defn messages-page [render-fn user]
   (let [user-id (:user-id user)
         messages (messages-service/get-all-messages user-id)
         draft (messages-service/get-draft user-id)]
-    ["messages.html" {:user            user
-                      :title           "Messages"
-                      :active_messages true
-                      :messages        messages
-                      :draft           draft}]))
+    (render-fn "messages.html" {:user            user
+                                :title           "Messages"
+                                :active_messages true
+                                :messages        messages
+                                :draft           draft})))
 
 (s/defn ^:always-validate save-message [user-id :- s/Int subject :- s/Str text :- s/Str]
   (messages-service/save-message! user-id subject text)

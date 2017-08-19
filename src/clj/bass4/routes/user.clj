@@ -37,18 +37,18 @@
 
 (defn treatment-routes
   [user]
-  (let [treatment (treatment-service/user-treatment (:user-id user))]
+  (let [treatment (treatment-service/user-treatment (:user-id user))
+        render-fn (user-response/user-page-renderer treatment)]
     ;; TODO: Check if actually in treatment
     (routes
       (GET "/" [] "this is the dashboard")
 
       ;; MESSAGES
       (GET "/messages" []
-        (let [[template params] (messages-response/messages-page user)]
+        #_(let [[template params] (messages-response/messages-page user)]
           (user-response/render-user-page treatment template params)))
       (GET "/messages" []
-        (let [[template params] (messages-response/messages-page user)]
-          (user-response/render-user-page treatment template params)))
+        (messages-response/messages-page render-fn user))
       (POST "/messages" [& params]
         (messages-response/save-message (:user-id user) (:subject params) (:text params)))
       (POST "/message-save-draft" [& params]
@@ -56,11 +56,9 @@
 
       ;; MODULES
       (GET "/modules" []
-        (let [[template params] (modules-response/modules-list (:modules (:user-components treatment)))]
-          (user-response/render-user-page treatment template params)))
+        (modules-response/modules-list render-fn (:modules (:user-components treatment))))
       (GET "/module/:module-id" [module-id]
-        (let [[template params] (modules-response/module (str->int module-id) (:modules (:user-components treatment)))]
-          (user-response/render-user-page treatment template params)))
+        (modules-response/module render-fn (str->int module-id) (:modules (:user-components treatment))))
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))
       #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))

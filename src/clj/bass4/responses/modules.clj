@@ -9,11 +9,12 @@
 
 
 
-(defn modules-list [modules]
-  ["modules-list.html"
-   {:modules modules}])
+(defn modules-list [render-fn modules]
+  (render-fn
+    "modules-list.html"
+    {:modules modules}))
 
-(defn module [module-id modules]
+(defn module [render-fn module-id modules]
   (if-let [module (->> (filter #(= module-id (:module-id %)) modules)
                        (some #(and (:active %) %)))]
     ;; TODO: How to handle multiple texts
@@ -23,8 +24,9 @@
       (log/debug module-contents)
       (log/debug module-text-id)
       (log/debug (treatment-service/get-content module-text-id))
-      ["module.html"
-       {:text text}])
+      (render-fn
+        "module.html"
+        {:text text}))
     ;; TODO: General solution for 404 error or whatever
     ["module.html"
      {}]))
