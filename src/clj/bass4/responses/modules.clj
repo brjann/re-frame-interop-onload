@@ -58,7 +58,10 @@
           content-data (content-data/get-content-data (:treatment-access-id treatment-access) [data-name])]
       (render-fn
         template
-        {:text (:text content) :data-name data-name :worksheet-data ((keyword data-name) content-data) :context-menu (context-menu (:module-id module) module-contents)}))))
+        {:text         (:text content)
+         :data-name    data-name
+         :content-data ((keyword data-name) content-data)
+         :context-menu (context-menu (:module-id module) module-contents)}))))
 
 (defn- module-render-wrapper
   [treatment-access render-fn text-render-fn module]

@@ -5,22 +5,4 @@
     {{text|safe}}
     <input type="submit" value="Save">
 </form>
-
-{% endblock %}
-
-{% block page-scripts %}
-<script type="text/javascript">
-	var bass_data = {};
-	 // @formatter:off
-    bass_data["content.data.{{data-name}}"] = {{worksheet-data|json|safe}};
-    // @formatter:on
-	bass_data["content.data.default"] = "{{data-name}}";
-	bass_data["content.postname"] = "content-data";
-
-	bass_data["unsavedchangesalert"] = "Det finns osparade \u00e4ndringar i p\u00e5 sidan.";
-	bass_data["tab_name"] = "Flik";
-	bass_data["save_name"] = "Spara";
-	bass_data["page_info"] = "Sida %s av %s";
-</script>
-<script src="/js/contentdata.js"></script>
 {% endblock %}
