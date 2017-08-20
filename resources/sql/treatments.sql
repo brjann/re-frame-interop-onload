@@ -62,11 +62,8 @@ WHERE Id IN (SELECT MAX(Id)
              WHERE DataOwnerId=:data-owner-id AND DataName IN (:v*:data-names)
              GROUP BY DataName, ValueName);
 
--- @formatter:off
-
 -- :name save-content-data! :! :n
 -- :doc save content data
 INSERT INTO content_data
 (DataOwnerId, `Time`, DataName, ValueName, `Value`)
 VALUES :t*:content-data;
--- @formatter:on
