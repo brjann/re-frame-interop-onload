@@ -34,6 +34,7 @@ function contentTabbed() {
 					addContentTabPlus(container, tabs_ul, tab_count + 1);
 				}
 
+			// TODO: content.data.default here
 				var cookie_name = 'tab.' + bass_data['content.data.default'] + '.' + container_id;
 
 				container.tabs({
@@ -119,9 +120,9 @@ function setupStaticDataTabbed(content, index) {
 	});
 }
 
-function fillStaticData(content) {
+function fillStaticData(content, data_name) {
 	content.find('.contentdata').not(':input').each(function () {
-		var value = getContentDataValue($(this).text());
+		var value = getContentDataValue($(this).text(), data_name);
 		if (value === undefined) {
 			value = '';
 		}
@@ -142,40 +143,47 @@ function getContentTabId(index) {
 	return 'content.tab.' + index;
 }
 
+function content_submit() {
+	var form = event.target;
+	var data_name = $(form).data('data-name');
+	var allvalues = {};
+	$(form)
+		.find(':input').not('[type=submit], [name=__anti-forgery-token], .contentposter')
+		.each(function () {
+			var input = this;
+			if (input.type == 'radio') {
+				if ($(input).prop('checked')) {
+					allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+				}
+			}
+			else if (input.type == 'checkbox') {
+				if ($(input).prop('checked')) {
+					allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+				}
+				else {
+					allvalues[getContentDataPostKey(input.name, data_name)] = '';
+				}
+			}
+			else {
+				allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+			}
+		});
+	$(form).find('.contentposter').val(JSON.stringify(allvalues));
+	return true;
+}
+
 function contentForm() {
 	//TODO: Does not handle pre-checked checkboxes
 	var contentform = $(".contentform").first();
+	var data_name = contentform.data('data-name');
 	contentform
 		.append($('<input type="hidden">')
 			.prop('name', bass_data['content.postname'])
 			.prop('class', 'contentposter')
 		)
-		.submit(function () {
-			var allvalues = {};
-			$(this)
-				.find(':input').not('[type=submit], [name=__anti-forgery-token], .contentposter').each(function () {
-				if (this.type == 'radio') {
-					if ($(this).prop('checked')) {
-						allvalues[getContentDataPostKey(this.name)] = $(this).val();
-					}
-				}
-				else if (this.type == 'checkbox') {
-					if ($(this).prop('checked')) {
-						allvalues[getContentDataPostKey(this.name)] = $(this).val();
-					}
-					else {
-						allvalues[getContentDataPostKey(this.name)] = '';
-					}
-				}
-				else {
-					allvalues[getContentDataPostKey(this.name)] = $(this).val();
-				}
-			});
-			$(this).find('.contentposter').val(JSON.stringify(allvalues));
-		})
 		.find(':input').not('[type=submit]')
 		.each(function () {
-			var value = getContentDataValue(this.name);
+			var value = getContentDataValue(this.name, data_name);
 			if (value !== undefined) {
 				if (this.type == 'radio' || this.type == 'checkbox') {
 					$(this).prop('checked', value == this.value);
@@ -185,7 +193,7 @@ function contentForm() {
 				}
 			}
 		});
-	fillStaticData(contentform);
+	fillStaticData(contentform, data_name);
 }
 
 function getContentDataBASSVar(value_name) {
@@ -199,10 +207,10 @@ function getContentDataBASSVar(value_name) {
 	}
 }
 
-function getContentDataValue(value_name) {
+function getContentDataValue(value_name, data_name) {
 	var key = "content.data.";
 	if (value_name.indexOf('.') == -1) {
-		key = key + bass_data['content.data.default'];
+		key = key + data_name;
 	}
 	else {
 		var a = value_name.split('.', 2);
@@ -228,9 +236,9 @@ function getContentDataValue(value_name) {
 	return undefined;
 }
 
-function getContentDataPostKey(value_name) {
+function getContentDataPostKey(value_name, data_name) {
 	if (value_name.indexOf('.') == -1) {
-		return bass_data['content.data.default'] + '.' + value_name;
+		return data_name + '.' + value_name;
 	}
 	else {
 		return value_name;

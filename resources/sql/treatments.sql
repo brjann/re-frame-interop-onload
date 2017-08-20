@@ -66,4 +66,4 @@ WHERE Id IN (SELECT MAX(Id)
 -- :doc save content data
 INSERT INTO content_data
 (DataOwnerId, `Time`, DataName, ValueName, `Value`)
-VALUES :t*:content- DATA
+VALUES :t*:content- DATA;

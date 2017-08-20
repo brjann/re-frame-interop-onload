@@ -8,6 +8,13 @@
 ;;  AJAX POST
 ;; ----------------
 
+;; Redirects are followed by the ajax request. So POST route does not answer with
+;; response/found (302). But rather with response/ok (200) and then a string with further
+;; instructions. found [url]: the post was received and here is your new url.
+;; This is achieved by middleware in the app that changes "302 url" responses to
+;; "200 found url" responses - for ajax posts.
+;; If page should just be reloaded, then the url returned should simply be "reload".
+
 (defn- is-ajax-post?
   [request]
   (let [requested-with (get (:headers request) "x-requested-with" "")

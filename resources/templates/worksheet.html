@@ -1,7 +1,7 @@
 {% extends "user.html" %}
 {% block user-content %}
-<form class="contentform" method="post">
-    {% csrf-field %}
+<form class="contentform" data-data-name="{{data-name}}" onsubmit="return content_submit();" method="post"
+      action="/user/content-data">
     {{text|safe}}
     <input type="submit" value="Save">
 </form>

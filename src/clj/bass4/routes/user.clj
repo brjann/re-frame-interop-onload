@@ -3,10 +3,11 @@
             [bass4.responses.messages :as messages-response]
             [bass4.responses.user :as user-response]
             [bass4.services.user :as user-service]
+            [bass4.services.content-data :as content-data-service]
             [bass4.services.treatment :as treatment-service]
             [bass4.responses.modules :as modules-response]
             [bass4.config :refer [env]]
-            [bass4.utils :refer [str->int]]
+            [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.assessments :as assessments-response]
             [ring.util.http-response :as response]
@@ -14,7 +15,9 @@
             [ring.util.codec :as codec]
             [bass4.request-state :as request-state]
             [bass4.layout :as layout]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [clojure.data.json :as json]
+            [clojure.tools.logging :as log]))
 
 (defn request-string
   "Return the request part of the request."
@@ -68,6 +71,12 @@
           (module-routes (:treatment-access treatment) render-fn module)
           ;; Module not found
           (layout/error-404-page (i18n/tr [:modules/no-module]))))
+      (POST "/content-data" [& params]
+        (let [treatment-access-id (:treatment-access-id (:treatment-access treatment))
+              data-map            (into [] (json-safe (:content-data params)))]
+          (log/debug data-map)
+          (content-data-service/save-content-data! data-map treatment-access-id))
+        (response/found "reload"))
 
       #_(GET "/" req (dashboard-page req))
       #_(GET "/profile" [errors :as req] (profile-page req errors))
