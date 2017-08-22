@@ -74,7 +74,6 @@
       (POST "/content-data" [& params]
         (let [treatment-access-id (:treatment-access-id (:treatment-access treatment))
               data-map            (into [] (json-safe (:content-data params)))]
-          (log/debug data-map)
           (content-data-service/save-content-data! data-map treatment-access-id))
         (response/found "reload"))
 

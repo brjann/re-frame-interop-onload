@@ -1,8 +1,12 @@
 {% extends "user.html" %}
 {% block user-content %}
-<form class="contentform" data-data-name="{{data-name}}" onsubmit="return content_submit();" method="post"
-      action="/user/content-data">
+<div class="treatment-content" data-data-name="{{data-name}}">
     {{text|safe}}
-    <input type="submit" value="Save">
-</form>
+    <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
+          onsubmit="return content_submit();">
+        <input type="hidden" name="content-data" class="content-poster">
+        <button type="submit" class="button">Test</button>
+    </form>
+</div>
+
 {% endblock %}

@@ -145,42 +145,39 @@ function getContentTabId(index) {
 
 function content_submit() {
 	var form = event.target;
-	var data_name = $(form).data('data-name');
-	var allvalues = {};
-	$(form)
-		.find(':input').not('[type=submit], [name=__anti-forgery-token], .contentposter')
+	var content_div = $(form).parent();
+	var data_name = content_div.data('data-name');
+	var all_values = {};
+	$(content_div)
+		.find(':input').not($(form).children())
 		.each(function () {
 			var input = this;
 			if (input.type == 'radio') {
 				if ($(input).prop('checked')) {
-					allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+					all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
 				}
 			}
 			else if (input.type == 'checkbox') {
 				if ($(input).prop('checked')) {
-					allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+					all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
 				}
 				else {
-					allvalues[getContentDataPostKey(input.name, data_name)] = '';
+					all_values[getContentDataPostKey(input.name, data_name)] = '';
 				}
 			}
 			else {
-				allvalues[getContentDataPostKey(input.name, data_name)] = $(input).val();
+				all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
 			}
 		});
-	$(form).find('.contentposter').val(JSON.stringify(allvalues));
+	$(form).find('.content-poster').val(JSON.stringify(all_values));
 	return true;
 }
 
 function contentForm() {
 	//TODO: Does not handle pre-checked checkboxes
-	var contentform = $(".contentform").first();
+	var contentform = $(".treatment-content").first();
 	var data_name = contentform.data('data-name');
 	contentform
-		.append($('<input type="hidden">')
-			.prop('name', bass_data['content.postname'])
-			.prop('class', 'contentposter')
-		)
 		.find(':input').not('[type=submit]')
 		.each(function () {
 			var value = getContentDataValue(this.name, data_name);

@@ -110,17 +110,18 @@ function form_ajax_response(form, jqXHR) {
 $(document).ready(function(){
 	$("form").each(function(){
 
+		var $form = $(this);
 
-		// TODO: Switch use of "this" to "form" or similar
 		// Don't tamper with get forms
-		if($(this).prop('method') == 'get'){
+		if ($form.prop('method') == 'get') {
 			return;
 		}
 
-		var no_ajax = $(this).hasClass("no-ajax");
-		var no_validate = $(this).hasClass("no-validate");
+		var no_ajax = $form.hasClass("no-ajax");
+		var no_validate = $form.hasClass("no-validate");
 		if(!no_ajax || !no_validate) {
-			$(this).data('on_ajax_fns', []);
+
+			$form.data('on_ajax_fns', []);
 
 
 			// Save form's own submit function
@@ -129,9 +130,10 @@ $(document).ready(function(){
 				formsubmit = this.onsubmit;
 				this.onsubmit = null;
 			}
-			$(this).submit(function (event) {
 
-				var ajax_fns = $(this).data('on_ajax_fns');
+			$form.submit(function (event) {
+
+				var ajax_fns = $form.data('on_ajax_fns');
 
 				while (ajax_fns.length) {
 					ajax_fns.pop()();
@@ -141,16 +143,17 @@ $(document).ready(function(){
 
 				if(!no_validate) {
 					var validation_failed = false;
-					$(this).find(".required").each(function () {
-						if ($(this).val() == "") {
-							$(this).parent().addClass('has-danger');
-							$(this).change(function () {
-								$(this).parent().removeClass("has-danger");
+					$form.find(".required").each(function () {
+						var $input = $(this);
+						if ($input.val() == "") {
+							$input.parent().addClass('has-danger');
+							$input.change(function () {
+								$input.parent().removeClass("has-danger");
 							});
 							validation_failed = true;
 						}
 						else {
-							$(this).parent().removeClass('has-danger');
+							$input.parent().removeClass('has-danger');
 						}
 					});
 					if (validation_failed) {
@@ -168,7 +171,7 @@ $(document).ready(function(){
 				}
 
 				if(!no_ajax){
-					var post = $(this).serializeArray();
+					var post = $form.serializeArray();
 					var url;
 					if (this.action != "") {
 						url = this.action;
