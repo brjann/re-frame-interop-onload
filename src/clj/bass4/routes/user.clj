@@ -72,16 +72,10 @@
           ;; Module not found
           (layout/error-404-page (i18n/tr [:modules/no-module]))))
       (POST "/content-data" [& params]
-        (let [treatment-access-id (:treatment-access-id (:treatment-access treatment))
-              data-map            (into [] (json-safe (:content-data params)))]
-          (content-data-service/save-content-data! data-map treatment-access-id))
-        (response/found "reload"))
-
-      #_(GET "/" req (dashboard-page req))
-      #_(GET "/profile" [errors :as req] (profile-page req errors))
-      #_(GET "/worksheets" [worksheet-id :as req] (worksheets-page worksheet-id req))
-      #_(POST "/worksheets" [& params :as req] (handle-worksheet-submit params req))
-      #_(GET "/charts" req (charts-page req)))))
+        (content-data-service/save-content-data!
+          (into [] (json-safe (:content-data params)))
+          (:treatment-access-id (:treatment-access treatment)))
+        (response/found "reload")))))
 
 (defn assessment-routes
   [user request]

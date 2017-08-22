@@ -13,6 +13,6 @@
 
 (deftest no-modules
   (let [treatments       (treatment/user-treatment 538182)
-        treatment-access (first (:treatment-accesses treatments))]
+        treatment-access (:treatment-access treatments)]
     (is (= 3958 (:treatment-id treatment-access)))
-    (is (= nil (:module-accesses treatment-access)))))
+    (is (= #{} (:module-accesses treatment-access)))))

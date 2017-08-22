@@ -64,11 +64,12 @@
 
 (defn save-content-data!
   [data-map treatment-access-id]
-  (let [string-map (map split-first data-map)
-        data-names (distinct (map first string-map))
-        old-data   (get-content-data treatment-access-id data-names)
-        save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
-    (if (> (count save-data) 0)
-      (do (db/save-content-data! {:content-data save-data})
-          (log/debug (str "Yeah! " (count save-data) " rows saved")))
-      (log/debug (str "No rows saved")))))
+  (when (seq data-map)
+    (let [string-map (map split-first data-map)
+          data-names (distinct (map first string-map))
+          old-data   (get-content-data treatment-access-id data-names)
+          save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
+      (if (> (count save-data) 0)
+        (do (db/save-content-data! {:content-data save-data})
+            (log/debug (str "Yeah! " (count save-data) " rows saved")))
+        (log/debug (str "No rows saved"))))))
