@@ -72,10 +72,14 @@
           ;; Module not found
           (layout/error-404-page (i18n/tr [:modules/no-module]))))
       (POST "/content-data" [& params]
-        (content-data-service/save-content-data!
-          (into [] (json-safe (:content-data params)))
-          (:treatment-access-id (:treatment-access treatment)))
-        (response/found "reload")))))
+        (let [data-map (json-safe (:content-data params))]
+          (if (map? data-map)
+            (do
+              (content-data-service/save-content-data!
+                data-map
+                (:treatment-access-id (:treatment-access treatment)))
+              (response/found "reload"))
+            (layout/error-400-page)))))))
 
 (defn assessment-routes
   [user request]
