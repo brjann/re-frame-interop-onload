@@ -1,7 +1,7 @@
 (ns bass4.middleware.errors
   (:require [bass4.layout :as layout]
             [bass4.config :refer [env]]
-            [bass4.utils :refer [nil-zero?]]
+            [bass4.utils :refer [nil-zero? subs+]]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [bass4.mailer :refer [mail!]]
@@ -64,7 +64,9 @@
     (try
       (handler req)
       (catch ExceptionInfo e
-        (if (= (:type (.data e)) :schema.core/error)
+        (if (or
+              (= (:type (.data e)) :schema.core/error)
+              (= "400" (subs+ (.getMessage e) 0 3)))
           (do
             (request-state/record-error! (.getMessage e))
             (error-400-page (when (env :debug-mode (.getMessage e)))))
