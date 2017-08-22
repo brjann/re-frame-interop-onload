@@ -39,10 +39,13 @@
 (defn split-first [pair]
   (let [splitted-list (clojure.string/split (first pair) #"\.")
         data-name     (first splitted-list)
-        key           (clojure.string/join "." (rest splitted-list))]
-    (when (some #(or (nil? %) (= "" %)) [data-name key])
+        key           (clojure.string/join "." (rest splitted-list))
+        value         (second pair)]
+    (when (or
+            (some #(or (nil? %) (= "" %)) [data-name key])
+            (not (string? value)))
       (throw (ex-info "400" {})))
-    [data-name key (second pair)]))
+    [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]
   (filter
@@ -68,7 +71,5 @@
           data-names (distinct (map first string-map))
           old-data   (get-content-data treatment-access-id data-names)
           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
-      (if (> (count save-data) 0)
-        (do (db/save-content-data! {:content-data save-data})
-            (log/debug (str "Yeah! " (count save-data) " rows saved")))
-        (log/debug (str "No rows saved"))))))
+      (if (< 0 (count save-data))
+        (db/save-content-data! {:content-data save-data})))))
