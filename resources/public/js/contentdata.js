@@ -122,21 +122,12 @@ function setupStaticDataTabbed(content, index) {
 
 function fillStaticData(content, data_name) {
 	content.find('.contentdata').not(':input').each(function () {
-		var value = getContentDataValue($(this).text(), data_name);
+		var value = getContentDataValue(getContentDataPostKey($(this).text(), data_name));
 		if (value === undefined) {
 			value = '';
 		}
 		$(this).html(value.replace(/(?:\r\n|\r|\n)/g, '<br />'));
 	});
-	/*
-	 content.find(':input.contentdata').each(function () {
-	 var value = getContentDataValue($(this).attr('value'));
-	 if(value === undefined){
-	 value = '';
-	 }
-	 $(this).attr('value', value);
-	 });
-	 */
 }
 
 function getContentTabId(index) {
@@ -146,7 +137,6 @@ function getContentTabId(index) {
 function content_submit() {
 	var form = event.target;
 	var content_div = $(form).parent();
-	var data_name = content_div.data('data-name');
 	var all_values = {};
 	$(content_div)
 		.find(':input').not($(form).children())
@@ -154,19 +144,19 @@ function content_submit() {
 			var input = this;
 			if (input.type == 'radio') {
 				if ($(input).prop('checked')) {
-					all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
+					all_values[input.name] = $(input).val();
 				}
 			}
 			else if (input.type == 'checkbox') {
 				if ($(input).prop('checked')) {
-					all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
+					all_values[input.name] = $(input).val();
 				}
 				else {
-					all_values[getContentDataPostKey(input.name, data_name)] = '';
+					all_values[input.name] = '';
 				}
 			}
 			else {
-				all_values[getContentDataPostKey(input.name, data_name)] = $(input).val();
+				all_values[input.name] = $(input).val();
 			}
 		});
 	$(form).find('.content-poster').val(JSON.stringify(all_values));
@@ -175,22 +165,24 @@ function content_submit() {
 
 function contentForm() {
 	//TODO: Does not handle pre-checked checkboxes
-	var contentform = $(".treatment-content").first();
-	var data_name = contentform.data('data-name');
-	contentform
-		.find(':input').not('[type=submit]')
+	var content_div = $(".treatment-content").first();
+	var data_name = content_div.data('data-name');
+	content_div
+		.find(':input').not(content_div.find('form').children())//.not('[type=submit]')
 		.each(function () {
-			var value = getContentDataValue(this.name, data_name);
+			var input = this;
+			$(input).prop('name', getContentDataPostKey(input.name, data_name));
+			var value = getContentDataValue(input.name);
 			if (value !== undefined) {
-				if (this.type == 'radio' || this.type == 'checkbox') {
-					$(this).prop('checked', value == this.value);
+				if (input.type == 'radio' || input.type == 'checkbox') {
+					$(input).prop('checked', value == input.value);
 				}
 				else {
-					$(this).val(value);
+					$(input).val(value);
 				}
 			}
 		});
-	fillStaticData(contentform, data_name);
+	fillStaticData(content_div, data_name);
 }
 
 function getContentDataBASSVar(value_name) {
@@ -204,16 +196,11 @@ function getContentDataBASSVar(value_name) {
 	}
 }
 
-function getContentDataValue(value_name, data_name) {
+function getContentDataValue(value_name) {
 	var key = "content.data.";
-	if (value_name.indexOf('.') == -1) {
-		key = key + data_name;
-	}
-	else {
-		var a = value_name.split('.', 2);
-		key = key + a[0];
-		value_name = a[1];
-	}
+	var a = value_name.split('.', 2);
+	key = key + a[0];
+	value_name = a[1];
 
 	if (bass_data[key] !== undefined) {
 		if (bass_data[key][value_name] !== undefined) {
