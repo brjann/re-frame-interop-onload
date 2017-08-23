@@ -183,6 +183,17 @@ function contentForm() {
 			}
 		});
 	fillStaticData(content_div, data_name);
+	if (content_div.hasClass('areyousure')) {
+		content_div.areYouSure({'silent': true});
+		content_div.on('dirty.areYouSure', function () {
+			// Enable save button only as the form is dirty.
+			$(this).prepend('<div id = "xxx" class="fixed-bottom"><button class="btn btn-primary">Save changes</button></div>');
+		});
+		content_div.on('clean.areYouSure', function () {
+			// Form is clean so nothing to save - disable the save button.
+			$(this).find('#xxx').remove();
+		});
+	}
 }
 
 function getContentDataBASSVar(value_name) {

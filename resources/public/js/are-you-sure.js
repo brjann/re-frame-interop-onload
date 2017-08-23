@@ -73,14 +73,22 @@
 			var isFieldDirty = function ($field) {
 				var origValue = $field.data('ays-orig');
 				if (undefined === origValue) {
+					$field.removeClass('dirty');
 					return false;
 				}
-				return (getValue($field) != origValue);
+				if (getValue($field) != origValue) {
+					$field.addClass('dirty');
+					return true;
+				}
+				$field.removeClass('dirty');
+				return false;
+				// return (getValue($field) != origValue);
 			};
 
-			var $form = ($(this).is('form'))
+			// .form Added by brjann@gmail.com
+			var $form = ($(this).is('form,.areyousure'))
 				? $(this)
-				: $(this).parents('form');
+				: $(this).parents('form,.areyousure');
 
 			// Test on the target first as it's the most likely to be dirty
 			if (isFieldDirty($(evt.target))) {
@@ -177,7 +185,7 @@
 		}
 
 		return this.each(function (elem) {
-			if (!$(this).is('form')) {
+			if (!$(this).is('form,.areyousure')) {
 				return;
 			}
 			var $form = $(this);
