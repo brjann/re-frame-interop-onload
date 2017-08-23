@@ -57,10 +57,18 @@
      :homework   (first (get categorized "Homework"))
      :main-texts (get categorized "MainTexts")}))
 
-(defn get-content
+#_(defn get-content
   [content-id]
   (let [content (db/get-content {:content-id content-id})]
     (assoc content :markdown (= 1 (:markdown content)))))
+
+(defn get-content
+  [content-id]
+  (-> (db/get-content {:content-id content-id})
+      (#(assoc % :markdown (= 1 (:markdown %))))
+      (unserialize-key :data-imports)
+      ;; Transform true false array for imports into list of imported data
+      (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
 
 ;; TODO: Remove c_module from SQL query
 (defn get-module-contents

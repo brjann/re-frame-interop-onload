@@ -49,7 +49,8 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 SELECT
   Text,
   IsMarkDown AS `markdown`,
-  DataName   AS `data-name`
+  DataName   AS `data-name`,
+  ImportData AS `data-imports`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
 
