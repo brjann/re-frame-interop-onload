@@ -16,7 +16,6 @@ function main_text_ays() {
 	$('.treatment-content.main-text').each(
 		function () {
 			var content_div = $(this);
-			content_div.areYouSure();
 			content_div.on('dirty.areYouSure', function () {
 				content_div.find('.changes-saver').show();
 			});
@@ -200,6 +199,8 @@ function contentForm() {
 				}
 			}
 		});
+	content_div.areYouSure();
+
 	fillStaticData(content_div, data_name);
 }
 

@@ -13,7 +13,7 @@
     {% endif %}
 </div>
 {% endif %}
-<div class="treatment-content{% if submitted %} readonly{% endif %}" data-data-name="{{data-name}}">
+<div class="treatment-content {% if submitted %}readonly{% else %}form{% endif %}" data-data-name="{{data-name}}">
     {% if markdown %}
     {{text|markdown}}
     {% else %}

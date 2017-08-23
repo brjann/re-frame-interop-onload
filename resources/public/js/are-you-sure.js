@@ -86,10 +86,10 @@
 				// return (getValue($field) != origValue);
 			};
 
-			// .areyousure Added by brjann@gmail.com
-			var $form = ($(this).is('form,.areyousure'))
+			// brjann@gmail.com added .form
+			var $form = ($(this).is('form,.form'))
 				? $(this)
-				: $(this).parents('form,.areyousure');
+				: $(this).parents('form,.form');
 
 			// Test on the target first as it's the most likely to be dirty
 			if (isFieldDirty($(evt.target))) {
@@ -167,7 +167,8 @@
 		if (!settings.silent && !window.aysUnloadSet) {
 			window.aysUnloadSet = true;
 			$(window).bind('beforeunload', function () {
-				$dirtyForms = $('form,.areyousure').filter('.' + settings.dirtyClass);
+				// brjann@gmail.com added .form
+				$dirtyForms = $('form,.form').filter('.' + settings.dirtyClass);
 				if ($dirtyForms.length == 0) {
 					return;
 				}
@@ -186,8 +187,8 @@
 		}
 
 		return this.each(function (elem) {
-			// .areyousure Added by brjann@gmail.com
-			if (!$(this).is('form,.areyousure')) {
+			// brjann@gmail.com added .form
+			if (!$(this).is('form,.form')) {
 				return;
 			}
 			var $form = $(this);
