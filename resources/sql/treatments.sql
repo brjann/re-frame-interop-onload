@@ -1,6 +1,6 @@
 
--- :name get-linked-treatments :? :*
--- :doc get user's active treatments (NOTE: DOES NOT CHECK IF THEY ARE ONGOING)
+-- :name get-treatment-accesses :? :*
+-- :doc get user's treatment accesses (NOTE: DOES NOT CHECK IF THEY ARE ONGOING)
 SELECT
   ca.ObjectId    AS `treatment-access-id`,
   lca.LinkeeId   AS `treatment-id`,
@@ -75,3 +75,17 @@ VALUES :t*:content-data;
 REPLACE INTO content_data_homework
 (TreatmentAccessId, ModuleId, `Time`, InspectorId, InspectionTime, OK)
 VALUES (:treatment-access-id, :module-id, unix_timestamp(now()), 0, 0, 0);
+
+-- :name get-submitted-homeworks :? :*
+-- :doc get the content data
+SELECT
+  ModuleId AS `module-id`,
+  `Time`,
+  OK
+FROM content_data_homework
+WHERE Id IN
+  (SELECT max(Id) FROM
+    content_data_homework
+  WHERE
+    TreatmentAccessId = :treatment-access-id
+  GROUP BY ModuleId)

@@ -20,12 +20,19 @@
     x
     (not (zero? (str->int x)))))
 
+(defn- submitted-homeworks
+  [treatment-access]
+  (->> (db/get-submitted-homeworks {:treatment-access-id (:treatment-access-id treatment-access)})
+       (group-by :module-id)
+       (map-map first)))
 
 (defn- user-treatment-accesses
   [user-id]
   (mapv (fn [treatment-access]
-          (unserialize-key treatment-access :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bol %))))))
-        (db/get-linked-treatments {:user-id user-id})))
+          (-> treatment-access
+              (unserialize-key :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bol %)))))
+              (#(assoc % :submitted-homeworks (submitted-homeworks %)))))
+        (db/get-treatment-accesses {:user-id user-id})))
 
 (defn- categorize-contents
   [contents module-id]
