@@ -1,13 +1,15 @@
 (ns bass4.middleware.errors
   (:require [bass4.layout :as layout]
             [bass4.config :refer [env]]
-            [bass4.utils :refer [nil-zero? subs+]]
+            [bass4.utils :refer [nil-zero?]]
+            [clojure.string :as string]
             [buddy.auth.accessrules :refer [restrict]]
             [buddy.auth :refer [authenticated?]]
             [bass4.mailer :refer [mail!]]
             [clojure.tools.logging :as log]
             [bass4.layout :refer [*app-context* error-page error-400-page]]
-            [bass4.request-state :as request-state])
+            [bass4.request-state :as request-state]
+            [clojure.string :as string])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -66,7 +68,7 @@
       (catch ExceptionInfo e
         (if (or
               (= (:type (.data e)) :schema.core/error)
-              (= "400" (subs+ (.getMessage e) 0 3)))
+              (string/starts-with? (.getMessage e) "400"))
           (do
             (request-state/record-error! (.getMessage e))
             (error-400-page (when (env :debug-mode (.getMessage e)))))

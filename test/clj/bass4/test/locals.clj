@@ -2,7 +2,11 @@
   (:require [clojure.test :refer :all]
             [bass4.utils :refer :all]
             [bass4.bass-locals :refer :all]
-            [bass4.test.core :refer [get-edn]]))
+            [bass4.test.core :refer [get-edn test-fixtures]]))
+
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest t-parse-local
   (is (= (get-edn "parse-local")

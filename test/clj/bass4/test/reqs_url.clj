@@ -3,7 +3,12 @@
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
-            [kerodon.test :refer :all]))
+            [kerodon.test :refer :all]
+            [bass4.test.core :refer [test-fixtures]]))
+
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest request-url-encode
   (-> (session (app))

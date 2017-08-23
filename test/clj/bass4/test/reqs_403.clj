@@ -5,7 +5,12 @@
             [kerodon.core :refer :all]
             [bass4.test.core :refer [test-fixtures debug-headers-text?]]
             [kerodon.test :refer :all]
+            [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.tools.logging :as log]))
+
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest request-404-get
   (-> (session (app))
