@@ -1,7 +1,8 @@
 (ns bass4.services.content-data
   (:require [bass4.db.core :as db]
             [schema.core :as schema]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.layout :as layout]))
 
 
 ;; ****************************
@@ -44,7 +45,7 @@
     (when (or
             (some #(or (nil? %) (= "" %)) [data-name key])
             (not (string? value)))
-      (throw (ex-info "400" {})))
+      (layout/throw-400!))
     [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]

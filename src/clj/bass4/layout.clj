@@ -74,6 +74,12 @@
                 :message message}
                "error-back-or-login.html")))
 
+(defn throw-400!
+  ([] (throw-400! ""))
+  ([message]
+   (let [sep (if (zero? (count message)) "" " ")]
+     (throw (ex-info (str "400" sep message) {})))))
+
 (defn text-response
   [var]
   (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))

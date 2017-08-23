@@ -6,7 +6,7 @@
     {% else %}
     {{text|safe}}
     {% endif %}
-    <form method="post" class="content-submitter no-ajax" name="contentform" action="/debug/params"
+    <form method="post" class="content-submitter" name="contentform" action=""
           onsubmit="return content_submit();">
         <input type="hidden" name="content-data" class="content-poster">
         <input type="hidden" name="submitting" value="0">
@@ -17,7 +17,7 @@
 </div>
 <script>
 	function submit_homework() {
-		$(event.target).siblings('[name="returning"]').val(1);
+		 $(event.target).siblings('[name="submitting"]').val(1);
 	}
 </script>
 {% endblock %}
