@@ -12,8 +12,8 @@
 
 
 (defn- context-menu
-  [module-id module-contents]
-  (let [base-path  (str "/user/module/" module-id)
+  [module module-contents]
+  (let [base-path  (str "/user/module/" (:module-id module))
         main-text  {:link (str base-path "/")
                     :name (i18n/tr [:modules/module-text])}
         homework   (when (:homework module-contents)
@@ -22,7 +22,8 @@
         worksheets (map #(identity {:link (str base-path "/worksheet/" (:content-id %))
                                     :name (:content-name %)})
                         (:worksheets module-contents))]
-    (remove nil? (into [main-text homework] worksheets))))
+    (merge {:items (remove nil? (into [main-text homework] worksheets))}
+           {:title (:module-name module)})))
 
 (defn- main-text-renderer
   ;; TODO: How to handle multiple texts
@@ -70,7 +71,7 @@
                 :markdown     (:markdown content)
                 :data-name    data-name
                 :content-data content-data
-                :context-menu (context-menu (:module-id module) module-contents)}
+                :context-menu (context-menu module module-contents)}
                params)))))
 
 (defn- module-render-wrapper

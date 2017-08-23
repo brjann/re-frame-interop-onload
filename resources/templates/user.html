@@ -28,7 +28,10 @@
             <!-- Context menu -->
             {% if context-menu %}
             <div class="dropdown-divider"></div>
-            {% for item in context-menu %}
+            {% if context-menu.title %}
+            <span class='navbar-text' style="text-align:center;">{{context-menu.title}}</span>
+            {% endif %}
+            {% for item in context-menu.items %}
             <a href="{{item.link}}" class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
             {% endfor %}
             {% endif %}
