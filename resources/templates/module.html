@@ -18,9 +18,12 @@ No such module
 
     </nav>
     <div id="module-text">
-        {{ text|markdown }}
+        {% if markdown %}
+        {{text|markdown}}
+        {% else %}
+        {{text|safe}}
+        {% endif %}
     </div>
 </div>
 {% endifequal %}
 {% endblock %}
-

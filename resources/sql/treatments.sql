@@ -48,7 +48,7 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 -- :doc
 SELECT
   Text,
-  IsMarkDown AS `mark-down`,
+  IsMarkDown AS `markdown`,
   DataName   AS `data-name`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;

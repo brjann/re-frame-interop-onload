@@ -202,8 +202,8 @@ function getContentDataValue(value_name) {
 	key = key + a[0];
 	value_name = a[1];
 
-	if (bass_data[key] !== undefined) {
-		if (bass_data[key][value_name] !== undefined) {
+	if (bass_data[key] != undefined) {
+		if (bass_data[key][value_name] != undefined) {
 			return bass_data[key][value_name];
 		}
 		/*

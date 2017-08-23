@@ -59,6 +59,7 @@
       (render-fn
         template
         {:text         (:text content)
+         :markdown     (:markdown content)
          :data-name    data-name
          :content-data ((keyword data-name) content-data)
          :context-menu (context-menu (:module-id module) module-contents)}))))

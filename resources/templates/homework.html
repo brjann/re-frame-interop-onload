@@ -1,7 +1,11 @@
 {% extends "user.html" %}
 {% block user-content %}
-<div id="module-text">
-    {{ text|markdown }}
+<div class="treatment-content">
+    {% if markdown %}
+    {{text|markdown}}
+    {% else %}
+    {{text|safe}}
+    {% endif %}
 </div>
 {% endblock %}
 
