@@ -16,7 +16,7 @@
 
 		var settings = $.extend(
 			{
-				'message': 'You have unsaved changes!',
+				'message': text_unsaved_changes,
 				'dirtyClass': 'dirty',
 				'change': null,
 				'silent': false,
@@ -70,22 +70,23 @@
 
 		var checkForm = function (evt) {
 
+			// brjann@gmail.com added dirty-input class to inputs
 			var isFieldDirty = function ($field) {
 				var origValue = $field.data('ays-orig');
 				if (undefined === origValue) {
-					$field.removeClass('dirty');
+					$field.removeClass('dirty-input');
 					return false;
 				}
 				if (getValue($field) != origValue) {
-					$field.addClass('dirty');
+					$field.addClass('dirty-input');
 					return true;
 				}
-				$field.removeClass('dirty');
+				$field.removeClass('dirty-input');
 				return false;
 				// return (getValue($field) != origValue);
 			};
 
-			// .form Added by brjann@gmail.com
+			// .areyousure Added by brjann@gmail.com
 			var $form = ($(this).is('form,.areyousure'))
 				? $(this)
 				: $(this).parents('form,.areyousure');
@@ -166,7 +167,7 @@
 		if (!settings.silent && !window.aysUnloadSet) {
 			window.aysUnloadSet = true;
 			$(window).bind('beforeunload', function () {
-				$dirtyForms = $("form").filter('.' + settings.dirtyClass);
+				$dirtyForms = $('form,.areyousure').filter('.' + settings.dirtyClass);
 				if ($dirtyForms.length == 0) {
 					return;
 				}
@@ -185,6 +186,7 @@
 		}
 
 		return this.each(function (elem) {
+			// .areyousure Added by brjann@gmail.com
 			if (!$(this).is('form,.areyousure')) {
 				return;
 			}

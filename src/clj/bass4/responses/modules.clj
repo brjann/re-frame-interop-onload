@@ -30,7 +30,7 @@
   [module-render-fn module-contents]
   (let [module-text-id (:content-id (first (:main-texts module-contents)))]
     (module-render-fn
-      "module.html"
+      "main-text.html"
       module-text-id)))
 
 

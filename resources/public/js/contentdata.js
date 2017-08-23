@@ -3,11 +3,29 @@ $(document).ready(function () {
 	// must be called before form is initialised
 	//contentTabbed();
 	contentForm();
+	main_text_ays();
 	$('.readonly :input').prop('disabled', true);
 	/* contentAdjustWidth();
 	 contentInsertPageBreaks();
 	 contentLayout();*/
+
 });
+
+
+function main_text_ays() {
+	$('.treatment-content.main-text').each(
+		function () {
+			var content_div = $(this);
+			content_div.areYouSure();
+			content_div.on('dirty.areYouSure', function () {
+				content_div.find('.changes-saver').show();
+			});
+			content_div.on('clean.areYouSure', function () {
+				content_div.find('.changes-saver').hide();
+			});
+		}
+	);
+}
 
 function contentTabbed() {
 	var tab_name = bass_data['tab_name'];
@@ -183,24 +201,6 @@ function contentForm() {
 			}
 		});
 	fillStaticData(content_div, data_name);
-
-	if (content_div.hasClass('areyousure')) {
-		content_div.areYouSure({'silent': true});
-		content_div.on('dirty.areYouSure', function () {
-			/*
-			 // Initial implementation of tooltip to remind user of saving.
-			 // Instead handled using question when leaving page.
-			 $(this).find(':input.dirty').each(function(){
-			 var $input = $(this);
-			 $input.tooltip({title: "Hejsan"});
-			 });
-			 */
-			$(this).find('.changes-saver').show();
-		});
-		content_div.on('clean.areYouSure', function () {
-			$(this).find('.changes-saver').hide();
-		});
-	}
 }
 
 function getContentDataBASSVar(value_name) {
