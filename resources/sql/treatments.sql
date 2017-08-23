@@ -68,3 +68,10 @@ WHERE Id IN (SELECT MAX(Id)
 INSERT INTO content_data
 (DataOwnerId, `Time`, DataName, ValueName, `Value`)
 VALUES :t*:content-data;
+
+
+-- :name submit-homework! :! :n
+-- :doc
+REPLACE INTO content_data_homework
+(TreatmentAccessId, ModuleId, `Time`, InspectorId, InspectionTime, OK)
+VALUES (:treatment-access-id, :module-id, unix_timestamp(now()), 0, 0, 0);

@@ -7,7 +7,8 @@
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [bass4.services.content-data :as content-data-service]))
 
 
 (defn- context-menu

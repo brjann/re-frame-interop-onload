@@ -57,7 +57,7 @@
     (POST "/homework" [& params]
       (when (handle-content-data params (:treatment-access-id treatment-access))
         (when (= 1 (str->int (:submitting params)))
-          (log/debug "submitting "))
+          (content-data-service/submit-homework! treatment-access module))
         (response/found "reload")))
     (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
 
