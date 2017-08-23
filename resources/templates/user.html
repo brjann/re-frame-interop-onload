@@ -25,19 +25,37 @@
             </a>
             {% endif %}
 
-            <!-- Context menu -->
             {% if context-menu %}
-            <div class="dropdown-divider"></div>
-            {% if context-menu.title %}
-            <span class='navbar-text' style="text-align:center;">{{context-menu.title}}</span>
-            {% endif %}
-            {% for item in context-menu.items %}
-            <a href="{{item.link}}" class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
-            {% endfor %}
+            <!-- Mobile context menu -->
+            <div class="hidden-md-up">
+                <div class="dropdown-divider"></div>
+                {% if context-menu.title %}
+                <span class='navbar-text' style="text-align:center;">{{context-menu.title}}</span>
+                {% endif %}
+                {% for item in context-menu.items %}
+                <a href="{{item.link}}"
+                   class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
+                {% endfor %}
+            </div>
             {% endif %}
         </div>
     </div>
 </nav>
+{% if context-menu %}
+<!-- Desktop context menu -->
+<div class="hidden-sm-down">
+    <nav class="navbar navbar-toggleable-md navbar-light bg-faded" style="margin-top: -10px;">
+        <div class="navbar-nav">
+            {% if context-menu.title %}
+            <span class='navbar-text'>{{context-menu.title}}</span>
+            {% endif %}
+            {% for item in context-menu.items %}
+            <a href="{{item.link}}" class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
+            {% endfor %}
+        </div>
+    </nav>
+</div>
+{% endif %}
 
 <div class="container">
     {% block user-content %}
