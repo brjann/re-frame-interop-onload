@@ -6,11 +6,19 @@
     {% else %}
     {{text|safe}}
     {% endif %}
-    <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
+    <form method="post" class="content-submitter no-ajax" name="contentform" action="/debug/params"
           onsubmit="return content_submit();">
         <input type="hidden" name="content-data" class="content-poster">
-        <button type="submit" class="btn btn-primary">{%tr save %}</button>
+        <input type="hidden" name="submitting" value="0">
+        <button type="submit" class="btn btn-primary" onclick="submit_homework();">{%tr modules/submit-homework %}
+        </button>
+        <button type="submit" class="btn btn-warning">{%tr modules/save-homework %}</button>
     </form>
 </div>
+<script>
+	function submit_homework() {
+		$(event.target).siblings('[name="returning"]').val(1);
+	}
+</script>
 {% endblock %}
 

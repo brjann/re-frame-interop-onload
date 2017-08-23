@@ -133,13 +133,7 @@ $(document).ready(function(){
 
 			$form.submit(function (event) {
 
-				var ajax_fns = $form.data('on_ajax_fns');
-
-				while (ajax_fns.length) {
-					ajax_fns.pop()();
-				}
-
-				event.preventDefault();
+				// TODO: Moved event.preventDefault without really knowing the effects.
 
 				if(!no_validate) {
 					var validation_failed = false;
@@ -157,20 +151,28 @@ $(document).ready(function(){
 						}
 					});
 					if (validation_failed) {
+						event.preventDefault();
 						return false;
 					}
 				}
 
 				// If form has own submit function, call it
 				// if it returns false, then abort.
-				// TODO: This possibly fails if function wants normal submission. Because of event.preventDefault
 				if(formsubmit !== undefined){
 					if(!formsubmit()){
+						event.preventDefault();
 						return false;
 					}
 				}
 
 				if(!no_ajax){
+					event.preventDefault();
+					var ajax_fns = $form.data('on_ajax_fns');
+
+					while (ajax_fns.length) {
+						ajax_fns.pop()();
+					}
+
 					var post = $form.serializeArray();
 					var url;
 					if (this.action != "") {

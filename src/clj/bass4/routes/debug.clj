@@ -49,6 +49,8 @@
           (layout/error-403-page (get-in request [:session :identity])))
         (POST "/found" []
           (-> (http-response/found "/login")))
+        (POST "/params" [& params]
+          (layout/text-response params))
         (GET "/encode" []
           (-> (http-response/found (str "/debug/decode?url=" (codec/url-encode "/debug/encode-decode?arg1=val1&arg2=val2&arg3=path%2fto%2fresource")))))
         (GET "/decode" [& params]
