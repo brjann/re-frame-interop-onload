@@ -1,6 +1,16 @@
 {% extends "user.html" %}
 {% block user-content %}
-<div class="treatment-content" data-data-name="{{data-name}}">
+{% if submitted %}
+<div class="alert alert-info" role="alert">
+    <strong>{%tr modules/submitted! %}</strong>
+    {% if submitted.ok %}
+    {% tr modules/submitted-ok %}
+    {% else %}
+    {% trb modules/submitted-info %}{{time|datetime-ns}}{% endtrb %}
+    {% endif %}
+</div>
+{% endif %}
+<div class="treatment-content{% if submitted %} readonly{% endif %}" data-data-name="{{data-name}}">
     {% if markdown %}
     {{text|markdown}}
     {% else %}

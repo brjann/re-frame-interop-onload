@@ -24,7 +24,8 @@
   [treatment-access]
   (->> (db/get-submitted-homeworks {:treatment-access-id (:treatment-access-id treatment-access)})
        (group-by :module-id)
-       (map-map first)))
+       (map-map first)
+       (map-map #(assoc % :ok (= 1 (:ok %))))))
 
 (defn- user-treatment-accesses
   [user-id]
@@ -33,29 +34,6 @@
               (unserialize-key :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bol %)))))
               (#(assoc % :submitted-homeworks (submitted-homeworks %)))))
         (db/get-treatment-accesses {:user-id user-id})))
-
-(defn- categorize-contents
-  [contents module-id]
-  (let [categorized (map-map (fn [x] (map :content-id x)) (group-by :type (get contents module-id)))]
-    {:worksheets (get categorized "Worksheets")
-     :homework   (first (get categorized "Homework"))
-     :main-texts (get categorized "MainTexts")}))
-
-(defn- add-contents-to-modules
-  [modules worksheets]
-  (let [contents-by-module (group-by :module-id worksheets)]
-    (map (fn [module]
-           (merge module (categorize-contents contents-by-module (:module-id module))))
-         modules)))
-
-#_(defn treatment-map
-  [treatment-id]
-  (let [info     (db/get-treatment-info {:treatment-id treatment-id})
-        modules  (db/get-treatment-modules {:treatment-id treatment-id})
-        contents (db/get-module-worksheets {:module-ids (map :module-id modules)})]
-    (merge info
-           {:modules  (add-contents-to-modules modules contents)
-            :contents (into {} (map #(identity [(:content-id %) (dissoc % :module-id :type)]) contents))})))
 
 (defn- categorize-module-contents
   [contents]

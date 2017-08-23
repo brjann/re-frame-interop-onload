@@ -28,7 +28,10 @@
                    :no-worksheet    "This module does not have this worksheet"
                    :homework        "Homework"
                    :submit-homework "Submit homework"
-                   :save-homework   "Save without submitting"}
+                   :save-homework   "Save without submitting"
+                   :submitted!      "Submitted!"
+                   :submitted-ok    "You have submitted your homework and it has been reviewed by your therapist."
+                   :submitted-info  "You submitted your homework on %1 and it is waiting to be reviewed by your therapist."}
  :login           {:login                    "Login"
                    :please-username-password "Please provide your username and password to log on to the system."
                    :username-password-error  "Wrong username or password"

@@ -33,13 +33,16 @@
       "module.html"
       module-text-id)))
 
+
 (defn- homework-renderer
-  [module-render-fn module-contents]
-  (if-let [homework-id (:content-id (:homework module-contents))]
-    (module-render-fn
-      "homework.html"
-      homework-id)
-    (layout/error-404-page (i18n/tr [:modules/no-homework]))))
+  [submitted]
+  (fn [module-render-fn module-contents]
+    (if-let [homework-id (:content-id (:homework module-contents))]
+      (module-render-fn
+        "homework.html"
+        homework-id
+        {:submitted submitted})
+      (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
 (defn- worksheet-renderer
   [worksheet-id]
@@ -53,19 +56,21 @@
 
 (defn module-content-renderer
   [treatment-access render-fn module module-contents]
-  (fn [template content-id]
+  (fn [template content-id & params-map]
     (let [content      (treatment-service/get-content content-id)
           data-name    (:data-name content)
           content-data (content-data/get-content-data
                          (:treatment-access-id treatment-access)
-                         (conj (:data-imports content) data-name))]
+                         (conj (:data-imports content) data-name))
+          params       (first params-map)]
       (render-fn
         template
-        {:text         (:text content)
-         :markdown     (:markdown content)
-         :data-name    data-name
-         :content-data content-data
-         :context-menu (context-menu (:module-id module) module-contents)}))))
+        (merge {:text         (:text content)
+                :markdown     (:markdown content)
+                :data-name    data-name
+                :content-data content-data
+                :context-menu (context-menu (:module-id module) module-contents)}
+               params)))))
 
 (defn- module-render-wrapper
   [treatment-access render-fn text-render-fn module]
@@ -77,7 +82,7 @@
   (module-render-wrapper treatment-access render-fn main-text-renderer module))
 
 (defn homework [treatment-access render-fn module]
-  (module-render-wrapper treatment-access render-fn homework-renderer module))
+  (module-render-wrapper treatment-access render-fn (homework-renderer (get-in treatment-access [:submitted-homeworks (:module-id module)])) module))
 
 (defn worksheet [treatment-access render-fn module worksheet-id]
   (module-render-wrapper treatment-access render-fn (worksheet-renderer worksheet-id) module))
