@@ -79,6 +79,7 @@ VALUES (:treatment-access-id, :module-id, unix_timestamp(now()), 0, 0, 0);
 -- :name get-submitted-homeworks :? :*
 -- :doc get the content data
 SELECT
+  Id AS `submit-id`,
   ModuleId AS `module-id`,
   `Time`,
   OK
@@ -89,3 +90,7 @@ WHERE Id IN
   WHERE
     TreatmentAccessId = :treatment-access-id
   GROUP BY ModuleId)
+
+-- :name retract-homework! :! :1
+-- :doc
+DELETE FROM content_data_homework WHERE Id = :submit-id;

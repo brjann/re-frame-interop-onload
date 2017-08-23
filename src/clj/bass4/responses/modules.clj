@@ -111,5 +111,13 @@
   [treatment-access module content-data submit?]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (when submit?
-      (content-data-service/submit-homework! treatment-access module))
+      (treatment-service/submit-homework! treatment-access module))
     (response/found "reload")))
+
+(defn retract-homework
+  [treatment-access module]
+  (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
+    (when (not (:ok submitted))
+      (treatment-service/retract-homework! submitted module)
+      (response/found "reload"))
+    (layout/throw-400!)))

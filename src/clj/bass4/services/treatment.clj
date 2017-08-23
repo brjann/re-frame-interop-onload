@@ -86,3 +86,11 @@
        :user-components  (user-components treatment-access treatment)
        :treatment        treatment})))
 
+(defn submit-homework!
+  [treatment-access module]
+  (db/submit-homework! {:treatment-access-id (:treatment-access-id treatment-access)
+                        :module-id           (:module-id module)}))
+
+(defn retract-homework!
+  [submitted module]
+  (db/retract-homework! {:submit-id (:submit-id submitted)}))

@@ -74,8 +74,3 @@
           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
       (if (< 0 (count save-data))
         (db/save-content-data! {:content-data save-data})))))
-
-(defn submit-homework!
-  [treatment-access module]
-  (db/submit-homework! {:treatment-access-id (:treatment-access-id treatment-access)
-                        :module-id           (:module-id module)}))

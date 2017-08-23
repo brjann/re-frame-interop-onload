@@ -49,6 +49,10 @@
         module
         (json-safe (:content-data params))
         (= 1 (str->int (:submitting params)))))
+    (POST "/retract-homework" []
+      (modules-response/retract-homework
+        treatment-access
+        module))
     (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
 
 (defn treatment-routes
