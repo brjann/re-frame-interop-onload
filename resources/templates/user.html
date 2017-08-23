@@ -9,7 +9,14 @@
             aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <span id="page-title" class="navbar-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Where are we?</span>
+    <span id="page-title" class="navbar-text hidden-md-up"
+          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+        {% if page-title %}
+        {{page-title}}
+        {% else %}
+        &nbsp;
+        {% endif %}
+    </span>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
             {% if messaging %}
@@ -30,7 +37,7 @@
             <div class="hidden-md-up">
                 <div class="dropdown-divider"></div>
                 {% if context-menu.title %}
-                <span class='navbar-text' style="text-align:center;">{{context-menu.title}}</span>
+                <div class='navbar-text' style="display:block; text-align:center;">{{context-menu.title}}</div>
                 {% endif %}
                 {% for item in context-menu.items %}
                 <a href="{{item.link}}"
@@ -46,9 +53,11 @@
 <div class="hidden-sm-down">
     <nav class="navbar navbar-toggleable-md navbar-light bg-faded" style="margin-top: -10px;">
         <div class="navbar-nav">
+            <!--
             {% if context-menu.title %}
             <span class='navbar-text'>{{context-menu.title}}</span>
             {% endif %}
+            -->
             {% for item in context-menu.items %}
             <a href="{{item.link}}" class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
             {% endfor %}

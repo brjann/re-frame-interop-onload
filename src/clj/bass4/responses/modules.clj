@@ -37,13 +37,14 @@
 
 
 (defn- homework-renderer
-  [submitted]
+  [module submitted]
   (fn [module-render-fn module-contents]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-render-fn
         "homework.html"
         homework-id
-        {:submitted submitted})
+        {:submitted  submitted
+         :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
 (defn- worksheet-renderer
@@ -84,7 +85,7 @@
   (module-render-wrapper treatment-access render-fn main-text-renderer module))
 
 (defn homework [treatment-access render-fn module]
-  (module-render-wrapper treatment-access render-fn (homework-renderer (get-in treatment-access [:submitted-homeworks (:module-id module)])) module))
+  (module-render-wrapper treatment-access render-fn (homework-renderer module (get-in treatment-access [:submitted-homeworks (:module-id module)])) module))
 
 (defn worksheet [treatment-access render-fn module worksheet-id]
   (module-render-wrapper treatment-access render-fn (worksheet-renderer worksheet-id) module))
@@ -92,7 +93,8 @@
 (defn modules-list [render-fn modules]
   (render-fn
     "modules-list.html"
-    {:modules modules}))
+    {:modules    modules
+     :page-title (i18n/tr [:modules/modules])}))
 
 (defn- handle-content-data
   [data-map treatment-access-id]

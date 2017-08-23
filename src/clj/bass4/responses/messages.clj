@@ -5,21 +5,13 @@
             [schema.core :as s]
             [bass4.layout :as layout]))
 
-(defn- messages-page [user messages draft]
-  (layout/render
-    "messages.html"
-    {:user user
-     :title "Messages"
-     :active_messages true
-     :messages messages
-     :draft draft}))
-
 (defn messages-page [render-fn user]
   (let [user-id (:user-id user)
         messages (messages-service/get-all-messages user-id)
         draft (messages-service/get-draft user-id)]
     (render-fn "messages.html" {:user            user
                                 :title           "Messages"
+                                :page-title      "Messages"
                                 :active_messages true
                                 :messages        messages
                                 :draft           draft})))
