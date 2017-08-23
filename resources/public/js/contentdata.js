@@ -3,8 +3,8 @@ $(document).ready(function () {
 	// must be called before form is initialised
 	//contentTabbed();
 	contentForm();
-	/*$('.readonly :input').prop('disabled', true);
-	 contentAdjustWidth();
+	$('.readonly :input').prop('disabled', true);
+	/* contentAdjustWidth();
 	 contentInsertPageBreaks();
 	 contentLayout();*/
 });

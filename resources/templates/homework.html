@@ -19,6 +19,7 @@
     {% else %}
     {{text|safe}}
     {% endif %}
+    {% if not submitted %}
     <form method="post" class="content-submitter" name="contentform" action=""
           onsubmit="return content_submit();">
         <input type="hidden" name="content-data" class="content-poster">
@@ -27,6 +28,7 @@
         </button>
         <button type="submit" class="btn btn-warning">{%tr modules/save-homework %}</button>
     </form>
+    {% endif %}
 </div>
 <script>
 	function submit_homework() {
