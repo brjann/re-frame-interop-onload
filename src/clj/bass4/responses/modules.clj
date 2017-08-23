@@ -31,7 +31,8 @@
   (let [module-text-id (:content-id (first (:main-texts module-contents)))]
     (module-render-fn
       "main-text.html"
-      module-text-id)))
+      module-text-id
+      {:module-id module-text-id})))
 
 
 (defn- homework-renderer
