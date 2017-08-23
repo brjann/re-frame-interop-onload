@@ -86,3 +86,25 @@
   (render-fn
     "modules-list.html"
     {:modules modules}))
+
+(defn- handle-content-data
+  [data-map treatment-access-id]
+  (if (map? data-map)
+    (do
+      (content-data-service/save-content-data!
+        data-map
+        treatment-access-id)
+      true)
+    (layout/throw-400!)))
+
+(defn save-worksheet-data
+  [treatment-access content-data]
+  (when (handle-content-data content-data (:treatment-access-id treatment-access))
+    (response/found "reload")))
+
+(defn save-homework
+  [treatment-access module content-data submit?]
+  (when (handle-content-data content-data (:treatment-access-id treatment-access))
+    (when submit?
+      (content-data-service/submit-homework! treatment-access module))
+    (response/found "reload")))

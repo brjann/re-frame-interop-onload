@@ -38,27 +38,17 @@
     string
     (codec/url-encode string)))
 
-(defn handle-content-data
-  [params treatment-access-id]
-  (let [data-map (json-safe (:content-data params))]
-    (if (map? data-map)
-      (do
-        (content-data-service/save-content-data!
-          data-map
-          treatment-access-id)
-        true)
-      (layout/throw-400!))))
-
 (defn module-routes
   [treatment-access render-fn module]
   (routes
     (GET "/" [] (modules-response/main-text treatment-access render-fn module))
     (GET "/homework" [] (modules-response/homework treatment-access render-fn module))
     (POST "/homework" [& params]
-      (when (handle-content-data params (:treatment-access-id treatment-access))
-        (when (= 1 (str->int (:submitting params)))
-          (content-data-service/submit-homework! treatment-access module))
-        (response/found "reload")))
+      (modules-response/save-homework
+        treatment-access
+        module
+        (json-safe (:content-data params))
+        (= 1 (str->int (:submitting params)))))
     (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
 
 (defn treatment-routes
@@ -87,8 +77,9 @@
           ;; Module not found
           (layout/error-404-page (i18n/tr [:modules/no-module]))))
       (POST "/content-data" [& params]
-        (when (handle-content-data params (:treatment-access-id (:treatment-access treatment)))
-          (response/found "reload"))))))
+        (modules-response/save-worksheet-data
+          (:treatment-access treatment)
+          (json-safe (:content-data params)))))))
 
 (defn assessment-routes
   [user request]
