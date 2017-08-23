@@ -28,12 +28,14 @@
 (defn- main-text-renderer
   ;; TODO: How to handle multiple texts
   ;; TODO: How to handle missing texts
-  [module-render-fn module-contents]
-  (let [module-text-id (:content-id (first (:main-texts module-contents)))]
-    (module-render-fn
-      "main-text.html"
-      module-text-id
-      {:module-id module-text-id})))
+  [module]
+  (fn [module-render-fn module-contents]
+    (let [module-text-id (:content-id (first (:main-texts module-contents)))]
+      (module-render-fn
+        "main-text.html"
+        module-text-id
+        {:module-id  module-text-id
+         :page-title (:module-name module)}))))
 
 
 (defn- homework-renderer
@@ -72,7 +74,8 @@
                 :markdown     (:markdown content)
                 :data-name    data-name
                 :content-data content-data
-                :context-menu (context-menu module module-contents)}
+                :context-menu (context-menu module module-contents)
+                :page-title   (:content-name content)}
                params)))))
 
 (defn- module-render-wrapper
@@ -82,7 +85,7 @@
     (text-render-fn module-render-fn module-contents)))
 
 (defn main-text [treatment-access render-fn module]
-  (module-render-wrapper treatment-access render-fn main-text-renderer module))
+  (module-render-wrapper treatment-access render-fn (main-text-renderer module) module))
 
 (defn homework [treatment-access render-fn module]
   (module-render-wrapper treatment-access render-fn (homework-renderer module (get-in treatment-access [:submitted-homeworks (:module-id module)])) module))

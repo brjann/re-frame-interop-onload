@@ -50,6 +50,7 @@ SELECT
   Text,
   IsMarkDown AS `markdown`,
   DataName   AS `data-name`,
+  `Name`       AS `content-name`,
   ImportData AS `data-imports`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
