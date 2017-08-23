@@ -271,7 +271,7 @@ $(document).ready(function () {
 			// TODO: Customize the h level
 			if (header.prop('tagName').indexOf('3') >= 0) {
 				header.attr('id', 's' + counter);
-				drop_down.append($('<a class="dropdown-item" href="#s' + counter + '">' + header.text() + '</a>'));
+				drop_down.append($(sprintf('<a class="dropdown-item" href="#s%s" onclick="return goToByScroll(\'s%s\');">%s</a>', counter, counter, header.text())));
 				counter++;
 			}
 		});
@@ -308,5 +308,12 @@ $(document).ready(function () {
 		}
 
 	}
-
 });
+
+function goToByScroll(id) {
+	var section = document.getElementById(id);
+	if (section !== null) {
+		section.scrollIntoView();
+	}
+	return false;
+}
