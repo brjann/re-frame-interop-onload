@@ -6,6 +6,7 @@
  :continue        "Continue"
  :logout          "Logout"
  :save            "Save"
+ :save-changes    "Save changes"
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
  :instrument      {:range-error     "You must supply a value between %s and %s."
                    :range-error-max "You must supply a value of %s or more."
