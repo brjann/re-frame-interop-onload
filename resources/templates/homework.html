@@ -1,11 +1,16 @@
 {% extends "user.html" %}
 {% block user-content %}
-<div class="treatment-content">
+<div class="treatment-content" data-data-name="{{data-name}}">
     {% if markdown %}
     {{text|markdown}}
     {% else %}
     {{text|safe}}
     {% endif %}
+    <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
+          onsubmit="return content_submit();">
+        <input type="hidden" name="content-data" class="content-poster">
+        <button type="submit" class="btn btn-primary">{%tr save %}</button>
+    </form>
 </div>
 {% endblock %}
 

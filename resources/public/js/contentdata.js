@@ -197,14 +197,13 @@ function getContentDataBASSVar(value_name) {
 }
 
 function getContentDataValue(value_name) {
-	var key = "content.data.";
 	var a = value_name.split('.', 2);
-	key = key + a[0];
+	var key = a[0];
 	value_name = a[1];
 
-	if (bass_data[key] != undefined) {
-		if (bass_data[key][value_name] != undefined) {
-			return bass_data[key][value_name];
+	if (content_data[key] != undefined) {
+		if (content_data[key][value_name] != undefined) {
+			return content_data[key][value_name];
 		}
 		/*
 		 * If it is not present - check if it's a tabbed and if #page = 1
@@ -213,12 +212,13 @@ function getContentDataValue(value_name) {
 		else if (value_name.indexOf('#') != -1) {
 			var x = value_name.split('#', 2);
 			if (x[1] == 1) {
-				return bass_data[key][x[0]];
+				return content_data[key][x[0]];
 			}
 		}
 	}
 	return undefined;
 }
+
 
 function getContentDataPostKey(value_name, data_name) {
 	if (value_name.indexOf('.') == -1) {

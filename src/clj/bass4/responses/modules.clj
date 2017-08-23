@@ -55,13 +55,15 @@
   (fn [template content-id]
     (let [content      (treatment-service/get-content content-id)
           data-name    (:data-name content)
-          content-data (content-data/get-content-data (:treatment-access-id treatment-access) [data-name])]
+          content-data (content-data/get-content-data
+                         (:treatment-access-id treatment-access)
+                         (conj (:data-imports content) data-name))]
       (render-fn
         template
         {:text         (:text content)
          :markdown     (:markdown content)
          :data-name    data-name
-         :content-data ((keyword data-name) content-data)
+         :content-data content-data
          :context-menu (context-menu (:module-id module) module-contents)}))))
 
 (defn- module-render-wrapper
