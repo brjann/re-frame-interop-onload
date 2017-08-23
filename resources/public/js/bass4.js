@@ -17,13 +17,15 @@ function post_success(form){
 			var on_success = eval($(form).data("on-success"));
 			on_success.call(form, data, textStatus, jqXHR);
 		}
-		var response = data.split(" ");
-		if (response[0] == "found") {
-			if (response[1] == "reload") {
-				window.location.reload(true);
-			}
-			else {
-				window.location.href = response[1];
+		if (typeof data === 'string') {
+			var response = data.split(" ");
+			if (response[0] == "found") {
+				if (response[1] == "reload") {
+					window.location.reload(true);
+				}
+				else {
+					window.location.href = response[1];
+				}
 			}
 		}
 	}

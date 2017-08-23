@@ -26,6 +26,12 @@ function main_text_ays() {
 	);
 }
 
+// Used by form on success.
+function main_text_save_complete() {
+	$(this).find('.changes-saver').hide();
+}
+
+
 function contentTabbed() {
 	var tab_name = bass_data['tab_name'];
 	var container_id = 0;

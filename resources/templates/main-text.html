@@ -23,7 +23,7 @@ No such module
         {% else %}
         {{text|safe}}
         {% endif %}
-        <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
+        <form method="post" class="content-submitter" name="contentform" data-on-success="main_text_save_complete"
               onsubmit="return content_submit();">
             <input type="hidden" name="content-data" class="content-poster">
             <button type="submit" class="btn btn-primary hidden fixed-bottom changes-saver">{%tr save-changes %}

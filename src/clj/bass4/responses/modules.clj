@@ -108,6 +108,11 @@
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (response/found "reload")))
 
+(defn save-main-text-data
+  [treatment-access content-data]
+  (when (handle-content-data content-data (:treatment-access-id treatment-access))
+    (response/ok {})))
+
 (defn save-homework
   [treatment-access module content-data submit?]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))

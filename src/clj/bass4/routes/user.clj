@@ -42,6 +42,10 @@
   [treatment-access render-fn module]
   (routes
     (GET "/" [] (modules-response/main-text treatment-access render-fn module))
+    (POST "/" [& params]
+      (modules-response/save-main-text-data
+        treatment-access
+        (json-safe (:content-data params))))
     (GET "/homework" [] (modules-response/homework treatment-access render-fn module))
     (POST "/homework" [& params]
       (modules-response/save-homework
