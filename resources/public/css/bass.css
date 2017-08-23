@@ -221,3 +221,13 @@ div#instrument .item-error {
 .module .dropdown-toggle::after {
     display: none;
 }
+
+.treatment-content input[type=text], textarea {
+    color: #464a4c;
+    background-color: #fff;
+    background-image: none;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: .25rem;
+}
