@@ -4,9 +4,10 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]))
 
+;; TODO: This default overrides actual settings in local_xxx.php. BUG!
 (def db-defaults
   {:time-zone "America/Puerto_Rico"
-   :language "se"})
+   :language  "en"})
 
 (def ^:dynamic *db-config*
   db-defaults)
@@ -17,6 +18,7 @@
 
 (defn language
   []
+  (log/debug *db-config*)
   (:language *db-config*))
 
 (defn- get-locals [bass-path]

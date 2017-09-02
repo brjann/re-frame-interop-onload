@@ -65,7 +65,7 @@
         render-fn (user-response/user-page-renderer treatment (:uri request))]
     ;; TODO: Check if actually in treatment
     (routes
-      (GET "/" [] "this is the dashboard")
+      (GET "/" [] (response/found "/user/messages"))
 
       ;; MESSAGES
       (GET "/messages" []

@@ -85,3 +85,5 @@ https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests
 - Module list
 - Tabs in content
 - Pressing return does not submit
+- New messages icon does not show up
+- Custom assessment kraschar

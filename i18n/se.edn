@@ -15,20 +15,20 @@
               :must-specify-m "You must provide specifications to your answers."
               :order-count "Formulär %1 av %2"}
  :date-time {:datetime-ns "yyyy-MM-dd HH:mm"}
- :messages {:sent-by "Sent by %1 on %2"
-            :subject "Mssage subject"
-            :text "Message text"
+ :messages {:sent-by    "Sent by %1 on %2"
+            :subject    "Message subject"
+            :text       "Message text"
             :save-draft "Save draft"}
- :login {:login "Logga in"
+ :login {:login                    "Logga in"
          :please-username-password "Please provide your username and password to log on to the system."
-         :username-password-error "Wrong username or password"
-         :please-double-auth "Please provide your double authentication code"
-         :code "Code"
-         :code-error "Wrong code provided"
-         :re-auth "Authenticate again"
-         :password-error "Wrong password"
-         :please-re-auth "Please provide your password to continue to use the system."
-         :please-re-auth-form "Your password is needed before you can submit your data."}
- :error {:something-happened "Something bad happened!"
-         :page-not-found "Page not found"
+         :username-password-error  "Wrong username or password"
+         :please-double-auth       "Please provide your double authentication code"
+         :code                     "Code"
+         :code-error               "Wrong code provided"
+         :re-auth                  "Authenticate again"
+         :password-error           "Wrong password"
+         :please-re-auth           "Please provide your password to continue to use the system."
+         :please-re-auth-form      "Your password is needed before you can submit your data."}
+ :error {:something-happened    "Something bad happened!"
+         :page-not-found        "Page not found"
          :page-not-found-longer "The page you requested could not be found."}}
