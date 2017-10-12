@@ -103,7 +103,7 @@
 (def user-routes
   (context "/user" [:as request]
     (let [user (get-in request [:session :user])]
-      (if (not (get-in request [:session :auth-timeout]))
+      (if (not (get-in request [:session :auth-re-auth]))
         (if (auth-response/double-authed? (:session request))
           (if (:assessments-pending (:session request))
             (assessment-routes user request)

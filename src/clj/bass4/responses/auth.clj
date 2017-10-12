@@ -153,7 +153,7 @@
 (defn- new-session-map
   [user-id]
   {:identity          user-id
-   :auth-timeout      nil
+   :auth-re-auth      nil
    :last-request-time (t/now)
    :session-start     (t/now)})
 
@@ -201,7 +201,7 @@
     :body    body}))
 
 (defn re-auth [session return-url]
-  (if (:auth-timeout session)
+  (if (:auth-re-auth session)
     (re-auth-page return-url)
     (if (:identity session)
       (response/found "/user/")
@@ -210,10 +210,10 @@
 (defn handle-re-auth
   [session password response]
   (if-let [user-id (:identity session)]
-    (if (:auth-timeout session)
+    (if (:auth-re-auth session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
-            (assoc :session (merge session {:auth-timeout nil})))
+            (assoc :session (merge session {:auth-re-auth nil})))
         (error-422 "error"))
       response)
     (response/forbidden)))

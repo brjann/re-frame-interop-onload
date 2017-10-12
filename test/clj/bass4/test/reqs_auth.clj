@@ -132,7 +132,7 @@
       (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
       (visit "/user/messages")
       (has (status? 200))
-      (visit "/debug/set-session" :params {:auth-timeout true})
+      (visit "/debug/set-session" :params {:auth-re-auth true})
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
@@ -140,7 +140,7 @@
 
 (deftest request-re-auth-pwd
   (-> (session (app))
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-timeout true})
+      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
       (visit "/re-auth" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth" :request-method :post :params {:password 536975})
@@ -148,14 +148,14 @@
 
 (deftest request-re-auth-pwd-redirect
   (is (= true (-> (session (app))
-                  (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-timeout true})
+                  (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
                   (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/messages"})
                   (get-in [:response :headers "Location"])
                   (.contains "/user/messages")))))
 
 (deftest request-re-auth-pwd-ajax
   (-> (session (app))
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-timeout true})
+      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
       (visit "/re-auth-ajax" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth-ajax" :request-method :post :params {:password 536975})

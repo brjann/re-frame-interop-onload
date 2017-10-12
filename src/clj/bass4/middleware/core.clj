@@ -114,30 +114,30 @@
 ;;  TIMEOUT
 ;; ----------------
 
-(defn auth-timeout-wrapper
+(defn auth-re-auth-wrapper
   [handler request]
-  (let [session (:session request)
-        now (t/now)
-        last-request-time (:last-request-time session)
-        auth-timeout-limit (or (env :timeout-soft) (* 30 60))
-        auth-timeout (cond
-                       (:auth-timeout session) true
-                       (nil? last-request-time) nil
-                       (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                         (> time-elapsed auth-timeout-limit)) true
-                       :else nil)
-        response (handler (assoc-in request [:session :auth-timeout] auth-timeout))
-        session-map {:last-request-time now
-                     :auth-timeout (if (contains? (:session response) :auth-timeout)
-                                     (:auth-timeout (:session response))
-                                     auth-timeout)}]
+  (let [session            (:session request)
+        now                (t/now)
+        last-request-time  (:last-request-time session)
+        auth-re-auth-limit (or (env :timeout-soft) (* 30 60))
+        auth-re-auth       (cond
+                             (:auth-re-auth session) true
+                             (nil? last-request-time) nil
+                             (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+                               (> time-elapsed auth-re-auth-limit)) true
+                             :else nil)
+        response           (handler (assoc-in request [:session :auth-re-auth] auth-re-auth))
+        session-map        {:last-request-time now
+                            :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
+                                                 (:auth-re-auth (:session response))
+                                                 auth-re-auth)}]
     (assoc response :session (if (nil? (:session response))
                                (merge session session-map)
                                (merge (:session response) session-map)))))
 
-(defn wrap-auth-timeout [handler]
+(defn wrap-auth-re-auth [handler]
   (fn [request]
-    (auth-timeout-wrapper handler request)))
+    (auth-re-auth-wrapper handler request)))
 
 
 
@@ -206,10 +206,10 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
+      wrap-auth-re-auth
       wrap-identity
       wrap-debug-exceptions
       wrap-db
-      wrap-auth-timeout
       wrap-ajax-post
       wrap-auth
       wrap-reload-headers
