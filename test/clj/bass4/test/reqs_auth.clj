@@ -7,8 +7,7 @@
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
-            [bass4.middleware.core :as middleware]
-            [bass4.middleware.debug-redefs :as debug]
+            [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]))
 
@@ -189,7 +188,7 @@
 
 (deftest modify-session
   (let [x (session (app))]
-    (-> (binding [middleware/*session-modification* {:test888 "hejsan"}]
+    (-> (binding [debug/*session-modification* {:test888 "hejsan"}]
           (-> x
               (visit "/debug/session")
               (has (some-text? ":test888"))))
@@ -202,7 +201,7 @@
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
-    (-> (binding [middleware/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
+    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
           (-> x
               (visit "/debug/session")
               (has (some-text? "1985-10-26T01:20:00.000Z"))))

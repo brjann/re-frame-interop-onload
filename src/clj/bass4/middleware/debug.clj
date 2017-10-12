@@ -1,8 +1,9 @@
-(ns bass4.middleware.debug-redefs
+(ns bass4.middleware.debug
   (:require [bass4.sms-sender :as sms]
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [prone.middleware :refer [wrap-exceptions]]))
 
 
 
@@ -57,3 +58,28 @@
   (fn [request]
     (debug-redefs-wrapper handler request)))
 
+
+(defn wrap-debug-exceptions
+  [handler]
+  (fn [request]
+    (if (or (env :debug-mode) (env :dev))
+      ((wrap-exceptions handler) request)
+      (handler request))))
+
+(def ^:dynamic *session-modification* nil)
+(defn session-modification-wrapper
+  [handler request]
+  (if *session-modification*
+    (let [session  (merge (:session request) *session-modification*)
+          response (handler (assoc request :session session))]
+      (assoc response :session (if (nil? (:session response))
+                                 session
+                                 (merge (:session response) *session-modification*))))
+    (handler request)))
+
+(defn wrap-session-modification
+  [handler]
+  (fn [request]
+    (if (or (env :debug-mode) (env :dev))
+      (session-modification-wrapper handler request)
+      (handler request))))

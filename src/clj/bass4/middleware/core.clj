@@ -23,11 +23,10 @@
             [bass4.sms-sender :as sms]
             [bass4.request-state :as request-state]
             [clj-time.coerce :as tc]
-            [prone.middleware :refer [wrap-exceptions]]
             [bass4.layout :as layout]
             [bass4.services.user :as user]
             [clojure.string :as string]
-            [bass4.middleware.debug-redefs :refer [wrap-debug-redefs]]
+            [bass4.middleware.debug :refer [wrap-debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [wrap-request-state]]
             [bass4.middleware.ajax-post :refer [wrap-ajax-post]]
             [bass4.middleware.errors :refer [wrap-internal-error]]
@@ -208,31 +207,6 @@
   (fn [request]
     (session-state-wrapper handler request)))
 
-
-(defn wrap-debug-exceptions
-  [handler]
-  (fn [request]
-    (if (or (env :debug-mode) (env :dev))
-      ((wrap-exceptions handler) request)
-      (handler request))))
-
-(def ^:dynamic *session-modification* nil)
-(defn session-modification-wrapper
-  [handler request]
-  (if *session-modification*
-    (let [session  (merge (:session request) *session-modification*)
-          response (handler (assoc request :session session))]
-      (assoc response :session (if (nil? (:session response))
-                                 session
-                                 (merge (:session response) *session-modification*))))
-    (handler request)))
-
-(defn wrap-session-modification
-  [handler]
-  (fn [request]
-    (if (or (env :debug-mode) (env :dev))
-      (session-modification-wrapper handler request)
-      (handler request))))
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
