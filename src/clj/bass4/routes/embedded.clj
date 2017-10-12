@@ -16,9 +16,10 @@
   (context "/embedded" [:as request]
     (GET "/create-session" [& params]
       (if (and (:uid params) (:redirect params))
-        (when-let [user-id (bass/admin-session-file (:uid params))]
+        (if-let [user-id (bass/admin-session-file (:uid params))]
           (-> (response/found (:redirect params))
-              (assoc :session {::embedded user-id :identity user-id})))
+              (assoc :session {::embedded user-id :identity user-id}))
+          (layout/text-response "Wrong uid."))
         (layout/text-response "Missing uid or redirect params.")))
     (if (get-in request [:session ::embedded])
       (routes

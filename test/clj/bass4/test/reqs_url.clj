@@ -4,7 +4,8 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures]]))
+            [bass4.test.core :refer [test-fixtures]]
+            [bass4.services.bass :as bass]))
 
 (use-fixtures
   :once
@@ -40,3 +41,20 @@
         (-> (session (app))
                 (visit "/login")
                 (get-in [:response :headers "Cache-Control"])))))
+
+(deftest request-frame-options-login
+  (is (= "SAMEORIGIN"
+         (-> (session (app))
+             (visit "/login")
+             (get-in [:response :headers "X-Frame-Options"])))))
+
+;; Same origin test for embedded iframes. Abandoned.
+;(deftest request-frame-options-embedded
+;  (is (= nil
+;         (with-redefs [bass/admin-session-file (constantly 110)]
+;           (-> (session (app))
+;               (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
+;               (visit "/embedded/instrument/1647")
+;               (has (status? 200))
+;               (has (some-text? "PDSR"))
+;               (get-in [:response :headers "X-Frame-Options"]))))))

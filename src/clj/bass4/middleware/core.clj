@@ -264,6 +264,11 @@
             site-defaults)
           #_site-defaults
           (assoc-in [:security :anti-forgery] false)
+
+          ;; DID NOT WORK OUT BECAUSE OF THIRD PARTY COOKIES
+          ;; Remove frame-options and instead add on route-basis, to allow embedding.
+          ;; (update-in [:security] dissoc :frame-options)
+
           (dissoc :session)))
       wrap-context
       wrap-internal-error
