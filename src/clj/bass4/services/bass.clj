@@ -2,9 +2,12 @@
   (:require [bass4.db.core :as db]
             [bass4.bass-locals :as locals]
             [clj-time.core :as t]
+            [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
-            [bass4.utils :refer [map-map-keys]]
-            [clj-time.coerce :as tc]))
+            [bass4.utils :refer [map-map-keys str->int]]
+            [clj-time.coerce :as tc]
+            [clojure.string :as s]
+            [clojure.java.io :as io]))
 
 (defn db-title []
   (:title (db/get-db-title)))
@@ -33,6 +36,21 @@
   ([] (local-midnight (t/now)))
   ([date-time]
    (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
+
+(defn- session-dir
+  []
+  (let [db-name   (:name locals/*db-config*)
+        bass-path (env :bass-path)]
+    (io/file bass-path "projects" db-name "sessiondata")))
+
+(defn admin-session-file
+  [filename]
+  (when-not (s/includes? filename "/")
+    (let [file (io/file (session-dir) filename)]
+      (when (.exists file)
+        (let [user-id (str->int (slurp file))]
+          (io/delete-file file)
+          user-id)))))
 
 #_(defn init-repl
     ([] (init-repl :db1))

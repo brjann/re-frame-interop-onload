@@ -22,11 +22,5 @@
 
 (defroutes home-routes
   (GET "/" [] (home-page))
-  (POST "/instrument/:instrument-id" [instrument-id & params]
-    (instruments/post-answers (str->int instrument-id) (:items params) (:specifications params)))
-  (GET "/instrument/:instrument-id" [instrument-id]
-    (instruments/instrument-page instrument-id))
-  (GET "/instrument/summary/:instrument-id" [instrument-id]
-    (instruments/summary-page instrument-id))
   (GET "/about" [] (about-page)))
 
