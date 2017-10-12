@@ -49,7 +49,8 @@
     (let [file (io/file (session-dir) filename)]
       (when (.exists file)
         (let [user-id (str->int (slurp file))]
-          (io/delete-file file)
+          ;; TODO: Check if session is ongoing in BASS
+          #_(io/delete-file file)
           user-id)))))
 
 #_(defn init-repl

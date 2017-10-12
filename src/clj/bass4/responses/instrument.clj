@@ -15,7 +15,7 @@
     (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
       (do
         (instruments/save-test-answers! instrument-id answers-map)
-        (response/found (str "/admin/instrument/summary/" instrument-id)))
+        (response/found (str "/embedded/instrument/summary/" instrument-id)))
       (do
         (request-state/record-error! "Instrument post was not in valid JSON format")
         (layout/error-400-page))))
