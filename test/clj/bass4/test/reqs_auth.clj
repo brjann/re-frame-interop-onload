@@ -73,7 +73,8 @@
     (-> (session (app))
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
-        (has (some-text? "dashboard")))))
+        (follow-redirect)
+        (has (some-text? "Messages")))))
 
 (deftest double-auth-sms-priority
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
