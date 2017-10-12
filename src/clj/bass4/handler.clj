@@ -26,6 +26,7 @@
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-schema-error))
     (-> #'user-routes
+        (wrap-routes middleware/wrap-auth-re-auth)
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-restricted)

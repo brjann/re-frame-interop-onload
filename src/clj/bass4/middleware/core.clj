@@ -206,7 +206,7 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
-      wrap-auth-re-auth
+      ;wrap-auth-re-auth
       wrap-identity
       wrap-debug-exceptions
       wrap-db
