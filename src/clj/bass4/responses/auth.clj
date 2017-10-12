@@ -213,7 +213,8 @@
     (if (:auth-re-auth session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
-            (assoc :session (merge session {:auth-re-auth nil})))
+            (assoc :session (merge session {:auth-re-auth      nil
+                                            :last-request-time (t/now)})))
         (error-422 "error"))
       response)
     (response/forbidden)))

@@ -214,3 +214,33 @@
         (visit "/user/messages")
         (has (status? 200)))))
 
+(deftest request-re-auth-last-request-time2
+  (let [x (-> (session (app))
+              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1}))]
+    ;; TODO: Rewrite session modification as macro
+    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
+          (-> x
+              (visit "/debug/session")
+              (has (some-text? "1985-10-26T01:20:00.000Z"))))
+        (visit "/user/messages")
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (has (status? 302))
+        (visit "/user/messages")
+        (has (status? 200)))))
+
+
+(deftest request-re-auth-last-request-time3
+  (let [x (-> (session (app))
+              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1}))
+        y (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
+                (-> x
+                    (visit "/debug/session")
+                    (has (some-text? "1985-10-26T01:20:00.000Z"))))
+              (visit "/user/messages"))]
+    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
+          (-> y
+              (visit "/debug/session")
+              (has (some-text? "1985-10-26T01:20:00.000Z"))))
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (visit "/user/messages")
+        (has (status? 200)))))
