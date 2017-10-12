@@ -4,7 +4,7 @@
             [bass4.routes.home :refer [home-routes]]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :refer [user-routes]]
-            [bass4.routes.admin :refer [admin-routes]]
+            [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.debug :refer [debug-routes]]
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
@@ -30,7 +30,7 @@
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-restricted)
         (wrap-routes wrap-schema-error))
-    (-> #'admin-routes
+    (-> #'embedded-routes
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-schema-error))
