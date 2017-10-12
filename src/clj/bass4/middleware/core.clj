@@ -30,7 +30,8 @@
             [bass4.middleware.debug-redefs :refer [wrap-debug-redefs]]
             [bass4.middleware.request-state :refer [wrap-request-state]]
             [bass4.middleware.ajax-post :refer [wrap-ajax-post]]
-            [bass4.middleware.errors :refer [wrap-internal-error]])
+            [bass4.middleware.errors :refer [wrap-internal-error]]
+            [ring.util.http-response :as response])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -62,16 +63,16 @@
            :title  "Invalid anti-forgery token"})}) request)))
 
 (defn wrap-csrf [handler]
-    (fn [request]
-      (csrf-wrapper handler request)))
+  (fn [request]
+    (csrf-wrapper handler request)))
 
 #_(defn wrap-csrf [handler]
-  (wrap-anti-forgery
-    handler
-    {:error-response
-     (error-page
-       {:status 403
-        :title "Invalid anti-forgery token"})}))
+    (wrap-anti-forgery
+      handler
+      {:error-response
+       (error-page
+         {:status 403
+          :title  "Invalid anti-forgery token"})}))
 
 (defn wrap-formats [handler]
   (let [wrapped (wrap-restful-format
@@ -110,9 +111,9 @@
                                "Pragma" "no-cache")))))
 
 
-;; ----------------
-;;  TIMEOUT
-;; ----------------
+;; -----------------
+;;  RE-AUTHENTICATE
+;; -----------------
 
 (defn auth-re-auth-wrapper
   [handler request]
@@ -120,20 +121,52 @@
         now                (t/now)
         last-request-time  (:last-request-time session)
         auth-re-auth-limit (or (env :timeout-soft) (* 30 60))
-        auth-re-auth       (cond
+        auth-re-auth?      (cond
                              (:auth-re-auth session) true
                              (nil? last-request-time) nil
                              (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
                                (> time-elapsed auth-re-auth-limit)) true
                              :else nil)
-        response           (handler (assoc-in request [:session :auth-re-auth] auth-re-auth))
+        response           (handler (assoc-in request [:session :auth-re-auth] auth-re-auth?))
         session-map        {:last-request-time now
                             :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
                                                  (:auth-re-auth (:session response))
-                                                 auth-re-auth)}]
+                                                 auth-re-auth?)}]
+
     (assoc response :session (if (nil? (:session response))
                                (merge session session-map)
                                (merge (:session response) session-map)))))
+
+(defn request-string
+  "Return the request part of the request."
+  [request]
+  (str (:uri request)
+       (when-let [query (:query-string request)]
+         (str "?" query))))
+
+#_(defn auth-re-auth-wrapper
+    [handler request]
+    (let [session            (:session request)
+          now                (t/now)
+          last-request-time  (:last-request-time session)
+          auth-re-auth-limit (or (env :timeout-soft) (* 30 60))
+          auth-re-auth?      (cond
+                               (:auth-re-auth session) true
+                               (nil? last-request-time) nil
+                               (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+                                 (> time-elapsed auth-re-auth-limit)) true
+                               :else nil)
+          response           (if auth-re-auth?
+                               (response/found (str "/re-auth?return-url=" (request-string request)))
+                               (handler (assoc-in request [:session :auth-re-auth] auth-re-auth?)))
+          session-map        {:last-request-time now
+                              :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
+                                                   (:auth-re-auth (:session response))
+                                                   auth-re-auth?)}]
+      (assoc response :session (if (nil? (:session response))
+                                 (merge session session-map)
+                                 (merge (:session response) session-map)))))
+
 
 (defn wrap-auth-re-auth [handler]
   (fn [request]
@@ -183,7 +216,23 @@
       ((wrap-exceptions handler) request)
       (handler request))))
 
+(def ^:dynamic *session-modification* nil)
+(defn session-modification-wrapper
+  [handler request]
+  (if *session-modification*
+    (let [session  (merge (:session request) *session-modification*)
+          response (handler (assoc request :session session))]
+      (assoc response :session (if (nil? (:session response))
+                                 session
+                                 (merge (:session response) *session-modification*))))
+    (handler request)))
 
+(defn wrap-session-modification
+  [handler]
+  (fn [request]
+    (if (or (env :debug-mode) (env :dev))
+      (session-modification-wrapper handler request)
+      (handler request))))
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
@@ -206,7 +255,7 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
-      ;wrap-auth-re-auth
+      wrap-auth-re-auth
       wrap-identity
       wrap-debug-exceptions
       wrap-db
@@ -216,6 +265,7 @@
       wrap-webjars
       wrap-flash
       wrap-session-state
+      wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
@@ -223,8 +273,8 @@
           ;; TODO: This results in eternal loop. Although it should not.
           ;; https://github.com/ring-clojure/ring-defaults#proxies
           (if (env :ssl)
-                (assoc secure-site-defaults :proxy (env :proxy))
-                site-defaults)
+            (assoc secure-site-defaults :proxy (env :proxy))
+            site-defaults)
           #_site-defaults
           (assoc-in [:security :anti-forgery] false)
           (dissoc :session)))

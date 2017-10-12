@@ -4,11 +4,13 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text?]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
+            [bass4.middleware.core :as middleware]
             [bass4.middleware.debug-redefs :as debug]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clj-time.core :as t]))
 
 
 
@@ -184,3 +186,32 @@
       (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))))
+
+(deftest modify-session
+  (let [x (session (app))]
+    (-> (binding [middleware/*session-modification* {:test888 "hejsan"}]
+          (-> x
+              (visit "/debug/session")
+              (has (some-text? ":test888"))))
+        (visit "/debug/session")
+        (has (some-text? ":test888")))))
+
+(deftest request-re-auth-last-request-time
+  (let [x (-> (session (app))
+              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+              (visit "/user/messages")
+              (has (status? 200))
+              (visit "/debug/session"))]
+    (-> (binding [middleware/*session-modification* {:last-request-time (t/date-time 1986 10 14 4 3 27 456)}]
+          (-> x
+              (visit "/debug/session")
+              (has (some-text? "1986-10-14T04:03:27.456Z"))))
+        (visit "/user/messages")
+        (has (status? 302))
+        (visit "/user/messages")
+        (has (status? 302))
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (has (status? 302))
+        (visit "/user/messages")
+        (has (status? 200)))))
+

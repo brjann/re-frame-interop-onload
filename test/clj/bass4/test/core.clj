@@ -3,7 +3,8 @@
             [clojure.edn :as edn]
             [mount.core :as mount]
             [bass4.db.core]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]))
 
 (defn get-edn
   [edn]
@@ -31,3 +32,12 @@
                              :message  ""
                              :expected (string/join ", " strs)}))
   response)
+
+
+(defn log-return
+  ([x]
+   (log/debug x)
+   x)
+  ([x y]
+   (log/debug y)
+   x))
