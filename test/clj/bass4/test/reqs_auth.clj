@@ -202,10 +202,10 @@
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
-    (-> (binding [middleware/*session-modification* {:last-request-time (t/date-time 1986 10 14 4 3 27 456)}]
+    (-> (binding [middleware/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
           (-> x
               (visit "/debug/session")
-              (has (some-text? "1986-10-14T04:03:27.456Z"))))
+              (has (some-text? "1985-10-26T01:20:00.000Z"))))
         (visit "/user/messages")
         (has (status? 302))
         (visit "/user/messages")
