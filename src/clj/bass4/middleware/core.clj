@@ -1,5 +1,6 @@
 (ns bass4.middleware.core
-  (:require [bass4.env :refer [defaults]]
+  (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
+            [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
             [bass4.layout :refer [*app-context* error-page error-400-page]]
             [bass4.services.bass :as bass]
@@ -30,7 +31,8 @@
             [bass4.middleware.request-state :refer [wrap-request-state]]
             [bass4.middleware.ajax-post :refer [wrap-ajax-post]]
             [bass4.middleware.errors :refer [wrap-internal-error]]
-            [ring.util.http-response :as response])
+            [ring.util.http-response :as response]
+            [bass4.responses.auth :as auth-response])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -114,7 +116,7 @@
 ;;  RE-AUTHENTICATE
 ;; -----------------
 
-(defn auth-re-auth-wrapper
+(defn auth-re-auth-wrapper2
   [handler request]
   (let [session            (:session request)
         now                (t/now)
@@ -143,28 +145,39 @@
        (when-let [query (:query-string request)]
          (str "?" query))))
 
-#_(defn auth-re-auth-wrapper
-    [handler request]
-    (let [session            (:session request)
-          now                (t/now)
-          last-request-time  (:last-request-time session)
-          auth-re-auth-limit (or (env :timeout-soft) (* 30 60))
-          auth-re-auth?      (cond
-                               (:auth-re-auth session) true
-                               (nil? last-request-time) nil
-                               (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                                 (> time-elapsed auth-re-auth-limit)) true
-                               :else nil)
-          response           (if auth-re-auth?
+(defn auth-re-auth-wrapper
+  [handler request]
+  (let [session            (:session request)
+        now                (t/now)
+        last-request-time  (:last-request-time session)
+        re-auth-time-limit (or (env :timeout-soft) (* 30 60))
+        re-auth?           (cond
+                             (:auth-re-auth session) true
+                             (nil? last-request-time) nil
+                             (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+                               (> time-elapsed re-auth-time-limit)) true
+                             :else nil)
+        response           (if re-auth?
+                             (if (= (:request-method request) :get)
                                (response/found (str "/re-auth?return-url=" (request-string request)))
-                               (handler (assoc-in request [:session :auth-re-auth] auth-re-auth?)))
-          session-map        {:last-request-time now
-                              :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                   (:auth-re-auth (:session response))
-                                                   auth-re-auth?)}]
-      (assoc response :session (if (nil? (:session response))
-                                 (merge session session-map)
-                                 (merge (:session response) session-map)))))
+                               (auth-response/re-auth-440))
+                             (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
+        session-map        {:last-request-time now
+                            :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
+                                                 (:auth-re-auth (:session response))
+                                                 re-auth?)}]
+
+    (assoc response :session (if (nil? (:session response))
+                               (merge session session-map)
+                               (merge (:session response) session-map)))))
+
+(defn request-string
+  "Return the request part of the request."
+  [request]
+  (str (:uri request)
+       (when-let [query (:query-string request)]
+         (str "?" query))))
+
 
 
 (defn wrap-auth-re-auth [handler]
@@ -229,7 +242,7 @@
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
-      wrap-auth-re-auth
+      ;wrap-auth-re-auth
       wrap-identity
       wrap-debug-exceptions
       wrap-db

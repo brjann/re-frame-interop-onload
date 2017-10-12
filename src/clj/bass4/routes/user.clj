@@ -103,16 +103,9 @@
 (def user-routes
   (context "/user" [:as request]
     (let [user (get-in request [:session :user])]
-      (if (not (get-in request [:session :auth-re-auth]))
-        (if (auth-response/double-authed? (:session request))
-          (if (:assessments-pending (:session request))
-            (assessment-routes user request)
-            (treatment-routes user request))
-          (routes
-            (ANY "*" [] (response/found "/double-auth"))))
+      (if (auth-response/double-authed? (:session request))
+        (if (:assessments-pending (:session request))
+          (assessment-routes user request)
+          (treatment-routes user request))
         (routes
-          (GET "*" [:as request]
-            (response/found (str "/re-auth?return-url=" (url-encode-x (request-string request)))))
-          (POST "*" [] (auth-response/re-auth-440)))))))
-
-
+          (ANY "*" [] (response/found "/double-auth")))))))
