@@ -12,11 +12,11 @@
 
 (defn get-ass-1-pending
   []
-  (with-redefs [t/now (constantly (t/date-time 2017 05 30 17 16 00))
-                db/get-user-group (constantly {:group-name nil :group-id nil})
+  (with-redefs [t/now                         (constantly (t/date-time 2017 05 30 17 16 00))
+                db/get-user-group             (constantly {:group-name nil :group-id nil})
                 db/get-user-assessment-series (constantly {:assessment-series-id 535756})
-                db/get-assessment-series-assessments (constantly (get-edn "ass-1-series-ass"))
-                db/get-user-administrations (constantly (get-edn "ass-1-adms"))]
+                db/get-user-assessments       (constantly (get-edn "ass-1-series-ass"))
+                db/get-user-administrations   (constantly (get-edn "ass-1-adms"))]
     (assessments/get-pending-assessments 535795)))
 
 (defn get-ass-1-rounds
@@ -32,13 +32,13 @@
 
 (defn get-ass-3-pending
   []
-  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
-                db/get-user-group (constantly {:group-name nil :group-id nil})
-                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
-                db/get-assessment-series-assessments (constantly (get-edn "ass-3-series-ass"))
-                db/get-user-administrations (constantly (get-edn "ass-3-adms"))
-                db/get-assessments-instruments (constantly (get-edn "ass-3-instruments"))
-                db/get-administration-completed-instruments (constantly ())
+  (with-redefs [t/now                                        (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group                            (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series                (constantly {:assessment-series-id 535756})
+                db/get-user-assessments                      (constantly (get-edn "ass-3-series-ass"))
+                db/get-user-administrations                  (constantly (get-edn "ass-3-adms"))
+                db/get-assessments-instruments               (constantly (get-edn "ass-3-instruments"))
+                db/get-administration-completed-instruments  (constantly ())
                 db/get-administration-additional-instruments (constantly ())]
     (assessments/get-pending-assessments 535899)))
 
@@ -55,13 +55,13 @@
 
 (defn get-ass-4-pending
   []
-  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
-                db/get-user-group (constantly {:group-name nil :group-id nil})
-                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
-                db/get-assessment-series-assessments (constantly (get-edn "ass-4-series-ass"))
-                db/get-user-administrations (constantly (get-edn "ass-4-adms"))
-                db/get-assessments-instruments (constantly (get-edn "ass-4-instruments"))
-                db/get-administration-completed-instruments (constantly ())
+  (with-redefs [t/now                                        (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group                            (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series                (constantly {:assessment-series-id 535756})
+                db/get-user-assessments                      (constantly (get-edn "ass-4-series-ass"))
+                db/get-user-administrations                  (constantly (get-edn "ass-4-adms"))
+                db/get-assessments-instruments               (constantly (get-edn "ass-4-instruments"))
+                db/get-administration-completed-instruments  (constantly ())
                 db/get-administration-additional-instruments (constantly ())]
     (assessments/get-pending-assessments 536048)))
 
@@ -78,13 +78,13 @@
 
 (defn get-ass-5-pending
   []
-  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))
-                db/get-user-group (constantly {:group-name nil :group-id nil})
-                db/get-user-assessment-series (constantly {:assessment-series-id 535756})
-                db/get-assessment-series-assessments (constantly (get-edn "ass-5-series-ass"))
-                db/get-user-administrations (constantly (get-edn "ass-5-adms"))
-                db/get-assessments-instruments (constantly (get-edn "ass-5-instruments"))
-                db/get-administration-completed-instruments (constantly '({:administration-id 536049, :instrument-id 286}))
+  (with-redefs [t/now                                        (constantly (t/date-time 2017 06 12 9 40 0))
+                db/get-user-group                            (constantly {:group-name nil :group-id nil})
+                db/get-user-assessment-series                (constantly {:assessment-series-id 535756})
+                db/get-user-assessments                      (constantly (get-edn "ass-5-series-ass"))
+                db/get-user-administrations                  (constantly (get-edn "ass-5-adms"))
+                db/get-assessments-instruments               (constantly (get-edn "ass-5-instruments"))
+                db/get-administration-completed-instruments  (constantly '({:administration-id 536049, :instrument-id 286}))
                 db/get-administration-additional-instruments (constantly ())]
     (assessments/get-pending-assessments 536048)))
 

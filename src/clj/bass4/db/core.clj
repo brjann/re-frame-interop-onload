@@ -18,6 +18,12 @@
 (def ^:dynamic *db* nil)
 (def ^:dynamic *db-common* nil)
 
+(defn bool-cols [db-fn params cols]
+  (let [row-fn (fn [row]
+                 (merge row
+                        (map-map #(not= 0 %) (select-keys row cols))))]
+    (db-fn *db* params nil {:row-fn row-fn})))
+
 (defn connect!
   [db-config]
   (let [res (map-map
