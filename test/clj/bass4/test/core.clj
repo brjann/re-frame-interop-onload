@@ -33,6 +33,16 @@
                              :expected (string/join ", " strs)}))
   response)
 
+(defn not-text?
+  [response text]
+  (let [body (get-in response [:response :body])]
+    (clojure.test/do-report {:actual   (str "has " text)
+                             :type     (if (.contains body text)
+                                         :fail
+                                         :pass)
+                             :message  ""
+                             :expected (str "does not have " text)}))
+  response)
 
 (defn log-return
   ([x]

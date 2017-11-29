@@ -96,8 +96,7 @@
         assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
         assessments          (db/bool-cols db/get-user-assessments
                                            {:assessment-series-id assessment-series-id :user-id user-id}
-                                           [:allow-swallow :is-record :clinician-rated :show-texts-if-swallowed]
-                                           #_[])
+                                           [:allow-swallow :is-record :clinician-rated :show-texts-if-swallowed])
         administrations      (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
     {:administrations (group-by #(:assessment-id %) administrations) :assessments (key-map-list assessments :assessment-id)}))
 

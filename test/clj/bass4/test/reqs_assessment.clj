@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures]]
+            [bass4.test.core :refer [test-fixtures not-text?]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [clj-time.core :as t]))
@@ -101,3 +101,23 @@
         (-> s2
             (visit "/user/")
             (has (some-text? "Thanks top")))))))
+
+
+(deftest swallow-texts
+  (let [user-id (user/create-user! 547369 {:Group "547387" :firstname "swallow-test"})]
+    (user/update-user-properties! user-id {:username user-id :password user-id})
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "welcome 0"))
+        (has (some-text? "welcome 2"))
+        (not-text? "welcome 1")
+        (visit "/user/" :request-method :post :params {:instrument-id 535693 :items "{}" :specifications "{}"})
+        (visit "/user/" :request-method :post :params {:instrument-id 547380 :items "{}" :specifications "{}"})
+        (visit "/user/" :request-method :post :params {:instrument-id 547374 :items "{}" :specifications "{}"})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "thanks 0"))
+        (has (some-text? "thanks 2"))
+        (not-text? "thanks 1"))))
