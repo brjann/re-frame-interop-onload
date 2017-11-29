@@ -148,8 +148,6 @@
   (layout/render
     "login.html"))
 
-;; TODO: Should the new session contain for example :admin nil?
-;; See question below.
 (defn- new-session-map
   [user-id]
   {:identity          user-id
@@ -163,24 +161,20 @@
   (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
     {:assessments-pending true}))
 
-;; TODO: Does the new session map really have to be merged with the old one?
-;; Doesn't that risk that previous sessions "leak" into the new one? For example
-;; if new user logs in without logging out out.
 (defn- login-response
-  [user redirect session]
+  [user redirect]
   (let [new-session (new-session-map (:user-id user))
         rounds (assessments-map user)]
     (-> (response/found (:redirect redirect))
-        (assoc :session (merge #_session new-session (:session redirect) rounds)))))
+        (assoc :session (merge new-session (:session redirect) rounds)))))
 
 (s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [redirect (redirect-map user)]
       (if (:error redirect)
         (error-422 (:error redirect))
-        (login-response user redirect session)))
+        (login-response user redirect)))
     (error-422 "error")))
-
 
 
 ;; -------------
