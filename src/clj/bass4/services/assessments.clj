@@ -92,10 +92,10 @@
 
 (defn- get-user-administrations
   [user-id]
-  (let [group-id (:group-id (db/get-user-group {:user-id user-id}))
+  (let [group-id             (:group-id (db/get-user-group {:user-id user-id}))
         assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-        assessments (db/get-assessment-series-assessments {:assessment-series-id assessment-series-id})
-        administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
+        assessments          (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})
+        administrations      (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
     {:administrations (group-by #(:assessment-id %) administrations) :assessments (key-map-list assessments :assessment-id)}))
 
 
@@ -145,6 +145,8 @@
     (let [next-administrations (get-assessment-statuses (rest administrations) assessments)
           current-administration (first administrations)
           current-assessment (get assessments (:assessment-id current-administration))]
+      (when (nil? current-assessment)
+        (throw (Exception. (str "Assessment ID: " (:assessment-id current-administration) " does not exist."))))
       (cons (get-administration-status current-administration (last (first next-administrations)) current-assessment) next-administrations))))
 
 
@@ -219,20 +221,20 @@
     ;; Amazingly enough, this all works even with no pending administrations
     [{:keys [administrations assessments]} (get-user-administrations user-id)
      pending-assessments (->> (vals administrations)
-          ;; Sort administrations by their assessment-index
-          (map #(sort-by :assessment-index %))
-          ;; Return assessment (!) statuses
-          (map #(get-assessment-statuses % assessments))
-          ;; Remove lists within list
-          (flatten)
-          ;; Keep the assessments that are AS_PENDING
-          (filter-pending-assessments)
-          ;; Find corresponding administrations
-          (collect-assessment-administrations administrations)
-          ;; Add any missing administrations
-          (add-missing-administrations user-id)
-          ;; Merge assessment and administration info into one map
-          (map #(merge % (get assessments (:assessment-id %)))))]
+                              ;; Sort administrations by their assessment-index
+                              (map #(sort-by :assessment-index %))
+                              ;; Return assessment (!) statuses
+                              (map #(get-assessment-statuses % assessments))
+                              ;; Remove lists within list
+                              (flatten)
+                              ;; Keep the assessments that are AS_PENDING
+                              (filter-pending-assessments)
+                              ;; Find corresponding administrations
+                              (collect-assessment-administrations administrations)
+                              ;; Add any missing administrations
+                              (add-missing-administrations user-id)
+                              ;; Merge assessment and administration info into one map
+                              (map #(merge % (get assessments (:assessment-id %)))))]
     (when (seq pending-assessments)
       (add-instruments pending-assessments))))
 

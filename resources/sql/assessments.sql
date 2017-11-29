@@ -10,7 +10,7 @@ FROM c_participant AS cp
 WHERE cp.ObjectId = :user-id;
 
 
--- :name get-assessment-series-assessments :? :*
+-- :name get-user-assessments :? :*
 -- :doc Get the assessments of an assessment series
 SELECT
     ObjectId AS `assessment-id`,
@@ -57,7 +57,7 @@ SELECT
    ShuffleInstruments AS `shuffle-instruments`
 
 FROM c_assessment
-WHERE parentid = :assessment-series-id
+WHERE parentid = :assessment-series-id OR parentid = :user-id;
 
 -- :name get-user-assessment-series :? :1
 -- :doc Get the assessment series that the user's project uses
