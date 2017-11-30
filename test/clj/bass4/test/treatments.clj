@@ -11,11 +11,13 @@
   :once
   test-fixtures)
 
-(deftest no-modules
-  (let [treatments       (treatment/user-treatment 543021)
-        treatment-access (:treatment-access treatments)]
-    (is (= 3958 (:treatment-id treatment-access)))
-    (is (= #{} (:module-accesses treatment-access)))))
+;; TODO: FIX!
+(deftest two-modules
+  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    (let [treatments       (treatment/user-treatment 543021)
+          treatment-access (:treatment-access treatments)]
+      (is (= 3958 (:treatment-id treatment-access)))
+      (is (= #{5787 3961} (:module-accesses treatment-access))))))
 
 
 
@@ -58,3 +60,8 @@
                                     :end-date       #inst"2017-06-17T23:00:00.000000000-00:00"
                                     :access-enabled true}
                                    {:access-enabling-required true})))))
+
+(deftest treatment-multiple-active
+  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    (is (= 3958 (get-in (treatment/user-treatment 549821) [:treatment :treatment-id])))
+    (is (= 3972 (get-in (treatment/user-treatment 549821) [:treatment :treatment-id])))))

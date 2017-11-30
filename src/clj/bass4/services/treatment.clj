@@ -83,11 +83,6 @@
     (merge info
            {:modules modules})))
 
-(defn user-components
-  [treatment-access treatment]
-  {:modules   (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
-   :messaging true})
-
 
 ;	public function getRemainingTreatmentDuration(){
 ;		if($this->Treatment->AccessStartAndEndDate){
@@ -105,7 +100,7 @@
   [(clj-time.coerce/from-sql-date (:start-date treatment-access))
    (clj-time.coerce/from-sql-date (:end-date treatment-access))])
 
-(defn treatment-ongoing?
+(defn- treatment-ongoing?
   [treatment-access]
   (let [[start-date end-date] (convert-dates treatment-access)]
     (and (t/before? start-date (t/now))
@@ -119,14 +114,19 @@
       (:access-enabled treatment-access)
       true)))
 
-;; TODO: For now, only the first treatment access is considered.
-;; If multiple treatments are available, the session needs to keep track
-;; of the cTreatmentAccess content in which treatment content is shown.
-;; Either in the URL or in a state. Too early to decide now - use case
-;; has never surfaced.
+(defn user-components
+  [treatment-access treatment]
+  {:modules   (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
+   :messaging true})
+
 ;; TODO: BulletinBoard!?
-(defn user-treatment2
+(defn user-treatment
   [user-id]
+  ;; For now, only the first active treatment access is considered.
+  ;; If multiple treatments are available, the session needs to keep track
+  ;; of the cTreatmentAccess content in which treatment content is shown.
+  ;; Either in the URL or in a state. Too early to decide now - use case
+  ;; has never surfaced.
   (when-let [[treatment-access treatment] (->> (map
                                                  #(vector % (treatment-map (:treatment-id %)))
                                                  (user-treatment-accesses user-id))
@@ -136,7 +136,7 @@
        :user-components  (user-components treatment-access treatment)
        :treatment        treatment})))
 
-(defn user-treatment
+#_(defn user-treatment
   [user-id]
   (if-let [treatment-access (first (user-treatment-accesses user-id))]
     (let [treatment (treatment-map (:treatment-id treatment-access))]

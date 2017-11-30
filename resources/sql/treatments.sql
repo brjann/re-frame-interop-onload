@@ -13,7 +13,7 @@ SELECT
 FROM c_treatmentaccess AS ca
   JOIN links_c_treatmentaccess AS lca
     ON ca.ObjectId = lca.LinkerId AND lca.PropertyName = "Treatment"
-WHERE ca.ParentId = :user-id;
+WHERE ca.ParentId = :user-id ORDER BY ca.ObjectId;
 
 -- :name get-treatment-info :? :1
 -- :doc
