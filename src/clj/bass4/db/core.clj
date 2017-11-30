@@ -1,7 +1,7 @@
 (ns bass4.db.core
   (:require
     [clojure.java.jdbc :as jdbc]
-    [bass4.utils :refer [map-map filter-map time+]]
+    [bass4.utils :refer [map-map filter-map time+ val-to-bool]]
     [conman.core :as conman]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
@@ -21,7 +21,7 @@
 (defn bool-cols [db-fn params cols]
   (let [row-fn (fn [row]
                  (merge row
-                        (map-map #(not= 0 %) (select-keys row cols))))]
+                        (map-map val-to-bool (select-keys row cols))))]
     (db-fn *db* params nil {:row-fn row-fn})))
 
 (defn connect!

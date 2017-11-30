@@ -2,25 +2,11 @@
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
             [clj-time.coerce]
-            [bass4.utils :refer [unserialize-key map-map str->int filter-map]]
+            [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean?]]
             [clj-time.core :as t]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
-
-
-;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L519
-(defn boolean?
-  "Return true if x is a Boolean"
-  {:added "1.9"}
-  [x] (instance? Boolean x))
-
-
-(defn- val-to-bol
-  [x]
-  (if (boolean? x)
-    x
-    (not (zero? (str->int x)))))
 
 (defn- submitted-homeworks
   [treatment-access]
@@ -33,7 +19,7 @@
   [user-id]
   (mapv (fn [treatment-access]
           (-> treatment-access
-              (unserialize-key :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bol %)))))
+              (unserialize-key :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bool %)))))
               (#(assoc % :submitted-homeworks (submitted-homeworks %)))))
         (db/bool-cols
           db/get-treatment-accesses
@@ -70,15 +56,18 @@
 
 (defn treatment-map
   [treatment-id]
-  (let [info    (db/bool-cols
-                  db/get-treatment-info
-                  {:treatment-id treatment-id}
-                  [:access-time-limited
-                   :access-enabling-required
-                   :modules-manual-access
-                   :module-automatic-access
-                   :messages-send-allowed
-                   :messages-receive-allowed])
+  (let [info    (-> (db/bool-cols
+                      db/get-treatment-info
+                      {:treatment-id treatment-id}
+                      [:access-time-limited
+                       :access-enabling-required
+                       :modules-manual-access
+                       :module-automatic-access
+                       :messages-send-allowed
+                       :messages-receive-allowed])
+                    (unserialize-key
+                      :modules-automatic-access
+                      #(into #{} (keys (filter-map identity (map-map val-to-bool %))))))
         modules (db/get-treatment-modules {:treatment-id treatment-id})]
     (merge info
            {:modules modules})))

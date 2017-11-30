@@ -80,6 +80,18 @@
     (nil? s) nil
     (re-find #"^\d+$" (s/trim s)) (read-string s)))
 
+;; https://github.com/clojure/clojure/blob/clojure-1.9.0-alpha14/src/clj/clojure/core.clj#L519
+(defn boolean?
+  "Return true if x is a Boolean"
+  {:added "1.9"}
+  [x] (instance? Boolean x))
+
+(defn val-to-bool
+  [x]
+  (if (boolean? x)
+    x
+    (not (zero? (str->int x)))))
+
 (defn diff
   [s1 s2]
   (filter #(not (some (partial = %) s2)) s1))
