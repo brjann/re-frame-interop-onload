@@ -58,4 +58,24 @@ SET
       (str "`" (name field) "`"
         " = :v:updates." (name field))))
   ~*/
-  where ObjectId=:user-id
+  where ObjectId=:user-id;
+
+
+
+-- :name update-object-properties! :! :1
+/* :require [clojure.string :as string]
+            [hugsql.parameters :refer [identifier-param-quote]] */
+UPDATE :i:table-name
+SET
+  /*~
+  (string/join ","
+    (for [[field _] (:updates params)]
+      (str "`" (name field) "`"
+        " = :v:updates." (name field))))
+  ~*/
+  where ObjectId = :object-id;
+
+
+-- :name create-bass-link! :! :1
+-- :doc
+CALL create_bass_link(:linker-id, :linkee-id, :link-property, :linker-class, :linkee-class);

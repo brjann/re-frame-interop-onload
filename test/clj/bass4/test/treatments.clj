@@ -5,20 +5,35 @@
             [bass4.services.treatment :as treatment :refer [treatment-active?]]
             [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.user :as user]
+            [bass4.services.bass :as bass]))
 
 (use-fixtures
   :once
   test-fixtures)
 
 ;; TODO: It's not possible to test :modules-automatic-access because BASS messes it up
-(deftest three-modules
+(deftest two-modules
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
     (let [treatments       (treatment/user-treatment 543021)
           treatment-access (:treatment-access treatments)]
       (is (= 3958 (:treatment-id treatment-access)))
-      (is (= #{5787 3978 3961 3979} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
+      (is (= #{5787 3961} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
 
+
+(deftest auto-modules-test
+  (let [user-id             (user/create-user! 543018 {:Group "537404" :firstname "autotest-module"})
+        treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                :parent-id     user-id
+                                                                :property-name "TreatmentAccesses"}))]
+    (db/create-bass-link! {:linker-id     treatment-access-id
+                           :linkee-id     551356
+                           :link-property "Treatment"
+                           :linker-class  "cTreatmentAccess"
+                           :linkee-class  "cTreatment"})
+    (let [user-treatment (treatment/user-treatment user-id)]
+      (is (= #{5787 4002 4003 4007} (into #{} (map :module-id (filter :active (get-in user-treatment [:user-components :modules])))))))))
 ;	public function getRemainingTreatmentDuration(){
 ;		if($this->Treatment->AccessStartAndEndDate){
 ;			if(getMidnight() < $this->StartDate) return 0;
@@ -68,9 +83,9 @@
 
 (deftest treatment-messaging
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
-    ;; User allowed - treatment allows
-    (is (= false (get-in (treatment/user-treatment 549821) [:user-components :send-messages])))
     ;; User not allowed - treatment allows
+    (is (= false (get-in (treatment/user-treatment 549821) [:user-components :send-messages])))
+    ;; User allowed - treatment allows
     (is (= true (get-in (treatment/user-treatment 543021) [:user-components :send-messages])))
     ;; User allowed - treatment does not allows
     (is (= false (get-in (treatment/user-treatment 550132) [:user-components :send-messages])))))

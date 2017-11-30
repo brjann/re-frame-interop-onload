@@ -88,9 +88,10 @@
 
 (defn val-to-bool
   [x]
-  (if (boolean? x)
-    x
-    (not (zero? (str->int x)))))
+  (cond
+    (boolean? x) x
+    (nil? x) false
+    :else (not (zero? (str->int x)))))
 
 (defn diff
   [s1 s2]
