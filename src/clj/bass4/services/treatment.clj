@@ -125,6 +125,17 @@
 ;; Either in the URL or in a state. Too early to decide now - use case
 ;; has never surfaced.
 ;; TODO: BulletinBoard!?
+(defn user-treatment2
+  [user-id]
+  (when-let [[treatment-access treatment] (->> (map
+                                                 #(vector % (treatment-map (:treatment-id %)))
+                                                 (user-treatment-accesses user-id))
+                                               (some #(when (apply treatment-active? %) %)))]
+    (let [treatment (treatment-map (:treatment-id treatment-access))]
+      {:treatment-access treatment-access
+       :user-components  (user-components treatment-access treatment)
+       :treatment        treatment})))
+
 (defn user-treatment
   [user-id]
   (if-let [treatment-access (first (user-treatment-accesses user-id))]
