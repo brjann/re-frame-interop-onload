@@ -8,6 +8,9 @@
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]))
 
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest request-messages
   (-> (session (app))

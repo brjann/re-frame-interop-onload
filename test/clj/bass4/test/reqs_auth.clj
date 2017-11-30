@@ -12,7 +12,9 @@
             [clj-time.core :as t]))
 
 
-
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest double-auth-generator
   []

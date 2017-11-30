@@ -8,16 +8,11 @@
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]))
 
-
-#_(deftest request-post-answers
-    (alter-var-root #'bass4.middleware.core/*skip-csrf* (constantly true))
-    (with-redefs [bass/admin-session-file (constantly 110)]
-      (-> (session (app))
-          (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
-          (log/debug))))
+(use-fixtures
+  :once
+  test-fixtures)
 
 (deftest request-post-answers
-  (alter-var-root #'bass4.middleware.core/*skip-csrf* (constantly true))
   (with-redefs [bass/admin-session-file (constantly 110)]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")

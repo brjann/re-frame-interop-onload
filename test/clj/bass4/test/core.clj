@@ -19,6 +19,7 @@
     #'bass4.db.core/db-configs
     #'bass4.i18n/i18n-map)
   #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
+  (alter-var-root #'bass4.middleware.core/*skip-csrf* (constantly true))
   (bass4.db.core/init-repl :test)
   (f))
 
