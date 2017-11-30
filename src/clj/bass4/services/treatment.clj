@@ -2,6 +2,7 @@
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
             [clj-time.coerce]
+            [clojure.set]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean?]]
             [clj-time.core :as t]))
 
@@ -105,9 +106,20 @@
 
 (defn user-components
   [treatment-access treatment]
-  {:modules       (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
+  {:modules       (map #(assoc % :active (contains?
+                                           (clojure.set/union
+                                             (:module-accesses treatment-access)
+                                             (:modules-automatic-access treatment))
+                                           (:module-id %)))
+                       (:modules treatment))
    :messages      true
    :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
+
+#_(defn user-components
+    [treatment-access treatment]
+    {:modules       (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
+     :messages      true
+     :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
 ;; TODO: BulletinBoard!?
 (defn user-treatment

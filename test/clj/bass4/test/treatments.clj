@@ -11,15 +11,13 @@
   :once
   test-fixtures)
 
-;; TODO: FIX!
-(deftest two-modules
+;; TODO: It's not possible to test :modules-automatic-access because BASS messes it up
+(deftest three-modules
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
     (let [treatments       (treatment/user-treatment 543021)
           treatment-access (:treatment-access treatments)]
       (is (= 3958 (:treatment-id treatment-access)))
-      (is (= #{5787 3961} (:module-accesses treatment-access))))))
-
-
+      (is (= #{5787 3978 3961 3979} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
 
 ;	public function getRemainingTreatmentDuration(){
 ;		if($this->Treatment->AccessStartAndEndDate){
