@@ -12,10 +12,23 @@
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
             [bass4.services.bass :as bass]
+            [mount.core :as mount]
             [clojure.pprint]
             [bass4.request-state :as request-state]
             [ring.util.codec :as codec]))
 
+(defn states-page
+  []
+  (layout/render "states.html" {:states (mapv #(subs % 2) (mount/find-all-states))}))
+
+(defn reset-state
+  [state-name]
+  (let [states     (mount/find-all-states)
+        state-name (str "#'" state-name)]
+    (when (some #{state-name} states)
+      (mount.core/stop state-name)
+      (mount.core/start state-name))
+    (http-response/found "/debug/states")))
 
 (def debug-routes
   (context "/debug" [:as request]
@@ -58,6 +71,10 @@
         (GET "/encode-decode" [& params]
           (layout/text-response params))
         (GET "/exception" []
-          (throw (Exception. "Your exception as requested."))))
+          (throw (Exception. "Your exception as requested.")))
+        (GET "/states" []
+          (states-page))
+        (POST "/states" [& params]
+          (reset-state (:state-name params))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

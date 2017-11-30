@@ -41,6 +41,7 @@
 
 (defn start-app [args]
   (doseq [component (-> args
+                        ;; TOOD: Wrong arity - is this really clojure.core/parse-opts?
                         (parse-opts cli-options)
                         mount/start-with-args
                         :started)]

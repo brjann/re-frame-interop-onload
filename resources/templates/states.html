@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <h1>App states</h1>
+    {% for state-name in states %}
+    <p><a href="#" onclick="post_state('{{ state-name }}');">Reset state {{ state-name }}</a></p>
+    {% endfor %}
+    <form id="state-poster" method="post" class="no-ajax">
+        <input type="hidden" name="state-name" id="state-name">
+    </form>
+</div>
+<script type="application/javascript">
+	function post_state(state_name) {
+		console.log(state_name);
+		$('#state-name').val(state_name);
+		$('#state-poster').submit();
+	}
+</script>
+
+{% endblock %}
