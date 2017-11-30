@@ -77,8 +77,8 @@
                    :access-enabling-required
                    :modules-manual-access
                    :module-automatic-access
-                   :messaging-allow-participant
-                   :messaging-allow-therapist])
+                   :messages-send-allowed
+                   :messages-receive-allowed])
         modules (db/get-treatment-modules {:treatment-id treatment-id})]
     (merge info
            {:modules modules})))
@@ -116,8 +116,9 @@
 
 (defn user-components
   [treatment-access treatment]
-  {:modules   (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
-   :messaging true})
+  {:modules       (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
+   :messages      true
+   :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
 ;; TODO: BulletinBoard!?
 (defn user-treatment

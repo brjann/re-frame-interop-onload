@@ -63,5 +63,16 @@
 
 (deftest treatment-multiple-active
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    ;; First and second treatment active
     (is (= 3958 (get-in (treatment/user-treatment 549821) [:treatment :treatment-id])))
-    (is (= 3972 (get-in (treatment/user-treatment 549821) [:treatment :treatment-id])))))
+    ;; First inactive second active
+    (is (= 3972 (get-in (treatment/user-treatment 550132) [:treatment :treatment-id])))))
+
+(deftest treatment-messaging
+  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    ;; User allowed - treatment allows
+    (is (= false (get-in (treatment/user-treatment 549821) [:user-components :send-messages])))
+    ;; User not allowed - treatment allows
+    (is (= true (get-in (treatment/user-treatment 543021) [:user-components :send-messages])))
+    ;; User allowed - treatment does not allows
+    (is (= false (get-in (treatment/user-treatment 550132) [:user-components :send-messages])))))

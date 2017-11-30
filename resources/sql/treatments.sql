@@ -24,8 +24,8 @@ SELECT
   `AccessEnablingRequired` AS `access-enabling-required`,
   `ModulesManualAccess` AS `modules-manual-access`,
   `ModuleAutomaticAccess` AS `modules-automatic-access`,
-  `MessagingAllowParticipant` AS `messaging-allow-participant`,
-  `MessagingAllowTherapist` AS  `messaging-allow-therapist`
+  `MessagingAllowParticipant` AS `messages-send-allowed`,
+  `MessagingAllowTherapist` AS  `messages-receive-allowed`
 FROM c_treatment AS ct
 WHERE ct.ObjectId=:treatment-id;
 
