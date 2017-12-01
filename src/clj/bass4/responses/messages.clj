@@ -12,7 +12,6 @@
     (render-fn "messages.html" {:user            user
                                 :title           "Messages"
                                 :page-title      "Messages"
-                                :active_messages true
                                 :messages        messages
                                 :draft           draft})))
 

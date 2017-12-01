@@ -21,7 +21,7 @@
   #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
   (alter-var-root #'bass4.middleware.core/*skip-csrf* (constantly true))
   (bass4.db.core/init-repl :test)
-  (f))
+  (binding [clojure.test/*stack-trace-depth* 5] (f)))
 
 (defn debug-headers-text?
   [response & strs]

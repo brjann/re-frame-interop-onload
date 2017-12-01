@@ -59,35 +59,50 @@
         module))
     (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
 
-(defn treatment-routes
+(defn- messages-routes
+  [user treatment render-fn]
+  (routes
+    (GET "/messages" []
+      (if (get-in treatment [:user-components :messaging])
+        (messages-response/messages-page render-fn user)
+        (layout/error-404-page)))
+    (POST "/messages" [& params]
+      (if (get-in treatment [:user-components :send-messages])
+        (messages-response/save-message (:user-id user) (:subject params) (:text params))
+        (layout/error-404-page)))
+    (POST "/message-save-draft" [& params]
+      (if (get-in treatment [:user-components :send-messages])
+        (messages-response/save-draft (:user-id user) (:subject params) (:text params))
+        (layout/error-404-page)))))
+
+(defn- treatment-routes
   [user request]
-  (let [treatment (treatment-service/user-treatment (:user-id user))
-        render-fn (user-response/user-page-renderer treatment (:uri request))]
-    ;; TODO: Check if actually in treatment
+  (if-let [treatment (treatment-service/user-treatment (:user-id user))]
+    (let [render-fn (user-response/user-page-renderer treatment (:uri request))]
+      (routes
+        (GET "/" [] (render-fn "dashboard.html" {:user       user
+                                                 :title      "Dashboard"
+                                                 :page-title "Dashboard"}))
+        ;; MESSAGES
+        (messages-routes user treatment render-fn)
+
+        ;; MODULES
+        (GET "/modules" []
+          (modules-response/modules-list render-fn (:modules (:user-components treatment))))
+        (context "/module/:module-id" [module-id]
+          (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
+                               (some #(and (:active %) %)))]
+            (module-routes (:treatment-access treatment) render-fn module)
+            ;; Module not found
+            (layout/error-404-page (i18n/tr [:modules/no-module]))))
+        (POST "/content-data" [& params]
+          (modules-response/save-worksheet-data
+            (:treatment-access treatment)
+            (json-safe (:content-data params))))))
     (routes
-      (GET "/" [] (response/found "/user/messages"))
+      ;; TODO: What should be shown if not in treatment?
+      (ANY "*" [] (layout/text-response "Empty page")))))
 
-      ;; MESSAGES
-      (GET "/messages" []
-        (messages-response/messages-page render-fn user))
-      (POST "/messages" [& params]
-        (messages-response/save-message (:user-id user) (:subject params) (:text params)))
-      (POST "/message-save-draft" [& params]
-        (messages-response/save-draft (:user-id user) (:subject params) (:text params)))
-
-      ;; MODULES
-      (GET "/modules" []
-        (modules-response/modules-list render-fn (:modules (:user-components treatment))))
-      (context "/module/:module-id" [module-id]
-        (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
-                             (some #(and (:active %) %)))]
-          (module-routes (:treatment-access treatment) render-fn module)
-          ;; Module not found
-          (layout/error-404-page (i18n/tr [:modules/no-module]))))
-      (POST "/content-data" [& params]
-        (modules-response/save-worksheet-data
-          (:treatment-access treatment)
-          (json-safe (:content-data params)))))))
 
 (defn assessment-routes
   [user request]

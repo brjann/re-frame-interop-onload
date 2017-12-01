@@ -112,7 +112,7 @@
                                              (:modules-automatic-access treatment))
                                            (:module-id %)))
                        (:modules treatment))
-   :messages      true
+   :messaging     true
    :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
 #_(defn user-components
