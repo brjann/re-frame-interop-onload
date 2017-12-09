@@ -2,12 +2,12 @@ $(document).ready(function () {
 
 	$('.treatment-content').each(function () {
 		content_prepend_names($(this));
+		content_setup_statics($(this));
 		content_create_tabs($(this));
 		content_fill_values($(this));
+		content_fill_statics($(this));
 	});
 
-
-	//contentForm();
 	main_text_ays();
 	$('.readonly :input').prop('disabled', true);
 	/* contentAdjustWidth();
@@ -45,12 +45,12 @@ function content_create_tabs(content) {
 
 	// TODO: This function is not optimized. Runs through all input fields multiple times
 	var getMaxTabCount = function (tabbed_content) {
-		var all_names = tabbed_content.find(':input').not('[type=submit], .contentposter').map(function () {
+		var all_names = tabbed_content.find(':input').not('[type=submit]').map(function () {
 			return $(this).prop('name');
 		}).get();
 
 		return _.reduce(all_names, function (memoO, input_name) {
-			var data = content_data[getContentDataBASSVar(input_name)];
+			var data = content_data[input_name.split('.', 2)[0]];
 			if (data === undefined) {
 				return memoO;
 			}
@@ -76,6 +76,7 @@ function content_create_tabs(content) {
 		}, 1);
 	};
 
+
 	var addPlusTab = function (tabs_ul, tab_div, content_id, on_click) {
 		var tab_count = tabs_ul.children().length;
 		var tab_id = get_tab_id(content_id, (tab_count + 1));
@@ -83,9 +84,11 @@ function content_create_tabs(content) {
 		tab_div.append(sprintf("<div class='tab-pane' id='%s'></div>", tab_id));
 	};
 
+
 	var get_tab_id = function (content_id, number) {
 		return 'tab_' + content_id + '_' + number;
 	};
+
 
 	var ContentTabTab = function (tab_id, label, on_click) {
 		var tab = $(sprintf("<li class='nav-item'><a class='nav-link' id ='tab_%s' data-target='#%s' data-toggle='tab'>%s</a></li>", tab_id, tab_id, label));
@@ -93,14 +96,23 @@ function content_create_tabs(content) {
 		return tab;
 	};
 
+
 	var cloneContent = function (content, i) {
 		var tab_content = content.clone(true);
 		// tab_content.prop('id', tab_content.prop('id' + i));
-		tab_content.find(':input').not('[type=submit], .contentposter').each(function () {
+		tab_content.find(':input').not('[type=submit]').each(function () {
 			$(this).prop('name', $(this).prop('name') + '#' + i);
 		});
-		setupStaticDataTabbed(tab_content, i);
+		setup_static_tabbed_data(tab_content, i);
 		return tab_content;
+	};
+
+
+	var setup_static_tabbed_data = function (content, index) {
+		content.find('.contentdata').not('.notab').each(function () {
+			var static_element = $(this);
+			static_element.data('data-key', static_element.data('data-key') + '#' + index);
+		});
 	};
 
 	var tab_name = "FLIKK";
@@ -108,10 +120,8 @@ function content_create_tabs(content) {
 
 	var tabelizer = function (container_index, container) {
 		var tabbed_content_id = content_id + '_' + container_index;
-		console.log(tabbed_content_id);
 		container = $(container);
 		var tabbed_content = container.children().not('form').wrapAll('<div></div>').parent();
-		container.removeClass('tabbed');
 		tabbed_content.detach();
 		var tab_div = $("<div class='tab-content'></div>");
 		// TODO: Handle id of embedded tabbed forms
@@ -127,7 +137,8 @@ function content_create_tabs(content) {
 				//fillStaticData(tab_content);
 				var tab_index = tabs_ul.children().length;
 				tab.text(tab_name + ' ' + tab_index);
-				$(tab.data('target')).append(cloneContent(tabbed_content, tab_index));
+				var new_content = cloneContent(tabbed_content, tab_index)
+				$(tab.data('target')).append(new_content);
 
 				addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
 			}
@@ -179,19 +190,15 @@ function content_create_tabs(content) {
 	}
 }
 
-function setupStaticDataTabbed(content, index) {
-	content.find('.contentdata').not('.notab').each(function () {
-		$(this).text($(this).text() + '#' + index);
-		//$(this).attr("value", $(this).attr("value") + '#' + index);
-	});
-}
-function fillStaticData(content, data_name) {
+function content_fill_statics(content) {
 	content.find('.contentdata').not(':input').each(function () {
-		var value = getContentDataValue(getContentDataPostKey($(this).text(), data_name));
+		var input = $(this);
+		var key = $(this).data('data-key');
+		var value = getContentDataValue(key);
 		if (value === undefined) {
 			value = '';
 		}
-		$(this).html(value.replace(/(?:\r\n|\r|\n)/g, '<br />'));
+		input.html(value.replace(/(?:\r\n|\r|\n)/g, '<br />'));
 	});
 }
 
@@ -235,6 +242,17 @@ function content_prepend_names(content_div) {
 }
 
 
+function content_setup_statics(content_div) {
+	var data_name = content_div.data('data-name');
+	content_div.find('.contentdata').not(':input').each(function () {
+		var input = $(this);
+		var key = getContentDataPostKey(input.text(), data_name);
+		input.data('data-key', key);
+		input.addClass('key_' + key);
+		input.text('');
+	});
+}
+
 function content_fill_values(content_div) {
 	//TODO: Does not handle pre-checked checkboxes
 	var data_name = content_div.data('data-name');
@@ -253,45 +271,6 @@ function content_fill_values(content_div) {
 			}
 		});
 	content_div.areYouSure();
-
-	fillStaticData(content_div, data_name);
-}
-
-
-function contentForm2() {
-	//TODO: Does not handle pre-checked checkboxes
-	var content_div = $(".treatment-content").first();
-	var data_name = content_div.data('data-name');
-	content_div
-		.find(':input').not(content_div.find('form').children())//.not('[type=submit]')
-		.each(function () {
-			var input = this;
-			$(input).prop('name', getContentDataPostKey(input.name, data_name));
-			var value = getContentDataValue(input.name);
-			if (value !== undefined) {
-				if (input.type == 'radio' || input.type == 'checkbox') {
-					$(input).prop('checked', value == input.value);
-				}
-				else {
-					$(input).val(value);
-				}
-			}
-		});
-	content_div.areYouSure();
-
-	fillStaticData(content_div, data_name);
-}
-
-function getContentDataBASSVar(value_name) {
-	return value_name.split('.', 2)[0];
-	var key = "content.data.";
-	if (value_name.indexOf('.') == -1) {
-		return key + bass_data['content.data.default'];
-	}
-	else {
-		var a = value_name.split('.', 2);
-		return key + a[0];
-	}
 }
 
 function getContentDataValue(value_name) {
@@ -326,49 +305,6 @@ function getContentDataPostKey(value_name, data_name) {
 		return value_name;
 	}
 }
-
-// function contentAutoGenerateForm() {
-// 	$('.autogenerateform').each(function () {
-//
-// 		// Remove all forms in content
-// 		$(this).find('form').each(function () {
-// 			var children = $(this).children();
-// 			children.detach();
-// 			$(this).wrap('<div></div>');
-// 			var div = $(this).parent();
-// 			$(this).remove();
-// 			div.append(children);
-// 		});
-//
-// 		// Remove all submit buttons
-// 		$(this).find(':submit').remove();
-//
-// 		// Check if there are any inputs
-// 		if ($(this).find(':input').length) {
-//
-// 			// If content is readonly, then just add contentform to this div
-// 			if ($(this).hasClass('readonly')) {
-// 				$(this).wrap('<div class="contentform"></div>');
-// 			}
-// 			else {
-// 				// Else wrap in form and add submit button
-// 				$(this).wrap($('<form class="contentform" method="POST" target=""></form>'));
-// 				var homework = $(this).find("[name='$$$homework']");
-// 				if (homework.length) {
-// 					$(this).parent().append('<input type = "submit" value = "Skicka in hemuppgift" title = "Skickar in din hemuppgiftsrapport så att din behandlare kan läsa den">');
-// 					var savebtn = $('<input type = "submit" value = "Spara utan att skicka in" title= "Sparar dina svar så att du kan skicka in dem senare">')
-// 						.click(function () {
-// 							homework.val(0);
-// 						});
-// 					$(this).parent().append(savebtn);
-// 				}
-// 				else {
-// 					$(this).parent().append(sprintf('<input type = "submit" value = "%s">', bass_data['save_name']));
-// 				}
-// 			}
-// 		}
-// 	});
-// }
 
 function contentAdjustWidth() {
 	$(".content.width").each(function () {
