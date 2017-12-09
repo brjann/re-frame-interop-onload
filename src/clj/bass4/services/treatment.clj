@@ -36,15 +36,13 @@
      :homework   (first (get categorized "Homework"))
      :main-texts (get categorized "MainTexts")}))
 
-#_(defn get-content
-  [content-id]
-  (let [content (db/get-content {:content-id content-id})]
-    (assoc content :markdown (= 1 (:markdown content)))))
 
 (defn get-content
   [content-id]
-  (-> (db/bool-cols db/get-content {:content-id content-id} [:markdown])
-      ;;(#(assoc % :markdown (= 1 (:markdown %))))
+  (-> (db/bool-cols
+        db/get-content
+        {:content-id content-id}
+        [:markdown :tabbed :show-example])
       (unserialize-key :data-imports)
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))

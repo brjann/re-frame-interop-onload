@@ -1,14 +1,18 @@
 $(document).ready(function () {
-	//contentAutoGenerateForm();
-	// must be called before form is initialised
-	//contentTabbed();
-	contentForm();
+
+	$('.treatment-content').each(function () {
+		content_prepend_names($(this));
+		content_create_tabs($(this));
+		content_fill_values($(this));
+	});
+
+
+	//contentForm();
 	main_text_ays();
 	$('.readonly :input').prop('disabled', true);
 	/* contentAdjustWidth();
 	 contentInsertPageBreaks();
 	 contentLayout();*/
-
 });
 
 
@@ -26,114 +30,153 @@ function main_text_ays() {
 	);
 }
 
+
+function isInt(value) {
+	return !isNaN(value) &&
+		parseInt(Number(value)) == value && !isNaN(parseInt(value, 10));
+}
+
 // Used by form on success.
 function main_text_save_complete() {
 	$(this).find('.changes-saver').hide();
 }
 
+function content_create_tabs(content) {
 
-function contentTabbed() {
-	var tab_name = bass_data['tab_name'];
-	var container_id = 0;
-	$('.tabbed')
-		.each(function () {
-				container_id++;
-				var container = $(this).wrap("<div></div>").parent();
-				var content = $(this);
-				content.removeClass('tabbed');
-				content.detach();
+	// TODO: This function is not optimized. Runs through all input fields multiple times
+	var getMaxTabCount = function (tabbed_content) {
+		var all_names = tabbed_content.find(':input').not('[type=submit], .contentposter').map(function () {
+			return $(this).prop('name');
+		}).get();
 
-				var tabs_ul = $("<ul></ul>");
-				container.append(tabs_ul);
-
-				var tab_count = getMaxTabCount(content);
-
-				for (var i = 1; i <= tab_count; i++) {
-					addContentTabTab(tabs_ul, i, tab_name + ' ' + i);
-					addContentTabContent(container, cloneContent(content, i), i);
-				}
-
-				if (!(container.hasClass('readonly') || container.parents('.readonly').length)) {
-					addContentTabPlus(container, tabs_ul, tab_count + 1);
-				}
-
-			// TODO: content.data.default here
-				var cookie_name = 'tab.' + bass_data['content.data.default'] + '.' + container_id;
-
-				container.tabs({
-					activate: function (event, ui) {
-						var index = ui.newTab.index() + 1;
-						$.cookie(cookie_name, index - 1);
-						if (ui.newTab.text() == '+') {
-							var tab_content = cloneContent(content, index);
-							fillStaticData(tab_content);
-							ui.newPanel.children().first().replaceWith(tab_content);
-							ui.newTab.children().first().text(tab_name + ' ' + index);
-							addContentTabPlus(container, tabs_ul, index + 1);
-							container.tabs("refresh");
-						}
-					},
-					// Don't activate the plus tab even if it was the last one selected
-					active: ($.cookie(cookie_name) >= tab_count ? 0 : $.cookie(cookie_name))
-				});
+		return _.reduce(all_names, function (memoO, input_name) {
+			var data = content_data[getContentDataBASSVar(input_name)];
+			if (data === undefined) {
+				return memoO;
 			}
-		);
-}
-
-// TODO: This function is not optimized. Runs through all input fields multiple times
-function getMaxTabCount(content) {
-	var all_names = content.find(':input').not('[type=submit], .contentposter').map(function () {
-		return $(this).prop('name');
-	}).get();
-
-	return _.reduce(all_names, function (memoO, input_name) {
-		var data = bass_data[getContentDataBASSVar(input_name)];
-		if (data !== undefined) {
+			var data_name = input_name.split('.', 2)[0];
 			var memoOX = _.reduce(data, function (memoI, value, input_key) {
-					if (value === '') {
-						return memoI;
-					}
-					var a = input_key.split('#', 2);
-					if (a[0] != input_name) {
-						return memoI;
-					}
-					var memoIX = a[1];
+				if (value === '') {
+					return memoI;
+				}
 
-					if (!isInt(memoIX)) {
-						return memoI;
-					}
+				var a = input_key.split('#', 2);
+				if (data_name + '.' + a[0] != input_name) {
+					return memoI;
+				}
+				var memoIX = a[1];
 
-					return Math.max(memoI, memoIX);
-				}, memoO
-			);
+				if (!isInt(memoIX)) {
+					return memoI;
+				}
+
+				return Math.max(memoI, memoIX);
+			}, memoO);
 			return Math.max(memoO, memoOX);
+		}, 1);
+	};
+
+	var addPlusTab = function (tabs_ul, tab_div, content_id, on_click) {
+		var tab_count = tabs_ul.children().length;
+		var tab_id = get_tab_id(content_id, (tab_count + 1));
+		tabs_ul.append(ContentTabTab(tab_id, '+', on_click));
+		tab_div.append(sprintf("<div class='tab-pane' id='%s'></div>", tab_id));
+	};
+
+	var get_tab_id = function (content_id, number) {
+		return 'tab_' + content_id + '_' + number;
+	};
+
+	var ContentTabTab = function (tab_id, label, on_click) {
+		var tab = $(sprintf("<li class='nav-item'><a class='nav-link' id ='tab_%s' data-target='#%s' data-toggle='tab'>%s</a></li>", tab_id, tab_id, label));
+		tab.on('show.bs.tab', on_click);
+		return tab;
+	};
+
+	var cloneContent = function (content, i) {
+		var tab_content = content.clone(true);
+		// tab_content.prop('id', tab_content.prop('id' + i));
+		tab_content.find(':input').not('[type=submit], .contentposter').each(function () {
+			$(this).prop('name', $(this).prop('name') + '#' + i);
+		});
+		setupStaticDataTabbed(tab_content, i);
+		return tab_content;
+	};
+
+	var tab_name = "FLIKK";
+	var content_id = content.prop("id") || 'xxx';
+
+	var tabelizer = function (container_index, container) {
+		var tabbed_content_id = content_id + '_' + container_index;
+		console.log(tabbed_content_id);
+		container = $(container);
+		var tabbed_content = container.children().not('form').wrapAll('<div></div>').parent();
+		container.removeClass('tabbed');
+		tabbed_content.detach();
+		var tab_div = $("<div class='tab-content'></div>");
+		// TODO: Handle id of embedded tabbed forms
+		var cookie_name = 'tab-' + tabbed_content_id;
+
+		var tabs_ul = $('<ul class="nav nav-tabs" role="tablist"></ul>');
+
+		var on_click = function (e) {
+			var tab = $(e.target);
+			if (tab.text() == '+') {
+
+				// TODO: Static data
+				//fillStaticData(tab_content);
+				var tab_index = tabs_ul.children().length;
+				tab.text(tab_name + ' ' + tab_index);
+				$(tab.data('target')).append(cloneContent(tabbed_content, tab_index));
+
+				addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
+			}
+			Cookies.set(cookie_name, tab.data('target'));
+		};
+
+		var tab_count = getMaxTabCount(tabbed_content);
+		//var tab_count = 4;
+		for (var i = 1; i <= tab_count; i++) {
+			var tab_id = get_tab_id(tabbed_content_id, i);
+			var label = tab_name + ' ' + i;
+			tabs_ul.append(ContentTabTab(tab_id, label, on_click));
+			var div = $(sprintf("<div class='tab-pane' id='%s'></div>", tab_id));
+			div.append(cloneContent(tabbed_content, i));
+			tab_div.append(div);
 		}
-	}, 1);
-}
 
-function addContentTabPlus(container, tabs_ul, i) {
-	addContentTabTab(tabs_ul, i, '+');
-	addContentTabContent(container, $('<div></div>'), i);
-}
+		// Set active tab based on cookie
+		var active_tab_id = (Cookies.get(cookie_name) || "").substr(1);
+		var active_div;
+		var active_tab;
+		if (active_tab_id != '') {
+			active_div = tab_div.find('#' + active_tab_id);
+			active_tab = tabs_ul.find('#tab_' + active_tab_id);
+		}
+		if (active_div === undefined || !active_div.length) {
+			active_div = tab_div.children().first();
+			active_tab = tabs_ul.children().first().find('a');
+		}
+		active_tab.addClass('active');
+		active_div.addClass('active');
 
-function addContentTabTab(tabs_ul, i, label) {
-	var tab_template = "<li><a href='#{href}'>#{label}</a></li>";
-	tabs_ul.append($(tab_template.replace(/#\{href\}/g, "#" + getContentTabId(i)).replace(/#\{label\}/g, label)));
-}
+		// TODO: Don't show plus tab in readonly mode
+		/*if (!(content.hasClass('readonly') || container.parents('.readonly').length)) {
+		 addContentTabPlus(container, tabs_ul, tab_count + 1);
+		 }*/
 
-function addContentTabContent(container, tab_content, i) {
-	tab_content.wrap("<div id='" + getContentTabId(i) + "'></div>");
-	container.append(tab_content.parent());
-}
+		addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
 
-function cloneContent(content, i) {
-	var tab_content = content.clone(true);
-	// tab_content.prop('id', tab_content.prop('id' + i));
-	tab_content.find(':input').not('[type=submit], .contentposter').each(function () {
-		$(this).prop('name', $(this).prop('name') + '#' + i);
-	});
-	setupStaticDataTabbed(tab_content, i);
-	return tab_content;
+		container.prepend(tab_div).prepend(tabs_ul);
+	};
+
+	if (content.hasClass('tabbed')) {
+		tabelizer(0, content);
+	}
+	else {
+		$('.tabbed')
+			.each(tabelizer);
+	}
 }
 
 function setupStaticDataTabbed(content, index) {
@@ -142,7 +185,6 @@ function setupStaticDataTabbed(content, index) {
 		//$(this).attr("value", $(this).attr("value") + '#' + index);
 	});
 }
-
 function fillStaticData(content, data_name) {
 	content.find('.contentdata').not(':input').each(function () {
 		var value = getContentDataValue(getContentDataPostKey($(this).text(), data_name));
@@ -151,10 +193,6 @@ function fillStaticData(content, data_name) {
 		}
 		$(this).html(value.replace(/(?:\r\n|\r|\n)/g, '<br />'));
 	});
-}
-
-function getContentTabId(index) {
-	return 'content.tab.' + index;
 }
 
 function content_submit() {
@@ -186,7 +224,41 @@ function content_submit() {
 	return true;
 }
 
-function contentForm() {
+function content_prepend_names(content_div) {
+	var data_name = content_div.data('data-name');
+	content_div
+		.find(':input').not(content_div.find('form').children())//.not('[type=submit]')
+		.each(function () {
+			var input = this;
+			$(input).prop('name', getContentDataPostKey(input.name, data_name));
+		});
+}
+
+
+function content_fill_values(content_div) {
+	//TODO: Does not handle pre-checked checkboxes
+	var data_name = content_div.data('data-name');
+	content_div
+		.find(':input').not(content_div.find('form').children())//.not('[type=submit]')
+		.each(function () {
+			var input = this;
+			var value = getContentDataValue(input.name);
+			if (value !== undefined) {
+				if (input.type == 'radio' || input.type == 'checkbox') {
+					$(input).prop('checked', value == input.value);
+				}
+				else {
+					$(input).val(value);
+				}
+			}
+		});
+	content_div.areYouSure();
+
+	fillStaticData(content_div, data_name);
+}
+
+
+function contentForm2() {
 	//TODO: Does not handle pre-checked checkboxes
 	var content_div = $(".treatment-content").first();
 	var data_name = content_div.data('data-name');
@@ -211,6 +283,7 @@ function contentForm() {
 }
 
 function getContentDataBASSVar(value_name) {
+	return value_name.split('.', 2)[0];
 	var key = "content.data.";
 	if (value_name.indexOf('.') == -1) {
 		return key + bass_data['content.data.default'];
@@ -254,48 +327,48 @@ function getContentDataPostKey(value_name, data_name) {
 	}
 }
 
-function contentAutoGenerateForm() {
-	$('.autogenerateform').each(function () {
-
-		// Remove all forms in content
-		$(this).find('form').each(function () {
-			var children = $(this).children();
-			children.detach();
-			$(this).wrap('<div></div>');
-			var div = $(this).parent();
-			$(this).remove();
-			div.append(children);
-		});
-
-		// Remove all submit buttons
-		$(this).find(':submit').remove();
-
-		// Check if there are any inputs
-		if ($(this).find(':input').length) {
-
-			// If content is readonly, then just add contentform to this div
-			if ($(this).hasClass('readonly')) {
-				$(this).wrap('<div class="contentform"></div>');
-			}
-			else {
-				// Else wrap in form and add submit button
-				$(this).wrap($('<form class="contentform" method="POST" target=""></form>'));
-				var homework = $(this).find("[name='$$$homework']");
-				if (homework.length) {
-					$(this).parent().append('<input type = "submit" value = "Skicka in hemuppgift" title = "Skickar in din hemuppgiftsrapport så att din behandlare kan läsa den">');
-					var savebtn = $('<input type = "submit" value = "Spara utan att skicka in" title= "Sparar dina svar så att du kan skicka in dem senare">')
-						.click(function () {
-							homework.val(0);
-						});
-					$(this).parent().append(savebtn);
-				}
-				else {
-					$(this).parent().append(sprintf('<input type = "submit" value = "%s">', bass_data['save_name']));
-				}
-			}
-		}
-	});
-}
+// function contentAutoGenerateForm() {
+// 	$('.autogenerateform').each(function () {
+//
+// 		// Remove all forms in content
+// 		$(this).find('form').each(function () {
+// 			var children = $(this).children();
+// 			children.detach();
+// 			$(this).wrap('<div></div>');
+// 			var div = $(this).parent();
+// 			$(this).remove();
+// 			div.append(children);
+// 		});
+//
+// 		// Remove all submit buttons
+// 		$(this).find(':submit').remove();
+//
+// 		// Check if there are any inputs
+// 		if ($(this).find(':input').length) {
+//
+// 			// If content is readonly, then just add contentform to this div
+// 			if ($(this).hasClass('readonly')) {
+// 				$(this).wrap('<div class="contentform"></div>');
+// 			}
+// 			else {
+// 				// Else wrap in form and add submit button
+// 				$(this).wrap($('<form class="contentform" method="POST" target=""></form>'));
+// 				var homework = $(this).find("[name='$$$homework']");
+// 				if (homework.length) {
+// 					$(this).parent().append('<input type = "submit" value = "Skicka in hemuppgift" title = "Skickar in din hemuppgiftsrapport så att din behandlare kan läsa den">');
+// 					var savebtn = $('<input type = "submit" value = "Spara utan att skicka in" title= "Sparar dina svar så att du kan skicka in dem senare">')
+// 						.click(function () {
+// 							homework.val(0);
+// 						});
+// 					$(this).parent().append(savebtn);
+// 				}
+// 				else {
+// 					$(this).parent().append(sprintf('<input type = "submit" value = "%s">', bass_data['save_name']));
+// 				}
+// 			}
+// 		}
+// 	});
+// }
 
 function contentAdjustWidth() {
 	$(".content.width").each(function () {

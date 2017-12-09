@@ -72,6 +72,8 @@
         template
         (merge {:text         (:text content)
                 :markdown     (:markdown content)
+                :tabbed       (:tabbed content)
+                :content-id   content-id
                 :data-name    data-name
                 :content-data content-data
                 :context-menu (context-menu module module-contents)

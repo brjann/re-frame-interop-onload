@@ -194,7 +194,7 @@ div#instrument .item-error {
 
 #module-text {
     position: relative;
-    height: 200px;
+    /*height: 200px;*/
     margin-top: .5rem;
     overflow: auto;
 }

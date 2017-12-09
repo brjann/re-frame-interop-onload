@@ -1,6 +1,6 @@
 {% extends "user.html" %}
 {% block user-content %}
-<div class="treatment-content form" data-data-name="{{data-name}}">
+<div class="treatment-content form {% if tabbed %}tabbed{% endif %}" data-data-name="{{data-name}}" id="{{content-id}}">
     {% if markdown %}
     {{text|markdown}}
     {% else %}

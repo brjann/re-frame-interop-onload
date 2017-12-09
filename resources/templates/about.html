@@ -2,305 +2,88 @@
 {% block user-content %}
 
 <style>
-    .module {
-        position: relative;
-    }
 
-    .module #module-text {
-        position: relative;
-        height: 200px;
-        margin-top: .5rem;
-        overflow: auto;
-    }
-
-    .module .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
-        padding: 0;
-    }
-
-    .module .navbar-nav {
-        flex-direction: row;
-    }
-
-    .navbar {
-        position: relative;
-        padding: 4px 8px;
-    }
-
-    .module .dropdown-toggle::after {
-        content: "";
-        border-top: 0 solid;
-        border-right: 0 solid transparent;
-        border-left: 0 solid transparent;
-    }
 </style>
 
-<div class="module" id="module-111">
-    <nav id="module-navbar" class="navbar navbar-light bg-faded">
-        <div class="navbar-nav">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-               aria-expanded="false">&#9776;</a>
-            <div class="dropdown-menu">
-                <!--<a class="dropdown-item" href="#s1">fat</a>-->
-            </div>
-            <span class="navbar-text" id="module-section-label"></span>
-        </div>
+<div class="container">
 
-    </nav>
-    <div class="module-text">
-        <h1>Number one</h1>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h1>Number two</h1>
-        <p>Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard. Freegan beard aliqua cupidatat
-            mcsweeney's vero. Cupidatat four loko nisi, ea helvetica nulla carles. Tattooed cosby sweater food truck,
-            mcsweeney's quis non freegan vinyl. Lo-fi wes anderson +1 sartorial. Carles non aesthetic exercitation quis
-            gentrify. Brooklyn adipisicing craft beer vice keytar deserunt.</p>
-        <p>Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard. Freegan beard aliqua cupidatat
-            mcsweeney's vero. Cupidatat four loko nisi, ea helvetica nulla carles. Tattooed cosby sweater food truck,
-            mcsweeney's quis non freegan vinyl. Lo-fi wes anderson +1 sartorial. Carles non aesthetic exercitation quis
-            gentrify. Brooklyn adipisicing craft beer vice keytar deserunt.</p>
-        <p>Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard. Freegan beard aliqua cupidatat
-            mcsweeney's vero. Cupidatat four loko nisi, ea helvetica nulla carles. Tattooed cosby sweater food truck,
-            mcsweeney's quis non freegan vinyl. Lo-fi wes anderson +1 sartorial. Carles non aesthetic exercitation quis
-            gentrify. Brooklyn adipisicing craft beer vice keytar deserunt.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h1>Number three</h1>
-        <p>Occaecat commodo aliqua delectus. Fap craft beer deserunt skateboard ea. Lomo bicycle rights adipisicing banh
-            mi, velit ea sunt next level locavore single-origin coffee in magna veniam. High life id vinyl, echo park
-            consequat quis aliquip banh mi pitchfork. Vero VHS est adipisicing. Consectetur nisi DIY minim messenger
-            bag. Cred ex in, sustainable delectus consectetur fanny pack iphone.</p>
-        <p>Occaecat commodo aliqua delectus. Fap craft beer deserunt skateboard ea. Lomo bicycle rights adipisicing banh
-            mi, velit ea sunt next level locavore single-origin coffee in magna veniam. High life id vinyl, echo park
-            consequat quis aliquip banh mi pitchfork. Vero VHS est adipisicing. Consectetur nisi DIY minim messenger
-            bag. Cred ex in, sustainable delectus consectetur fanny pack iphone.</p>
-        <p>Occaecat commodo aliqua delectus. Fap craft beer deserunt skateboard ea. Lomo bicycle rights adipisicing banh
-            mi, velit ea sunt next level locavore single-origin coffee in magna veniam. High life id vinyl, echo park
-            consequat quis aliquip banh mi pitchfork. Vero VHS est adipisicing. Consectetur nisi DIY minim messenger
-            bag. Cred ex in, sustainable delectus consectetur fanny pack iphone.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h1>Number four</h1>
-        <p>In incididunt echo park, officia deserunt mcsweeney's proident master cleanse thundercats sapiente veniam.
-            Excepteur VHS elit, proident shoreditch +1 biodiesel laborum craft beer. Single-origin coffee wayfarers
-            irure four loko, cupidatat terry richardson master cleanse. Assumenda you probably haven't heard of them art
-            party fanny pack, tattooed nulla cardigan tempor ad. Proident wolf nesciunt sartorial keffiyeh eu banh mi
-            sustainable. Elit wolf voluptate, lo-fi ea portland before they sold out four loko. Locavore enim nostrud
-            mlkshk brooklyn nesciunt.</p>
-        <p>In incididunt echo park, officia deserunt mcsweeney's proident master cleanse thundercats sapiente veniam.
-            Excepteur VHS elit, proident shoreditch +1 biodiesel laborum craft beer. Single-origin coffee wayfarers
-            irure four loko, cupidatat terry richardson master cleanse. Assumenda you probably haven't heard of them art
-            party fanny pack, tattooed nulla cardigan tempor ad. Proident wolf nesciunt sartorial keffiyeh eu banh mi
-            sustainable. Elit wolf voluptate, lo-fi ea portland before they sold out four loko. Locavore enim nostrud
-            mlkshk brooklyn nesciunt.</p>
-        <p>In incididunt echo park, officia deserunt mcsweeney's proident master cleanse thundercats sapiente veniam.
-            Excepteur VHS elit, proident shoreditch +1 biodiesel laborum craft beer. Single-origin coffee wayfarers
-            irure four loko, cupidatat terry richardson master cleanse. Assumenda you probably haven't heard of them art
-            party fanny pack, tattooed nulla cardigan tempor ad. Proident wolf nesciunt sartorial keffiyeh eu banh mi
-            sustainable. Elit wolf voluptate, lo-fi ea portland before they sold out four loko. Locavore enim nostrud
-            mlkshk brooklyn nesciunt.</p>
-        <p>In incididunt echo park, officia deserunt mcsweeney's proident master cleanse thundercats sapiente veniam.
-            Excepteur VHS elit, proident shoreditch +1 biodiesel laborum craft beer. Single-origin coffee wayfarers
-            irure four loko, cupidatat terry richardson master cleanse. Assumenda you probably haven't heard of them art
-            party fanny pack, tattooed nulla cardigan tempor ad. Proident wolf nesciunt sartorial keffiyeh eu banh mi
-            sustainable. Elit wolf voluptate, lo-fi ea portland before they sold out four loko. Locavore enim nostrud
-            mlkshk brooklyn nesciunt.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <h4>Number five - not 1</h4>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
-        <p>Ad leggings keytar, brunch id art party dolor labore. Pitchfork yr enim lo-fi before they sold out qui.
-            Tumblr farm-to-table bicycle rights whatever. Anim keffiyeh carles cardigan. Velit seitan mcsweeney's photo
-            booth 3 wolf moon irure. Cosby sweater lomo jean shorts, williamsburg hoodie minim qui you probably haven't
-            heard of them et cardigan trust fund culpa biodiesel wes anderson aesthetic. Nihil tattooed accusamus, cred
-            irony biodiesel keffiyeh artisan ullamco consequat.</p>
-        <p>Keytar twee blog, culpa messenger bag marfa whatever delectus food truck. Sapiente synth id assumenda.
-            Locavore sed helvetica cliche irony, thundercats you probably haven't heard of them consequat hoodie
-            gluten-free lo-fi fap aliquip. Labore elit placeat before they sold out, terry richardson proident brunch
-            nesciunt quis cosby sweater pariatur keffiyeh ut helvetica artisan. Cardigan craft beer seitan readymade
-            velit. VHS chambray laboris tempor veniam. Anim mollit minim commodo ullamco thundercats.</p>
+    <div class="treatment-content form tabbed" data-data-name="arbetsblad4_1i" id="4027">
+
+        <p><strong>Hemuppgift 4.1 &ndash; Interoceptiv exponering</strong><br/>
+            <br/>
+            <strong>Datum f&ouml;r genomf&ouml;rd exponering:&nbsp;<input maxlength="10" name="date" size="10"
+                                                                          type="text"/><br/>
+                Exponering nummer (tidsordning):<input maxlength="10" name="number" size="10" type="text"/></strong></p>
+
+        <p><strong>Inf&ouml;r exponeringen</strong></p>
+
+        <p>1. Vilken exponering i min hierarki ska jag utf&ouml;ra?&nbsp;<br/>
+            <textarea cols="80" name="1" rows="2"></textarea></p>
+
+        <blockquote>a. Var?<br/>
+            <textarea cols="60" name="1a" rows="6"></textarea></blockquote>
+
+        <blockquote>b. N&auml;r? Vilken veckodag/tidpunkt?<br/>
+            <textarea cols="60" name="1b" rows="2"></textarea></blockquote>
+
+        <blockquote>c.&nbsp;Med n&aring;gon eller ensam?<br/>
+            <textarea cols="60" name="1c" rows="4"></textarea></blockquote>
+
+        <p>2. P&aring; vilken &aring;ngestniv&aring; ligger &ouml;vningen i min exponeringshierarki?&nbsp;<input
+                maxlength="10" name="2" size="10" type="text"/></p>
+
+        <p>3.&nbsp;Vad &auml;r det v&auml;rsta som skulle kunna h&auml;nda? (se tidigare arbetsblad)</p>
+
+        <p><textarea cols="80" name="3" rows="5"></textarea></p>
+
+        <p>4. Hur&nbsp;sannolikt tror du det &auml;r att det kommer h&auml;nda? (0 -100)&nbsp;<input maxlength="10"
+                                                                                                     name="4" size="10"
+                                                                                                     type="text"/></p>
+
+        <p>5.&nbsp;Hur l&auml;nge ska du g&ouml;ra exponeringen f&ouml;r att utmana din farh&aring;ga? Vad &auml;r din
+            tidsram? Ange tid i minuter&nbsp;<input maxlength="10" name="5" size="10" type="text"/></p>
+
+        <p><strong>Efter exponeringen</strong></p>
+
+        <p>6.&nbsp;Hur h&ouml;g var din &aring;ngest i b&ouml;rjan av exponerings&ouml;vningen​? (0-100)&nbsp;<input
+                maxlength="10" name="6" size="10" type="text"/></p>
+
+        <p>7.&nbsp;Hur mycket &aring;ngest k&auml;nde du som mest? (0-100)&nbsp;<input maxlength="10" name="7" size="10"
+                                                                                       type="text"/></p>
+
+        <p>8.&nbsp;Hur mycket &aring;ngest hade du i slutet av exponeringen? (0-100)&nbsp;<input maxlength="10" name="8"
+                                                                                                 size="10" type="text"/>
+        </p>
+
+        <p>9.&nbsp;Hur l&aring;ng tid p&aring;gick din exponering?&nbsp;<input maxlength="10" name="9" size="10"
+                                                                               type="text"/>&nbsp;minuter.</p>
+
+        <p>10.&nbsp;H&auml;nde det som du var r&auml;dd f&ouml;r skulle h&auml;nda?&nbsp;<input name="10" type="radio"
+                                                                                                value="JA"/>JA&nbsp;<input
+                name="10" type="radio" value="NEJ"/>&nbsp;NEJ</p>
+
+        <p>11.&nbsp;Hur vet du det?<br/>
+            <textarea cols="80" name="11" rows="6"></textarea></p>
+
+        <p>12.&nbsp;Vad l&auml;rde du dig? Blev du f&ouml;rv&aring;nad?<br/>
+            <textarea cols="80" name="12" rows="6"></textarea></p>
+
+        <p>13.&nbsp;Hur sannolikt &auml;r det att det du trodde var det v&auml;rsta som skulle kunna h&auml;nda faktiskt
+            h&auml;nder n&auml;sta g&aring;ng? (0-100)&nbsp;<input maxlength="10" name="13" size="10" type="text"/></p>
+
+
+        <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
+              onsubmit="return content_submit();">
+            <input type="hidden" name="content-data" class="content-poster">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
     </div>
+
+
 </div>
+
 
 {% endblock %}
 {% block page-scripts %}
-<script>
 
-</script>
 {% endblock %}

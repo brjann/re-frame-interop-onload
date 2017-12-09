@@ -72,5 +72,5 @@
           data-names (distinct (map first string-map))
           old-data   (get-content-data treatment-access-id data-names)
           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
-      (if (< 0 (count save-data))
+      (when (< 0 (count save-data))
         (db/save-content-data! {:content-data save-data})))))
