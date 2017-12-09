@@ -3,7 +3,7 @@
 
 <!-- navbar -->
 
-<nav class="navbar navbar-toggleable-md navbar-inverse bg-primary">
+<nav class="navbar navbar-expand-md navbar-dark bg-primary">
     <button id="navbar-toggler" class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
             data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
             aria-label="Toggle navigation">
@@ -34,7 +34,8 @@
 
             {% if context-menu %}
             <!-- Mobile context menu -->
-            <div class="hidden-md-up">
+            <!-- https://stackoverflow.com/questions/35351353/missing-visible-and-hidden-in-bootstrap-v4 -->
+            <div class="d-md-none">
                 <div class="dropdown-divider"></div>
                 {% if context-menu.title %}
                 <div class='navbar-text' style="display:block; text-align:center;">{{context-menu.title}}</div>
@@ -50,8 +51,9 @@
 </nav>
 {% if context-menu %}
 <!-- Desktop context menu -->
-<div class="hidden-sm-down">
-    <nav class="navbar navbar-toggleable-md navbar-light bg-faded" style="margin-top: -10px;">
+<!-- https://stackoverflow.com/questions/35351353/missing-visible-and-hidden-in-bootstrap-v4 -->
+<div class="d-none d-md-block">
+    <nav class="navbar navbar-expand-md navbar-light bg-light" style="margin-top: -10px;">
         <div class="navbar-nav">
             <!--
             {% if context-menu.title %}
