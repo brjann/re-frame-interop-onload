@@ -8,7 +8,8 @@
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
             [bass4.responses.content-example :as content-example]
-            [bass4.utils :refer [str->int]]
+            [bass4.responses.modules :as modules]
+            [bass4.utils :refer [str->int json-safe]]
             [bass4.services.bass :as bass]))
 
 
@@ -31,6 +32,8 @@
         (GET "/instrument/summary/:instrument-id" [instrument-id]
           (instruments/summary-page instrument-id))
         (GET "/content-example/:content-id" [content-id]
-          (content-example/edit-example (str->int content-id))))
+          (content-example/edit-example (str->int content-id)))
+        (POST "/content-example/:content-id" [content-id & params]
+          (modules/save-worksheet-data content-id (json-safe (:content-data params)))))
       (routes
         (ANY "*" [] (layout/error-403-page))))))

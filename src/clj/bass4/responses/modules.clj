@@ -112,8 +112,8 @@
     (layout/throw-400!)))
 
 (defn save-worksheet-data
-  [treatment-access content-data]
-  (when (handle-content-data content-data (:treatment-access-id treatment-access))
+  [treatment-access-id content-data]
+  (when (handle-content-data content-data treatment-access-id)
     (response/found "reload")))
 
 (defn save-main-text-data

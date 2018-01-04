@@ -97,7 +97,7 @@
             (layout/error-404-page (i18n/tr [:modules/no-module]))))
         (POST "/content-data" [& params]
           (modules-response/save-worksheet-data
-            (:treatment-access treatment)
+            (get-in treatment [:treatment-access :treatment-access-id])
             (json-safe (:content-data params))))))
     (routes
       ;; TODO: What should be shown if not in treatment?

@@ -6,7 +6,7 @@
     {% else %}
     {{text|safe}}
     {% endif %}
-    <form method="post" class="content-submitter" name="contentform" action="/content-example/{{content-id}}"
+    <form method="post" class="content-submitter" name="contentform"
           onsubmit="return content_submit();">
         <input type="hidden" name="content-data" class="content-poster">
         <button type="submit" class="btn btn-primary">{%tr save %}</button>
