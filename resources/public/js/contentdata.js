@@ -3,7 +3,9 @@ $(document).ready(function () {
 	$('.treatment-content').each(function () {
 		content_prepend_names($(this));
 		content_setup_statics($(this));
-		content_create_tabs($(this));
+		if ($(this).hasClass('tabbed')) {
+			content_create_tabs($(this));
+		}
 		content_fill_values($(this));
 		content_fill_statics($(this));
 	});

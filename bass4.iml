@@ -140,10 +140,11 @@
     <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.tobereplaced/lettercase:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars.bower/tether:1.4.0" level="project" />
-    <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.0.0-alpha.6" level="project" />
+    <orderEntry type="library" name="Leiningen: org.webjars.npm/popper.js:1.11.1" level="project" />
+    <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.0.0-beta.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/font-awesome:4.7.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/jquery-ui:1.12.1" level="project" />
-    <orderEntry type="library" name="Leiningen: org.webjars/jquery:3.2.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.webjars/jquery:3.2.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/webjars-locator-core:0.30" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/webjars-locator-jboss-vfs:0.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/webjars-locator:0.27" level="project" />

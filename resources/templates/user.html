@@ -77,15 +77,9 @@
 
 {% block page-scripts %}
 <script type="text/javascript">
-	var bass_data = {};
 	// @formatter:off
     var content_data = {{content-data|json|safe}} || {};
     // @formatter:on
-
-	bass_data["unsavedchangesalert"] = "Det finns osparade \u00e4ndringar i p\u00e5 sidan.";
-	bass_data["tab_name"] = "Flik";
-	bass_data["save_name"] = "Spara";
-	bass_data["page_info"] = "Sida %s av %s";
 </script>
 <script src="/js/contentdata.js"></script>
 <script src="/js/underscore-min.js"></script>

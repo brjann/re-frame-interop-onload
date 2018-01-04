@@ -80,9 +80,16 @@
    (let [sep (if (zero? (count message)) "" " ")]
      (throw (ex-info (str "400" sep message) {})))))
 
-(defn text-response
+#_(defn text-response
   [var]
   (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
+
+(defn text-response
+  [var]
+  (-> (clojure.pprint/pprint var)
+      (with-out-str)
+      (ring-response/response)
+      (ring-response/content-type "text/plain")))
 
 (parser/add-tag!
   :tr

@@ -43,7 +43,7 @@
         bass-path (env :bass-path)]
     (io/file bass-path "projects" db-name "sessiondata")))
 
-(defn admin-session-file
+(defn embedded-session-file
   [filename]
   (when-not (s/includes? filename "/")
     (let [file (io/file (session-dir) filename)]

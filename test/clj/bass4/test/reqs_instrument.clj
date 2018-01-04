@@ -13,7 +13,7 @@
   test-fixtures)
 
 (deftest request-post-answers
-  (with-redefs [bass/admin-session-file (constantly 110)]
+  (with-redefs [bass/embedded-session-file (constantly 110)]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/1647")
@@ -29,7 +29,7 @@
 
 
 (deftest request-wrong-instrument
-  (with-redefs [bass/admin-session-file (constantly 110)]
+  (with-redefs [bass/embedded-session-file (constantly 110)]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
