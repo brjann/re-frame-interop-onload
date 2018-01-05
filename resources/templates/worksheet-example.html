@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="{{return-path}}" class="btn btn-warning btn-sm">{%tr modules/close-example %}</a>
+<div class="treatment-content form {% if tabbed %}tabbed{% endif %} read-only" data-data-name="{{data-name}}"
+     id="{{content-id}}">
+    {% if markdown %}
+    {{text|markdown}}
+    {% else %}
+    {{text|safe}}
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block page-scripts %}
+<script type="text/javascript">
+	// @formatter:off
+    var content_data = {{content-data|json|safe}} || {};
+    // @formatter:on
+
+</script>
+<script src="/js/contentdata.js"></script>
+<script src="/js/underscore-min.js"></script>
+{% endblock %}

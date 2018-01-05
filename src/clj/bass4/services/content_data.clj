@@ -31,7 +31,6 @@
                  (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
 
 (defn get-content-data [data-owner-id data-names]
-  (log/debug data-owner-id data-names)
   (->>
     (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})
     (unflatten-content-data)

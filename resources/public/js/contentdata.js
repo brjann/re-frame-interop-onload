@@ -7,6 +7,9 @@ $(document).ready(function () {
 			content_create_tabs($(this));
 		}
 		content_fill_values($(this));
+		if ($(this).hasClass('read-only')) {
+			content_readonly($(this));
+		}
 		content_fill_statics($(this));
 	});
 
@@ -17,7 +20,7 @@ $(document).ready(function () {
 	 contentLayout();*/
 });
 
-
+// TODO: https://getbootstrap.com/docs/4.0/components/buttons/#sizes
 function main_text_ays() {
 	$('.treatment-content.main-text').each(
 		function () {
@@ -117,7 +120,7 @@ function content_create_tabs(content) {
 		});
 	};
 
-	var tab_name = "FLIKK";
+	var tab_name = text_tab;
 	var content_id = content.prop("id") || 'xxx';
 
 	var tabelizer = function (container_index, container) {
@@ -148,7 +151,6 @@ function content_create_tabs(content) {
 		};
 
 		var tab_count = getMaxTabCount(tabbed_content);
-		//var tab_count = 4;
 		for (var i = 1; i <= tab_count; i++) {
 			var tab_id = get_tab_id(tabbed_content_id, i);
 			var label = tab_name + ' ' + i;
@@ -177,8 +179,9 @@ function content_create_tabs(content) {
 		/*if (!(content.hasClass('readonly') || container.parents('.readonly').length)) {
 		 addContentTabPlus(container, tabs_ul, tab_count + 1);
 		 }*/
-
-		addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
+		if (!content.hasClass('read-only')) {
+			addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
+		}
 
 		container.prepend(tab_div).prepend(tabs_ul);
 	};
@@ -190,6 +193,13 @@ function content_create_tabs(content) {
 		$('.tabbed')
 			.each(tabelizer);
 	}
+}
+
+function content_readonly(content) {
+	content.find(':input')
+		.each(function (index, input) {
+			$(input).attr('disabled', 'disabled');
+		})
 }
 
 function content_fill_statics(content) {
@@ -307,102 +317,102 @@ function getContentDataPostKey(value_name, data_name) {
 		return value_name;
 	}
 }
-
-function contentAdjustWidth() {
-	$(".content.width").each(function () {
-		var classes = $(this).attr("class").split(' ');
-		var width = _.find(classes, isInt);
-		if (width !== undefined) {
-			$(this).css('maxWidth', width + 'px');
-		}
-	});
-}
-
-function contentInsertPageBreaks() {
-	$('.content div[style*="page-break-after"]').each(function () {
-		if ($(this).css('page-break-after') == 'always') {
-			var div = $('<div class = "pagebreak"></div>');
-			$(this).replaceWith(div);
-
-			// Move up in DOM until parent is content div
-			while (!div.parent().hasClass('content')) {
-				div.insertAfter(div.parent());
-			}
-		}
-	});
-
-	$('.content').prepend($('<div class = "pagebreak"></div>'));
-
-	var page_count = 1;
-
-	$('.content div.pagebreak').each(function () {
-		$(this).nextUntil('div.pagebreak').wrapAll($('<div class = "contentpage"></div>'));
-		var div = $(this).next();
-		div.data('page', page_count++);
-		$(this).remove();
-	});
-}
-
-function contentLayout() {
-	$('.content').each(function () {
-		var page_count = $(this).find('.contentpage').length;
-		if (page_count > 1) {
-			var div = $('<div class="navigator"><a href="#" class = "pageprev">&lt;</a><span class = "pagenumbers"></span><a href="#" class = "pagenext">&gt;</a></div>');
-			div.append($('<br>' + sprintf(bass_data['page_info'], '<span class = "currentpage"></span>', '<span class = "pagecount"></span>')));
-			div.css('width', '100%');
-			div.css('text-align', 'center');
-			div.find('a').button();
-			div.find('.pagecount').text(page_count);
-			var content = this;
-
-			cookie_name = $(this).prop('id') + '_page';
-
-			var current_page = parseInt($.cookie(cookie_name), 10);
-
-			div.find('.pageprev').click(function () {
-				current_page = contentUpdatePages(content, current_page - 1, page_count);
-				$.cookie(cookie_name, current_page);
-			});
-
-			div.find('.pagenext').click(function () {
-				current_page = contentUpdatePages(content, current_page + 1, page_count);
-				$.cookie(cookie_name, current_page);
-			});
-
-			$(this).prepend(div.clone(true));
-			$(this).append(div.clone(true));
-
-			//var current_page = isInt($.cookie(cookie_name)) ? $.cookie(cookie_name) : 1;
-			current_page = contentUpdatePages(this, current_page, page_count);
-		}
-	});
-}
-
-function contentUpdatePages(content, current_page, page_count) {
-	var navigator = $(content).find('.navigator');
-	if (current_page <= 1 || !isInt(current_page)) {
-		navigator.find('.pageprev').button("option", "disabled", true);
-		current_page = 1;
-	}
-	else {
-		navigator.find('.pageprev').button("option", "disabled", false);
-		if (current_page >= page_count) {
-			navigator.find('.pagenext').button("option", "disabled", true);
-			current_page = page_count;
-		}
-		else {
-			navigator.find('.pagenext').button("option", "disabled", false);
-		}
-	}
-
-	navigator.find('.currentpage').text(current_page);
-	$(content).find('.contentpage').each(function (index) {
-		if (index == current_page - 1) {
-			$(this).show();
-		}
-		else {
-			$(this).hide();
-		}
-	});
-	return current_page;
-}
+//
+// function contentAdjustWidth() {
+// 	$(".content.width").each(function () {
+// 		var classes = $(this).attr("class").split(' ');
+// 		var width = _.find(classes, isInt);
+// 		if (width !== undefined) {
+// 			$(this).css('maxWidth', width + 'px');
+// 		}
+// 	});
+// }
+//
+// function contentInsertPageBreaks() {
+// 	$('.content div[style*="page-break-after"]').each(function () {
+// 		if ($(this).css('page-break-after') == 'always') {
+// 			var div = $('<div class = "pagebreak"></div>');
+// 			$(this).replaceWith(div);
+//
+// 			// Move up in DOM until parent is content div
+// 			while (!div.parent().hasClass('content')) {
+// 				div.insertAfter(div.parent());
+// 			}
+// 		}
+// 	});
+//
+// 	$('.content').prepend($('<div class = "pagebreak"></div>'));
+//
+// 	var page_count = 1;
+//
+// 	$('.content div.pagebreak').each(function () {
+// 		$(this).nextUntil('div.pagebreak').wrapAll($('<div class = "contentpage"></div>'));
+// 		var div = $(this).next();
+// 		div.data('page', page_count++);
+// 		$(this).remove();
+// 	});
+// }
+//
+// function contentLayout() {
+// 	$('.content').each(function () {
+// 		var page_count = $(this).find('.contentpage').length;
+// 		if (page_count > 1) {
+// 			var div = $('<div class="navigator"><a href="#" class = "pageprev">&lt;</a><span class = "pagenumbers"></span><a href="#" class = "pagenext">&gt;</a></div>');
+// 			div.append($('<br>' + sprintf(bass_data['page_info'], '<span class = "currentpage"></span>', '<span class = "pagecount"></span>')));
+// 			div.css('width', '100%');
+// 			div.css('text-align', 'center');
+// 			div.find('a').button();
+// 			div.find('.pagecount').text(page_count);
+// 			var content = this;
+//
+// 			cookie_name = $(this).prop('id') + '_page';
+//
+// 			var current_page = parseInt($.cookie(cookie_name), 10);
+//
+// 			div.find('.pageprev').click(function () {
+// 				current_page = contentUpdatePages(content, current_page - 1, page_count);
+// 				$.cookie(cookie_name, current_page);
+// 			});
+//
+// 			div.find('.pagenext').click(function () {
+// 				current_page = contentUpdatePages(content, current_page + 1, page_count);
+// 				$.cookie(cookie_name, current_page);
+// 			});
+//
+// 			$(this).prepend(div.clone(true));
+// 			$(this).append(div.clone(true));
+//
+// 			//var current_page = isInt($.cookie(cookie_name)) ? $.cookie(cookie_name) : 1;
+// 			current_page = contentUpdatePages(this, current_page, page_count);
+// 		}
+// 	});
+// }
+//
+// function contentUpdatePages(content, current_page, page_count) {
+// 	var navigator = $(content).find('.navigator');
+// 	if (current_page <= 1 || !isInt(current_page)) {
+// 		navigator.find('.pageprev').button("option", "disabled", true);
+// 		current_page = 1;
+// 	}
+// 	else {
+// 		navigator.find('.pageprev').button("option", "disabled", false);
+// 		if (current_page >= page_count) {
+// 			navigator.find('.pagenext').button("option", "disabled", true);
+// 			current_page = page_count;
+// 		}
+// 		else {
+// 			navigator.find('.pagenext').button("option", "disabled", false);
+// 		}
+// 	}
+//
+// 	navigator.find('.currentpage').text(current_page);
+// 	$(content).find('.contentpage').each(function (index) {
+// 		if (index == current_page - 1) {
+// 			$(this).show();
+// 		}
+// 		else {
+// 			$(this).hide();
+// 		}
+// 	});
+// 	return current_page;
+// }

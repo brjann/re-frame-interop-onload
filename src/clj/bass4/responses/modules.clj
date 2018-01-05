@@ -73,6 +73,7 @@
         (merge {:text         (:text content)
                 :markdown     (:markdown content)
                 :tabbed       (:tabbed content)
+                :show-example (:show-example content)
                 :content-id   content-id
                 :data-name    data-name
                 :content-data content-data
@@ -94,6 +95,25 @@
 
 (defn worksheet [treatment-access render-fn module worksheet-id]
   (module-render-wrapper treatment-access render-fn (worksheet-renderer worksheet-id) module))
+
+(defn worksheet-example [module worksheet-id return-path]
+  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
+    (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
+      (let [content      (treatment-service/get-content worksheet-id)
+            data-name    (:data-name content)
+            example-data (content-data/get-content-data
+                           worksheet-id
+                           [data-name])]
+
+        (layout/render "worksheet-example.html"
+                       {:return-path  return-path
+                        :text         (:text content)
+                        :markdown     (:markdown content)
+                        :tabbed       (:tabbed content)
+                        :content-id   worksheet-id
+                        :data-name    data-name
+                        :content-data example-data}))
+      (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn modules-list [render-fn modules]
   (render-fn

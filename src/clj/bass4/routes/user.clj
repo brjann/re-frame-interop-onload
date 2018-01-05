@@ -57,7 +57,10 @@
       (modules-response/retract-homework
         treatment-access
         module))
-    (GET "/worksheet/:worksheet-id" [worksheet-id] (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))))
+    (GET "/worksheet/:worksheet-id" [worksheet-id]
+      (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))
+    (GET "/worksheet/:worksheet-id/example" [worksheet-id & params]
+      (modules-response/worksheet-example module (str->int worksheet-id) (:return params)))))
 
 (defn- messages-routes
   [user treatment render-fn]

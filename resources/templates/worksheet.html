@@ -1,5 +1,9 @@
 {% extends "user.html" %}
 {% block user-content %}
+{% if show-example %}
+<a href="{{path}}/example?return={{path}}" class="btn btn-primary btn-sm">{%tr modules/show-example %}</a>
+{% endif %}
+
 <div class="treatment-content form {% if tabbed %}tabbed{% endif %}" data-data-name="{{data-name}}" id="{{content-id}}">
     {% if markdown %}
     {{text|markdown}}

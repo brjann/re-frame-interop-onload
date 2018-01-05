@@ -35,11 +35,12 @@
   {% script "/js/sprintf.min.js" %}
     <script type="text/javascript">
 		 var csrfToken = "{{csrf-token}}";
-         var context = "{{servlet-context}}";
-         var text_offline_warning = "{%tr offline-warning %}";
-         var text_timeout_hard = "{%tr error/timeout-hard %}";
-         var text_try_reloading = "{%tr error/try-reload %}";
+			var context = "{{servlet-context}}";
+			var text_offline_warning = "{%tr offline-warning %}";
+			var text_timeout_hard = "{%tr error/timeout-hard %}";
+			var text_try_reloading = "{%tr error/try-reload %}";
 			var text_unsaved_changes = "{%tr unsaved-changes %}";
+			var text_tab = "{%tr tab %}";
     </script>
     {% block page-scripts %}
     {% endblock %}
