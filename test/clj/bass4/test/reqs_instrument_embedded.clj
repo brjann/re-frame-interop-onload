@@ -1,4 +1,4 @@
-(ns bass4.test.reqs-instrument
+(ns bass4.test.reqs-instrument-embedded
   (:require [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
@@ -13,7 +13,7 @@
   test-fixtures)
 
 (deftest request-post-answers
-  (with-redefs [bass/embedded-session-file (constantly 110)]
+  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "/embedded/instrument/1647"})]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/1647")
@@ -25,11 +25,13 @@
         (debug-headers-text? "MAIL" "JSON")
         (has (status? 400))
         (visit "/embedded/instrument/1647" :request-method :post :params {:items "{}" :specifications "{}"})
-        (has (status? 302)))))
+        (has (status? 302))
+        (visit "/embedded/instrument/535690")
+        (has (status? 403)))))
 
 
 (deftest request-wrong-instrument
-  (with-redefs [bass/embedded-session-file (constantly 110)]
+  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "/embedded/instrument/"})]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")

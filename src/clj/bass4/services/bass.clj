@@ -4,7 +4,7 @@
             [clj-time.core :as t]
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
-            [bass4.utils :refer [map-map-keys str->int]]
+            [bass4.utils :refer [map-map-keys str->int json-safe]]
             [clj-time.coerce :as tc]
             [clojure.string :as s]
             [clojure.java.io :as io]))
@@ -45,13 +45,17 @@
 
 (defn embedded-session-file
   [filename]
-  (when-not (s/includes? filename "/")
+  (when-not (or (nil? filename) (s/includes? filename "/"))
+    (log/debug filename)
+    (log/debug "session dir")
+    (log/debug (session-dir))
     (let [file (io/file (session-dir) filename)]
+      (log/debug "ok 2")
       (when (.exists file)
-        (let [user-id (str->int (slurp file))]
+        (let [info (json-safe (slurp file) keyword)]
           ;; TODO: Check if session is ongoing in BASS
           #_(io/delete-file file)
-          user-id)))))
+          info)))))
 
 #_(defn init-repl
     ([] (init-repl :db1))

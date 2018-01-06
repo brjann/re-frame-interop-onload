@@ -45,9 +45,10 @@
      (subs s start (min end (count s))))))
 
 (defn json-safe
-  [json]
-  (try (json/read-str json)
-       (catch Exception e nil)))
+  ([json] (json-safe json identity))
+  ([json key-fn]
+   (try (json/read-str json :key-fn key-fn)
+        (catch Exception e nil))))
 
 ;; TODO: Should be able to use select-in instead of filter if matching keys are saved.
 (defn keep-matching

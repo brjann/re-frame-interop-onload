@@ -30,6 +30,7 @@
             [bass4.middleware.debug :refer [wrap-debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [wrap-request-state]]
             [bass4.middleware.ajax-post :refer [wrap-ajax-post]]
+            [bass4.middleware.embedded :refer [wrap-embedded]]
             [bass4.middleware.errors :refer [wrap-internal-error]]
             [ring.util.http-response :as response]
             [bass4.responses.auth :as auth-response])
@@ -236,7 +237,7 @@
 ;; wrap-1 AFTER calling handler arg
 ;; wrap-2 AFTER calling handler arg
 ;;
-;; i.e., wrapper 2 modifies the session going into wrapper 1,
+;; i.e., wrapper 2 modifies the request going into wrapper 1,
 ;; and wrapper 1 modifies the response returned to wrapper 2.
 
 (defn wrap-base [handler]
@@ -245,6 +246,7 @@
       ;wrap-auth-re-auth
       wrap-identity
       wrap-debug-exceptions
+      wrap-embedded
       wrap-db
       wrap-ajax-post
       wrap-auth
