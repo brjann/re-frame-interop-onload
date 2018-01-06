@@ -9,7 +9,6 @@
 
 (defn embedded-session
   [handler request uid]
-  (log/debug "create session")
   (if-let [{:keys [user-id path]}
            (bass/embedded-session-file uid)]
     (-> (response/found path)
@@ -18,24 +17,16 @@
 
 (defn embedded-path
   [handler request]
-  (log/debug "embedded path")
   (let [current-path  (:uri request)
         embedded-path (get-in request [:session :embedded-path])]
-    (log/debug current-path)
-    (log/debug embedded-path)
     (if (and current-path embedded-path (string/starts-with? current-path embedded-path))
-      (do
-        (log/debug "OK")
-        (handler request))
-      (do
-        (log/debug "fail")
-        (layout/error-page
-          {:status 403
-           :title  "No embedded access"})))))
+      (handler request)
+      (layout/error-page
+        {:status 403
+         :title  "No embedded access"}))))
 
 (defn handle-embedded
   [handler request]
-  (log/debug "embedded")
   (let [path (:uri request)
         uid  (get-in request [:params :uid])]
     (if (string/starts-with? path "/embedded/create-session")

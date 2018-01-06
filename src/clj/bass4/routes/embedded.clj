@@ -21,7 +21,7 @@
         (instruments/instrument-page instrument-id))
       (POST "/instrument/:instrument-id" [instrument-id & params]
         (instruments/post-answers (str->int instrument-id) (:items params) (:specifications params)))
-      (GET "/instrument/summary/:instrument-id" [instrument-id]
+      (GET "/instrument/:instrument-id/summary" [instrument-id]
         (instruments/summary-page instrument-id))
       (GET "/content-example/:content-id" [content-id]
         (content-example/edit-example (str->int content-id)))

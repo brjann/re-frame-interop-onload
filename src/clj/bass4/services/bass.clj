@@ -46,11 +46,7 @@
 (defn embedded-session-file
   [filename]
   (when-not (or (nil? filename) (s/includes? filename "/"))
-    (log/debug filename)
-    (log/debug "session dir")
-    (log/debug (session-dir))
     (let [file (io/file (session-dir) filename)]
-      (log/debug "ok 2")
       (when (.exists file)
         (let [info (json-safe (slurp file) keyword)]
           ;; TODO: Check if session is ongoing in BASS

@@ -17,7 +17,6 @@
 
 (defn language
   []
-  #_(log/debug *db-config*)
   (:language *db-config*))
 
 (defn- get-locals [bass-path]
