@@ -45,7 +45,7 @@
                    :headers {}
                    :body    "login"}))
 
-(defn ajax-post-wrapper
+(defn ajax-post
   [handler request]
   (let [ajax-post? (is-ajax-post? request)
         response (handler request)]
@@ -69,7 +69,5 @@
       :else
       response)))
 
-(defn wrap-ajax-post [handler]
-  (fn [request]
-    (ajax-post-wrapper handler request)))
+
 

@@ -46,7 +46,7 @@
                    :title   "Something bad happened!"
                    :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
-(defn internal-error-wrapper
+(defn internal-error
   [handler req]
   (let [res       (catch-internal-error handler req)
         req-state (request-state/get-state)]
@@ -54,11 +54,6 @@
     (when-not (nil-zero? (:error-count req-state))
       (mail-error! req-state))
     res))
-
-(defn wrap-internal-error [handler]
-  (fn [req]
-    (internal-error-wrapper handler req)))
-
 
 
 (defn wrap-schema-error [handler]

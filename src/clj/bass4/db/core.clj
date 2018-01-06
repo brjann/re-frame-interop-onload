@@ -110,7 +110,7 @@
 ;; closes the old connection and creates a new one. Which is used at the next
 ;; request, explaining why it works again then. This should not affect the production
 ;; environment.
-(defn db-wrapper
+(defn db-middleware
   [handler request]
   (let [db-config (resolve-db request)]
     (request-state/set-state! :name (:name db-config))

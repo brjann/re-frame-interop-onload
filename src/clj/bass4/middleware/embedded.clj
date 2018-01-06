@@ -33,14 +33,9 @@
       (embedded-session handler request uid)
       (embedded-path handler request))))
 
-(defn embedded-wrapper
+(defn embedded
   [handler request]
   (if (when-let [path (:uri request)]
         (string/starts-with? path "/embedded"))
     (handle-embedded handler request)
     (handler request)))
-
-(defn wrap-embedded
-  [handler]
-  (fn [request]
-    (embedded-wrapper handler request)))

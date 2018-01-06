@@ -32,7 +32,7 @@
 ;; I would like to place this in the request-state namespace, however
 ;; that creates a circular dependency because db also uses the request-state
 ;; Don't really know how to handle that...
-(defn request-state-wrapper
+(defn request-state
   [handler request]
   (binding [request-state/*request-state* (atom {})]
     (let [{:keys [val time]} (time+ (handler request))
@@ -44,7 +44,3 @@
       (if (:debug-headers req-state)
         (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
         val))))
-
-(defn wrap-request-state [handler]
-  (fn [request]
-    (request-state-wrapper handler request)))

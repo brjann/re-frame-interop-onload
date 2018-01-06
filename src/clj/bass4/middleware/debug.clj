@@ -33,7 +33,7 @@
   true)
 
 
-(defn debug-redefs-wrapper
+(defn debug-redefs
   [handler request]
   (cond
     ;; Test environment
@@ -51,12 +51,6 @@
     ;; Production environment
     :else
     (handler request)))
-
-
-(defn wrap-debug-redefs
-  [handler]
-  (fn [request]
-    (debug-redefs-wrapper handler request)))
 
 
 (defn wrap-debug-exceptions

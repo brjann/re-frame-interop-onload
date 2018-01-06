@@ -27,11 +27,11 @@
             [bass4.layout :as layout]
             [bass4.services.user :as user]
             [clojure.string :as string]
-            [bass4.middleware.debug :refer [wrap-debug-redefs wrap-debug-exceptions wrap-session-modification]]
-            [bass4.middleware.request-state :refer [wrap-request-state]]
-            [bass4.middleware.ajax-post :refer [wrap-ajax-post]]
-            [bass4.middleware.embedded :refer [wrap-embedded]]
-            [bass4.middleware.errors :refer [wrap-internal-error]]
+            [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
+            [bass4.middleware.request-state :refer [request-state]]
+            [bass4.middleware.ajax-post :refer [ajax-post]]
+            [bass4.middleware.embedded :refer [embedded]]
+            [bass4.middleware.errors :refer [internal-error]]
             [ring.util.http-response :as response]
             [bass4.responses.auth :as auth-response])
   (:import [javax.servlet ServletContext]
@@ -101,6 +101,10 @@
 ;;
 ;; ----------------
 
+(defn wrap-mw-fn
+  [handler middleware]
+  (fn [request]
+    (middleware handler request)))
 
 ;; TODO: http://stackoverflow.com/questions/8861181/clear-all-fields-in-a-form-upon-going-back-with-browser-back-button
 (defn wrap-reload-headers [handler]
@@ -117,27 +121,6 @@
 ;;  RE-AUTHENTICATE
 ;; -----------------
 
-(defn auth-re-auth-wrapper2
-  [handler request]
-  (let [session            (:session request)
-        now                (t/now)
-        last-request-time  (:last-request-time session)
-        auth-re-auth-limit (or (env :timeout-soft) (* 30 60))
-        auth-re-auth?      (cond
-                             (:auth-re-auth session) true
-                             (nil? last-request-time) nil
-                             (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                               (> time-elapsed auth-re-auth-limit)) true
-                             :else nil)
-        response           (handler (assoc-in request [:session :auth-re-auth] auth-re-auth?))
-        session-map        {:last-request-time now
-                            :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                 (:auth-re-auth (:session response))
-                                                 auth-re-auth?)}]
-
-    (assoc response :session (if (nil? (:session response))
-                               (merge session session-map)
-                               (merge (:session response) session-map)))))
 
 (defn request-string
   "Return the request part of the request."
@@ -172,39 +155,15 @@
                                (merge session session-map)
                                (merge (:session response) session-map)))))
 
-(defn request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
 
-
-
-(defn wrap-auth-re-auth [handler]
-  (fn [request]
-    (auth-re-auth-wrapper handler request)))
-
-
-
-(defn wrap-db [handler]
-  (fn [request]
-    (db/db-wrapper handler request)))
-
-(defn identity-wrapper
+(defn user-identity
   [handler request]
   "Check if user in identity exists
     yes: add user map to session
     no: remove :identity key from from session"
   (handler (if-let [user (user/get-user (:identity request))]
              (assoc-in request [:session :user] user)
-             (merge request {:identity nil :session (dissoc (:session request) :identity)})))
-  #_(handler request))
-
-(defn wrap-identity
-  [handler]
-  (fn [request]
-    (identity-wrapper handler request)))
+             (merge request {:identity nil :session (dissoc (:session request) :identity)}))))
 
 ;; I tried to wrap around immutant.web.middleware/wrap-session
 ;; but it did not work. Worked in browser but not tests.
@@ -227,17 +186,14 @@
 ;            (visit "/debug/session")) [:response :body])
 
 ;; So extra wrapper instead
-(defn session-state-wrapper
+(defn session-state
   [handler request]
   (let [session (:session request)]
     (request-state/set-state! :user-id (:identity session))
     (request-state/set-state! :session-start (:session-start session)))
   (handler request))
 
-(defn wrap-session-state
-  [handler]
-  (fn [request]
-    (session-state-wrapper handler request)))
+
 
 
 ;;
@@ -262,16 +218,16 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
-      wrap-identity
+      (wrap-mw-fn user-identity)
       wrap-debug-exceptions
-      wrap-embedded
-      wrap-db
-      wrap-ajax-post
+      (wrap-mw-fn embedded)
+      (wrap-mw-fn db/db-middleware)                         ;; wrap-db
+      (wrap-mw-fn ajax-post)
       wrap-auth
       wrap-reload-headers
       wrap-webjars
       wrap-flash
-      wrap-session-state
+      (wrap-mw-fn session-state)                            ;;      wrap-session-state
       wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
@@ -291,6 +247,6 @@
 
           (dissoc :session)))
       wrap-context
-      wrap-internal-error
-      wrap-request-state
-      wrap-debug-redefs))
+      (wrap-mw-fn internal-error)
+      (wrap-mw-fn request-state)
+      (wrap-mw-fn debug-redefs)))
