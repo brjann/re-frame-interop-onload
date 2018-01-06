@@ -32,7 +32,7 @@
   (fn [module-render-fn module-contents]
     (let [module-text-id (:content-id (first (:main-texts module-contents)))]
       (module-render-fn
-        "main-text.html"
+        "module-main-text.html"
         module-text-id
         {:module-id  module-text-id
          :page-title (:module-name module)}))))
@@ -43,7 +43,7 @@
   (fn [module-render-fn module-contents]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-render-fn
-        "homework.html"
+        "module-homework.html"
         homework-id
         {:submitted  submitted
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
@@ -55,7 +55,7 @@
     [module-render-fn module-contents]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-render-fn
-        "worksheet.html"
+        "module-worksheet.html"
         worksheet-id)
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
@@ -105,7 +105,7 @@
                            worksheet-id
                            [data-name])]
 
-        (layout/render "worksheet-example.html"
+        (layout/render "module-worksheet-example.html"
                        {:return-path  return-path
                         :text         (:text content)
                         :markdown     (:markdown content)
