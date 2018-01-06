@@ -20,7 +20,6 @@ $(document).ready(function () {
 	 contentLayout();*/
 });
 
-// TODO: https://getbootstrap.com/docs/4.0/components/buttons/#sizes
 function main_text_ays() {
 	$('.treatment-content.main-text').each(
 		function () {
