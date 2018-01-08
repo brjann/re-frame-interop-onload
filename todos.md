@@ -87,3 +87,9 @@ https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests
 - Pressing return does not submit
 - New messages icon does not show up
 - Custom assessment kraschar
+
+# IMORGON
+- Testa om omladdning av "vanliga" ns också kraschar tester
+    - isf gå tillbaka bland commits och identifiera när det blev så
+- Gör utloggningsknapp
+- Fixa file.php, kolla om det finns bra skydd mot ..

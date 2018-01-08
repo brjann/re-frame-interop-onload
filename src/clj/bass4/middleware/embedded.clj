@@ -15,11 +15,28 @@
         (assoc :session {:identity user-id :embedded-path path}))
     (layout/text-response "Wrong uid.")))
 
-(defn embedded-path
+(defn legal-character
+  [c]
+  (some #(= c %) ["=" "/" "?" "&"]))
+
+(defn matches-embedded
+  [current embedded]
+  (let [current-length  (count current)
+        embedded-length (count embedded)]
+    (and
+      current
+      embedded
+      (string/starts-with? current embedded)
+      (if (> current-length embedded-length)
+        (or (legal-character (subs current (dec embedded-length) embedded-length))
+            (legal-character (subs current embedded-length (inc embedded-length))))
+        true))))
+
+(defn check-embedded-path
   [handler request]
   (let [current-path  (:uri request)
         embedded-path (get-in request [:session :embedded-path])]
-    (if (and current-path embedded-path (string/starts-with? current-path embedded-path))
+    (if (matches-embedded current-path embedded-path)
       (handler request)
       (layout/error-page
         {:status 403
@@ -31,7 +48,7 @@
         uid  (get-in request [:params :uid])]
     (if (string/starts-with? path "/embedded/create-session")
       (embedded-session handler request uid)
-      (embedded-path handler request))))
+      (check-embedded-path handler request))))
 
 (defn embedded
   [handler request]
