@@ -194,7 +194,18 @@
   (handler request))
 
 
-
+(defn File-php
+  [handler request]
+  (handler request)
+  #_(let [uri           (:uri request)
+          length        (count uri)
+          uploaded-file (and
+                          (< 8 length)
+                          (= "File.php" (subs uri (- length 8)))
+                          (get-in request [:params :uploadedfile]))]
+      (if uploaded-file
+        (layout/text-response uploaded-file)
+        (handler request))))
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
@@ -218,16 +229,21 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
-      (wrap-mw-fn user-identity)
+
+      ;; Must quote the names of the functions.
+      ;; Else the actual functions are passed as arguments
+      (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions
-      (wrap-mw-fn embedded)
-      (wrap-mw-fn db/db-middleware)                         ;; wrap-db
-      (wrap-mw-fn ajax-post)
+      (wrap-mw-fn #'embedded)
+      (wrap-mw-fn #'File-php)
+      (wrap-mw-fn #'db/db-middleware)                       ;; wrap-db
+      (wrap-mw-fn #'ajax-post)
       wrap-auth
       wrap-reload-headers
+      ;;File-php-wrapper
       wrap-webjars
       wrap-flash
-      (wrap-mw-fn session-state)                            ;;      wrap-session-state
+      (wrap-mw-fn #'session-state)                          ;;      wrap-session-state
       wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
@@ -247,6 +263,6 @@
 
           (dissoc :session)))
       wrap-context
-      (wrap-mw-fn internal-error)
-      (wrap-mw-fn request-state)
-      (wrap-mw-fn debug-redefs)))
+      (wrap-mw-fn #'internal-error)
+      (wrap-mw-fn #'request-state)
+      (wrap-mw-fn #'debug-redefs)))
