@@ -17,12 +17,9 @@
 
 {% block page-scripts %}
 <script type="text/javascript">
-	var instrument = {
-	{
-		instrument | json | safe
-	}
-	}
-	;
+	// @formatter:off
+	var instrument = {{instrument|json|safe}};
+	// @formatter:on
 	var text_submit = "{%tr submit %}";
 	var text_next = "{%tr next %}";
 	var text_previous = "{%tr previous %}";
