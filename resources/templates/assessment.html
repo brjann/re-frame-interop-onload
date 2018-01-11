@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- TODO: Place confirm_logout button properly -->
+<div class="position-relative">
+    <div class="d-flex justify-content-end">
+        <button class="btn" onclick="confirm_logout();">
+            <span class="fa fa-power-off"></span></button>
+    </div>
+</div>
+{% block assessment-content %}
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,37 @@
+<div class="container">
+    <div id="instrument">
+        <div class="hidden">
+            <form method="post" class="submitter" action="">
+                <input type="hidden" name="instrument-id" value="{{instrument-id}}">
+                <input type="hidden" name="items">
+                <input type="hidden" name="specifications">
+            </form>
+        </div>
+        {% ifunequal order nil %}
+        <div class="order-count">{% trb instrument/order-count %}{{order}}|{{count}}{% endtrb %}</div>
+        {% endifunequal %}
+        <div class="instrument-show-name"></div>
+        <div class="instrument-elements"></div>
+    </div>
+</div>
+
+{% block page-scripts %}
+<script type="text/javascript">
+	var instrument = {
+	{
+		instrument | json | safe
+	}
+	}
+	;
+	var text_submit = "{%tr submit %}";
+	var text_next = "{%tr next %}";
+	var text_previous = "{%tr previous %}";
+	var text_range_error = "{%tr instrument/range-error %}";
+	var text_range_error_max = "{%tr instrument/range-error-max %}";
+	var text_range_error_min = "{%tr instrument/range-error-max %}";
+	var text_pattern_error = "{%tr instrument/pattern-error %}";
+	var text_must_answer = "{%tr instrument/must-answer %}";
+	var text_specification_missing_1 = "{%tr instrument/must-specify-1 %}";
+	var text_specification_missing_m = "{%tr instrument/must-specify-m %}";
+</script>
+{% endblock %}

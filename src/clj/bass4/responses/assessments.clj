@@ -18,7 +18,7 @@
   [step]
   (let [instrument-id (:instrument-id step)]
     (if-let [instrument (instruments/get-instrument instrument-id)]
-      (bass4.layout/render "instrument.html"
+      (bass4.layout/render "assessment-instrument.html"
                            {:instrument instrument
                             :instrument-id instrument-id
                             :order (:instrument-order step)

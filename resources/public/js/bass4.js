@@ -320,3 +320,9 @@ function goToByScroll(id) {
 	}
 	return false;
 }
+
+function confirm_logout() {
+	if (confirm(text_logout_confirm)) {
+		window.location.href = "/confirm_logout";
+	}
+}

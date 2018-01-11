@@ -5,6 +5,7 @@
  :password        "Password"
  :continue        "Continue"
  :logout          "Logout"
+ :logout-confirm  "Are you sure you want to log out?"
  :save            "Save"
  :save-changes    "Save changes"
  :unsaved-changes "You have unsaved changes!"
