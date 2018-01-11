@@ -7,7 +7,8 @@
             [bass4.utils :refer [map-map-keys str->int json-safe]]
             [clj-time.coerce :as tc]
             [clojure.string :as s]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as string]))
 
 (defn db-title []
   (:title (db/get-db-title)))
@@ -37,7 +38,42 @@
   ([date-time]
    (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
 
-(defn- session-dir
+#_(defn db-dir
+    ([] (db-dir nil))
+    ([sub-dir]
+     (let [db-name   (:name locals/*db-config*)
+           bass-path (env :bass-path)]
+       (io/file bass-path "projects" db-name sub-dir))))
+
+#_(defn db-dir
+    ^java.io.File
+    [& parts]
+    (let [db-name   (:name locals/*db-config*)
+          bass-path (env :bass-path)]
+      (try
+        (apply io/file (into [bass-path "projects" db-name] parts))
+        (catch Exception e))))
+
+(defn get-sub-path
+  "Makes sure that the combination of
+  base-path and sub-path is within base-path"
+  [base-path sub-path]
+  (let [full-sub-path (io/file (.getCanonicalPath (io/file base-path sub-path)))]
+    (when (string/starts-with? (str full-sub-path) (str base-path))
+      full-sub-path)))
+
+(defn db-dir
+  (^java.io.File [base-path] (db-dir base-path nil))
+  (^java.io.File [base-path sub-path]
+   (try
+     (let [db-name        (:name locals/*db-config*)
+           full-base-path (io/file (env :bass-path) "projects" db-name base-path)]
+       (if sub-path
+         (get-sub-path full-base-path sub-path)
+         full-base-path))
+     (catch Exception e))))
+
+#_(defn- session-dir
   []
   (let [db-name   (:name locals/*db-config*)
         bass-path (env :bass-path)]
@@ -46,16 +82,23 @@
 (defn embedded-session-file
   [filename]
   (when-not (or (nil? filename) (s/includes? filename "/"))
-    (let [file (io/file (session-dir) filename)]
+    (let [file (db-dir "sessiondata" filename)]
       (when (.exists file)
         (let [info (json-safe (slurp file) keyword)]
           ;; TODO: Check if session is ongoing in BASS
           #_(io/delete-file file)
           info)))))
 
-(defn- session-dir
-  []
-  (let [db-name   (:name locals/*db-config*)
-        bass-path (env :bass-path)]
-    (io/file bass-path "projects" db-name "sessiondata")))
+(defn remove-leading-slash
+  [x]
+  (if (= "/" (subs x 0 1))
+    (subs x 1)
+    x))
+
+(defn uploaded-file
+  [filename]
+  (when filename
+    (when-let [file (db-dir "upload" (remove-leading-slash filename))]
+      (when (.exists file)
+        file))))
 

@@ -196,16 +196,19 @@
 
 (defn File-php
   [handler request]
-  (handler request)
-  #_(let [uri           (:uri request)
+  (let [uri             (:uri request)
           length        (count uri)
           uploaded-file (and
                           (< 8 length)
                           (= "File.php" (subs uri (- length 8)))
                           (get-in request [:params :uploadedfile]))]
-      (if uploaded-file
-        (layout/text-response uploaded-file)
-        (handler request))))
+    (log/debug (and
+                 (< 8 length)
+                 (= "File.php" (subs uri (- length 8)))
+                 (get-in request [:params :uploadedfile])))
+    (if uploaded-file
+      (layout/text-response uploaded-file)
+      (handler request))))
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
