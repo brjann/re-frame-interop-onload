@@ -15,10 +15,10 @@
                                 :messages        messages
                                 :draft           draft})))
 
-(s/defn ^:always-validate save-message [user-id :- s/Int subject :- s/Str text :- s/Str]
-  (messages-service/save-message! user-id subject text)
+(s/defn ^:always-validate save-message [user-id :- s/Int text :- s/Str]
+  (messages-service/save-message! user-id text)
   (response/found "/user/messages"))
 
-(s/defn ^:always-validate save-draft [user-id :- s/Int subject :- s/Str text :- s/Str]
-  (messages-service/save-draft! user-id subject text)
+(s/defn ^:always-validate save-draft [user-id :- s/Int text :- s/Str]
+  (messages-service/save-draft! user-id text)
   (response/ok "ok"))

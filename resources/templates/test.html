@@ -1,34 +1,98 @@
-{% extends "user.html" %}
-{% block user-content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css"
+          integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
+            integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
+            crossorigin="anonymous"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Max body width</title>
+</head>
+<body>
+<div id="body-div">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-<style>
-
-</style>
-
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">Large modal
-</button>
-<button type="button" class="btn btn-primary" onclick="modal();">Open and close</button>
-
-<div class="modal fade bd-example-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
-
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content" style="width: 16px">
-            <span class="fa fa-spinner fa-spin"></span>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Dropdown
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#">Disabled</a>
+                </li>
+            </ul>
         </div>
+    </nav>
+    <button class="btn btn-primary" onclick="toggle();">Toggle max-width</button>
+    <script type="text/javascript">
+		 function toggle() {
+			 var div = $('#body-div');
+			 if (div.css('max-width') !== "960px") {
+				 div.css('max-width', '960px');
+			 }
+			 else {
+				 div.css('max-width', '');
+			 }
+		 }
+    </script>
+    <div class="container">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus tristique, dui vitae pharetra
+            sollicitudin, felis metus dignissim sapien, at sodales libero massa condimentum dui. Maecenas sem diam,
+            porttitor eget lacus at, vulputate facilisis leo. Nulla ut nisi sem. Nunc sapien neque, maximus fermentum mi
+            ut, dapibus fermentum nunc. Phasellus dignissim laoreet dictum. Sed egestas sem ut viverra dignissim. Sed
+            blandit rhoncus turpis, ac feugiat tortor venenatis id. Ut ac fermentum enim. Integer vitae malesuada sem,
+            nec ultrices mi. Fusce mattis ante vel lacinia convallis. Integer posuere nisi sit amet augue ultrices, quis
+            elementum ante consequat. Sed et ornare lectus. Phasellus rutrum luctus ipsum non vestibulum. Etiam
+            efficitur nulla at erat blandit, sit amet tristique ante gravida. Proin tortor purus, eleifend vel metus
+            hendrerit, tincidunt tristique sapien. Donec lacinia aliquam lacus, in efficitur velit facilisis ac.</p>
+
+        <p>Etiam vehicula nunc in viverra volutpat. Mauris porttitor augue eu dictum suscipit. Suspendisse in commodo
+            urna, sed pharetra lorem. Maecenas ut ipsum eget lorem pretium fermentum eu vitae nunc. Vivamus fermentum
+            convallis fermentum. Nulla viverra massa non elementum facilisis. In lobortis tincidunt velit in dictum.
+            Morbi odio nulla, euismod id massa eu, vestibulum fermentum dui. Aenean porttitor cursus mi, vel ultricies
+            dui ultrices in. Fusce quis dui mauris. Sed mauris tellus, viverra eget lacus quis, egestas condimentum
+            erat. Suspendisse malesuada enim ac lacus lobortis aliquam. Cras eu augue aliquet, vehicula quam porta,
+            malesuada arcu. Maecenas fringilla purus sed tellus scelerisque, eu gravida orci rutrum. Aliquam erat
+            volutpat. Etiam mattis, eros quis volutpat feugiat, nibh lectus semper lacus, in dignissim est enim vitae
+            tellus.</p>
+
+        <p>Integer eu volutpat arcu, at luctus lorem. Fusce id nunc a risus sodales luctus eu id urna. Proin a eros
+            libero. Praesent ac faucibus metus, porta ullamcorper ex. Sed aliquet nisi vitae lorem faucibus aliquam.
+            Nulla pellentesque, est ac varius tristique, tellus ipsum tincidunt purus, a aliquet tortor ipsum eget nisi.
+            Nulla convallis eu nulla eu commodo. Ut ipsum mi, ultrices eget diam et, dapibus viverra tortor. Aliquam
+            erat volutpat. Interdum et malesuada fames ac ante ipsum primis in faucibus. Morbi blandit pulvinar
+            placerat. Maecenas sagittis fermentum leo, et tempus tellus dignissim vitae. Sed dignissim efficitur erat,
+            vel consectetur nisl tincidunt suscipit. Aliquam purus ipsum, porttitor non pulvinar ac, maximus et orci.
+            Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
     </div>
 </div>
-<span class="fa fa-spinner fa-spin"></span>
-
-<script type="application/javascript">
-	function modal_spinner() {
-		$('.modal').modal('show');
-		setTimeout(function () {
-			console.log('hejsan');
-			$('.modal').modal('hide');
-		}, 3000);
-	}
-</script>
-{% endblock %}
-{% block page-scripts %}
-
-{% endblock %}
+</body>
+</html>

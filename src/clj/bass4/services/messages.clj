@@ -17,14 +17,14 @@
   (or (:message-id (db/get-message-draft {:user-id user-id}))
       (create-message-placeholder user-id)))
 
-(defn save-message! [user-id subject text]
+(defn save-message! [user-id text]
   (let [message-id (get-draft-id user-id)]
-    (db/save-message! {:message-id message-id :subject subject :text text})
+    (db/save-message! {:message-id message-id :subject "" :text text})
     message-id))
 
-(defn save-draft! [user-id subject text]
+(defn save-draft! [user-id text]
   (let [message-id (get-draft-id user-id)]
-    (db/save-message-draft! {:message-id message-id :subject subject :text text})
+    (db/save-message-draft! {:message-id message-id :subject "" :text text})
     message-id))
 
 (defn get-draft [user-id]

@@ -71,11 +71,11 @@
         (layout/error-404-page)))
     (POST "/messages" [& params]
       (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-message (:user-id user) (:subject params) (:text params))
+        (messages-response/save-message (:user-id user) (:text params))
         (layout/error-404-page)))
     (POST "/message-save-draft" [& params]
       (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-draft (:user-id user) (:subject params) (:text params))
+        (messages-response/save-draft (:user-id user) (:text params))
         (layout/error-404-page)))))
 
 (defn- treatment-routes

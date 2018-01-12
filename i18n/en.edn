@@ -20,11 +20,12 @@
                    :must-specify-m  "You must provide specifications to your answers."
                    :order-count     "Questionnaire %1 of %2"}
  :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"}
- :messages        {:sent-by    "Sent by %1 on %2"
-                   :subject    "Message subject"
-                   :text       "Message text"
-                   :save-draft "Save draft"
-                   :messages   "Messages"}
+ :messages        {:sent-by      "Sent by %1 on %2"
+                   :must-message "Please write message text"
+                   :subject      "Message subject"
+                   :text         "Message text"
+                   :save-draft   "Save draft"
+                   :messages     "Messages"}
  :modules         {:modules          "Modules"
                    :module-text      "Module text"
                    :no-module        "This module does not exist"
@@ -39,17 +40,18 @@
                    :submitted!       "Submitted!"
                    :submitted-ok     "You have submitted your homework and it has been reviewed by your therapist."
                    :submitted-info   "You submitted your homework on %1 and it is waiting to be reviewed by your therapist."}
- :login           {:login                    "Login"
-                   :please-username-password "Please provide your username and password to log on to the system."
-                   :username-password-error  "Wrong username or password"
-                   :please-double-auth       "Please provide your double authentication code"
-                   :code                     "Code"
-                   :code-error               "Wrong code provided"
-                   :no-send-method           "You do not have a registered e-mail or sms number required to login. Please contact support at %1."
-                   :re-auth                  "Authenticate again"
-                   :password-error           "Wrong password"
-                   :please-re-auth           "Please provide your password to continue to use the system."
-                   :please-re-auth-form      "Your password is needed before you can submit your data."}
+ :login           {:login                   "Login"
+                   :must-username           "Please provide your username"
+                   :must-password           "Please provide your password"
+                   :username-password-error "Wrong username or password"
+                   :please-double-auth      "Please provide your double authentication code"
+                   :code                    "Code"
+                   :code-error              "Wrong code provided"
+                   :no-send-method          "You do not have a registered e-mail or sms number required to login. Please contact support at %1."
+                   :re-auth                 "Authenticate again"
+                   :password-error          "Wrong password"
+                   :please-re-auth          "Please provide your password to continue to use the system."
+                   :please-re-auth-form     "Your password is needed before you can submit your data."}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."
