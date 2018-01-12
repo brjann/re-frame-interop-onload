@@ -40,7 +40,7 @@
                                   (request-state/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (layout/text-response req))
-        (GET "/test" [:as req] (layout/text-response (:server-name req)))
+        (GET "/test" [:as req] (layout/render "test.html"))
         (GET "/env" [:as req] (layout/text-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")
