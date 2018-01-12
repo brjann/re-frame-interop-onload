@@ -83,5 +83,6 @@ https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests
 # TREATMENT
 - Always show messages? If cannot send, cannot retrieve and no messages
 - Module list
+- Module scroll to top isn't saved
 - Pressing return does not submit
 - New messages icon does not show up

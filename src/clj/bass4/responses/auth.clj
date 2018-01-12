@@ -44,7 +44,7 @@
 
 (defn- double-auth-page [double-auth-code]
   (layout/render
-    "double-auth.html"
+    "auth/double-auth.html"
     {:double-auth-code double-auth-code}))
 
 (defn- double-auth-redirect [session]
@@ -146,7 +146,7 @@
 
 (defn login-page []
   (layout/render
-    "login.html"))
+    "auth/login.html"))
 
 (defn- new-session-map
   [user-id]
@@ -184,7 +184,7 @@
 (defn- re-auth-page
   ([return-url] (re-auth-page return-url false))
   ([return-url error] (layout/render
-                        "re-auth.html"
+                        "auth/re-auth.html"
                         {:return-url return-url
                          :error      error})))
 (defn re-auth-440

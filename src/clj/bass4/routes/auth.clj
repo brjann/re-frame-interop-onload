@@ -8,7 +8,7 @@
             [bass4.request-state :as request-state]))
 
 (defroutes auth-routes
-  (GET "/confirm_logout" [& params]
+  (GET "/logout" [& params]
     (auth-response/logout))
 
   (GET "/login" []

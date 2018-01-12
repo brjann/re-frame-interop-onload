@@ -50,8 +50,6 @@ function post_error(form, complete_fn) {
 
 		// http://stackoverflow.com/questions/6186770/ajax-request-returns-200-ok-but-an-error-event-is-fired-instead-of-success
 		if(jqXHR.status == 200){
-			// TODO: This can't remain in production
-			console.log("FAKE ERROR");
 			return false;
 		}
 
@@ -126,8 +124,13 @@ $(document).ready(function(){
 			return;
 		}
 
-		var no_ajax = $form.hasClass("no-ajax");
 		var no_validate = $form.hasClass("no-validate");
+		if (!no_validate) {
+			$form.attr('novalidate', true);
+		}
+
+		var no_ajax = $form.hasClass("no-ajax");
+
 		if(!no_ajax || !no_validate) {
 
 			$form.data('on_ajax_fns', []);
@@ -142,25 +145,11 @@ $(document).ready(function(){
 
 			$form.submit(function (event) {
 
-				// TODO: Moved event.preventDefault without really knowing the effects.
-
-				if(!no_validate) {
-					var validation_failed = false;
-					$form.find(".required").each(function () {
-						var $input = $(this);
-						if ($input.val() == "") {
-							$input.addClass('is-invalid');
-							$input.change(function () {
-								$input.removeClass("is-invalid");
-							});
-							validation_failed = true;
-						}
-						else {
-							$input.removeClass('is-invalid');
-						}
-					});
-					if (validation_failed) {
+				if (!no_validate) {
+					if (!$form.get(0).checkValidity()) {
+						$form.addClass('was-validated');
 						event.preventDefault();
+						event.stopPropagation();
 						return false;
 					}
 				}
@@ -170,10 +159,12 @@ $(document).ready(function(){
 				if(formsubmit !== undefined){
 					if(!formsubmit()){
 						event.preventDefault();
+						event.stopPropagation();
 						return false;
 					}
 				}
 
+				$form.removeClass('was-validated');
 
 				if(!no_ajax){
 
@@ -362,6 +353,6 @@ function goToByScroll(id) {
 
 function confirm_logout() {
 	if (confirm(text_logout_confirm)) {
-		window.location.href = "/confirm_logout";
+		window.location.href = "/logout";
 	}
 }
