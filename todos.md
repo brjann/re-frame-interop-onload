@@ -87,6 +87,3 @@ https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests
 - Pressing return does not submit
 - New messages icon does not show up
 - Custom assessment kraschar
-
-# IMORGON
-- Fixa file.php, kolla om det finns bra skydd mot ..

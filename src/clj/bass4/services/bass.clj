@@ -96,6 +96,7 @@
     x))
 
 (defn uploaded-file
+  ^java.io.File
   [filename]
   (when filename
     (when-let [file (db-dir "upload" (remove-leading-slash filename))]

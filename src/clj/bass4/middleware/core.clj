@@ -8,7 +8,7 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.bass-locals :as bass-locals]
-            [bass4.utils :refer [filter-map time+ nil-zero?]]
+            [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
@@ -27,13 +27,17 @@
             [bass4.layout :as layout]
             [bass4.services.user :as user]
             [clojure.string :as string]
+            [clojure.java.io :as io]
             [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [request-state]]
             [bass4.middleware.ajax-post :refer [ajax-post]]
             [bass4.middleware.embedded :refer [embedded]]
             [bass4.middleware.errors :refer [internal-error]]
             [ring.util.http-response :as response]
-            [bass4.responses.auth :as auth-response])
+            [ring.util.response :as response-utils]
+            [ring.util.mime-type :as mime-type]
+            [bass4.responses.auth :as auth-response]
+            [bass4.middleware.file-php :as file-php])
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -194,22 +198,6 @@
   (handler request))
 
 
-(defn File-php
-  [handler request]
-  (let [uri             (:uri request)
-          length        (count uri)
-          uploaded-file (and
-                          (< 8 length)
-                          (= "File.php" (subs uri (- length 8)))
-                          (get-in request [:params :uploadedfile]))]
-    (log/debug (and
-                 (< 8 length)
-                 (= "File.php" (subs uri (- length 8)))
-                 (get-in request [:params :uploadedfile])))
-    (if uploaded-file
-      (layout/text-response uploaded-file)
-      (handler request))))
-
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -238,15 +226,15 @@
       (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions
       (wrap-mw-fn #'embedded)
-      (wrap-mw-fn #'File-php)
-      (wrap-mw-fn #'db/db-middleware)                       ;; wrap-db
+      (wrap-mw-fn #'file-php/File-php)
+      (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'ajax-post)
       wrap-auth
       wrap-reload-headers
       ;;File-php-wrapper
       wrap-webjars
       wrap-flash
-      (wrap-mw-fn #'session-state)                          ;;      wrap-session-state
+      (wrap-mw-fn #'session-state)
       wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
