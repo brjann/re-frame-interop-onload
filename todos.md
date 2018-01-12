@@ -81,9 +81,7 @@ https://clojure.github.io/clojure/clojure.test-api.html#clojure.test/*load-tests
 
 
 # TREATMENT
-- Treatment active?
+- Always show messages? If cannot send, cannot retrieve and no messages
 - Module list
-- Tabs in content
 - Pressing return does not submit
 - New messages icon does not show up
-- Custom assessment kraschar
