@@ -8,6 +8,9 @@ SELECT
   LinkeeId AS `sender-id`,
   LinkeeClass AS `sender-class`,
   CASE
+    WHEN lcm.LinkeeClass = 'cParticipant' THEN 'participant' ELSE 'therapist'
+  END AS `sender-type`,
+  CASE
   WHEN lcm.LinkeeClass IS NULL THEN "*unknown*" ELSE
     CASE WHEN lcm.LinkeeClass = 'cTherapist' THEN ct.`Name` ELSE CONCAT(cp.FirstName, " ", cp.LastName) END
   END AS `sender-name`

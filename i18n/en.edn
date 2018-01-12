@@ -20,12 +20,12 @@
                    :must-specify-m  "You must provide specifications to your answers."
                    :order-count     "Questionnaire %1 of %2"}
  :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"}
- :messages        {:sent-by      "Sent by %1 on %2"
-                   :must-message "Please write message text"
-                   :subject      "Message subject"
-                   :text         "Message text"
-                   :save-draft   "Save draft"
-                   :messages     "Messages"}
+ :messages        {:from-therapist "From %1 on %2"
+                   :must-message   "Please write message text"
+                   :subject        "Message subject"
+                   :text           "Message text"
+                   :save-draft     "Save draft"
+                   :messages       "Messages"}
  :modules         {:modules          "Modules"
                    :module-text      "Module text"
                    :no-module        "This module does not exist"

@@ -256,3 +256,23 @@ div#instrument .item-error {
 #load-spinner .fa-spinner {
     color: white;
 }
+
+.card.message {
+    margin-top: 10px;
+}
+
+.card.message.participant .card-footer {
+    background-color: rgba(0, 0, 255, .15);
+}
+
+.card.message.participant .card-body {
+    background-color: rgba(0, 0, 255, .30);
+}
+
+.card.message.therapist .card-footer {
+    background-color: rgba(0, 0, 0, .03);
+}
+
+.card.message.therapist .card-body {
+    background-color: rgba(0, 0, 0, .06);
+}

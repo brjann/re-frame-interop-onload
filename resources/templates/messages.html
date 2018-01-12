@@ -2,15 +2,18 @@
 {% block user-content %}
 
 {% for item in messages %}
-<div class="row">
-    <div class="col-md-12">
-        <h3>{{item.subject}}</h3>
-        <div class="card">
-            <div class="header">
-                <p>{%trb messages/sent-by%} {{item.sender-name}} | {{item.send-datetime|datetime-ns}} {%endtrb%}</p>
+<div class='d-flex justify-content-{% ifequal item.sender-type "participant" %}end{% else %}start{% endifequal %}'>
+    <div class="col-10 col-sm-8">
+        <div class="card message {{item.sender-type}}">
+            <div class='card-footer {% ifequal item.sender-type "participant" %}text-right{% endifequal %}'>
+                {% if item.subject %}<strong>{{item.subject}}</strong><br>{% endif %}
+                {% ifequal item.sender-type "therapist" %}{%trb messages/from-therapist%} {{item.sender-name}} |
+                {{item.send-datetime|datetime-ns}} {%endtrb%}
+                <!--<i class="fa fa-envelope"></i>-->
+                {% else %}{{item.send-datetime|datetime-ns}}{% endifequal %}
             </div>
-            <div class="content">
-                <p>{{item.text}}</p>
+            <div class="card-body">
+                {{item.text}}
             </div>
         </div>
     </div>
@@ -19,24 +22,20 @@
 
 {% if send-messages %}
 <div class="row">
-    <h2>New message</h2>
     <div class="col-md-12">
-        <div class="card">
-            <div class="content">
-                <form method="post" id="new-message-form">
-                    <div class="form-group">
+        <h3>New message</h3>
+        <form method="post" id="new-message-form">
+            <div class="form-group">
                         <textarea class="form-control" placeholder="{%tr messages/text %}" name="text" rows="5"
                                   required>{{draft.text}}</textarea>
-                        <div class="invalid-feedback">{%tr messages/must-message %}</div>
-                    </div>
-                    <button type="submit" class="btn btn-fill btn-info">{%tr submit %}</button>
-                    <button type="button" class="btn btn-fill btn-warning" id = "draft-button">
-                        {%tr messages/save-draft %}
-                        <span class="fa fa-spinner fa-spin" style="display: none;" id ="new-message-spinner"></span>
-                    </button>
-                </form>
+                <div class="invalid-feedback">{%tr messages/must-message %}</div>
             </div>
-        </div>
+            <button type="submit" class="btn btn-fill btn-info">{%tr submit %}</button>
+            <button type="button" class="btn btn-fill btn-warning" id="draft-button">
+                {%tr messages/save-draft %}
+                <span class="fa fa-spinner fa-spin" style="display: none;" id="new-message-spinner"></span>
+            </button>
+        </form>
     </div>
 </div>
 {% endif %}

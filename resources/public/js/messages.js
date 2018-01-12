@@ -49,5 +49,6 @@ $(document).ready(function(){
 			$("#draft-button").click(function(){
 				save_draft();
 			})
-		})
+		});
+	$("html, body").animate({scrollTop: $(document).height()}, 500);
 });
