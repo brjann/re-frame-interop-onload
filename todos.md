@@ -27,20 +27,10 @@
 - Add translations to all templates
 - Tags and filter plugins in Selmer that utilize Tempura
 - Added handling of missing translation
-
-# Other
- - SQL injection
- - WTF? http://stackoverflow.com/questions/26515700/mysql-jdbc-driver-5-1-33-time-zone-issue
  
-## Done
+#Other - Done
 - Logging of pageloads
 - Page title
 
 
-
 # TREATMENT
-- Always show messages? If cannot send, cannot retrieve and no messages
-- Module list
-- Module scroll to top isn't saved
-- Pressing return does not submit
-- New messages icon does not show up
