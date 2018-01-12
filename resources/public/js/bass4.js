@@ -11,8 +11,11 @@ $(document).ajaxSend(function(event, jqxhr, settings) {
  If page should just be reloaded, then the url returned should simply be "reload".
  */
 
-function post_success(form){
+function post_success(form, complete_fn) {
 	return function(data, textStatus, jqXHR) {
+		if (complete_fn !== undefined) {
+			complete_fn();
+		}
 		if($(form).data("on-success") != undefined){
 			var on_success = eval($(form).data("on-success"));
 			on_success.call(form, data, textStatus, jqXHR);
@@ -33,8 +36,12 @@ function post_success(form){
 
 var re_auth_hidden_form;
 
-function post_error(form){
+function post_error(form, complete_fn) {
 	return function(jqXHR, textStatus, errorThrown) {
+		if (complete_fn !== undefined) {
+			complete_fn();
+		}
+
 		var response = jqXHR.responseText;
 		if(jqXHR.status == 0){
 			alert(text_offline_warning);
@@ -142,14 +149,14 @@ $(document).ready(function(){
 					$form.find(".required").each(function () {
 						var $input = $(this);
 						if ($input.val() == "") {
-							$input.parent().addClass('has-danger');
+							$input.addClass('is-invalid');
 							$input.change(function () {
-								$input.parent().removeClass("has-danger");
+								$input.removeClass("is-invalid");
 							});
 							validation_failed = true;
 						}
 						else {
-							$input.parent().removeClass('has-danger');
+							$input.removeClass('is-invalid');
 						}
 					});
 					if (validation_failed) {
@@ -167,7 +174,39 @@ $(document).ready(function(){
 					}
 				}
 
+
 				if(!no_ajax){
+
+					/*
+					 * If using fade animation (which we're not), the spinner
+					 * may not have been shown when the ajax call has been completed.
+					 * Then the hide event is called before the spinner is shown,
+					 * and then it is never hidden. Thus, we check if the spinner
+					 * has been shown using the variable "opened". If not, delay trying
+					 * to close the spinner 10 ms.
+					 */
+					var opened = false;
+					var spinner = $('#load-spinner');
+
+					spinner.on('shown.bs.modal', function () {
+						spinner.off('shown.bs.modal');
+						opened = true;
+					});
+
+					spinner.modal('show');
+
+					var ajax_complete_fn = function () {
+						var closer = function () {
+							if (opened) {
+								spinner.modal('hide');
+							}
+							else {
+								setTimeout(closer, 10);
+							}
+						};
+						closer();
+					};
+
 					event.preventDefault();
 					var ajax_fns = $form.data('on_ajax_fns');
 
@@ -188,8 +227,8 @@ $(document).ready(function(){
 						{
 							method: "post",
 							data: post,
-							success: post_success(this),
-							error: post_error(this)
+							success: post_success(this, ajax_complete_fn),
+							error: post_error(this, ajax_complete_fn)
 						}
 					);
 				}

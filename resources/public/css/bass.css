@@ -231,3 +231,28 @@ div#instrument .item-error {
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: .25rem;
 }
+
+/***********************
+    Load spinner
+ ***********************/
+
+#load-spinner .modal-dialog {
+    display: table;
+    position: relative;
+    margin: 0 auto;
+    top: calc(33% - 24px);
+}
+
+#load-spinner .modal-dialog .modal-content {
+    background-color: transparent;
+    border: none;
+}
+
+#load-spinner .modal-dialog .modal-content {
+    background-color: transparent;
+    border: none;
+}
+
+#load-spinner .fa-spinner {
+    color: white;
+}

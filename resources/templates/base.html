@@ -24,11 +24,12 @@
       {% endblock %}
   </div>
   {% include "re-auth-box-snip.html" %}
+  {% include "spinner-snip.html" %}
 
   <!-- scripts -->
   {% script "/js/jquery/jquery-3.2.0.min.js" %}
-    {% script "/js/jquery-ui-slider/jquery-ui.min.js" %}
-    {% script "/assets/tether/dist/js/tether.min.js" %}
+  {% script "/js/jquery-ui-slider/jquery-ui.min.js" %}
+  {% script "/assets/tether/dist/js/tether.min.js" %}
   {% script "/assets/bootstrap/js/bootstrap.bundle.min.js" %}
   {% script "/js/bass4.js" %}
   {% script "/js/are-you-sure.js" %}
