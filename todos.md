@@ -31,6 +31,3 @@
 #Other - Done
 - Logging of pageloads
 - Page title
-
-
-# TREATMENT
