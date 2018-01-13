@@ -2,6 +2,7 @@
   (:require [selmer.parser :as parser]
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]
+            [bass4.config :refer [env]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :refer [status] :as ring-response]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
@@ -29,6 +30,7 @@
       (parser/render-file
         template
         (assoc params
+          :dev (env :dev)
           :page template
           :csrf-token *anti-forgery-token*
           :servlet-context *app-context*

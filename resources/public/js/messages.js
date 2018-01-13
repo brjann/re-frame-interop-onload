@@ -53,13 +53,16 @@ $(document).ready(function(){
 
 	var visibility_updater = function (data) {
 		$.map(data, function (time, id) {
-			var message = $('#' + id);
-			message.find('.visibility').text(time);
-			if (time >= 10) {
-				message.find('.card-body').animate({backgroundColor: 'rgba(0, 0, 0, .06)'});
-				message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
-				message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
-				message.removeClass('unread');
+			var message = $('#' + id + '.unread');
+			if (message.length) {
+				message.find('.visibility').text(time);
+				if (time >= 10) {
+					message.find('.visibility').animate({color: 'rgba(0, 0, 0, 0)'});
+					message.find('.card-body').animate({backgroundColor: 'rgba(0, 0, 0, .06)'});
+					message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
+					message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
+					message.removeClass('unread');
+				}
 			}
 		})
 	};

@@ -8,9 +8,9 @@
             <div class='card-footer {% ifequal item.sender-type "participant" %}text-right{% endifequal %}'>
                 {% if item.subject %}<strong>{{item.subject}}</strong><br>{% endif %}
                 {% ifequal item.sender-type "therapist" %}
-                <span class="visibility" style="color: red;"></span>
                 {%trb messages/from-therapist%} {{item.sender-name}} | {{item.send-datetime|datetime-ns}} {%endtrb%}
                 <i class="fa fa-envelope"></i>
+                {% if dev %}<span class="visibility" style="color: red;"></span>{% endif %}
                 {% else %}
                 {{item.send-datetime|datetime-ns}}
                 {% endifequal %}
