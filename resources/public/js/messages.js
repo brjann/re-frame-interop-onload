@@ -57,29 +57,45 @@ $(document).ready(function(){
 			if (message.length) {
 				message.find('.visibility').text(time);
 				if (time >= 10) {
-					message.find('.visibility').animate({color: 'rgba(0, 0, 0, 0)'});
-					message.find('.card-body').animate({backgroundColor: 'rgba(0, 0, 0, .06)'});
-					message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
-					message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
-					message.removeClass('unread');
+					$.ajax(
+						'/user/message-read',
+						{
+							method: 'post',
+							data: {'message-id': id.substr(8)},
+							success: function () {
+								message.find('.visibility').animate({color: 'rgba(0, 0, 0, 0)'});
+								message.find('.card-body').animate({backgroundColor: 'rgba(0, 0, 0, .06)'});
+								message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
+								message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
+								message.removeClass('unread');
+							}
+						}
+					);
 				}
 			}
 		})
 	};
 
-	var fields = $('.message.therapist').map(
-		function (index, message) {
-			return {
-				selector: '#' + message.id,
-				name: message.id
-			};
-		}
-	).get();
-	$.screentime({
-		fields: fields,
-		callback: visibility_updater,
-		reportInterval: 1
-	});
-
-	$("html, body").animate({scrollTop: $(document).height()}, 500);
+	var unread_messages = $('.message.therapist.unread');
+	if (unread_messages.length) {
+		var fields = unread_messages.map(
+			function (index, message) {
+				return {
+					selector: '#' + message.id,
+					name: message.id
+				};
+			}
+		).get();
+		$.screentime({
+			fields: fields,
+			callback: visibility_updater,
+			reportInterval: 1
+		});
+		$('html, body').animate({
+			scrollTop: $(unread_messages[0]).offset().top + 'px'
+		}, 0);
+	}
+	else {
+		$("html, body").animate({scrollTop: $(document).height()}, 0);
+	}
 });
