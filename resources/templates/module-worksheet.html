@@ -5,11 +5,7 @@
 {% endif %}
 
 <div class="treatment-content form {% if tabbed %}tabbed{% endif %}" data-data-name="{{data-name}}" id="{{content-id}}">
-    {% if markdown %}
-    {{text|markdown}}
-    {% else %}
-    {{text|safe}}
-    {% endif %}
+    {% include "module-markdown-snip.html" %}
     <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
           onsubmit="return content_submit();">
         <input type="hidden" name="content-data" class="content-poster">

@@ -140,6 +140,7 @@
     <orderEntry type="library" name="Leiningen: org.projectodd.wunderboss/wunderboss-web:0.12.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.tobereplaced/lettercase:1.0.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.webjars.bower/jquery-color:2.1.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars.bower/tether:1.4.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars.npm/popper.js:1.11.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.0.0-beta.2" level="project" />

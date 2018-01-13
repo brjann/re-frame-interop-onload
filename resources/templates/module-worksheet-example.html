@@ -3,10 +3,7 @@
 <a href="{{return-path}}" class="btn btn-warning btn-sm">{%tr modules/close-example %}</a>
 <div class="treatment-content form {% if tabbed %}tabbed{% endif %} read-only" data-data-name="{{data-name}}"
      id="{{content-id}}">
-    {% if markdown %}
-    {{text|markdown}}
-    {% else %}
-    {{text|safe}}
+    {% include "module-markdown-snip.html" %}
     {% endif %}
 </div>
 

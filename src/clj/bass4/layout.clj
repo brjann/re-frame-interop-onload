@@ -2,6 +2,7 @@
   (:require [selmer.parser :as parser]
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]
+            [markdown.transformers :as md-transformers]
             [bass4.config :refer [env]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :refer [status] :as ring-response]
@@ -17,10 +18,16 @@
             [bass4.services.bass :as bass]
             [compojure.response :as response]))
 
+
+(defn remove-comments [text state]
+  "Remove one-line html comments from markdown"
+  [(clojure.string/replace text #"<!--(.*?)-->" "") state])
+
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
-(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
+#_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
+(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers (cons remove-comments md-transformers/transformer-vector))]))
 
 (defn render
   "renders the HTML template located relative to resources/templates"
