@@ -4,7 +4,8 @@
 {% for item in messages %}
 <div class='d-flex justify-content-{% ifequal item.sender-type "participant" %}end{% else %}start{% endifequal %}'>
     <div class="col-10 col-sm-8">
-        <div class="card message {{item.sender-type}} unread" id="message-{{item.message-id}}">
+        <div class="card message {{item.sender-type}} {% if item.unread %} unread {% endif %}"
+             id="message-{{item.message-id}}">
             <div class='card-footer {% ifequal item.sender-type "participant" %}text-right{% endifequal %}'>
                 {% if item.subject %}<strong>{{item.subject}}</strong><br>{% endif %}
                 {% ifequal item.sender-type "therapist" %}

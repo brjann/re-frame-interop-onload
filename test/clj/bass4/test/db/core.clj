@@ -22,10 +22,10 @@
 (deftest test-save-message
   (jdbc/with-db-transaction [t-conn *db*]
     (jdbc/db-set-rollback-only! t-conn)
-    (let [message-id (save-message! 535899 "SubjectX" "Message")
-          message (db/get-message-by-id {:message-id message-id})]
+    (let [message-id (save-message! 535899 "Message")
+          message    (db/get-message-by-id {:message-id message-id})]
       (is message-id)
-      (is (= "SubjectX" (:subject message)))
+      (is (= "" (:subject message)))
       (is (= 1 1))
       (is (= "Message" (:text message))))))
 

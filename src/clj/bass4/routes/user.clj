@@ -76,7 +76,9 @@
     (POST "/message-save-draft" [& params]
       (if (get-in treatment [:user-components :send-messages])
         (messages-response/save-draft (:user-id user) (:text params))
-        (layout/error-404-page)))))
+        (layout/error-404-page)))
+    (POST "/message-read" [& params]
+      (messages-response/message-read (:user-id user) (str->int (:message-id params))))))
 
 (defn- treatment-routes
   [user request]

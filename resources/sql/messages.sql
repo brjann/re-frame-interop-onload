@@ -13,7 +13,8 @@ SELECT
   CASE
   WHEN lcm.LinkeeClass IS NULL THEN "*unknown*" ELSE
     CASE WHEN lcm.LinkeeClass = 'cTherapist' THEN ct.`Name` ELSE CONCAT(cp.FirstName, " ", cp.LastName) END
-  END AS `sender-name`
+  END AS `sender-name`,
+  (ReadTime = 0 OR ReadTime IS NULL) AS `unread`
 FROM c_message AS cm
   LEFT JOIN links_c_message AS lcm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
@@ -59,3 +60,21 @@ SELECT
   from_unixtime(CASE WHEN SendTime IS NULL THEN 0 ELSE SendTime END) AS `saved-datetime`
 FROM c_message AS cm
 WHERE cm.ObjectId = :message-id;
+
+-- :name mark-message-as-read! :! :n
+-- :doc
+UPDATE c_message AS cm
+  LEFT JOIN links_c_message AS lcm ON
+    cm.ObjectId = lcm.LinkerId AND
+    lcm.PropertyName = "Sender"
+SET cm.ReadTime = unix_timestamp(now())
+WHERE
+  (cm.ReadTime = 0 OR cm.ReadTime IS NULL) AND
+  cm.ParentId = :user-id AND
+  cm.ObjectId = :message-id AND
+  (cm.ParentId != lcm.LinkeeId OR lcm.LinkeeId IS NULL);
+
+
+-- :name set-message-reader! :! :n
+-- :doc
+CALL create_bass_link(:message-id, :user-id, "Reader", "cMessage", "cParticipant")

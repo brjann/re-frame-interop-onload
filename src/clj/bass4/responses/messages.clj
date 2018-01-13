@@ -22,3 +22,7 @@
 (s/defn ^:always-validate save-draft [user-id :- s/Int text :- s/Str]
   (messages-service/save-draft! user-id text)
   (response/ok "ok"))
+
+(s/defn ^:always-validate message-read [user-id :- s/Int message-id :- s/Int]
+  (messages-service/mark-message-as-read! user-id message-id)
+  (response/ok "ok"))
