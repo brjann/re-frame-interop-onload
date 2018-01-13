@@ -50,5 +50,33 @@ $(document).ready(function(){
 				save_draft();
 			})
 		});
+
+	var visibility_updater = function (data) {
+		$.map(data, function (time, id) {
+			var message = $('#' + id);
+			message.find('.visibility').text(time);
+			if (time >= 10) {
+				message.find('.card-body').animate({backgroundColor: 'rgba(0, 0, 0, .06)'});
+				message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
+				message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
+				message.removeClass('unread');
+			}
+		})
+	};
+
+	var fields = $('.message.therapist').map(
+		function (index, message) {
+			return {
+				selector: '#' + message.id,
+				name: message.id
+			};
+		}
+	).get();
+	$.screentime({
+		fields: fields,
+		callback: visibility_updater,
+		reportInterval: 1
+	});
+
 	$("html, body").animate({scrollTop: $(document).height()}, 500);
 });

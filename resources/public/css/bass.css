@@ -276,3 +276,11 @@ div#instrument .item-error {
 .card.message.therapist .card-body {
     background-color: rgba(0, 0, 0, .06);
 }
+
+.card.message.therapist.unread .card-footer {
+    background-color: rgba(0, 255, 0, .03);
+}
+
+.card.message.therapist.unread .card-body {
+    background-color: rgba(0, 255, 0, .09);
+}
