@@ -185,6 +185,8 @@ $(document).ready(function () {
 					});
 
 					spinner.modal('show');
+					spinner.find('.fa-spinner').animate({color: '#FFFFFF'}, 2000);
+					$('.modal-backdrop').animate({backgroundColor: '#000000'}, 2000);
 
 					var ajax_complete_fn = function () {
 						var closer = function () {

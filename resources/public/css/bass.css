@@ -261,7 +261,7 @@ div#instrument .item-error {
 }
 
 #load-spinner .fa-spinner {
-    color: white;
+    color: transparent;
 }
 
 /***********************
@@ -294,4 +294,8 @@ div#instrument .item-error {
 
 .card.message.therapist.unread .card-body {
     background-color: rgba(0, 255, 0, .09);
+}
+
+.modal-backdrop {
+    background-color: transparent;
 }
