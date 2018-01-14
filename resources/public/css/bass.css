@@ -188,7 +188,7 @@ div#instrument .item-error {
     Modules
  ***********************/
 
-.module {
+.module, #module-navbar {
     position: relative;
 }
 
@@ -199,17 +199,12 @@ div#instrument .item-error {
     overflow: auto;
 }
 
-.module .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
+#module-navbar .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
     padding: 0;
 }
 
-.module .navbar-nav {
+#module-navbar .navbar-nav {
     flex-direction: row;
-}
-
-.navbar {
-    position: relative;
-    padding: 4px 8px;
 }
 
 #module-section-label {
@@ -218,7 +213,7 @@ div#instrument .item-error {
     text-overflow: ellipsis
 }
 
-.module .dropdown-toggle::after {
+#module-navbar .dropdown-toggle::after {
     display: none;
 }
 
