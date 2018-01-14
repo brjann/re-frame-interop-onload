@@ -1,4 +1,5 @@
 function set_title_width() {
+	console.log('hejsan');
 	var toggler = $("#navbar-toggler:visible");
 	var page_title = $('#page-title');
 
@@ -43,6 +44,10 @@ $(document).ready(function () {
 				$("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
 			};
 
+			var set_top_margin = function () {
+				$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
+			};
+
 			var set_module_height = function () {
 				$('#module-text').each(
 					function () {
@@ -52,6 +57,11 @@ $(document).ready(function () {
 				var section_label = $('#module-section-label');
 				var container_width = $('#module-navbar').width();
 				section_label.width(container_width - section_label.position().left);
+			};
+
+			var on_resize = function () {
+				set_top_margin();
+				set_module_height();
 			};
 
 			// TODO: This cookie will get the wrong name
@@ -64,8 +74,8 @@ $(document).ready(function () {
 			};
 
 			module_text.scrollspy({target: '#module-navbar'});
-			$(window).resize(set_module_height);
-			set_module_height();
+			$(window).resize(on_resize);
+			on_resize();
 
 			$(window).on('activate.bs.scrollspy', on_scrollspy);
 
