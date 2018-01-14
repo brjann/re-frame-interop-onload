@@ -23,18 +23,6 @@ $(document).ready(function () {
  */
 
 
-function set_module_height() {
-	$('#module-text').each(
-		function () {
-			$(this).height($(window).height() - $(this).offset().top);
-		}
-	);
-	var section_label = $('#module-section-label');
-	var container_width = $('#module-navbar').width();
-	section_label.width(container_width - section_label.position().left);
-
-}
-
 $(document).ready(function () {
 	var module_text = $('#module-text');
 	if (module_text.length) {
@@ -50,20 +38,37 @@ $(document).ready(function () {
 			}
 		});
 		if (counter > 0) {
-			module_text.scrollspy({target: '#module-navbar'});
 
 			var set_label = function (label) {
 				$("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
 			};
-			$(window).resize(set_module_height);
-			set_module_height();
+
+			var set_module_height = function () {
+				$('#module-text').each(
+					function () {
+						$(this).height($(window).height() - $(this).offset().top);
+					}
+				);
+				var section_label = $('#module-section-label');
+				var container_width = $('#module-navbar').width();
+				section_label.width(container_width - section_label.position().left);
+			};
+
+			// TODO: This cookie will get the wrong name
 			var module_section_cookie = $("#module-navbar").parents(".module").attr('id') + "-section";
 
-			$(window).on('activate.bs.scrollspy', function () {
+			var on_scrollspy = function () {
 				var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
 				set_label($(section).text());
 				Cookies.set(module_section_cookie, section);
-			});
+			};
+
+			module_text.scrollspy({target: '#module-navbar'});
+			$(window).resize(set_module_height);
+			set_module_height();
+
+			$(window).on('activate.bs.scrollspy', on_scrollspy);
+
 			set_label($("#module-text").find(":header").first().text());
 
 			// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
@@ -73,12 +78,6 @@ $(document).ready(function () {
 				if (section !== null) {
 					section.scrollIntoView();
 				}
-
-				//var url = location.href;               //Save down the URL without hash.
-				//location.href = Cookies.get(module_section_cookie);                 //Go to the target element.
-				//history.replaceState(null, "", url);
-
-				//window.location.hash = Cookies.get(module_section_cookie);
 			}
 		}
 		else {
