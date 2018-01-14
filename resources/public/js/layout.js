@@ -7,7 +7,7 @@ $(document).ready(function () {
 
 			if (toggler.length) {
 				// 6 from the margin-left css setting
-				page_title.width($('#main-nav').innerWidth() - toggler.outerWidth() - 6);
+				page_title.width($('#main-navbar').innerWidth() - toggler.outerWidth() - 6);
 			}
 			else {
 				page_title.width('');

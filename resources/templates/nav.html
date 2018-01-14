@@ -4,8 +4,8 @@
 <!-- navbar -->
 <div id="top-nav" class="fixed-top">
 
-    <nav class="navbar navbar-expand-md navbar-dark bg-primary">
-        <div class="container justify-content-start" id="main-nav">
+    <nav class="navbar navbar-expand-md navbar-light" id="main-nav">
+        <div class="container justify-content-start" id="main-navbar">
             <button id="navbar-toggler" class="navbar-toggler navbar-toggler-right" type="button"
                     data-toggle="collapse"
                     data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false"
@@ -79,11 +79,9 @@
         <nav class="navbar navbar-expand-md navbar-light bg-light" style="margin-top: -10px;">
             <div class="container">
                 <div class="navbar-nav">
-                    <!--
                     {% if context-menu.title %}
-                    <span class='navbar-text'>{{context-menu.title}}</span>
+                    <span class='navbar-brand'>{{context-menu.title}}</span>
                     {% endif %}
-                    -->
                     {% for item in context-menu.items %}
                     <a href="{{item.link}}"
                        class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
