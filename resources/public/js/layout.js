@@ -1,15 +1,5 @@
 $(document).ready(function () {
 
-	if ($('#top-nav').length) {
-		var set_top_margin = function () {
-			// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
-			$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
-		};
-
-		$(window).resize(set_top_margin);
-		set_top_margin();
-	}
-
 	if ($('#page-title').length) {
 		var set_title_width = function () {
 			var toggler = $("#navbar-toggler:visible");
@@ -26,6 +16,16 @@ $(document).ready(function () {
 
 		$(window).resize(set_title_width);
 		set_title_width();
+	}
+
+	if ($('#top-nav').length) {
+		var set_top_margin = function () {
+			// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
+			$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
+		};
+
+		$(window).resize(set_top_margin);
+		set_top_margin();
 	}
 
 	/*
