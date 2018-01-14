@@ -1,15 +1,4 @@
-function set_title_width() {
-	var toggler = $("#navbar-toggler:visible");
-	var page_title = $('#page-title');
 
-	if (toggler.length) {
-		// 6 from the margin-left css setting
-		page_title.width($('#main-nav').innerWidth() - toggler.outerWidth() - 6);
-	}
-	else {
-		page_title.width('');
-	}
-}
 
 $(document).ready(function () {
 	$(window).resize(set_title_width);
@@ -27,6 +16,33 @@ $(document).ready(function () {
 $(document).ready(function () {
 	var module_text = $('#module-text');
 	if (module_text.length) {
+
+		var set_title_width = function () {
+			var toggler = $("#navbar-toggler:visible");
+			var page_title = $('#page-title');
+
+			if (toggler.length) {
+				// 6 from the margin-left css setting
+				page_title.width($('#main-nav').innerWidth() - toggler.outerWidth() - 6);
+			}
+			else {
+				page_title.width('');
+			}
+		};
+
+		var set_top_margin = function () {
+			// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
+			$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
+		};
+
+		var on_resize = function () {
+			set_title_width();
+			set_top_margin();
+		};
+
+		$(window).resize(on_resize);
+		on_resize();
+
 		var counter = 0;
 		var drop_down = $('#module-navbar .dropdown-menu');
 		module_text.find(':header').each(function () {
@@ -38,15 +54,10 @@ $(document).ready(function () {
 				drop_down.append($(sprintf('<a class="dropdown-item" href="#s%s" onclick="return goToByScroll(\'s%s\');">%s</a>', counter, counter, header.text())));
 			}
 		});
+
 		if (counter > 0) {
-
-			var set_label = function (label) {
+			var set_section_label = function (label) {
 				$("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
-			};
-
-			var set_top_margin = function () {
-				// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
-				$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
 			};
 
 			var set_module_height = function () {
@@ -60,31 +71,25 @@ $(document).ready(function () {
 				section_label.width(container_width - section_label.position().left);
 			};
 
-			var on_resize = function () {
-				set_top_margin();
-				set_module_height();
-			};
-
 			// TODO: This cookie will get the wrong name
 			var module_section_cookie = $("#module-navbar").data('module-id') + "-section";
 
 			var on_scrollspy = function () {
 				var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-				set_label($(section).text());
+				set_section_label($(section).text());
 				Cookies.set(module_section_cookie, section);
 			};
 
 			module_text.scrollspy({target: '#module-navbar'});
-			$(window).resize(on_resize);
-			on_resize();
+			$(window).resize(set_module_height);
+			set_module_height();
 
 			$(window).on('activate.bs.scrollspy', on_scrollspy);
 
-			set_label($("#module-text").find(":header").first().text());
+			set_section_label($("#module-text").find(":header").first().text());
 
 			// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
 			if (Cookies.get(module_section_cookie) !== undefined) {
-
 				var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
 				if (section !== null) {
 					section.scrollIntoView();
