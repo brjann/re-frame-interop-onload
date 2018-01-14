@@ -185,12 +185,23 @@ div#instrument .item-error {
 }
 
 /***********************
+    Layout
+ ***********************/
+
+#page-title {
+    margin-left: 6px;
+    margin-right: 0;
+}
+
+/***********************
     Modules
  ***********************/
 
+#module-navbar {
+    padding: 0 6px;
+}
 
 #module-text {
-    /*height: 200px;*/
     margin-top: .5rem;
     overflow: auto;
 }
@@ -247,6 +258,10 @@ div#instrument .item-error {
 #load-spinner .fa-spinner {
     color: white;
 }
+
+/***********************
+    Messages
+ ***********************/
 
 .card.message {
     margin-bottom: 10px;

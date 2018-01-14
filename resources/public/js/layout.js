@@ -1,10 +1,10 @@
 function set_title_width() {
-	console.log('hejsan');
 	var toggler = $("#navbar-toggler:visible");
 	var page_title = $('#page-title');
 
 	if (toggler.length) {
-		page_title.width(toggler.offset().left - page_title.offset().left);
+		// 6 from the margin-left css setting
+		page_title.width($('#main-nav').innerWidth() - toggler.outerWidth() - 6);
 	}
 	else {
 		page_title.width('');
@@ -45,6 +45,7 @@ $(document).ready(function () {
 			};
 
 			var set_top_margin = function () {
+				// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
 				$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
 			};
 
@@ -65,7 +66,7 @@ $(document).ready(function () {
 			};
 
 			// TODO: This cookie will get the wrong name
-			var module_section_cookie = $("#module-navbar").parents(".module").attr('id') + "-section";
+			var module_section_cookie = $("#module-navbar").data('module-id') + "-section";
 
 			var on_scrollspy = function () {
 				var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
