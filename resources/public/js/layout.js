@@ -14,9 +14,18 @@ $(document).ready(function () {
 
 
 $(document).ready(function () {
-	var module_text = $('#module-text');
-	if (module_text.length) {
 
+	if ($('#top-nav').length) {
+		var set_top_margin = function () {
+			// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
+			$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
+		};
+
+		$(window).resize(set_top_margin);
+		set_top_margin();
+	}
+
+	if ($('#page-title').length) {
 		var set_title_width = function () {
 			var toggler = $("#navbar-toggler:visible");
 			var page_title = $('#page-title');
@@ -30,18 +39,12 @@ $(document).ready(function () {
 			}
 		};
 
-		var set_top_margin = function () {
-			// It seems that it must be padding-top because margin-top seems to be considered a scrollable area
-			$('#main-body').css('padding-top', $('#top-nav').height() + 'px');
-		};
+		$(window).resize(set_title_width);
+		set_title_width();
+	}
 
-		var on_resize = function () {
-			set_title_width();
-			set_top_margin();
-		};
-
-		$(window).resize(on_resize);
-		on_resize();
+	var module_text = $('#module-text');
+	if (module_text.length) {
 
 		var counter = 0;
 		var drop_down = $('#module-navbar .dropdown-menu');
@@ -71,7 +74,6 @@ $(document).ready(function () {
 				section_label.width(container_width - section_label.position().left);
 			};
 
-			// TODO: This cookie will get the wrong name
 			var module_section_cookie = $("#module-navbar").data('module-id') + "-section";
 
 			var on_scrollspy = function () {
