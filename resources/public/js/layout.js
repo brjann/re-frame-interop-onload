@@ -45,7 +45,7 @@ $(document).ready(function () {
 			if (header.prop('tagName').indexOf('3') >= 0) {
 				counter++;
 				header.attr('id', 's' + counter);
-				drop_down.append($(sprintf('<a class="dropdown-item" href="#s%s" onclick="return goToByScroll(\'s%s\');">%s</a>', counter, counter, header.text())));
+				drop_down.append($(sprintf('<a class="dropdown-item" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.text())));
 			}
 		});
 
@@ -69,7 +69,6 @@ $(document).ready(function () {
 
 			var on_scrollspy = function () {
 				var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-				console.log('scrolled to ' + section);
 				set_section_label($(section).text());
 				Cookies.set(module_section_cookie, section);
 			};
@@ -87,13 +86,9 @@ $(document).ready(function () {
 			if (Cookies.get(module_section_cookie) !== undefined) {
 				var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
 				if (section !== null) {
-					console.log('cookie found for ' + Cookies.get(module_section_cookie));
-					section.scrollIntoView();
-					/*
-					$('html, body').animate({
-						scrollTop: $(section).offset().top + 'px'
-					}, 'fast');
-					*/
+					module_text.scrollTop(section.offsetTop);
+					// Not supported by all browsers it seems
+					//section.scrollIntoView();
 				}
 			}
 		}
@@ -103,11 +98,15 @@ $(document).ready(function () {
 	}
 });
 
-function goToByScroll(id) {
-	var section = document.getElementById(id);
+function scroll_to_section(section_id) {
+	var module_text = $('#module-text');
+	var section = document.getElementById(section_id);
+	// Not supported by all browsers it seems
+	//section.scrollIntoView();
 	if (section !== null) {
-		section.scrollIntoView();
+		module_text.scrollTop(section.offsetTop);
 	}
+	return false;
 }
 
 function confirm_logout() {
