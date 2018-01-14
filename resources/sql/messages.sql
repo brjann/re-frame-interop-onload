@@ -78,3 +78,14 @@ WHERE
 -- :name set-message-reader! :! :n
 -- :doc
 CALL create_bass_link(:message-id, :user-id, "Reader", "cMessage", "cParticipant")
+
+-- :name new-messages :? :1
+-- :doc
+SELECT
+  count(*) AS `new-messages-count`
+FROM c_message AS cm
+  LEFT JOIN links_c_message AS lcm
+    ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
+  LEFT JOIN c_therapist as ct ON lcm.LinkeeId = ct.ObjectId
+  JOIN c_participant as cp ON cp.ObjectId = :user-id
+WHERE cm.ParentId = :user-id AND cm.Draft = 0 AND LinkeeClass = 'cTherapist' AND ReadTime = 0 ORDER BY cm.SendTime ASC;

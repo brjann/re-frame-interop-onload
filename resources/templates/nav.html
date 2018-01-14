@@ -13,15 +13,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-
-            <!--<span id="page-title" class="navbar-text hidden-md-up"
-                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                {% if page-title %}
-                {{page-title}}
-                {% else %}
-                &nbsp;
-                {% endif %}
-            </span>-->
+            <!-- TODO: Double style settings here and css? -->
             <span id="page-title" class="navbar-brand d-md-none"
                   style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
             {% if page-title %}
@@ -36,6 +28,9 @@
                     <a href="/user/messages"
                        class='nav-link{% ifequal path "/user/messages" %} active{%endifequal%}'>
                         {%tr messages/messages %}
+                        {% if new-messages? %}
+                        <i class="fa fa-envelope" title="{%tr messages/new-message %}" id="new-message-icon"></i>
+                        {% endif %}
                     </a>
                     {% endif %}
                     {% if modules %}

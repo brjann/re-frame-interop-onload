@@ -13,4 +13,7 @@
     (let [user-components (:user-components treatment)]
       (layout/render
         template
-        (merge params user-components {:path path})))))
+        (merge params
+               user-components
+               {:path          path
+                :new-messages? (:new-messages? treatment)})))))

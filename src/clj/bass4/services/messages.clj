@@ -37,3 +37,8 @@
   (when (< 0 (db/mark-message-as-read! {:user-id user-id :message-id message-id}))
     (db/set-message-reader! {:user-id user-id :message-id message-id})
     true))
+
+(defn new-messages? [user-id]
+  (->> (db/new-messages {:user-id user-id})
+       :new-messages-count
+       (not= 0)))

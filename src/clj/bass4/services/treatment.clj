@@ -4,6 +4,7 @@
             [clj-time.coerce]
             [clojure.set]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean?]]
+            [bass4.services.messages :as messages]
             [clj-time.core :as t]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
@@ -133,16 +134,17 @@
                                                (some #(when (apply treatment-active? %) %)))]
     (let [treatment (treatment-map (:treatment-id treatment-access))]
       {:treatment-access treatment-access
+       :new-messages?    (messages/new-messages? user-id)
        :user-components  (user-components treatment-access treatment)
        :treatment        treatment})))
 
 #_(defn user-treatment
-  [user-id]
-  (if-let [treatment-access (first (user-treatment-accesses user-id))]
-    (let [treatment (treatment-map (:treatment-id treatment-access))]
-      {:treatment-access treatment-access
-       :user-components  (user-components treatment-access treatment)
-       :treatment        treatment})))
+    [user-id]
+    (if-let [treatment-access (first (user-treatment-accesses user-id))]
+      (let [treatment (treatment-map (:treatment-id treatment-access))]
+        {:treatment-access treatment-access
+         :user-components  (user-components treatment-access treatment)
+         :treatment        treatment})))
 
 (defn submit-homework!
   [treatment-access module]

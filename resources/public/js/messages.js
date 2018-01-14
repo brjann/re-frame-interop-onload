@@ -68,6 +68,10 @@ $(document).ready(function(){
 								message.find('.card-footer').animate({backgroundColor: 'rgba(0, 0, 0, .03)'});
 								message.find('.fa-envelope').animate({color: 'rgba(0, 0, 0, 0)'});
 								message.removeClass('unread');
+
+								if ($('.message.therapist.unread').length === 0) {
+									$('#new-message-icon').animate({color: 'rgba(0, 0, 0, 0)'});
+								}
 							}
 						}
 					);

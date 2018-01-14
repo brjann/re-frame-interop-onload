@@ -25,7 +25,8 @@
                    :subject        "Message subject"
                    :text           "Message text"
                    :save-draft     "Save draft"
-                   :messages       "Messages"}
+                   :messages       "Messages"
+                   :new-message    "You have a new message"}
  :modules         {:modules          "Modules"
                    :module-text      "Module text"
                    :no-module        "This module does not exist"
