@@ -56,7 +56,7 @@ $(document).ready(function(){
 			var message = $('#' + id + '.unread');
 			if (message.length) {
 				message.find('.visibility').text(time);
-				if (time >= 10) {
+				if (time >= 5) {
 					$.ajax(
 						'/user/message-read',
 						{
