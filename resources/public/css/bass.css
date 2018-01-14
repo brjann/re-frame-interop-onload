@@ -202,8 +202,9 @@ div#instrument .item-error {
 }
 
 #module-text {
+    position: relative;
     margin-top: .5rem;
-    overflow: auto;
+    overflow-y: scroll;
 }
 
 #module-navbar .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
