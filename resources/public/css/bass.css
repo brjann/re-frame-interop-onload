@@ -188,7 +188,7 @@ div#instrument .item-error {
     Modules
  ***********************/
 
-.module, #module-navbar {
+.module {
     position: relative;
 }
 
