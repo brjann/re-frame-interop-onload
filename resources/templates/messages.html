@@ -17,7 +17,7 @@
                 {% endifequal %}
             </div>
             <div class="card-body">
-                {{item.text}}
+                {{item.text|linebreaks|safe}}
             </div>
         </div>
     </div>

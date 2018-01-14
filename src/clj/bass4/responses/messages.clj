@@ -1,14 +1,16 @@
 (ns bass4.responses.messages
   (:require [bass4.services.messages :as messages-service]
             [bass4.services.user :as user]
+            [clojure.string :as string]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [bass4.layout :as layout]))
 
 (defn messages-page [render-fn user]
-  (let [user-id (:user-id user)
-        messages (messages-service/get-all-messages user-id)
-        draft (messages-service/get-draft user-id)]
+  (let [user-id  (:user-id user)
+        messages (->> (messages-service/get-all-messages user-id)
+                      (map #(assoc % :text (string/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
+        draft    (messages-service/get-draft user-id)]
     (render-fn "messages.html" {:user            user
                                 :title           "Messages"
                                 :page-title      "Messages"
