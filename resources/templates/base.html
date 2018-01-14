@@ -15,15 +15,13 @@
     <!--{% style "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" %}-->
 </head>
 <body>
-<div class="m-auto" style="max-width: 960px;">
-    <div id="main-body">
-        {% if debug %}
-        <div>{{debug}}</div>
-        {% endif %}
+<div id="main-body">
+    {% if debug %}
+    <div>{{debug}}</div>
+    {% endif %}
 
-        {% block content %}
-        {% endblock %}
-    </div>
+    {% block x-content %}
+    {% endblock %}
 </div>
 {% include "auth/re-auth-box-snip.html" %}
 {% include "spinner-snip.html" %}
@@ -34,7 +32,8 @@
 {% script "/assets/jquery-color/jquery.color.js" %}
 {% script "/assets/tether/dist/js/tether.min.js" %}
 {% script "/assets/bootstrap/js/bootstrap.bundle.min.js" %}
-{% script "/js/bass4.js" %}
+{% script "/js/layout.js" %}
+{% script "/js/form-ajax.js" %}
 {% script "/js/are-you-sure.js" %}
 {% script "/js/js.cookie.js" %}
 {% script "/js/sprintf.min.js" %}

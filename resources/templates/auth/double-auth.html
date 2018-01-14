@@ -1,22 +1,20 @@
-{% extends "base.html" %}
+{% extends "simple.html" %}
 {% block content %}
 
-<div class="container">
-    <h1>{%tr login/login %}</h1>
-    <p>{%tr login/please-double-auth %} ({{double-auth-code}}).</p>
-    <form method="post">
-        <div class="alert alert-danger hidden" data-show-on = "error" role="alert">
-            {%tr login/code-error %}
+<h1>{%tr login/login %}</h1>
+<p>{%tr login/please-double-auth %} ({{double-auth-code}}).</p>
+<form method="post">
+    <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+        {%tr login/code-error %}
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-12">
+            <input type="text" class="form-control" autocomplete="off" id="code" data-clear-on="error" name="code"
+                   placeholder="{%tr login/code %}" required>
         </div>
-        <div class="form-group row">
-            <div class="col-sm-12">
-                <input type="text" class="form-control" autocomplete="off" id="code" data-clear-on="error" name="code"
-                       placeholder="{%tr login/code %}" required>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">{%tr continue %}</button>
-        <a href="/logout" class="btn btn-warning">{%tr logout %}</a>
-    </form>
-</div>
+    </div>
+    <button type="submit" class="btn btn-primary">{%tr continue %}</button>
+    <a href="/logout" class="btn btn-warning">{%tr logout %}</a>
+</form>
 
 {% endblock %}

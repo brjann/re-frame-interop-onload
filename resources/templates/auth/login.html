@@ -1,34 +1,32 @@
-{% extends "base.html" %}
+{% extends "simple.html" %}
 {% block content %}
 
-<div class="container">
-    <h1>{%tr login/login %}</h1>
-    <!--<p>{%tr login/please-username-password %}</p>-->
-    <form method="post" class="">
+<h1>{%tr login/login %}</h1>
+<!--<p>{%tr login/please-username-password %}</p>-->
+<form method="post" class="">
 
-        <div class="alert alert-danger hidden" data-show-on = "error" role="alert">
-            {%tr login/username-password-error %}
+    <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+        {%tr login/username-password-error %}
+    </div>
+    <div class="alert alert-danger hidden ajax-error-message" role="alert">
+    </div>
+    <div class="form-group row">
+        <label for="username" class="col-sm-2 col-form-label">{%tr username %}</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="username" data-clear-on="error" name="username"
+                   placeholder="{%tr username %}" required>
+            <div class="invalid-feedback">{%tr login/must-username %}</div>
         </div>
-        <div class="alert alert-danger hidden ajax-error-message" role="alert">
+    </div>
+    <div class="form-group row">
+        <label for="password" class="col-sm-2 col-form-label">{%tr password %}</label>
+        <div class="col-sm-10">
+            <input type="password" class="form-control" data-clear-on="error" id="password" name="password"
+                   placeholder="{%tr password %}" required>
+            <div class="invalid-feedback">{%tr login/must-password %}</div>
         </div>
-        <div class="form-group row">
-            <label for="username" class="col-sm-2 col-form-label">{%tr username %}</label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control" id="username" data-clear-on="error" name="username"
-                       placeholder="{%tr username %}" required>
-                <div class="invalid-feedback">{%tr login/must-username %}</div>
-            </div>
-        </div>
-        <div class="form-group row">
-            <label for="password" class="col-sm-2 col-form-label">{%tr password %}</label>
-            <div class="col-sm-10">
-                <input type="password" class="form-control" data-clear-on="error" id="password" name="password"
-                       placeholder="{%tr password %}" required>
-                <div class="invalid-feedback">{%tr login/must-password %}</div>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
-    </form>
-</div>
+    </div>
+    <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
+</form>
 
 {% endblock %}
