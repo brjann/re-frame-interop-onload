@@ -84,7 +84,7 @@
     <orderEntry type="library" name="Leiningen: luminus-immutant:0.2.3" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-migrations:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-nrepl:0.1.4" level="project" />
-    <orderEntry type="library" name="Leiningen: markdown-clj:0.9.98" level="project" />
+    <orderEntry type="library" name="Leiningen: markdown-clj:1.0.2" level="project" />
     <orderEntry type="library" name="Leiningen: medley:0.8.2" level="project" />
     <orderEntry type="library" name="Leiningen: metosin/ring-http-response:0.8.1" level="project" />
     <orderEntry type="library" name="Leiningen: migratus:0.8.33" level="project" />

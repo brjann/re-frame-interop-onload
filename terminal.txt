@@ -1,1 +1,1 @@
-git rm --cached bass4.iml 
+git rm --cached bass4.iml

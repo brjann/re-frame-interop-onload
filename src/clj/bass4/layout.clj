@@ -3,6 +3,7 @@
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]
             [markdown.transformers :as md-transformers]
+            [markdown.lists :refer :all]
             [bass4.config :refer [env]]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :refer [status] :as ring-response]
@@ -16,18 +17,64 @@
             [bass4.services.bass :as bass-service]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
-            [compojure.response :as response]))
+            [compojure.response :as response]
+            [clojure.string :as string]))
 
+(defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
+  (cond
+
+    (and last-line-empty? (string/blank? text))
+    [(str (close-lists (reverse lists)) text)
+     (-> state (dissoc :lists) (assoc :last-line-empty? false))]
+
+    (or code codeblock)
+    (if (and lists (or last-line-empty? eof))
+      [(str (close-lists (reverse lists)) text)
+       (-> state (dissoc :lists) (assoc :last-line-empty? false))]
+      [text state])
+
+    (and (not eof)
+         lists
+         (string/blank? text))
+    [text (assoc state :last-line-empty? true)]
+
+    :else
+    (let [indents  (if last-line-empty? 0 (count (take-while (partial = \space) text)))
+          trimmed  (string/trim text)
+          in-list? (:lists state)]
+      (cond
+        (re-find #"^[\*\+-] " trimmed)
+        (ul (if in-list? text trimmed) state)
+
+        #_(re-find #"^[0-9]+\. " trimmed)
+        #_(ol (if in-list? text trimmed) state)
+
+        (pos? indents)
+        [text state]
+
+        (and (or eof last-line-empty?)
+             (not-empty lists))
+        [(close-lists (reverse lists))
+         (assoc state :lists [] :buf text)]
+
+        :else
+        [text state]))))
 
 (defn remove-comments [text state]
   "Remove one-line html comments from markdown"
   [(clojure.string/replace text #"<!--(.*?)-->" "") state])
 
+(def new-transformer-vector
+  (let [li-index (first (keep-indexed #(when (= markdown.lists/li %2) %1) md-transformers/transformer-vector))]
+    (-> md-transformers/transformer-vector
+        (assoc li-index only-ul)
+        (#(cons remove-comments %)))))
+
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path!  (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
 #_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
-(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers (cons remove-comments md-transformers/transformer-vector))]))
+(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
 
 (defn render
   "renders the HTML template located relative to resources/templates"

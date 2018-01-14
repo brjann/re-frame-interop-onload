@@ -11,7 +11,7 @@
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.3.0"]
                  [luminus-nrepl "0.1.4"]
-                 [markdown-clj "0.9.98"]
+                 [markdown-clj "1.0.2"]
                  [metosin/ring-http-response "0.8.1"]
                  [mount "0.1.11"]
                  [mysql/mysql-connector-java "6.0.5"]
