@@ -188,12 +188,8 @@ div#instrument .item-error {
     Modules
  ***********************/
 
-.module {
-    position: relative;
-}
 
 #module-text {
-    position: relative;
     /*height: 200px;*/
     margin-top: .5rem;
     overflow: auto;
