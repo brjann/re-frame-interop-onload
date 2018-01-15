@@ -41,14 +41,14 @@
 #_(defn db-dir
     ([] (db-dir nil))
     ([sub-dir]
-     (let [db-name   (:name locals/*db-config*)
+     (let [db-name   (:name locals/*local-config*)
            bass-path (env :bass-path)]
        (io/file bass-path "projects" db-name sub-dir))))
 
 #_(defn db-dir
     ^java.io.File
     [& parts]
-    (let [db-name   (:name locals/*db-config*)
+    (let [db-name   (:name locals/*local-config*)
           bass-path (env :bass-path)]
       (try
         (apply io/file (into [bass-path "projects" db-name] parts))
@@ -66,7 +66,7 @@
   (^java.io.File [base-path] (db-dir base-path nil))
   (^java.io.File [base-path sub-path]
    (try
-     (let [db-name        (:name locals/*db-config*)
+     (let [db-name        (:name locals/*local-config*)
            full-base-path (io/file (env :bass-path) "projects" db-name base-path)]
        (if sub-path
          (get-sub-path full-base-path sub-path)
@@ -75,7 +75,7 @@
 
 #_(defn- session-dir
   []
-  (let [db-name   (:name locals/*db-config*)
+    (let [db-name (:name locals/*local-config*)
         bass-path (env :bass-path)]
     (io/file bass-path "projects" db-name "sessiondata")))
 

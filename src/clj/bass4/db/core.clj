@@ -178,10 +178,10 @@
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
         host        (keyword (request-host request))
-        matching    (or (get db-mappings host) (:default db-mappings))]
-    (if (contains? db-configs matching)
-      (get db-configs matching)
-      (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))
+        db-name     (or (get db-mappings host) (:default db-mappings))]
+    (if (contains? db-connections db-name)
+      [db-name @(get db-connections db-name) (get db-configs db-name)]
+      (throw (Exception. (str "No db present for key " db-name " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
 ;; occur after this file has changed? It seems that mount stops and starts the
@@ -191,15 +191,15 @@
 ;; environment.
 (defn db-middleware
   [handler request]
-  (let [db-config (resolve-db request)]
+  (let [[db-name db-conn db-config] (resolve-db request)]
     (request-state/set-state! :name (:name db-config))
-    (binding [*db*                    @(get db-connections (keyword (:name db-config)))
-              bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
+    (binding [*db*                       db-conn
+              bass-locals/*local-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
       (handler request))))
 
 (defn init-repl
   ([] (init-repl :db1))
   ([db-name]
    (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
-   (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))
+   (alter-var-root (var locals/*local-config*) (constantly (get db-configs db-name)))
    (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))

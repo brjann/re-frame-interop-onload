@@ -12,16 +12,16 @@
   {:time-zone "America/Puerto_Rico"
    :language  "en"})
 
-(def ^:dynamic *db-config*
+(def ^:dynamic *local-config*
   db-defaults)
 
 (defn time-zone
   []
-  (:time-zone *db-config*))
+  (:time-zone *local-config*))
 
 (defn language
   []
-  (:language *db-config*))
+  (:language *local-config*))
 
 (defn- get-locals [bass-path]
   (->> (.listFiles (io/file bass-path))
