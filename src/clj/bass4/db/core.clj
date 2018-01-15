@@ -15,16 +15,57 @@
             BatchUpdateException
             PreparedStatement]))
 
+
+(defn- build-db-url2
+  [host port name user password]
+  (str "jdbc:mysql://" host
+       ":" port
+       "/" (url-encode name)
+       "?user=" (url-encode user)
+       "&password=" (url-encode password)))
+
+(defn db-url2
+  [local-config port]
+  (build-db-url2
+    (:db-host local-config)
+    port
+    (:db-name local-config)
+    (:db-user local-config)
+    (:db-password local-config)))
+
+(defn db-connect!
+  [local-config]
+  (let [url (db-url2 local-config (env :database-port))]
+    (delay
+      (log/info (str "Attaching " (:name local-config)))
+      (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
+
+#_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
+
+(defn db-disconnect!
+  [db-conn]
+  (when (realized? db-conn)
+    (log/info (str "Detaching db"))
+    (conman/disconnect! @db-conn)))
+
+(defstate db-connections
+  :start (map-map db-connect!
+                  locals/local-configs)
+  :stop (map-map db-disconnect!
+                 db-connections))
+
+(defstate db-common
+  :start @(db-connect! locals/common-config)
+  :stop (conman/disconnect! db-common))
+
+
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
 (def ^:dynamic *db* nil)
-(def ^:dynamic *db-common* nil)
+#_(def ^:dynamic *db-common* nil)
 
-(defn bool-cols [db-fn params cols]
-  (let [row-fn (fn [row]
-                 (merge row
-                        (map-map val-to-bool (select-keys row cols))))]
-    (db-fn *db* params nil {:row-fn row-fn})))
+
+
 
 (defn connect!
   [db-config]
@@ -37,7 +78,7 @@
                                      ;;TODO: &serverTimezone=UTC WTF????
                                      (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
               db-config)]
-    (alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
+    #_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
     res))
 
 (defn database-configs []
@@ -70,7 +111,13 @@
 (conman/bind-connection *db* "sql/instruments.sql")
 (conman/bind-connection *db* "sql/assessments.sql")
 (conman/bind-connection *db* "sql/instrument-answers.sql")
-(conman/bind-connection *db-common* "sql/common.sql")
+(conman/bind-connection db-common "sql/common.sql")
+
+(defn bool-cols [db-fn params cols]
+  (let [row-fn (fn [row]
+                 (merge row
+                        (map-map val-to-bool (select-keys row cols))))]
+    (db-fn *db* params nil {:row-fn row-fn})))
 
 (defn to-date [^java.sql.Date sql-date]
   (-> sql-date (.getTime) (java.util.Date.)))
@@ -120,50 +167,6 @@
 (defmethod hugsql.core/hugsql-command-fn :? [sym] 'bass4.db.core/sql-wrapper-query)
 (defmethod hugsql.core/hugsql-command-fn :query [sym] 'bass4.db.core/sql-wrapper-query)
 (defmethod hugsql.core/hugsql-command-fn :default [sym] 'bass4.db.core/sql-wrapper-query)
-
-(defn- build-db-url2
-  [host port name user password]
-  (str "jdbc:mysql://" host
-       ":" port
-       "/" (url-encode name)
-       "?user=" (url-encode user)
-       "&password=" (url-encode password)))
-
-(defn db-url2
-  [local-config port]
-  (build-db-url2
-    (:db-host local-config)
-    port
-    (:db-name local-config)
-    (:db-user local-config)
-    (:db-password local-config)))
-
-(defn db-connect!
-  [local-config]
-  (let [url (db-url2 local-config (env :database-port))]
-    (delay
-      (log/info (str "Attaching " (:name local-config)))
-      (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
-
-#_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
-
-(defn db-disconnect!
-  [db-conn]
-  (when (realized? db-conn)
-    (log/info (str "Detaching db"))
-    (conman/disconnect! @db-conn)))
-
-(defstate db-connections
-  :start (map-map db-connect!
-                  locals/local-configs)
-  :stop (map-map db-disconnect!
-                 db-connections))
-
-(defstate db-commmon
-  :start @(db-connect! locals/common-config)
-  :stop (conman/disconnect! db-commmon))
-
-
 
 ;;-------------
 ;; DB RESOLVING
