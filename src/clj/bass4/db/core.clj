@@ -88,45 +88,6 @@
     (.setTimestamp stmt idx (java.sql.Timestamp. (.getTime v)))))
 
 
-;;-------------
-;; DB RESOLVING
-;;-------------
-
-(defn request-host
-  [request]
-  (first (filter identity
-                 [(get-in request [:headers "x-forwarded-host"])
-                  (:server-name request)])))
-
-(defn resolve-db [request]
-  (let [db-mappings (env :db-mappings)
-        host        (keyword (request-host request))
-        matching    (or (get db-mappings host) (:default db-mappings))]
-    (if (contains? db-configs matching)
-      (get db-configs matching)
-      (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))
-
-;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
-;; occur after this file has changed? It seems that mount stops and starts the
-;; db-connection AFTER the *db* variable has been bound to a db-connection. This
-;; closes the old connection and creates a new one. Which is used at the next
-;; request, explaining why it works again then. This should not affect the production
-;; environment.
-(defn db-middleware
-  [handler request]
-  (let [db-config (resolve-db request)]
-    (request-state/set-state! :name (:name db-config))
-    (binding [*db*                    @(:db-conn db-config)
-              bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
-      (handler request))))
-
-(defn init-repl
-  ([] (init-repl :db1))
-  ([db-name]
-   (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
-   (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))
-   (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))
-
 ;---------------
 ; SQL WRAPPER
 ;---------------
@@ -201,3 +162,44 @@
 (defstate db-commmon
   :start @(db-connect! locals/common-config)
   :stop (conman/disconnect! db-commmon))
+
+
+
+;;-------------
+;; DB RESOLVING
+;;-------------
+
+(defn request-host
+  [request]
+  (first (filter identity
+                 [(get-in request [:headers "x-forwarded-host"])
+                  (:server-name request)])))
+
+(defn resolve-db [request]
+  (let [db-mappings (env :db-mappings)
+        host        (keyword (request-host request))
+        matching    (or (get db-mappings host) (:default db-mappings))]
+    (if (contains? db-configs matching)
+      (get db-configs matching)
+      (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))
+
+;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
+;; occur after this file has changed? It seems that mount stops and starts the
+;; db-connection AFTER the *db* variable has been bound to a db-connection. This
+;; closes the old connection and creates a new one. Which is used at the next
+;; request, explaining why it works again then. This should not affect the production
+;; environment.
+(defn db-middleware
+  [handler request]
+  (let [db-config (resolve-db request)]
+    (request-state/set-state! :name (:name db-config))
+    (binding [*db*                    @(get db-connections (keyword (:name db-config)))
+              bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
+      (handler request))))
+
+(defn init-repl
+  ([] (init-repl :db1))
+  ([db-name]
+   (alter-var-root (var *db*) (constantly @(get-in db-configs [db-name :db-conn])))
+   (alter-var-root (var locals/*db-config*) (constantly (get db-configs db-name)))
+   (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))
