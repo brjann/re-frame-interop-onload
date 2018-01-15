@@ -4,7 +4,9 @@
             [mount.core :as mount]
             [bass4.db.core]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]))
+            [clojure.test]
+            [clojure.tools.logging :as log]
+            [bass4.middleware.core :as mw]))
 
 (defn get-edn
   [edn]
@@ -18,11 +20,9 @@
     #'bass4.config/env
     #'bass4.db.core/db-configs
     #'bass4.i18n/i18n-map)
-  #_(migrations/migrate ["migrate"] (select-keys env [:database-url]))
   (bass4.db.core/init-repl :test)
-  (binding [clojure.test/*stack-trace-depth*  5
-            bass4.middleware.core/*skip-csrf* true]
-    (log/debug bass4.middleware.core/*skip-csrf*)
+  (binding [clojure.test/*stack-trace-depth* 5
+            mw/*skip-csrf*                   true]
     (f)))
 
 (defn debug-headers-text?

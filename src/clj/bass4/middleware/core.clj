@@ -57,20 +57,16 @@
       (handler request))))
 
 (def ^:dynamic *skip-csrf* false)
-(log/debug "reloading middleware core")
 (defn csrf-wrapper
   [handler request]
   (if *skip-csrf*
-    (do (log/debug "skipped CSRFx")
-        (handler request))
-    (do
-      (log/debug "NOT SKIPPING CSRF")
-      ((wrap-anti-forgery
-         handler
-         {:error-response
-          (error-page
-            {:status 403
-             :title  "Invalid anti-forgery token"})}) request))))
+    (handler request)
+    ((wrap-anti-forgery
+       handler
+       {:error-response
+        (error-page
+          {:status 403
+           :title  "Invalid anti-forgery token"})}) request)))
 
 (defn wrap-csrf [handler]
   (fn [request]
