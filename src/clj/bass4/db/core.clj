@@ -67,7 +67,7 @@
 
 
 
-(defn connect!
+#_(defn connect!
   [db-config]
   (let [res (map-map
               (fn [pool-spec]
@@ -81,11 +81,11 @@
     #_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
     res))
 
-(defn database-configs []
+#_(defn database-configs []
   (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
 
 ;; Disconnect from all databases in db-connections
-(defn disconnect!
+#_(defn disconnect!
   [db-connections]
   (doall
     (map (fn [db]
@@ -99,7 +99,7 @@
 
 ;; Establish connections to all databases
 ;; and store connections in db-configs
-(defstate db-configs
+#_(defstate db-configs
   :start (connect!
            (database-configs))
   :stop (disconnect! db-configs))
