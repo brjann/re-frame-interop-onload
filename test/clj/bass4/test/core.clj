@@ -22,6 +22,7 @@
   (bass4.db.core/init-repl :test)
   (binding [clojure.test/*stack-trace-depth*  5
             bass4.middleware.core/*skip-csrf* true]
+    (log/debug bass4.middleware.core/*skip-csrf*)
     (f)))
 
 (defn debug-headers-text?

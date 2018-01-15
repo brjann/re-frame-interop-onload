@@ -31,7 +31,7 @@
             [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [request-state]]
             [bass4.middleware.ajax-post :refer [ajax-post]]
-            [bass4.middleware.embedded :refer [embedded]]
+            [bass4.middleware.embedded :refer [embedded-mw embedded-iframe]]
             [bass4.middleware.errors :refer [internal-error]]
             [ring.util.http-response :as response]
             [ring.util.response :as response-utils]
@@ -57,16 +57,20 @@
       (handler request))))
 
 (def ^:dynamic *skip-csrf* false)
+(log/debug "reloading middleware core")
 (defn csrf-wrapper
   [handler request]
   (if *skip-csrf*
-    (handler request)
-    ((wrap-anti-forgery
-       handler
-       {:error-response
-        (error-page
-          {:status 403
-           :title  "Invalid anti-forgery token"})}) request)))
+    (do (log/debug "skipped CSRFx")
+        (handler request))
+    (do
+      (log/debug "NOT SKIPPING CSRF")
+      ((wrap-anti-forgery
+         handler
+         {:error-response
+          (error-page
+            {:status 403
+             :title  "Invalid anti-forgery token"})}) request))))
 
 (defn wrap-csrf [handler]
   (fn [request]
@@ -225,13 +229,12 @@
       ;; Else the actual functions are passed as arguments
       (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions
-      (wrap-mw-fn #'embedded)
+      (wrap-mw-fn #'embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'ajax-post)
       wrap-auth
       wrap-reload-headers
-      ;;File-php-wrapper
       wrap-webjars
       wrap-flash
       (wrap-mw-fn #'session-state)
@@ -248,12 +251,9 @@
           #_site-defaults
           (assoc-in [:security :anti-forgery] false)
 
-          ;; DID NOT WORK OUT BECAUSE OF THIRD PARTY COOKIES
-          ;; Remove frame-options and instead add on route-basis, to allow embedding.
-          ;; (update-in [:security] dissoc :frame-options)
-
           (dissoc :session)))
       wrap-context
+      (wrap-mw-fn #'embedded-iframe)                        ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'internal-error)
       (wrap-mw-fn #'request-state)
       (wrap-mw-fn #'debug-redefs)))

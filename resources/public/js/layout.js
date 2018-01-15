@@ -34,6 +34,10 @@ $(document).ready(function () {
 	 --------------
 	 */
 
+	$('.markdown').find('img').addClass('img-fluid');
+	$('.markdown').find('table').addClass('table');
+	$('.markdown').find('textarea').addClass('form-control');
+
 	var module_text = $('#module-text');
 	if (module_text.length) {
 

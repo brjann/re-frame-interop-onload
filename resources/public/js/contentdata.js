@@ -1,9 +1,5 @@
 $(document).ready(function () {
 
-	$('.markdown').find('img').addClass('img-fluid');
-	$('.markdown').find('table').addClass('table');
-	$('.markdown').find('textarea').addClass('form-control');
-
 	$('.treatment-content').each(function () {
 		content_prepend_names($(this));
 		content_setup_statics($(this));

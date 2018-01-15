@@ -7,7 +7,8 @@
             [bass4.test.core :refer [test-fixtures not-text?]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -55,6 +56,7 @@
         (has (some-text? "Thanks top")))))
 
 (deftest group-assessment-concurrent
+  (log/debug bass4.middleware.core/*skip-csrf*)
   (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
     (let [s1 (-> (session (app))

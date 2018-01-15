@@ -26,4 +26,8 @@
       (GET "/content-example/:content-id" [content-id]
         (content-example/edit-example (str->int content-id)))
       (POST "/content-example/:content-id" [content-id & params]
-        (modules/save-worksheet-data content-id (json-safe (:content-data params)))))))
+        (modules/save-worksheet-data content-id (json-safe (:content-data params))))
+      (GET "/render" [& params]
+        (layout/render "render.html"
+                       {:text     (:text params)
+                        :markdown (:markdown params)})))))
