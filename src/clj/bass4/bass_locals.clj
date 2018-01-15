@@ -8,12 +8,12 @@
             [clojure.tools.logging :as log]
             [clojure.set :as set]))
 
-(def db-defaults
+(def local-defaults
   {:time-zone "America/Puerto_Rico"
    :language  "en"})
 
 (def ^:dynamic *local-config*
-  db-defaults)
+  local-defaults)
 
 (defn time-zone
   []

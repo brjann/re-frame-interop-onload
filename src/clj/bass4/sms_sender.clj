@@ -7,7 +7,8 @@
             [bass4.db.core :as db]
             [bass4.services.bass :as bass-service]
             [selmer.parser :as parser]
-            [bass4.request-state :as request-state])
+            [bass4.request-state :as request-state]
+            [bass4.bass-locals :as locals])
   (:import (java.io StringReader)))
 
 (defn smsteknik-url
@@ -44,16 +45,16 @@
 ;; Overwritten by other function when in debug mode
 (defn send-db-sms!
   [recipient message]
-  (let [config (:common db/db-configs)
+  (let [config (locals/common-config)
         url    (smsteknik-url
-                 (:SMSTEKNIK_ID config)
-                 (:SMSTEKNIK_USER config)
-                 (:SMSTEKNIK_PASSWORD config))
+                 (:smsteknik-id config)
+                 (:smsteknik-user config)
+                 (:smsteknik-password config))
         xml    (smsteknik-xml
                  recipient
                  message
                  (bass-service/db-sms-sender)
-                 (:SMSTEKNIK_STATUS_RETURN_URL config))
+                 (:smsteknik-status-return-url config))
         res    (:body (http/post url {:body xml}))]
     (if (= "0" (subs res 0 1))
       (sms-error recipient message res)
