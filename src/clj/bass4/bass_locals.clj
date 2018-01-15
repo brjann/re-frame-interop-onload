@@ -1,8 +1,12 @@
 (ns bass4.bass-locals
   (:require [ring.util.codec :refer [url-encode]]
-            [bass4.utils :refer [map-map parse-php-constants]]
+            [bass4.utils :refer [map-map parse-php-constants filter-map]]
             [clojure.java.io :as io]
-            [clojure.tools.logging :as log]))
+            [clojure.string :as string]
+            [bass4.config :as config]
+            [mount.core :refer [defstate]]
+            [clojure.tools.logging :as log]
+            [clojure.set :as set]))
 
 (def db-defaults
   {:time-zone "America/Puerto_Rico"
@@ -61,3 +65,52 @@
                                         (:DB_COMMON_NAME common)
                                         (:DB_COMMON_USER common)
                                         (:DB_COMMON_PWD common))})))))
+
+(defn check-keys
+  [local-config]
+  (set/subset? #{:db-host :db-name :db-user :db-password} (set (keys local-config))))
+
+(defn- fix-keys
+  [m]
+  (zipmap (mapv #(-> %
+                     name
+                     string/lower-case
+                     (string/replace "_" "-")
+                     (string/replace "pwd" "password")
+                     (string/replace "db-time-zone" "time-zone")
+                     (string/replace "db-common-" "db-")
+                     keyword)
+                (keys m)) (vals m)))
+
+(defn parse-local-2 [file]
+  (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
+    {(keyword db-name)
+     (-> (slurp file)
+         (parse-php-constants)
+         fix-keys
+         (assoc :name db-name))}))
+
+(defn load-local-configs
+  [bass-path]
+  (reduce merge (map parse-local-2 (get-locals bass-path))))
+
+(defn load-local-configs
+  [bass-path]
+  (->> (get-locals bass-path)
+       (map parse-local-2)
+       (reduce merge)
+       (filter-map check-keys)))
+
+(defstate local-configs
+  :start (load-local-configs (config/env :bass-path)))
+
+(defn load-common-config
+  [bass-path]
+  (-> (io/file bass-path "local.php")
+      slurp
+      (parse-php-constants)
+      fix-keys
+      (assoc :name "common")))
+
+(defstate common-config
+  :start (load-common-config (config/env :bass-path)))

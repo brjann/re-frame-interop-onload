@@ -1,8 +1,10 @@
 (ns bass4.db.core
   (:require
     [clojure.java.jdbc :as jdbc]
+    [ring.util.codec :refer [url-encode]]
     [bass4.utils :refer [map-map filter-map time+ val-to-bool]]
     [conman.core :as conman]
+    [clojure.set :as set]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
     [bass4.bass-locals :as locals]
@@ -98,8 +100,8 @@
 
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
-        host (keyword (request-host request))
-        matching (or (get db-mappings host) (:default db-mappings))]
+        host        (keyword (request-host request))
+        matching    (or (get db-mappings host) (:default db-mappings))]
     (if (contains? db-configs matching)
       (get db-configs matching)
       (throw (Exception. (str "No db present for key " matching " mappings: " db-mappings))))))
@@ -114,7 +116,7 @@
   [handler request]
   (let [db-config (resolve-db request)]
     (request-state/set-state! :name (:name db-config))
-    (binding [*db* @(:db-conn db-config)
+    (binding [*db*                    @(:db-conn db-config)
               bass-locals/*db-config* (cprop.tools/merge-maps bass-locals/db-defaults (filter-map identity db-config))]
       (handler request))))
 
@@ -157,3 +159,45 @@
 (defmethod hugsql.core/hugsql-command-fn :? [sym] 'bass4.db.core/sql-wrapper-query)
 (defmethod hugsql.core/hugsql-command-fn :query [sym] 'bass4.db.core/sql-wrapper-query)
 (defmethod hugsql.core/hugsql-command-fn :default [sym] 'bass4.db.core/sql-wrapper-query)
+
+(defn- build-db-url2
+  [host port name user password]
+  (str "jdbc:mysql://" host
+       ":" port
+       "/" (url-encode name)
+       "?user=" (url-encode user)
+       "&password=" (url-encode password)))
+
+(defn db-url2
+  [local-config port]
+  (build-db-url2
+    (:db-host local-config)
+    port
+    (:db-name local-config)
+    (:db-user local-config)
+    (:db-password local-config)))
+
+(defn db-connect!
+  [local-config]
+  (let [url (db-url2 local-config (env :database-port))]
+    (delay
+      (log/info (str "Attaching " (:name local-config)))
+      (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
+
+#_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
+
+(defn db-disconnect!
+  [db-conn]
+  (when (realized? db-conn)
+    (log/info (str "Detaching db"))
+    (conman/disconnect! @db-conn)))
+
+(defstate db-connections
+  :start (map-map db-connect!
+                  locals/local-configs)
+  :stop (map-map db-disconnect!
+                 db-connections))
+
+(defstate db-commmon
+  :start @(db-connect! locals/common-config)
+  :stop (conman/disconnect! db-commmon))
