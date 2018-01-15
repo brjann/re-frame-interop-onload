@@ -41,3 +41,12 @@
   (-> (session (app))
       (visit "/embedded/instrument/hell-is-here")
       (has (status? 403))))
+
+(deftest embedded-render
+  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "render"})]
+    (-> (session (app))
+        (visit "/embedded/render")
+        (has (status? 403))
+        (visit "/embedded/render?uid=xx&text=Hejsan")
+        (has (status? 200))
+        (has (some-text? "Hejsan")))))
