@@ -16,7 +16,7 @@
             PreparedStatement]))
 
 ;; TODO: Do Latin1 connections need to be handled?
-(defn- build-db-url2
+(defn- build-db-url
   [host port name user password]
   (str "jdbc:mysql://" host
        ":" port
@@ -24,9 +24,9 @@
        "?user=" (url-encode user)
        "&password=" (url-encode password)))
 
-(defn db-url2
+(defn db-url
   [local-config port]
-  (build-db-url2
+  (build-db-url
     (:db-host local-config)
     port
     (:db-name local-config)
@@ -35,7 +35,7 @@
 
 (defn db-connect!
   [local-config]
-  (let [url (db-url2 local-config (env :database-port))]
+  (let [url (db-url local-config (env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
       (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
@@ -54,7 +54,8 @@
 
 (defstate db-common
   :start @(db-connect! locals/common-config)
-  :stop (conman/disconnect! db-common))
+  :stop (do (log/info "Detaching common")
+            (conman/disconnect! db-common)))
 
 
 ;; Bind queries to *db* dynamic variable which is bound
