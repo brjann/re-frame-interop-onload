@@ -3,6 +3,7 @@
             [clojure.edn :as edn]
             [mount.core :as mount]
             [bass4.db.core]
+            [bass4.bass-locals :as locals]
             [clojure.string :as string]
             [clojure.test]
             [clojure.tools.logging :as log]
@@ -18,7 +19,10 @@
   [f]
   (mount/start
     #'bass4.config/env
-    #'bass4.db.core/db-configs
+    #'locals/local-configs
+    #'locals/common-config
+    #'bass4.db.core/db-connections
+    #'bass4.db.core/db-common
     #'bass4.i18n/i18n-map)
   (bass4.db.core/init-repl :test)
   (binding [clojure.test/*stack-trace-depth* 5
