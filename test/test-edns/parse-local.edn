@@ -1,5 +1,0 @@
-{:db-url
-            "jdbc:mysql://localhost:3300/bass4_test?user=root&password=root",
- :time-zone "Asia/Tokyo",
- :lang "en",
- :name "test"}

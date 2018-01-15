@@ -15,7 +15,7 @@
             BatchUpdateException
             PreparedStatement]))
 
-
+;; TODO: Do Latin1 connections need to be handled?
 (defn- build-db-url2
   [host port name user password]
   (str "jdbc:mysql://" host
@@ -40,8 +40,6 @@
       (log/info (str "Attaching " (:name local-config)))
       (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
 
-#_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
-
 (defn db-disconnect!
   [db-conn]
   (when (realized? db-conn)
@@ -62,47 +60,6 @@
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
 (def ^:dynamic *db* nil)
-#_(def ^:dynamic *db-common* nil)
-
-
-
-
-#_(defn connect!
-  [db-config]
-  (let [res (map-map
-              (fn [pool-spec]
-                (assoc pool-spec :db-conn
-                                 (delay
-                                   (do
-                                     (log/info (str "Attaching " (:db-url pool-spec)))
-                                     ;;TODO: &serverTimezone=UTC WTF????
-                                     (conman/connect! {:jdbc-url (str (:db-url pool-spec) "&serverTimezone=UTC")})))))
-              db-config)]
-    #_(alter-var-root (var *db-common*) (constantly @(get-in res [:common :db-conn])))
-    res))
-
-#_(defn database-configs []
-  (locals/get-bass-db-configs (env :bass-path) (env :database-port)))
-
-;; Disconnect from all databases in db-connections
-#_(defn disconnect!
-  [db-connections]
-  (doall
-    (map (fn [db]
-           (let [db-conn (:db-conn (val db))]
-             (when (realized? db-conn)
-               (do
-                 (log/info (str "Detaching " (key db)))
-                 (conman/disconnect! @db-conn)))))
-         db-connections)))
-
-
-;; Establish connections to all databases
-;; and store connections in db-configs
-#_(defstate db-configs
-  :start (connect!
-           (database-configs))
-  :stop (disconnect! db-configs))
 
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
