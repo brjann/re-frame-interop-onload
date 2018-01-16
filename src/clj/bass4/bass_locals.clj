@@ -53,10 +53,6 @@
 
 (defn- load-local-configs
   [bass-path]
-  (reduce merge (map parse-local (get-locals bass-path))))
-
-(defn- load-local-configs
-  [bass-path]
   (->> (get-locals bass-path)
        (map parse-local)
        (reduce merge)
