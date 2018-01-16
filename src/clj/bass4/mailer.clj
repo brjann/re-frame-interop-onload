@@ -9,14 +9,14 @@
   ([to subject message reply-to]
    (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
          args        (into {}
+                           ;; Removes nil elements
                            (filter second
                                    {"to" to "subject" subject "message" message "reply-to" reply-to}))
-         res (shell/sh "php" (str mailer-path) :in (clj->php args))]
+         res         (shell/sh "php" (str mailer-path) :in (clj->php args))]
      res
      (when (not= 0 (:exit res))
        (throw (Exception. (str (:out res)))))
      true)))
-
 
 ;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
 (defn- match-regex?
