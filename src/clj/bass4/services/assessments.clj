@@ -137,6 +137,10 @@
                        :else (let [activation-date (get-activation-date administration assessment)
                                    time-limit (get-time-limit assessment)]
                                (cond
+                                 ;; REMEMBER:
+                                 ;; activation-date is is UTC time of activation,
+                                 ;; NOT local time. Thus, it is sufficient to compare
+                                 ;; to t/now which returns UTC time
                                  (nil? activation-date) "AS_NO_DATE"
                                  (t/before? (t/now) activation-date) "AS_WAITING"
                                  (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit)))) "AS_DATE_PASSED"
@@ -144,9 +148,9 @@
 
 (defn- get-assessment-statuses [administrations assessments]
   (when (seq administrations)
-    (let [next-administrations (get-assessment-statuses (rest administrations) assessments)
+    (let [next-administrations   (get-assessment-statuses (rest administrations) assessments)
           current-administration (first administrations)
-          current-assessment (get assessments (:assessment-id current-administration))]
+          current-assessment     (get assessments (:assessment-id current-administration))]
       (when (nil? current-assessment)
         (throw (Exception. (str "Assessment ID: " (:assessment-id current-administration) " does not exist."))))
       (cons (get-administration-status current-administration (last (first next-administrations)) current-assessment) next-administrations))))

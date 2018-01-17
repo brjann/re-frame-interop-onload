@@ -5,6 +5,7 @@
             [markdown.transformers :as md-transformers]
             [markdown.lists :refer :all]
             [bass4.config :refer [env]]
+            [bass4.time :as b-time]
             [ring.util.http-response :refer [content-type ok]]
             [ring.util.response :refer [status] :as ring-response]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
@@ -71,7 +72,7 @@
         (#(cons remove-comments %)))))
 
 (declare ^:dynamic *app-context*)
-(parser/set-resource-path!  (clojure.java.io/resource "templates"))
+(parser/set-resource-path! (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
 #_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
 (filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
@@ -119,8 +120,8 @@
   ([] (error-400-page nil))
   ([message]
    (error-page {:status  400
-                       :title   "Bad request!"
-                       :message message})))
+                :title   "Bad request!"
+                :message message})))
 
 (defn error-404-page
   ([] (error-404-page (i18n/tr [:error/page-not-found-longer])))
@@ -137,8 +138,8 @@
      (throw (ex-info (str "400" sep message) {})))))
 
 #_(defn text-response
-  [var]
-  (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
+    [var]
+    (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
 
 (defn text-response
   [var]
@@ -160,10 +161,23 @@
              (split (get-in content [:trb :content]) #"[|]")))
   :endtrb)
 
+#_(filters/add-filter!
+    :datetime-ns
+    (fn [val]
+      (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (bass/time-zone)) (tc/from-date val))))
+
+
+
+(defn datetime-str
+  [val resource-id]
+  (-> (i18n/tr [resource-id])
+      (f/formatter (bass/time-zone))
+      (f/unparse (tc/from-date val))))
+
 (filters/add-filter!
   :datetime-ns
   (fn [val]
-    (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (bass/time-zone)) (tc/from-date val))))
+    (datetime-str val :date-time/datetime-ns)))
 
 (defn route-not-found
   "Replacement function for route/not-found, which messes with the translation,
@@ -176,3 +190,21 @@
       (-> (response/render body request)
           (status 404)
           (cond-> (= (:request-method request) :head) (assoc :body nil))))))
+
+(defn day-diff-str
+  [day-diff]
+  (cond
+    (zero? day-diff) (i18n/tr [:date-time/today])
+    (= 1 day-diff) (i18n/tr [:date-time/yesterday])
+    (and (>= 7 day-diff) (< 0 day-diff)) (i18n/tr [:date-time/days-ago] [(i18n/tr [(keyword "number" (str day-diff))])])
+    (= -1 day-diff) (i18n/tr [:date-time/tomorrow])
+    (<= -7 day-diff) (i18n/tr [:date-time/in-days] [(i18n/tr [(keyword "number" (str (- day-diff)))])])))
+
+
+(defn datetime-nice-str
+  [datetime]
+  (let [day-diff (-> datetime
+                     (tc/from-date)
+                     (b-time/days-since (bass/time-zone)))
+        day-str  (day-diff-str day-diff)]
+    (or day-str (datetime-str datetime :date-time/date))))

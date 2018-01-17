@@ -19,8 +19,15 @@
                    :must-specify-1  "You must provide a specification to your answer."
                    :must-specify-m  "You must provide specifications to your answers."
                    :order-count     "Questionnaire %1 of %2"}
- :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"}
- :messages        {:from-therapist "From %1 on %2"
+ :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"
+                   :date        "yyyy-MM-dd"
+                   :today       "today"
+                   :tomorrow    "tomorrow"
+                   :in-days     "in %1 days"
+                   :yesterday   "yesterday"
+                   :days-ago    "%1 days ago"}
+ :messages        {:sent-on-from   "Sent %1 by %2"
+                   :from-therapist "From %1 on %2"
                    :must-message   "Please write message text"
                    :subject        "Message subject"
                    :text           "Message text"
@@ -62,4 +69,14 @@
                    :timeout-hard          "You have been logged out. You will be redirected to the login page."
                    :try-reload            "Something is wrong and your data cannot be submitted. Try resubmitting again or reloading the page."
                    :not-authorized        "Not authorized."
-                   :not-authorized-longer "You are not authorized to view this page."}}
+                   :not-authorized-longer "You are not authorized to view this page."}
+ :number          {:1  "one"
+                   :2  "two"
+                   :3  "three"
+                   :4  "four"
+                   :5  "five"
+                   :6  "six"
+                   :7  "seven"
+                   :8  "eight"
+                   :9  "nine"
+                   :10 "ten"}}
