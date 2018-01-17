@@ -26,7 +26,7 @@
             (-> treatment-access
                 (unserialize-key :module-accesses)
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
-                (#(assoc % :modules-activation-timestamp (filter-map (complement zero?) (:module-accesses %))))
+                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/bool-cols
@@ -111,9 +111,8 @@
                                     (:modules-automatic-access treatment))
                                   (:module-id %)))
         activation-date-fn #(when (and (:modules-manual-access treatment))
-                              (fnil+ b-time/from-unix
-                                     (get-in treatment-access
-                                             [:modules-activation-timestamp (:module-id %)])))]
+                              (get-in treatment-access
+                                      [:modules-activation-dates (:module-id %)]))]
     (map #(merge %
                  {:active          (active-fn %)
                   :activation-date (activation-date-fn %)})
