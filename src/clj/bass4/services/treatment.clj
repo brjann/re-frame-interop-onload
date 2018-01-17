@@ -4,9 +4,10 @@
             [clj-time.coerce :as c]
             [bass4.time :as b-time]
             [clojure.set]
-            [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean?]]
+            [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean? fnil+]]
             [bass4.services.messages :as messages]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.tools.logging :as log]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -25,7 +26,7 @@
             (-> treatment-access
                 (unserialize-key :module-accesses)
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
-                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (:module-accesses %))))
+                (#(assoc % :modules-activation-timestamp (filter-map (complement zero?) (:module-accesses %))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/bool-cols
@@ -101,15 +102,26 @@
       (:access-enabled treatment-access)
       true)))
 
+(defn modules-component
+  [treatment-access treatment]
+  (let [active-fn          #(or (not (:modules-manual-access treatment))
+                                (contains?
+                                  (clojure.set/union
+                                    (:modules-active treatment-access)
+                                    (:modules-automatic-access treatment))
+                                  (:module-id %)))
+        activation-date-fn #(when (and (:modules-manual-access treatment))
+                              (fnil+ b-time/from-unix
+                                     (get-in treatment-access
+                                             [:modules-activation-timestamp (:module-id %)])))]
+    (map #(merge %
+                 {:active          (active-fn %)
+                  :activation-date (activation-date-fn %)})
+         (:modules treatment))))
+
 (defn user-components
   [treatment-access treatment]
-  {:modules       (map #(assoc % :active (or (not (:modules-manual-access treatment))
-                                             (contains?
-                                               (clojure.set/union
-                                                 (:modules-active treatment-access)
-                                                 (:modules-automatic-access treatment))
-                                               (:module-id %))))
-                       (:modules treatment))
+  {:modules       (modules-component treatment-access treatment)
    :messaging     true
    :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
