@@ -19,6 +19,10 @@
     (t/from-time-zone (t/now) time-zone)
     (t/from-time-zone then time-zone)))
 
+
+(defn from-unix
+  [timestamp]
+  (tc/from-long (* 1000 timestamp)))
 #_(defn day-diff-since
     [today then]
     (t/day then))

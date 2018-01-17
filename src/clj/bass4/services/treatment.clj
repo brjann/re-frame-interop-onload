@@ -1,7 +1,8 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
-            [clj-time.coerce]
+            [clj-time.coerce :as c]
+            [bass4.time :as b-time]
             [clojure.set]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean?]]
             [bass4.services.messages :as messages]
@@ -19,16 +20,20 @@
 
 (defn- user-treatment-accesses
   [user-id]
-  (mapv (fn [treatment-access]
-          (-> treatment-access
-              (unserialize-key :module-accesses #(into #{} (keys (filter-map identity (map-map val-to-bool %)))))
-              (#(assoc % :submitted-homeworks (submitted-homeworks %)))))
-        (db/bool-cols
-          db/get-treatment-accesses
-          {:user-id user-id}
-          [:access-enabled
-           :messages-send-allowed
-           :messages-receive-allowed])))
+  (let [active-modules #(into #{} (keys (filter-map identity (map-map val-to-bool %))))]
+    (mapv (fn [treatment-access]
+            (-> treatment-access
+                (unserialize-key :module-accesses)
+                (#(assoc % :modules-active (active-modules (:module-accesses %))))
+                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (:module-accesses %))))
+                (#(assoc % :submitted-homeworks (submitted-homeworks %)))
+                (dissoc :module-accesses)))
+          (db/bool-cols
+            db/get-treatment-accesses
+            {:user-id user-id}
+            [:access-enabled
+             :messages-send-allowed
+             :messages-receive-allowed]))))
 
 (defn- categorize-module-contents
   [contents]
@@ -77,17 +82,6 @@
            {:modules modules})))
 
 
-;	public function getRemainingTreatmentDuration(){
-;		if($this->Treatment->AccessStartAndEndDate){
-;			if(getMidnight() < $this->StartDate) return 0;
-;			return getDateSpan(getMidnight(), $this->EndDate);
-;		}
-;		if(!$this->Treatment->AccessEnablingRequired) return 1;
-;		if($this->Treatment->AccessEnablingRequired) return (int)$this->AccessEnabled;
-;		return 0;
-;	}
-
-;; TODO: Could all clj-time coerce be done in the db layer?
 (defn- convert-dates
   [treatment-access]
   [(clj-time.coerce/from-sql-date (:start-date treatment-access))
@@ -111,18 +105,13 @@
   [treatment-access treatment]
   {:modules       (map #(assoc % :active (contains?
                                            (clojure.set/union
-                                             (:module-accesses treatment-access)
+                                             (:modules-active treatment-access)
                                              (:modules-automatic-access treatment))
                                            (:module-id %)))
                        (:modules treatment))
    :messaging     true
    :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
-#_(defn user-components
-    [treatment-access treatment]
-    {:modules       (map #(assoc % :active (contains? (:module-accesses treatment-access) (:module-id %))) (:modules treatment))
-     :messages      true
-     :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
 
 ;; TODO: BulletinBoard!?
 (defn user-treatment
@@ -141,14 +130,6 @@
        :new-messages?    (messages/new-messages? user-id)
        :user-components  (user-components treatment-access treatment)
        :treatment        treatment})))
-
-#_(defn user-treatment
-    [user-id]
-    (if-let [treatment-access (first (user-treatment-accesses user-id))]
-      (let [treatment (treatment-map (:treatment-id treatment-access))]
-        {:treatment-access treatment-access
-         :user-components  (user-components treatment-access treatment)
-         :treatment        treatment})))
 
 (defn submit-homework!
   [treatment-access module]
