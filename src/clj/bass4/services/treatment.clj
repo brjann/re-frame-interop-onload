@@ -48,11 +48,15 @@
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
 
-;; TODO: Remove c_module from SQL query
 (defn get-module-contents
   [module-id]
   (let [contents (db/get-module-contents {:module-ids [module-id]})]
     (categorize-module-contents contents)))
+
+(defn get-multiple-module-contents
+  [module-ids]
+  (let [contents (db/get-module-contents {:module-ids module-ids})]
+    (map-map categorize-module-contents (group-by :module-id contents))))
 
 (defn treatment-map
   [treatment-id]

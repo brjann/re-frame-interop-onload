@@ -107,11 +107,13 @@
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn modules-list [render-map modules]
-  (layout/render
-    "modules-list.html"
-    (merge render-map
-           {:modules    modules
-            :page-title (i18n/tr [:modules/modules])})))
+  (let [module-contents      (treatment-service/get-multiple-module-contents (mapv :module-id modules))
+        modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
+    (layout/render
+      "modules-list.html"
+      (merge render-map
+             {:modules    modules
+              :page-title (i18n/tr [:modules/modules])}))))
 
 (defn- handle-content-data
   [data-map treatment-access-id]
