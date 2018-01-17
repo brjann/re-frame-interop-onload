@@ -103,11 +103,12 @@
 
 (defn user-components
   [treatment-access treatment]
-  {:modules       (map #(assoc % :active (contains?
-                                           (clojure.set/union
-                                             (:modules-active treatment-access)
-                                             (:modules-automatic-access treatment))
-                                           (:module-id %)))
+  {:modules       (map #(assoc % :active (or (not (:modules-manual-access treatment))
+                                             (contains?
+                                               (clojure.set/union
+                                                 (:modules-active treatment-access)
+                                                 (:modules-automatic-access treatment))
+                                               (:module-id %))))
                        (:modules treatment))
    :messaging     true
    :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
