@@ -7,18 +7,30 @@
 
 
         <!-- MODULE ACTIVE INFO -->
-        <h3><a href="/user/module/{{module.module-id}}/">{{module.module-name}}</a></h3>
+        <h3>{{module.module-name}}</h3>
 
         {% if module.activation-date %}
         <p>{% tr modules/activated %} {{module.activation-date|nice-date}}</p>
         {% endif %}
+
+        {% if module.contents.main-texts %}
+        <p><a href="/user/module/{{module.module-id}}/">{% tr modules/read-module-text %}</a></p>
+        {% endif %}
+
         <!-- END MODULE ACTIVE INFO -->
 
 
         <!-- START HOMEWORK-->
-        {% if module.contents.worksheets %}
-        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a></h5>
-        {% endif %}
+        {% if module.contents.homework %}
+        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a>
+            {% ifequal module.homework-status :ok %}
+            <span class="badge badge-success">{% tr modules/submitted-ok-short! %}</span>
+            {% endifequal %}
+            {% ifequal module.homework-status :submitted %}
+            <span class="badge badge-info">{% tr modules/submitted-waiting-short! %}</span>
+            {% endifequal %}
+            {% endif %}
+        </h5>
         <!-- END HOMEWORK-->
 
 
