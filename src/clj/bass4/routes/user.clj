@@ -95,7 +95,10 @@
 
         ;; MODULES
         (GET "/modules" []
-          (modules-response/modules-list render-map (:modules (:user-components treatment))))
+          (modules-response/modules-list
+            render-map
+            (:modules (:user-components treatment))
+            (get-in treatment [:treatment-access :treatment-access-id])))
         (context "/module/:module-id" [module-id]
           (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
                                (some #(and (:active %) %)))]

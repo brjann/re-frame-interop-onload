@@ -45,6 +45,7 @@ ORDER BY lct.SortOrder;
 SELECT DISTINCT
   cm.ObjectId      AS `module-id`,
   ctc.ObjectId     AS `content-id`,
+  ctc.DataName     AS `data-name`,
   ctc.`Name`       AS `content-name`,
   lcm.PropertyName AS `type`
 FROM c_module as cm
@@ -59,12 +60,12 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 -- :doc
 SELECT
   Text,
-  IsMarkDown AS `markdown`,
+  IsMarkDown  AS `markdown`,
   ShowExample AS `show-example`,
-  Tabbed AS `tabbed`,
-  DataName   AS `data-name`,
-  `Name`       AS `content-name`,
-  ImportData AS `data-imports`
+  Tabbed      AS `tabbed`,
+  DataName    AS `data-name`,
+  `Name`      AS `content-name`,
+  ImportData  AS `data-imports`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
 

@@ -60,9 +60,11 @@
   (let [contents (db/get-module-contents {:module-ids [module-id]})]
     (categorize-module-contents contents)))
 
-(defn get-multiple-module-contents
-  [module-ids]
-  (let [contents (db/get-module-contents {:module-ids module-ids})]
+(defn get-module-contents-with-update-time
+  [module-ids treatment-access-id]
+  (let [last-updates (map-map first (group-by :data-name (db/get-content-data-last-save {:data-owner-id treatment-access-id})))
+        contents     (->> (db/get-module-contents {:module-ids module-ids})
+                          (mapv #(assoc % :data-updated (get-in last-updates [(:data-name %) :time]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 
 (defn treatment-map

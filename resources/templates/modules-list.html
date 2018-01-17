@@ -45,7 +45,12 @@
         {% if module.contents.worksheets %}
         <h5>{% tr modules/worksheets %}</h5>
         {% for worksheet in module.contents.worksheets %}
-        <p><a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">{{worksheet.content-name}}</a>
+        <p>
+            <a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">{{worksheet.content-name}}</a>
+            {% if worksheet.data-updated %}
+            <small class="text-muted"><span class="fa fa-pencil"></span>&nbsp;{{worksheet.data-updated|nice-datetime}}
+            </small>
+            {% endif %}
         </p>
         {% endfor %}
         {% endif %}
