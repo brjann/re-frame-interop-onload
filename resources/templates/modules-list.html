@@ -4,9 +4,26 @@
 <div class="row list">
     <div class="col-sm-12 col-md-6">
         {% if module.active %}
-        <a href="/user/module/{{module.module-id}}/">{{module.module-name}}</a>
+
+
+        <!-- MODULE ACTIVE INFO -->
+        <h3><a href="/user/module/{{module.module-id}}/">{{module.module-name}}</a></h3>
+
+        {% if module.activation-date %}
+        <p>{% tr modules/activated %} {{module.activation-date|nice-date}}</p>
+        {% endif %}
+        <!-- END MODULE ACTIVE INFO -->
+
+
+        <!-- START HOMEWORK-->
+        {% if module.contents.worksheets %}
+        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a></h5>
+        {% endif %}
+        <!-- END HOMEWORK-->
+
+
         {% else %}
-        {{module.module-name}}
+        <h3>{{module.module-name}}</h3>
         {% endif %}
     </div>
     <div class="col-sm-12 col-md-6">
@@ -21,13 +38,6 @@
         {% endfor %}
         {% endif %}
         <!-- END WORKSHEETS -->
-
-
-        <!-- START HOMEWORK-->
-        {% if module.contents.worksheets %}
-        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a></h5>
-        {% endif %}
-        <!-- END HOMEWORK-->
 
         {% else %}
         Not available

@@ -201,6 +201,11 @@
   (fn [val]
     (str (date-nice-str val) " " (datetime-str val :date-time/time-ns))))
 
+(filters/add-filter!
+  :nice-date
+  (fn [val]
+    (str (date-nice-str val))))
+
 (defn route-not-found
   "Replacement function for route/not-found, which messes with the translation,
   because it has not been loaded yet.

@@ -37,6 +37,7 @@
                    :messages       "Messages"
                    :new-message    "You have a new message"}
  :modules         {:modules          "Modules"
+                   :activated        "Activated"
                    :module-text      "Module text"
                    :no-module        "This module does not exist"
                    :no-homework      "This module does not have homework"

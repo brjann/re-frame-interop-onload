@@ -26,7 +26,8 @@
             (-> treatment-access
                 (unserialize-key :module-accesses)
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
-                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
+                ;; This is pretty sick, but we have to convert from joda to java time because it gets converted again later
+                (#(assoc % :modules-activation-dates (map-map (comp c/to-date b-time/from-unix) (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/bool-cols

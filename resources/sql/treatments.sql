@@ -103,7 +103,7 @@ WHERE Id IN
     content_data_homework
   WHERE
     TreatmentAccessId = :treatment-access-id
-  GROUP BY ModuleId)
+  GROUP BY ModuleId);
 
 -- :name retract-homework! :! :1
 -- :doc
