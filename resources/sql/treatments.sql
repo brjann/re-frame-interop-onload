@@ -95,7 +95,7 @@ VALUES (:treatment-access-id, :module-id, unix_timestamp(now()), 0, 0, 0);
 SELECT
   Id AS `submit-id`,
   ModuleId AS `module-id`,
-  `Time`,
+  from_unixtime(`Time`) AS `Time`,
   OK
 FROM content_data_homework
 WHERE Id IN

@@ -113,10 +113,12 @@
                                   (:module-id %)))
         activation-date-fn #(when (and (:modules-manual-access treatment))
                               (get-in treatment-access
-                                      [:modules-activation-dates (:module-id %)]))]
+                                      [:modules-activation-dates (:module-id %)]))
+        homework-status-fn #(identity %)]
     (map #(merge %
                  {:active          (active-fn %)
-                  :activation-date (activation-date-fn %)})
+                  :activation-date (activation-date-fn %)
+                  :homework-status (homework-status-fn %)})
          (:modules treatment))))
 
 (defn user-components
