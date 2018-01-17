@@ -75,7 +75,6 @@
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
-
 (defn worksheet [treatment-access render-map module worksheet-id]
   (let [module-contents (treatment-service/get-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))

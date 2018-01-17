@@ -19,6 +19,7 @@
                                          (/ (apply + (:sql-times req-state)) 1000)),
                       :sql-max-time    (when (:sql-times req-state)
                                          (/ (apply max (:sql-times req-state)) 1000)),
+                      :sql-ops         (count (:sql-times req-state))
                       :user-id         (:user-id req-state),
                       :render-time     (/ time 1000),
                       :response-size   (count (:body val)),
