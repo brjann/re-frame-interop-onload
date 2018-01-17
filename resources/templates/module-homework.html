@@ -6,7 +6,7 @@
     {% if submitted.ok %}
     {% tr modules/submitted-ok %}
     {% else %}
-    {% trb modules/submitted-info %}{{time|datetime-ns}}{% endtrb %}
+    {% trb modules/submitted-waiting %}{{submitted.time|nice-datetime}}{% endtrb %}
     <form method="post" action="retract-homework">
         <button type="submit" class="btn btn-danger">{%tr modules/retract-homework %}</button>
     </form>
