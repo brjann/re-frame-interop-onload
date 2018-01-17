@@ -124,9 +124,9 @@
   [atom key val]
   (swap! atom #(assoc % key val)))
 
-;; -----------------
-;; PHP define PARSER
-;; -----------------
+;; -------------------
+;; PHP "define" PARSER
+;; -------------------
 (def regex-php-constant (let [q "(\"[^\"\\\\]*(\\\\(.|\\n)[^\"\\\\]*)*\"|'[^'\\\\]*(\\\\(.|\\n)[^'\\\\]*)*')"]
                           (re-pattern (str "define\\s*\\(\\s*" q "\\s*,\\s*" q "\\s*\\)\\s*;"))))
 
