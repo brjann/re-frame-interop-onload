@@ -42,9 +42,8 @@
                                   (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (layout/text-response req))
         (GET "/test" [:as req]
-          (let [{:keys [filename digits]} (captcha/captcha!)]
-            (layout/render "test.html"
-                           {:url (str "File.php?uid=" filename)})))
+          (layout/render "test.html"
+                         {:url :url}))
         (GET "/env" [:as req] (layout/text-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")

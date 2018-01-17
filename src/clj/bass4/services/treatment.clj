@@ -114,7 +114,11 @@
         activation-date-fn #(when (and (:modules-manual-access treatment))
                               (get-in treatment-access
                                       [:modules-activation-dates (:module-id %)]))
-        homework-status-fn #(identity %)]
+        homework-status-fn #(case (get-in treatment-access
+                                          [:submitted-homeworks (:module-id %) :ok])
+                              nil nil
+                              true :ok
+                              false :submitted)]
     (map #(merge %
                  {:active          (active-fn %)
                   :activation-date (activation-date-fn %)
