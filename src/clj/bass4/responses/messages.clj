@@ -6,16 +6,18 @@
             [schema.core :as s]
             [bass4.layout :as layout]))
 
-(defn messages-page [render-fn user]
+(defn messages-page [render-map user]
   (let [user-id  (:user-id user)
         messages (->> (messages-service/get-all-messages user-id)
                       (map #(assoc % :text (string/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
         draft    (messages-service/get-draft user-id)]
-    (render-fn "messages.html" {:user            user
-                                :title           "Messages"
-                                :page-title      "Messages"
-                                :messages        messages
-                                :draft           draft})))
+    (layout/render "messages.html"
+                   (merge render-map
+                          {:user       user
+                           :title      "Messages"
+                           :page-title "Messages"
+                           :messages   messages
+                           :draft      draft}))))
 
 (s/defn ^:always-validate save-message [user-id :- s/Int text :- s/Str]
   (messages-service/save-message! user-id text)

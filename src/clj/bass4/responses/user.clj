@@ -7,13 +7,8 @@
             [bass4.layout :as layout]))
 
 
-(defn user-page-renderer
+(defn user-page-map
   [treatment path]
-  (fn [template params]
-    (let [user-components (:user-components treatment)]
-      (layout/render
-        template
-        (merge params
-               user-components
-               {:path          path
-                :new-messages? (:new-messages? treatment)})))))
+  (merge (:user-components treatment)
+         {:path          path
+          :new-messages? (:new-messages? treatment)}))

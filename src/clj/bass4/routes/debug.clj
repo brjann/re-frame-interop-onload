@@ -64,6 +64,8 @@
                               :body "Sorry!"}))
         (GET "/403" [& params :as request]
           (layout/error-403-page (get-in request [:session :identity])))
+        (GET "/404!" [& params :as request]
+          (http-response/not-found!))
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]

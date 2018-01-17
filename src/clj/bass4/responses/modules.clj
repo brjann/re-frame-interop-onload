@@ -25,76 +25,68 @@
     (merge {:items (remove nil? (into [main-text homework] worksheets))}
            {:title (:module-name module)})))
 
-(defn- main-text-renderer
-  ;; TODO: How to handle multiple texts
-  ;; TODO: How to handle missing texts
-  [module]
-  (fn [module-render-fn module-contents]
-    (let [module-text-id (:content-id (first (:main-texts module-contents)))]
-      (module-render-fn
-        "module-main-text.html"
-        module-text-id
-        {:module-id  module-text-id
-         :page-title (:module-name module)}))))
 
+(defn module-content-renderer
+  [treatment-access render-map module module-contents template content-id & params-map]
+  (let [content      (treatment-service/get-content content-id)
+        data-name    (:data-name content)
+        content-data (content-data/get-content-data
+                       (:treatment-access-id treatment-access)
+                       (conj (:data-imports content) data-name))
+        params       (first params-map)]
+    (layout/render
+      template
+      (merge render-map
+             {:text         (:text content)
+              :markdown     (:markdown content)
+              :tabbed       (:tabbed content)
+              :show-example (:show-example content)
+              :content-id   content-id
+              :data-name    data-name
+              :content-data content-data
+              :context-menu (context-menu module module-contents)
+              :page-title   (:content-name content)}
+             params))))
 
-(defn- homework-renderer
-  [module submitted]
-  (fn [module-render-fn module-contents]
+(defn main-text [treatment-access render-map module]
+  (let [module-contents (treatment-service/get-module-contents (:module-id module))
+        module-text-id  (:content-id (first (:main-texts module-contents)))]
+    (module-content-renderer
+      treatment-access
+      render-map
+      module
+      module-contents
+      "module-main-text.html"
+      module-text-id
+      {:module-id  module-text-id
+       :page-title (:module-name module)})))
+
+(defn homework [treatment-access render-map module]
+  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
     (if-let [homework-id (:content-id (:homework module-contents))]
-      (module-render-fn
+      (module-content-renderer
+        treatment-access
+        render-map
+        module
+        module-contents
         "module-homework.html"
         homework-id
-        {:submitted  submitted
+        {:submitted  (get-in treatment-access [:submitted-homeworks (:module-id module)])
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
-(defn- worksheet-renderer
-  [worksheet-id]
-  (fn
-    [module-render-fn module-contents]
+
+(defn worksheet [treatment-access render-map module worksheet-id]
+  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
-      (module-render-fn
+      (module-content-renderer
+        treatment-access
+        render-map
+        module
+        module-contents
         "module-worksheet.html"
         worksheet-id)
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
-
-(defn module-content-renderer
-  [treatment-access render-fn module module-contents]
-  (fn [template content-id & params-map]
-    (let [content      (treatment-service/get-content content-id)
-          data-name    (:data-name content)
-          content-data (content-data/get-content-data
-                         (:treatment-access-id treatment-access)
-                         (conj (:data-imports content) data-name))
-          params       (first params-map)]
-      (render-fn
-        template
-        (merge {:text         (:text content)
-                :markdown     (:markdown content)
-                :tabbed       (:tabbed content)
-                :show-example (:show-example content)
-                :content-id   content-id
-                :data-name    data-name
-                :content-data content-data
-                :context-menu (context-menu module module-contents)
-                :page-title   (:content-name content)}
-               params)))))
-
-(defn- module-render-wrapper
-  [treatment-access render-fn text-render-fn module]
-  (let [module-contents  (treatment-service/get-module-contents (:module-id module))
-        module-render-fn (module-content-renderer treatment-access render-fn module module-contents)]
-    (text-render-fn module-render-fn module-contents)))
-
-(defn main-text [treatment-access render-fn module]
-  (module-render-wrapper treatment-access render-fn (main-text-renderer module) module))
-
-(defn homework [treatment-access render-fn module]
-  (module-render-wrapper treatment-access render-fn (homework-renderer module (get-in treatment-access [:submitted-homeworks (:module-id module)])) module))
-
-(defn worksheet [treatment-access render-fn module worksheet-id]
-  (module-render-wrapper treatment-access render-fn (worksheet-renderer worksheet-id) module))
 
 (defn worksheet-example [module worksheet-id return-path]
   (let [module-contents (treatment-service/get-module-contents (:module-id module))]
@@ -104,7 +96,6 @@
             example-data (content-data/get-content-data
                            worksheet-id
                            [data-name])]
-
         (layout/render "module-worksheet-example.html"
                        {:return-path  return-path
                         :text         (:text content)
@@ -115,11 +106,12 @@
                         :content-data example-data}))
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(defn modules-list [render-fn modules]
-  (render-fn
+(defn modules-list [render-map modules]
+  (layout/render
     "modules-list.html"
-    {:modules    modules
-     :page-title (i18n/tr [:modules/modules])}))
+    (merge render-map
+           {:modules    modules
+            :page-title (i18n/tr [:modules/modules])})))
 
 (defn- handle-content-data
   [data-map treatment-access-id]

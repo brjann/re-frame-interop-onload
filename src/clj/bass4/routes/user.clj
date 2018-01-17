@@ -39,14 +39,14 @@
     (codec/url-encode string)))
 
 (defn module-routes
-  [treatment-access render-fn module]
+  [treatment-access render-map module]
   (routes
-    (GET "/" [] (modules-response/main-text treatment-access render-fn module))
+    (GET "/" [] (modules-response/main-text treatment-access render-map module))
     (POST "/" [& params]
       (modules-response/save-main-text-data
         treatment-access
         (json-safe (:content-data params))))
-    (GET "/homework" [] (modules-response/homework treatment-access render-fn module))
+    (GET "/homework" [] (modules-response/homework treatment-access render-map module))
     (POST "/homework" [& params]
       (modules-response/save-homework
         treatment-access
@@ -58,16 +58,16 @@
         treatment-access
         module))
     (GET "/worksheet/:worksheet-id" [worksheet-id]
-      (modules-response/worksheet treatment-access render-fn module (str->int worksheet-id)))
+      (modules-response/worksheet treatment-access render-map module (str->int worksheet-id)))
     (GET "/worksheet/:worksheet-id/example" [worksheet-id & params]
       (modules-response/worksheet-example module (str->int worksheet-id) (:return params)))))
 
 (defn- messages-routes
-  [user treatment render-fn]
+  [user treatment render-map]
   (routes
     (GET "/messages" []
       (if (get-in treatment [:user-components :messaging])
-        (messages-response/messages-page render-fn user)
+        (messages-response/messages-page render-map user)
         (layout/error-404-page)))
     (POST "/messages" [& params]
       (if (get-in treatment [:user-components :send-messages])
@@ -83,21 +83,23 @@
 (defn- treatment-routes
   [user request]
   (if-let [treatment (treatment-service/user-treatment (:user-id user))]
-    (let [render-fn (user-response/user-page-renderer treatment (:uri request))]
+    (let [render-map (user-response/user-page-map treatment (:uri request))]
       (routes
-        (GET "/" [] (render-fn "dashboard.html" {:user       user
-                                                 :title      "Dashboard"
-                                                 :page-title "Dashboard"}))
+        (GET "/" [] (layout/render "dashboard.html"
+                                   (merge render-map
+                                          {:user       user
+                                           :title      "Dashboard"
+                                           :page-title "Dashboard"})))
         ;; MESSAGES
-        (messages-routes user treatment render-fn)
+        (messages-routes user treatment render-map)
 
         ;; MODULES
         (GET "/modules" []
-          (modules-response/modules-list render-fn (:modules (:user-components treatment))))
+          (modules-response/modules-list render-map (:modules (:user-components treatment))))
         (context "/module/:module-id" [module-id]
           (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
                                (some #(and (:active %) %)))]
-            (module-routes (:treatment-access treatment) render-fn module)
+            (module-routes (:treatment-access treatment) render-map module)
             ;; Module not found
             (layout/error-404-page (i18n/tr [:modules/no-module]))))
         (POST "/content-data" [& params]
