@@ -109,7 +109,6 @@
 (defn modules-list [render-map modules]
   (let [module-contents      (treatment-service/get-multiple-module-contents (mapv :module-id modules))
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
-    (log/debug (first modules-with-content))
     (layout/render
       "modules-list.html"
       (merge render-map
