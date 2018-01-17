@@ -9,11 +9,11 @@
             <div class='card-footer {% ifequal item.sender-type "participant" %}text-right{% endifequal %}'>
                 {% if item.subject %}<strong>{{item.subject}}</strong><br>{% endif %}
                 {% ifequal item.sender-type "therapist" %}
-                {%trb messages/from-therapist%} {{item.sender-name}} | {{item.send-datetime|datetime-ns}} {%endtrb%}
+                {%trb messages/sent-on-from%} {{item.sender-name}} | {{item.send-datetime|nice-datetime}} {%endtrb%}
                 {% if item.unread %} <i class="fa fa-envelope"></i> {% endif %}
                 {% if dev %}<span class="visibility" style="color: red;"></span>{% endif %}
                 {% else %}
-                {{item.send-datetime|datetime-ns}}
+                {%trb messages/sent-on-from%} {%tr me %} | {{item.send-datetime|nice-datetime}} {%endtrb%}
                 {% endifequal %}
             </div>
             <div class="card-body">

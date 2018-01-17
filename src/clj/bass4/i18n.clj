@@ -22,8 +22,8 @@
   ([dir]
    (->> (ls dir)
         (map #(vector (-> (.getName %)
-                          (s/replace  #"[.]edn$" "")
-                          (keyword))  %))
+                          (s/replace #"[.]edn$" "")
+                          (keyword)) %))
         (into {})
         (map-map slurp)
         (map-map-keys #(try (edn/read-string %1)

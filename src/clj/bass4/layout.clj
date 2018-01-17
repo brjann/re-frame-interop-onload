@@ -148,6 +148,35 @@
       (ring-response/response)
       (ring-response/content-type "text/plain")))
 
+
+(defn datetime-str
+  [val resource-id]
+  (-> (i18n/tr [resource-id])
+      (f/formatter (bass/time-zone))
+      (f/unparse (tc/from-date val))))
+
+(defn day-diff-str
+  [day-diff]
+  (cond
+    (zero? day-diff) (i18n/tr [:date-time/today])
+    (= 1 day-diff) (i18n/tr [:date-time/yesterday])
+    (and (>= 7 day-diff) (< 0 day-diff)) (i18n/tr [:date-time/days-ago] [(str day-diff)])
+    (= -1 day-diff) (i18n/tr [:date-time/tomorrow])
+    (<= -7 day-diff) (i18n/tr [:date-time/in-days] [(str (- day-diff))])))
+
+
+(defn date-nice-str
+  [datetime]
+  (let [day-diff (-> datetime
+                     (tc/from-date)
+                     (b-time/days-since (bass/time-zone)))
+        day-str  (day-diff-str day-diff)]
+    (or day-str (datetime-str datetime :date-time/date))))
+
+;;-------------
+;; PARSER TAGS
+;;-------------
+
 (parser/add-tag!
   :tr
   (fn [args context-map]
@@ -161,23 +190,16 @@
              (split (get-in content [:trb :content]) #"[|]")))
   :endtrb)
 
-#_(filters/add-filter!
-    :datetime-ns
-    (fn [val]
-      (f/unparse (f/with-zone (f/formatter (i18n/tr [:date-time/datetime-ns])) (bass/time-zone)) (tc/from-date val))))
-
-
-
-(defn datetime-str
-  [val resource-id]
-  (-> (i18n/tr [resource-id])
-      (f/formatter (bass/time-zone))
-      (f/unparse (tc/from-date val))))
 
 (filters/add-filter!
   :datetime-ns
   (fn [val]
     (datetime-str val :date-time/datetime-ns)))
+
+(filters/add-filter!
+  :nice-datetime
+  (fn [val]
+    (str (date-nice-str val) " " (datetime-str val :date-time/time-ns))))
 
 (defn route-not-found
   "Replacement function for route/not-found, which messes with the translation,
@@ -190,21 +212,3 @@
       (-> (response/render body request)
           (status 404)
           (cond-> (= (:request-method request) :head) (assoc :body nil))))))
-
-(defn day-diff-str
-  [day-diff]
-  (cond
-    (zero? day-diff) (i18n/tr [:date-time/today])
-    (= 1 day-diff) (i18n/tr [:date-time/yesterday])
-    (and (>= 7 day-diff) (< 0 day-diff)) (i18n/tr [:date-time/days-ago] [(i18n/tr [(keyword "number" (str day-diff))])])
-    (= -1 day-diff) (i18n/tr [:date-time/tomorrow])
-    (<= -7 day-diff) (i18n/tr [:date-time/in-days] [(i18n/tr [(keyword "number" (str (- day-diff)))])])))
-
-
-(defn datetime-nice-str
-  [datetime]
-  (let [day-diff (-> datetime
-                     (tc/from-date)
-                     (b-time/days-since (bass/time-zone)))
-        day-str  (day-diff-str day-diff)]
-    (or day-str (datetime-str datetime :date-time/date))))

@@ -1,5 +1,6 @@
 {:submit          "Submit"
  :next            "Next"
+ :me              "me"
  :previous        "Previous"
  :username        "Username"
  :password        "Password"
@@ -21,12 +22,13 @@
                    :order-count     "Questionnaire %1 of %2"}
  :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"
                    :date        "yyyy-MM-dd"
+                   :time-ns     "HH:mm"
                    :today       "today"
                    :tomorrow    "tomorrow"
                    :in-days     "in %1 days"
                    :yesterday   "yesterday"
                    :days-ago    "%1 days ago"}
- :messages        {:sent-on-from   "Sent %1 by %2"
+ :messages        {:sent-on-from   "Sent by %1 %2"
                    :from-therapist "From %1 on %2"
                    :must-message   "Please write message text"
                    :subject        "Message subject"
