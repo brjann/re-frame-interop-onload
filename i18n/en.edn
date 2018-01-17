@@ -41,6 +41,7 @@
                    :no-module        "This module does not exist"
                    :no-homework      "This module does not have homework"
                    :no-worksheet     "This module does not have this worksheet"
+                   :worksheets       "Worksheets"
                    :homework         "Homework"
                    :show-example     "Show example"
                    :close-example    "Close example"

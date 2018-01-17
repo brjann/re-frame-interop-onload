@@ -11,7 +11,24 @@
     </div>
     <div class="col-sm-12 col-md-6">
         {% if module.active %}
-        Some info
+
+        <!-- START WORKSHEETS -->
+        {% if module.contents.worksheets %}
+        <h5>{% tr modules/worksheets %}</h5>
+        {% for worksheet in module.contents.worksheets %}
+        <p><a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">{{worksheet.content-name}}</a>
+        </p>
+        {% endfor %}
+        {% endif %}
+        <!-- END WORKSHEETS -->
+
+
+        <!-- START HOMEWORK-->
+        {% if module.contents.worksheets %}
+        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a></h5>
+        {% endif %}
+        <!-- END HOMEWORK-->
+
         {% else %}
         Not available
         {% endif %}
