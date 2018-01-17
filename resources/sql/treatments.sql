@@ -77,6 +77,18 @@ WHERE Id IN (SELECT MAX(Id)
              WHERE DataOwnerId=:data-owner-id AND DataName IN (:v*:data-names)
              GROUP BY DataName, ValueName);
 
+
+-- :name get-content-data-last-save :? :*
+-- :doc get the content data
+SELECT
+	DataName AS `data-name`,
+    from_unixtime(Time) AS `time`
+FROM content_data
+WHERE Id IN (SELECT MAX(Id)
+             FROM content_data
+             WHERE DataOwnerId= :data-owner-id
+             GROUP BY DataName);
+
 -- :name save-content-data! :! :n
 -- :doc save content data
 INSERT INTO content_data
