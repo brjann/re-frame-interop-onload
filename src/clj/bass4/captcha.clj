@@ -16,9 +16,10 @@
 (defn captcha!
   []
   (let [captcha-path (io/file (env :bass-path) "system/CaptchaGenerator.php")
-        filename     (io/file (env :bass-path) "projects/temp" (str "captcha_" (java.util.UUID/randomUUID) ".jpg"))
+        filename     (str "captcha_" (java.util.UUID/randomUUID) ".jpg")
+        path         (io/file (env :bass-path) "projects/temp" filename)
         digits       (captcha-number 5)
-        args         {"filename" (str filename) "digits" digits}
+        args         {"filename" (str path) "digits" digits}
         res          (shell/sh "php" (str captcha-path) :in (clj->php args))]
     res
     (when (not= 0 (:exit res))

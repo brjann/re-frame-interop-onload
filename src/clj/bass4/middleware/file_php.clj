@@ -720,11 +720,13 @@
   [handler request]
   (let [uri       (:uri request)
         length    (count uri)
+        params    (:params request)
         file-php? (and
                     (< 8 length)
                     (= "File.php" (subs uri (- length 8))))]
     (if file-php?
-      (->> (get-in request [:params :uploadedfile])
-           (bass/uploaded-file)
+      (->> (cond
+             (:uploadedfile params) (bass/uploaded-file (:uploadedfile params))
+             (:uid params) (bass/uid-file (:uid params)))
            (file-response))
       (handler request))))

@@ -20,9 +20,9 @@
 (defn create-bass-objects-without-parent!
   [class-name, property-name, count]
   (let [last-object-id (:objectid (db/create-bass-objects-without-parent!
-                                    {:class-name class-name
+                                    {:class-name    class-name
                                      :property-name property-name
-                                     :count count}))]
+                                     :count         count}))]
     (range (inc (- last-object-id count)) (inc last-object-id))))
 
 (defn time-zone
@@ -74,10 +74,10 @@
      (catch Exception e))))
 
 #_(defn- session-dir
-  []
-    (let [db-name (:name locals/*local-config*)
-        bass-path (env :bass-path)]
-    (io/file bass-path "projects" db-name "sessiondata")))
+    []
+    (let [db-name   (:name locals/*local-config*)
+          bass-path (env :bass-path)]
+      (io/file bass-path "projects" db-name "sessiondata")))
 
 (defn embedded-session-file
   [filename]
@@ -95,6 +95,7 @@
     (subs x 1)
     x))
 
+
 (defn uploaded-file
   ^java.io.File
   [filename]
@@ -103,3 +104,27 @@
       (when (.exists file)
         file))))
 
+#_(defn uid-file
+    ^string
+    [uid]
+    (cond
+      (not (string? uid)) nil
+      (.contains uid "/")) nil
+    (try
+      (let [uid-no-slash (string/replace (or uid "") "/" "")
+            file         (io/file (env :bass-path) "projects/temp" uid-no-slash)]
+        (when (and file (.exists file))
+          file))
+      (catch Exception e)))
+
+(defn uid-file
+  [uid]
+  (cond
+    (not (string? uid)) nil
+    (.contains uid "/") nil
+    :else
+    (try
+      (let [file (io/file (env :bass-path) "projects/temp" uid)]
+        (when (.exists file)
+          file))
+      (catch Exception e))))

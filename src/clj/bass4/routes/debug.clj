@@ -8,6 +8,7 @@
             [ring.util.request :as request]
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
+            [bass4.captcha :as captcha]
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
@@ -40,7 +41,10 @@
                                   (request-state/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (layout/text-response req))
-        (GET "/test" [:as req] (layout/render "test.html"))
+        (GET "/test" [:as req]
+          (let [{:keys [filename digits]} (captcha/captcha!)]
+            (layout/render "test.html"
+                           {:url (str "File.php?uid=" filename)})))
         (GET "/env" [:as req] (layout/text-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")
