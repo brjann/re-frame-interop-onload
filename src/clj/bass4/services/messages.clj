@@ -1,7 +1,6 @@
 (ns bass4.services.messages
   (:require [bass4.db.core :as db]
             [bass4.utils :refer [map-map]]
-            [clj-time.coerce :as tc]
             [clj-time.core :as t]))
 
 (defn- create-message-placeholder [user-id]

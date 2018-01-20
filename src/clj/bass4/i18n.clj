@@ -10,8 +10,7 @@
             [clojure.string :as s]
             [mount.core :refer [defstate]]
             [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]
-            [clj-time.coerce :as tc])
+            [bass4.services.bass :as bass])
   (:import [java.io.File]))
 
 (defn ls [d]

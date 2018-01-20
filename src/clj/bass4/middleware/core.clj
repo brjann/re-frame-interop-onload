@@ -23,7 +23,6 @@
             [bass4.mailer :refer [mail!]]
             [bass4.sms-sender :as sms]
             [bass4.request-state :as request-state]
-            [clj-time.coerce :as tc]
             [bass4.layout :as layout]
             [bass4.services.user :as user]
             [clojure.string :as string]

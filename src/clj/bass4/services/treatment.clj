@@ -1,7 +1,7 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
-            [clj-time.coerce :as c]
+            [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [clojure.set]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean? fnil+]]
@@ -27,7 +27,7 @@
                 (unserialize-key :module-accesses)
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
                 ;; This is pretty sick, but we have to convert from joda to java time because it gets converted again later
-                (#(assoc % :modules-activation-dates (map-map (comp c/to-date b-time/from-unix) (filter-map (complement zero?) (:module-accesses %)))))
+                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/bool-cols
@@ -86,14 +86,14 @@
            {:modules modules})))
 
 
-(defn- convert-dates
+#_(defn- convert-dates
   [treatment-access]
-  [(clj-time.coerce/from-sql-date (:start-date treatment-access))
-   (clj-time.coerce/from-sql-date (:end-date treatment-access))])
+    [(tc/from-sql-date (:start-date treatment-access))
+     (tc/from-sql-date (:end-date treatment-access))])
 
 (defn- treatment-ongoing?
   [treatment-access]
-  (let [[start-date end-date] (convert-dates treatment-access)]
+  (let [[start-date end-date] [(:start-date treatment-access) (:end-date treatment-access)]]
     (and (t/before? start-date (t/now))
          (t/after? end-date (t/now)))))
 

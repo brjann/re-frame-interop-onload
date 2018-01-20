@@ -14,7 +14,6 @@
             [clojure.string :refer [split join]]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clj-time.coerce :as tc]
             [bass4.services.bass :as bass-service]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
@@ -149,11 +148,17 @@
       (ring-response/content-type "text/plain")))
 
 
+#_(defn datetime-str
+    [val resource-id]
+    (-> (i18n/tr [resource-id])
+        (f/formatter (bass/time-zone))
+        (f/unparse (tc/from-date val))))
+
 (defn datetime-str
   [val resource-id]
   (-> (i18n/tr [resource-id])
       (f/formatter (bass/time-zone))
-      (f/unparse (tc/from-date val))))
+      (f/unparse val)))
 
 (defn day-diff-str
   [day-diff]
@@ -168,7 +173,7 @@
 (defn date-nice-str
   [datetime]
   (let [day-diff (-> datetime
-                     (tc/from-date)
+                     #_(tc/from-date)
                      (b-time/days-since (bass/time-zone)))
         day-str  (day-diff-str day-diff)]
     (or day-str (datetime-str datetime :date-time/date))))

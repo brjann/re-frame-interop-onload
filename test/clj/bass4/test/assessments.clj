@@ -10,6 +10,8 @@
   :once
   test-fixtures)
 
+(def x 8)
+
 (defn get-ass-1-pending
   []
   (with-redefs [t/now                         (constantly (t/date-time 2017 05 30 17 16 00))

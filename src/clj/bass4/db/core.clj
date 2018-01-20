@@ -10,12 +10,17 @@
     [bass4.bass-locals :as locals]
     [clojure.tools.logging :as log]
     [bass4.request-state :as request-state]
-    [bass4.bass-locals :as bass-locals])
+    [bass4.bass-locals :as bass-locals]
+    ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
+    [clj-time.jdbc])
   (:import [java.sql
             BatchUpdateException
             PreparedStatement]))
 
-;; TODO: Do Latin1 connections need to be handled?
+;----------------
+; SETUP DB STATE
+;----------------
+
 (defn- build-db-url
   [host port name user password]
   (str "jdbc:mysql://" host
@@ -71,27 +76,18 @@
 (conman/bind-connection *db* "sql/instrument-answers.sql")
 (conman/bind-connection db-common "sql/common.sql")
 
+
+;---------------------
+; COL TRANSFORMATIONS
+;---------------------
+
+;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
+
 (defn bool-cols [db-fn params cols]
   (let [row-fn (fn [row]
                  (merge row
                         (map-map val-to-bool (select-keys row cols))))]
     (db-fn *db* params nil {:row-fn row-fn})))
-
-(defn to-date [^java.sql.Date sql-date]
-  (-> sql-date (.getTime) (java.util.Date.)))
-
-(extend-protocol jdbc/IResultSetReadColumn
-  java.sql.Date
-  (result-set-read-column [v _ _] (to-date v))
-
-  java.sql.Timestamp
-  (result-set-read-column [v _ _] (to-date v)))
-
-(extend-type java.util.Date
-  jdbc/ISQLParameter
-  (set-parameter [v ^PreparedStatement stmt idx]
-    (.setTimestamp stmt idx (java.sql.Timestamp. (.getTime v)))))
-
 
 ;---------------
 ; SQL WRAPPER
@@ -126,9 +122,9 @@
 (defmethod hugsql.core/hugsql-command-fn :query [sym] 'bass4.db.core/sql-wrapper-query)
 (defmethod hugsql.core/hugsql-command-fn :default [sym] 'bass4.db.core/sql-wrapper-query)
 
-;;-------------
-;; DB RESOLVING
-;;-------------
+;;-------------------------
+;; DB RESOLVING MIDDLEWARE
+;;-------------------------
 
 (defn request-host
   [request]

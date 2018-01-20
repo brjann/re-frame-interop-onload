@@ -110,8 +110,7 @@
   (when-let [activation-date (if (= (:scope assessment) 0)
                                (:participant-activation-date administration)
                                (:group-activation-date administration))]
-    (t/plus (clj-time.coerce/from-sql-date
-              activation-date) (t/hours (:activation-hour assessment)))))
+    (t/plus activation-date (t/hours (:activation-hour assessment)))))
 
 (defn- check-next-status [{:keys [repetition-type]} next-administration-status]
   (if (nil? next-administration-status)
@@ -297,7 +296,7 @@
   [user-id]
   (fn [idx step]
     (merge
-      {:time              (tc/to-sql-date (t/now))
+      {:time              (t/now) #_(tc/to-sql-date (t/now))
        :user-id           user-id
        :batch-id          nil
        :step              idx

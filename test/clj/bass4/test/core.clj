@@ -4,6 +4,8 @@
             [mount.core :as mount]
             [bass4.db.core]
             [bass4.bass-locals :as locals]
+            [bass4.utils :refer [map-map]]
+            [clj-time.coerce :as tc]
             [clojure.string :as string]
             [clojure.test]
             [clojure.tools.logging :as log]
@@ -11,9 +13,12 @@
 
 (defn get-edn
   [edn]
-  (-> (io/file (System/getProperty "user.dir") "test/test-edns" (str edn ".edn"))
-      (slurp)
-      (edn/read-string)))
+  (let [res (-> (io/file (System/getProperty "user.dir") "test/test-edns" (str edn ".edn"))
+                (slurp)
+                (edn/read-string))]
+    (if (list? res)
+      (map (fn [m] (map-map #(if (= java.util.Date (class %)) (tc/from-date %) %) m)) res)
+      res)))
 
 (defn test-fixtures
   [f]
