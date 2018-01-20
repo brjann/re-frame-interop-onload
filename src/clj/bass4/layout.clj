@@ -167,7 +167,7 @@
     (= 1 day-diff) (i18n/tr [:date-time/yesterday])
     (and (>= 7 day-diff) (< 0 day-diff)) (i18n/tr [:date-time/days-ago] [(str day-diff)])
     (= -1 day-diff) (i18n/tr [:date-time/tomorrow])
-    (<= -7 day-diff) (i18n/tr [:date-time/in-days] [(str (- day-diff))])))
+    (and (<= -7 day-diff) (> 0 day-diff)) (i18n/tr [:date-time/in-days] [(str (- day-diff))])))
 
 
 (defn date-nice-str
