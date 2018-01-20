@@ -299,3 +299,20 @@ div#instrument .item-error {
 .modal-backdrop {
     background-color: transparent;
 }
+
+/***********************
+    Modules list
+ ***********************/
+
+.modules-list .list-group-item {
+    padding-left: 0;
+}
+
+.modules-list .card-body {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.modules-list .card {
+    margin-bottom: 20px;
+}

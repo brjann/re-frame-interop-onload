@@ -50,6 +50,7 @@
                    :submit-homework          "Submit homework"
                    :retract-homework         "Retract homework"
                    :save-homework            "Save without submitting"
+                   :not-available            "Not available"
                    :submitted!               "Submitted!"
                    :submitted-ok             "You have submitted your homework and it has been reviewed by your therapist."
                    :submitted-waiting        "You submitted your homework %1 and it is waiting to be reviewed by your therapist."

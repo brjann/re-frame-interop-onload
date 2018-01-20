@@ -1,68 +1,88 @@
 {% extends "nav.html" %}
 {% block user-content %}
-{% for module in modules %}
-<div class="row list">
-    <div class="col-sm-12 col-md-6">
-        {% if module.active %}
+<div class="modules-list">
+    <div class="row">
+        {% for module in modules %}
+        <div class="col-sm-12 col-md-6">
+            <!-- <div class="col-sm-12 col-md-6"> -->
+            {% if module.active %}
 
 
-        <!-- MODULE ACTIVE INFO -->
-        <h3>{{module.module-name}}</h3>
+            <!--
+        <div class="card {% ifequal module.homework-status :ok %}border-success{% endifequal %}">
+            <h5 class="card-header text-white
+            {% ifequal module.homework-status :ok %}bg-success{% endifequal %}
+            {% ifequal module.homework-status :submitted %}bg-info
+            {% else %}bg-primary{% endifequal %}">
+            -->
+            <div class="card">
+                <h5 class="card-header">
+                    {{module.module-name}}
+                    <!-- MODULE ACTIVE INFO -->
+                    {% if module.activation-date %}
+                    <small class="card-text text-light">{% tr modules/activated %}
+                        {{module.activation-date|nice-date}}
+                    </small>
+                    {% endif %}
+                    <!-- END MODULE ACTIVE INFO -->
+                </h5>
 
-        {% if module.activation-date %}
-        <p>{% tr modules/activated %} {{module.activation-date|nice-date}}</p>
-        {% endif %}
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% if module.contents.main-texts %}
+                        <li class="list-group-item">
+                            <a class="card-link" href="/user/module/{{module.module-id}}/">{% tr
+                                modules/read-module-text %}</a>
+                        </li>
+                        {% endif %}
 
-        {% if module.contents.main-texts %}
-        <p><a href="/user/module/{{module.module-id}}/">{% tr modules/read-module-text %}</a></p>
-        {% endif %}
 
-        <!-- END MODULE ACTIVE INFO -->
+                        <!-- START HOMEWORK-->
+                        {% if module.contents.homework %}
+                        <li class="list-group-item">
+                            <a class="card-link" href="/user/module/{{module.module-id}}/homework">{% tr
+                                modules/homework %}</a>
+                            {% ifequal module.homework-status :ok %}
+                            <span class="badge badge-success">{% tr modules/submitted-ok-short! %}</span>
+                            {% endifequal %}
+                            {% ifequal module.homework-status :submitted %}
+                            <span class="badge badge-info">{% tr modules/submitted-waiting-short! %}</span>
+                            {% endifequal %}
+                            {% endif %}
+                        </li>
+                        <!-- END HOMEWORK-->
 
-
-        <!-- START HOMEWORK-->
-        {% if module.contents.homework %}
-        <h5><a href="/user/module/{{module.module-id}}/homework">{% tr modules/homework %}</a>
-            {% ifequal module.homework-status :ok %}
-            <span class="badge badge-success">{% tr modules/submitted-ok-short! %}</span>
-            {% endifequal %}
-            {% ifequal module.homework-status :submitted %}
-            <span class="badge badge-info">{% tr modules/submitted-waiting-short! %}</span>
-            {% endifequal %}
+                        <!-- START WORKSHEETS -->
+                        {% if module.contents.worksheets %}
+                        <li class="list-group-item">
+                            <h5 class="card-title">{% tr modules/worksheets %}</h5>
+                            {% for worksheet in module.contents.worksheets %}
+                            <p class="card-text">
+                                <a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">{{worksheet.content-name}}</a>
+                                {% if worksheet.data-updated %}
+                                <small class="text-muted">
+                                    <span class="fa fa-pencil"></span>&nbsp;{{worksheet.data-updated|nice-datetime}}
+                                </small>
+                                {% endif %}
+                            </p>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                        <!-- END WORKSHEETS -->
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <div class="card text-white bg-secondary">
+                <h5 class="card-header">{{module.module-name}}</h5>
+                <div class="card-body">
+                    <p class="card-text">{% tr modules/not-available %}</p>
+                </div>
+            </div>
             {% endif %}
-        </h5>
-        <!-- END HOMEWORK-->
+        </div>
 
-
-        {% else %}
-        <h3>{{module.module-name}}</h3>
-        {% endif %}
-    </div>
-    <div class="col-sm-12 col-md-6">
-        {% if module.active %}
-
-        <!-- START WORKSHEETS -->
-        {% if module.contents.worksheets %}
-        <h5>{% tr modules/worksheets %}</h5>
-        {% for worksheet in module.contents.worksheets %}
-        <p>
-            <a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">{{worksheet.content-name}}</a>
-            {% if worksheet.data-updated %}
-            <small class="text-muted"><span class="fa fa-pencil"></span>&nbsp;{{worksheet.data-updated|nice-datetime}}
-            </small>
-            {% endif %}
-        </p>
         {% endfor %}
-        {% endif %}
-        <!-- END WORKSHEETS -->
-
-        {% else %}
-        Not available
-        {% endif %}
     </div>
 </div>
-{% endfor %}
-
-
 {% endblock %}
-
