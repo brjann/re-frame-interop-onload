@@ -161,19 +161,23 @@
   (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
     {:assessments-pending true}))
 
-(defn- login-response
+(defn- login-successful-response
   [user redirect]
   (let [new-session (new-session-map (:user-id user))
         rounds (assessments-map user)]
+    (auth-service/register-user-login! (:user-id user))
     (-> (response/found (:redirect redirect))
         (assoc :session (merge new-session (:session redirect) rounds)))))
 
-(s/defn ^:always-validate handle-login [session username :- s/Str password :- s/Str]
+(s/defn
+  ^:always-validate
+  handle-login
+  [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [redirect (redirect-map user)]
       (if (:error redirect)
         (error-422 (:error redirect))
-        (login-response user redirect)))
+        (login-successful-response user redirect)))
     (error-422 "error")))
 
 

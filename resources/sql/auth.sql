@@ -41,3 +41,15 @@ FROM c_participant AS cp
   JOIN c_treatmentinterface AS ct
     ON cp.ParentInterface = ct.ObjectId
 WHERE cp.objectid = :user-id;
+
+-- :name update-last-login! :! :1
+-- :doc
+UPDATE c_participant
+SET LastLogin = UNIX_TIMESTAMP(NOW())
+WHERE ObjectId=:user-id
+
+-- :name update-login-count! :! :1
+-- :doc
+UPDATE c_participant
+SET LoginCount = LoginCount + 1
+WHERE ObjectId=:user-id

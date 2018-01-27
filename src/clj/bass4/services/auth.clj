@@ -40,6 +40,10 @@
       (assoc user :user-id (:objectid user))
       #_(:objectid user))))
 
+(defn register-user-login! [user-id]
+  (db/update-last-login! {:user-id user-id})
+  (db/update-login-count! {:user-id user-id}))
+
 ;; -------------
 ;;  DOUBLE AUTH
 ;; -------------
