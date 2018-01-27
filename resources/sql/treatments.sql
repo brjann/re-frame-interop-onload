@@ -136,4 +136,4 @@ SELECT
 	content_id AS `content-id`,
     `time`
 FROM content_data_accesses
-WHERE treatment_access_id = :treatment-access-id
+WHERE treatment_access_id = :treatment-access-id AND module_id IN(:v*:module-ids) ;
