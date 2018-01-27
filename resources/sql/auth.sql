@@ -9,6 +9,7 @@ SELECT
   SMSNumber AS `sms-number`,
   DoubleAuthUseBoth AS 'double-auth-use-both',
   ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login`,
   `Password`
 FROM c_participant
 WHERE ObjectId = :user-id;
@@ -25,6 +26,7 @@ SELECT
   SMSNumber AS `sms-number`,
   DoubleAuthUseBoth AS 'double-auth-use-both',
   ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login-time`,
   `Password`
 FROM c_participant
 WHERE UserName = :username;
@@ -45,7 +47,7 @@ WHERE cp.objectid = :user-id;
 -- :name update-last-login! :! :1
 -- :doc
 UPDATE c_participant
-SET LastLogin = UNIX_TIMESTAMP(NOW())
+SET LastLogin = unix_timestamp(now())
 WHERE ObjectId=:user-id
 
 -- :name update-login-count! :! :1

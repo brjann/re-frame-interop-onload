@@ -149,9 +149,10 @@
     "auth/login.html"))
 
 (defn- new-session-map
-  [user-id]
-  {:identity          user-id
+  [user]
+  {:identity          (:user-id user)
    :auth-re-auth      nil
+   :last-login-time   (:last-login-time user)
    :last-request-time (t/now)
    :session-start     (t/now)})
 
@@ -163,8 +164,8 @@
 
 (defn- login-successful-response
   [user redirect]
-  (let [new-session (new-session-map (:user-id user))
-        rounds (assessments-map user)]
+  (let [new-session (new-session-map user)
+        rounds      (assessments-map user)]
     (auth-service/register-user-login! (:user-id user))
     (-> (response/found (:redirect redirect))
         (assoc :session (merge new-session (:session redirect) rounds)))))
