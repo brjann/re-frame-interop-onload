@@ -26,7 +26,7 @@
            {:title (:module-name module)})))
 
 
-(defn module-content-renderer
+(defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
   (let [content      (treatment-service/get-content content-id)
         data-name    (:data-name content)
@@ -34,6 +34,10 @@
                        (:treatment-access-id treatment-access)
                        (conj (:data-imports content) data-name))
         params       (first params-map)]
+    (treatment-service/register-content-access!
+      content-id
+      (:module-id module)
+      (:treatment-access-id treatment-access))
     (layout/render
       template
       (merge render-map
@@ -113,6 +117,12 @@
       (merge render-map
              {:modules    modules-with-content
               :page-title (i18n/tr [:modules/modules])}))))
+
+
+
+;--------------
+; CONTENT DATA
+;--------------
 
 (defn- handle-content-data
   [data-map treatment-access-id]

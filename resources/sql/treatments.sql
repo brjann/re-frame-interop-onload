@@ -121,3 +121,15 @@ WHERE Id IN
 -- :name retract-homework! :! :1
 -- :doc
 DELETE FROM content_data_homework WHERE Id = :submit-id;
+
+
+-- :name register-content-access! :! :n
+-- :doc
+INSERT INTO content_data_accesses
+(content_id, treatment_access_id, module_id, `time`)
+VALUES (:content-id, :treatment-access-id, :module-id, now());
+
+-- :name get-module-readings :? :*
+-- :doc
+SELECT * FROM module_readings
+WHERE treatment_access_id = :treatment-access-id;

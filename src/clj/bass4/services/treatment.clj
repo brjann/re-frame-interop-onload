@@ -26,7 +26,6 @@
             (-> treatment-access
                 (unserialize-key :module-accesses)
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
-                ;; This is pretty sick, but we have to convert from joda to java time because it gets converted again later
                 (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
@@ -87,7 +86,7 @@
 
 
 #_(defn- convert-dates
-  [treatment-access]
+    [treatment-access]
     [(tc/from-sql-date (:start-date treatment-access))
      (tc/from-sql-date (:end-date treatment-access))])
 
@@ -160,3 +159,11 @@
 (defn retract-homework!
   [submitted module]
   (db/retract-homework! {:submit-id (:submit-id submitted)}))
+
+
+(defn register-content-access!
+  [content-id module-id treatment-access-id]
+  (db/register-content-access!
+    {:content-id          content-id
+     :module-id           module-id
+     :treatment-access-id treatment-access-id}))
