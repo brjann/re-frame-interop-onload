@@ -2,11 +2,12 @@
 {% block user-content %}
 {% if submitted %}
 <div class="alert alert-{% if submitted.ok %}success{% else %}info{% endif %}" role="alert">
-    <strong>{%tr modules/submitted! %}</strong>
     {% if submitted.ok %}
-    {% tr modules/submitted-ok %}
+    <strong>{%tr modules/submitted-ok-title %}</strong>
+    {% tr modules/submitted-ok-text %}
     {% else %}
-    {% trb modules/submitted-waiting %}{{submitted.time|nice-datetime}}{% endtrb %}
+    <strong>{%tr modules/submitted-waiting-title %}</strong>
+    {% trb modules/submitted-waiting-text %}{{submitted.time|nice-datetime}}{% endtrb %}
     <form method="post" action="retract-homework">
         <button type="submit" class="btn btn-danger">{%tr modules/retract-homework %}</button>
     </form>
