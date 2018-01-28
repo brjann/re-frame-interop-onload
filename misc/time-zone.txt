@@ -1,7 +1,11 @@
 https://stackoverflow.com/questions/5989539/when-to-use-datetime-or-timestamp
 
-"If you store a TIMESTAMP value, and then change the time zone and retrieve the value, the retrieved value is different from the value you stored."
-"So if you are using an application across timezones, and need the date/time to reflect individual users settings, use Timestamp. If you need consistency regardless of timezone, use Datetime"
+"If you store a TIMESTAMP value, and then change the time zone and retrieve the value,
+the retrieved value is different from the value you stored."
+
+"So if you are using an application across timezones,
+and need the date/time to reflect individual users settings, use Timestamp.
+If you need consistency regardless of timezone, use Datetime"
 
 YES: If I change timezone (SET time_zone = "-02:00";), then the values returned by TimeStamp change - but not DateTime.
 

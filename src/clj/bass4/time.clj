@@ -16,8 +16,8 @@
 (defn days-since
   [then time-zone]
   (day-diff-since
-    (t/from-time-zone (t/now) time-zone)
-    (t/from-time-zone then time-zone)))
+    (t/to-time-zone (t/now) time-zone)
+    (t/to-time-zone then time-zone)))
 
 
 (defn from-unix

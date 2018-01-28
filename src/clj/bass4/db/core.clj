@@ -158,5 +158,5 @@
   ([] (init-repl :db1))
   ([db-name]
    (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
-   (alter-var-root (var locals/*local-config*) (merge bass-locals/local-defaults (get bass-locals/local-configs db-name)))
+   (alter-var-root (var locals/*local-config*) (constantly (merge bass-locals/local-defaults (get bass-locals/local-configs db-name))))
    (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))
