@@ -110,7 +110,9 @@
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn modules-list [render-map modules treatment-access-id]
-  (let [module-contents      (treatment-service/get-module-contents-with-update-time (mapv :module-id modules) treatment-access-id)
+  (let [module-contents      (treatment-service/get-module-contents-with-update-time
+                               (mapv :module-id modules)
+                               treatment-access-id)
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
     (layout/render
       "modules-list.html"
