@@ -20,7 +20,8 @@
                     {{module.module-name}}
                     <!-- MODULE ACTIVE INFO -->
                     {% if module.activation-date %}
-                    <small class="card-text text-light">{% tr modules/activated %}
+                    <small class="card-text text-light">
+                        {% tr modules/activated %}
                         {{module.activation-date|nice-date}}
                     </small>
                     {% endif %}
@@ -34,9 +35,13 @@
                             <a class="card-link" href="/user/module/{{module.module-id}}/">
                                 {% tr modules/read-module-text %}
                             </a>
+                            {% ifequal module.contents.main-text.accessed? false %}
+                            <span class="badge badge-pill badge-warning">
+                                {% tr modules/unread %}
+                            </span>
+                            {% endifequal %}
                         </li>
                         {% endif %}
-
 
                         <!-- START HOMEWORK-->
                         {% if module.contents.homework %}
