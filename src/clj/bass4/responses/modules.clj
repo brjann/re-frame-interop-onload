@@ -54,7 +54,7 @@
 
 (defn main-text [treatment-access render-map module]
   (let [module-contents (treatment-service/get-module-contents (:module-id module))
-        module-text-id  (:content-id (first (:main-texts module-contents)))]
+        module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
       render-map

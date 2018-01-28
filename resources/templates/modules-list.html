@@ -29,10 +29,11 @@
 
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                        {% if module.contents.main-texts %}
+                        {% if module.contents.main-text %}
                         <li class="list-group-item">
-                            <a class="card-link" href="/user/module/{{module.module-id}}/">{% tr
-                                modules/read-module-text %}</a>
+                            <a class="card-link" href="/user/module/{{module.module-id}}/">
+                                {% tr modules/read-module-text %}
+                            </a>
                         </li>
                         {% endif %}
 

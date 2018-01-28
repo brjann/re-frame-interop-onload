@@ -41,7 +41,7 @@
   (let [categorized (group-by :type contents)]
     {:worksheets (get categorized "Worksheets")
      :homework   (first (get categorized "Homework"))
-     :main-texts (get categorized "MainTexts")}))
+     :main-text  (first (get categorized "MainTexts"))}))
 
 
 (defn get-content
