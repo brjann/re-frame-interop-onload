@@ -1,6 +1,7 @@
 (ns bass4.routes.user
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.responses.messages :as messages-response]
+            [bass4.responses.dashboard :as dashboard]
             [bass4.responses.user :as user-response]
             [bass4.services.user :as user-service]
             [bass4.services.content-data :as content-data-service]
@@ -31,12 +32,12 @@
 ;; On the server with reverse proxy, some type of rewrite causes the url
 ;; to be double encoded. This is a hack until the problem can be solved
 ;; in Apache.
-(defn url-encode-x
-  "Return the request part of the request."
-  [string]
-  (if (env :no-url-encode)
-    string
-    (codec/url-encode string)))
+;(defn url-encode-x
+;  "Return the request part of the request."
+;  [string]
+;  (if (env :no-url-encode)
+;    string
+;    (codec/url-encode string)))
 
 (defn module-routes
   [treatment-access render-map module]
@@ -85,11 +86,8 @@
   (if-let [treatment (treatment-service/user-treatment (:user-id user))]
     (let [render-map (user-response/user-page-map treatment (:uri request))]
       (routes
-        (GET "/" [] (layout/render "dashboard.html"
-                                   (merge render-map
-                                          {:user       user
-                                           :title      "Dashboard"
-                                           :page-title "Dashboard"})))
+        (GET "/" []
+          (dashboard/dashboard user (:session request) render-map treatment))
         ;; MESSAGES
         (messages-routes user treatment render-map)
 

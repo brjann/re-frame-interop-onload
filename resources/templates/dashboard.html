@@ -1,4 +1,47 @@
 {% extends "nav.html" %}
 {% block user-content %}
-<h1>This is the dashboard</h1>
+<h1>{% tr dashboard/welcome %}</h1>
+{% if start-date %}
+<div class="card">
+    <div class="card-body">
+        <p class="card-text">
+            {%trb dashboard/treatment-dates %}{{start-date|date}}|{{end-date|date}}{%endtrb%}
+        </p>
+        <p class="card-text">
+            {% ifequal days-remaining 1 %}
+            {% tr dashboard/last-day %}
+            {% else %}
+            {% trb dashboard/days-remaining %}{{days-remaining}}{%endtrb%}
+            {% endifequal %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% if new-modules %}
+<div class="card">
+    <div class="card-header">
+        <h4>{% tr dashboard/new-modules %}</h4>
+    </div>
+    <div class="card-body">
+        {% for module in new-modules %}
+        <p class="card-title">{{module.module-name}}</p>
+        {% endfor %}
+        <p class="card-text"><a href="/user/modules">{% tr dashboard/go-to-modules %}</a></p>
+    </div>
+</div>
+{% endif %}
+
+{% if new-messages? %}
+<div class="card">
+    <div class="card-header">
+        <h4>{%tr messages/new-message %}&nbsp;<small><i class="fa fa-envelope"></i></small>
+        </h4>
+    </div>
+    <div class="card-body">
+        <p class="card-text"><a href="/user/messages">{% tr dashboard/go-to-messages %}</a></p>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

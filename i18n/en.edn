@@ -12,6 +12,14 @@
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
+ :dashboard       {:start           "Start"
+                   :welcome         "Welcome!"
+                   :new-modules     "You have access to new modules"
+                   :go-to-modules   "Go to modules"
+                   :go-to-messages  "Go to messages"
+                   :treatment-dates "Your treatment started %1 and ends %2."
+                   :days-remaining  "You have %1 days left of the treatment."
+                   :last-day        "This is the last day of the treatment."}
  :instrument      {:range-error     "You must supply a value between %s and %s."
                    :range-error-max "You must supply a value of %s or more."
                    :range-error-min "You must supply a value of %s or less."
@@ -56,7 +64,6 @@
                    :submitted-ok-text       "You have submitted your homework and it has been reviewed by your therapist."
                    :submitted-waiting-title "Submitted!"
                    :submitted-waiting-text  "You submitted your homework %1 and it is waiting to be reviewed by your therapist."}
-
  :login           {:login                   "Login"
                    :must-username           "Please provide your username"
                    :must-password           "Please provide your password"

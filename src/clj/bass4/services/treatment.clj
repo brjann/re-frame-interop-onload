@@ -98,7 +98,7 @@
   [treatment-access]
   (let [[start-date end-date] [(:start-date treatment-access) (:end-date treatment-access)]]
     (and (t/before? start-date (t/now))
-         (t/after? end-date (t/now)))))
+         (t/after? (t/plus end-date (t/days 1)) (t/now)))))
 
 (defn treatment-active?
   [treatment-access treatment]

@@ -197,6 +197,11 @@
 
 
 (filters/add-filter!
+  :date
+  (fn [val]
+    (datetime-str val :date-time/date)))
+
+(filters/add-filter!
   :datetime-ns
   (fn [val]
     (datetime-str val :date-time/datetime-ns)))

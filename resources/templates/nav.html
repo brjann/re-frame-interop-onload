@@ -24,6 +24,10 @@
                 </span>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
+                    <a href="/user/"
+                       class='nav-link{% ifequal path "/user/" %} active{%endifequal%}'>
+                        {%tr dashboard/start %}
+                    </a>
                     {% if messaging %}
                     <a href="/user/messages"
                        class='nav-link{% ifequal path "/user/messages" %} active{%endifequal%}'>
