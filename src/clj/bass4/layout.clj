@@ -173,8 +173,7 @@
 (defn date-nice-str
   [datetime]
   (let [day-diff (-> datetime
-                     #_(tc/from-date)
-                     (b-time/days-since (bass/time-zone)))
+                     (b-time/days-since-tz))
         day-str  (day-diff-str day-diff)]
     (or day-str (datetime-str datetime :date-time/date))))
 

@@ -8,21 +8,19 @@
 
 (defn- new-modules
   [modules last-login]
-  (let [tz (bass/time-zone)]
-    (filter #(when (:activation-date %)
-               (<= 0 (b-time/day-diff-since
-                       (t/to-time-zone (:activation-date %) tz)
-                       (t/to-time-zone last-login tz))))
-            modules)))
+  (seq (filter #(when (:activation-date %)
+                  (<= 0 (b-time/day-diff-since-tz
+                          (:activation-date %)
+                          last-login)))
+               modules)))
 
 (defn treatment-dates
   [treatment]
   (when (get-in treatment [:treatment :access-time-limited])
     [(get-in treatment [:treatment-access :start-date])
      (get-in treatment [:treatment-access :end-date])
-     (inc (- (b-time/days-since
-               (get-in treatment [:treatment-access :end-date])
-               (bass/time-zone))))]))
+     (inc (- (b-time/days-since-tz
+               (get-in treatment [:treatment-access :end-date]))))]))
 
 (defn dashboard
   [user session render-map treatment]

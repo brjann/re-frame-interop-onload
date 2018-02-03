@@ -1,7 +1,8 @@
 (ns bass4.time
   (:require
     [clj-time.core :as t]
-    [clj-time.coerce :as tc]))
+    [clj-time.coerce :as tc]
+    [bass4.services.bass :as bass]))
 
 (defn day-diff-since
   [today then]
@@ -13,12 +14,21 @@
       (- (t/in-days
            (t/interval today-midnight then-midnight))))))
 
+(defn day-diff-since-tz
+  [today then]
+  (day-diff-since
+    (t/to-time-zone today (bass/time-zone))
+    (t/to-time-zone then (bass/time-zone))))
+
 (defn days-since
   [then time-zone]
   (day-diff-since
     (t/to-time-zone (t/now) time-zone)
     (t/to-time-zone then time-zone)))
 
+(defn days-since-tz
+  [then]
+  (days-since then (bass/time-zone)))
 
 (defn from-unix
   [timestamp]
