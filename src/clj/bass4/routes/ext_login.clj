@@ -27,7 +27,7 @@
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
 
-(defn check-ip-mw
+(defn- check-ip-mw
   [handler request]
   (let [{:keys [allowed ips]} (db/bool-cols db/ext-login-settings {} [:allowed])]
     (cond
@@ -35,18 +35,34 @@
       (not (match-request-ip request ips)) (layout/text-response (str "0 External login not allowed from this IP " (:remote-addr request)))
       :else (handler request))))
 
-(defn check-pending
+(defn- check-participant-id
   [participant-id]
   (let [users (user-service/get-users-by-participant-id participant-id)
         user  (first users)]
-    (cond (nil? user)
-          (layout/text-response "0 No such user")
+    (cond
+      (nil? user)
+      "No such user"
 
-          (< 1 (count users))
-          (layout/text-response "0 More than 1 matching user")
+      (< 1 (count users))
+      "More than 1 matching user"
 
-          :else
-          (assessments/get-pending-assessments (:user-id user)))))
+      :else
+      (:user-id user))))
+
+(defn uid-url
+  [user-id])
+
+(defn- check-pending
+  [participant-id]
+  (let [user-id (check-participant-id participant-id)]
+    (if (string? user-id)
+      (layout/text-response (str "0 " user-id))
+      (cond
+        (zero? (count (assessments/get-pending-assessments user-id)))
+        (layout/text-response "0 No pending administrations")
+
+        :else
+        (layout/text-response "1 Yep")))))
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]

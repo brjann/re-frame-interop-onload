@@ -26,14 +26,27 @@
         (visit "/ext-login/check-pending/900")
         (has (some-text? "0 External login not allowed from this IP")))))
 
-(deftest request-ext-login-allowed-ok-ip
+(deftest request-ext-login-allowed-ok-ip-no-user
   (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
     (-> (session (app))
         (visit "/ext-login/check-pending/ext-login-x")
         (has (some-text? "0 No such user")))))
 
-(deftest request-ext-login-allowed-ok-ip
+(deftest request-ext-login-allowed-ok-ip-double
   (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
     (-> (session (app))
         (visit "/ext-login/check-pending/ext-login-double")
         (has (some-text? "0 More than 1 matching user")))))
+
+(deftest request-ext-login-allowed-ok-no-pending
+  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
+    (-> (session (app))
+        (visit "/ext-login/check-pending/ext-login-1")
+        (has (some-text? "0 No pending administrations")))))
+
+(deftest request-ext-login-assessment-pending
+  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (-> (session (app))
+          (visit (str "/ext-login/check-pending/" user-id))))))
