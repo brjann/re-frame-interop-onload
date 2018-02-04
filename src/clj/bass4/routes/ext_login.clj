@@ -27,7 +27,7 @@
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
 
-(defn- check-ip-mw
+(defn check-ip-mw
   [handler request]
   (let [{:keys [allowed ips]} (db/bool-cols db/ext-login-settings {} [:allowed])]
     (cond

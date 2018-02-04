@@ -7,7 +7,10 @@
             [bass4.utils :refer [map-map-keys str->int json-safe]]
             [clojure.string :as s]
             [clojure.java.io :as io]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.data.json :as json])
+  (:import (java.util UUID)
+           (java.io File)))
 
 (defn db-title []
   (:title (db/get-db-title)))
@@ -45,7 +48,7 @@
        (io/file bass-path "projects" db-name sub-dir))))
 
 #_(defn db-dir
-    ^java.io.File
+    ^File
     [& parts]
     (let [db-name   (:name locals/*local-config*)
           bass-path (env :bass-path)]
@@ -62,8 +65,8 @@
       full-sub-path)))
 
 (defn db-dir
-  (^java.io.File [base-path] (db-dir base-path nil))
-  (^java.io.File [base-path sub-path]
+  (^File [base-path] (db-dir base-path nil))
+  (^File [base-path sub-path]
    (try
      (let [db-name        (:name locals/*local-config*)
            full-base-path (io/file (env :bass-path) "projects" db-name base-path)]
@@ -78,15 +81,25 @@
           bass-path (env :bass-path)]
       (io/file bass-path "projects" db-name "sessiondata")))
 
-(defn embedded-session-file
-  [filename]
-  (when-not (or (nil? filename) (s/includes? filename "/"))
-    (let [file (db-dir "sessiondata" filename)]
-      (when (.exists file)
-        (let [info (json-safe (slurp file) keyword)]
-          ;; TODO: Check if session is ongoing in BASS
-          #_(io/delete-file file)
-          info)))))
+(defn read-session-file
+  ([filename] (read-session-file filename false))
+  ([filename delete?]
+   (when-not (or (nil? filename) (s/includes? filename "/"))
+     (let [file (db-dir "sessiondata" filename)]
+       (when (.exists file)
+         (let [info (json-safe (slurp file) keyword)]
+           ;; TODO: Check if session is ongoing in BASS
+           (when delete?
+             (io/delete-file file))
+           info))))))
+
+(defn write-session-file
+  ([contents] (write-session-file contents nil))
+  ([contents prefix]
+   (let [filename (str (when prefix (str prefix "_")) (UUID/randomUUID))
+         file     (db-dir "sessiondata" filename)]
+     (spit file (json/write-str contents))
+     filename)))
 
 (defn remove-leading-slash
   [x]
@@ -96,7 +109,7 @@
 
 
 (defn uploaded-file
-  ^java.io.File
+  ^File
   [filename]
   (when filename
     (when-let [file (db-dir "upload" (remove-leading-slash filename))]

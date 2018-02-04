@@ -13,7 +13,7 @@
   test-fixtures)
 
 (deftest request-post-answers
-  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "instrument/1647"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647"})]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/1647")
@@ -31,7 +31,7 @@
 
 
 (deftest request-wrong-instrument
-  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "instrument/"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/"})]
     (-> (session (app))
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
@@ -43,7 +43,7 @@
       (has (status? 403))))
 
 (deftest embedded-render
-  (with-redefs [bass/embedded-session-file (constantly {:user-id 110 :path "render"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "render"})]
     (-> (session (app))
         (visit "/embedded/render")
         (has (status? 403))
