@@ -23,6 +23,11 @@
             [ring.util.codec :as codec]
             [clojure.tools.logging :as log]))
 
+
+;; ------------
+;;  MIDDLEWARE
+;; ------------
+
 (defn- match-request-ip
   [request ips-str]
   (let [remote-ip   (:remote-addr request)
@@ -36,6 +41,20 @@
       (not allowed) (layout/text-response "0 External login not allowed")
       (not (match-request-ip request ips)) (layout/text-response (str "0 External login not allowed from this IP " (:remote-addr request)))
       :else (handler request))))
+
+(defn return-url-mw
+  [handler request]
+  (let [session (:session request)]
+    (if (and (:return-url session) (not (:assessments-pending session)))
+      (-> (http-response/found (:return-url session))
+          (assoc :session nil))
+      (handler request))))
+
+
+;; ------------
+;;  RESPONSES
+;; ------------
+
 
 (defn- check-participant-id
   [participant-id]
@@ -51,7 +70,7 @@
       :else
       (:user-id user))))
 
-(defn uid-url
+(defn- uid-url
   [user-id request]
   (let [headers  (:headers request)
         host     (get headers "x-forwarded-host" (get headers "host"))
@@ -77,6 +96,12 @@
                       (user-service/get-user))]
     (-> (http-response/found "/user/")
         (assoc :session (auth-response/create-new-session user {:external-login true :return-url return-url} true)))))
+
+
+;; ------------
+;;    ROUTES
+;; ------------
+
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]

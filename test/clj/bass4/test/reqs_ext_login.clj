@@ -55,12 +55,20 @@
                         (visit (str "/ext-login/check-pending/" user-id))
                         (get-in [:response :body])
                         (string/split #"localhost")
-                        (second))]
+                        (second))
+            redirect (-> session
+                         (visit (str uri "&returnURL=http://www.dn.se"))
+                         (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+                         (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+                         (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+                         (follow-redirect)
+                         (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                         (follow-redirect)
+                         (visit "/user")
+                         (follow-redirect)
+                         (has (status? 302))
+                         (get-in [:response :headers "Location"]))]
+        (is (= "http://www.dn.se" redirect))
         (-> session
-            (visit uri)
-            (has (status? 302))
-            (follow-redirect)
-            (has (some-text? "Welcome"))
-            (has (some-text? "top top welcome"))
-            (visit "/user/")
-            (has (some-text? "HAD")))))))
+            (visit "/user/message")
+            (has (status? 403)))))))
