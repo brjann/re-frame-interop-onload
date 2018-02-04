@@ -59,12 +59,19 @@
          full-base-path))
      (catch Exception e))))
 
+(defn- check-file-age
+  [file max-age-sec]
+  (or (not max-age-sec)
+      (> max-age-sec (/ (- (. System (currentTimeMillis))
+                           (.lastModified file))
+                        1000))))
+
 (defn read-session-file
-  ([filename] (read-session-file filename false))
-  ([filename delete?]
+  ([filename] (read-session-file filename false nil))
+  ([filename delete? max-age-sec]
    (when-not (or (nil? filename) (s/includes? filename "/"))
      (let [file (db-dir "sessiondata" filename)]
-       (when (.exists file)
+       (when (and (.exists file) (check-file-age file max-age-sec))
          (let [info (json-safe (slurp file) keyword)]
            ;; TODO: Check if session is ongoing in BASS
            (when delete?

@@ -72,3 +72,19 @@
         (-> session
             (visit "/user/message")
             (has (status? 403)))))))
+
+
+
+(deftest request-ext-login-error-uid
+  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (let [session  (session (app))
+            redirect (-> session
+                         (visit "/ext-login/do-login?uid=666&returnURL=http://www.dn.se")
+                         (has (status? 302))
+                         (get-in [:response :headers "Location"]))]
+        (is (= "http://www.dn.se" redirect))
+        (-> session
+            (visit "/user/message")
+            (has (status? 403)))))))
