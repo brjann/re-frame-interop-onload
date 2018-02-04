@@ -126,9 +126,9 @@
 (def user-routes
   (context "/user" [:as request]
     (let [user (get-in request [:session :user])]
-      (if (auth-response/double-authed? (:session request))
+      (if (auth-response/need-double-auth? (:session request))
+        (routes
+          (ANY "*" [] (response/found "/double-auth")))
         (if (:assessments-pending (:session request))
           (assessment-routes user request)
-          (treatment-routes user request))
-        (routes
-          (ANY "*" [] (response/found "/double-auth")))))))
+          (treatment-routes user request))))))

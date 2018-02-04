@@ -37,7 +37,6 @@
 
 
 
-
 ;; ------------------
 ;;    DOUBLE-AUTH
 ;; ------------------
@@ -54,10 +53,16 @@
     (auth-service/double-auth-done? session) "/user/"
     (auth-service/double-auth-no-code session) "/login"))
 
-(defn double-authed? [session]
-  (if (auth-service/double-auth-required? (:identity session))
-    (boolean (:double-authed session))
-    true))
+(defn need-double-auth? [session]
+  (cond
+    (:no-re-auth session)
+    false
+
+    (auth-service/double-auth-required? (:identity session))
+    (not (boolean (:double-authed session)))
+
+    :else
+    false))
 
 (defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]
@@ -131,12 +136,18 @@
                                (:email settings)
                                (and (:double-auth-use-both user) (:allow-both settings)))]
       (case send-res
-        :success {:redirect "/double-auth"
-                  :session  {:double-authed    nil
-                             :double-auth-code code}}
-        :no-method {:error (no-method-message user)}
-        :send-error {:redirect "/user/"
-                     :session  {:double-authed true}}))
+        :success
+        {:redirect "/double-auth"
+         :session  {:double-authed    nil
+                    :double-auth-code code}}
+
+        :no-method
+        {:error (no-method-message user)}
+
+        :send-error
+        {:redirect "/user/"
+         :session  {:double-authed true}}))
+
     {:redirect "/user/"}))
 
 
@@ -148,37 +159,35 @@
   (layout/render
     "auth/login.html"))
 
-(defn- new-session-map
-  [user]
-  {:identity          (:user-id user)
-   :auth-re-auth      nil
-   :last-login-time   (:last-login-time user)
-   :last-request-time (t/now)
-   :session-start     (t/now)})
-
 
 (defn- assessments-map
   [user]
   (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
     {:assessments-pending true}))
 
-(defn- login-successful-response
-  [user redirect]
-  (let [new-session (new-session-map user)
-        rounds      (assessments-map user)]
-    (auth-service/register-user-login! (:user-id user))
-    (-> (response/found (:redirect redirect))
-        (assoc :session (merge new-session (:session redirect) rounds)))))
+(defn create-new-session
+  [user additional check-assessments?]
+  (auth-service/register-user-login! (:user-id user))
+  (merge
+    {:identity          (:user-id user)
+     :auth-re-auth      nil
+     :last-login-time   (:last-login-time user)
+     :last-request-time (t/now)
+     :session-start     (t/now)}
+    additional
+    (when check-assessments?
+      (assessments-map user))))
 
 (s/defn
   ^:always-validate
   handle-login
   [session username :- s/Str password :- s/Str]
   (if-let [user (auth-service/authenticate-by-username username password)]
-    (let [redirect (redirect-map user)]
-      (if (:error redirect)
-        (error-422 (:error redirect))
-        (login-successful-response user redirect)))
+    (let [{:keys [redirect error session]} (redirect-map user)]
+      (if error
+        (error-422 error)
+        (-> (response/found redirect)
+            (assoc :session (create-new-session user session true)))))
     (error-422 "error")))
 
 

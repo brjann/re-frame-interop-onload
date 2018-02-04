@@ -6,6 +6,7 @@
             [ring.util.http-response :as http-response]
             [ring.util.response :as response]
             [ring.util.request :as request]
+            [ring.util.codec :refer [url-encode]]
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [clojure.string :as string]
@@ -50,10 +51,15 @@
       (:user-id user))))
 
 (defn uid-url
-  [user-id])
+  [user-id request]
+  (let [headers  (:headers request)
+        host     (get headers "x-forwarded-host" (get headers "host"))
+        scheme   (name (:scheme request))
+        filename (bass/write-session-file user-id "extlogin")]
+    (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
 (defn- check-pending
-  [participant-id]
+  [participant-id request]
   (let [user-id (check-participant-id participant-id)]
     (if (string? user-id)
       (layout/text-response (str "0 " user-id))
@@ -62,8 +68,13 @@
         (layout/text-response "0 No pending administrations")
 
         :else
-        (layout/text-response "1 Yep")))))
+        (layout/text-response (str "1 " (uid-url user-id request)))))))
+
+(defn- do-login
+  [uid]
+  (let [user-id (bass/read-session-file uid true)]))
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]
-    (GET "/check-pending/:participant-id" [participant-id] (check-pending participant-id))))
+    (GET "/check-pending/:participant-id" [participant-id] (check-pending participant-id request))
+    (GET "/do-login" [uid] (layout/text-response (str "uid" uid)))))

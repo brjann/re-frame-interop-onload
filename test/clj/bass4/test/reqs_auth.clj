@@ -104,6 +104,12 @@
       (visit "/user/messages")
       (has (status? 200))))
 
+(deftest request-double-authentication-no-re-auth
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666" :no-re-auth true})
+      (visit "/user/messages")
+      (has (status? 200))))
+
 (deftest request-no-double-authentication
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 536821})
@@ -139,6 +145,15 @@
       (has (status? 302))
       (follow-redirect)
       (has (some-text? "Authenticate again"))))
+
+(deftest request-re-auth
+  (-> (session (app))
+      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+      (visit "/user/messages")
+      (has (status? 200))
+      (visit "/debug/set-session" :params {:auth-re-auth true :no-re-auth true})
+      (visit "/user/messages")
+      (has (status? 200))))
 
 (deftest request-re-auth-pwd
   (-> (session (app))
@@ -212,6 +227,19 @@
         (has (status? 302))
         (visit "/re-auth" :request-method :post :params {:password 536975})
         (has (status? 302))
+        (visit "/user/messages")
+        (has (status? 200)))))
+
+(deftest request-re-auth-last-request-time-no-re-auth
+  (let [x (-> (session (app))
+              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :no-re-auth true})
+              (visit "/user/messages")
+              (has (status? 200))
+              (visit "/debug/session"))]
+    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
+          (-> x
+              (visit "/debug/session")
+              (has (some-text? "1985-10-26T01:20:00.000Z"))))
         (visit "/user/messages")
         (has (status? 200)))))
 
