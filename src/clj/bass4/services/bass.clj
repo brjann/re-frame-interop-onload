@@ -40,22 +40,6 @@
   ([date-time]
    (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
 
-#_(defn db-dir
-    ([] (db-dir nil))
-    ([sub-dir]
-     (let [db-name   (:name locals/*local-config*)
-           bass-path (env :bass-path)]
-       (io/file bass-path "projects" db-name sub-dir))))
-
-#_(defn db-dir
-    ^File
-    [& parts]
-    (let [db-name   (:name locals/*local-config*)
-          bass-path (env :bass-path)]
-      (try
-        (apply io/file (into [bass-path "projects" db-name] parts))
-        (catch Exception e))))
-
 (defn get-sub-path
   "Makes sure that the combination of
   base-path and sub-path is within base-path"
@@ -74,12 +58,6 @@
          (get-sub-path full-base-path sub-path)
          full-base-path))
      (catch Exception e))))
-
-#_(defn- session-dir
-    []
-    (let [db-name   (:name locals/*local-config*)
-          bass-path (env :bass-path)]
-      (io/file bass-path "projects" db-name "sessiondata")))
 
 (defn read-session-file
   ([filename] (read-session-file filename false))
@@ -115,19 +93,6 @@
     (when-let [file (db-dir "upload" (remove-leading-slash filename))]
       (when (.exists file)
         file))))
-
-#_(defn uid-file
-    ^string
-    [uid]
-    (cond
-      (not (string? uid)) nil
-      (.contains uid "/")) nil
-    (try
-      (let [uid-no-slash (string/replace (or uid "") "/" "")
-            file         (io/file (env :bass-path) "projects/temp" uid-no-slash)]
-        (when (and file (.exists file))
-          file))
-      (catch Exception e)))
 
 (defn uid-file
   [uid]
