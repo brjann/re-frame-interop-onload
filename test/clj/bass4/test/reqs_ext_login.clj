@@ -54,8 +54,6 @@
             uri     (-> session
                         (visit (str "/ext-login/check-pending/" user-id))
                         (get-in [:response :body])
-                        (clojure.string/split #" ")
-                        (second)
                         (string/split #"localhost")
                         (second))]
         (-> session

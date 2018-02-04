@@ -69,7 +69,7 @@
         (layout/text-response "0 No pending administrations")
 
         :else
-        (layout/text-response (str "1 " (uid-url user-id request)))))))
+        (layout/text-response (uid-url user-id request))))))
 
 (defn- do-login
   [uid]
