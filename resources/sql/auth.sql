@@ -31,6 +31,24 @@ SELECT
 FROM c_participant
 WHERE UserName = :username;
 
+-- :name get-user-by-participant-id :? :*
+-- :doc retrieve a user given the id.
+SELECT
+  ObjectId,
+  FirstName AS `first-name`,
+  LastName AS `last-name`,
+  UserName,
+  Email,
+  SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both',
+  ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login`,
+  `Password`
+FROM c_participant
+WHERE ParticipantId = :participant-id;
+
+
+
 -- :name get-double-auth-settings :? :1
 -- :doc
 SELECT

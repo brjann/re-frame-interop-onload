@@ -35,7 +35,7 @@
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'ext-login-routes
-        (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip))
+        (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
         (wrap-routes middleware/wrap-formats))
     ;; Replacement for route/not-found
     (layout/route-not-found)))

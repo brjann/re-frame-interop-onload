@@ -6,6 +6,10 @@
     (if-let [user (db/get-user-by-user-id {:user-id user-id})]
       (assoc user :user-id (:objectid user)))))
 
+(defn get-users-by-participant-id [participant-id]
+  (when-let [users (db/get-user-by-participant-id {:participant-id participant-id})]
+    (mapv #(assoc % :user-id (:objectid %)) users)))
+
 (defn support-email [user]
   (:email (db/get-support-email {:project-id (:project-id user)})))
 
