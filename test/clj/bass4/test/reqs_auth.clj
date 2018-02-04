@@ -106,7 +106,7 @@
 
 (deftest request-double-authentication-no-re-auth
   (-> (session (app))
-      (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666" :no-re-auth true})
+      (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666" :external-login true})
       (visit "/user/messages")
       (has (status? 200))))
 
@@ -151,7 +151,7 @@
       (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
       (visit "/user/messages")
       (has (status? 200))
-      (visit "/debug/set-session" :params {:auth-re-auth true :no-re-auth true})
+      (visit "/debug/set-session" :params {:auth-re-auth true :external-login true})
       (visit "/user/messages")
       (has (status? 200))))
 
@@ -232,7 +232,7 @@
 
 (deftest request-re-auth-last-request-time-no-re-auth
   (let [x (-> (session (app))
-              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :no-re-auth true})
+              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :external-login true})
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]

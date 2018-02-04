@@ -72,13 +72,16 @@
         (layout/text-response (uid-url user-id request))))))
 
 (defn- do-login
-  [uid]
+  [uid return-url]
   (when-let [user (-> (bass/read-session-file uid true)
                       (user-service/get-user))]
     (-> (http-response/found "/user/")
-        (assoc :session (auth-response/create-new-session user {:no-re-auth true} true)))))
+        (assoc :session (auth-response/create-new-session user {:external-login true :return-url return-url} true)))))
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]
     (GET "/check-pending/:participant-id" [participant-id] (check-pending participant-id request))
-    (GET "/do-login" [uid] (do-login uid))))
+    (GET "/do-login" [& params]
+      (let [uid        (:uid params)
+            return-url (:returnURL params)]
+        (do-login uid return-url)))))

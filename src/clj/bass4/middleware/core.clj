@@ -139,7 +139,7 @@
         last-request-time  (:last-request-time session)
         re-auth-time-limit (or (env :timeout-soft) (* 30 60))
         re-auth?           (cond
-                             (:no-re-auth session) false
+                             (:external-login session) false
                              (:auth-re-auth session) true
                              (nil? last-request-time) nil
                              (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]

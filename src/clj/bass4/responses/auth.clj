@@ -55,7 +55,7 @@
 
 (defn need-double-auth? [session]
   (cond
-    (:no-re-auth session)
+    (:external-login session)
     false
 
     (auth-service/double-auth-required? (:identity session))
