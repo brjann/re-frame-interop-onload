@@ -13,6 +13,7 @@
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
             [bass4.responses.instrument :as instruments]
+            [bass4.responses.auth :as auth-response]
             [bass4.services.assessments :as assessments]
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
@@ -72,9 +73,12 @@
 
 (defn- do-login
   [uid]
-  (let [user-id (bass/read-session-file uid true)]))
+  (when-let [user (-> (bass/read-session-file uid true)
+                      (user-service/get-user))]
+    (-> (http-response/found "/user/")
+        (assoc :session (auth-response/create-new-session user {:no-re-auth true} true)))))
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]
     (GET "/check-pending/:participant-id" [participant-id] (check-pending participant-id request))
-    (GET "/do-login" [uid] (layout/text-response (str "uid" uid)))))
+    (GET "/do-login" [uid] (do-login uid))))

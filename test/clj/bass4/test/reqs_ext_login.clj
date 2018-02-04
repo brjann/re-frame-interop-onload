@@ -60,4 +60,9 @@
                         (second))]
         (-> session
             (visit uri)
-            (has (some-text? "uid")))))))
+            (has (status? 302))
+            (follow-redirect)
+            (has (some-text? "Welcome"))
+            (has (some-text? "top top welcome"))
+            (visit "/user/")
+            (has (some-text? "HAD")))))))
