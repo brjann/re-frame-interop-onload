@@ -109,7 +109,7 @@
             (json-safe (:content-data params))))))
     (routes
       ;; TODO: What should be shown if not in treatment?
-      (ANY "*" [] (layout/text-response "Empty page")))))
+      (ANY "*" [] (layout/print-var-response "Empty page")))))
 
 
 (defn assessment-routes

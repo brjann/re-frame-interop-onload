@@ -142,6 +142,12 @@
 
 (defn text-response
   [var]
+  (-> (str var)
+      (ring-response/response)
+      (ring-response/content-type "text/plain")))
+
+(defn print-var-response
+  [var]
   (-> (clojure.pprint/pprint var)
       (with-out-str)
       (ring-response/response)

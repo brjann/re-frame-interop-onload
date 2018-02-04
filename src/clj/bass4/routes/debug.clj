@@ -35,16 +35,16 @@
   (context "/debug" [:as request]
     (if (or (env :debug-mode) (env :dev))
       (routes
-        (GET "/timezone" [:as req] (layout/text-response (locals/time-zone)))
-        (GET "/session" [:as req] (layout/text-response (:session req)))
+        (GET "/timezone" [:as req] (layout/print-var-response (locals/time-zone)))
+        (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-state/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
-        (GET "/request" [:as req] (layout/text-response req))
+        (GET "/request" [:as req] (layout/print-var-response req))
         (GET "/test" [:as req]
           (layout/render "test.html"
                          {:url :url}))
-        (GET "/env" [:as req] (layout/text-response env))
+        (GET "/env" [:as req] (layout/print-var-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")
               (assoc :session
@@ -68,13 +68,13 @@
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]
-          (layout/text-response params))
+          (layout/print-var-response params))
         (GET "/encode" []
           (-> (http-response/found (str "/debug/decode?url=" (codec/url-encode "/debug/encode-decode?arg1=val1&arg2=val2&arg3=path%2fto%2fresource")))))
         (GET "/decode" [& params]
           (-> (http-response/found (:url params))))
         (GET "/encode-decode" [& params]
-          (layout/text-response params))
+          (layout/print-var-response params))
         (GET "/exception" []
           (throw (Exception. "Your exception as requested.")))
         (GET "/states" []

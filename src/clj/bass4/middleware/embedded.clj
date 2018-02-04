@@ -13,7 +13,7 @@
            (bass/embedded-session-file uid)]
     (-> (response/found path)
         (assoc :session {:identity user-id :embedded-path path}))
-    (layout/text-response "Wrong uid.")))
+    (layout/print-var-response "Wrong uid.")))
 
 (defn legal-character
   [c]

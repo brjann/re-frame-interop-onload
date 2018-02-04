@@ -27,6 +27,14 @@ SELECT SMSSender AS `sms-sender`
 FROM c_project
 WHERE ObjectId=100;
 
+
+-- :name ext-login-settings :? :1
+SELECT ExternalLoginAllowed AS allowed,
+  ExternalLoginIps AS ips
+FROM c_project
+WHERE ObjectId=100;
+
+
 -- :name link-property-reverse! :! :1
 -- :doc
 INSERT IGNORE INTO links_properties_reverse
