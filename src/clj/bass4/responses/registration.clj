@@ -3,8 +3,11 @@
             [schema.core :as s]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
+            [clojure.walk :as walk]
             [bass4.services.registration :as reg-service]
+            [bass4.responses.auth :as res-auth]
             [clj-time.core :as t]
+            [bass4.utils :refer [filter-map]]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]))
@@ -47,7 +50,27 @@
   (layout/render "registration-form.html"
                  {:registration-content (reg-service/registration-content project-id)}))
 
+(defn- map-fields
+  [fields-mapping fields]
+  (->> fields-mapping
+       (map #(vector (first %) (get fields (second %))))
+       (into {})
+       (filter-map identity)
+       (walk/keywordize-keys)))
+
 (defn handle-registration
-  [project-id]
-  (layout/render "registration-form.html"
-                 {:registration-content (reg-service/registration-content project-id)}))
+  [project-id fields]
+  (let [{:keys [fields-mapping group]} (reg-service/registration-params project-id)
+        field-values (map-fields fields-mapping fields)]
+    (if (seq field-values)
+      (let [user-id (reg-service/create-user! project-id field-values group)]
+        (-> (response/found "/user")
+            (assoc :session (res-auth/create-new-session
+                              {:user-id user-id}
+                              {:double-authed true}
+                              true))))
+      (layout/error-400-page))))
+
+;; TODO: Tests for registration and following assessments
+;; TODO: Duplicate username
+;; TODO: Validate email and sms

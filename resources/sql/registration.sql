@@ -12,3 +12,10 @@ WHERE ObjectId=:project-id;
 SELECT RegistrationForm AS `registration-content`
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
+
+-- :name registration-params :? :1
+SELECT
+  RegistrationFieldsMapping AS `fields-mapping`,
+  DefaultRegistrationGroup AS `group`
+FROM c_treatmentinterface
+WHERE ObjectId=:project-id;
