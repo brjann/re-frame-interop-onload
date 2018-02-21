@@ -15,6 +15,7 @@
     <!--{% style "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" %}-->
 </head>
 <body>
+{% script "/js/jquery/jquery-3.2.0.min.js" %}
 <div id="main-body">
     {% if debug %}
     <div>{{debug}}</div>
@@ -27,7 +28,6 @@
 {% include "spinner-snip.html" %}
 
 <!-- scripts -->
-{% script "/js/jquery/jquery-3.2.0.min.js" %}
 {% script "/js/jquery-ui-slider/jquery-ui.min.js" %}
 {% script "/assets/jquery-color/jquery.color.js" %}
 {% script "/assets/tether/dist/js/tether.min.js" %}
