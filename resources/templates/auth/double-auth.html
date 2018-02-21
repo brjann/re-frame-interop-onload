@@ -2,7 +2,10 @@
 {% block content %}
 
 <h1>{%tr login/login %}</h1>
-<p>{%tr login/please-double-auth %} ({{double-auth-code}}).</p>
+<p>{%tr login/please-double-auth %}
+    {% if double-auth-code %}
+    ({{double-auth-code}})
+    {% endif %}</p>
 <form method="post">
     <div class="alert alert-danger hidden" data-show-on="error" role="alert">
         {%tr login/code-error %}

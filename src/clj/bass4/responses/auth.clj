@@ -5,6 +5,7 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [clojure.tools.logging :as log]
+            [bass4.config :refer [env]]
             [clj-time.core :as t]
             [bass4.layout :as layout]
             [bass4.sms-sender :as sms]
@@ -44,7 +45,7 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    {:double-auth-code double-auth-code}))
+    (when (or (env :dev) (env :debug)) {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]
   (cond
