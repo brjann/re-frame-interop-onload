@@ -8,7 +8,8 @@
             [bass4.services.bass :as bass-service]
             [selmer.parser :as parser]
             [bass4.request-state :as request-state]
-            [bass4.bass-locals :as locals])
+            [bass4.bass-locals :as locals]
+            [clojure.tools.logging :as log])
   (:import (java.io StringReader)))
 
 (defn smsteknik-url
@@ -45,7 +46,7 @@
 ;; Overwritten by other function when in debug mode
 (defn send-db-sms!
   [recipient message]
-  (let [config (locals/common-config)
+  (let [config locals/common-config
         url    (smsteknik-url
                  (:smsteknik-id config)
                  (:smsteknik-user config)

@@ -3,7 +3,8 @@
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
             [bass4.request-state :as request-state]
-            [prone.middleware :refer [wrap-exceptions]]))
+            [prone.middleware :refer [wrap-exceptions]]
+            [clojure.tools.logging :as log]))
 
 
 
@@ -37,13 +38,17 @@
   [handler request]
   (cond
     ;; Test environment
-    (or (env :dev-test) (env :dev))
+    ;; Put mail and sms in header
+    (and (or (env :dev-test) (env :dev))
+         (not (= true (env :force-external-messages))))
     (with-redefs [sms/send-db-sms! test-send-sms!
                   mail! test-mail!]
       (handler request))
 
     ;; Debug or development environment
-    (env :debug)
+    ;; Send mail and sms via debug mail
+    (and (env :debug)
+         (not (= true (env :force-external-messages))))
     (with-redefs [sms/send-db-sms! debug-send-sms!
                   mail! (debug-wrap-mail-fn mail!)]
       (handler request))
