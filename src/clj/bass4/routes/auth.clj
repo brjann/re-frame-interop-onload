@@ -11,6 +11,11 @@
   (GET "/logout" [& params]
     (auth-response/logout))
 
+  (GET "/" [:as request]
+    (if (get-in request [:session :identity])
+      (response/found "/user")
+      (response/found "/login")))
+
   (GET "/login" []
     (auth-response/login-page))
   (POST "/login" [& params :as request]
