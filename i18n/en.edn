@@ -12,7 +12,8 @@
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
- :registration    {:provide-digits "Provide the digits in the image."}
+ :registration    {:provide-digits "Provide the digits in the image."
+                   :captcha-error  "Wrong digits provided."}
  :dashboard       {:start           "Start"
                    :welcome         "Welcome!"
                    :new-modules     "You have access to new modules"

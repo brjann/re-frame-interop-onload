@@ -8,9 +8,6 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
-(defn create-captcha!
-  [])
-
 (defn captcha-mw
   [handler request]
   (let [[_ project-id captcha] (re-matches #"/registration/([0-9]*)(.*)", (:uri request))]
@@ -30,4 +27,6 @@
   (GET "/registration/:project-id" [project-id :as request]
     (layout/text-response "OK"))
   (GET "/registration/:project-id/captcha" [project-id :as request]
-    (reg-response/captcha project-id (:session request))))
+    (reg-response/captcha project-id (:session request)))
+  (POST "/registration/:project-id/captcha" [project-id & params :as request]
+    (reg-response/validate-captcha project-id (:captcha params) (:session request))))

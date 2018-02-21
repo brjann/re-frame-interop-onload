@@ -6,7 +6,8 @@
             [bass4.services.registration :as reg-service]
             [clj-time.core :as t]
             [bass4.layout :as layout]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [clojure.tools.logging :as log]))
 
 (defn- captcha-session
   [project-id]
@@ -24,8 +25,19 @@
 
 (defn captcha
   [project-id session]
-  (let [filename (:captcha-filename session)
-        digits   (:captcha-digits session)]
-    (if (and filename digits)
-      (captcha-page project-id filename)
-      (captcha-session project-id))))
+  (if (:captcha-ok session)
+    (response/found (str "/registration/" project-id))
+    (let [filename (:captcha-filename session)
+          digits   (:captcha-digits session)]
+      (if (and filename digits)
+        (captcha-page project-id filename)
+        (captcha-session project-id)))))
+
+(defn validate-captcha
+  [project-id captcha session]
+  (if-let [digits (:captcha-digits session)]
+    (if (= digits captcha)
+      (-> (response/found (str "/registration/" project-id ""))
+          (assoc :session {:captcha-ok true}))
+      (layout/error-422 "error"))
+    (response/found (str "/registration/" project-id "/captcha"))))

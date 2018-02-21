@@ -12,22 +12,6 @@
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]))
 
-
-
-(defn error-422
-  "https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-  422 Unprocessable Entity (WebDAV; RFC 4918)
-  The request was well-formed but was unable to be followed due to semantic errors.
-
-  Used to communicate back to form that there was something wrong with
-  the posted data. For example erroneous username-password combination"
-  ([] (error-422 ""))
-  ([body]
-   {:status  422
-    :headers {}
-    :body    body}))
-
-
 ;; -------------
 ;;    LOGOUT
 ;; -------------
@@ -76,7 +60,7 @@
     (if (= code (:double-auth-code session))
       (-> (response/found "/user/")
           (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
-      (error-422 "error"))))
+      (layout/error-422 "error"))))
 
 
 ;; --------------------------
@@ -186,10 +170,10 @@
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
       (if error
-        (error-422 error)
+        (layout/error-422 error)
         (-> (response/found redirect)
             (assoc :session (create-new-session user session true)))))
-    (error-422 "error")))
+    (layout/error-422 "error")))
 
 
 ;; -------------
@@ -224,7 +208,7 @@
         (-> response
             (assoc :session (merge session {:auth-re-auth      nil
                                             :last-request-time (t/now)})))
-        (error-422 "error"))
+        (layout/error-422 "error"))
       response)
     (response/forbidden)))
 

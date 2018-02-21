@@ -3,6 +3,9 @@
 {{content|safe}}
 <p><img src="File.php?uid={{filename}}"></p>
 <form class="form" action="" method="post">
+    <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+        {%tr registration/captcha-error %}
+    </div>
     <div class="form-group">
         <label for="captcha">{%tr registration/provide-digits %}</label>
         <input class="form-control" type="text" name="captcha" id="captcha">
