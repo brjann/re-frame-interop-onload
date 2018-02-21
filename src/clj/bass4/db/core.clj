@@ -76,6 +76,7 @@
 (conman/bind-connection *db* "sql/instruments.sql")
 (conman/bind-connection *db* "sql/assessments.sql")
 (conman/bind-connection *db* "sql/instrument-answers.sql")
+(conman/bind-connection *db* "sql/registration.sql")
 (conman/bind-connection db-common "sql/common.sql")
 
 
