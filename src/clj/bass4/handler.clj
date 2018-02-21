@@ -4,7 +4,7 @@
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :refer [user-routes]]
             [bass4.routes.embedded :refer [embedded-routes]]
-            [bass4.routes.registration :refer [registration-routes]]
+            [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
             [bass4.routes.debug :refer [debug-routes]]
             [compojure.route :as route]
@@ -37,7 +37,8 @@
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'registration-routes
-        (wrap-routes middleware/wrap-formats))
+        (wrap-routes middleware/wrap-formats)
+        (wrap-routes #(middleware/wrap-mw-fn % reg-routes/captcha-mw)))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
         (wrap-routes middleware/wrap-formats))

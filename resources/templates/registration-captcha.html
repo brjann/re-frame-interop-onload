@@ -1,0 +1,12 @@
+{% extends "simple.html" %}
+{% block content %}
+{{content|safe}}
+<p><img src="File.php?uid={{filename}}"></p>
+<form class="form" action="" method="post">
+    <div class="form-group">
+        <label for="captcha">{%tr registration/provide-digits %}</label>
+        <input class="form-control" type="text" name="captcha" id="captcha">
+    </div>
+    <button class="btn btn-primary" type="submit">{%tr submit %}</button>
+</form>
+{% endblock %}
