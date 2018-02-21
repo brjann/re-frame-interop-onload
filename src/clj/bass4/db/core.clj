@@ -43,7 +43,9 @@
   (let [url (db-url local-config (env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
-      (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")}))))
+      (let [conn (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")})]
+        (log/info (str (:name local-config) " attached"))
+        conn))))
 
 (defn db-disconnect!
   [db-conn]
@@ -132,10 +134,14 @@
                  [(get-in request [:headers "x-forwarded-host"])
                   (:server-name request)])))
 
+(defn host-db
+  [host db-mappings]
+  (or (get db-mappings host) (:default db-mappings)))
+
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
         host        (keyword (request-host request))
-        db-name     (or (get db-mappings host) (:default db-mappings))]
+        db-name     (host-db host db-mappings)]
     (if (contains? db-connections db-name)
       [db-name @(get db-connections db-name)]
       (throw (Exception. (str "No db present for key " db-name " mappings: " db-mappings))))))
@@ -157,6 +163,10 @@
 (defn init-repl
   ([] (init-repl :db1))
   ([db-name]
-   (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
-   (alter-var-root (var locals/*local-config*) (constantly (merge bass-locals/local-defaults (get bass-locals/local-configs db-name))))
-   (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))
+   (if (not (contains? db-connections db-name))
+     (throw (Exception. (str "db " db-name " does not exists")))
+     (do
+       (alter-var-root (var host-db) (constantly (constantly db-name)))
+       (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
+       (alter-var-root (var locals/*local-config*) (constantly (merge bass-locals/local-defaults (get bass-locals/local-configs db-name))))
+       (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))))

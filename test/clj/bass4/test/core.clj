@@ -29,7 +29,7 @@
     #'bass4.db.core/db-connections
     #'bass4.db.core/db-common
     #'bass4.i18n/i18n-map)
-  (bass4.db.core/init-repl :test)
+  (bass4.db.core/init-repl :bass4_test)
   (binding [clojure.test/*stack-trace-depth* 5
             mw/*skip-csrf*                   true]
     (f)))
