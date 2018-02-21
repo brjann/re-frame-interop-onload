@@ -8,3 +8,7 @@
 (defn captcha-content
   [project-id]
   (:captcha-content (db/captcha-content {:project-id project-id})))
+
+(defn registration-content
+  [project-id]
+  (:registration-content (db/registration-content {:project-id project-id})))

@@ -38,7 +38,9 @@
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (has (status? 302))
         (visit "/registration/564610/captcha")
-        (has (status? 302)))))
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "Intresseanmälan")))))
 
 (deftest registration-captcha-not-created
   (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]

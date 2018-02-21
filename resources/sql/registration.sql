@@ -8,3 +8,7 @@ SELECT RegistrationCaptcha AS `captcha-content`
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
+-- :name registration-content :? :1
+SELECT RegistrationForm AS `registration-content`
+FROM c_treatmentinterface
+WHERE ObjectId=:project-id;

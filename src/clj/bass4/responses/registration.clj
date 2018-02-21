@@ -41,3 +41,13 @@
           (assoc :session {:captcha-ok true}))
       (layout/error-422 "error"))
     (response/found (str "/registration/" project-id "/captcha"))))
+
+(defn registration
+  [project-id]
+  (layout/render "registration-form.html"
+                 {:registration-content (reg-service/registration-content project-id)}))
+
+(defn handle-registration
+  [project-id]
+  (layout/render "registration-form.html"
+                 {:registration-content (reg-service/registration-content project-id)}))
