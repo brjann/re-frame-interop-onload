@@ -4,6 +4,7 @@
             [bass4.services.assessments :as administrations]
             [ring.util.http-response :as response]
             [schema.core :as s]
+            [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
             [bass4.config :refer [env]]
             [clj-time.core :as t]
@@ -91,7 +92,7 @@
         (sms/send-db-sms! user-sms code))
     true
     (when (:email send-methods)
-      (mail/mail! user-email "code" code))))
+      (mail/mail! user-email (i18n/tr) code))))
 
 (defn- send-code!
   [code user-sms user-email by-sms by-email allow-both]

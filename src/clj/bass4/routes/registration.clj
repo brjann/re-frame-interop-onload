@@ -10,9 +10,12 @@
 
 (defn captcha-mw
   [handler request]
-  (let [[_ project-id captcha] (re-matches #"/registration/([0-9]*)(.*)", (:uri request))]
+  (let [[_ project-id path] (re-matches #"/registration/([0-9]*)(.*)", (:uri request))]
     (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
-      (if (or (= "/captcha" captcha) (get-in request [:session :captcha-ok]))
+      (if (or
+            (= "/captcha" path)
+            (= "/validation" path)
+            (get-in request [:session :captcha-ok]))
         (handler request)
         (response/found (str "/registration/" project-id "/captcha")))
       (layout/text-response "Registration not allowed"))
@@ -31,4 +34,6 @@
   (GET "/registration/:project-id/captcha" [project-id :as request]
     (reg-response/captcha project-id (:session request)))
   (POST "/registration/:project-id/captcha" [project-id & params :as request]
-    (reg-response/validate-captcha project-id (:captcha params) (:session request))))
+    (reg-response/validate-captcha project-id (:captcha params) (:session request)))
+  (GET "/registration/:project-id/validation" [project-id :as request]
+    (reg-response/validate-registration project-id (:session request))))

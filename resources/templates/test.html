@@ -1,21 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>bass4 test</title>
-
-    <!-- styles -->
-    <link href="/js/jquery-ui-slider/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <link href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
-    <link href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
-
-    <link href="/css/screen.css" rel="stylesheet" type="text/css"/>
-    <link href="/css/bass.css" rel="stylesheet" type="text/css"/>
-    <!--<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />-->
-</head>
-<body>
-<p>{{url}}</p>
-<p>{%ifequal url :url%}EQUAL{%endifequal%}</p>
-</body>
-</html>
+{% extends "simple.html" %}
+{% block content %}
+<div class="container">
+    <ul class="list-group">
+        <li class="list-group-item row d-flex">
+            <div class="col-md-4 col-12 list-group-item-primary">Name</div>
+            <div class="col-md-8 col-12">Email</div>
+        </li>
+    </ul>
+</div>
+{% endblock %}

@@ -158,6 +158,7 @@ $(document).ready(function () {
 				// if it returns false, then abort.
 				if (formsubmit !== undefined) {
 					if (!formsubmit()) {
+                  $form.addClass('was-validated');
 						event.preventDefault();
 						event.stopPropagation();
 						return false;

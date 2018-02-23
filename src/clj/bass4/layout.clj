@@ -212,6 +212,11 @@
              (split (get-in content [:trb :content]) #"[|]")))
   :endtrb)
 
+(parser/add-tag!
+  :tra
+  (fn [args context-map content]
+    (i18n/tr [(keyword (get-in content [:tra :content]))]))
+  :endtra)
 
 (filters/add-filter!
   :date

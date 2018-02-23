@@ -2,7 +2,8 @@
   (:require [bass4.config :refer [env]]
             [clojure.java.io :as io]
             [bass4.php_clj.core :refer [clj->php]]
-            [clojure.java.shell :as shell]))
+            [clojure.java.shell :as shell]
+            [clojure.tools.logging :as log]))
 
 (defn mail!
   ([to subject message] (mail! to subject message nil))

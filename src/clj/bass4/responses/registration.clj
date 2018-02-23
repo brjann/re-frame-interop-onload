@@ -6,11 +6,15 @@
             [clojure.walk :as walk]
             [bass4.services.registration :as reg-service]
             [bass4.responses.auth :as res-auth]
+            [bass4.services.auth :as auth-service]
             [clj-time.core :as t]
-            [bass4.utils :refer [filter-map]]
+            [bass4.utils :refer [filter-map fnil+ in?]]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.sms-sender :as sms]
+            [bass4.mailer :as mail]
+            [clojure.string :as string]))
 
 (defn- captcha-session
   [project-id]
@@ -47,8 +51,15 @@
 
 (defn registration
   [project-id]
-  (layout/render "registration-form.html"
-                 {:registration-content (reg-service/registration-content project-id)}))
+  (let [params        (reg-service/registration-params project-id)
+        fields        (:fields params)
+        fields-map    (zipmap fields (repeat (count fields) true))
+        sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
+    (layout/render "registration-form.html"
+                   (merge
+                     params
+                     fields-map
+                     {:sms-countries sms-countries}))))
 
 (defn- map-fields
   [fields-mapping fields]
@@ -58,19 +69,50 @@
        (filter-map identity)
        (walk/keywordize-keys)))
 
+(defn email-map
+  [email]
+  (let [code (auth-service/letters-digits 5)]
+    (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
+    {:code-Email code}))
+
+(defn- sms-map
+  [sms-number]
+  (let [code (auth-service/letters-digits 5)]
+    (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
+    {:code-SMS code}))
+
+(defn- prepare-validation
+  [project-id field-values]
+  (let [info (merge
+               field-values
+               (fnil+ sms-map (:SMSNumber field-values))
+               (fnil+ email-map (:Email field-values)))]
+    (->
+      (response/found (str "registration/" project-id "/validate"))
+      (assoc :session {:reg-info   info
+                       :captcha-ok nil}))))
+
 (defn handle-registration
   [project-id fields]
   (let [{:keys [fields-mapping group]} (reg-service/registration-params project-id)
         field-values (map-fields fields-mapping fields)]
     (if (seq field-values)
-      (let [user-id (reg-service/create-user! project-id field-values group)]
-        (-> (response/found "/user")
-            (assoc :session (res-auth/create-new-session
-                              {:user-id user-id}
-                              {:double-authed true}
-                              true))))
+      (prepare-validation project-id field-values)
       (layout/error-400-page))))
+
+(defn validate-registration
+  [project-id session]
+  (let [info (:reg-info session)]))
 
 ;; TODO: Tests for registration and following assessments
 ;; TODO: Duplicate username
 ;; TODO: Validate email and sms
+;; Idea: If email and/or sms is entered, then all field values
+;; are stored in session and validation codes are sent out.
+;; Registrant must enter these before user is created.
+;; Auto-create password and present username/password to user if no sms/email,
+;; otherwise send them to user by sms first and by email second
+;;
+;; TODO: Captcha timeout
+;; TODO: Registration closed screen
+;; TODO: Max number of sms
