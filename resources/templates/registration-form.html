@@ -1,7 +1,10 @@
 {% extends "simple.html" %}
+
 {% block head %}
+{% if sms-number %}
 {% style "/js/intl-tel-input/css/intlTelInput.css" %}
 {% style "/css/intl-override.css" %}
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -104,9 +107,10 @@
             <label for="password" class="col-sm-3 col-form-label">{%tr password %}</label>
             <div class="col-sm-9">
                 <input type="password" class="form-control" id="password"
-                       pattern="((?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20})" name="password"
+                       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" name="password"
                        oninvalid="password_invalid();"
-                       placeholder="{%tr registration/password-req-info %}" oninput="validate_password();" required>
+                       oninput="setCustomValidity(''); validate_password();"
+                       placeholder="{%tr registration/password-req-info %}" required>
             </div>
         </div>
         <div class="form-group row">
@@ -143,7 +147,7 @@
    }
 
    function validate_pid() {
-      if (pid_validator !== undefined) {
+      if (typeof pid_validator !== "undefined") {
          var error = pid_validator($(event.target).val());
          if (typeof error === 'string' && error.length > 0) {
             event.target.setCustomValidity(error);

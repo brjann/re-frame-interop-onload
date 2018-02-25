@@ -44,7 +44,7 @@
         sms-countries (string/split-lines (:sms-countries params))]
     (merge
       {:fields fields :group group :sms-countries sms-countries}
-      (select-keys params [:pid-name :pid-format :info :markdown?]))))
+      (select-keys params [:pid-name :pid-format :pid-validator :info :markdown?]))))
 
 (defn create-user!
   [project-id field-values group]
