@@ -27,8 +27,9 @@
   (let [content (reg-service/captcha-content project-id)]
     (layout/render
       "registration-captcha.html"
-      {:content  content
-       :filename filename})))
+      (merge
+        content
+        {:filename filename}))))
 
 (defn captcha
   [project-id session]
@@ -49,9 +50,9 @@
       (layout/error-422 "error"))
     (response/found (str "/registration/" project-id "/captcha"))))
 
-(defn registration
+(defn registration-page
   [project-id]
-  (let [params        (reg-service/registration-params project-id)
+  (let [params        (reg-service/registration-content project-id)
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]

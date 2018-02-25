@@ -13,7 +13,7 @@
 
 (defn captcha-content
   [project-id]
-  (:captcha-content (db/captcha-content {:project-id project-id})))
+  (db/bool-cols db/captcha-content {:project-id project-id} [:markdown?]))
 
 (def field-translation
   {:FirstName    :first-name
@@ -33,18 +33,18 @@
 
 (defn registration-params
   [project-id]
-  (let [content (db/registration-content {:project-id project-id})]
+  (let [content (db/registration-params {:project-id project-id})]
     (merge content {:fields (transform-fields (:fields content))})))
 
-(defn registration-params
+(defn registration-content
   [project-id]
-  (let [params        (db/registration-params {:project-id project-id})
+  (let [params        (db/registration-content {:project-id project-id})
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
         sms-countries (string/split-lines (:sms-countries params))]
     (merge
       {:fields fields :group group :sms-countries sms-countries}
-      (select-keys params [:pid-name :pid-format]))))
+      (select-keys params [:pid-name :pid-format :info :markdown?]))))
 
 (defn create-user!
   [project-id field-values group]

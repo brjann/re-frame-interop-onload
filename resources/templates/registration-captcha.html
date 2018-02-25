@@ -1,6 +1,12 @@
 {% extends "simple.html" %}
 {% block content %}
+{% if markdown? %}
+<div class="markdown">
+    {{content|markdown}}
+</div>
+{% else %}
 {{content|safe}}
+{% endif %}
 <p><img src="File.php?uid={{filename}}"></p>
 <form class="form" action="" method="post">
     <div class="alert alert-danger hidden" data-show-on="error" role="alert">
