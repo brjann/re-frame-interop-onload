@@ -1,4 +1,5 @@
 {:submit          "Submit"
+ :confirm         "Confirm"
  :next            "Next"
  :me              "me"
  :previous        "Previous"
@@ -25,7 +26,9 @@
                    :repeat-not-match   "Repeated password does not match password."
                    :password-req-error "Password must be 8-20 characters and contain at lowercase and uppercase letter(s) and number(s)"
                    :password-req-info  "8-20 characters, upper- and lowercase and number"
-                   :must-enter         "You must enter your"}
+                   :must-enter         "You must enter your"
+                   :change-information "Change information"
+                   :please-review      "Please review and confirm your information."}
  :dashboard       {:start           "Start"
                    :welcome         "Welcome!"
                    :new-modules     "You have access to new modules"

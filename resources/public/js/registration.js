@@ -13,9 +13,6 @@ function sms_change() {
    sms_number.intlTelInput('setNumber', sms_number.intlTelInput('getNumber'));
 }
 
-var text_no_match = "{%tr registration/repeat-not-match %}";
-var text_password_invalid = "{%tr registration/password-req-error %}";
-
 function password_invalid() {
    event.target.setCustomValidity(text_password_invalid);
 }
@@ -42,4 +39,39 @@ function validate_pid() {
          event.target.setCustomValidity('');
       }
    }
+}
+
+function confirm_registration_dialog() {
+   if ($('#registration-form').get(0).checkValidity()) {
+      $('#registration-div').hide();
+      $('#confirm-div').show();
+
+      var basic_fields = ['first-name', 'last-name', 'email', 'pid-number'];
+      for (var i = 0; i < basic_fields.length; i++) {
+         $('#' + basic_fields[i] + '-confirm').val($('#' + basic_fields[i]).val());
+      }
+
+      var sms_number = $('#sms-number');
+      if (sms_number.length) {
+         $('#sms-number-confirm').val(sms_number.intlTelInput('getNumber'));
+         var country = sms_number.intlTelInput('getSelectedCountryData');
+         $('#sms-country').text(country['name']);
+      }
+      return false;
+   }
+   else {
+      // Must return true if not valid to show form errors.
+      return true;
+   }
+}
+
+function change_registration() {
+   $('#confirm-div').hide();
+   $('#registration-div').show();
+}
+
+function confirm_registration() {
+   $('#confirm-div').hide();
+   $('#registration-div').show();
+   $('#registration-form').submit();
 }
