@@ -8,13 +8,14 @@
             [bass4.responses.auth :as res-auth]
             [bass4.services.auth :as auth-service]
             [clj-time.core :as t]
-            [bass4.utils :refer [filter-map fnil+ in?]]
+            [bass4.utils :refer [filter-map fnil+ in? json-safe]]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.java.io :as io]))
 
 (defn- captcha-session
   [project-id]
@@ -62,7 +63,7 @@
                      fields-map
                      {:sms-countries sms-countries}))))
 
-(defn- map-fields
+#_(defn- map-fields
   [fields-mapping fields]
   (->> fields-mapping
        (map #(vector (first %) (get fields (second %))))
@@ -82,7 +83,7 @@
     (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
     {:code-SMS code}))
 
-(defn- prepare-validation
+#_(defn- prepare-validation
   [project-id field-values]
   (let [info (merge
                field-values
@@ -93,12 +94,37 @@
       (assoc :session {:reg-info   info
                        :captcha-ok nil}))))
 
+(def country-codes
+  (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
+
+(defn- check-sms
+  [sms-number sms-countries]
+  (cond
+
+    (nil? sms-number)
+    true
+
+    (not (string/starts-with? sms-number "+"))
+    false
+
+    :else
+    (let [matching (-> (select-keys country-codes sms-countries)
+                       vals
+                       flatten)]
+      (some
+        #(string/starts-with?
+           sms-number
+           (str "+" (get % "callingCode")))
+        matching))))
+
 (defn handle-registration
   [project-id fields]
-  (let [{:keys [fields-mapping group]} (reg-service/registration-params project-id)
-        field-values (map-fields fields-mapping fields)]
+  (let [params       (reg-service/registration-params project-id)
+        field-values (select-keys fields (:fields params))]
     (if (seq field-values)
-      (prepare-validation project-id field-values)
+      (if (check-sms (:sms-number field-values) (:sms-countries params))
+        ()
+        (layout/error-422 "sms-country-error"))
       (layout/error-400-page))))
 
 (defn validate-registration

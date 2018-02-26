@@ -33,15 +33,19 @@
 
 (defn registration-params
   [project-id]
-  (let [content (db/registration-params {:project-id project-id})]
-    (merge content {:fields (transform-fields (:fields content))})))
+  (let [params        (db/registration-params {:project-id project-id})
+        sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
+    (merge
+      params
+      {:fields        (transform-fields (:fields params))
+       :sms-countries sms-countries})))
 
 (defn registration-content
   [project-id]
   (let [params        (db/registration-content {:project-id project-id})
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
-        sms-countries (string/split-lines (:sms-countries params))]
+        sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
     (merge
       {:fields fields :group group :sms-countries sms-countries}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown?]))))

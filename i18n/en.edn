@@ -28,6 +28,7 @@
                    :password-req-info  "8-20 characters, upper- and lowercase and number"
                    :must-enter         "You must enter your"
                    :change-information "Change information"
+                   :sms-country-error  "Illegal country code for mobile number"
                    :please-review      "Please review and confirm your information."}
  :dashboard       {:start           "Start"
                    :welcome         "Welcome!"

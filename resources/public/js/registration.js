@@ -4,13 +4,15 @@ if (sms_input.length) {
    sms_input.intlTelInput({
       onlyCountries: sms_countries,
       initialCountry: sms_countries[0],
-      utilsScript: "/js/intl-tel-input/js/utils.js"
+      utilsScript: "/js/intl-tel-input/js/utils.js",
+      hiddenInput: "sms-number"
    });
 }
 
 function sms_change() {
    var sms_number = $('#sms-number');
    sms_number.intlTelInput('setNumber', sms_number.intlTelInput('getNumber'));
+   //$('#sms-number-hidden').val(sms_number.intlTelInput('getNumber'));
 }
 
 function password_invalid() {
