@@ -14,7 +14,7 @@
     (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
       (if (or
             (= "/captcha" path)
-            (= "/validation" path)
+            (= "/validate" path)
             (get-in request [:session :captcha-ok]))
         (handler request)
         (response/found (str "/registration/" project-id "/captcha")))
@@ -35,5 +35,7 @@
     (reg-response/captcha project-id (:session request)))
   (POST "/registration/:project-id/captcha" [project-id & params :as request]
     (reg-response/validate-captcha project-id (:captcha params) (:session request)))
-  (GET "/registration/:project-id/validation" [project-id :as request]
-    (reg-response/validate-registration project-id (:session request))))
+  (GET "/registration/:project-id/validate" [project-id :as request]
+    (reg-response/validation-page project-id (:session request)))
+  (POST "/registration/:project-id/validate" [project-id & params :as request]
+    (reg-response/handle-validation project-id params (:session request))))

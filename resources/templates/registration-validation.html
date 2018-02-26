@@ -1,25 +1,51 @@
 {% extends "simple.html" %}
 {% block content %}
-<div class="container">
-    <div class="col-md-3">
-        <ul class="list-group">
-            <li class="list-group-item row">
-                <div class="col-md-3">One</div>
-                <div class="col-md-9">This is a line for content</div>
-            </li>
-            <li class="list-group-item row">
-                <div class="col-md-3">Two</div>
-                <div class="col-md-9">This is more content</div>
-            </li>
-            <li class="list-group-item row">
-                <div class="col-md-3">Three</div>
-                <div class="col-md-9">This is another row here</div>
-            </li>
-            <li class="list-group-item row">
-                <div class="col-md-3">Four</div>
-                <div class="col-md-9">This is a line for content</div>
-            </li>
-        </ul>
-    </div>
+<h1>{%tr registration/validate-heading %}</h1>
+{% if email %}
+{% if sms-number %}
+<p>{%tr registration/validate-info-m-e %}</p>
+{% else %}
+<p>{%tr registration/validate-info-e %}</p>
+{% endif %}
+{% else %}
+<p>{%tr registration/validate-info-m %}</p>
+{% endif %}
+
+<div class="col-10">
+    <form method="post" class="no-validate" id="registration-form">
+        <!-- EMAIL -->
+        {% if email %}
+        <div class="alert alert-danger hidden" data-show-on="email-error" role="alert">
+            {%tr login/code-error %}
+        </div>
+        <div class="form-group row">
+            <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="email" name="code-email" autocomplete="off" required>
+                <small class="form-text">{%tr registration/troubleshoot-e %}</small>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SMS NUMBER -->
+        {% if sms-number %}
+        <div class="alert alert-danger hidden" data-show-on="sms-error" role="alert">
+            {%tr login/code-error %}
+        </div>
+
+        <div class="form-group row">
+            <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="sms-number" name="code-sms" autocomplete="off" required>
+                <small class="form-text">{%tr registration/troubleshoot-m %}</small>
+            </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary" onclick="">{%tr submit %}</button>
+        <button onclick="document.location = '/registration/{{project-id}}'; return false;" class="btn btn-warning">{%tr
+            registration/cancel %}
+        </button>
+    </form>
 </div>
 {% endblock %}

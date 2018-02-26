@@ -17,6 +17,27 @@
             [clojure.string :as string]
             [clojure.java.io :as io]))
 
+
+;; ---------------
+;;     CAPTCHA
+;; ---------------
+
+;; TODO: Test this
+(defn all-fields?
+  [fields field-values]
+  (if (seq field-values)
+    (= (into #{} fields) (into #{} (keys field-values)))))
+
+(defn complete-registration
+  [project-id field-values reg-params]
+  (let [user-id (reg-service/create-user! project-id field-values (:group reg-params))]
+    (-> (response/found "/user")
+        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
+
+;; ---------------
+;;     CAPTCHA
+;; ---------------
+
 (defn- captcha-session
   [project-id]
   (let [{:keys [filename digits]} (captcha/captcha!)]
@@ -51,6 +72,82 @@
       (layout/error-422 "error"))
     (response/found (str "/registration/" project-id "/captcha"))))
 
+;; --------------
+;;   VALIDATION
+;; --------------
+
+(defn email-map
+  [email]
+  (let [code (auth-service/letters-digits 5)]
+    (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
+    {:code-email code}))
+
+(defn- sms-map
+  [sms-number]
+  (let [code (auth-service/letters-digits 5)]
+    (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
+    {:code-sms code}))
+
+(defn- prepare-validation
+  [project-id field-values]
+  (let [codes (merge
+                (fnil+ sms-map (:sms-number field-values))
+                (fnil+ email-map (:email field-values)))]
+    (->
+      (response/found (str "/registration/" project-id "/validate"))
+      (assoc :session {:reg-field-values field-values
+                       :reg-codes        codes
+                       :captcha-ok       nil}))))
+
+(defn validation-page
+  [project-id session]
+  (let [field-values (:reg-field-values session)
+        codes        (:reg-codes session)]
+    (if (or (contains? codes :code-sms) (contains? codes :code-email))
+      (layout/render "registration-validation.html"
+                     {:email      (:email field-values)
+                      :sms-number (:sms-number field-values)
+                      :project-id project-id})
+      (layout/error-403-page))))
+
+;; TODO: Test this
+(defn handle-validation
+  [project-id posted-codes session]
+  (let [field-values (:reg-field-values session)
+        codes        (:reg-codes session)
+        reg-params   (reg-service/registration-params project-id)]
+    (cond
+      ;; All fields are present in session
+      (not (all-fields? (:fields reg-params) field-values))
+      (layout/error-400-page)
+
+      ;; Either email or sms code in session
+      (not (or (contains? codes :code-email)
+               (contains? codes :code-sms)))
+      (layout/error-400-page)
+
+      ;; Either email or sms coded posted
+      (not (or (contains? posted-codes :code-email)
+               (contains? posted-codes :code-sms)))
+      (layout/error-400-page)
+
+      ;; Check if email code is correct
+      (and (contains? field-values :code-email)
+           (not= (string/trim (:code-email posted-codes)) (:code-email codes)))
+      (layout/error-422 "email-error")
+
+      ;; Check if sms code is correct
+      (and (contains? field-values :code-sms)
+           (not= (string/trim (:code-sms posted-codes)) (:code-sms codes)))
+      (layout/error-422 "sms-error")
+
+      :else
+      (complete-registration project-id field-values reg-params))))
+
+;; --------------
+;;   REGISTRATION
+;; --------------
+
 (defn registration-page
   [project-id]
   (let [params        (reg-service/registration-content project-id)
@@ -63,44 +160,12 @@
                      fields-map
                      {:sms-countries sms-countries}))))
 
-#_(defn- map-fields
-  [fields-mapping fields]
-  (->> fields-mapping
-       (map #(vector (first %) (get fields (second %))))
-       (into {})
-       (filter-map identity)
-       (walk/keywordize-keys)))
-
-(defn email-map
-  [email]
-  (let [code (auth-service/letters-digits 5)]
-    (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-Email code}))
-
-(defn- sms-map
-  [sms-number]
-  (let [code (auth-service/letters-digits 5)]
-    (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-SMS code}))
-
-#_(defn- prepare-validation
-  [project-id field-values]
-  (let [info (merge
-               field-values
-               (fnil+ sms-map (:SMSNumber field-values))
-               (fnil+ email-map (:Email field-values)))]
-    (->
-      (response/found (str "registration/" project-id "/validate"))
-      (assoc :session {:reg-info   info
-                       :captcha-ok nil}))))
-
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
 
 (defn- check-sms
   [sms-number sms-countries]
   (cond
-
     (nil? sms-number)
     true
 
@@ -117,19 +182,20 @@
            (str "+" (get % "callingCode")))
         matching))))
 
+
 (defn handle-registration
-  [project-id fields]
+  [project-id posted-fields]
   (let [params       (reg-service/registration-params project-id)
-        field-values (select-keys fields (:fields params))]
-    (if (seq field-values)
+        fields       (:fields params)
+        field-values (select-keys posted-fields fields)]
+    (if (all-fields? fields field-values)
       (if (check-sms (:sms-number field-values) (:sms-countries params))
-        ()
+        (if (or (contains? field-values :sms-number) (contains? field-values :email))
+          (prepare-validation project-id field-values)
+          (complete-registration project-id field-values params))
         (layout/error-422 "sms-country-error"))
       (layout/error-400-page))))
 
-(defn validate-registration
-  [project-id session]
-  (let [info (:reg-info session)]))
 
 ;; TODO: Tests for registration and following assessments
 ;; TODO: Duplicate username
@@ -142,4 +208,5 @@
 ;;
 ;; TODO: Captcha timeout
 ;; TODO: Registration closed screen
+;; TODO: Login only if there are assessments waiting
 ;; TODO: Max number of sms

@@ -92,7 +92,7 @@
         (sms/send-db-sms! user-sms code))
     true
     (when (:email send-methods)
-      (mail/mail! user-email (i18n/tr) code))))
+      (mail/mail! user-email (i18n/tr [:login/code]) code))))
 
 (defn- send-code!
   [code user-sms user-email by-sms by-email allow-both]
