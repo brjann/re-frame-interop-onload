@@ -3,6 +3,7 @@
             [schema.core :as s]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
+            [bass4.passwords :as passwords]
             [clojure.walk :as walk]
             [bass4.services.registration :as reg-service]
             [bass4.responses.auth :as res-auth]
@@ -73,10 +74,17 @@
       (:auto-id-prefix reg-params)
       (:auto-id-length reg-params))))
 
+(defn gen-password
+  [field-values reg-params]
+  (if (:auto-password? reg-params)
+    (assoc field-values :password (passwords/password))
+    field-values))
+
 (defn- create-user
   [project-id field-values reg-params]
   (let [participant-id (gen-participant-id project-id reg-params)
         username       (gen-username field-values participant-id reg-params)
+        field-values   (gen-password field-values reg-params)
         user-id        (reg-service/create-user! project-id field-values username participant-id (:group reg-params))]
     (-> (response/found "/user")
         (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))

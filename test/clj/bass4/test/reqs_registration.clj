@@ -14,7 +14,8 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clojure.string :as string]
-            [bass4.services.registration :as reg-service]))
+            [bass4.services.registration :as reg-service]
+            [bass4.passwords :as passwords]))
 
 
 (use-fixtures
@@ -195,7 +196,8 @@
         (is (= 1 (count by-participant-id)))))))
 
 (deftest registration-auto-id-no-prefix-0-length
-  (let [participant-id (reg-service/generate-participant-id 564610 "" 0)]
+  (let [participant-id (reg-service/generate-participant-id 564610 "" 0)
+        password       (passwords/password)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
                                                                    :group                  564616
@@ -203,11 +205,13 @@
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                                    :auto-username          :participant-id
+                                                                   :auto-password?         true
                                                                    :auto-id-prefix         ""
                                                                    :auto-id-length         0
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
-                  auth-service/letters-digits         (constantly "METALLICA")]
+                  auth-service/letters-digits         (constantly "METALLICA")
+                  passwords/password                  (constantly password)]
       (-> (session (app))
           (visit "/registration/564610")
           ;; Captcha session is created
@@ -223,7 +227,8 @@
       (let [by-username       (db/get-user-by-username {:username participant-id})
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))
-        (is (= 1 (count by-participant-id)))))))
+        (is (= 1 (count by-participant-id)))
+        (is (= password (:password by-username)))))))
 
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
