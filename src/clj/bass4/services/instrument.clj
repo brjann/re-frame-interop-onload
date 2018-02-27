@@ -15,31 +15,40 @@
   [item-ids current-id]
   (fn [jump-to]
     (subvec item-ids
-            (+ 1 (first (keep-indexed #(when(= current-id %2) %1) item-ids)))
-            (first (keep-indexed #(when(= jump-to %2) %1) item-ids)))))
+            (+ 1 (first (keep-indexed #(when (= current-id %2) %1) item-ids)))
+            (first (keep-indexed #(when (= jump-to %2) %1) item-ids)))))
 
 (defn process-item-elements
-  [bass-elements]
-  (let [item-ids (mapv :item-id bass-elements)]
-    (map (fn [bass-element]
-           (let [current-id (:item-id bass-element)]
+  [item-elements]
+  (let [item-ids (mapv :item-id item-elements)
+        ;; A jump-map is returned as {} rather than []
+        ;; if the keys in the php array are not sorted
+        ;; This function returns a sorted seq from a map
+        unmap    (fn [m]
+                   (if (map? m)
+                     (->> (into [] m)
+                          (sort #(compare (first %1) (first %2)))
+                          (map second))
+                     m))]
+    (map (fn [item]
+           (let [current-id (:item-id item)]
              (unserialize-key
-               (select-keys bass-element
+               (select-keys item
                             [:item-id :name :text :response-id :sort-order :layout-id :option-jumps :page-break :optional])
                :option-jumps
                (fn [m] (map-map
                          (jumper-fn item-ids current-id)
-                         (keep-matching #(< 0 %) m))))))
-         bass-elements)))
+                         (keep-matching #(< 0 %) (unmap m)))))))
+         item-elements)))
 
 (defn make-option
   [value label specification-text specification-big?]
   (let [specification? (not (empty? specification-text))]
-    {:value value
-     :label label
-     :specification specification?
+    {:value              value
+     :label              label
+     :specification      specification?
      :specification-text (if specification? specification-text nil)
-     :specification-big (if specification? specification-big? nil)}))
+     :specification-big  (if specification? specification-big? nil)}))
 
 (defn options
   [{:keys [option-values option-labels option-specifications option-specifications-big option-jumps]}]
@@ -95,9 +104,9 @@
         static-layouts  (layout-map static-elements)
         tables          (table-elements instrument-id)
         elements        (map #(dissoc %1 :sort-order) (sort-by :sort-order (concat items statics tables)))]
-    {:elements elements
-     :responses responses
-     :layouts layouts
+    {:elements       elements
+     :responses      responses
+     :layouts        layouts
      :static-layouts static-layouts}))
 
 (defn instrument-def
@@ -132,9 +141,9 @@
       (if (= (subs+ expression 0 2) "if")
         (let [if-expr (s/split (subs expression 2) #",")]
           (when (= (count if-expr) 3)
-            {:var  var
-             :test (if-expr 0)
-             :true (if-expr 1)
+            {:var   var
+             :test  (if-expr 0)
+             :true  (if-expr 1)
              :false (if-expr 2)}))
         {:var var :expression expression}))))
 
@@ -145,11 +154,11 @@
 
 (defn- parse-scoring
   [scoring-string]
-  (let [lines (filterv #(not= (count %) 0) (mapv (comp s/lower-case s/trim) (s/split-lines scoring-string)))
+  (let [lines   (filterv #(not= (count %) 0) (mapv (comp s/lower-case s/trim) (s/split-lines scoring-string)))
         exports (scoring-exports lines)]
     (when exports
       {:statements (remove nil? (mapv scoring-parse-statement (scoring-statements lines)))
-       :exports exports}
+       :exports    exports}
       )))
 
 (defn get-scoring
@@ -166,21 +175,21 @@
 
 ;; Returns 0 in case of exception or nil result
 (defn- expression-resolver
-    [default-value]
-    (fn
-      [expression namespace]
-      (or (try
-            (infix/calc
-              expression
-              (infix/token-resolver
-                namespace
-                (fn [token]
-                  ;; In BASS, missing items are scored as default-value
-                  ;; and missing variables are scored as 0
-                  (if (= "$" (subs token 0 1))
-                    default-value
-                    0))))
-            (catch Exception e 0)) 0)))
+  [default-value]
+  (fn
+    [expression namespace]
+    (or (try
+          (infix/calc
+            expression
+            (infix/token-resolver
+              namespace
+              (fn [token]
+                ;; In BASS, missing items are scored as default-value
+                ;; and missing variables are scored as 0
+                (if (= "$" (subs token 0 1))
+                  default-value
+                  0))))
+          (catch Exception e 0)) 0)))
 
 (defn- statement-resolver
   [default-value]
@@ -215,11 +224,11 @@
 
 (defn parse-answers-post
   [instrument-id items-str specifications-str]
-  (let [instrument (get-instrument instrument-id)
-        items (json-safe items-str)
+  (let [instrument     (get-instrument instrument-id)
+        items          (json-safe items-str)
         specifications (json-safe specifications-str)]
     (if (or (nil? items) (nil? specifications) (nil? instrument))
       nil
-      {:items items
+      {:items          items
        :specifications specifications
-       :sums (score-items items (get-scoring instrument-id))})))
+       :sums           (score-items items (get-scoring instrument-id))})))
