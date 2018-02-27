@@ -19,17 +19,26 @@
             [bass4.services.bass :as bass]))
 
 
-;; ---------------
-;;     CAPTCHA
-;; ---------------
-
-;; TODO: Test this
-(defn all-fields?
+(defn- all-fields?
   [fields field-values]
   (if (seq field-values)
     (= (into #{} fields) (into #{} (keys field-values)))))
 
-(defn duplicate-conflict?
+
+;; -------------
+;;   DUPLICATE
+;; -------------
+
+(defn duplicate-page
+  [project-id]
+  (let [emails (bass/db-contact-info project-id)]
+    (layout/render "registration-duplicate.html"
+                   {:email      (or (:project-email emails)
+                                    (:db-email emails))
+                    :project-id project-id})))
+
+
+(defn- duplicate-conflict?
   [field-values reg-params]
   (if-let [duplicates-map (merge
                             (when (not (:allow-duplicate-email? reg-params))
@@ -39,15 +48,46 @@
     (reg-service/duplicate-info? duplicates-map)
     false))
 
-(defn complete-registration
+
+;; ---------------
+;;  USER CREATION
+;; ---------------
+
+(defn- gen-username
+  [field-values participant-id reg-params]
+  (let [username (case (:auto-username reg-params)
+                   :email (:email field-values)
+                   :participant-id participant-id
+                   :none ""
+                   nil)]
+    (if (nil? username)
+      (throw (Exception. (str "No value for auto username " (:auto-username reg-params))))
+      (when (not= "" username)
+        username))))
+
+(defn- gen-participant-id
+  [project-id reg-params]
+  (when (:auto-id? reg-params)
+    (reg-service/generate-participant-id
+      project-id
+      (:auto-id-prefix reg-params)
+      (:auto-id-length reg-params))))
+
+(defn- create-user
+  [project-id field-values reg-params]
+  (let [participant-id (gen-participant-id project-id reg-params)
+        username       (gen-username field-values participant-id reg-params)
+        user-id        (reg-service/create-user! project-id field-values username participant-id (:group reg-params))]
+    (-> (response/found "/user")
+        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
+
+(defn- complete-registration
   "This function relies on previous checking of presence of field-values"
   [project-id field-values reg-params]
   (if (duplicate-conflict? field-values reg-params)
     (-> (response/found (str "/registration/" project-id "/duplicate"))
         (assoc :session {}))
-    (let [user-id (reg-service/create-user! project-id field-values (:group reg-params))]
-      (-> (response/found "/user")
-          (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true))))))
+    (create-user project-id field-values reg-params)))
 
 ;; ---------------
 ;;     CAPTCHA
@@ -159,18 +199,6 @@
       :else
       (complete-registration project-id field-values reg-params))))
 
-
-;; -------------
-;;   DUPLICATE
-;; -------------
-
-(defn duplicate-page
-  [project-id]
-  (let [emails (bass/db-contact-info project-id)]
-    (layout/render "registration-duplicate.html"
-                   {:email      (or (:project-email emails)
-                                    (:db-email emails))
-                    :project-id project-id})))
 
 ;; --------------
 ;;   REGISTRATION

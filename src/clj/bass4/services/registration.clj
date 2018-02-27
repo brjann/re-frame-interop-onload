@@ -2,10 +2,11 @@
   (:require [bass4.db.core :as db]
             [bass4.php_clj.core :refer [php->clj]]
             [bass4.services.user :as user]
-            [bass4.utils :refer [filter-map map-map in?]]
+            [bass4.utils :refer [filter-map map-map in? subs+]]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn registration-allowed?
   [project-id]
@@ -77,9 +78,12 @@
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown?]))))
 
 (defn create-user!
-  [project-id field-values group]
+  [project-id field-values username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
-    (user/create-user! project-id (merge insert-values (when group {:group group})))))
+    (user/create-user! project-id (merge insert-values
+                                         (when username {:username username})
+                                         (when participant-id {:participantid participant-id})
+                                         (when group {:group group})))))
 
 (defn duplicate-info?
   [{:keys [email sms-number]}]
@@ -88,3 +92,22 @@
           :sms-number (or sms-number "_")})
        :count
        (< 0)))
+
+(defn- next-auto-id
+  [project-id]
+  (jdbc/with-db-transaction [conn db/*db*]
+    (let [id (:auto-id (db/get-current-auto-id-for-update conn {:project-id project-id}))]
+      (db/increment-auto-id! conn {:project-id project-id})
+      id))
+  #_(let [id (:auto-id (db/get-current-auto-id-for-update {:project-id project-id}))]
+      (db/increment-auto-id! {:project-id project-id})
+      id))
+
+(defn generate-participant-id
+  [project-id prefix length]
+  (let [id             (str (next-auto-id project-id))
+        zeroes         (string/join (repeat length "0"))
+        participant-id (str prefix (subs+ zeroes 0 (- length (count id))) id)]
+    (if (zero? (:count (db/check-participant-id {:participant-id participant-id})))
+      participant-id
+      (recur project-id prefix length))))

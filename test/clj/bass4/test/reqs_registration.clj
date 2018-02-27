@@ -7,6 +7,7 @@
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
+            [bass4.db.core :as db]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
@@ -32,7 +33,8 @@
                                                              :group                  564616
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]})
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> (session (app))
         (visit "/registration/564610")
@@ -70,7 +72,9 @@
         (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "345345"})
         (has (status? 422))
         (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
-        (has (status? 302)))))
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "AAQ")))))
 
 (deftest registration-back-to-registration-at-validation
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -78,7 +82,8 @@
                                                              :group                  564616
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]})
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> (session (app))
         (visit "/registration/564610")
@@ -105,7 +110,8 @@
                                                              :group                  564616
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]})
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> (session (app))
         (visit "/registration/564610")
@@ -122,6 +128,71 @@
         (has (status? 422))
         (visit "/user")
         (has (status? 403)))))
+
+(deftest registration-auto-id
+  (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)]
+    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                                                                   :group                  564616
+                                                                   :allow-duplicate-email? true
+                                                                   :allow-duplicate-sms?   true
+                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                   :auto-username          :participant-id
+                                                                   :auto-id-prefix         "xxx-"
+                                                                   :auto-id-length         3
+                                                                   :auto-id?               true})
+                  reg-service/generate-participant-id (constantly participant-id)
+                  auth-service/letters-digits         (constantly "METALLICA")]
+      (-> (session (app))
+          (visit "/registration/564610")
+          ;; Captcha session is created
+          (follow-redirect)
+          ;; Redirected do captcha page
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (follow-redirect)
+          (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"}))
+      (let [by-username       (db/get-user-by-username {:username participant-id})
+            by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
+        (is (= true (map? by-username)))
+        (is (= 1 (count by-participant-id)))))))
+
+(deftest registration-auto-id-email-username
+  (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
+        email          (apply str (take 20 (repeatedly #(char (+ (rand 26) 65)))))]
+    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                                                                   :group                  564616
+                                                                   :allow-duplicate-email? false
+                                                                   :allow-duplicate-sms?   true
+                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                   :auto-username          :email
+                                                                   :auto-id-prefix         "xxx-"
+                                                                   :auto-id-length         3
+                                                                   :auto-id?               true})
+                  reg-service/generate-participant-id (constantly participant-id)
+                  auth-service/letters-digits         (constantly "METALLICA")]
+      (-> (session (app))
+          (visit "/registration/564610")
+          ;; Captcha session is created
+          (follow-redirect)
+          ;; Redirected do captcha page
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/registration/564610" :request-method :post :params {:email email :sms-number "+46070717652"})
+          (follow-redirect)
+          (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? "AAQ")))
+      (let [by-username       (db/get-user-by-username {:username email})
+            by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
+        (is (= true (map? by-username)))
+        (is (= 1 (count by-participant-id)))))))
 
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -146,6 +217,8 @@
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "already exists")))))
+
+
 
 (deftest registration-captcha-not-created
   (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
