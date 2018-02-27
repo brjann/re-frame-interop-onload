@@ -15,6 +15,7 @@
       (if (or
             (= "/captcha" path)
             (= "/validate" path)
+            (= "/duplicate" path)
             (get-in request [:session :captcha-ok]))
         (handler request)
         (response/found (str "/registration/" project-id "/captcha")))
@@ -38,4 +39,6 @@
   (GET "/registration/:project-id/validate" [project-id :as request]
     (reg-response/validation-page project-id (:session request)))
   (POST "/registration/:project-id/validate" [project-id & params :as request]
-    (reg-response/handle-validation project-id params (:session request))))
+    (reg-response/handle-validation project-id params (:session request)))
+  (GET "/registration/:project-id/duplicate" [project-id :as request]
+    (reg-response/duplicate-page project-id)))

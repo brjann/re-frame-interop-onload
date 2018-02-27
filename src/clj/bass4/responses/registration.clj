@@ -15,7 +15,8 @@
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
             [clojure.string :as string]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [bass4.services.bass :as bass]))
 
 
 ;; ---------------
@@ -28,11 +29,25 @@
   (if (seq field-values)
     (= (into #{} fields) (into #{} (keys field-values)))))
 
+(defn duplicate-conflict?
+  [field-values reg-params]
+  (if-let [duplicates-map (merge
+                            (when (not (:allow-duplicate-email? reg-params))
+                              (select-keys field-values [:email]))
+                            (when (not (:allow-duplicate-sms? reg-params))
+                              (select-keys field-values [:sms-number])))]
+    (reg-service/duplicate-info? duplicates-map)
+    false))
+
 (defn complete-registration
+  "This function relies on previous checking of presence of field-values"
   [project-id field-values reg-params]
-  (let [user-id (reg-service/create-user! project-id field-values (:group reg-params))]
-    (-> (response/found "/user")
-        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
+  (if (duplicate-conflict? field-values reg-params)
+    (-> (response/found (str "/registration/" project-id "/duplicate"))
+        (assoc :session {}))
+    (let [user-id (reg-service/create-user! project-id field-values (:group reg-params))]
+      (-> (response/found "/user")
+          (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true))))))
 
 ;; ---------------
 ;;     CAPTCHA
@@ -143,6 +158,19 @@
 
       :else
       (complete-registration project-id field-values reg-params))))
+
+
+;; -------------
+;;   DUPLICATE
+;; -------------
+
+(defn duplicate-page
+  [project-id]
+  (let [emails (bass/db-contact-info project-id)]
+    (layout/render "registration-duplicate.html"
+                   {:email      (or (:project-email emails)
+                                    (:db-email emails))
+                    :project-id project-id})))
 
 ;; --------------
 ;;   REGISTRATION

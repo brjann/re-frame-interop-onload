@@ -27,6 +27,10 @@ SELECT SMSSender AS `sms-sender`
 FROM c_project
 WHERE ObjectId=100;
 
+-- :name get-contact-info :? :1
+SELECT cp.Email AS `db-email`, ct.DefaultEmailRecipient AS `project-email`
+FROM c_project AS cp LEFT JOIN c_treatmentinterface AS ct ON ct.ObjectId = :project-id
+WHERE cp.ObjectId=100;
 
 -- :name ext-login-settings :? :1
 SELECT ExternalLoginAllowed AS allowed,

@@ -36,26 +36,39 @@
 
 (defn debug-redefs
   [handler request]
+  ;; Test environment, dev-test and dev are true
+  ;; Dev environment, dev-test is false and dev is true
   (cond
-    ;; Test environment
-    ;; Put mail and sms in header
-    (and (or (env :dev-test) (env :dev))
-         (not (= true (env :force-external-messages))))
+    ;; Put mail and sms in header in
+    ;; - test environment
+    ;; - dev environment unless
+    ;;   :dev-allow-email or :dev-allow-external-messages are true
+    (or (env :dev-test)
+        (and (env :dev)
+             (not (or
+                    (env :dev-allow-email)
+                    (env :dev-allow-external-messages)))))
     (with-redefs [sms/send-db-sms! test-send-sms!
-                  mail! test-mail!]
+                  mail!            test-mail!]
       (handler request))
 
-    ;; Debug or development environment
-    ;; Send mail and sms via debug mail
-    (and (env :debug)
-         (not (= true (env :force-external-messages))))
+    ;; Send mail and sms to debug email in
+    ;; - debug mode unless :dev-allow-external-messages is true
+    ;; - dev environment if :dev-allow-email is true
+    ;;   unless :dev-allow-external-messages is true
+    (or (and (env :debug)
+             (not (env :dev-allow-external-messages)))
+        (and (env :dev)
+             (env :dev-allow-email)
+             (not (env :dev-allow-external-messages))))
     (with-redefs [sms/send-db-sms! debug-send-sms!
-                  mail! (debug-wrap-mail-fn mail!)]
+                  mail!            (debug-wrap-mail-fn mail!)]
       (handler request))
 
     ;; Production environment
     :else
-    (handler request)))
+    (do
+      (handler request))))
 
 
 (defn wrap-debug-exceptions

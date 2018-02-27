@@ -16,7 +16,8 @@
             [mount.core :as mount]
             [clojure.pprint]
             [bass4.request-state :as request-state]
-            [ring.util.codec :as codec]))
+            [ring.util.codec :as codec]
+            [bass4.mailer :as mail]))
 
 (defn states-page
   []
@@ -65,6 +66,8 @@
           (layout/error-403-page (get-in request [:session :identity])))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
+        (GET "/mail" [& params :as request]
+          (layout/text-response (mail/mail-debug! "brjann@gmail.com" "Test email" "This is the test message")))
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]

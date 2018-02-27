@@ -18,6 +18,11 @@
 (defn db-sms-sender []
   (:sms-sender (db/get-sms-sender)))
 
+(defn db-contact-info
+  ([] (db-contact-info "_"))
+  ([project-id]
+   (db/get-contact-info {:project-id project-id})))
+
 ;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!
   [class-name, property-name, count]

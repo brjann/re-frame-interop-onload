@@ -1,0 +1,10 @@
+{% extends "simple.html" %}
+{% block content %}
+<h1>{%tr registration/duplicate-heading %}</h1>
+<p>{%tr registration/duplicate-info %}</p>
+{% if email %}
+<p>{%tr registration/contact-project-manager %} <a href="mailto:{{email}}">{{email}}</a></p>
+{% endif %}
+<p><a href="/registration/{{project-id}}">{%tr registration/register-again %}</a></p>
+<p><a href="/login">{%tr error/login %}</a></p>
+{% endblock %}

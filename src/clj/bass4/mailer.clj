@@ -8,6 +8,8 @@
 (defn mail!
   ([to subject message] (mail! to subject message nil))
   ([to subject message reply-to]
+   (when (env :dev)
+     (log/info (str "Sent mail to " to)))
    (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
          args        (into {}
                            ;; Removes nil elements
@@ -18,6 +20,22 @@
      (when (not= 0 (:exit res))
        (throw (Exception. (str (:out res)))))
      true)))
+
+(defn mail-debug!
+  ([to subject message] (mail-debug! to subject message nil))
+  ([to subject message reply-to]
+   (when (env :dev)
+     (log/info (str "Sent mail to " to)))
+   (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
+         args        (into {}
+                           ;; Removes nil elements
+                           (filter second
+                                   {"to" to "subject" subject "message" message "reply-to" reply-to "debug" true}))
+         res         (shell/sh "php" (str mailer-path) :in (clj->php args))]
+     res
+     (when (not= 0 (:exit res))
+       (throw (Exception. (str (:out res)))))
+     (str (:out res)))))
 
 ;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
 (defn- match-regex?
