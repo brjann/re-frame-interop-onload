@@ -53,5 +53,4 @@
 (defn create-user!
   [project-id field-values group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
-    (log/debug insert-values)
     (user/create-user! project-id (merge insert-values (when group {:group group})))))

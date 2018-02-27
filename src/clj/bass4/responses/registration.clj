@@ -121,23 +121,23 @@
       (not (all-fields? (:fields reg-params) field-values))
       (layout/error-400-page)
 
-      ;; Either email or sms code in session
-      (not (or (contains? codes :code-email)
-               (contains? codes :code-sms)))
+      ;; If check if email code has been submitted if required
+      (when (contains? codes :code-email)
+        (not (contains? posted-codes :code-email)))
       (layout/error-400-page)
 
-      ;; Either email or sms coded posted
-      (not (or (contains? posted-codes :code-email)
-               (contains? posted-codes :code-sms)))
+      ;; If check if sms code has been submitted if required
+      (when (contains? codes :code-sms)
+        (not (contains? posted-codes :code-sms)))
       (layout/error-400-page)
 
       ;; Check if email code is correct
-      (and (contains? field-values :code-email)
+      (and (contains? codes :code-email)
            (not= (string/trim (:code-email posted-codes)) (:code-email codes)))
       (layout/error-422 "email-error")
 
       ;; Check if sms code is correct
-      (and (contains? field-values :code-sms)
+      (and (contains? codes :code-sms)
            (not= (string/trim (:code-sms posted-codes)) (:code-sms codes)))
       (layout/error-422 "sms-error")
 
