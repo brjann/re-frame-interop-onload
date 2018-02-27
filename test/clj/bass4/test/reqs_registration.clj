@@ -194,6 +194,37 @@
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
 
+(deftest registration-auto-id-no-prefix-0-length
+  (let [participant-id (reg-service/generate-participant-id 564610 "" 0)]
+    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                                                                   :group                  564616
+                                                                   :allow-duplicate-email? true
+                                                                   :allow-duplicate-sms?   true
+                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                   :auto-username          :participant-id
+                                                                   :auto-id-prefix         ""
+                                                                   :auto-id-length         0
+                                                                   :auto-id?               true})
+                  reg-service/generate-participant-id (constantly participant-id)
+                  auth-service/letters-digits         (constantly "METALLICA")]
+      (-> (session (app))
+          (visit "/registration/564610")
+          ;; Captcha session is created
+          (follow-redirect)
+          ;; Redirected do captcha page
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (follow-redirect)
+          (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"}))
+      (let [by-username       (db/get-user-by-username {:username participant-id})
+            by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
+        (is (= true (map? by-username)))
+        (is (= 1 (count by-participant-id)))))))
+
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                 reg-service/registration-params (constantly {:fields                 #{:email :sms-number}
