@@ -31,7 +31,6 @@ SELECT
   RegistrationAllowDuplicateEmail AS `allow-duplicate-email?`,
   RegistrationAllowDuplicateSMS AS `allow-duplicate-sms?`,
   RegistrationAutoId AS `auto-id?`,
-  RegistrationAutoId AS `auto-id?`,
   RegistrationAutoIdPrefix AS `auto-id-prefix`,
   RegistrationAutoIdLength AS `auto-id-length`,
   RegistrationAutoPassword AS `auto-password?`

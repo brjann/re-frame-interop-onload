@@ -26,6 +26,27 @@
     (= (into #{} fields) (into #{} (keys field-values)))))
 
 
+;; ------------
+;; CREDENTIALS
+;; ------------
+
+(defn- login-url
+  [request]
+  (let [headers (:headers request)
+        host    (get headers "x-forwarded-host" (get headers "host"))
+        scheme  (name (:scheme request))]
+    (str scheme "://" host)))
+
+(defn credentials-page
+  [project-id session request]
+  (let [credentials (:reg-credentials session)]
+    (if (contains? credentials :username)
+      (layout/render "registration-credentials.html"
+                     {:username  (:username credentials)
+                      :password  (:password credentials)
+                      :login-url (login-url request)})
+      (layout/error-403-page))))
+
 ;; -------------
 ;;   DUPLICATE
 ;; -------------
@@ -74,11 +95,21 @@
       (:auto-id-prefix reg-params)
       (:auto-id-length reg-params))))
 
-(defn gen-password
+(defn- gen-password
   [field-values reg-params]
   (if (:auto-password? reg-params)
     (assoc field-values :password (passwords/password))
     field-values))
+
+(defn- created-redirect
+  [project-id user-id username password auto-password?]
+  (if username
+    (->
+      (response/found (str "/registration/" project-id "/credentials"))
+      (assoc :session {:reg-credentials (merge {:username username} (if auto-password? {:password password}))}))
+    (->
+      (response/found "/user")
+      (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
 
 (defn- create-user
   [project-id field-values reg-params]
@@ -86,8 +117,7 @@
         username       (gen-username field-values participant-id reg-params)
         field-values   (gen-password field-values reg-params)
         user-id        (reg-service/create-user! project-id field-values username participant-id (:group reg-params))]
-    (-> (response/found "/user")
-        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
+    (-> (created-redirect project-id user-id username (:password field-values) (:auto-password? reg-params)))))
 
 (defn- complete-registration
   "This function relies on previous checking of presence of field-values"
@@ -168,9 +198,12 @@
         codes        (:reg-codes session)]
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (layout/render "registration-validation.html"
-                     {:email      (:email field-values)
-                      :sms-number (:sms-number field-values)
-                      :project-id project-id})
+                     (merge
+                       {:email      (:email field-values)
+                        :sms-number (:sms-number field-values)
+                        :project-id project-id}
+                       (when (or (env :dev) (env :debug-mode))
+                         codes)))
       (layout/error-403-page))))
 
 ;; TODO: Test this

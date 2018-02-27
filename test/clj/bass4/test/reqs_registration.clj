@@ -161,11 +161,11 @@
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
 
-(deftest registration-auto-id-email-username
+(deftest registration-auto-id-email-username-own-password
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (apply str (take 20 (repeatedly #(char (+ (rand 26) 65)))))]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number :password}
                                                                    :group                  564616
                                                                    :allow-duplicate-email? false
                                                                    :allow-duplicate-sms?   true
@@ -185,17 +185,18 @@
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (follow-redirect)
           (has (some-text? "Welcome"))
-          (visit "/registration/564610" :request-method :post :params {:email email :sms-number "+46070717652"})
+          (visit "/registration/564610" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY"})
           (follow-redirect)
           (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
           (follow-redirect)
-          (has (some-text? "AAQ")))
+          (has (some-text? email))
+          (has (some-text? "chose")))
       (let [by-username       (db/get-user-by-username {:username email})
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
 
-(deftest registration-auto-id-no-prefix-0-length
+(deftest registration-auto-id-no-prefix-0-length-password
   (let [participant-id (reg-service/generate-participant-id 564610 "" 0)
         password       (passwords/password)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
@@ -223,7 +224,10 @@
           (has (some-text? "Welcome"))
           (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
           (follow-redirect)
-          (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"}))
+          (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? password))
+          (has (some-text? participant-id)))
       (let [by-username       (db/get-user-by-username {:username participant-id})
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))

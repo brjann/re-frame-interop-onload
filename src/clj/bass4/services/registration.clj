@@ -37,7 +37,8 @@
   [params]
   (let [auto-username    (case (:auto-username params)
                            "participantid" :participant-id
-                           "email" :email)
+                           "email" :email
+                           :none)
         fields           (-> (transform-fields (:fields params)))
         fields           (if (= auto-username :email)
                            (conj fields :email)
@@ -48,9 +49,13 @@
                            :else (:auto-password? params))
         duplicate-email? (if (= auto-username :email)
                            false
-                           (:allow-duplicate-email? params))]
+                           (:allow-duplicate-email? params))
+        auto-id?         (if (= auto-username :participant-id)
+                           true
+                           (:auto-id? params))]
     (merge params
            {:auto-username          auto-username
+            :auto-id?               auto-id?
             :fields                 fields
             :auto-password?         auto-password?
             :allow-duplicate-email? duplicate-email?})))

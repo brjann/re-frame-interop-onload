@@ -19,7 +19,8 @@
             {%tr login/code-error %}
         </div>
         <div class="form-group row">
-            <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}</label>
+            <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}
+                {{code-email}}</label>
             <div class="col-sm-9">
                 <input type="text" class="form-control" id="email" name="code-email" autocomplete="off" required>
                 <small class="form-text">{%tr registration/troubleshoot-e %}</small>
@@ -34,7 +35,8 @@
         </div>
 
         <div class="form-group row">
-            <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}</label>
+            <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}
+                {{code-sms}}</label>
             <div class="col-sm-9">
                 <input type="text" class="form-control" id="sms-number" name="code-sms" autocomplete="off" required>
                 <small class="form-text">{%tr registration/troubleshoot-m %}</small>

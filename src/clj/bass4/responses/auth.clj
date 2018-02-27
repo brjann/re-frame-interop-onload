@@ -30,7 +30,7 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    (when (or (env :dev) (env :debug)) {:double-auth-code double-auth-code})))
+    (when (or (env :dev) (env :debug-mode)) {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]
   (cond
