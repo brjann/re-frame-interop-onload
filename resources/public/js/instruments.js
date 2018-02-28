@@ -36,9 +36,16 @@ $(document).ready(function(){
 			$(this).addClass('instrument');
 
 			// TODO: Remove debug
-         $("#responsive-toggler").click(function () {
-            toggle_size($("#instrument"))
-         });
+         var responsive_toggler = $("#responsive-toggler");
+         if (responsive_toggler.length) {
+            responsive_toggler.click(function () {
+               toggle_size($("#instrument"))
+            });
+            if (!instrument.responsive) {
+               responsive_toggler.append('<i class="fa fa-exclamation-circle" style="color:red"' +
+                  'title="This instrument is not configured to be responsive and will look identical on desktop and mobile devices."></i>');
+            }
+         }
 
 			var instrument_div = $(this).find(".instrument-elements");
 
