@@ -17,7 +17,12 @@ div#instrument .order-count {
     text-align: center;
 }
 
-div#instrument .instrument-show-name {
+#page-selector .btn {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+div#instrument .instrument-show-name, div#instrument .order-count {
     width: 100%;
     text-align: center;
 }

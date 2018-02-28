@@ -150,8 +150,29 @@ function init_instrument(instrument){
 function init_pages(pages){
 	var page_count = pages.length;
 
+   var init_page_button = function (page, index, pages) {
+      var page_selector = $('#page-selector');
+      if (page_selector.length) {
+         var page_button = $(sprintf('<button class="btn btn-outline-danger btn-sm page-button">%s</button>', index + 1));
+         if (index === 0) {
+            page_button.addClass('active');
+         }
+         page_button.click(
+            function () {
+               $('.page-button').removeClass('active');
+               page_button.addClass('active');
+               pages.hide();
+               page.show();
+            });
+         page.data('page-button', page_button);
+         $('#page-selector').append(page_button);
+      }
+   };
+
 	return function(index){
-		var page = $(this);
+      var page = $(this);
+
+      init_page_button(page, index, pages);
 
 		var left_div = $('<div class="left"></div>');
 		var right_div = $('<div class="right"></div>');
@@ -159,7 +180,7 @@ function init_pages(pages){
 
 		// Next or submit
 		var right_button;
-		if(index == page_count - 1) {
+      if (index === page_count - 1) {
 			right_button = button(text_submit);
 			right_button.click(function () {
 				if(validate_page(page)){
@@ -171,9 +192,13 @@ function init_pages(pages){
 			right_button = button(text_next);
 			right_button.click(function(){
 				if(validate_page(page)){
-					page.hide();
-					pages.eq(index + 1).show();
-				}
+               var next_page = pages.eq(index + 1);
+               page.hide();
+               next_page.show();
+               if (next_page.data('page-button')) {
+                  next_page.data('page-button').click();
+               }
+            }
 			});
 		}
 		right_div.append(right_button);
@@ -182,8 +207,12 @@ function init_pages(pages){
 		if(index > 0){
 			var left_button = button(text_previous);
 			left_button.click(function(){
-				page.hide();
-				pages.eq(index - 1).show();
+            var pre_page = pages.eq(index - 1);
+            page.hide();
+            pre_page.show();
+            if (pre_page.data('page-button')) {
+               pre_page.data('page-button').click();
+            }
 			});
 			left_div.append(left_button);
 		}
@@ -295,7 +324,7 @@ function parse_response(element, response){
 
 	// TODO: Fix so second line of option label is not under input (e.g., MADRS)
 	// Radio buttons and checkboxes
-	if(response_type == "RD" || response_type == "CB"){
+   if (response_type === "RD" || response_type === "CB") {
 		return $.map(response.options, function(option, index){
 			var str;
 			var jumps = '';
@@ -306,7 +335,7 @@ function parse_response(element, response){
 			}
 
 			// Radio button
-			if(response_type == "RD"){
+         if (response_type === "RD") {
 				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s' data-has-specification = '%s'>", name, escape_html(option.value), jumps, option.specification);
 			}
 
@@ -477,8 +506,6 @@ function validate_item(item_div){
 		return;
 	}
 
-	console.log(item_div);
-	console.log(item_div.data('response-type'));
 	//var item_div = $(this);
 	switch (item_div.data('response-type')){
 		case 'TX':
