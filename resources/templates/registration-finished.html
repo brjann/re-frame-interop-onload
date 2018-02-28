@@ -1,0 +1,10 @@
+{% extends "simple.html" %}
+{% block content %}
+{% if markdown? %}
+<div class="markdown">
+    {{content|markdown}}
+</div>
+{% else %}
+{{content|safe}}
+{% endif %}
+{% endblock %}

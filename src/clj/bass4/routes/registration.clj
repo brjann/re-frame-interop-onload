@@ -17,6 +17,7 @@
             (= "/validate" path)
             (= "/duplicate" path)
             (= "/credentials" path)
+            (= "/finished" path)
             (get-in request [:session :captcha-ok]))
         (handler request)
         (response/found (str "/registration/" project-id "/captcha")))
@@ -44,4 +45,6 @@
   (GET "/registration/:project-id/duplicate" [project-id :as request]
     (reg-response/duplicate-page project-id))
   (GET "/registration/:project-id/credentials" [project-id :as request]
-    (reg-response/credentials-page project-id (:session request) request)))
+    (reg-response/credentials-page project-id (:session request) request))
+  (GET "/registration/:project-id/finished" [project-id :as request]
+    (reg-response/finished-page project-id (:session request))))

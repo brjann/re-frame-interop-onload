@@ -74,6 +74,9 @@
         (has (status? 422))
         (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
         (has (status? 302))
+        ;; Redirect to finish
+        (follow-redirect)
+        ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "AAQ")))))
 
@@ -161,12 +164,12 @@
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
 
-(deftest registration-auto-id-email-username-own-password
+(deftest registration-auto-id-email-username-own-password-no-assessments
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (apply str (take 20 (repeatedly #(char (+ (rand 26) 65)))))]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:fields                 #{:email :sms-number :password}
-                                                                   :group                  564616
+                                                                   :group                  570281 ;;No assessments in this group
                                                                    :allow-duplicate-email? false
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
@@ -190,11 +193,68 @@
           (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
           (follow-redirect)
           (has (some-text? email))
-          (has (some-text? "chose")))
+          (has (some-text? "chose"))
+          (visit "/registration/564610/finished")
+          (follow-redirect)
+          (has (some-text? "we promise")))
       (let [by-username       (db/get-user-by-username {:username email})
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
+
+(deftest registration-no-credentials-no-assessments
+  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:fields                 #{:first-name :last-name :email}
+                                                             :group                  570281 ;;No assessments in this group
+                                                             :allow-duplicate-email? true
+                                                             :allow-duplicate-sms?   true
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none
+                                                             :auto-id-prefix         "xxx-"
+                                                             :auto-id-length         3
+                                                             :auto-id?               true})
+                auth-service/letters-digits     (constantly "METALLICA")]
+    (-> (session (app))
+        (visit "/registration/564610")
+        ;; Captcha session is created
+        (follow-redirect)
+        ;; Redirected do captcha page
+        (follow-redirect)
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (visit "/registration/564610" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
+        (follow-redirect)
+        (visit "/registration/564610/validate" :request-method :post :params {:code-email "METALLICA"})
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "we promise")))))
+
+(deftest registration-no-validation-no-credentials-no-assessments
+  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:fields                 #{:first-name :last-name}
+                                                             :group                  570281 ;;No assessments in this group
+                                                             :allow-duplicate-email? true
+                                                             :allow-duplicate-sms?   true
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none
+                                                             :auto-id-prefix         "xxx-"
+                                                             :auto-id-length         3
+                                                             :auto-id?               true})
+                auth-service/letters-digits     (constantly "METALLICA")]
+    (-> (session (app))
+        (visit "/registration/564610")
+        ;; Captcha session is created
+        (follow-redirect)
+        ;; Redirected do captcha page
+        (follow-redirect)
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (visit "/registration/564610" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "we promise")))))
 
 (deftest registration-auto-id-no-prefix-0-length-password
   (let [participant-id (reg-service/generate-participant-id 564610 "" 0)

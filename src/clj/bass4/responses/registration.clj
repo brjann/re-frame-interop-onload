@@ -17,7 +17,8 @@
             [bass4.mailer :as mail]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [bass4.services.assessments :as assessments]))
 
 
 (defn- all-fields?
@@ -25,6 +26,22 @@
   (if (seq field-values)
     (= (into #{} fields) (into #{} (keys field-values)))))
 
+;; ------------
+;; FINISHED
+;; ------------
+
+(defn finished-page
+  [project-id session]
+  (if-let [user-id (get-in session [:reg-credentials :user-id])]
+    (if (zero? (count (assessments/get-pending-assessments user-id)))
+      (->
+        (response/found (str "/registration/" project-id "/finished"))
+        (assoc :session {}))
+      (->
+        (response/found "/user")
+        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true))))
+    (layout/render "registration-finished.html"
+                   (reg-service/finished-content project-id))))
 
 ;; ------------
 ;; CREDENTIALS
@@ -42,9 +59,10 @@
   (let [credentials (:reg-credentials session)]
     (if (contains? credentials :username)
       (layout/render "registration-credentials.html"
-                     {:username  (:username credentials)
-                      :password  (:password credentials)
-                      :login-url (login-url request)})
+                     {:username   (:username credentials)
+                      :password   (:password credentials)
+                      :login-url  (login-url request)
+                      :project-id project-id})
       (layout/error-403-page))))
 
 ;; -------------
@@ -106,10 +124,12 @@
   (if username
     (->
       (response/found (str "/registration/" project-id "/credentials"))
-      (assoc :session {:reg-credentials (merge {:username username} (if auto-password? {:password password}))}))
+      (assoc :session {:reg-credentials (merge
+                                          {:user-id user-id :username username}
+                                          (if auto-password? {:password password}))}))
     (->
-      (response/found "/user")
-      (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true)))))
+      (response/found (str "/registration/" project-id "/finished"))
+      (assoc :session {:reg-credentials {:user-id user-id}}))))
 
 (defn- create-user
   [project-id field-values reg-params]

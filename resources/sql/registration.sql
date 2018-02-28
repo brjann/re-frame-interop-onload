@@ -3,6 +3,13 @@ SELECT RegistrationPossible AS allowed
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
+-- :name finished-content :? :1
+SELECT
+  RegistrationFinished AS `content`,
+  RegistrationIsMarkdown AS `markdown?`
+FROM c_treatmentinterface
+WHERE ObjectId=:project-id;
+
 -- :name captcha-content :? :1
 SELECT
   RegistrationCaptcha AS `content`,

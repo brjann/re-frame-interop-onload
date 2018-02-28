@@ -16,6 +16,10 @@
   [project-id]
   (db/bool-cols db/captcha-content {:project-id project-id} [:markdown?]))
 
+(defn finished-content
+  [project-id]
+  (db/bool-cols db/finished-content {:project-id project-id} [:markdown?]))
+
 (def field-translation
   {:FirstName    :first-name
    :LastName     :last-name
