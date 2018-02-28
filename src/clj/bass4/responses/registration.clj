@@ -316,16 +316,5 @@
       (layout/error-400-page))))
 
 
-;; TODO: Tests for registration and following assessments
-;; TODO: Duplicate username
-;; TODO: Validate email and sms
-;; Idea: If email and/or sms is entered, then all field values
-;; are stored in session and validation codes are sent out.
-;; Registrant must enter these before user is created.
-;; Auto-create password and present username/password to user if no sms/email,
-;; otherwise send them to user by sms first and by email second
-;;
 ;; TODO: Captcha timeout
-;; TODO: Registration closed screen
-;; TODO: Login only if there are assessments waiting
 ;; TODO: Max number of sms
