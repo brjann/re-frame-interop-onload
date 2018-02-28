@@ -169,7 +169,8 @@ function init_pages(pages){
       page.show();
       page_count_updater(index);
       if (page.data('page-button')) {
-         page.data('page-button').click();
+         $('.page-button').removeClass('active');
+         page.data('page-button').addClass('active');
       }
    };
 
@@ -182,10 +183,7 @@ function init_pages(pages){
          }
          page_button.click(
             function () {
-               $('.page-button').removeClass('active');
-               page_button.addClass('active');
-               pages.hide();
-               page.show();
+               show_page(index);
             });
          page.data('page-button', page_button);
          $('#page-selector').append(page_button);
