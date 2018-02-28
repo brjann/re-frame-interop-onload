@@ -22,7 +22,7 @@ div#instrument .order-count {
     margin-right: 2px;
 }
 
-div#instrument .instrument-show-name, div#instrument .order-count {
+div#instrument .instrument-show-name, div#instrument .order-count, div#instrument .page-count {
     width: 100%;
     text-align: center;
 }
@@ -172,16 +172,16 @@ div#instrument .slider-container {
  ***********************/
 
 div#instrument .has-option:hover{
-    background-color: #DDDDDD;
+    background-color: #EEEEEE;
 }
 
 div#instrument .item-div.has-data{
     #background-color: #EEEEEE;
-    background-color: greenyellow;
+    background-color: #d9d9d9;
 }
 
 div#instrument .item-div.jumped-over {
-    background-color: #BBBBBB;
+    background-color: #737373;
 }
 
 div#instrument .item-error {

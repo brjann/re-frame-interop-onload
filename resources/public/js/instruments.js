@@ -148,7 +148,23 @@ function init_instrument(instrument){
 }
 
 function init_pages(pages){
-	var page_count = pages.length;
+
+   var page_count_updater = function (index) {
+      if (pages.length > 1) {
+         $('.page-count').text(sprintf(text_page_count, index + 1, pages.length));
+      }
+   };
+
+   var show_page = function (index) {
+      window.scrollTo(0, 0);
+      pages.hide();
+      var page = pages.eq(index);
+      page.show();
+      page_count_updater(index);
+      if (page.data('page-button')) {
+         page.data('page-button').click();
+      }
+   };
 
    var init_page_button = function (page, index, pages) {
       var page_selector = $('#page-selector');
@@ -169,7 +185,9 @@ function init_pages(pages){
       }
    };
 
-	return function(index){
+   page_count_updater(0);
+
+   return function (index) {
       var page = $(this);
 
       init_page_button(page, index, pages);
@@ -180,7 +198,7 @@ function init_pages(pages){
 
 		// Next or submit
 		var right_button;
-      if (index === page_count - 1) {
+      if (index === pages.length - 1) {
 			right_button = button(text_submit);
 			right_button.click(function () {
 				if(validate_page(page)){
@@ -192,12 +210,7 @@ function init_pages(pages){
 			right_button = button(text_next);
 			right_button.click(function(){
 				if(validate_page(page)){
-               var next_page = pages.eq(index + 1);
-               page.hide();
-               next_page.show();
-               if (next_page.data('page-button')) {
-                  next_page.data('page-button').click();
-               }
+               show_page(index + 1)
             }
 			});
 		}
@@ -207,12 +220,7 @@ function init_pages(pages){
 		if(index > 0){
 			var left_button = button(text_previous);
 			left_button.click(function(){
-            var pre_page = pages.eq(index - 1);
-            page.hide();
-            pre_page.show();
-            if (pre_page.data('page-button')) {
-               pre_page.data('page-button').click();
-            }
+            show_page(index - 1);
 			});
 			left_div.append(left_button);
 		}

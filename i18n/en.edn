@@ -63,7 +63,8 @@
                    :must-answer     "You must provide an answer."
                    :must-specify-1  "You must provide a specification to your answer."
                    :must-specify-m  "You must provide specifications to your answers."
-                   :order-count     "Questionnaire %1 of %2"}
+                   :order-count     "Questionnaire %1 of %2"
+                   :page-count      "Page %s of %s"}
  :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"
                    :date        "yyyy-MM-dd"
                    :time-ns     "HH:mm"

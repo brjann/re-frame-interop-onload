@@ -11,24 +11,26 @@
         <div class="order-count mx-auto">{% trb instrument/order-count %}{{order}}|{{count}}{% endtrb %}</div>
         {% endifunequal %}
         <div class="instrument-show-name mx-auto"></div>
+        <div class="page-count mx-auto"></div>
         <div class="instrument-elements mx-auto"></div>
     </div>
 </div>
 
 {% block page-scripts %}
 <script type="text/javascript">
-	// @formatter:off
+   // @formatter:off
 	var instrument = {{instrument|json|safe}};
 	// @formatter:on
-	var text_submit = "{%tr submit %}";
-	var text_next = "{%tr next %}";
-	var text_previous = "{%tr previous %}";
-	var text_range_error = "{%tr instrument/range-error %}";
-	var text_range_error_max = "{%tr instrument/range-error-max %}";
-	var text_range_error_min = "{%tr instrument/range-error-max %}";
-	var text_pattern_error = "{%tr instrument/pattern-error %}";
-	var text_must_answer = "{%tr instrument/must-answer %}";
-	var text_specification_missing_1 = "{%tr instrument/must-specify-1 %}";
-	var text_specification_missing_m = "{%tr instrument/must-specify-m %}";
+   var text_submit = "{%tr submit %}";
+   var text_next = "{%tr next %}";
+   var text_previous = "{%tr previous %}";
+   var text_page_count = "{%tr instrument/page-count %}";
+   var text_range_error = "{%tr instrument/range-error %}";
+   var text_range_error_max = "{%tr instrument/range-error-max %}";
+   var text_range_error_min = "{%tr instrument/range-error-max %}";
+   var text_pattern_error = "{%tr instrument/pattern-error %}";
+   var text_must_answer = "{%tr instrument/must-answer %}";
+   var text_specification_missing_1 = "{%tr instrument/must-specify-1 %}";
+   var text_specification_missing_m = "{%tr instrument/must-specify-m %}";
 </script>
 {% endblock %}
