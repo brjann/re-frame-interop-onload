@@ -83,6 +83,10 @@ div#instrument .content{
     padding-right: 2px;
 }
 
+div#instrument textarea {
+    width: 100%;
+}
+
 /*
 div#instrument div.navigate{
     width: 100%;
