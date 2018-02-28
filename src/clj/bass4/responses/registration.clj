@@ -63,7 +63,8 @@
                       :password   (:password credentials)
                       :login-url  (login-url request)
                       :project-id project-id})
-      (layout/error-403-page))))
+      ;; Wrong place - redirect
+      (response/found (str "/registration/" project-id)))))
 
 ;; -------------
 ;;   DUPLICATE
@@ -224,7 +225,8 @@
                         :project-id project-id}
                        (when (or (env :dev) (env :debug-mode))
                          codes)))
-      (layout/error-403-page))))
+      ;; Wrong page - redirect
+      (response/found (str "/registration/" project-id)))))
 
 ;; TODO: Test this
 (defn handle-validation
