@@ -8,7 +8,7 @@
 
 (defn instrument-page [instrument-id]
   (if-let [instrument (instruments/get-instrument instrument-id)]
-    (layout/render "instrument.html" {:instrument instrument :instrument-id instrument-id})
+    (layout/render "instrument-preview.html" {:instrument instrument :instrument-id instrument-id})
     (layout/error-404-page)))
 
 (s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]

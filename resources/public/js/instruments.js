@@ -36,7 +36,9 @@ $(document).ready(function(){
 			$(this).addClass('instrument');
 
 			// TODO: Remove debug
-			$(this).find(".instrument-show-name").click(function(){toggle_size($("#instrument"))});
+         $("#responsive-toggler").click(function () {
+            toggle_size($("#instrument"))
+         });
 
 			var instrument_div = $(this).find(".instrument-elements");
 
