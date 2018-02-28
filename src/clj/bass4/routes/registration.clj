@@ -34,17 +34,26 @@
     (reg-response/registration-page project-id))
   (POST "/registration/:project-id" [project-id & fields]
     (reg-response/handle-registration project-id fields))
+  (GET "/registration/:project-id/" [project-id :as request]
+    (reg-response/registration-page project-id))
+  (POST "/registration/:project-id/" [project-id & fields]
+    (reg-response/handle-registration project-id fields))
+
   (GET "/registration/:project-id/captcha" [project-id :as request]
     (reg-response/captcha project-id (:session request)))
   (POST "/registration/:project-id/captcha" [project-id & params :as request]
     (reg-response/validate-captcha project-id (:captcha params) (:session request)))
+
   (GET "/registration/:project-id/validate" [project-id :as request]
     (reg-response/validation-page project-id (:session request)))
   (POST "/registration/:project-id/validate" [project-id & params :as request]
     (reg-response/handle-validation project-id params (:session request)))
+
   (GET "/registration/:project-id/duplicate" [project-id :as request]
     (reg-response/duplicate-page project-id))
+
   (GET "/registration/:project-id/credentials" [project-id :as request]
     (reg-response/credentials-page project-id (:session request) request))
+
   (GET "/registration/:project-id/finished" [project-id :as request]
     (reg-response/finished-page project-id (:session request))))
