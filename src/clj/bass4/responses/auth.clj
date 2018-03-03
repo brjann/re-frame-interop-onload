@@ -44,6 +44,7 @@
     (:external-login session)
     false
 
+    ;; TODO: Check :double-authed first!
     (auth-service/double-auth-required? (:identity session))
     (not (boolean (:double-authed session)))
 
@@ -75,14 +76,14 @@
    :email (mail/is-email? user-email)})
 
 (defn- send-methods-general
-  [by-sms by-email allow-both]
-  {:sms   (or (pos? by-sms) (pos? allow-both))
-   :email (or (pos? by-email) (pos? allow-both))})
+  [by-sms? by-email? allow-both?]
+  {:sms   (or by-sms? allow-both?)
+   :email (or by-email? allow-both?)})
 
 (defn- get-send-methods
-  [user-sms user-email by-sms by-email allow-both]
+  [user-sms user-email by-sms? by-email? allow-both?]
   (let [methods-user    (send-methods-user user-sms user-email)
-        methods-general (send-methods-general by-sms by-email allow-both)]
+        methods-general (send-methods-general by-sms? by-email? allow-both?)]
     {:sms   (and (:sms methods-user) (:sms methods-general))
      :email (and (:email methods-user) (:email methods-general))}))
 
@@ -95,8 +96,8 @@
       (mail/mail! user-email (i18n/tr [:login/code]) code))))
 
 (defn- send-code!
-  [code user-sms user-email by-sms by-email allow-both]
-  (let [send-methods (get-send-methods user-sms user-email by-sms by-email allow-both)]
+  [code user-sms user-email by-sms? by-email? allow-both?]
+  (let [send-methods (get-send-methods user-sms user-email by-sms? by-email? allow-both?)]
     (if (some identity (vals send-methods))
       (if (send-by-method! code send-methods user-sms user-email)
         :success
@@ -118,9 +119,9 @@
           send-res (send-code! code
                                (:sms-number user)
                                (:email user)
-                               (:sms settings)
-                               (:email settings)
-                               (and (:double-auth-use-both user) (:allow-both settings)))]
+                               (:sms? settings)
+                               (:email? settings)
+                               (and (:double-auth-use-both? user) (:allow-both? settings)))]
       (case send-res
         :success
         {:redirect "/double-auth"

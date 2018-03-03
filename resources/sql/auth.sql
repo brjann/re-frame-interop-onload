@@ -7,7 +7,7 @@ SELECT
   UserName,
   Email,
   SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both',
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login`,
   `Password`
@@ -24,7 +24,7 @@ SELECT
   UserName,
   Email,
   SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both',
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login-time`,
   `Password`
@@ -40,7 +40,7 @@ SELECT
   UserName,
   Email,
   SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both',
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login`,
   `Password`
@@ -52,11 +52,11 @@ WHERE ParticipantId = :participant-id;
 -- :name get-double-auth-settings :? :1
 -- :doc
 SELECT
-  cp.DoubleAuthSkip AS `user-skip`,
-  ct.DoubleAuthUseSMS AS `sms`,
-  ct.DoubleAuthUseEmail AS `email`,
-  ct.DoubleAuthAllowSkip AS `allow-skip`,
-  ct.DoubleAuthAllowBothMethods AS `allow-both`
+  cp.DoubleAuthSkip AS `user-skip?`,
+  ct.DoubleAuthUseSMS AS `sms?`,
+  ct.DoubleAuthUseEmail AS `email?`,
+  ct.DoubleAuthAllowSkip AS `allow-skip?`,
+  ct.DoubleAuthAllowBothMethods AS `allow-both?`
 FROM c_participant AS cp
   JOIN c_treatmentinterface AS ct
     ON cp.ParentInterface = ct.ObjectId
