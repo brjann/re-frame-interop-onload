@@ -119,6 +119,17 @@ $(document).ready(function () {
 
 		var $form = $(this);
 
+      /*
+         Workaround for a bug in IE that ignores last part of
+         url if part of it contains only numbers. For example
+         registration/564610/captcha
+         -> registration/564610/ by IE
+         See https://stackoverflow.com/questions/27182689/ie-form-action-url-issue
+       */
+      if ($form.attr('action') === '') {
+         $form.prop('action', location.href);
+      }
+
 		// Don't tamper with get forms
 		if ($form.prop('method') == 'get') {
 			return;
@@ -134,7 +145,6 @@ $(document).ready(function () {
 		if (!no_ajax || !no_validate) {
 
 			$form.data('on_ajax_fns', []);
-
 
 			// Save form's own submit function
 			var formsubmit;
@@ -210,11 +220,11 @@ $(document).ready(function () {
 
 					var post = $form.serializeArray();
 					var url;
-					if (this.action != "") {
+               if (this.action !== '') {
 						url = this.action;
 					}
 					else {
-						url = document.URL;
+                  url = location.href;
 					}
 					$.ajax(
 						url,
