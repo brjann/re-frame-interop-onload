@@ -79,7 +79,9 @@
   will be converted to ordered maps therefore preserving insertion order.
 
   Example: (php->clj \"a:2:{i:0;i:1;i:1;i:2;}\")"
-  [php]
+  [php safe?]
+  (if (not safe?)
+    (throw (Exception. "php unserializer must be called with safe argument")))
   (if (empty? php)
     nil
     (let [reader (r/buffered-input-stream php)]

@@ -1,9 +1,9 @@
 (ns bass4.utils
   (:require [clojure.data.json :as json]
-            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.php-clj.safe :refer [php->clj]]
             [clojure.string :as s]))
 
-
+1
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
   ([m k f]

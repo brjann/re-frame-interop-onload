@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+]]
-            [bass4.php_clj.core :refer [php->clj clj->php]]
+            [bass4.php_clj.core :refer [clj->php]]
+            [bass4.php-clj.safe :refer [php->clj]]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.tools.logging :as log]))
 

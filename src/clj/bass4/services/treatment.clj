@@ -1,6 +1,6 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.php-clj.safe :refer [php->clj]]
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [clojure.set]

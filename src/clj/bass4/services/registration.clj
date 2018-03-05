@@ -1,6 +1,6 @@
 (ns bass4.services.registration
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj]]
+            [bass4.php-clj.safe :refer [php->clj]]
             [bass4.services.user :as user]
             [bass4.utils :refer [filter-map map-map in? subs+]]
             [clojure.tools.logging :as log]

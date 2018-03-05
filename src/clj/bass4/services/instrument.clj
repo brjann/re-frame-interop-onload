@@ -1,10 +1,12 @@
 (ns bass4.services.instrument
   (:require [bass4.db.core :as db]
-            [bass4.php_clj.core :refer [php->clj clj->php]]
+            [bass4.php_clj.core :refer [clj->php]]
+            [bass4.php-clj.safe :refer [php->clj]]
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [bass4.infix-parser :as infix]
             [bass4.services.instrument-answers :as instrument-answers]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [clojure.tools.logging :as log]))
 
 
 ;; ------------------------
