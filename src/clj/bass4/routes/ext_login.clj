@@ -42,7 +42,12 @@
   (let [{:keys [allowed ips]} (db/bool-cols db/ext-login-settings {} [:allowed])]
     (cond
       (not allowed) (layout/text-response "0 External login not allowed")
-      (not (match-request-ip request ips)) (layout/text-response (str "0 External login not allowed from this IP " (get-ip request)))
+
+      (and
+        (string/starts-with? (:uri request) "/ext-login/check-pending/")
+        (not (match-request-ip request ips)))
+      (layout/text-response (str "0 External login not allowed from this IP " (get-ip request)))
+
       :else (handler request))))
 
 (defn return-url-mw
@@ -50,7 +55,7 @@
   (let [session (:session request)]
     (if (and (:return-url session) (not (:assessments-pending session)))
       (-> (http-response/found (:return-url session))
-          (assoc :session nil))
+          (assoc :session {}))
       (handler request))))
 
 

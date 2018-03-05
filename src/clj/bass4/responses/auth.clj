@@ -19,7 +19,7 @@
 
 (defn logout []
   (-> (response/found "/login")
-      (assoc :session nil)))
+      (assoc :session {})))
 
 
 

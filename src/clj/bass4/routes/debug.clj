@@ -17,7 +17,8 @@
             [clojure.pprint]
             [bass4.request-state :as request-state]
             [ring.util.codec :as codec]
-            [bass4.mailer :as mail]))
+            [bass4.mailer :as mail]
+            [clj-http.client :as http]))
 
 (defn states-page
   []
@@ -31,6 +32,18 @@
       (mount.core/stop state-name)
       (mount.core/start state-name))
     (http-response/found "/debug/states")))
+
+(defn check-pending-http
+  [participant-id request]
+  (let [host-address (let [headers (:headers request)
+                           host    (get headers "x-forwarded-host" (get headers "host"))
+                           scheme  (name (:scheme request))]
+                       (str scheme "://" host))]
+    (-> (str host-address "/ext-login/check-pending/" participant-id)
+        (http/get)
+        (:body)
+        (str "&returnURL=" (codec/url-encode (str host-address "/debug/session")))
+        (layout/text-response))))
 
 (def debug-routes
   (context "/debug" [:as request]
@@ -95,6 +108,8 @@
           (layout/print-var-response params))
         (GET "/exception" []
           (throw (Exception. "Your exception as requested.")))
+        (GET "/ext-login/:participant-id" [participant-id]
+          (check-pending-http participant-id request))
         (GET "/states" []
           (states-page))
         (POST "/states" [& params]
