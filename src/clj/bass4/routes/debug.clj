@@ -45,6 +45,16 @@
         (GET "/test" [:as req]
           (layout/render "test.html"
                          {:url :url}))
+        (GET "/ie-test/:xxx/:yyy" [:as req]
+          (layout/render "ie-error-test.html"
+                         {:url :url}))
+        (POST "/ie-test/:xxx/:yyy" [:as req]
+          (layout/text-response "You posted data"))
+        (GET "/ie-test/:xxx/:yyy/" [:as req]
+          (layout/render "ie-error-test.html"
+                         {:url :url}))
+        (POST "/ie-test/:xxx/:yyy/" [:as req]
+          (layout/text-response "You posted data"))
         (GET "/env" [:as req] (layout/print-var-response env))
         (GET "/timeout" [:as request]
           (-> (http-response/found "/re-auth")
