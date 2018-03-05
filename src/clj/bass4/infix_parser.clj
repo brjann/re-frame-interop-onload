@@ -112,9 +112,9 @@
               "+"  +
               "-"  -
               "*"  *
-              '"/" /
-              "^" math/expt
-              "~" -}]
+              '"/" #(float (/ %1 %2))
+              "^"  math/expt
+              "~"  -}]
      (first
        (reduce
          (fn [stack token]
