@@ -20,17 +20,20 @@
             [mount.core :as mount]
             [clojure.pprint]
             [bass4.request-state :as request-state]
-            [ring.util.codec :as codec]
-            [clojure.tools.logging :as log]))
+            [ring.util.codec :as codec]))
 
 
 ;; ------------
 ;;  MIDDLEWARE
 ;; ------------
 
+(defn- get-ip
+  [request]
+  (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request)))
+
 (defn- match-request-ip
   [request ips-str]
-  (let [remote-ip   (:remote-addr request)
+  (let [remote-ip   (get-ip request)
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
 
@@ -39,7 +42,7 @@
   (let [{:keys [allowed ips]} (db/bool-cols db/ext-login-settings {} [:allowed])]
     (cond
       (not allowed) (layout/text-response "0 External login not allowed")
-      (not (match-request-ip request ips)) (layout/text-response (str "0 External login not allowed from this IP " (:remote-addr request)))
+      (not (match-request-ip request ips)) (layout/text-response (str "0 External login not allowed from this IP " (get-ip request)))
       :else (handler request))))
 
 (defn return-url-mw

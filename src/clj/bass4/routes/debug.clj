@@ -71,7 +71,7 @@
               (assoc :session {})))
         (POST "/403" [& params :as request]
           (layout/error-page {:status 403
-                              :body "Sorry!"}))
+                              :body   "Sorry!"}))
         (GET "/403" [& params :as request]
           (layout/error-403-page (get-in request [:session :identity])))
         (GET "/404!" [& params :as request]
@@ -86,6 +86,11 @@
           (-> (http-response/found (str "/debug/decode?url=" (codec/url-encode "/debug/encode-decode?arg1=val1&arg2=val2&arg3=path%2fto%2fresource")))))
         (GET "/decode" [& params]
           (-> (http-response/found (:url params))))
+        (GET "/ip" []
+          (layout/text-response
+            (str "x-ip " (get-in request [:headers "x-forwarded-for"]) "\n"
+                 "ip " (:remote-addr request) "\n"
+                 "selected ip " (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request)))))
         (GET "/encode-decode" [& params]
           (layout/print-var-response params))
         (GET "/exception" []
