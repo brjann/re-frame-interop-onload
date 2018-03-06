@@ -4,18 +4,18 @@
 <table>
     <thead>
     <tr>
-        <th>Item ID</th>
         <th>Number</th>
         <th>Answer</th>
         <th>Question</th>
+        <th>Item ID</th>
     </tr>
     </thead>
     {% for item in items %}
     <tr>
-        <td>{{item.item-id}}</td>
         <td>{{item.name}}</td>
         <td>{{item.value}}</td>
-        <td>{{item.text}}</td>
+        <td>{{item.text|safe}}</td>
+        <td>{{item.item-id}}</td>
     </tr>
     {% endfor %}
 </table>
