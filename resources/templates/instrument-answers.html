@@ -5,13 +5,17 @@
     <thead>
     <tr>
         <th>Item ID</th>
+        <th>Number</th>
         <th>Answer</th>
+        <th>Question</th>
     </tr>
     </thead>
-    {% for key, val in items %}
+    {% for item in items %}
     <tr>
-        <td>{{key}}</td>
-        <td>{{val}}</td>
+        <td>{{item.item-id}}</td>
+        <td>{{item.name}}</td>
+        <td>{{item.value}}</td>
+        <td>{{item.text}}</td>
     </tr>
     {% endfor %}
 </table>
