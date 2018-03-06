@@ -58,6 +58,12 @@
         (GET "/test" [:as req]
           (layout/render "test.html"
                          {:url :url}))
+        (GET "/sleep1" []
+          (do (Thread/sleep 20000)
+              (layout/text-response "I slept for 20 secs")))
+        (GET "/sleep2" []
+          (do (Thread/sleep 20000)
+              (layout/text-response "I slept for 20 secs")))
         (GET "/ie-test/:xxx/:yyy" [:as req]
           (layout/render "ie-error-test.html"
                          {:url :url}))
