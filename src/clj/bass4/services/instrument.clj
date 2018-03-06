@@ -25,10 +25,14 @@
   (let [item-ids (mapv :item-id item-elements)
         ;; A jump-map is returned as {} rather than []
         ;; if the keys in the php array are not sorted
+        ;; or some intermediate keys are missing
         ;; This function returns a sorted seq from a map
         unmap    (fn [m]
                    (if (map? m)
-                     (->> (into [] m)
+                     (->> m
+                          ;; Make sure all keys between 0 and 19 are present
+                          (merge (zipmap (range 0 20) (repeat 20 0)))
+                          (into [])
                           (sort #(compare (first %1) (first %2)))
                           (map second))
                      m))]
@@ -221,7 +225,7 @@
 
 (defn save-test-answers!
   [instrument-id answers-map]
-  (if-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
+  (when-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
     (instrument-answers/save-answers! answers-id answers-map)))
 
 (defn parse-answers-post
