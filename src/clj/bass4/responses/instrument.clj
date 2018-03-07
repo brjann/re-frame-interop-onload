@@ -5,6 +5,7 @@
             [schema.core :as s]
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
+            [clojure.string :as string]
             [bass4.request-state :as request-state]))
 
 (defn instrument-page [instrument-id]
@@ -20,6 +21,7 @@
     (do
       (request-state/record-error! "Instrument post was not in valid JSON format")
       (layout/error-400-page))))
+
 
 (defn- get-test-answers
   [instrument-id]
@@ -37,3 +39,18 @@
       (bass4.layout/render
         "instrument-answers.html"
         {:items (:items answers) :specifications (:specifications answers) :sums (:sums answers)}))))
+
+
+(def x
+  (fn [[key specification]]
+    (let [[item-id option] (string/split key #"_")] {:item-id (str->int item-id) :value option :specification specification})))
+
+(defn checkboxize
+  [instrument]
+  (let [items (filter :item-id (:elements instrument))]
+    (map (fn [item]
+           (let [response (get (:responses instrument) (:response-id item))]
+             (if (= "CB" (:response-type response))
+               (map #(merge {:spec-id (str (:item-id item) "_" (:value %))} %) (:options response))
+               item)))
+         items)))
