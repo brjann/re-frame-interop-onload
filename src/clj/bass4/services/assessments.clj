@@ -435,4 +435,5 @@
         empty-administration-ids (diff (map :administration-id round) non-empty)]
     (when (seq empty-administration-ids)
       (db/set-administration-complete! {:administration-ids empty-administration-ids})
+      (db/set-last-assessment! {:administration-id (first empty-administration-ids)})
       (dependent-assessments! user-id empty-administration-ids))))

@@ -300,6 +300,15 @@ UPDATE c_participantadministration
   SET DateCompleted = unix_timestamp(now())
 WHERE ObjectId IN(:v*:administration-ids);
 
+-- :name set-last-assessment! :! :n
+-- :doc
+UPDATE  c_participantadministration as cpa
+  JOIN c_assessment AS ca ON cpa.Assessment = ca.ObjectId
+  JOIN c_participant AS cp ON cpa.parentid = cp.objectid
+SET cp.lastassessment = ca.objectid,
+    cp.LastAssessmentIndex = cpa.assessmentindex
+WHERE cpa.ObjectId = :administration-id;
+
 -- :name get-dependent-assessments :? :*
 SELECT
   ca2.ObjectId AS `assessment-id`,
