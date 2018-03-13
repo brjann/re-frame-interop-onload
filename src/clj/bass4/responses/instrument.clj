@@ -22,16 +22,55 @@
       (request-state/record-error! "Instrument post was not in valid JSON format")
       (layout/error-400-page))))
 
+#_(defn checkboxize
+    [items]
+    (map (fn [item]
+           (let [response (get (:responses instrument) (:response-id item))]
+             (if (= "CB" (:response-type response))
+               (map #(merge
+                       {:item-id (:item-id item)
+                        :spec-id (str (:item-id item) "_" (:value %))} %)
+                    (:options response))
+               item)))
+         items))
+
+(defn checkboxize
+  [instrument]
+  (let [items (->> instrument
+                   (:elements)
+                   (filter :item-id))]
+    (reduce (fn [coll item]
+              (let [response (get (:responses instrument) (:response-id item))
+                    res      (if (= "CB" (:response-type response))
+                               (map #(merge
+                                       {:item-id     (:item-id item)
+                                        :checkbox-id (str (:item-id item) "_" (:value %))} %)
+                                    (:options response))
+                               (list item))]
+                (concat coll res)))
+            ()
+            items)))
 
 (defn- get-test-answers
   [instrument-id]
-  (let [items (->> (instruments/get-instrument instrument-id)
-                   (:elements)
-                   (filter :item-id))]
+  (let [items (checkboxize (instruments/get-instrument instrument-id))]
     (when items
-      (let [answers      (instruments/get-instrument-test-answers instrument-id)
-            item-answers (into {} (:items answers))]
-        (assoc answers :items (map #(assoc % :value (get item-answers (str (:item-id %)))) items))))))
+      (let [answers        (instruments/get-instrument-test-answers instrument-id)
+            item-answers   (->> answers
+                                :items
+                                (map #(vector (str (first %)) (second %)))
+                                (into {}))
+            specifications (into {} (:specifications answers))]
+        (assoc answers
+          :items
+          (map
+            (fn [item]
+              (let [value (get item-answers (str (or (:checkbox-id item) (:item-id item))))]
+                (merge
+                  item
+                  {:value         value
+                   :specification (get specifications (str (:item-id item) "_" value))})))
+            items))))))
 
 (defn summary-page [instrument-id]
   (let [answers (get-test-answers instrument-id)]
@@ -41,16 +80,14 @@
         {:items (:items answers) :specifications (:specifications answers) :sums (:sums answers)}))))
 
 
-(def x
+#_(def x
   (fn [[key specification]]
     (let [[item-id option] (string/split key #"_")] {:item-id (str->int item-id) :value option :specification specification})))
 
-(defn checkboxize
-  [instrument]
-  (let [items (filter :item-id (:elements instrument))]
-    (map (fn [item]
-           (let [response (get (:responses instrument) (:response-id item))]
-             (if (= "CB" (:response-type response))
-               (map #(merge {:spec-id (str (:item-id item) "_" (:value %))} %) (:options response))
-               item)))
-         items)))
+#_(def answers (instruments/get-instrument-test-answers instrument-id))
+#_(def item-answers (->> answers
+                         :items
+                         (map #(vector (str (first %)) (second %)))
+                         (into {})))
+#_(def specifications (into {} (:specifications answers)))
+
