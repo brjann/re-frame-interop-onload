@@ -8,6 +8,7 @@
             [bass4.test.core :refer [test-fixtures not-text?]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
+            [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]))
 
@@ -57,10 +58,11 @@
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "top top top thanks"))
-        (has (some-text? "Thanks top")))))
+        (has (some-text? "Thanks top")))
+    (is (= {:assessment-id 536106, :assessment-index 1} (db/get-last-assessment {:user-id user-id})))))
 
 (deftest group-assessment-concurrent
-  (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test"})]
+  (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test-concurrent"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
     (let [s1 (-> (session (app))
                  (visit "/login" :request-method :post :params {:username user-id :password user-id}))

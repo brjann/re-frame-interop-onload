@@ -309,6 +309,14 @@ SET cp.lastassessment = ca.objectid,
     cp.LastAssessmentIndex = cpa.assessmentindex
 WHERE cpa.ObjectId = :administration-id;
 
+-- :name get-last-assessment :? :1
+-- :doc
+SELECT
+  LastAssessment AS `assessment-id`,
+  LastAssessmentIndex `assessment-index`
+FROm c_participant
+WHERE ObjectId = :user-id;
+
 -- :name get-dependent-assessments :? :*
 SELECT
   ca2.ObjectId AS `assessment-id`,
