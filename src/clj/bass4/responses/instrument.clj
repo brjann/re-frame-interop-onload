@@ -35,6 +35,7 @@
          items))
 
 (defn checkboxize
+  "Makes checkbox items into one item per checkbox option."
   [instrument]
   (let [items (->> instrument
                    (:elements)
@@ -44,7 +45,8 @@
                     res      (if (= "CB" (:response-type response))
                                (map #(merge
                                        {:item-id     (:item-id item)
-                                        :checkbox-id (str (:item-id item) "_" (:value %))} %)
+                                        :checkbox-id (str (:item-id item) "_" (:value %))
+                                        :name        (str (:name item) "_" (:value %))} %)
                                     (:options response))
                                (list item))]
                 (concat coll res)))
@@ -62,6 +64,7 @@
                                 (into {}))
             specifications (into {} (:specifications answers))]
         (assoc answers
+          :specifications specifications
           :items
           (map
             (fn [item]
@@ -69,7 +72,9 @@
                 (merge
                   item
                   {:value         value
-                   :specification (get specifications (str (:item-id item) "_" value))})))
+                   :specification (get specifications (or
+                                                        (:checkbox-id item)
+                                                        (str (:item-id item) "_" value)))})))
             items))))))
 
 (defn summary-page [instrument-id]
@@ -77,17 +82,5 @@
     (when (:items answers)
       (bass4.layout/render
         "instrument-answers.html"
-        {:items (:items answers) :specifications (:specifications answers) :sums (:sums answers)}))))
-
-
-#_(def x
-  (fn [[key specification]]
-    (let [[item-id option] (string/split key #"_")] {:item-id (str->int item-id) :value option :specification specification})))
-
-#_(def answers (instruments/get-instrument-test-answers instrument-id))
-#_(def item-answers (->> answers
-                         :items
-                         (map #(vector (str (first %)) (second %)))
-                         (into {})))
-#_(def specifications (into {} (:specifications answers)))
-
+        {:items (:items answers)
+         :sums  (:sums answers)}))))

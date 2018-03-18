@@ -54,7 +54,7 @@
 
 (defn save-answers!
   ([answers-id answers-map]
-    (save-answers! answers-id answers-map nil))
+   (save-answers! answers-id answers-map nil))
   ([answers-id {:keys [items specifications sums]} copy-of]
    (db/save-instrument-answers!
      {:answers-id     answers-id
@@ -62,22 +62,22 @@
       :specifications (clj->php specifications)
       :sums           (clj->php sums)
       :copy-of        copy-of})
-    (when copy-of
-      (db/link-property-reverse! {:linkee-id answers-id :property-name "CopyOf" :linker-class "cInstrumentAnswers"}))))
+   (when copy-of
+     (db/link-property-reverse! {:linkee-id answers-id :property-name "CopyOf" :linker-class "cInstrumentAnswers"}))))
 
 (defn save-administrations-answers!
   [administration-ids instrument-id answers-map]
   ;; TODO: Allocates them one by one - instrument-answers-id would have to be rewritten if unwanted
   (let [answers-ids (map #(instrument-answers-id % instrument-id) administration-ids)
-        copy-ofs (if (> (count answers-ids) 1)
-                   (cons (second answers-ids) (repeat (dec (count answers-ids)) (first answers-ids)))
-                   '(nil))]
+        copy-ofs    (if (> (count answers-ids) 1)
+                      (cons (second answers-ids) (repeat (dec (count answers-ids)) (first answers-ids)))
+                      '(nil))]
     (mapv #(save-answers! %1 answers-map %2) answers-ids copy-ofs)))
 
 (defn get-answers
   [administration-id instrument-id]
   (let [answers (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})]
     (merge answers
-           {:items (php->clj (:items answers))
+           {:items          (php->clj (:items answers))
             :specifications (php->clj (:specifications answers))
-            :sums (php->clj (:sums answers))})))
+            :sums           (php->clj (:sums answers))})))

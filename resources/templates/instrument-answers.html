@@ -6,7 +6,7 @@
     <tr>
         <th>Number</th>
         <th>Answer</th>
-        <th>Question</th>
+        <th>Specification</th>
         <th>Item ID</th>
     </tr>
     </thead>
@@ -14,22 +14,8 @@
     <tr>
         <td>{{item.name}}</td>
         <td>{{item.value}}</td>
-        <td>{{item.text|safe}}</td>
+        <td>{{item.specification}}</td>
         <td>{{item.item-id}}</td>
-    </tr>
-    {% endfor %}
-</table>
-<table>
-    <thead>
-    <tr>
-        <th>Specification ID</th>
-        <th>Answer</th>
-    </tr>
-    </thead>
-    {% for key, val in specifications %}
-    <tr>
-        <td>{{key}}</td>
-        <td>{{val}}</td>
     </tr>
     {% endfor %}
 </table>
