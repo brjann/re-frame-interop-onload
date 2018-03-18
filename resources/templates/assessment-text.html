@@ -3,7 +3,7 @@
 
 <div class="container">
     {% for text in texts %}
-    <p>{{text}}</p>
+    <div>{{text|markdown}}</div>
     {% endfor %}
     <p><a href="">{%tr continue %}</a></p>
 </div>

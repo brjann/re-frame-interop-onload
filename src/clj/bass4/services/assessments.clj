@@ -270,6 +270,7 @@
                       (fn [idx assessment] (when (or (zero? idx) (:show-texts-if-swallowed assessment)) (get assessment text-name)))
                       batch))]
         (when (seq texts)
+          ;; Since these are saved to a table, they are converted to text representation
           {:texts (pr-str texts)}))))
 
 (defn- assessment-instruments
