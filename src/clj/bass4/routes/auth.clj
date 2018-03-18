@@ -31,4 +31,6 @@
   (POST "/re-auth" [& params :as request]
     (auth-response/check-re-auth (:session request) (:password params) (:return-url params)))
   (POST "/re-auth-ajax" [& params :as request]
-    (auth-response/check-re-auth-ajax (:session request) (:password params) )))
+    (auth-response/check-re-auth-ajax (:session request) (:password params)))
+  (GET "/no-activities" [& params :as request]
+    (auth-response/no-activities-page)))

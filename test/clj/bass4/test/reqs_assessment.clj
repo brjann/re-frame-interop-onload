@@ -5,7 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
-            [bass4.test.core :refer [test-fixtures not-text?]]
+            [bass4.test.core :refer [test-fixtures not-text? log-return]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.db.core :as db]
@@ -107,7 +107,13 @@
             (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"}))
         (-> s2
             (visit "/user/")
-            (has (some-text? "Thanks top")))))))
+            (has (some-text? "Thanks top"))
+            (visit "/user/")
+            ;; The assessment is now marked as completed and user is redirected...
+            (follow-redirect)
+            ;; ...to the user page, which redirects to the login because user is not in treatment
+            (follow-redirect)
+            (has (some-text? "Login")))))))
 
 
 (deftest swallow-texts

@@ -36,13 +36,14 @@
     ;; Bad separation of concern but difficult to place elsewhere
     (assessments-service/batch-must-show-texts! step)
     (if (nil? (:instrument-id step))
+      ;; TODO: The pre-checking of whether the assessment is completed should be done here.
       (text-page step)
       (instrument-page step))))
 
 (defn- assessments-completed
   [session]
   (-> (response/found "/user")
-      (assoc :session (merge session {:assessments-pending false}))))
+      (assoc :session (merge session {:assessments-pending? false}))))
 
 (defn- instrument-completed
   [user-id round instrument-id items-str specifications-str]

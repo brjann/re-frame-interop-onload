@@ -346,8 +346,8 @@
 ;; ------------------------
 
 ;; 1. When user logs in - create round entries
-;; 2. If created round entries > 0, set :assessments-pending in session to true
-;; 3. Whenever trying to access /user, check if :assessments-pending is true
+;; 2. If created round entries > 0, set :assessments-pending? in session to true
+;; 3. Whenever trying to access /user, check if :assessments-pending? is true
 ;; 4. If so, check if there are assessment round entries in table
 ;;    no -> change session and redirect
 ;; 5. If yes, hand over control to assessment shower

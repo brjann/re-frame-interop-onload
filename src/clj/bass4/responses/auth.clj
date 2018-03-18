@@ -13,6 +13,15 @@
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]))
 
+
+;; -------------------
+;;    NO ACTIVITIES
+;; -------------------
+
+(defn no-activities-page []
+  (layout/render
+    "auth/no-activities.html"))
+
 ;; -------------
 ;;    LOGOUT
 ;; -------------
@@ -150,7 +159,8 @@
 (defn- assessments-map
   [user]
   (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
-    {:assessments-pending true}))
+    {:assessments-pending?   true
+     :assessments-performed? true}))
 
 (defn create-new-session
   [user additional check-assessments?]

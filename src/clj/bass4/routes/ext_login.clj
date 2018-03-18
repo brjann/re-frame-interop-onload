@@ -53,7 +53,7 @@
 (defn return-url-mw
   [handler request]
   (let [session (:session request)]
-    (if (and (:return-url session) (not (:assessments-pending session)))
+    (if (and (:return-url session) (not (:assessments-pending? session)))
       (-> (http-response/found (:return-url session))
           (assoc :session {}))
       (handler request))))

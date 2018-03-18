@@ -76,7 +76,8 @@
     (-> (session (app))
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
-        (has (some-text? "Empty page")))))
+        (follow-redirect)
+        (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
@@ -114,7 +115,9 @@
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 536821})
       (visit "/user/messages")
-      (has (status? 200))))
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "activities"))))
 
 (deftest request-no-double-authentication-visit
   (is (= true (-> (session (app))

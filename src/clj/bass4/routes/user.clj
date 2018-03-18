@@ -81,6 +81,17 @@
     (POST "/message-read" [& params]
       (messages-response/message-read (:user-id user) (str->int (:message-id params))))))
 
+
+(defn no-treatment-response
+  [session]
+  (if (:assessments-performed? session)
+    (->
+      (response/found "/login")
+      (assoc :session {}))
+    (->
+      (response/found "/no-activities")
+      (assoc :session {}))))
+
 (defn- treatment-routes
   [user request]
   (if-let [treatment (treatment-service/user-treatment (:user-id user))]
@@ -109,7 +120,7 @@
             (json-safe (:content-data params))))))
     (routes
       ;; TODO: What should be shown if not in treatment?
-      (ANY "*" [] (layout/print-var-response "Empty page")))))
+      (ANY "*" [] (no-treatment-response (:session request))))))
 
 
 (defn assessment-routes
@@ -129,6 +140,6 @@
       (if (auth-response/need-double-auth? (:session request))
         (routes
           (ANY "*" [] (response/found "/double-auth")))
-        (if (:assessments-pending (:session request))
+        (if (:assessments-pending? (:session request))
           (assessment-routes user request)
           (treatment-routes user request))))))
