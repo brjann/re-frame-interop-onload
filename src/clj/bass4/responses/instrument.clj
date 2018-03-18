@@ -3,7 +3,9 @@
             [ring.util.http-response :as response]
             [clojure.tools.logging :as log]
             [schema.core :as s]
+            [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
+            [clojure.string :as string]
             [bass4.request-state :as request-state]))
 
 (defn instrument-page [instrument-id]
@@ -12,17 +14,73 @@
     (layout/error-404-page)))
 
 (s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]
-    (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
-      (do
-        (instruments/save-test-answers! instrument-id answers-map)
-        (response/found (str "/embedded/instrument/" instrument-id "/summary")))
-      (do
-        (request-state/record-error! "Instrument post was not in valid JSON format")
-        (layout/error-400-page))))
+  (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
+    (do
+      (instruments/save-test-answers! instrument-id answers-map)
+      (response/found (str "/embedded/instrument/" instrument-id "/summary")))
+    (do
+      (request-state/record-error! "Instrument post was not in valid JSON format")
+      (layout/error-400-page))))
+
+#_(defn checkboxize
+    [items]
+    (map (fn [item]
+           (let [response (get (:responses instrument) (:response-id item))]
+             (if (= "CB" (:response-type response))
+               (map #(merge
+                       {:item-id (:item-id item)
+                        :spec-id (str (:item-id item) "_" (:value %))} %)
+                    (:options response))
+               item)))
+         items))
+
+(defn checkboxize
+  "Makes checkbox items into one item per checkbox option."
+  [instrument]
+  (let [items (->> instrument
+                   (:elements)
+                   (filter :item-id))]
+    (reduce (fn [coll item]
+              (let [response (get (:responses instrument) (:response-id item))
+                    res      (if (= "CB" (:response-type response))
+                               (map #(merge
+                                       {:item-id     (:item-id item)
+                                        :checkbox-id (str (:item-id item) "_" (:value %))
+                                        :name        (str (:name item) "_" (:value %))} %)
+                                    (:options response))
+                               (list item))]
+                (concat coll res)))
+            ()
+            items)))
+
+(defn- get-test-answers
+  [instrument-id]
+  (let [items (checkboxize (instruments/get-instrument instrument-id))]
+    (when items
+      (let [answers        (instruments/get-instrument-test-answers instrument-id)
+            item-answers   (->> answers
+                                :items
+                                (map #(vector (str (first %)) (second %)))
+                                (into {}))
+            specifications (into {} (:specifications answers))]
+        (assoc answers
+          :specifications specifications
+          :items
+          (map
+            (fn [item]
+              (let [value (get item-answers (str (or (:checkbox-id item) (:item-id item))))]
+                (merge
+                  item
+                  {:value         value
+                   :specification (get specifications (or
+                                                        (:checkbox-id item)
+                                                        (str (:item-id item) "_" value)))})))
+            items))))))
 
 (defn summary-page [instrument-id]
-  ;; There is no way to check if the instrument actually exists.
-  (if-let [answers (instruments/get-instrument-test-answers instrument-id)]
-    (bass4.layout/render
-      "instrument-answers.html"
-      {:items (:items answers) :specifications (:specifications answers) :sums (:sums answers)})))
+  (let [answers (get-test-answers instrument-id)]
+    (when (:items answers)
+      (bass4.layout/render
+        "instrument-answers.html"
+        {:items (:items answers)
+         :sums  (:sums answers)}))))
