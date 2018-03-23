@@ -325,3 +325,29 @@
     (let [response (-> (session (app))
                        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}))]
       (is (string/includes? (get-in response [:response :headers "Location"]) "/registration/564610/captcha")))))
+
+(deftest captcha-timeout
+  (let [now (t/now)]
+    (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
+      (let [x (-> (session (app))
+                  (visit "/registration/564610")
+                  ;; Captcha session is created
+                  (follow-redirect)
+                  ;; Redirected do captcha page
+                  (follow-redirect)
+                  (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
+                  (has (status? 422)))]
+        (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
+          (let [x (-> x
+                      (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
+                      (has (status? 422)))])
+          (with-redefs [t/now (constantly (t/plus now (t/seconds 61)))]
+            (-> x
+                (visit "/registration/564610")
+                ;; Captcha session is created
+                (follow-redirect)
+                ;; Redirected do captcha page
+                (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+                (has (status? 422))
+                (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
+                (has (status? 302)))))))))

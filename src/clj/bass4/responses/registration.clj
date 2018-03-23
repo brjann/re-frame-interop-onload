@@ -156,7 +156,10 @@
   [project-id]
   (let [{:keys [filename digits]} (captcha/captcha!)]
     (-> (response/found (str "/registration/" project-id "/captcha"))
-        (assoc :session {:captcha-filename filename :captcha-digits digits}))))
+        (assoc :session {:captcha-filename  filename
+                         :captcha-digits    digits
+                         :captcha-timestamp (t/now)
+                         :captcha-tries     0}))))
 
 (defn- captcha-page
   [project-id filename]
@@ -167,12 +170,24 @@
         content
         {:filename filename}))))
 
+(defn current-captcha
+  [session]
+  (let [filename  (:captcha-filename session)
+        digits    (:captcha-digits session)
+        timestamp (:captcha-timestamp session)
+        tries     (:captcha-tries session)]
+    (if (and filename digits timestamp tries)
+      (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
+        ;; 60 seconds before new captcha is generated
+        (when (> 60 time-elapsed)
+          {:filename filename
+           :digits   digits})))))
+
 (defn captcha
   [project-id session]
   (if (:captcha-ok session)
     (response/found (str "/registration/" project-id))
-    (let [filename (:captcha-filename session)
-          digits   (:captcha-digits session)]
+    (let [{:keys [filename digits]} (current-captcha session)]
       (if (and filename digits)
         (captcha-page project-id filename)
         (captcha-session project-id)))))
@@ -228,7 +243,6 @@
       ;; Wrong page - redirect
       (response/found (str "/registration/" project-id)))))
 
-;; TODO: Test this
 (defn handle-validation
   [project-id posted-codes session]
   (let [field-values (:reg-field-values session)
@@ -317,4 +331,5 @@
 
 
 ;; TODO: Captcha timeout
+;; TODO: Capcha max tries
 ;; TODO: Max number of sms

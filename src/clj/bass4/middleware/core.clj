@@ -109,7 +109,6 @@
   (fn [request]
     (middleware handler request)))
 
-;; TODO: http://stackoverflow.com/questions/8861181/clear-all-fields-in-a-form-upon-going-back-with-browser-back-button
 (defn wrap-reload-headers [handler]
   (fn [request]
     (let [response (handler request)]
@@ -132,25 +131,28 @@
        (when-let [query (:query-string request)]
          (str "?" query))))
 
+(defn should-re-auth?
+  [session now last-request-time re-auth-time-limit]
+  (cond
+    (:external-login session) false
+    (:auth-re-auth session) true
+    (nil? last-request-time) nil
+    (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
+      (> time-elapsed re-auth-time-limit)) true
+    :else nil))
+
 (defn auth-re-auth-wrapper
   [handler request]
-  (let [session            (:session request)
-        now                (t/now)
-        last-request-time  (:last-request-time session)
-        re-auth-time-limit (or (env :timeout-soft) (* 30 60))
-        re-auth?           (cond
-                             (:external-login session) false
-                             (:auth-re-auth session) true
-                             (nil? last-request-time) nil
-                             (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-                               (> time-elapsed re-auth-time-limit)) true
-                             :else nil)
-        response           (if re-auth?
+  (let [session           (:session request)
+        now               (t/now)
+        last-request-time (:last-request-time session)
+        re-auth?          (should-re-auth? session now last-request-time (or (env :timeout-soft) (* 30 60)))
+        response          (if re-auth?
                              (if (= (:request-method request) :get)
                                (response/found (str "/re-auth?return-url=" (request-string request)))
                                (auth-response/re-auth-440))
                              (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
-        session-map        {:last-request-time now
+        session-map       {:last-request-time now
                             :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
                                                  (:auth-re-auth (:session response))
                                                  re-auth?)}]
