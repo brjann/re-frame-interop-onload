@@ -353,6 +353,4 @@
       (layout/error-400-page))))
 
 
-;; TODO: Captcha timeout
-;; TODO: Capcha max tries
 ;; TODO: Max number of sms
