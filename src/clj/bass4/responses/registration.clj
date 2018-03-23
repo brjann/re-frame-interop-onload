@@ -18,7 +18,8 @@
             [clojure.string :as string]
             [clojure.java.io :as io]
             [bass4.services.bass :as bass]
-            [bass4.services.assessments :as assessments]))
+            [bass4.services.assessments :as assessments]
+            [bass4.http-utils :as h-utils]))
 
 
 (defn- all-fields?
@@ -47,11 +48,10 @@
 ;; CREDENTIALS
 ;; ------------
 
-(defn- login-url
+#_(defn- login-url
   [request]
-  (let [headers (:headers request)
-        host    (get headers "x-forwarded-host" (get headers "host"))
-        scheme  (name (:scheme request))]
+    (let [host   (h-utils/get-host request)
+          scheme (name (:scheme request))]
     (str scheme "://" host)))
 
 (defn credentials-page
@@ -61,7 +61,7 @@
       (layout/render "registration-credentials.html"
                      {:username   (:username credentials)
                       :password   (:password credentials)
-                      :login-url  (login-url request)
+                      :login-url  (h-utils/get-host-address request)
                       :project-id project-id})
       ;; Wrong place - redirect
       (response/found (str "/registration/" project-id)))))

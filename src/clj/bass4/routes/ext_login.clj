@@ -1,6 +1,7 @@
 (ns bass4.routes.ext-login
   (:require [bass4.layout :as layout]
             [bass4.services.auth :as auth]
+            [bass4.http-utils :as h-utils]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
             [bass4.db.core :as db]
             [ring.util.http-response :as http-response]
@@ -27,13 +28,9 @@
 ;;  MIDDLEWARE
 ;; ------------
 
-(defn- get-ip
-  [request]
-  (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request)))
-
 (defn- match-request-ip
   [request ips-str]
-  (let [remote-ip   (get-ip request)
+  (let [remote-ip   (h-utils/get-ip request)
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
 
@@ -46,7 +43,7 @@
       (and
         (string/starts-with? (:uri request) "/ext-login/check-pending/")
         (not (match-request-ip request ips)))
-      (layout/text-response (str "0 External login not allowed from this IP " (get-ip request)))
+      (layout/text-response (str "0 External login not allowed from this IP " (h-utils/get-ip request)))
 
       :else (handler request))))
 
@@ -80,8 +77,7 @@
 
 (defn- uid-url
   [user-id request]
-  (let [headers  (:headers request)
-        host     (get headers "x-forwarded-host" (get headers "host"))
+  (let [host     (h-utils/get-host request)
         scheme   (name (:scheme request))
         filename (bass/write-session-file user-id "extlogin")]
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))

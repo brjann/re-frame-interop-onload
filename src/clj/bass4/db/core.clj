@@ -12,7 +12,8 @@
     [bass4.request-state :as request-state]
     [bass4.bass-locals :as bass-locals]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
-    [clj-time.jdbc])
+    [clj-time.jdbc]
+    [bass4.http-utils :as h-utils])
   (:import [java.sql
             BatchUpdateException
             PreparedStatement]))
@@ -129,19 +130,13 @@
 ;; DB RESOLVING MIDDLEWARE
 ;;-------------------------
 
-(defn request-host
-  [request]
-  (first (filter identity
-                 [(get-in request [:headers "x-forwarded-host"])
-                  (:server-name request)])))
-
 (defn host-db
   [host db-mappings]
   (or (get db-mappings host) (:default db-mappings)))
 
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
-        host        (keyword (request-host request))
+        host        (keyword (h-utils/get-host request))
         db-name     (host-db host db-mappings)]
     (if (contains? db-connections db-name)
       [db-name @(get db-connections db-name)]

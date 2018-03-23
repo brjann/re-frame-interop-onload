@@ -18,7 +18,8 @@
             [bass4.request-state :as request-state]
             [ring.util.codec :as codec]
             [bass4.mailer :as mail]
-            [clj-http.client :as http]))
+            [clj-http.client :as http]
+            [bass4.http-utils :as h-utils]))
 
 (defn states-page
   []
@@ -35,10 +36,7 @@
 
 (defn check-pending-http
   [participant-id request]
-  (let [host-address (let [headers (:headers request)
-                           host    (get headers "x-forwarded-host" (get headers "host"))
-                           scheme  (name (:scheme request))]
-                       (str scheme "://" host))]
+  (let [host-address (h-utils/get-host-address request)]
     (-> (str host-address "/ext-login/check-pending/" participant-id)
         (http/get)
         (:body)
@@ -109,7 +107,7 @@
           (layout/text-response
             (str "x-ip " (get-in request [:headers "x-forwarded-for"]) "\n"
                  "ip " (:remote-addr request) "\n"
-                 "selected ip " (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request)))))
+                 "selected ip " (h-utils/get-ip request))))
         (GET "/encode-decode" [& params]
           (layout/print-var-response params))
         (GET "/exception" []
