@@ -111,52 +111,45 @@
     <!-- FIRST NAME -->
     {% if first-name %}
     <div class="form-group row">
-        <label for="first-name-confirm" class="col-sm-3 col-form-label">{%tr registration/first-name %}</label>
-        <div class="col-sm-9">
-            <input type="text" readonly class="form-control-plaintext" id="first-name-confirm">
-        </div>
+        <div class="col-sm-3 form-text">{%tr registration/first-name %}</div>
+        <div class="col-sm-9 form-text" id="first-name-confirm"></div>
     </div>
     {% endif %}
 
     <!-- LAST NAME -->
     {% if last-name %}
     <div class="form-group row">
-        <label for="last-name-confirm" class="col-sm-3 col-form-label">{%tr registration/last-name %}</label>
-        <div class="col-sm-9">
-            <input type="text" readonly class="form-control-plaintext" id="last-name-confirm">
-        </div>
+        <div class="col-sm-3 form-text">{%tr registration/last-name %}</div>
+        <div class="col-sm-9 form-text" id="last-name-confirm"></div>
     </div>
     {% endif %}
 
     <!-- EMAIL -->
     {% if email %}
     <div class="form-group row">
-        <label for="email-confirm" class="col-sm-3 col-form-label">{%tr registration/email %}</label>
-        <div class="col-sm-9">
-            <input type="text" readonly class="form-control-plaintext" id="email-confirm">
-        </div>
+        <div class="col-sm-3 form-text">{%tr registration/email %}</div>
+        <div class="col-sm-9 form-text" id="email-confirm"></div>
     </div>
     {% endif %}
 
     <!-- PID NUMBER -->
     {% if pid-number %}
     <div class="form-group row">
-        <label for="pid-number-confirm" class="col-sm-3 col-form-label">{{pid-name}}</label>
-        <div class="col-sm-9">
-            <input type="text" readonly class="form-control-plaintext" id="pid-number-confirm">
-        </div>
+        <div class="col-sm-3 form-text">{{pid-name}}</div>
+        <div class="col-sm-9 form-text" id="pid-number-confirm"></div>
     </div>
     {% endif %}
 
     <!-- SMS NUMBER -->
     {% if sms-number %}
     <div class="form-group row">
-        <label for="sms-number-confirm" class="col-sm-3 col-form-label">{%tr registration/sms-number %}</label>
-        <div class="col-sm-9">
-            <input type="text" readonly class="form-control-plaintext" id="sms-number-confirm">
+        <div class="col-sm-3 form-text">{%tr registration/sms-number %}</div>
+        <div class="col-sm-9 form-text">
+            <span id="sms-number-confirm"></span>
             <small class="form-text" id="sms-country"></small>
         </div>
     </div>
+
     {% endif %}
 
     <button class="btn btn-primary" onclick="confirm_registration();">{%tr confirm %}</button>

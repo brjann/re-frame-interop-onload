@@ -60,6 +60,7 @@ FROM c_participantscollection
 WHERE ParentId=:project-id;
 
 -- :name update-user-properties! :! :1
+-- :doc This is SQL injection safe!
 /* :require [clojure.string :as string]
             [hugsql.parameters :refer [identifier-param-quote]] */
 UPDATE c_participant
@@ -75,6 +76,7 @@ SET
 
 
 -- :name update-object-properties! :! :1
+-- :doc This is SQL injection safe!
 /* :require [clojure.string :as string]
             [hugsql.parameters :refer [identifier-param-quote]] */
 UPDATE :i:table-name

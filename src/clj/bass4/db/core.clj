@@ -43,7 +43,7 @@
   (let [url (db-url local-config (env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
-      (let [conn (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC")})]
+      (let [conn (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false")})]
         (log/info (str (:name local-config) " attached"))
         conn))))
 
