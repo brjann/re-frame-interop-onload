@@ -211,13 +211,6 @@
                                   (get completed-instruments (:participant-administration-id %))))
          assessments)))
 
-(defn- complete-empty-administrations!
-  [assessments]
-  (let [empty-administration-ids (map :participant-administration-id (filter #(empty? (:instruments %)) assessments))]
-    (when (seq empty-administration-ids)
-      (db/set-administration-complete! {:administration-ids empty-administration-ids}))))
-
-
 (defn get-pending-assessments [user-id]
   (let
     ;; NOTE that administrations is a map of lists
@@ -244,15 +237,42 @@
       (add-instruments pending-assessments))))
 
 
+
+;; ------------------------------
+;;     COMPLETE ADMINISTRATION
+;; ------------------------------
+
+(defn- start-date-representation
+  [date-time]
+  (tc/to-epoch (bass/local-midnight date-time)))
+
+(defn dependent-assessments!
+  "Activates any assessments depending on completed assessments (by administration id)"
+  [user-id administration-ids]
+  (let [assessments (->> (db/get-dependent-assessments {:administration-ids administration-ids})
+                         (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
+                                                        (start-date-representation)))))]
+    (when (seq assessments)
+      (->> (create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments))
+           (map #(select-values % [:participant-administration-id :start-time]))
+           (assoc {} :dates)
+           (db/set-administration-dates!)))))
+
+(defn set-administrations-completed!
+  [user-id administration-ids]
+  (db/set-administration-complete! {:administration-ids administration-ids})
+  (db/set-last-assessment! {:administration-id (first administration-ids)})
+  (dependent-assessments! user-id administration-ids))
+
+(defn- complete-empty-administrations!
+  [user-id assessments]
+  (let [empty-administration-ids (map :participant-administration-id (filter #(empty? (:instruments %)) assessments))]
+    (when (seq empty-administration-ids)
+      (set-administrations-completed! user-id empty-administration-ids))))
+
 ;; ------------------------
 ;;     ROUNDS CREATION
 ;; ------------------------
-
-#_(defn- merge-batches
-  [coll val]
-  (if (and (seq coll) (= (:allow-swallow val) 1))
-    (concat (butlast coll) (list (concat (last coll) (list val))))
-    (concat coll (list (list val)))))
 
 (defn- merge-batches
   [coll val]
@@ -333,13 +353,13 @@
 (defn create-assessment-round-entries!
   "Returns number of round entries created"
   [user-id]
-  (let [pending-assessments (get-pending-assessments user-id)]
-    (if (seq pending-assessments)
-      (do
-        (complete-empty-administrations! pending-assessments)
-        (save-round! (generate-assessment-round user-id pending-assessments)))
-      0)))
-
+  (let [pending-assessments (get-pending-assessments user-id)
+        round-count         (when (seq pending-assessments)
+                              (complete-empty-administrations! user-id pending-assessments)
+                              (let [round (generate-assessment-round user-id pending-assessments)]
+                                (when (seq round)
+                                  (save-round! round))))]
+    (or round-count 0)))
 
 ;; ------------------------
 ;;  ROUNDS ADMINISTRATION
@@ -376,22 +396,6 @@
 ;; - the start time should be created as UTC corresponding to midnight in selected timezone
 ;; - the start time should be compared to (t/now)
 ;;
-
-(defn- start-date-representation
-  [date-time]
-  (tc/to-epoch (bass/local-midnight date-time)))
-
-(defn dependent-assessments!
-  "Activates any assessments depending on completed assessments (by administration id)"
-  [user-id administration-ids]
-  (let [assessments (->> (db/get-dependent-assessments {:administration-ids administration-ids})
-                         (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
-                                                        (start-date-representation)))))]
-    (when (seq assessments)
-      (->> (create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments))
-           (map #(select-values % [:participant-administration-id :start-time]))
-           (assoc {} :dates)
-           (db/set-administration-dates!)))))
 
 (defn get-assessment-round [user-id]
   (let [order-count (fn [x]
@@ -435,6 +439,4 @@
                        (distinct))
         empty-administration-ids (diff (map :administration-id round) non-empty)]
     (when (seq empty-administration-ids)
-      (db/set-administration-complete! {:administration-ids empty-administration-ids})
-      (db/set-last-assessment! {:administration-id (first empty-administration-ids)})
-      (dependent-assessments! user-id empty-administration-ids))))
+      (set-administrations-completed! user-id empty-administration-ids))))

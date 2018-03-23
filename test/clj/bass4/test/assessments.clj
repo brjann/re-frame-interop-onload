@@ -104,7 +104,7 @@
 (defn get-ass-6-pending
   []
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (assessments/get-pending-assessments 536124)))
+    (sort-by :assessment-id (assessments/get-pending-assessments 536124))))
 
 (defn get-ass-6-rounds
   [pending]
@@ -120,7 +120,7 @@
 (defn get-ass-7-pending
   []
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (assessments/get-pending-assessments 536140)))
+    (sort-by :assessment-id (assessments/get-pending-assessments 536140))))
 
 (defn get-ass-7-rounds
   [pending]

@@ -59,7 +59,9 @@
         (follow-redirect)
         (has (some-text? "top top top thanks"))
         (has (some-text? "Thanks top")))
-    (is (= {:assessment-id 536106, :assessment-index 1} (db/get-last-assessment {:user-id user-id})))))
+    (is (= {:assessment-id 536106, :assessment-index 1} (db/get-last-assessment {:user-id user-id})))
+    (is (= 7 (count (db/get-completed-answers {:user-id user-id}))))
+    (is (= #{536112 536113} (set (map :assessment-id (db/get-assessments-with-date {:user-id user-id})))))))
 
 (deftest group-assessment-concurrent
   (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test-concurrent"})]
@@ -134,3 +136,10 @@
         (has (some-text? "thanks 0"))
         (has (some-text? "thanks 2"))
         (not-text? "thanks 1"))))
+
+(deftest empty-assessment
+  (let [user-id (user/create-user! 572594 {:Group "572598" :firstname "group-test"})]
+    (user/update-user-properties! user-id {:username user-id :password user-id})
+    (-> (session (app))
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 302)))))

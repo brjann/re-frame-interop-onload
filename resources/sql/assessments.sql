@@ -317,6 +317,31 @@ SELECT
 FROm c_participant
 WHERE ObjectId = :user-id;
 
+-- :name get-last-assessment :? :1
+-- :doc
+SELECT
+  LastAssessment AS `assessment-id`,
+  LastAssessmentIndex `assessment-index`
+FROm c_participant
+WHERE ObjectId = :user-id;
+
+-- :name get-completed-answers :? :*
+-- :doc used for testing
+SELECT * FROM
+  c_participantadministration AS cpa
+  JOIN c_instrumentanswers AS cia
+  ON cpa.ObjectId = cia.ParentId
+WHERE
+  cpa.ParentId = :user-id AND cia.DateCompleted > 0;
+
+
+-- :name get-assessments-with-date :? :*
+-- :doc used for testing
+SELECT Assessment AS `assessment-id` FROM
+  c_participantadministration
+WHERE
+  parentid = :user-id AND (DateCompleted = 0 OR DateCompleted IS NULL) AND `Date` > 0;
+
 -- :name get-dependent-assessments :? :*
 SELECT
   ca2.ObjectId AS `assessment-id`,
