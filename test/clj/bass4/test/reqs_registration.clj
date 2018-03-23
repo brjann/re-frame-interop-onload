@@ -343,11 +343,50 @@
                       (has (status? 422)))])
           (with-redefs [t/now (constantly (t/plus now (t/seconds 61)))]
             (-> x
-                (visit "/registration/564610")
+                (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+                ;; Captcha is invalid
+                (follow-redirect)
                 ;; Captcha session is created
                 (follow-redirect)
-                ;; Redirected do captcha page
                 (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
                 (has (status? 422))
                 (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
                 (has (status? 302)))))))))
+
+(deftest captcha-tries
+  (let [now (t/now)]
+    (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
+      (let [x (-> (session (app))
+                  (visit "/registration/564610")
+                  ;; Captcha session is created
+                  (follow-redirect)
+                  ;; Redirected do captcha page
+                  (follow-redirect))]
+        (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
+          (-> x
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 1
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 2
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 3
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 4
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 5
+              (has (status? 302))
+              ;; Captcha is invalid
+              (follow-redirect)
+              ;; New captcha created
+              (follow-redirect)
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}) ;; 1
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}) ;; 2
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}) ;; 3
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}) ;; 4
+              (has (status? 422))
+              (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 5 - correct
+              ;; Correct captcha, redirected to registration page.
+              (follow-redirect)
+              (has (some-text? "Welcome"))))))))

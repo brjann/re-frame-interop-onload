@@ -170,18 +170,23 @@
         content
         {:filename filename}))))
 
+(defn captcha-valid?
+  "60 seconds before new captcha is generated
+   5 tries before new captcha is generated"
+  [session]
+  (let [timestamp (:captcha-timestamp session)
+        tries     (:captcha-tries session)]
+    (when (and timestamp tries)
+      (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
+        (and (> 60 time-elapsed) (> 5 tries))))))
+
 (defn current-captcha
   [session]
-  (let [filename  (:captcha-filename session)
-        digits    (:captcha-digits session)
-        timestamp (:captcha-timestamp session)
-        tries     (:captcha-tries session)]
-    (if (and filename digits timestamp tries)
-      (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
-        ;; 60 seconds before new captcha is generated
-        (when (> 60 time-elapsed)
-          {:filename filename
-           :digits   digits})))))
+  (let [filename (:captcha-filename session)
+        digits   (:captcha-digits session)]
+    (when (and filename digits (captcha-valid? session))
+      {:filename filename
+       :digits   digits})))
 
 (defn captcha
   [project-id session]
@@ -192,13 +197,31 @@
         (captcha-page project-id filename)
         (captcha-session project-id)))))
 
+(defn- inc-tries
+  [session]
+  (let [tries (inc (:captcha-tries session))]
+    (assoc-in session [:captcha-tries] tries)))
+
+(defn- captcha-digits
+  [session]
+  (when (captcha-valid? session)
+    (:captcha-digits session)))
+
+(defn- wrong-captcha-response
+  [project-id session]
+  (if (captcha-valid? session)
+    (-> (layout/error-422 "error")
+        (assoc :session session))
+    (-> (response/found (str "/registration/" project-id "/captcha"))
+        (assoc :session session))))
+
 (defn validate-captcha
   [project-id captcha session]
-  (if-let [digits (:captcha-digits session)]
+  (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       (-> (response/found (str "/registration/" project-id ""))
           (assoc :session {:captcha-ok true}))
-      (layout/error-422 "error"))
+      (wrong-captcha-response project-id (inc-tries session)))
     (response/found (str "/registration/" project-id "/captcha"))))
 
 ;; --------------
