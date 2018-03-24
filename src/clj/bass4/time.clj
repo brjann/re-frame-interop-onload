@@ -33,6 +33,14 @@
 (defn from-unix
   [timestamp]
   (tc/from-long (* 1000 timestamp)))
+
+(defn to-unix
+  [now]
+  (-> now
+      (tc/to-long)
+      (/ 1000)
+      (int)))
+
 #_(defn day-diff-since
     [today then]
     (t/day then))

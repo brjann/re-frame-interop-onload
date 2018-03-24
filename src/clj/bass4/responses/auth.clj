@@ -11,7 +11,8 @@
             [bass4.layout :as layout]
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [bass4.services.attack-detector :as a-d]))
 
 
 ;; -------------------
@@ -29,8 +30,6 @@
 (defn logout []
   (-> (response/found "/login")
       (assoc :session {})))
-
-
 
 ;; ------------------
 ;;    DOUBLE-AUTH
@@ -178,14 +177,18 @@
 (s/defn
   ^:always-validate
   handle-login
-  [session username :- s/Str password :- s/Str]
+  [request username :- s/Str password :- s/Str]
+  (a-d/delay-if-blocked! request)
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
+      (a-d/register-successful-login! request)
       (if error
         (layout/error-422 error)
         (-> (response/found redirect)
             (assoc :session (create-new-session user session true)))))
-    (layout/error-422 "error")))
+    (do
+      (a-d/register-failed-login! :login request {:username username})
+      (layout/error-422 "error"))))
 
 
 ;; -------------

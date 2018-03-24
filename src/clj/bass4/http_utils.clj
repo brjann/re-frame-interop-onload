@@ -9,6 +9,11 @@
   (let [headers (:headers request)]
     (get headers "x-forwarded-host" (get headers "host"))))
 
+(defn get-server
+  [request]
+  (let [headers (:headers request)]
+    (get headers "x-forwarded-host" (:server-name request))))
+
 (defn get-host-address
   [request]
   (let [host   (get-host request)

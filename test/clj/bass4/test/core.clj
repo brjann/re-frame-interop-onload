@@ -34,6 +34,17 @@
             mw/*skip-csrf*                   true]
     (f)))
 
+(defn debug-headers-not-text?
+  [response & strs]
+  (let [headers (or (get-in response [:response :headers "X-Debug-Headers"]) "")]
+    (clojure.test/do-report {:actual   headers
+                             :type     (if (some #(.contains headers %) strs)
+                                         :fail
+                                         :pass)
+                             :message  ""
+                             :expected (str "Not any of " (string/join ", " strs))}))
+  response)
+
 (defn debug-headers-text?
   [response & strs]
   (let [headers (or (get-in response [:response :headers "X-Debug-Headers"]) "")]

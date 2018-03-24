@@ -19,7 +19,7 @@
   (GET "/login" []
     (auth-response/login-page))
   (POST "/login" [& params :as request]
-    (auth-response/handle-login (:session request) (:username params) (:password params)))
+    (auth-response/handle-login request (:username params) (:password params)))
 
   (GET "/double-auth" [:as request]
     (auth-response/double-auth (:session request)))

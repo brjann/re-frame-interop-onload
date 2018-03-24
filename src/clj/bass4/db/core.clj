@@ -79,7 +79,7 @@
 (conman/bind-connection *db* "sql/instrument-answers.sql")
 (conman/bind-connection *db* "sql/registration.sql")
 (conman/bind-connection db-common "sql/common.sql")
-
+(conman/bind-connection db-common "sql/attack-detector.sql")
 
 ;---------------------
 ; COL TRANSFORMATIONS
@@ -136,7 +136,7 @@
 
 (defn resolve-db [request]
   (let [db-mappings (env :db-mappings)
-        host        (keyword (h-utils/get-host request))
+        host        (keyword (h-utils/get-server request))
         db-name     (host-db host db-mappings)]
     (if (contains? db-connections db-name)
       [db-name @(get db-connections db-name)]
