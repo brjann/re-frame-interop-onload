@@ -43,17 +43,17 @@ function post_error(form, complete_fn) {
 		}
 
 		var response = jqXHR.responseText;
-		if (jqXHR.status == 0) {
+      if (jqXHR.status === 0) {
 			alert(text_offline_warning);
 			return false;
 		}
 
 		// http://stackoverflow.com/questions/6186770/ajax-request-returns-200-ok-but-an-error-event-is-fired-instead-of-success
-		if (jqXHR.status == 200) {
+      if (jqXHR.status === 200) {
 			return false;
 		}
 
-		if (jqXHR.status == 403) {
+      if (jqXHR.status === 403) {
 			if (response == "login") {
 				alert(text_timeout_hard);
 				window.location.href = "/login"
@@ -63,11 +63,15 @@ function post_error(form, complete_fn) {
 			}
 		}
 
-		if (jqXHR.status == 500 || jqXHR.status == 404 || jqXHR.status == 400) {
+      if (jqXHR.status === 429) {
+         alert(text_server_busy);
+      }
+
+      if (jqXHR.status === 500 || jqXHR.status === 404 || jqXHR.status === 400) {
 			alert(text_try_reloading + " Error " + jqXHR.status);
 		}
 
-		if (jqXHR.status == 440) {
+      if (jqXHR.status === 440) {
 			$("#main-body").hide();
 			$("#re-auth-box").show();
 			re_auth_hidden_form = form;

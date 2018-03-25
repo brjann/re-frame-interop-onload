@@ -124,7 +124,8 @@
                    :timeout-hard          "You have been logged out. You will be redirected to the login page."
                    :try-reload            "Something is wrong and your data cannot be submitted. Try resubmitting again or reloading the page."
                    :not-authorized        "Not authorized."
-                   :not-authorized-longer "You are not authorized to view this page."}
+                   :not-authorized-longer "You are not authorized to view this page."
+                   :server-busy           "The server is currently busy. Try again in a few seconds."}
  :number          {:1  "one"
                    :2  "two"
                    :3  "three"
