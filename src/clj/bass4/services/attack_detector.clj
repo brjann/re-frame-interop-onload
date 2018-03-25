@@ -14,12 +14,13 @@
 
 (def ^:const const-fails-until-ip-block 10)
 (def ^:const const-block-delay 10)
+(def ^:const const-attack-interval 900)
 
 (def blocked-ips (atom {}))
 
 (defn get-failed-logins
   [now]
-  (db/get-failed-logins {:time now}))
+  (db/get-failed-logins {:time now :attack-interval const-attack-interval}))
 
 (defn logins-by-ip
   [logins]
@@ -82,20 +83,6 @@
   (when (ip-blocked? (h-utils/get-ip request))
     (sleep!)))
 
-(def allowed-request-time (atom {}))
-
-#_(defn delay-time
-    [request]
-    (let [ip-address (h-utils/get-ip request)]
-      (when (ip-blocked? ip-address)
-        (let [now                  (t/now)
-              request-allowed-time (or (get @allowed-request-time ip-address) now)]
-          (swap! blocked-last-request #(assoc % ip-address now))
-          (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
-            (log/debug seconds-since-request)
-            (when (>= const-block-delay seconds-since-request)
-              (- const-block-delay seconds-since-request)))))))
-
 (def blocked-last-request (atom {}))
 
 (defn get-last-request-time
@@ -114,7 +101,7 @@
             last-request-time (get-last-request-time ip-address now)]
         (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
                       (log/debug "Seconds since last request" seconds-since-request)
-                      (when (>= const-block-delay seconds-since-request)
+                      (when (> const-block-delay seconds-since-request)
                         (- const-block-delay seconds-since-request)))]
           (log/debug "Delay" delay)
           (when (not delay)
@@ -149,13 +136,13 @@
   [handler request]
   (if-let [success-fn (route-success-fn request)]
     (let [response (handler request)]
-      (log/debug "Route " (:uri request) " matches")
+      #_(log/debug "Route " (:uri request) " matches")
       #_(log/debug (:session request))
       #_(log/debug (:session response))
       (cond
         (= 422 (:status response))
         (do
-          (log/debug "Login failed")
+          #_(log/debug "Login failed")
           (register-failed-login! :login request)
           #_(delay-if-blocked! request)
           (if-let [delay (delay-time request)]
@@ -167,7 +154,7 @@
 
         (success-fn (:session request) (:session response))
         (do
-          (log/debug "Login successful")
+          #_(log/debug "Login successful")
           (register-successful-login! request)
           response)
 

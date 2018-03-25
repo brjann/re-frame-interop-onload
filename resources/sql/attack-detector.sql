@@ -14,7 +14,7 @@ SELECT
   UNIX_TIMESTAMP(`time`) AS `time`
 FROM common_log_failed_logins
 WHERE
-  FROM_UNIXTIME(`time`) > DATE_SUB(:time, INTERVAL 15 MINUTE);
+  FROM_UNIXTIME(`time`) > DATE_SUB(:time, INTERVAL :sql:attack-interval SECOND);
 
 
 -- :name clear-failed-logins! :! :1

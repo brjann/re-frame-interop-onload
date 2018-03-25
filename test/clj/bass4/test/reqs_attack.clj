@@ -23,13 +23,23 @@
   :once
   test-fixtures)
 
+(def now (atom nil))
+
+(defn advance-time!
+  [state secs]
+  (swap! now (constantly (t/plus (t/now) (t/seconds secs))))
+  state)
+
 (use-fixtures
   :each
   (fn [f]
     (db/clear-failed-logins!)
     (swap! a-d/blocked-ips (constantly {}))
     (swap! a-d/blocked-last-request (constantly {}))
-    (f)))
+    (swap! now (constantly (t/now)))
+    (with-redefs
+      [t/now (fn [] @now)]
+      (f))))
 
 (deftest attack
   (let [x (session (app))]
@@ -39,4 +49,9 @@
         (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
         (has (status? 422))
         (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
-        (has (status? 429)))))
+        (has (status? 429))
+        (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
+        (has (status? 429))
+        (advance-time! a-d/const-block-delay)
+        (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
+        (has (status? 422)))))
