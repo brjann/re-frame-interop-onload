@@ -65,63 +65,16 @@
     :else
     {}))
 
-(defn- attack-detector-redefs
-  []
-  (when (env :dev-test)
-    {#'a-d/sleep! (fn [] (request-state/swap-state! :debug-headers #(conj %1 "IP blocked, slept for 5 secs")))}))
-
 (defn debug-redefs
   [handler request]
   ;; Test environment, dev-test and dev are true
   ;; Dev environment, dev-test is false and dev is true
   (let [redefs (merge
-                 (mail-redefs)
-                 (attack-detector-redefs))]
+                 (mail-redefs))]
     (if redefs
       (with-redefs-fn redefs
         #(handler request))
       (handler request))))
-
-#_(defn debug-redefs
-    [handler request]
-    ;; Test environment, dev-test and dev are true
-    ;; Dev environment, dev-test is false and dev is true
-    (cond
-      ;; Put mail and sms in header in
-      ;; - test environment
-      ;; - dev environment unless
-      ;;   :dev-allow-email or :dev-allow-external-messages are true
-      (or (env :dev-test)
-          (and (env :dev)
-               (not (or
-                      (env :dev-allow-email)
-                      (env :dev-allow-external-messages)))))
-      (let [x {#'sms/send-db-sms! test-send-sms!
-               #'mail!            test-mail!}]
-        (with-redefs-fn x
-          #(handler request)))
-      #_(with-redefs [sms/send-db-sms! test-send-sms!
-                      mail!            test-mail!]
-          (handler request))
-
-      ;; Send mail and sms to debug email in
-      ;; - debug mode unless :dev-allow-external-messages is true
-      ;; - dev environment if :dev-allow-email is true
-      ;;   unless :dev-allow-external-messages is true
-      (or (and (env :debug)
-               (not (env :dev-allow-external-messages)))
-          (and (env :dev)
-               (env :dev-allow-email)
-               (not (env :dev-allow-external-messages))))
-      (with-redefs [sms/send-db-sms! debug-send-sms!
-                    mail!            (debug-wrap-mail-fn mail!)]
-        (handler request))
-
-      ;; Production environment
-      :else
-      (do
-        (handler request))))
-
 
 (defn wrap-debug-exceptions
   [handler]

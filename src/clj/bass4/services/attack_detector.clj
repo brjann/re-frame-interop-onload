@@ -74,15 +74,6 @@
   [ip-address]
   (contains? @blocked-ips ip-address))
 
-(defn sleep!
-  []
-  (Thread/sleep 5000))
-
-(defn delay-if-blocked!
-  [request]
-  (when (ip-blocked? (h-utils/get-ip request))
-    (sleep!)))
-
 (def blocked-last-request (atom {}))
 
 (defn get-last-request-time

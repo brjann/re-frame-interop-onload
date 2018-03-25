@@ -178,17 +178,13 @@
   ^:always-validate
   handle-login
   [request username :- s/Str password :- s/Str]
-  #_(a-d/delay-if-blocked! request)
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
-      #_(a-d/register-successful-login! request)
       (if error
         (layout/error-422 error)
         (-> (response/found redirect)
             (assoc :session (create-new-session user session true)))))
-    (do
-      #_(a-d/register-failed-login! :login request {:username username})
-      (layout/error-422 "error"))))
+    (layout/error-422 "error")))
 
 
 ;; -------------
