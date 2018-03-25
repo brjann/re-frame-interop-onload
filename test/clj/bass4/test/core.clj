@@ -9,7 +9,8 @@
             [clojure.string :as string]
             [clojure.test]
             [clojure.tools.logging :as log]
-            [bass4.middleware.core :as mw]))
+            [bass4.middleware.core :as mw]
+            [bass4.services.attack-detector :as a-d]))
 
 (defn get-edn
   [edn]
@@ -32,6 +33,10 @@
   (bass4.db.core/init-repl :bass4_test)
   (binding [clojure.test/*stack-trace-depth* 5
             mw/*skip-csrf*                   true]
+    (f)))
+
+(defn disable-attack-detector [f]
+  (with-redefs [a-d/delay-time! (constantly nil)]
     (f)))
 
 (defn debug-headers-not-text?

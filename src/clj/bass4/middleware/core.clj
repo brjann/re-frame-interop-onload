@@ -125,6 +125,9 @@
 ;;  RE-AUTHENTICATE
 ;; -----------------
 
+(defn re-auth-timeout
+  []
+  (or (env :timeout-soft) (* 30 60)))
 
 (defn request-string
   "Return the request part of the request."
@@ -140,7 +143,7 @@
     (:auth-re-auth session) true
     (nil? last-request-time) nil
     (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-      (> time-elapsed re-auth-time-limit)) true
+      (>= time-elapsed re-auth-time-limit)) true
     :else nil))
 
 (defn auth-re-auth-wrapper
@@ -148,7 +151,7 @@
   (let [session           (:session request)
         now               (t/now)
         last-request-time (:last-request-time session)
-        re-auth?          (should-re-auth? session now last-request-time (or (env :timeout-soft) (* 30 60)))
+        re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
         response          (if re-auth?
                              (if (= (:request-method request) :get)
                                (response/found (str "/re-auth?return-url=" (request-string request)))

@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -15,13 +15,14 @@
             [clj-time.core :as t]
             [clojure.string :as string]
             [bass4.services.registration :as reg-service]
-            [bass4.passwords :as passwords]))
+            [bass4.passwords :as passwords]
+            [bass4.services.attack-detector :as a-d]))
 
 
 (use-fixtures
   :once
-  test-fixtures)
-
+  test-fixtures
+  disable-attack-detector)
 
 (deftest registration-not-allowed
   (-> (session (app))
@@ -317,8 +318,6 @@
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "already exists")))))
-
-
 
 (deftest registration-captcha-not-created
   (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]

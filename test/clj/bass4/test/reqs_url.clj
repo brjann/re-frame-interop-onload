@@ -4,12 +4,13 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures]]
+            [bass4.test.core :refer [test-fixtures disable-attack-detector]]
             [bass4.services.bass :as bass]))
 
 (use-fixtures
   :once
-  test-fixtures)
+  test-fixtures
+  disable-attack-detector)
 
 (deftest request-url-encode
   (-> (session (app))

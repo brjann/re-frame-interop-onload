@@ -170,6 +170,9 @@
         content
         {:filename filename}))))
 
+(def ^:const const-captcha-tries 5)
+(def ^:const const-captcha-timeout 60)
+
 (defn captcha-valid?
   "60 seconds before new captcha is generated
    5 tries before new captcha is generated"
@@ -178,7 +181,8 @@
         tries     (:captcha-tries session)]
     (when (and timestamp tries)
       (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
-        (and (> 60 time-elapsed) (> 5 tries))))))
+        (and (> const-captcha-timeout time-elapsed)
+             (> const-captcha-tries tries))))))
 
 (defn current-captcha
   [session]

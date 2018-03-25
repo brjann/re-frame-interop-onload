@@ -3,14 +3,15 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text?]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? disable-attack-detector]]
             [clojure.string :as string]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
-  test-fixtures)
+  test-fixtures
+  disable-attack-detector)
 
 (deftest request-post-answers
   (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647"})]

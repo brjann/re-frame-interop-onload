@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
@@ -15,13 +15,8 @@
 
 (use-fixtures
   :once
-  test-fixtures)
-
-(use-fixtures
-  :each
-  (fn [f]
-    (with-redefs [a-d/delay-time (constantly nil)]
-      (f))))
+  test-fixtures
+  disable-attack-detector)
 
 (deftest double-auth-generator
   []
@@ -156,7 +151,7 @@
       (follow-redirect)
       (has (some-text? "Authenticate again"))))
 
-(deftest request-re-auth
+(deftest request-re-auth-ext-login
   (-> (session (app))
       (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
       (visit "/user/messages")

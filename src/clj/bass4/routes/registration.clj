@@ -10,7 +10,7 @@
 
 (defn captcha-mw
   [handler request]
-  (let [[_ project-id path] (re-matches #"/registration/([0-9]*)(.*)", (:uri request))]
+  (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)", (:uri request))]
     (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
       (if (or
             (= "/captcha" path)

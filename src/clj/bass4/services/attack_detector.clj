@@ -34,7 +34,7 @@
         failed-from-ip (-> failed-logins
                            (logins-by-ip)
                            (get ip-address))]
-    (if (< const-fails-until-ip-block (count failed-from-ip))
+    (if (<= const-fails-until-ip-block (count failed-from-ip))
       (swap! blocked-ips #(assoc % ip-address now))
       (swap! blocked-ips #(dissoc % ip-address now)))))
 
@@ -87,23 +87,22 @@
 
 (defn get-last-request-time
   [ip-address now]
-  (if-let [res (get @blocked-last-request ip-address)]
-    res
-    (do
-      (swap! blocked-last-request #(assoc % ip-address now))
-      now)))
+  (let [res (get @blocked-last-request ip-address)]
+    (if (or (nil? res) (t/before? now res))
+      (do
+        (swap! blocked-last-request #(assoc % ip-address now))
+        now)
+      res)))
 
-(defn delay-time
+(defn delay-time!
   [request]
   (let [ip-address (h-utils/get-ip request)]
     (when (ip-blocked? ip-address)
       (let [now               (t/now)
             last-request-time (get-last-request-time ip-address now)]
         (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
-                      (log/debug "Seconds since last request" seconds-since-request)
                       (when (> const-block-delay seconds-since-request)
                         (- const-block-delay seconds-since-request)))]
-          (log/debug "Delay" delay)
           (when (not delay)
             (swap! blocked-last-request #(assoc % ip-address now)))
           delay)))))
@@ -126,7 +125,11 @@
                          {:route   #"/re-auth-ajax"
                           :success (fn [in out]
                                      (and (:auth-re-auth in)
-                                          (nil? (:auth-re-auth out))))}]]
+                                          (nil? (:auth-re-auth out))))}
+                         {:route   #"/registration/[0-9]+/captcha"
+                          :success (fn [in out]
+                                     (and (not (:captcha-ok in))
+                                          (:captcha-ok out)))}]]
       (->> attack-routes
            (filter #(re-matches (:route %) (:uri request)))
            (first)
@@ -135,38 +138,27 @@
 (defn attack-detector-mw
   [handler request]
   (if-let [success-fn (route-success-fn request)]
-    (let [response (handler request)]
-      #_(log/debug "Route " (:uri request) " matches")
-      #_(log/debug (:session request))
-      #_(log/debug (:session response))
-      (cond
-        (= 422 (:status response))
-        (do
-          #_(log/debug "Login failed")
-          (register-failed-login! :login request)
-          #_(delay-if-blocked! request)
-          (if-let [delay (delay-time request)]
+    (do
+      (if-let [delay (delay-time! request)]
+        (layout/error-429 delay)
+        (let [response (handler request)]
+          (cond
+            (= 422 (:status response))
             (do
-              (log/debug "Sleep for " delay " seconds")
-              (layout/error-429 delay))
-            response
-            #_(Thread/sleep (* 1000 delay))))
+              (register-failed-login! :login request)
+              (delay-time! request)
+              response)
 
-        (success-fn (:session request) (:session response))
-        (do
-          #_(log/debug "Login successful")
-          (register-successful-login! request)
-          response)
+            (success-fn (:session request) (:session response))
+            (do
+              (register-successful-login! request)
+              response)
 
-        :else
-        (do
-          (log/debug "Something else")
-          response)))
+            :else
+            response))))
     (handler request)))
 
 ;;
-;; TODO: Test password fail timing
-;; TODO: Add to all login/password sites
 ;; TODO: Block all IPs if 100 failures
 ;; TODO: Block user after too many failed login attempts
 ;;
