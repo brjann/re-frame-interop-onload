@@ -9,12 +9,19 @@
             [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.services.attack-detector :as a-d]))
 
 
 (use-fixtures
   :once
   test-fixtures)
+
+(use-fixtures
+  :each
+  (fn [f]
+    (with-redefs [a-d/delay-time (constantly nil)]
+      (f))))
 
 (deftest double-auth-generator
   []

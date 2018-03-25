@@ -23,21 +23,20 @@
   :once
   test-fixtures)
 
-(defn clear-blocks!
-  []
-  (db/clear-failed-logins!)
-  (swap! a-d/blocked-ips (constantly {})))
+(use-fixtures
+  :each
+  (fn [f]
+    (db/clear-failed-logins!)
+    (swap! a-d/blocked-ips (constantly {}))
+    (swap! a-d/blocked-last-request (constantly {}))
+    (f)))
 
 (deftest attack
-  (clear-blocks!)
   (let [x (session (app))]
     (dotimes [_ 9]
       (visit x "/login" :request-method :post :params {:username "xxx" :password "xxx"}))
     (-> x
         (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
-        (debug-headers-not-text? "blocked" "slept")
+        (has (status? 422))
         (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"})
-        (debug-headers-text? "blocked" "slept"))))
-
-
-
+        (has (status? 429)))))

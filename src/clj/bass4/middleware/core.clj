@@ -36,7 +36,9 @@
             [ring.util.response :as response-utils]
             [ring.util.mime-type :as mime-type]
             [bass4.responses.auth :as auth-response]
-            [bass4.middleware.file-php :as file-php])
+            [bass4.middleware.file-php :as file-php]
+            [bass4.services.attack-detector :as a-d])
+
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
 
@@ -230,6 +232,7 @@
       (wrap-mw-fn #'embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
+      (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
       wrap-auth
       wrap-reload-headers

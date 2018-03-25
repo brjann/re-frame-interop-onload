@@ -118,6 +118,18 @@
     :headers {}
     :body    body}))
 
+(defn error-429
+  "https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+  429 Too Many Requests (RFC 6585)
+  The user has sent too many requests in a given amount of time. Intended for use with rate-limiting schemes
+
+  Used to communicate back to authentication form that too many failed requests
+  have been made with body equal to number of second until request can be retried"
+  [secs]
+  {:status  429
+   :headers {}
+   :body    (str secs)})
+
 (defn error-403-page
   ([] (error-403-page nil))
   ([user-id] (error-403-page user-id (i18n/tr [:error/not-authorized-longer])))

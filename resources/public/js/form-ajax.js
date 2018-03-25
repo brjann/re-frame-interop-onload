@@ -98,7 +98,7 @@ function form_ajax_response(form, jqXHR) {
 				alert(message);
 			}
 		}
-		else if (event_text != "") {
+      else if (event_text !== '') {
 			//$(form).find("[data-show-on=" + event_text + "]").show();
 			$(form)
 				.find("[data-show-on=" + event_text + "]")
@@ -111,6 +111,9 @@ function form_ajax_response(form, jqXHR) {
 				});
 			$(form).find("input[data-clear-on=" + event_text + "]").val("");
 		}
+      $('input').filter(function (ix, x) {
+         return $(x).prop('autofocus');
+      }).focus();
 	}
 }
 
@@ -256,6 +259,7 @@ function re_auth_modal_error(jqXHR) {
 	if (jqXHR.status == 422) {
 		$("#main-body").hide();
 		$("#re-auth-box").show();
+      $("#re-auth-box input").focus();
 	}
 }
 
