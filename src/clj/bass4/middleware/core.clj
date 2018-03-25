@@ -197,7 +197,7 @@
 ;            (visit "/debug/session")) [:response :body])
 
 ;; So extra wrapper instead
-(defn session-state
+(defn request-state-session-info
   [handler request]
   (let [session (:session request)]
     (request-state/set-state! :user-id (:identity session))
@@ -241,7 +241,7 @@
       wrap-reload-headers
       wrap-webjars
       wrap-flash
-      (wrap-mw-fn #'session-state)
+      (wrap-mw-fn #'request-state-session-info)
       wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})

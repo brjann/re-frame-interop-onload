@@ -44,20 +44,22 @@
       (f))))
 
 (defn attack-uri
-  [state uri post attacks]
-  (loop [current-state state attacks attacks]
-    (if (seq attacks)
-      (let [[wait status] (first attacks)]
-        (-> current-state
-            (advance-time! wait)
-            (visit uri :request-method :post :params post)
-            (has (status? status))
-            ((fn [state]
-               (if (= 302 (get-in state [:response :status]))
-                 (follow-redirect state)
-                 state)))
-            (recur (rest attacks))))
-      current-state)))
+  ([state uri post attacks]
+   (attack-uri state uri post attacks "localhost"))
+  ([state uri post attacks from-ip-address]
+   (loop [current-state state attacks attacks]
+     (if (seq attacks)
+       (let [[wait status] (first attacks)]
+         (-> current-state
+             (advance-time! wait)
+             (visit uri :request-method :post :params post :remote-addr from-ip-address)
+             (has (status? status))
+             ((fn [state]
+                (if (= 302 (get-in state [:response :status]))
+                  (follow-redirect state)
+                  state)))
+             (recur (rest attacks))))
+       current-state))))
 
 (def standard-attack
   (concat
@@ -198,6 +200,31 @@
               [[0 429]
                [a-d/const-block-delay 422]]))))))
 
+(deftest attack-parallel-different-ips
+  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+    (let [s1 (session (app))
+          s2 (session (app))]
+      (-> s1
+          (attack-uri
+            "/login"
+            {:username "536975" :password "xxx"}
+            [[0 422]])
+          (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "666777"))
+          (attack-uri
+            "/double-auth"
+            {:code "xxx"}
+            [[70 422]
+             [70 422]]))
+      (-> s2
+          (attack-uri
+            "/login"
+            {:username "xxx" :password "xxx"}
+            standard-attack
+            "192.168.0.1")))))
+
 
 (deftest attack-registration
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -236,3 +263,6 @@
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "we promise")))))
+
+#_(log/debug (-> (session (app))
+                 (visit "/debug/headers" :remote-addr "1000")))
