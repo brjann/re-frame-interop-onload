@@ -120,7 +120,7 @@
 
 (defn delay-global!
   []
-  (when-let [global @global-block]
+  (when @global-block
     (let [now               (t/now)
           last-request-time (get-last-request-time-global now)]
       (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
