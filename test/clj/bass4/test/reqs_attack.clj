@@ -288,4 +288,12 @@
   (advance-time! a-d/const-global-block-delay)
   (-> *s*
       (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "SLAYER")
-      (has (status? 422))))
+      (has (status? 422)))
+  (advance-time! a-d/const-attack-interval)
+  (dotimes [ip-address 5]
+    (attack-uri
+      *s*
+      "/login"
+      {:username "xxx" :password "xxx"}
+      (repeat (/ a-d/const-fails-until-global-block 10) [1 422])
+      (str ip-address))))

@@ -14,6 +14,7 @@
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]))
 
+(def s (atom nil))
 (def ^:dynamic *s* nil)
 
 (defn get-edn
@@ -34,10 +35,12 @@
     #'bass4.db.core/db-connections
     #'bass4.db.core/db-common
     #'bass4.i18n/i18n-map)
+  (when (nil? @s)
+    (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
   (binding [clojure.test/*stack-trace-depth* 5
             mw/*skip-csrf*                   true
-            *s*                              (session (app))]
+            *s*                              @s]
     (f)))
 
 (defn disable-attack-detector [f]
