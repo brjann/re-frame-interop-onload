@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures disable-attack-detector]]
+            [bass4.test.core :refer [test-fixtures disable-attack-detector *s*]]
             [bass4.services.bass :as bass]))
 
 (use-fixtures
@@ -13,7 +13,7 @@
   disable-attack-detector)
 
 (deftest request-url-encode
-  (-> (session (app))
+  (-> *s*
       (visit "/debug/encode")
       (follow-redirect)
       (follow-redirect)
@@ -21,31 +21,31 @@
 
 (deftest request-no-cache-asset
   (is (not= "no-cache, no-store, must-revalidate"
-         (-> (session (app))
+            (-> *s*
                 (visit "/assets/bootstrap/css/bootstrap.min.css")
                 (get-in [:response :headers "Cache-Control"])))))
 
 (deftest request-no-cache-css
   (is (not= "no-cache, no-store, must-revalidate"
-        (-> (session (app))
-            (visit "/css/bass.css")
-            (get-in [:response :headers "Cache-Control"])))))
+            (-> *s*
+                (visit "/css/bass.css")
+                (get-in [:response :headers "Cache-Control"])))))
 
 (deftest request-no-cache-js
   (is (not= "no-cache, no-store, must-revalidate"
-         (-> (session (app))
-             (visit "/js/jquery-ui-slider/jquery-ui.css")
-             (get-in [:response :headers "Cache-Control"])))))
+            (-> *s*
+                (visit "/js/jquery-ui-slider/jquery-ui.css")
+                (get-in [:response :headers "Cache-Control"])))))
 
 (deftest request-cache-login
   (is (= "no-cache, no-store, must-revalidate"
-        (-> (session (app))
-                (visit "/login")
-                (get-in [:response :headers "Cache-Control"])))))
+         (-> *s*
+             (visit "/login")
+             (get-in [:response :headers "Cache-Control"])))))
 
 (deftest request-frame-options-login
   (is (= "SAMEORIGIN"
-         (-> (session (app))
+         (-> *s*
              (visit "/login")
              (get-in [:response :headers "X-Frame-Options"])))))
 
@@ -53,7 +53,7 @@
 ;(deftest request-frame-options-embedded
 ;  (is (= nil
 ;         (with-redefs [bass/admin-session-file (constantly 110)]
-;           (-> (session (app))
+;           (-> s
 ;               (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
 ;               (visit "/embedded/instrument/1647")
 ;               (has (status? 200))

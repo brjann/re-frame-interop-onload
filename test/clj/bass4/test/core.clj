@@ -5,12 +5,16 @@
             [bass4.db.core]
             [bass4.bass-locals :as locals]
             [bass4.utils :refer [map-map]]
+            [kerodon.core :refer :all]
+            [bass4.handler :refer :all]
             [clj-time.coerce :as tc]
             [clojure.string :as string]
             [clojure.test]
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]))
+
+(def ^:dynamic *s* nil)
 
 (defn get-edn
   [edn]
@@ -32,11 +36,13 @@
     #'bass4.i18n/i18n-map)
   (bass4.db.core/init-repl :bass4_test)
   (binding [clojure.test/*stack-trace-depth* 5
-            mw/*skip-csrf*                   true]
+            mw/*skip-csrf*                   true
+            *s*                              (session (app))]
     (f)))
 
 (defn disable-attack-detector [f]
-  (with-redefs [a-d/delay-time! (constantly nil)]
+  (with-redefs [a-d/get-delay-time         (constantly nil)
+                a-d/register-failed-login! (constantly nil)]
     (f)))
 
 (defn debug-headers-not-text?

@@ -13,10 +13,14 @@
             [bass4.layout :as layout]))
 
 (def ^:const const-fails-until-ip-block 10)
-(def ^:const const-block-delay 10)
+(def ^:const const-fails-until-global-block 100)            ;; Should be factor of 10 for test to work
+(def ^:const const-global-block-ip-count 3)
+(def ^:const const-ip-block-delay 10)
+(def ^:const const-global-block-delay 2)
 (def ^:const const-attack-interval 900)
 
 (def blocked-ips (atom {}))
+(def global-block (atom nil))
 
 (defn get-failed-logins
   [now]
@@ -36,7 +40,12 @@
                            (get ip-address))]
     (if (<= const-fails-until-ip-block (count failed-from-ip))
       (swap! blocked-ips #(assoc % ip-address now))
-      (swap! blocked-ips #(dissoc % ip-address now)))))
+      (swap! blocked-ips #(dissoc % ip-address now)))
+    (if (and (<= const-fails-until-global-block (count failed-logins))
+             (<= const-global-block-ip-count (count (group-by :ip-address failed-logins))))
+      (swap! global-block (constantly now))
+      ;; TODO: Can global-block be used instead of last-request-global?
+      (swap! global-block (constantly nil)))))
 
 (defn save-failed-login!
   [type db ip-address info now]
@@ -85,18 +94,45 @@
         now)
       res)))
 
-(defn delay-time!
+(defn delay-ip!
   [request]
   (let [ip-address (h-utils/get-ip request)]
     (when (ip-blocked? ip-address)
       (let [now               (t/now)
             last-request-time (get-last-request-time ip-address now)]
         (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
-                      (when (> const-block-delay seconds-since-request)
-                        (- const-block-delay seconds-since-request)))]
+                      (when (> const-ip-block-delay seconds-since-request)
+                        (- const-ip-block-delay seconds-since-request)))]
           (when (not delay)
             (swap! blocked-last-request #(assoc % ip-address now)))
           delay)))))
+
+(def global-last-request (atom nil))
+
+(defn get-last-request-time-global
+  [now]
+  (let [res @global-last-request]
+    (if (or (nil? res) (t/before? now res))
+      (do
+        (swap! global-last-request (constantly now))
+        now)
+      res)))
+
+(defn delay-global!
+  []
+  (when-let [global @global-block]
+    (let [now               (t/now)
+          last-request-time (get-last-request-time-global now)]
+      (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
+                    (when (> const-global-block-delay seconds-since-request)
+                      (- const-global-block-delay seconds-since-request)))]
+        (when (not delay)
+          (swap! global-last-request (constantly nil)))
+        delay))))
+
+(defn get-delay-time
+  [request]
+  (or (delay-ip! request) (delay-global!)))
 
 (defn- route-success-fn
   [request]
@@ -129,28 +165,27 @@
 (defn attack-detector-mw
   [handler request]
   (if-let [success-fn (route-success-fn request)]
-    (do
-      (if-let [delay (delay-time! request)]
-        (layout/error-429 delay)
-        (let [response (handler request)]
-          (cond
-            (= 422 (:status response))
-            (do
-              (register-failed-login! :login request)
-              (delay-time! request)
-              response)
+    (if-let [delay (get-delay-time request)]
+      (layout/error-429 delay)
+      (let [response (handler request)]
+        (cond
+          (= 422 (:status response))
+          (do
+            (register-failed-login! :login request)
+            (delay-ip! request)
+            (delay-global!)
+            response)
 
-            (success-fn (:session request) (:session response))
-            (do
-              (register-successful-login! request)
-              response)
+          (success-fn (:session request) (:session response))
+          (do
+            (register-successful-login! request)
+            response)
 
-            :else
-            response))))
+          :else
+          response)))
     (handler request)))
 
 ;;
-;; TODO: Block all IPs if 100 failures
 ;; TODO: Block user after too many failed login attempts
 ;;
 

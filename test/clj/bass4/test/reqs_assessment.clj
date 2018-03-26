@@ -5,7 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector]]
+            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.db.core :as db]
@@ -18,19 +18,13 @@
   test-fixtures
   disable-attack-detector)
 
-#_(use-fixtures
-    :each
-    (fn [f]
-      (with-redefs [a-d/delay-time! (constantly nil)]
-        (f))))
-
 (deftest skip-csrf
   (is (= true mw/*skip-csrf*)))
 
 (deftest active-assessment
   (with-redefs [auth-service/double-auth-code (constantly "666777")
                 t/now (constantly (t/date-time 2017 8 2 0 0 0))]
-    (-> (session (app))
+    (-> *s*
         (visit "/login" :request-method :post :params {:username "one-assessment" :password "one-assessment"})
         (has (status? 302))
         (follow-redirect)
@@ -44,7 +38,7 @@
 (deftest group-assessment
   (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
-    (-> (session (app))
+    (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
         (follow-redirect)
@@ -74,9 +68,9 @@
 (deftest group-assessment-concurrent
   (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test-concurrent"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
-    (let [s1 (-> (session (app))
+    (let [s1 (-> *s*
                  (visit "/login" :request-method :post :params {:username user-id :password user-id}))
-          s2 (-> (session (app))
+          s2 (-> *s*
                  (visit "/login" :request-method :post :params {:username user-id :password user-id}))]
       (-> s1
           (has (status? 302))
@@ -101,7 +95,7 @@
       (-> s2
           (visit "/user/")
           (has (some-text? "AAQ")))
-      (let [s3 (-> (session (app))
+      (let [s3 (-> *s*
                    (visit "/login" :request-method :post :params {:username user-id :password user-id}))]
         (-> s3
             (has (status? 302))
@@ -129,7 +123,7 @@
 (deftest swallow-texts
   (let [user-id (user/create-user! 547369 {:Group "547387" :firstname "swallow-test"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
-    (-> (session (app))
+    (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
         (follow-redirect)
@@ -148,6 +142,6 @@
 (deftest empty-assessment
   (let [user-id (user/create-user! 572594 {:Group "572598" :firstname "group-test"})]
     (user/update-user-properties! user-id {:username user-id :password user-id})
-    (-> (session (app))
+    (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302)))))

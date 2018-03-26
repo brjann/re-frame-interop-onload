@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? debug-headers-not-text? log-return]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? debug-headers-not-text? log-return *s*]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -28,9 +28,11 @@
 (def now (atom nil))
 
 (defn advance-time!
-  [state secs]
-  (swap! now (constantly (t/plus (t/now) (t/seconds secs))))
-  state)
+  ([secs]
+   (swap! now (constantly (t/plus (t/now) (t/seconds secs)))))
+  ([state secs]
+   (advance-time! secs)
+   state))
 
 (use-fixtures
   :each
@@ -38,6 +40,8 @@
     (db/clear-failed-logins!)
     (swap! a-d/blocked-ips (constantly {}))
     (swap! a-d/blocked-last-request (constantly {}))
+    (swap! a-d/global-block (constantly nil))
+    (swap! a-d/global-last-request (constantly nil))
     (swap! now (constantly (t/now)))
     (with-redefs
       [t/now (fn [] @now)]
@@ -63,9 +67,9 @@
 
 (def standard-attack
   (concat
-    (repeat a-d/const-fails-until-ip-block [0 422])
+    (repeat a-d/const-fails-until-ip-block [1 422])
     (repeat 3 [0 429])
-    [[(dec a-d/const-block-delay) 429]
+    [[(dec a-d/const-ip-block-delay) 429]
      [1 422]
      [0 429]
      [a-d/const-attack-interval 422]]
@@ -74,21 +78,21 @@
 
 
 (deftest attack-login
-  (-> (session (app))
+  (-> *s*
       (attack-uri
         "/login"
         {:username "xxx" :password "xxx"}
         standard-attack)
       (visit "/login" :request-method :post :params {:username 536975 :password 536975})
       (has (status? 429))
-      (advance-time! a-d/const-block-delay)
+      (advance-time! a-d/const-ip-block-delay)
       (visit "/login" :request-method :post :params {:username 536975 :password 536975})
       (has (status? 302))))
 
 
 (deftest attack-double-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> (session (app))
+    (let [state (-> *s*
                     (visit "/login" :request-method :post :params {:username 536975 :password 536975})
                     (has (status? 302))
                     (follow-redirect)
@@ -101,7 +105,7 @@
 
 (deftest attack-re-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> (session (app))
+    (let [state (-> *s*
                     (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
                     (visit "/user/messages")
                     (has (status? 200))
@@ -118,7 +122,7 @@
 
 (deftest attack-re-auth-ajax
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> (session (app))
+    (let [state (-> *s*
                     (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
                     (visit "/user/messages")
                     (has (status? 200))
@@ -135,7 +139,7 @@
 
 (deftest attack-login-double-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (-> (session (app))
+    (-> *s*
         (attack-uri
           "/login"
           {:username "536975" :password "xxx"}
@@ -148,13 +152,13 @@
           "/double-auth"
           {:code "xxx"}
           (concat
-            (repeat (dec a-d/const-block-delay) [0 422])
+            (repeat (dec a-d/const-ip-block-delay) [0 422])
             [[0 429]
              [0 429]
              [0 429]
-             [(dec a-d/const-block-delay) 429]
+             [(dec a-d/const-ip-block-delay) 429]
              [1 422]]))
-        (advance-time! a-d/const-block-delay)
+        (advance-time! a-d/const-ip-block-delay)
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
         (follow-redirect)
@@ -167,63 +171,59 @@
           (concat
             (repeat 10 [0 422])
             (repeat 10 [0 429])))
-        (advance-time! a-d/const-block-delay)
+        (advance-time! a-d/const-ip-block-delay)
         (visit "/re-auth-ajax" :request-method :post :params {:password "536975"})
         (has (status? 200)))))
 
 (deftest attack-parallel
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [s1 (session (app))
-          s2 (session (app))]
-      (-> s1
-          (attack-uri
-            "/login"
-            {:username "536975" :password "xxx"}
-            [[0 422]])
-          (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
-          (has (status? 302))
-          (follow-redirect)
-          (has (some-text? "666777"))
-          (attack-uri
-            "/double-auth"
-            {:code "xxx"}
-            [[70 422]
-             [70 422]]))
-      (-> s2
-          (attack-uri
-            "/login"
-            {:username "xxx" :password "xxx"}
-            (concat
-              (repeat
-                (- a-d/const-fails-until-ip-block 3)
-                [0 422])
-              [[0 429]
-               [a-d/const-block-delay 422]]))))))
+    (-> *s*
+        (attack-uri
+          "/login"
+          {:username "536975" :password "xxx"}
+          [[0 422]])
+        (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "666777"))
+        (attack-uri
+          "/double-auth"
+          {:code "xxx"}
+          [[70 422]
+           [70 422]]))
+    (-> *s*
+        (attack-uri
+          "/login"
+          {:username "xxx" :password "xxx"}
+          (concat
+            (repeat
+              (- a-d/const-fails-until-ip-block 3)
+              [0 422])
+            [[0 429]
+             [a-d/const-ip-block-delay 422]])))))
 
 (deftest attack-parallel-different-ips
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [s1 (session (app))
-          s2 (session (app))]
-      (-> s1
-          (attack-uri
-            "/login"
-            {:username "536975" :password "xxx"}
-            [[0 422]])
-          (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
-          (has (status? 302))
-          (follow-redirect)
-          (has (some-text? "666777"))
-          (attack-uri
-            "/double-auth"
-            {:code "xxx"}
-            [[70 422]
-             [70 422]]))
-      (-> s2
-          (attack-uri
-            "/login"
-            {:username "xxx" :password "xxx"}
-            standard-attack
-            "192.168.0.1")))))
+    (-> *s*
+        (attack-uri
+          "/login"
+          {:username "536975" :password "xxx"}
+          [[0 422]])
+        (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "666777"))
+        (attack-uri
+          "/double-auth"
+          {:code "xxx"}
+          [[70 422]
+           [70 422]]))
+    (-> *s*
+        (attack-uri
+          "/login"
+          {:username "xxx" :password "xxx"}
+          standard-attack
+          "192.168.0.1"))))
 
 
 (deftest attack-registration
@@ -237,7 +237,7 @@
                                                              :auto-id-prefix         "xxx-"
                                                              :auto-id-length         3
                                                              :auto-id?               true})]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -264,5 +264,28 @@
         (follow-redirect)
         (has (some-text? "we promise")))))
 
-#_(log/debug (-> (session (app))
-                 (visit "/debug/headers" :remote-addr "1000")))
+(deftest attack-global
+  (dotimes [ip-address 10]
+    (attack-uri
+      *s*
+      "/login"
+      {:username "xxx" :password "xxx"}
+      (repeat (/ a-d/const-fails-until-global-block 10) [1 422])
+      (str ip-address)))
+  (-> *s*
+      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hejsan")
+      (has (status? 429)))
+  (advance-time! a-d/const-global-block-delay)
+  (-> *s*
+      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hoppsan")
+      (has (status? 422)))
+  (-> *s*
+      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "tjosan")
+      (has (status? 429)))
+  (-> *s*
+      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "METALLICA")
+      (has (status? 429)))
+  (advance-time! a-d/const-global-block-delay)
+  (-> *s*
+      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "SLAYER")
+      (has (status? 422))))

@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s*]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -25,7 +25,7 @@
   disable-attack-detector)
 
 (deftest registration-not-allowed
-  (-> (session (app))
+  (-> *s*
       (visit "/registration/564612")
       (has (some-text? "Registration not allowed"))))
 
@@ -38,7 +38,7 @@
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -90,7 +90,7 @@
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -118,7 +118,7 @@
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -148,7 +148,7 @@
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
                   auth-service/letters-digits         (constantly "METALLICA")]
-      (-> (session (app))
+      (-> *s*
           (visit "/registration/564610")
           ;; Captcha session is created
           (follow-redirect)
@@ -180,7 +180,7 @@
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
                   auth-service/letters-digits         (constantly "METALLICA")]
-      (-> (session (app))
+      (-> *s*
           (visit "/registration/564610")
           ;; Captcha session is created
           (follow-redirect)
@@ -215,7 +215,7 @@
                                                              :auto-id-length         3
                                                              :auto-id?               true})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -243,7 +243,7 @@
                                                              :auto-id-length         3
                                                              :auto-id?               true})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -274,7 +274,7 @@
                   reg-service/generate-participant-id (constantly participant-id)
                   auth-service/letters-digits         (constantly "METALLICA")
                   passwords/password                  (constantly password)]
-      (-> (session (app))
+      (-> *s*
           (visit "/registration/564610")
           ;; Captcha session is created
           (follow-redirect)
@@ -303,7 +303,7 @@
                                                              :allow-duplicate-sms?   false
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]})
                 auth-service/letters-digits     (constantly "METALLICA")]
-    (-> (session (app))
+    (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
         (follow-redirect)
@@ -321,14 +321,14 @@
 
 (deftest registration-captcha-not-created
   (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
-    (let [response (-> (session (app))
+    (let [response (-> *s*
                        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}))]
       (is (string/includes? (get-in response [:response :headers "Location"]) "/registration/564610/captcha")))))
 
 (deftest captcha-timeout
   (let [now (t/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
-      (let [x (-> (session (app))
+      (let [x (-> *s*
                   (visit "/registration/564610")
                   ;; Captcha session is created
                   (follow-redirect)
@@ -355,7 +355,7 @@
 (deftest captcha-tries
   (let [now (t/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
-      (let [x (-> (session (app))
+      (let [x (-> *s*
                   (visit "/registration/564610")
                   ;; Captcha session is created
                   (follow-redirect)
