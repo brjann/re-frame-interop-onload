@@ -1,7 +1,7 @@
 (ns bass4.i18n
   (:require [selmer.parser :as parser]
             [taoensso.tempura :as tempura]
-            [bass4.utils :refer [map-map map-map-keys filter-map deep-merge]]
+            [bass4.utils :refer [map-map map-map-keys filter-map deep-merge in?]]
             [bass4.bass-locals :as locals]
             [bass4.php_clj.reader :as reader]
             [clj-time.core :as t]
@@ -75,39 +75,34 @@
   (loop [acc [] s s]
     (if (zero? (.available s))
       [(keyword (s/join acc))]
-      (let [c (reader/read-char s)]
-        (if (or (= \( c)
-                (= \) c)
-                (= \{ c)
-                (= \} c)
-                (= \, c)
-                (= \" c)
-                (s/blank? (str c)))
-          [(keyword (s/join acc)) c]
-          (recur (conj acc c) s))))))
+      (do (.mark s 1)
+          (let [c (reader/read-char s)]
+            (if (or (in? [\( \) \{ \} \, \"] c)
+                    (s/blank? (str c)))
+              (do (.reset s)
+                  (keyword (s/join acc)))
+              (recur (conj acc c) s)))))))
 
 (defn- i18n-map-to-list*
   [s]
-  (loop [acc [] c nil s s]
-    (if (or (zero? (.available s))
-            (or (= \) c) (= \} c)))
+  (loop [acc [] s s]
+    (if (zero? (.available s))
       acc
-      (let [c (or c (reader/read-char s))
-            [form c] (cond
+      (let [c (reader/read-char s)]
+        (if (or (= \) c) (= \} c))
+          acc
+          (let [form (cond
                        (= \: c)
                        (parse-keyword s)
 
                        (= \" c)
-                       [(parse-string s)]
+                       (parse-string s)
 
                        (or (= \( c) (= \{ c))
-                       [(i18n-map-to-list* s)]
+                       (i18n-map-to-list* s))]
+            (recur (if form (conj acc form) acc) s)))))))
 
-                       (or (= \) c) (= \} c))
-                       [nil c])]
-        (recur (if form (conj acc form) acc) c s)))))
-
-(defn- i18n-map-to-list
+(defn i18n-map-to-list
   [s]
   (first (i18n-map-to-list* (reader/buffered-input-stream s))))
 
