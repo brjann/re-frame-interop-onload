@@ -19,7 +19,8 @@
             [ring.util.codec :as codec]
             [bass4.mailer :as mail]
             [clj-http.client :as http]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.i18n :as i18n]))
 
 (defn states-page
   []
@@ -117,6 +118,8 @@
         (GET "/states" []
           (states-page))
         (POST "/states" [& params]
-          (reset-state (:state-name params))))
+          (reset-state (:state-name params)))
+        (GET "/i18n-merge/:lang" [lang]
+          (layout/text-response (i18n/merge-i18n lang))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

@@ -148,3 +148,13 @@
 (defn nil-zero?
   [x]
   (or (nil? x) (zero? x)))
+
+;; https://gist.github.com/danielpcox/c70a8aa2c36766200a95
+(defn deep-merge [v & vs]
+  (letfn [(rec-merge [v1 v2]
+            (if (and (map? v1) (map? v2))
+              (merge-with deep-merge v1 v2)
+              v2))]
+    (if (some identity vs)
+      (reduce #(rec-merge %1 %2) v vs)
+      v)))
