@@ -44,13 +44,30 @@ $(document).ready(function () {
 
 		var counter = 0;
 		var drop_down = $('#module-navbar .dropdown-menu');
+
+      // Locate the first header and check if there is text above it,
+      // if so, add an invisible header to the top of the page.
+      // This way, it's possible to scroll to the top of the page
+      // using scrollspy and the top position is saved.
+      module_text.find(':header').first().each(function () {
+         var header = $(this);
+         if (header.prev().length) {
+            header.parent().prepend('<h3 data-label="- ' + text_page_top + ' -"></h3>');
+         }
+      });
+
 		module_text.find(':header').each(function () {
 			var header = $(this);
+         var title = '';
 			// TODO: Customize the h level
 			if (header.prop('tagName').indexOf('3') >= 0) {
 				counter++;
 				header.attr('id', 's' + counter);
-				drop_down.append($(sprintf('<a class="dropdown-item" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.text())));
+            if (header.data('label') === undefined) {
+               header.data('label', header.text());
+            }
+            title = $(sprintf('<a class="dropdown-item" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.data('label')));
+            drop_down.append(title);
 			}
 		});
 
@@ -74,7 +91,7 @@ $(document).ready(function () {
 
 			var on_scrollspy = function () {
 				var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-				set_section_label($(section).text());
+            set_section_label($(section).data('label'));
 				Cookies.set(module_section_cookie, section);
 			};
 
@@ -85,7 +102,7 @@ $(document).ready(function () {
 
 			$(window).on('activate.bs.scrollspy', on_scrollspy);
 
-			set_section_label($("#module-text").find(":header").first().text());
+         set_section_label($("#module-text").find(":header").first().data('label'));
 
 			// TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
 			if (Cookies.get(module_section_cookie) !== undefined) {

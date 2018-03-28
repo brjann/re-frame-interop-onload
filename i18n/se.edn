@@ -90,6 +90,7 @@
                    :no-worksheet            "Denna modul har inte detta arbetsblad"
                    :worksheets              "Arbetsblad"
                    :homework                "Hemuppgifter"
+                   :page-top                "Sidans topp"
                    :show-example            "Visa exempel"
                    :close-example           "Stäng exempel"
                    :submit-homework         "Skicka in hemuppgifter"
