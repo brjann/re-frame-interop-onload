@@ -36,14 +36,12 @@
                  [org.flatland/ordered "1.5.4"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/data.json "0.2.6"]
-                 [peridot "0.4.4"]
-                 [kerodon "0.8.0"]
                  [prone "1.1.4"]
                  [clj-http "3.6.1"]]
 
   :min-lein-version "2.0.0"
 
-  ;; .lein-env is initialized by leiningen to include the map from profiles.clj
+  ;; .lein-env is modified by leiningen to include the map from profiles.clj
   ;; https://yobriefca.se/blog/2014/04/29/managing-environment-variables-in-clojure/
   :jvm-opts ["-server" "-Dconf=.lein-env"]
   :source-paths ["src/clj"]
@@ -72,7 +70,9 @@
    ;; These dependencies are only compiled into the development app
    :project/dev  {:dependencies [[ring/ring-mock "0.3.0"]
                                  [ring/ring-devel "1.5.1"]
-                                 [pjstadig/humane-test-output "0.8.1"]]
+                                 [pjstadig/humane-test-output "0.8.1"]
+                                 [peridot "0.4.4"]
+                                 [kerodon "0.8.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.20.0"]]
                   
                   :source-paths ["env/dev/clj"]
