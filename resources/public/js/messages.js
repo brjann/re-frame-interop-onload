@@ -55,7 +55,8 @@ $(document).ready(function(){
 		$.map(data, function (time, id) {
 			var message = $('#' + id + '.unread');
 			if (message.length) {
-				message.find('.visibility').text(time);
+            // visibility counter, used for debug purposes
+            // message.find('.visibility').text(time);
 				if (time >= 5) {
 					$.ajax(
 						'/user/message-read',
