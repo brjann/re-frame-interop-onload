@@ -26,9 +26,12 @@ $(document).ready(function () {
       }
    };
 
-	$('.markdown').find('img').addClass('img-fluid');
-	$('.markdown').find('table').addClass('table');
-	$('.markdown').find('textarea').addClass('form-control');
+   var add_markdown_classes = function () {
+      var markdowns = $('markdown');
+      markdowns.find('img').addClass('img-fluid');
+      markdowns.find('table').addClass('table');
+      markdowns.find('textarea').addClass('form-control');
+   };
 
    var create_page_top = function (module_text) {
       // Locate the first header and check if there is text above it,
@@ -38,7 +41,7 @@ $(document).ready(function () {
       module_text.find(':header').first().each(function () {
          var header = $(this);
          if (header.prev().length) {
-            header.parent().prepend('<h3 data-label="- ' + text_page_top + ' -"></h3>');
+            header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
          }
       });
    };
@@ -50,8 +53,8 @@ $(document).ready(function () {
       module_text.find(':header').each(function () {
          var header = $(this);
          var title = '';
-         // TODO: Customize the h level
-         if (header.prop('tagName').indexOf('3') >= 0) {
+         var tag = header.prop('tagName').toLowerCase();
+         if (tag === 'h1') {
             counter++;
             header.attr('id', 's' + counter);
             if (header.data('label') === undefined) {
@@ -131,6 +134,7 @@ $(document).ready(function () {
       var headers_count = init_headers(module_text);
       init_module_navbar(module_text, headers_count);
    }
+   add_markdown_classes();
    resize_title();
    resize_top_nav();
 });
