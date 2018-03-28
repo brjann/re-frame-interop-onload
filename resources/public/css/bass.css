@@ -2,12 +2,11 @@
     display: none;
 }
 
-
 /***********************
     Instrument layout
  ***********************/
 
-div#instrument.classic .instrument-elements{
+div#instrument.classic .instrument-elements {
     font-size: 11.2px;
     font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
 }
@@ -37,11 +36,11 @@ div#instrument .col .option.line{
 }
 */
 
-div#instrument.desktop > div{
+div#instrument.desktop > div {
     width: 700px;
 }
 
-div#instrument.responsive.desktop .col.cell .option-label{
+div#instrument.responsive.desktop .col.cell .option-label {
     display: none;
 }
 
@@ -52,33 +51,31 @@ div#instrument.desktop .col{
 }
 */
 
-
-div#instrument .col{
+div#instrument .col {
     display: inline-block;
     vertical-align: top;
     padding: 5px 0 5px 0;
 }
 
-div#instrument.responsive.desktop .mobile-only{
+div#instrument.responsive.desktop .mobile-only {
     display: none;
 }
 
-div#instrument.responsive.mobile .desktop-only{
+div#instrument.responsive.mobile .desktop-only {
     display: none;
 }
 
-
-div#instrument.responsive.mobile .item-div{
+div#instrument.responsive.mobile .item-div {
     width: 100%;
     margin-top: 10px;
 }
 
-div#instrument.responsive.mobile .col.cell, div#instrument .option.line{
+div#instrument.responsive.mobile .col.cell, div#instrument .option.line {
     display: block;
     padding: 5px 2px 5px 2px;
 }
 
-div#instrument .content{
+div#instrument .content {
     padding-left: 2px;
     padding-right: 2px;
 }
@@ -93,23 +90,23 @@ div#instrument div.navigate{
 }
 */
 
-div#instrument div.navigator div{
+div#instrument div.navigator div {
     display: inline-block;
 }
 
-div#instrument.desktop div.navigator div{
+div#instrument.desktop div.navigator div {
     width: 50%;
 }
 
-div#instrument.desktop div.navigator div.right{
+div#instrument.desktop div.navigator div.right {
     text-align: right;
 }
 
-div#instrument div.navigator div.left button{
+div#instrument div.navigator div.left button {
     margin-right: 10px;
 }
 
-div#instrument div.navigator button{
+div#instrument div.navigator button {
     margin-top: 10px;
     margin-bottom: 10px;
 }
@@ -130,12 +127,11 @@ div#instrument.mobile .col.cell .option-label{
 }
 */
 
-
 /***********************
         Slider
  ***********************/
 
-div#instrument .slider{
+div#instrument .slider {
     display: inline-block;
     text-align: center;
     width: 410px;
@@ -175,11 +171,11 @@ div#instrument .slider-container {
     Interactive colors
  ***********************/
 
-div#instrument .has-option:hover{
+div#instrument .has-option:hover {
     background-color: #EEEEEE;
 }
 
-div#instrument .item-div.has-data{
+div#instrument .item-div.has-data {
     #background-color: #EEEEEE;
     background-color: #d9d9d9;
 }
@@ -246,6 +242,24 @@ div#instrument .item-error {
     background-clip: padding-box;
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: .25rem;
+}
+
+/*
+    Make titles smaller in treatment content
+    since it is rendered from Markdown which
+    should be able to use h1
+ */
+
+.treatment-content h1 {
+    font-size: 1.75rem;
+}
+
+.treatment-content h2 {
+    font-size: 1.25rem;
+}
+
+.treatment-content h3, h4, h5, h6 {
+    font-size: 1rem;
 }
 
 /***********************
