@@ -38,7 +38,7 @@ $(document).ready(function () {
       // if so, add an invisible header to the top of the page.
       // This way, it's possible to scroll to the top of the page
       // using scrollspy and the top position is saved.
-      module_text.find(':header').first().each(function () {
+      module_text.find('h1').first().each(function () {
          var header = $(this);
          if (header.prev().length) {
             header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
@@ -50,9 +50,10 @@ $(document).ready(function () {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
 
-      module_text.find(':header').each(function () {
+      module_text.find('h1').each(function () {
          var header = $(this);
          var title = '';
+         // Unnecessary check but keeping if heading level should be custom
          var tag = header.prop('tagName').toLowerCase();
          if (tag === 'h1') {
             counter++;
@@ -60,7 +61,7 @@ $(document).ready(function () {
             if (header.data('label') === undefined) {
                header.data('label', header.text());
             }
-            title = $(sprintf('<a class="dropdown-item" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.data('label')));
+            title = $(sprintf('<a class="dropdown-item text-truncate" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.data('label')));
             drop_down.append(title);
          }
       });
@@ -128,6 +129,21 @@ $(document).ready(function () {
       }
    };
 
+   var resize_dropdown = function () {
+      var dropdown = $('#module-navbar .dropdown');
+      if (dropdown.length) {
+         var dropdown_resizer = function () {
+            var dropdown_menu = $('#module-navbar .dropdown-menu');
+            var height = $(window).height() - $('#module-text').offset().top;
+            dropdown_menu.width(dropdown.width() - 2);
+            dropdown_menu.css('max-height', height + 'px');
+         };
+         dropdown.on('shown.bs.dropdown', dropdown_resizer);
+         $(window).resize(dropdown_resizer);
+         dropdown_resizer();
+      }
+   };
+
    var module_text = $('#module-text');
    if (module_text.length) {
       create_page_top(module_text);
@@ -137,6 +153,7 @@ $(document).ready(function () {
    add_markdown_classes();
    resize_title();
    resize_top_nav();
+   resize_dropdown()
 });
 
 function scroll_to_section(section_id) {

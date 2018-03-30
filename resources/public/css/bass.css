@@ -244,6 +244,10 @@ div#instrument .item-error {
     border-radius: .25rem;
 }
 
+#module-navbar .dropdown-menu {
+    overflow-y: auto;
+}
+
 /*
     Make titles smaller in treatment content
     since it is rendered from Markdown which
