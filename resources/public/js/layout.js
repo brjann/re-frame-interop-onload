@@ -5,6 +5,17 @@ $(document).ready(function () {
     --------------
     */
 
+   var top_nav_height = function () {
+      var selectors = ['#main-nav', '#context-nav', '#dropdown-toggler'];
+      var h = _.reduce(selectors, function (height, s) {
+         element = $(s + ':visible');
+         //console.log(element.length ? element.outerHeight(true) : 0);
+         return height + (element.length ? element.outerHeight(true) : 0);
+      }, 0);
+      console.log(h);
+      return h;
+   };
+
    var resize_title = function () {
       if ($('#page-title').length) {
          var set_title_width = function () {
@@ -27,7 +38,7 @@ $(document).ready(function () {
    };
 
    var add_markdown_classes = function () {
-      var markdowns = $('markdown');
+      var markdowns = $('.markdown');
       markdowns.find('img').addClass('img-fluid');
       markdowns.find('table').addClass('table');
       markdowns.find('textarea').addClass('form-control');
@@ -107,6 +118,7 @@ $(document).ready(function () {
             var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
             if (section !== null) {
                module_text.scrollTop(section.offsetTop);
+               top_nav_height();
                // Not supported by all browsers it seems
                //section.scrollIntoView();
             }
@@ -133,8 +145,11 @@ $(document).ready(function () {
       var dropdown = $('#module-navbar .dropdown');
       if (dropdown.length) {
          var dropdown_resizer = function () {
+            //console.log($(window).height());
+            //console.log($('#top-nav').height());
             var dropdown_menu = $('#module-navbar .dropdown-menu');
-            var height = $(window).height() - $('#module-text').offset().top;
+            var height = $(window).height() - $('#top-nav').height();
+            //console.log(height);
             dropdown_menu.width(dropdown.width() - 2);
             dropdown_menu.css('max-height', height + 'px');
          };
@@ -153,7 +168,6 @@ $(document).ready(function () {
    add_markdown_classes();
    resize_title();
    resize_top_nav();
-   resize_dropdown()
 });
 
 function scroll_to_section(section_id) {
