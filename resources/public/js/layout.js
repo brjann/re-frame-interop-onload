@@ -6,14 +6,30 @@ $(document).ready(function () {
     */
 
    var top_nav_height = function () {
-      var selectors = ['#main-nav', '#context-nav', '#dropdown-toggler'];
-      var h = _.reduce(selectors, function (height, s) {
+
+      // If the toggler is expanded in mobile view, then the main_nav height
+      // is too large. Therefore we fall back to the toggler height plus the
+      // padding and margin from the main-nav.
+      var top_bar_height = function () {
+         var toggler_height = $('#navbar-toggler:visible').outerHeight(true);
+         var main_nav = $('#main-nav');
+
+         if (toggler_height > 0) {
+            var margins = ['padding-top', 'padding-bottom', 'margin-top', 'margin-bottom'];
+            var heights = _.reduce(margins, function (height, margin) {
+               return height + parseInt(main_nav.css(margin));
+            }, 0);
+            return toggler_height + heights;
+         }
+         return $('#main-nav').outerHeight(true);
+      };
+
+      var selectors = ['#context-nav', '#dropdown-toggler'];
+
+      return top_bar_height() + _.reduce(selectors, function (height, s) {
          element = $(s + ':visible');
-         //console.log(element.length ? element.outerHeight(true) : 0);
          return height + (element.length ? element.outerHeight(true) : 0);
       }, 0);
-      console.log(h);
-      return h;
    };
 
    var resize_title = function () {
@@ -88,7 +104,7 @@ $(document).ready(function () {
          var set_module_height = function () {
             $('#module-text').each(
                function () {
-                  $(this).height($(window).height() - $(this).offset().top);
+                  $(this).height($(window).height() - top_nav_height());
                }
             );
             var section_label = $('#module-section-label');
@@ -118,9 +134,6 @@ $(document).ready(function () {
             var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
             if (section !== null) {
                module_text.scrollTop(section.offsetTop);
-               top_nav_height();
-               // Not supported by all browsers it seems
-               //section.scrollIntoView();
             }
          }
       }
@@ -129,11 +142,12 @@ $(document).ready(function () {
       }
    };
 
-   var resize_top_nav = function () {
+   var resize_top_margin = function () {
       if ($('#top-nav').length) {
          var set_top_margin = function () {
             // It seems that it must be padding-top because margin-top seems to be considered a scrollable area
-            $('#main-body').css('padding-top', $('#top-nav').height() + 'px');
+            var height = top_nav_height();
+            $('#main-body').css('padding-top', height + 'px');
          };
 
          $(window).resize(set_top_margin);
@@ -145,11 +159,8 @@ $(document).ready(function () {
       var dropdown = $('#module-navbar .dropdown');
       if (dropdown.length) {
          var dropdown_resizer = function () {
-            //console.log($(window).height());
-            //console.log($('#top-nav').height());
             var dropdown_menu = $('#module-navbar .dropdown-menu');
-            var height = $(window).height() - $('#top-nav').height();
-            //console.log(height);
+            var height = $(window).height() - top_nav_height() - 20;
             dropdown_menu.width(dropdown.width() - 2);
             dropdown_menu.css('max-height', height + 'px');
          };
@@ -159,15 +170,16 @@ $(document).ready(function () {
       }
    };
 
+   add_markdown_classes();
+   resize_title();
    var module_text = $('#module-text');
    if (module_text.length) {
       create_page_top(module_text);
       var headers_count = init_headers(module_text);
       init_module_navbar(module_text, headers_count);
    }
-   add_markdown_classes();
-   resize_title();
-   resize_top_nav();
+   resize_top_margin();
+   resize_dropdown();
 });
 
 function scroll_to_section(section_id) {

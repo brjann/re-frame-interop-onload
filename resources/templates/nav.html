@@ -102,14 +102,14 @@
     </div>
 </div>
 
-{% endblock %}
-
-{% block page-scripts %}
 <script type="text/javascript">
-	// @formatter:off
+   // @formatter:off
     var content_data = {{content-data|json|safe}} || {};
     // @formatter:on
 </script>
 <script src="/js/contentdata.js"></script>
 <script src="/js/underscore-min.js"></script>
+
+
 {% endblock %}
+
