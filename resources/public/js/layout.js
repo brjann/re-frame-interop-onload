@@ -117,7 +117,7 @@ $(document).ready(function () {
          };
 
          var set_module_height = function () {
-            $('#module-text').each(
+            $('.module-text').each(
                function () {
                   $(this).height($(window).height() - top_nav_height());
                }
@@ -141,7 +141,7 @@ $(document).ready(function () {
 
          $(window).on('activate.bs.scrollspy', on_scrollspy);
 
-         set_section_label($("#module-text").find(":header").first().data('label'));
+         set_section_label($(".module-text").find(":header").first().data('label'));
 
          // TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
          if (Cookies.get(module_section_cookie) !== undefined) {
@@ -230,7 +230,7 @@ $(document).ready(function () {
 
    add_markdown_classes();
    resize_title();
-   var module_text = $('#module-text');
+   var module_text = $('.module-text');
    if (module_text.length) {
       create_page_top(module_text);
       var headers_count = init_module_headers(module_text);
@@ -242,7 +242,7 @@ $(document).ready(function () {
 });
 
 function scroll_to_section(section_id) {
-   var module_text = $('#module-text');
+   var module_text = $('.module-text');
    var section = document.getElementById(section_id);
    // Not supported by all browsers it seems
    //section.scrollIntoView();

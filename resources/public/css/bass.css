@@ -210,7 +210,7 @@ div#instrument .item-error {
     padding: 0 6px;
 }
 
-#module-text {
+.module-text {
     position: relative;
     /*margin-top: .5rem;*/
     overflow-y: scroll;

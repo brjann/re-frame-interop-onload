@@ -22,7 +22,7 @@ $(document).ready(function () {
 
 function main_text_ays() {
    // TODO: Replace module-text with .main-text and use content-id as id
-	$('.treatment-content.main-text').each(
+   $('.treatment-content.module-text').each(
 		function () {
 			var content_div = $(this);
 			content_div.on('dirty.areYouSure', function () {
