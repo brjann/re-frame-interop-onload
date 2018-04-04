@@ -87,12 +87,12 @@ $(document).ready(function () {
     -------------------------
    */
 
-   var create_page_top = function (module_text) {
+   var create_page_top = function ($module_text) {
       // Locate the first header and check if there is text above it,
       // if so, add an invisible header to the top of the page.
       // This way, it's possible to scroll to the top of the page
       // using scrollspy and the top position is saved.
-      module_text.find('h1').first().each(function () {
+      $module_text.find('h1').first().each(function () {
          var header = $(this);
          if (header.prev().length) {
             header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
@@ -121,7 +121,7 @@ $(document).ready(function () {
       return counter;
    };
 
-   var init_module_scrollspy = function (module_text, headers_count) {
+   var init_module_scrollspy = function ($module_text, headers_count) {
       if (headers_count > 0) {
          var set_section_label = function (label) {
             $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
@@ -146,7 +146,7 @@ $(document).ready(function () {
             Cookies.set(module_section_cookie, section);
          };
 
-         module_text.scrollspy({target: '#module-navbar'});
+         $module_text.scrollspy({target: '#module-navbar'});
          $(window).resize(set_module_height);
          set_module_height();
 
@@ -158,7 +158,7 @@ $(document).ready(function () {
          if (Cookies.get(module_section_cookie) !== undefined) {
             var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
             if (section !== null) {
-               module_text.scrollTop(section.offsetTop);
+               $module_text.scrollTop(section.offsetTop);
             }
          }
       }
@@ -173,7 +173,7 @@ $(document).ready(function () {
     -------------------------
    */
 
-   var init_module_position_saver = function (module_text) {
+   var init_module_position_saver = function ($module_text) {
       var texts_in_viewport = function () {
          var isElementInViewport = function (el, module_top) {
             //special bonus for those using jQuery
@@ -195,9 +195,9 @@ $(document).ready(function () {
             );
          };
 
-         var texts = module_text.find('p, div, ol, ul, h1, h2, h3');
+         var texts = $module_text.find('p, div, ol, ul, h1, h2, h3');
          texts.each(function (ix, text) {
-            //text.data;
+            //$(text).prop('id', 'text' + ix);
          });
 
          return function () {
@@ -208,7 +208,7 @@ $(document).ready(function () {
             }));
          };
       };
-      module_text.on('scroll', texts_in_viewport());
+      $module_text.on('scroll', texts_in_viewport());
    };
 
    /*
@@ -259,24 +259,24 @@ $(document).ready(function () {
 
    add_markdown_classes();
    resize_title();
-   var module_text = $('.module-text');
-   if (module_text.length) {
-      create_page_top(module_text);
-      var headers_count = init_module_headers(module_text);
-      init_module_scrollspy(module_text, headers_count);
-      init_module_position_saver(module_text);
+   var $module_text = $('.module-text');
+   if ($module_text.length) {
+      create_page_top($module_text);
+      var headers_count = init_module_headers($module_text);
+      init_module_scrollspy($module_text, headers_count);
+      init_module_position_saver($module_text);
    }
    resize_top_margin();
    resize_navigation_dropdown();
 });
 
 function scroll_to_section(section_id) {
-   var module_text = $('.module-text');
+   var $module_text = $('.module-text');
    var section = document.getElementById(section_id);
    // Not supported by all browsers it seems
    //section.scrollIntoView();
    if (section !== null) {
-      module_text.scrollTop(section.offsetTop);
+      $module_text.scrollTop(section.offsetTop);
    }
    return false;
 }
