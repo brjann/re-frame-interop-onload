@@ -154,24 +154,19 @@ $(document).ready(function () {
       var init_module_scrollspy = function ($module_text, sections_count) {
          if (sections_count > 0) {
             var set_section_label = function (label) {
-               $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
+               // TODO: https://stackoverflow.com/questions/39272035/how-to-truncate-long-text-with-ellipsis-but-always-show-icon-after-ellipsis -->
+               $("#module-nav-dropdown-toggler").html('<i class="fa fa-caret-down" aria-hidden="true"></i>' + label);
             };
 
             var set_navigator_label_width = function () {
-               var section_label = $('#module-section-label');
+               var module_nav = $('#module-nav-dropdown-toggler');
                var container_width = $('#module-navbar').width();
-               section_label.width(container_width - section_label.position().left);
+               module_nav.width(container_width - module_nav.position().left);
             };
-
-            //var module_section_cookie = $module_text.prop('id') + "-section";
 
             var on_scrollspy = function () {
                var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-               if (section.lengt) {
-
-               }
                set_section_label($(section).data('label'));
-               //Cookies.set(module_section_cookie, section);
             };
 
             $module_text.scrollspy({target: '#module-navbar'});
@@ -182,15 +177,6 @@ $(document).ready(function () {
             $(window).on('activate.bs.scrollspy', on_scrollspy);
 
             set_section_label($('#module-content').find(":header").first().data('label'));
-
-            /*
-            if (Cookies.get(module_section_cookie) !== undefined) {
-               var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
-               if (section !== null) {
-                  $module_text.scrollTop(section.offsetTop);
-               }
-            }
-            */
          }
          else {
             $("#module-navbar").remove();

@@ -234,10 +234,14 @@ div#instrument .item-error {
     flex-direction: row;
 }
 
-#module-section-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis
+#module-nav-dropdown-toggler {
+    color: rgba(0, 0, 0, .5);
+    text-align: left;
+}
+
+#module-nav-dropdown-toggler i {
+    color: black;
+    margin-right: 10px;
 }
 
 #module-navbar .dropdown-toggle::after {
