@@ -142,12 +142,12 @@ $(document).ready(function () {
             section_label.width(container_width - section_label.position().left);
          };
 
-         var module_section_cookie = $module_text.prop('id') + "-section";
+         //var module_section_cookie = $module_text.prop('id') + "-section";
 
          var on_scrollspy = function () {
             var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
             set_section_label($(section).data('label'));
-            Cookies.set(module_section_cookie, section);
+            //Cookies.set(module_section_cookie, section);
          };
 
          $module_text.scrollspy({target: '#module-navbar'});
@@ -158,13 +158,14 @@ $(document).ready(function () {
 
          set_section_label($(".module-text").find(":header").first().data('label'));
 
-         // TODO: Or https://stackoverflow.com/questions/2009029/restoring-page-scroll-position-with-jquery
+         /*
          if (Cookies.get(module_section_cookie) !== undefined) {
             var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
             if (section !== null) {
                $module_text.scrollTop(section.offsetTop);
             }
          }
+         */
       }
       else {
          $("#module-navbar").remove();
@@ -200,7 +201,7 @@ $(document).ready(function () {
             );
          };
 
-         var texts = $module_text.find('p, div, ol, ul, h1, h2, h3');
+         var texts = $module_text.children().find('p, div, ol, ul, h1, h2, h3');
          texts.each(function (ix, text) {
             $text = $(this);
             if ($.inArray($text.prop('tagName').toLowerCase(), section_tags) === -1) {
@@ -208,15 +209,25 @@ $(document).ready(function () {
             }
          });
 
+         var module_text_text_cookie = $module_text.prop('id') + "-text";
+
+         if (Cookies.get(module_text_text_cookie) !== undefined) {
+            var text = document.getElementById(Cookies.get(module_text_text_cookie));
+            if (text !== null) {
+               $module_text.scrollTop(text.offsetTop);
+            }
+         }
+
          return function () {
             var module_top = top_nav_height();
             // TODO: Handle if there is visible element
             var first_visible = _.find(texts, (function (el) {
                return isElementInViewport(el, module_top);
             }));
+            Cookies.set(module_text_text_cookie, first_visible.id);
          };
       };
-      $module_text.on('scroll', texts_in_viewport());
+      $module_text.on('scroll', _.debounce(texts_in_viewport(), 100));
    };
 
    /*

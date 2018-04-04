@@ -212,7 +212,6 @@ div#instrument .item-error {
 
 .module-text {
     position: relative;
-    /*margin-top: .5rem;*/
     overflow-y: scroll;
 }
 
