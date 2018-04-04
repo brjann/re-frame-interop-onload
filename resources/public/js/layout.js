@@ -156,7 +156,6 @@ $(document).ready(function () {
             //Cookies.set(module_section_cookie, section);
          };
 
-         // TODO: Too far left
          // TODO: Wrong order of resizing
          // TODO: No position indicator if only 100%
 
@@ -281,13 +280,19 @@ $(document).ready(function () {
       }
    };
 
+
+   /*
+    -----------------------------
+      MODULE POSITION INDICATOR
+    –----------------------------
+   */
+
    var init_position_indicator = function ($module_text) {
       var $pi = $('#position-indicator');
       var place_pi = function () {
-         var m_left = $module_text.offset().left;
          var m_width = $module_text.innerWidth();
          var pi_width = $('#position-indicator').outerWidth();
-         $pi.offset({left: m_left + m_width - pi_width, top: 0});
+         $pi.offset({left: m_width - pi_width, top: 0});
       };
 
       var pi_shown = false;
