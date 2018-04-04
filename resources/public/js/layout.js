@@ -337,7 +337,7 @@ $(document).ready(function () {
          console.log(viewer_height)
          if (text_height > viewer_height) {
             var scroll_pos = $module_text[0].scrollTop;
-            var perc = Math.round((scroll_pos / (text_height - viewer_height)) * 100);
+            var perc = Math.min(Math.round((scroll_pos / (text_height - viewer_height)) * 100), 100);
             $pi.text(perc + ' %');
             if (first_showing) {
                flash_pi();
