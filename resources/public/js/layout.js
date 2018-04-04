@@ -5,7 +5,6 @@ $(document).ready(function () {
     ----------------------------
     */
    var computed_top_nav_height = -1;
-   // TODO: Move resize title here
 
    var recompute_top_nav_height = function () {
       // If the toggler is expanded in mobile view, then the main_nav height
@@ -156,7 +155,6 @@ $(document).ready(function () {
             //Cookies.set(module_section_cookie, section);
          };
 
-         // TODO: Wrong order of resizing
          // TODO: No position indicator if only 100%
 
          $module_text.scrollspy({target: '#module-navbar'});
@@ -330,18 +328,26 @@ $(document).ready(function () {
          var module_content = document.getElementById('module-content');
          var text_height = $(module_content).height();
          var viewer_height = $module_text.height();
-         var scroll_pos = $module_text[0].scrollTop;
-         var perc = Math.round((scroll_pos / (text_height - viewer_height)) * 100);
-         $pi.text(perc + ' %');
-         if (first_showing) {
-            flash_pi();
+         console.log(text_height);
+         console.log(viewer_height)
+         if (text_height > viewer_height) {
+            var scroll_pos = $module_text[0].scrollTop;
+            var perc = Math.round((scroll_pos / (text_height - viewer_height)) * 100);
+            $pi.text(perc + ' %');
+            if (first_showing) {
+               flash_pi();
+            }
+            else {
+               show_pi();
+            }
          }
          else {
-            show_pi();
+            $pi.css('opacity', 0);
          }
       };
 
       place_pi();
+      update_pi();
       $(window).resize(place_pi);
       // Strange delay of last execution if using high throttle time (like 50)
       $module_text.on('scroll', _.throttle(update_pi, 10));
