@@ -26,10 +26,14 @@ $(document).ready(function () {
       };
 
 
-      var selectors = ['#context-nav', '#dropdown-toggler'];
-      computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, s) {
-         element = $(s + ':visible');
-         return height + (element.length ? element.outerHeight(true) : 0);
+      var selectors = [['#context-nav'], ['#dropdown-toggler', 15]];
+      computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, el) {
+         element = $(el[0] + ':visible');
+         var element_height =
+            (element.length ?
+               element.outerHeight(true) + (el[1] ? el[1] : 0)
+               : 0);
+         return height + element_height;
       }, 0);
    };
 
