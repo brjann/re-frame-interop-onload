@@ -12,28 +12,32 @@ $(document).ready(function () {
       // padding and margin from the main-nav.
       var top_bar_height = function () {
          var toggler_height = $('#navbar-toggler:visible').outerHeight(true);
-         var main_nav = $('#main-nav');
+         var $main_nav = $('#main-nav');
 
          if (toggler_height > 0) {
             var margins = ['padding-top', 'padding-bottom', 'margin-top', 'margin-bottom'];
             var heights = _.reduce(margins, function (height, margin) {
-               return height + parseInt(main_nav.css(margin));
+               return height + parseInt($main_nav.css(margin));
             }, 0);
             return toggler_height + heights;
          }
-         return $('#main-nav').outerHeight(true);
+         else {
+            return $main_nav.outerHeight(true);
+         }
       };
 
       // Margin-bottom cannot be added to the module navigator so this is a workaround
       var selectors = [['#context-nav'], ['#module-nav-dropdown-toggler', 15]];
-      computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, el) {
-         element = $(el[0] + ':visible');
-         var element_height =
-            (element.length ?
-               element.outerHeight(true) + (el[1] ? el[1] : 0)
-               : 0);
-         return height + element_height;
-      }, 0);
+      computed_top_nav_height = top_bar_height() +
+         _.reduce(selectors,
+            function (height, el) {
+               element = $(el[0] + ':visible');
+               var element_height =
+                  (element.length ?
+                     element.outerHeight(true) + (el[1] ? el[1] : 0)
+                     : 0);
+               return height + element_height;
+            }, 0);
    };
 
    var top_nav_height = function () {
@@ -89,89 +93,145 @@ $(document).ready(function () {
         NAVIGATION MENU
     -------------------------
    */
-
    var section_tags = ['h1'];
 
-   var create_page_top = function ($module_content) {
-      // Locate the first header and check if there is text above it,
-      // if so, add an invisible header to the top of the page.
-      // This way, it's possible to scroll to the top of the page
-      // using scrollspy and the top position is saved.
-      $module_content.find(section_tags.join(',')).first().each(function () {
-         var header = $(this);
-         if (header.prev().length) {
-            header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
-         }
-      });
-   };
-   var init_module_sections = function ($module_content) {
-      var counter = 0;
-      var drop_down = $('#module-navbar .dropdown-menu');
-      var module_text_id = $module_text.prop('id');
+   var init_module_navigation = function ($module_text) {
 
-      $module_content.find(section_tags.join(',')).each(function () {
-         var header = $(this);
-         var title = '';
-         var tag = header.prop('tagName').toLowerCase();
-         if ($.inArray(tag, section_tags) >= 0) {
-            counter++;
-            var section_id = module_text_id + '-s' + counter;
-            header.prop('id', section_id);
-            if (header.data('label') === undefined) {
-               header.data('label', header.text());
+      /*
+       -------------------------
+         CREATE EMPTY PAGE TOP
+       -------------------------
+      */
+
+      var create_page_top = function ($module_content) {
+         // Locate the first header and check if there is text above it,
+         // if so, add an invisible header to the top of the page.
+         // This way, it's possible to scroll to the top of the page
+         // using scrollspy and the top position is saved.
+         $module_content.find(section_tags.join(',')).first().each(function () {
+            var header = $(this);
+            if (header.prev().length) {
+               header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
             }
-            title = $(sprintf('<a class="dropdown-item text-truncate" href="#%s" onclick="return scroll_to_section(\'%s\');">%s</a>', section_id, section_id, header.data('label')));
-            drop_down.append(title);
-         }
-      });
-      return counter;
-   };
+         });
+      };
 
-   var init_module_scrollspy = function ($module_text, sections_count) {
-      if (sections_count > 0) {
-         var set_section_label = function (label) {
-            $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
-         };
+      /*
+       -------------------------
+           MODULE SECTIONS
+       -------------------------
+      */
 
-         var set_navigator_label_width = function () {
-            var section_label = $('#module-section-label');
-            var container_width = $('#module-navbar').width();
-            section_label.width(container_width - section_label.position().left);
-         };
+      var init_module_sections = function ($module_content) {
+         var counter = 0;
+         var drop_down = $('#module-navbar .dropdown-menu');
+         var module_text_id = $module_text.prop('id');
 
-         //var module_section_cookie = $module_text.prop('id') + "-section";
-
-         var on_scrollspy = function () {
-            var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
-            if (section.lengt) {
-
+         $module_content.find(section_tags.join(',')).each(function () {
+            var header = $(this);
+            var title = '';
+            var tag = header.prop('tagName').toLowerCase();
+            if ($.inArray(tag, section_tags) >= 0) {
+               counter++;
+               var section_id = module_text_id + '-s' + counter;
+               header.prop('id', section_id);
+               if (header.data('label') === undefined) {
+                  header.data('label', header.text());
+               }
+               title = $(sprintf('<a class="dropdown-item text-truncate" href="#%s" onclick="return scroll_to_section(\'%s\');">%s</a>', section_id, section_id, header.data('label')));
+               drop_down.append(title);
             }
-            set_section_label($(section).data('label'));
-            //Cookies.set(module_section_cookie, section);
-         };
+         });
+         return counter;
+      };
 
-         $module_text.scrollspy({target: '#module-navbar'});
+      /*
+       -------------------------
+           MODULE SCROLLSPY
+       -------------------------
+      */
 
-         $(window).resize(set_navigator_label_width);
-         set_navigator_label_width();
+      var init_module_scrollspy = function ($module_text, sections_count) {
+         if (sections_count > 0) {
+            var set_section_label = function (label) {
+               $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
+            };
 
-         $(window).on('activate.bs.scrollspy', on_scrollspy);
+            var set_navigator_label_width = function () {
+               var section_label = $('#module-section-label');
+               var container_width = $('#module-navbar').width();
+               section_label.width(container_width - section_label.position().left);
+            };
 
-         set_section_label($('#module-content').find(":header").first().data('label'));
+            //var module_section_cookie = $module_text.prop('id') + "-section";
 
-         /*
-         if (Cookies.get(module_section_cookie) !== undefined) {
-            var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
-            if (section !== null) {
-               $module_text.scrollTop(section.offsetTop);
+            var on_scrollspy = function () {
+               var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
+               if (section.lengt) {
+
+               }
+               set_section_label($(section).data('label'));
+               //Cookies.set(module_section_cookie, section);
+            };
+
+            $module_text.scrollspy({target: '#module-navbar'});
+
+            $(window).resize(set_navigator_label_width);
+            set_navigator_label_width();
+
+            $(window).on('activate.bs.scrollspy', on_scrollspy);
+
+            set_section_label($('#module-content').find(":header").first().data('label'));
+
+            /*
+            if (Cookies.get(module_section_cookie) !== undefined) {
+               var section = document.getElementById(Cookies.get(module_section_cookie).substr(1));
+               if (section !== null) {
+                  $module_text.scrollTop(section.offsetTop);
+               }
             }
+            */
          }
-         */
-      }
-      else {
-         $("#module-navbar").remove();
-         recompute_top_nav_height();
-      }
+         else {
+            $("#module-navbar").remove();
+            recompute_top_nav_height();
+         }
+      };
+
+      /*
+       -------------------------
+         NAVIGATION RESIZER
+       -------------------------
+      */
+
+      var init_navigation_dropdown_resizer = function () {
+         var dropdown = $('#module-navbar .dropdown');
+         if (dropdown.length) {
+            var dropdown_resizer = function () {
+               var dropdown_menu = $('#module-navbar .dropdown-menu');
+               var height = $(window).height() - top_nav_height() - 20;
+               dropdown_menu.width(dropdown.width() - 2);
+               dropdown_menu.css('max-height', height + 'px');
+            };
+            dropdown.on('shown.bs.dropdown', dropdown_resizer);
+            $(window).resize(dropdown_resizer);
+            dropdown_resizer();
+         }
+      };
+
+      /*
+       -------------------------------
+         INVOKE NAVIGATION FUNCTIONS
+       -------------------------------
+      */
+
+      (function () {
+         var $module_content = $('#module-content');
+         create_page_top($module_content);
+         var sections_count = init_module_sections($module_content);
+         init_module_scrollspy($module_text, sections_count);
+         init_navigation_dropdown_resizer();
+      })();
    };
 
    /*
@@ -268,28 +328,6 @@ $(document).ready(function () {
    };
 
    /*
-    -------------------------
-       NAVIGATION RESIZER
-    -------------------------
-   */
-
-   var init_navigation_dropdown_resizer = function () {
-      var dropdown = $('#module-navbar .dropdown');
-      if (dropdown.length) {
-         var dropdown_resizer = function () {
-            var dropdown_menu = $('#module-navbar .dropdown-menu');
-            var height = $(window).height() - top_nav_height() - 20;
-            dropdown_menu.width(dropdown.width() - 2);
-            dropdown_menu.css('max-height', height + 'px');
-         };
-         dropdown.on('shown.bs.dropdown', dropdown_resizer);
-         $(window).resize(dropdown_resizer);
-         dropdown_resizer();
-      }
-   };
-
-
-   /*
     -----------------------------
       MODULE POSITION INDICATOR
     –----------------------------
@@ -368,23 +406,21 @@ $(document).ready(function () {
     -------------------------
    */
 
-   add_markdown_classes();
-   init_title_resizer();
-   var $module_text = $('.module-text');
-   if ($module_text.length) {
-      var $module_content = $('#module-content');
-      create_page_top($module_content);
-      var sections_count = init_module_sections($module_content);
-      init_module_scrollspy($module_text, sections_count);
-      init_top_margin_resizer();
-      init_navigation_dropdown_resizer();
-      init_module_resizer($module_text);
-      init_module_position_saver($module_text);
-      init_position_indicator($module_text);
-   }
-   else {
-      init_top_margin_resizer();
-   }
+   (function () {
+      add_markdown_classes();
+      init_title_resizer();
+      var $module_text = $('.module-text');
+      if ($module_text.length) {
+         init_module_navigation($module_text);
+         init_top_margin_resizer();
+         init_module_resizer($module_text);
+         init_module_position_saver($module_text);
+         init_position_indicator($module_text);
+      }
+      else {
+         init_top_margin_resizer();
+      }
+   })();
 });
 
 function scroll_to_section(section_id) {
