@@ -87,12 +87,14 @@ $(document).ready(function () {
     -------------------------
    */
 
+   var section_tags = ['h1'];
+
    var create_page_top = function ($module_text) {
       // Locate the first header and check if there is text above it,
       // if so, add an invisible header to the top of the page.
       // This way, it's possible to scroll to the top of the page
       // using scrollspy and the top position is saved.
-      $module_text.find('h1').first().each(function () {
+      $module_text.find(section_tags).first().each(function () {
          var header = $(this);
          if (header.prev().length) {
             header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
@@ -104,12 +106,12 @@ $(document).ready(function () {
       var drop_down = $('#module-navbar .dropdown-menu');
       var module_text_id = $module_text.prop('id');
 
-      $module_text.find('h1').each(function () {
+      $module_text.find(section_tags.join(',')).each(function () {
          var header = $(this);
          var title = '';
          // Unnecessary check but keeping if heading level should be custom
          var tag = header.prop('tagName').toLowerCase();
-         if (tag === 'h1') {
+         if ($.inArray(tag, section_tags) >= 0) {
             counter++;
             var section_id = module_text_id + '-s' + counter;
             header.prop('id', section_id);
@@ -200,7 +202,10 @@ $(document).ready(function () {
 
          var texts = $module_text.find('p, div, ol, ul, h1, h2, h3');
          texts.each(function (ix, text) {
-            //$(text).prop('id', 'text-' + module_text_id + '-' + ix);
+            $text = $(this);
+            if ($.inArray($text.prop('tagName').toLowerCase(), section_tags) === -1) {
+               $(text).prop('id', 'text-' + module_text_id + '-' + ix);
+            }
          });
 
          return function () {
