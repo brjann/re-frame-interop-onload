@@ -150,8 +150,6 @@ $(document).ready(function () {
             //Cookies.set(module_section_cookie, section);
          };
 
-         // TODO: No position indicator if only 100%
-
          $module_text.scrollspy({target: '#module-navbar'});
 
          $(window).resize(set_navigator_label_width);
@@ -372,17 +370,20 @@ $(document).ready(function () {
 
    add_markdown_classes();
    init_title_resizer();
-   init_top_margin_resizer();
-   init_navigation_dropdown_resizer();
    var $module_text = $('.module-text');
    if ($module_text.length) {
       var $module_content = $('#module-content');
       create_page_top($module_content);
       var sections_count = init_module_sections($module_content);
       init_module_scrollspy($module_text, sections_count);
+      init_top_margin_resizer();
+      init_navigation_dropdown_resizer();
       init_module_resizer($module_text);
       init_module_position_saver($module_text);
       init_position_indicator($module_text);
+   }
+   else {
+      init_top_margin_resizer();
    }
 });
 
