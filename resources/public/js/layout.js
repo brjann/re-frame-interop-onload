@@ -26,7 +26,7 @@ $(document).ready(function () {
       };
 
 
-      var selectors = [['#context-nav'], ['#dropdown-toggler', 15]];
+      var selectors = [['#context-nav'], ['#module-nav-dropdown-toggler', 15]];
       computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, el) {
          element = $(el[0] + ':visible');
          var element_height =
