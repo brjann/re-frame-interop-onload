@@ -1,12 +1,13 @@
 $(document).ready(function () {
    /*
-    --------------
-    MODULES
-    --------------
+    ----------------------------
+      COMPUTING TOP NAV HEIGHT
+    ----------------------------
     */
+   var computed_top_nav_height = -1;
+   // TODO: Move resize title here
 
-   var top_nav_height = function () {
-
+   var recompute_top_nav_height = function () {
       // If the toggler is expanded in mobile view, then the main_nav height
       // is too large. Therefore we fall back to the toggler height plus the
       // padding and margin from the main-nav.
@@ -24,13 +25,27 @@ $(document).ready(function () {
          return $('#main-nav').outerHeight(true);
       };
 
-      var selectors = ['#context-nav', '#dropdown-toggler'];
 
-      return top_bar_height() + _.reduce(selectors, function (height, s) {
+      var selectors = ['#context-nav', '#dropdown-toggler'];
+      computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, s) {
          element = $(s + ':visible');
          return height + (element.length ? element.outerHeight(true) : 0);
       }, 0);
    };
+
+   var top_nav_height = function () {
+      if (computed_top_nav_height === -1) {
+         recompute_top_nav_height();
+      }
+      return computed_top_nav_height;
+   };
+   $(window).resize(recompute_top_nav_height);
+
+   /*
+    -------------------------
+          TITLE RESIZING
+    -------------------------
+   */
 
    var resize_title = function () {
       if ($('#page-title').length) {
@@ -73,7 +88,7 @@ $(document).ready(function () {
       });
    };
 
-   var init_headers = function (module_text) {
+   var init_module_headers = function (module_text) {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
 
@@ -95,7 +110,7 @@ $(document).ready(function () {
       return counter;
    };
 
-   var init_module_navbar = function (module_text, headers_count) {
+   var init_module_scrollspy = function (module_text, headers_count) {
       if (headers_count > 0) {
          var set_section_label = function (label) {
             $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
@@ -121,7 +136,6 @@ $(document).ready(function () {
          };
 
          module_text.scrollspy({target: '#module-navbar'});
-
          $(window).resize(set_module_height);
          set_module_height();
 
@@ -140,6 +154,50 @@ $(document).ready(function () {
       else {
          $("#module-navbar").remove();
       }
+   };
+
+   /*
+    -------------------------
+      MODULE POSITION SAVER
+    -------------------------
+   */
+
+   var init_module_position_saver = function (module_text) {
+      var texts_in_viewport = function () {
+         var isElementInViewport = function (el, module_top) {
+            //special bonus for those using jQuery
+            if (typeof jQuery === "function" && el instanceof jQuery) {
+               el = el[0];
+            }
+
+            var rect = el.getBoundingClientRect();
+
+            return (
+               // within
+               (rect.top >= module_top && rect.bottom <= $(window).height()) ||
+               // bottom showing
+               (rect.bottom >= module_top && rect.bottom <= $(window).height()) ||
+               // top showing
+               (rect.top >= module_top && rect.top <= $(window).height()) ||
+               // filling all
+               (rect.top <= module_top && rect.bottom >= $(window).height())
+            );
+         };
+
+         var texts = module_text.find('p, div, ol, ul, h1, h2, h3');
+         texts.each(function (ix, text) {
+            //text.data;
+         });
+
+         return function () {
+            var module_top = top_nav_height();
+            // TODO: Handle if there is visible element
+            var first_visible = _.find(texts, (function (el) {
+               return isElementInViewport(el, module_top);
+            }));
+         };
+      };
+      module_text.on('scroll', texts_in_viewport());
    };
 
    var resize_top_margin = function () {
@@ -175,26 +233,27 @@ $(document).ready(function () {
    var module_text = $('#module-text');
    if (module_text.length) {
       create_page_top(module_text);
-      var headers_count = init_headers(module_text);
-      init_module_navbar(module_text, headers_count);
+      var headers_count = init_module_headers(module_text);
+      init_module_scrollspy(module_text, headers_count);
+      init_module_position_saver(module_text);
    }
    resize_top_margin();
    resize_dropdown();
 });
 
 function scroll_to_section(section_id) {
-	var module_text = $('#module-text');
-	var section = document.getElementById(section_id);
-	// Not supported by all browsers it seems
-	//section.scrollIntoView();
-	if (section !== null) {
-		module_text.scrollTop(section.offsetTop);
-	}
-	return false;
+   var module_text = $('#module-text');
+   var section = document.getElementById(section_id);
+   // Not supported by all browsers it seems
+   //section.scrollIntoView();
+   if (section !== null) {
+      module_text.scrollTop(section.offsetTop);
+   }
+   return false;
 }
 
 function confirm_logout() {
-	if (confirm(text_logout_confirm)) {
-		window.location.href = "/logout";
-	}
+   if (confirm(text_logout_confirm)) {
+      window.location.href = "/logout";
+   }
 }
