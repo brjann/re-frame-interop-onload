@@ -99,22 +99,24 @@ $(document).ready(function () {
          }
       });
    };
-   var init_module_sections = function (module_text) {
+   var init_module_sections = function ($module_text) {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
+      var module_text_id = $module_text.prop('id');
 
-      module_text.find('h1').each(function () {
+      $module_text.find('h1').each(function () {
          var header = $(this);
          var title = '';
          // Unnecessary check but keeping if heading level should be custom
          var tag = header.prop('tagName').toLowerCase();
          if (tag === 'h1') {
             counter++;
-            header.attr('id', 's' + counter);
+            var section_id = module_text_id + '-s' + counter;
+            header.prop('id', section_id);
             if (header.data('label') === undefined) {
                header.data('label', header.text());
             }
-            title = $(sprintf('<a class="dropdown-item text-truncate" href="#s%s" onclick="return scroll_to_section(\'s%s\');">%s</a>', counter, counter, header.data('label')));
+            title = $(sprintf('<a class="dropdown-item text-truncate" href="#%s" onclick="return scroll_to_section(\'%s\');">%s</a>', section_id, section_id, header.data('label')));
             drop_down.append(title);
          }
       });
