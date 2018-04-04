@@ -378,8 +378,13 @@ $(document).ready(function () {
          var viewer_height = $module_text.height();
          if (text_height > viewer_height) {
             var scroll_pos = $module_text[0].scrollTop;
+            var pages = Math.floor(text_height / viewer_height) + 1;
+            var page = Math.min(Math.floor((scroll_pos + 10) / text_height * pages) + 1, pages);
+            $pi.text(page + '/' + pages);
+            /*
             var perc = Math.min(Math.round((scroll_pos / (text_height - viewer_height)) * 100), 100);
             $pi.text(perc + ' %');
+            */
             if (first_showing) {
                flash_pi();
             }

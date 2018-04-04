@@ -223,6 +223,7 @@ div#instrument .item-error {
 .module-text {
     position: relative;
     overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
 }
 
 #module-navbar .navbar-nav .navbar-text, .module .navbar-nav .nav-link {
@@ -254,7 +255,7 @@ div#instrument .item-error {
 }
 
 #module-navbar .dropdown-menu {
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 /*

@@ -238,7 +238,7 @@
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
       wrap-auth
-      wrap-reload-headers
+      ;;wrap-reload-headers
       wrap-webjars
       wrap-flash
       (wrap-mw-fn #'request-state-session-info)
@@ -257,6 +257,8 @@
 
           (dissoc :session)))
       wrap-context
+      ;; TODO: Disable and enable above
+      wrap-reload-headers
       (wrap-mw-fn #'embedded-iframe)                        ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'internal-error)
       (wrap-mw-fn #'request-state)
