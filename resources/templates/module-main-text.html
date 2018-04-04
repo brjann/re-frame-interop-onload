@@ -26,8 +26,9 @@
 <div class="module" id="module-{{module-id}}">
     <div id="{{content-id}}" data-data-name="{{data-name}}" class="treatment-content module-text form">
         <!--<div id="position-indicator" class="position-fixed badge badge-pill badge-primary">XX %</div>-->
-        <div class="position-fixed"><h2><span id="position-indicator" class="badge badge-pill badge-primary hidden">XX %>
-        </h2></span></div>
+        <div class="position-fixed">
+            <span id="position-indicator" class="badge badge-pill badge-primary hidden">XX %</span>
+        </div>
         {% include "module-markdown-snip.html" %}
         <form method="post" class="content-submitter" name="contentform" data-on-success="main_text_save_complete"
               onsubmit="return content_submit();">

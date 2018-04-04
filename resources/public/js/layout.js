@@ -149,9 +149,16 @@ $(document).ready(function () {
 
          var on_scrollspy = function () {
             var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
+            if (section.lengt) {
+
+            }
             set_section_label($(section).data('label'));
             //Cookies.set(module_section_cookie, section);
          };
+
+         // TODO: Too far left
+         // TODO: Wrong order of resizing
+         // TODO: No position indicator if only 100%
 
          $module_text.scrollspy({target: '#module-navbar'});
          $(window).resize(set_module_height);
@@ -159,7 +166,7 @@ $(document).ready(function () {
 
          $(window).on('activate.bs.scrollspy', on_scrollspy);
 
-         set_section_label($(".module-text").find(":header").first().data('label'));
+         set_section_label($('#module-content').find(":header").first().data('label'));
 
          /*
          if (Cookies.get(module_section_cookie) !== undefined) {
@@ -223,11 +230,12 @@ $(document).ready(function () {
 
          return function () {
             var module_top = top_nav_height();
-            // TODO: Handle if there is visible element
             var first_visible = _.find(texts, (function (el) {
                return isElementInViewport(el, module_top);
             }));
-            Cookies.set(module_text_text_cookie, first_visible.id);
+            if (first_visible !== undefined) {
+               Cookies.set(module_text_text_cookie, first_visible.id);
+            }
          };
       };
       $module_text.on('scroll', _.debounce(texts_in_viewport(), 100));
