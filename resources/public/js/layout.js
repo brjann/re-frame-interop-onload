@@ -133,15 +133,18 @@ $(document).ready(function () {
             $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
          };
 
+         var set_navigator_label_width = function () {
+            var section_label = $('#module-section-label');
+            var container_width = $('#module-navbar').width();
+            section_label.width(container_width - section_label.position().left);
+         };
+
          var set_module_height = function () {
             $('.module-text').each(
                function () {
                   $(this).height($(window).height() - top_nav_height());
                }
             );
-            var section_label = $('#module-section-label');
-            var container_width = $('#module-navbar').width();
-            section_label.width(container_width - section_label.position().left);
          };
 
          //var module_section_cookie = $module_text.prop('id') + "-section";
@@ -158,6 +161,11 @@ $(document).ready(function () {
          // TODO: No position indicator if only 100%
 
          $module_text.scrollspy({target: '#module-navbar'});
+
+         $(window).resize(set_navigator_label_width);
+         set_navigator_label_width();
+
+
          $(window).resize(set_module_height);
          set_module_height();
 
