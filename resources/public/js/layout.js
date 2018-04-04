@@ -175,6 +175,12 @@ $(document).ready(function () {
       }
    };
 
+   /*
+    -------------------------
+         MODULE RESIZER
+    -------------------------
+   */
+
    var init_module_resizer = function ($module_text) {
       var set_module_height = function () {
          $module_text.height($(window).height() - top_nav_height());
@@ -333,8 +339,6 @@ $(document).ready(function () {
          var module_content = document.getElementById('module-content');
          var text_height = $(module_content).height();
          var viewer_height = $module_text.height();
-         console.log(text_height);
-         console.log(viewer_height)
          if (text_height > viewer_height) {
             var scroll_pos = $module_text[0].scrollTop;
             var perc = Math.min(Math.round((scroll_pos / (text_height - viewer_height)) * 100), 100);
