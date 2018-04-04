@@ -68,12 +68,24 @@ $(document).ready(function () {
       }
    };
 
+   /*
+    -------------------------
+        MARKDOWN CLASSES
+    -------------------------
+   */
+
    var add_markdown_classes = function () {
       var markdowns = $('.markdown');
       markdowns.find('img').addClass('img-fluid');
       markdowns.find('table').addClass('table');
       markdowns.find('textarea').addClass('form-control');
    };
+
+   /*
+    -------------------------
+        NAVIGATION MENU
+    -------------------------
+   */
 
    var create_page_top = function (module_text) {
       // Locate the first header and check if there is text above it,
@@ -87,7 +99,6 @@ $(document).ready(function () {
          }
       });
    };
-
    var init_module_headers = function (module_text) {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
@@ -200,6 +211,12 @@ $(document).ready(function () {
       module_text.on('scroll', texts_in_viewport());
    };
 
+   /*
+    -------------------------
+       TOP MARGIN RESIZER
+    -------------------------
+   */
+
    var resize_top_margin = function () {
       if ($('#top-nav').length) {
          var set_top_margin = function () {
@@ -213,7 +230,13 @@ $(document).ready(function () {
       }
    };
 
-   var resize_dropdown = function () {
+   /*
+    -------------------------
+       NAVIGATION RESIZER
+    -------------------------
+   */
+
+   var resize_navigation_dropdown = function () {
       var dropdown = $('#module-navbar .dropdown');
       if (dropdown.length) {
          var dropdown_resizer = function () {
@@ -228,6 +251,12 @@ $(document).ready(function () {
       }
    };
 
+   /*
+    -------------------------
+     INVOKE LAYOUT FUNCTIONS
+    -------------------------
+   */
+
    add_markdown_classes();
    resize_title();
    var module_text = $('.module-text');
@@ -238,7 +267,7 @@ $(document).ready(function () {
       init_module_position_saver(module_text);
    }
    resize_top_margin();
-   resize_dropdown();
+   resize_navigation_dropdown();
 });
 
 function scroll_to_section(section_id) {
