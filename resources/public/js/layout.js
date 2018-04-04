@@ -25,7 +25,7 @@ $(document).ready(function () {
          return $('#main-nav').outerHeight(true);
       };
 
-
+      // Margin-bottom cannot be added to the module navigator so this is a workaround
       var selectors = [['#context-nav'], ['#module-nav-dropdown-toggler', 15]];
       computed_top_nav_height = top_bar_height() + _.reduce(selectors, function (height, el) {
          element = $(el[0] + ':visible');
