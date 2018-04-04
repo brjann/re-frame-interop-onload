@@ -99,7 +99,7 @@ $(document).ready(function () {
          }
       });
    };
-   var init_module_headers = function (module_text) {
+   var init_module_sections = function (module_text) {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
 
@@ -121,8 +121,8 @@ $(document).ready(function () {
       return counter;
    };
 
-   var init_module_scrollspy = function ($module_text, headers_count) {
-      if (headers_count > 0) {
+   var init_module_scrollspy = function ($module_text, sections_count) {
+      if (sections_count > 0) {
          var set_section_label = function (label) {
             $("#module-section-label").html('<i class="fa fa-caret-down" aria-hidden="true"></i>&nbsp;' + label);
          };
@@ -138,7 +138,7 @@ $(document).ready(function () {
             section_label.width(container_width - section_label.position().left);
          };
 
-         var module_section_cookie = $("#module-navbar").data('module-id') + "-section";
+         var module_section_cookie = $module_text.prop('id') + "-section";
 
          var on_scrollspy = function () {
             var section = $("#module-navbar").find(".dropdown-item.active").attr("href");
@@ -174,6 +174,7 @@ $(document).ready(function () {
    */
 
    var init_module_position_saver = function ($module_text) {
+      var module_text_id = $module_text.prop('id');
       var texts_in_viewport = function () {
          var isElementInViewport = function (el, module_top) {
             //special bonus for those using jQuery
@@ -197,7 +198,7 @@ $(document).ready(function () {
 
          var texts = $module_text.find('p, div, ol, ul, h1, h2, h3');
          texts.each(function (ix, text) {
-            //$(text).prop('id', 'text' + ix);
+            //$(text).prop('id', 'text-' + module_text_id + '-' + ix);
          });
 
          return function () {
@@ -262,8 +263,8 @@ $(document).ready(function () {
    var $module_text = $('.module-text');
    if ($module_text.length) {
       create_page_top($module_text);
-      var headers_count = init_module_headers($module_text);
-      init_module_scrollspy($module_text, headers_count);
+      var sections_count = init_module_sections($module_text);
+      init_module_scrollspy($module_text, sections_count);
       init_module_position_saver($module_text);
    }
    resize_top_margin();
