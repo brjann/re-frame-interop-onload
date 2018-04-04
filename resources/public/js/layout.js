@@ -50,7 +50,7 @@ $(document).ready(function () {
     -------------------------
    */
 
-   var resize_title = function () {
+   var init_title_resizer = function () {
       if ($('#page-title').length) {
          var set_title_width = function () {
             var toggler = $("#navbar-toggler:visible");
@@ -172,6 +172,7 @@ $(document).ready(function () {
       }
       else {
          $("#module-navbar").remove();
+         recompute_top_nav_height();
       }
    };
 
@@ -255,7 +256,7 @@ $(document).ready(function () {
     -------------------------
    */
 
-   var resize_top_margin = function () {
+   var init_top_margin_resizer = function () {
       if ($('#top-nav').length) {
          var set_top_margin = function () {
             // It seems that it must be padding-top because margin-top seems to be considered a scrollable area
@@ -274,7 +275,7 @@ $(document).ready(function () {
     -------------------------
    */
 
-   var resize_navigation_dropdown = function () {
+   var init_navigation_dropdown_resizer = function () {
       var dropdown = $('#module-navbar .dropdown');
       if (dropdown.length) {
          var dropdown_resizer = function () {
@@ -370,9 +371,9 @@ $(document).ready(function () {
    */
 
    add_markdown_classes();
-   resize_title();
-   resize_top_margin();
-   resize_navigation_dropdown();
+   init_title_resizer();
+   init_top_margin_resizer();
+   init_navigation_dropdown_resizer();
    var $module_text = $('.module-text');
    if ($module_text.length) {
       var $module_content = $('#module-content');
