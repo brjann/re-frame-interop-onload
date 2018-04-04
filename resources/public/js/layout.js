@@ -93,27 +93,26 @@ $(document).ready(function () {
 
    var section_tags = ['h1'];
 
-   var create_page_top = function ($module_text) {
+   var create_page_top = function ($module_content) {
       // Locate the first header and check if there is text above it,
       // if so, add an invisible header to the top of the page.
       // This way, it's possible to scroll to the top of the page
       // using scrollspy and the top position is saved.
-      $module_text.find(section_tags).first().each(function () {
+      $module_content.find(section_tags.join(',')).first().each(function () {
          var header = $(this);
          if (header.prev().length) {
             header.parent().prepend('<h1 data-label="- ' + text_page_top + ' -"></h1>');
          }
       });
    };
-   var init_module_sections = function ($module_text) {
+   var init_module_sections = function ($module_content) {
       var counter = 0;
       var drop_down = $('#module-navbar .dropdown-menu');
       var module_text_id = $module_text.prop('id');
 
-      $module_text.find(section_tags.join(',')).each(function () {
+      $module_content.find(section_tags.join(',')).each(function () {
          var header = $(this);
          var title = '';
-         // Unnecessary check but keeping if heading level should be custom
          var tag = header.prop('tagName').toLowerCase();
          if ($.inArray(tag, section_tags) >= 0) {
             counter++;
@@ -205,7 +204,7 @@ $(document).ready(function () {
             );
          };
 
-         var texts = $module_text.children().find('p, div, ol, ul, h1, h2, h3');
+         var texts = $('#module-content').children().find('p, div, ol, ul, h1, h2, h3');
          texts.each(function (ix, text) {
             $text = $(this);
             if ($.inArray($text.prop('tagName').toLowerCase(), section_tags) === -1) {
@@ -274,6 +273,66 @@ $(document).ready(function () {
       }
    };
 
+   var init_position_indicator = function ($module_text) {
+      var $pi = $('#position-indicator');
+      var place_pi = function () {
+         var m_left = $module_text.offset().left;
+         var m_width = $module_text.innerWidth();
+         var pi_width = $('#position-indicator').outerWidth();
+         $pi.offset({left: m_left + m_width - pi_width, top: 0});
+      };
+
+      var pi_shown = false;
+      var show_pi = function () {
+         if (!pi_shown) {
+            pi_shown = true;
+            $pi.stop();
+            $pi.fadeIn(100);
+         }
+      };
+
+      var hide_pi = function () {
+         if (pi_shown) {
+            pi_shown = false;
+            $pi.fadeOut(500);
+         }
+      };
+
+      var flashing = false;
+      var flash_pi = function () {
+         if (flashing) return;
+         flashing = true;
+         $pi.fadeIn(100);
+         setTimeout(function () {
+            first_showing = false;
+            flashing = false;
+            $pi.fadeOut(500);
+         }, 2000);
+      };
+
+      var first_showing = true;
+      var update_pi = function () {
+         var module_content = document.getElementById('module-content');
+         var text_height = $(module_content).height();
+         var viewer_height = $module_text.height();
+         var scroll_pos = $module_text[0].scrollTop;
+         var perc = Math.round((scroll_pos / (text_height - viewer_height)) * 100);
+         $pi.text(perc + ' %');
+         if (first_showing) {
+            flash_pi();
+         }
+         else {
+            show_pi();
+         }
+      };
+
+      place_pi();
+      $(window).resize(place_pi);
+      // Strange delay of last execution if using high throttle time (like 50)
+      $module_text.on('scroll', _.throttle(update_pi, 10));
+      $module_text.on('scroll', _.debounce(hide_pi, 300));
+   };
+
    /*
     -------------------------
      INVOKE LAYOUT FUNCTIONS
@@ -284,10 +343,12 @@ $(document).ready(function () {
    resize_title();
    var $module_text = $('.module-text');
    if ($module_text.length) {
-      create_page_top($module_text);
-      var sections_count = init_module_sections($module_text);
+      var $module_content = $('#module-content');
+      create_page_top($module_content);
+      var sections_count = init_module_sections($module_content);
       init_module_scrollspy($module_text, sections_count);
       init_module_position_saver($module_text);
+      init_position_indicator($module_text);
    }
    resize_top_margin();
    resize_navigation_dropdown();

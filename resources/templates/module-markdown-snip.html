@@ -1,7 +1,9 @@
-{% if markdown %}
-<div class="markdown">
-    {{text|markdown}}
+<div id="module-content">
+    {% if markdown %}
+    <div class="markdown">
+        {{text|markdown}}
+    </div>
+    {% else %}
+    {{text|safe}}
+    {% endif %}
 </div>
-{% else %}
-{{text|safe}}
-{% endif %}
