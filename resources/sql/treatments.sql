@@ -47,6 +47,7 @@ SELECT DISTINCT
   ctc.ObjectId     AS `content-id`,
   ctc.DataName     AS `data-name`,
   ctc.`Name`       AS `content-name`,
+  ctc.FilePath     AS `file-path`,
   lcm.PropertyName AS `type`
 FROM c_module as cm
   JOIN links_c_module AS lcm
@@ -65,7 +66,8 @@ SELECT
   Tabbed      AS `tabbed`,
   DataName    AS `data-name`,
   `Name`      AS `content-name`,
-  ImportData  AS `data-imports`
+  ImportData  AS `data-imports`,
+  FilePath    AS `file-path`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
 

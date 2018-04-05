@@ -7,7 +7,8 @@
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean? fnil+]]
             [bass4.services.messages :as messages]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -43,6 +44,11 @@
      :homework   (first (get categorized "Homework"))
      :main-text  (first (get categorized "MainTexts"))}))
 
+(defn check-file
+  [content]
+  (if (bass/uploaded-file (:file-path content))
+    content
+    (dissoc content :file-path)))
 
 (defn get-content
   [content-id]
@@ -50,13 +56,15 @@
         db/get-content
         {:content-id content-id}
         [:markdown :tabbed :show-example])
+      (check-file)
       (unserialize-key :data-imports)
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
 
 (defn get-module-contents
   [module-id]
-  (let [contents (db/get-module-contents {:module-ids [module-id]})]
+  (let [contents (->> (db/get-module-contents {:module-ids [module-id]})
+                      (map check-file))]
     (categorize-module-contents contents)))
 
 (defn get-module-contents-with-update-time

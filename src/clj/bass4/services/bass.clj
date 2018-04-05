@@ -101,7 +101,7 @@
 (defn uploaded-file
   ^File
   [filename]
-  (when filename
+  (when (not (empty? filename))
     (when-let [file (db-dir "upload" (remove-leading-slash filename))]
       (when (.exists file)
         file))))
