@@ -21,15 +21,22 @@
             [mount.core :as mount]
             [clojure.pprint]
             [bass4.request-state :as request-state]
-            [ring.util.codec :as codec]))
+            [ring.util.codec :as codec]
+            [clojure.tools.logging :as log]))
 
 
 ;; ------------
 ;;  MIDDLEWARE
 ;; ------------
 
+(defn logged-response
+  [s]
+  (log/info (:db-name locals/*local-config*) s)
+  (layout/text-response s))
+
 (defn- match-request-ip
   [request ips-str]
+  (log/info "Request from " (h-utils/get-ip request))
   (let [remote-ip   (h-utils/get-ip request)
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
@@ -38,12 +45,13 @@
   [handler request]
   (let [{:keys [allowed ips]} (db/bool-cols db/ext-login-settings {} [:allowed])]
     (cond
-      (not allowed) (layout/text-response "0 External login not allowed")
+      (not allowed)
+      (logged-response "0 External login not allowed")
 
       (and
         (string/starts-with? (:uri request) "/ext-login/check-pending/")
         (not (match-request-ip request ips)))
-      (layout/text-response (str "0 External login not allowed from this IP " (h-utils/get-ip request)))
+      (logged-response (str "0 External login not allowed from this IP " (h-utils/get-ip request)))
 
       :else (handler request))))
 
@@ -84,15 +92,16 @@
 
 (defn- check-pending
   [participant-id request]
+  (log/info "Check pending for" participant-id)
   (let [user-id (check-participant-id participant-id)]
     (if (string? user-id)
-      (layout/text-response (str "0 " user-id))
+      (logged-response (str "0 " user-id))
       (cond
         (zero? (count (assessments/get-pending-assessments user-id)))
-        (layout/text-response "0 No pending administrations")
+        (logged-response "0 No pending administrations")
 
         :else
-        (layout/text-response (uid-url user-id request))))))
+        (logged-response (uid-url user-id request))))))
 
 (defn- do-login
   [uid return-url]
