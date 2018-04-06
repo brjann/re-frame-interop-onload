@@ -37,19 +37,10 @@
              :messages-send-allowed
              :messages-receive-allowed]))))
 
-(defn content-files
-  [contents]
-  (->> contents
-       (filter :file-path)))
 
-(defn- categorize-module-contents
-  [contents]
-  (let [categorized (group-by :type contents)]
-    {:worksheets (get categorized "Worksheets")
-     :homework   (first (get categorized "Homework"))
-     ;; TODO: Handle multiple main texts
-     :main-text  (first (get categorized "MainTexts"))
-     :files      (filter :file-path contents)}))
+;; ----------------
+;;   DB RETRIEVAL
+;; ----------------
 
 (defn check-file
   [content]
@@ -78,7 +69,8 @@
 (defn get-module-contents*
   [module-ids]
   (->> (db/bool-cols db/get-module-contents {:module-ids module-ids} [:has-text?])
-       (map check-file)))
+       (map check-file)
+       (filter #(or (:has-text? %) (:file-path %)))))
 
 (defn get-module-contents
   [module-ids]
@@ -86,6 +78,18 @@
     (if (coll? module-ids)
       module-ids
       [module-ids])))
+
+;; --------------------------
+;;   CONTENT CATEGORIZATION
+;; --------------------------
+
+(defn- categorize-module-contents
+  [contents]
+  (let [categorized (group-by :type contents)]
+    {:worksheets (get categorized "Worksheets")
+     :homework   (first (get categorized "Homework"))
+     ;; TODO: Handle multiple main texts
+     :main-text  (first (get categorized "MainTexts"))}))
 
 (defn get-categorized-module-contents
   [module-id]

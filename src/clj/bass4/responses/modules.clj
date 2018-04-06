@@ -35,7 +35,6 @@
                        (:treatment-access-id treatment-access)
                        (conj (:data-imports content) data-name))
         params       (first params-map)]
-    (log/debug content)
     (treatment-service/register-content-access!
       content-id
       (:module-id module)
@@ -116,7 +115,7 @@
                                (mapv :module-id modules)
                                treatment-access-id)
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
-    #_(log/debug (pp/pprint modules-with-content))
+    (log/debug (pp/pprint modules-with-content))
     (layout/render
       "modules-list.html"
       (merge render-map

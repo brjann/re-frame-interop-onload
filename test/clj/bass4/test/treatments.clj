@@ -22,6 +22,13 @@
       (is (= 3958 (:treatment-id treatment-access)))
       (is (= #{5787 3961} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
 
+(deftest empty-content
+  (let [module (treatment/get-module-contents 3961)]
+    (is (= #{3980 4001 3989}
+           (->>
+             (treatment/get-module-contents 3961)
+             (into #{} (map :content-id)))))))
+
 
 (deftest auto-modules-test
   (let [user-id             (user/create-user! 543018 {:Group "537404" :firstname "autotest-module"})
