@@ -9,43 +9,41 @@
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]
-            [clojure.pprint :as pp]))
-
+            [bass4.services.content-data :as content-data-service]))
 
 (defn- context-menu
   [module module-contents]
-  (let [file-php           (fn [content]
-                             (str "File.php?uploadedfile="
-                                  (url-escape (:file-path content))))
-        base-path          (str "/user/module/" (:module-id module))
-        worksheet-links    (fn [worksheet]
-                             [(when (:has-text? worksheet)
-                                {:link (str base-path "/worksheet/" (:content-id worksheet))
-                                 :name (:content-name worksheet)})
-                              (when (:file-path worksheet)
-                                {:link (file-php worksheet)
-                                 :name (str (i18n/tr [:download]) " " (:content-name worksheet))})])
-        main-text          (:main-text module-contents)
-        homework           (:homework module-contents)
-        main-text-read     (when (:has-text? main-text)
-                             {:link (str base-path "/")
-                              :name (i18n/tr [:modules/module-text])})
-        main-text-download (when (:file-path main-text)
-                             {:link (file-php main-text)
-                              :name (i18n/tr [:modules/download-module-text])})
-        homework-read      (when (:has-text? homework)
-                             {:link (str base-path "/homework")
-                              :name (i18n/tr [:modules/homework])})
-        homework-download  (when (:file-path homework)
-                             {:link (file-php homework)
-                              :name (i18n/tr [:modules/download-homework])})
-        worksheets         (flatten (map worksheet-links
-                                         (:worksheets module-contents)))]
-    (merge {:items (->> worksheets
-                        (into [main-text-read main-text-download homework-read homework-download])
-                        (remove nil?))}
-           {:title (:module-name module)})))
+  (let [file-php        (fn [content]
+                          (str "File.php?uploadedfile="
+                               (url-escape (:file-path content))))
+        base-path       (str "/user/module/" (:module-id module))
+        worksheet-links (fn [worksheet]
+                          [(when (:has-text? worksheet)
+                             {:link (str base-path "/worksheet/" (:content-id worksheet))
+                              :name (:content-name worksheet)})
+                           (when (:file-path worksheet)
+                             {:link (file-php worksheet)
+                              :name (str (i18n/tr [:download]) " " (:content-name worksheet))})])
+        main-text       (:main-text module-contents)
+        homework        (:homework module-contents)
+        items           [(when (:has-text? main-text)
+                           {:link (str base-path "/")
+                            :name (i18n/tr [:modules/module-text])})
+                         (when (:file-path main-text)
+                           {:link (file-php main-text)
+                            :name (i18n/tr [:modules/download-module-text])})
+                         (when (:has-text? homework)
+                           {:link (str base-path "/homework")
+                            :name (i18n/tr [:modules/homework])})
+                         (when (:file-path homework)
+                           {:link (file-php homework)
+                            :name (i18n/tr [:modules/download-homework])})
+                         (flatten (map worksheet-links
+                                       (:worksheets module-contents)))]]
+    {:items (->> items
+                 flatten
+                 (remove nil?))
+     :title (:module-name module)}))
 
 
 (defn- module-content-renderer
