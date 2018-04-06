@@ -73,6 +73,20 @@
                         </li>
                         {% endif %}
                         <!-- END WORKSHEETS -->
+
+                        <!-- START FILES -->
+                        {% if module.contents.files %}
+                        <li class="list-group-item">
+                            <h5 class="card-title">{% tr modules/files %}</h5>
+                            {% for file in module.contents.files %}
+                            <p class="card-text">
+                                {{file.content-name}}: <a href="File.php?uploadedfile={{file.file-path|safe}}">{% tr
+                                modules/download %}</a>
+                            </p>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                        <!-- END FILES -->
                     </ul>
                 </div>
             </div>

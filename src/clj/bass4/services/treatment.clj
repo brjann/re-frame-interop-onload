@@ -37,18 +37,31 @@
              :messages-send-allowed
              :messages-receive-allowed]))))
 
+(defn content-files
+  [contents]
+  (->> contents
+       (filter :file-path)))
+
 (defn- categorize-module-contents
   [contents]
   (let [categorized (group-by :type contents)]
     {:worksheets (get categorized "Worksheets")
      :homework   (first (get categorized "Homework"))
-     :main-text  (first (get categorized "MainTexts"))}))
+     ;; TODO: Handle multiple main texts
+     :main-text  (first (get categorized "MainTexts"))
+     :files      (filter :file-path contents)}))
 
 (defn check-file
   [content]
   (if (bass/uploaded-file (:file-path content))
     content
     (dissoc content :file-path)))
+
+(defn check-content
+  [content]
+  (if (empty? (:text content))
+    (dissoc content :text)
+    content))
 
 (defn get-content
   [content-id]
@@ -57,15 +70,27 @@
         {:content-id content-id}
         [:markdown :tabbed :show-example])
       (check-file)
+      (check-content)
       (unserialize-key :data-imports)
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
 
+(defn get-module-contents*
+  [module-ids]
+  (->> (db/bool-cols db/get-module-contents {:module-ids module-ids} [:has-text?])
+       (map check-file)))
+
 (defn get-module-contents
+  [module-ids]
+  (get-module-contents*
+    (if (coll? module-ids)
+      module-ids
+      [module-ids])))
+
+(defn get-categorized-module-contents
   [module-id]
-  (let [contents (->> (db/get-module-contents {:module-ids [module-id]})
-                      (map check-file))]
-    (categorize-module-contents contents)))
+  (-> (get-module-contents module-id)
+      (categorize-module-contents)))
 
 (defn get-module-contents-with-update-time
   [module-ids treatment-access-id]
@@ -73,7 +98,7 @@
         content-accesses (->> (db/get-content-first-access {:treatment-access-id treatment-access-id :module-ids module-ids})
                               (mapv #(vector (:module-id %) (:content-id %)))
                               (into #{}))
-        contents         (->> (db/get-module-contents {:module-ids module-ids})
+        contents         (->> (get-module-contents module-ids)
                               (mapv #(assoc % :data-updated (get-in last-updates [(:data-name %) :time])))
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))

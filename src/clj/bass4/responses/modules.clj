@@ -8,7 +8,8 @@
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]))
+            [bass4.services.content-data :as content-data-service]
+            [clojure.pprint :as pp]))
 
 
 (defn- context-menu
@@ -34,6 +35,7 @@
                        (:treatment-access-id treatment-access)
                        (conj (:data-imports content) data-name))
         params       (first params-map)]
+    (log/debug content)
     (treatment-service/register-content-access!
       content-id
       (:module-id module)
@@ -53,7 +55,7 @@
              params))))
 
 (defn main-text [treatment-access render-map module]
-  (let [module-contents (treatment-service/get-module-contents (:module-id module))
+  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
@@ -66,7 +68,7 @@
        :page-title (:module-name module)})))
 
 (defn homework [treatment-access render-map module]
-  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
         treatment-access
@@ -80,7 +82,7 @@
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
 (defn worksheet [treatment-access render-map module worksheet-id]
-  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
         treatment-access
@@ -92,7 +94,7 @@
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defn worksheet-example [module worksheet-id return-path]
-  (let [module-contents (treatment-service/get-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
             data-name    (:data-name content)
@@ -114,6 +116,7 @@
                                (mapv :module-id modules)
                                treatment-access-id)
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
+    #_(log/debug (pp/pprint modules-with-content))
     (layout/render
       "modules-list.html"
       (merge render-map

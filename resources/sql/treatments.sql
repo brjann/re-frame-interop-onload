@@ -48,6 +48,13 @@ SELECT DISTINCT
   ctc.DataName     AS `data-name`,
   ctc.`Name`       AS `content-name`,
   ctc.FilePath     AS `file-path`,
+  (CASE
+    WHEN (ctc.Text IS NULL OR ctc.Text = "") THEN
+      FALSE
+    ELSE
+      TRUE
+  END) AS `has-text?`,
+
   lcm.PropertyName AS `type`
 FROM c_module as cm
   JOIN links_c_module AS lcm
