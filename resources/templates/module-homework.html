@@ -15,7 +15,7 @@
 </div>
 {% endif %}
 <div class="treatment-content {% if submitted %}readonly{% else %}form{% endif %}" data-data-name="{{data-name}}">
-    {% include "module-markdown-snip.html" %}
+    {% include "module-content-render-snip.html" %}
     {% if not submitted %}
     <form method="post" class="content-submitter" name="contentform" action=""
           onsubmit="return content_submit();">

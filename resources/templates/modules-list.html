@@ -47,7 +47,7 @@
                         {% if module.contents.main-text.file-path %}
                         <li class="list-group-item">
                             <p class="card-text">
-                                <a href="File.php?uploadedfile={{module.contents.main-text.file-path|safe}}">
+                                <a href="File.php?uploadedfile={{module.contents.main-text.file-path|urlescape}}">
                                     {% tr modules/download-module-text %}
                                 </a>
                             </p>
@@ -77,7 +77,7 @@
                         {% if module.contents.homework.file-path %}
                         <li class="list-group-item">
                             <p class="card-text">
-                                <a href="File.php?uploadedfile={{module.contents.homework.file-path|safe}}">
+                                <a href="File.php?uploadedfile={{module.contents.homework.file-path|urlescape}}">
                                     {% tr modules/download-homework %}
                                 </a>
                             </p>
@@ -108,7 +108,7 @@
 
                             {% if worksheet.file-path %}
                             <p class="card-text">
-                                <a href="File.php?uploadedfile={{worksheet.file-path|safe}}">
+                                <a href="File.php?uploadedfile={{worksheet.file-path|urlescape}}">
                                     {% tr download %} {{worksheet.content-name}}
                                 </a>
                             </p>
@@ -118,6 +118,21 @@
                         </li>
                         {% endif %}
                         <!-- END WORKSHEETS -->
+
+                        <!-- START FILES -->
+                        {% if module.contents.files %}
+                        <li class="list-group-item">
+                            <h5 class="card-title">{% tr modules/files %}</h5>
+                            {% for file in module.contents.files %}
+                            <p class="card-text">
+                                {{file.content-name}}: <a href="File.php?uploadedfile={{file.file-path|urlescape}}">{%
+                                tr
+                                modules/download %}</a>
+                            </p>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                        <!-- END FILES -->
                     </ul>
                 </div>
             </div>

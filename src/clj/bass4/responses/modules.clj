@@ -1,6 +1,7 @@
 (ns bass4.responses.modules
   (:require [bass4.services.user :as user]
             [ring.util.http-response :as response]
+            [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
             [schema.core :as s]
             [bass4.layout :as layout]
@@ -14,16 +15,36 @@
 
 (defn- context-menu
   [module module-contents]
-  (let [base-path  (str "/user/module/" (:module-id module))
-        main-text  {:link (str base-path "/")
-                    :name (i18n/tr [:modules/module-text])}
-        homework   (when (:homework module-contents)
-                     {:link (str base-path "/homework")
-                      :name (i18n/tr [:modules/homework])})
-        worksheets (map #(identity {:link (str base-path "/worksheet/" (:content-id %))
-                                    :name (:content-name %)})
-                        (:worksheets module-contents))]
-    (merge {:items (remove nil? (into [main-text homework] worksheets))}
+  (let [file-php           (fn [content]
+                             (str "File.php?uploadedfile="
+                                  (url-escape (:file-path content))))
+        base-path          (str "/user/module/" (:module-id module))
+        worksheet-links    (fn [worksheet]
+                             [(when (:has-text? worksheet)
+                                {:link (str base-path "/worksheet/" (:content-id worksheet))
+                                 :name (:content-name worksheet)})
+                              (when (:file-path worksheet)
+                                {:link (file-php worksheet)
+                                 :name (str (i18n/tr [:download]) " " (:content-name worksheet))})])
+        main-text          (:main-text module-contents)
+        homework           (:homework module-contents)
+        main-text-read     (when (:has-text? main-text)
+                             {:link (str base-path "/")
+                              :name (i18n/tr [:modules/module-text])})
+        main-text-download (when (:file-path main-text)
+                             {:link (file-php main-text)
+                              :name (i18n/tr [:modules/download-module-text])})
+        homework-read      (when (:has-text? homework)
+                             {:link (str base-path "/homework")
+                              :name (i18n/tr [:modules/homework])})
+        homework-download  (when (:file-path homework)
+                             {:link (file-php homework)
+                              :name (i18n/tr [:modules/download-homework])})
+        worksheets         (flatten (map worksheet-links
+                                         (:worksheets module-contents)))]
+    (merge {:items (->> worksheets
+                        (into [main-text-read main-text-download homework-read homework-download])
+                        (remove nil?))}
            {:title (:module-name module)})))
 
 
@@ -43,6 +64,7 @@
       template
       (merge render-map
              {:text         (:text content)
+              :file-path    (:file-path content)
               :markdown     (:markdown content)
               :tabbed       (:tabbed content)
               :show-example (:show-example content)
@@ -115,7 +137,6 @@
                                (mapv :module-id modules)
                                treatment-access-id)
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
-    (log/debug (pp/pprint modules-with-content))
     (layout/render
       "modules-list.html"
       (merge render-map

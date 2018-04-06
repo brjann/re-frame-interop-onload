@@ -1,4 +1,5 @@
-(ns bass4.http-utils)
+(ns bass4.http-utils
+  (:import (java.net URLEncoder)))
 
 (defn get-ip
   [request]
@@ -19,3 +20,7 @@
   (let [host   (get-host request)
         scheme (name (:scheme request))]
     (str scheme "://" host)))
+
+(defn
+  url-escape
+  [s] (URLEncoder/encode s))
