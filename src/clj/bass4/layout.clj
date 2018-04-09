@@ -73,8 +73,8 @@
 (declare ^:dynamic *app-context*)
 (parser/set-resource-path! (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
-#_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
-(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
+(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
+#_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
 
 (defn render
   "renders the HTML template located relative to resources/templates"

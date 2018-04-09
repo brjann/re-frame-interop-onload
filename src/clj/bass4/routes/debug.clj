@@ -120,6 +120,10 @@
         (POST "/states" [& params]
           (reset-state (:state-name params)))
         (GET "/i18n-merge/:lang" [lang]
-          (layout/text-response (i18n/merge-i18n lang))))
+          (layout/text-response (i18n/merge-i18n lang)))
+        (GET "/markdown-list" [& params]
+          (layout/render "render.html"
+                         {:text     "1. Foo\n2. Bar\n3. Baz"
+                          :markdown true})))
       (routes
         (ANY "*" [] "Not in debug mode")))))
