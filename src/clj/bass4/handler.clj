@@ -31,7 +31,8 @@
         (wrap-routes wrap-restricted)
         (wrap-routes wrap-schema-error))
     (-> #'embedded-routes
-        (wrap-routes middleware/wrap-csrf)
+        ;; TODO: Bring back wrap-csrf
+        #_(wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-schema-error))
     (-> #'debug-routes
