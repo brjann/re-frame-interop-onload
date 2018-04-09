@@ -46,6 +46,7 @@
       (log/info (str "Attaching " (:name local-config)))
       (let [conn (conman/connect! {:jdbc-url (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false")})]
         (log/info (str (:name local-config) " attached"))
+        (jdbc/execute! conn "SET time_zone = '+00:00';")
         conn))))
 
 (defn db-disconnect!

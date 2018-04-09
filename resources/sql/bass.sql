@@ -93,3 +93,6 @@ SET
 -- :name create-bass-link! :! :1
 -- :doc
 CALL create_bass_link(:linker-id, :linkee-id, :link-property, :linker-class, :linkee-class);
+
+-- :name get-time-zone :? :1
+SELECT @@session.time_zone AS `time-zone`;

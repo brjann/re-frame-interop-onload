@@ -48,6 +48,6 @@
     (-> *s*
         (visit "/embedded/render")
         (has (status? 403))
-        (visit "/embedded/render?uid=xx&text=Hejsan")
+        (visit "/embedded/render?uid=x" :request-method :post :params {:text "Hejsan"})
         (has (status? 200))
         (has (some-text? "Hejsan")))))
