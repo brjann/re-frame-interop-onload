@@ -9,6 +9,10 @@
   ([key f val-if-empty]
    (utils/swap-key! *request-state* key f val-if-empty)))
 
+(defn add-to-state-key!
+  [key v]
+  (swap-state! key #(conj %1 v) []))
+
 (defn set-state!
   [key val]
   (utils/set-key! *request-state* key val))

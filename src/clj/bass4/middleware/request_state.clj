@@ -3,7 +3,9 @@
             [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clj-time.coerce :as tc]
             [bass4.request-state :as request-state]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.string :as s]
+            [clojure.tools.logging :as log]))
 
 
 
@@ -28,7 +30,9 @@
                       :error-messages  (:error-messages req-state)
                       :source-file     (:uri request),
                       :session-start   (tc/to-epoch (:session-start req-state)),
-                      :user-agent      (get-in request [:headers "user-agent"])}))
+                      :user-agent      (get-in request [:headers "user-agent"])
+                      :info            (->> (:info req-state)
+                                            (s/join "\n"))}))
 
 ;; I would like to place this in the request-state namespace, however
 ;; that creates a circular dependency because db also uses the request-state
