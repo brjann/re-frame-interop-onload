@@ -172,6 +172,8 @@
   "Check if user in identity exists
     yes: add user map to session
     no: remove :identity key from from session"
+  (when (get-in request [:session :assessments-pending?])
+    (request-state/add-to-state-key! :info "Assessments pending"))
   (handler (if-let [user (user/get-user (:identity request))]
              (assoc-in request [:session :user] user)
              (merge request {:identity nil :session (dissoc (:session request) :identity)}))))

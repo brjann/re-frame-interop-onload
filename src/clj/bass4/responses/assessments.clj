@@ -9,6 +9,7 @@
 
 (defn- text-page
   [step]
+  (request-state/add-to-state-key! :info "Assessment text")
   (assessments-service/step-completed! step)
   (bass4.layout/render "assessment-text.html"
                        {:texts (try (clojure.edn/read-string (:texts step))
@@ -17,6 +18,7 @@
 (defn- instrument-page
   [step]
   (let [instrument-id (:instrument-id step)]
+    (request-state/add-to-state-key! :info (str "Instrument " instrument-id))
     (if-let [instrument (instruments/get-instrument instrument-id)]
       (bass4.layout/render "assessment-instrument.html"
                            {:instrument instrument
