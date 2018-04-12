@@ -45,7 +45,8 @@
     (swap! now (constantly (t/now)))
     (with-redefs
       [t/now (fn [] @now)]
-      (f))))
+      (f))
+    (db/clear-failed-logins!)))
 
 (defn attack-uri
   ([state uri post attacks]
