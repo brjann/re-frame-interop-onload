@@ -40,7 +40,9 @@
 (defn request-state
   [handler request]
   (binding [request-state/*request-state* (atom {})]
+    (request-state/add-to-state-key! :info (name (:request-method request)))
     (let [{:keys [val time]} (time+ (handler request))
+          _         (request-state/add-to-state-key! :info (:status val))
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (:name req-state)
