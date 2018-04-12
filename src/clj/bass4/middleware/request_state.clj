@@ -14,7 +14,7 @@
 ;; ----------------
 
 (defn save-log!
-  [req-state request time]
+  [req-state request time method status]
   (db/save-pageload! {:db-name         (:name req-state),
                       :remote-ip       (:remote-addr request),
                       :sql-time        (when (:sql-times req-state)
@@ -31,6 +31,8 @@
                       :source-file     (:uri request),
                       :session-start   (tc/to-epoch (:session-start req-state)),
                       :user-agent      (get-in request [:headers "user-agent"])
+                      :method          method
+                      :status          status
                       :info            (->> (:info req-state)
                                             (s/join "\n"))}))
 
@@ -40,13 +42,13 @@
 (defn request-state
   [handler request]
   (binding [request-state/*request-state* (atom {})]
-    (request-state/add-to-state-key! :info (name (:request-method request)))
     (let [{:keys [val time]} (time+ (handler request))
-          _         (request-state/add-to-state-key! :info (:status val))
+          method    (name (:request-method request))
+          status    (:status val)
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (:name req-state)
-        (save-log! req-state request time))
+        (save-log! req-state request time method status))
       ;;val
       (if (:debug-headers req-state)
         (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
