@@ -57,29 +57,6 @@
                 (:app-context env))]
       (handler request))))
 
-(def ^:dynamic *skip-csrf* false)
-(defn csrf-wrapper
-  [handler request]
-  (if *skip-csrf*
-    (handler request)
-    ((wrap-anti-forgery
-       handler
-       {:error-response
-        (error-page
-          {:status 403
-           :title  "Invalid anti-forgery token"})}) request)))
-
-(defn wrap-csrf [handler]
-  (fn [request]
-    (csrf-wrapper handler request)))
-
-#_(defn wrap-csrf [handler]
-    (wrap-anti-forgery
-      handler
-      {:error-response
-       (error-page
-         {:status 403
-          :title  "Invalid anti-forgery token"})}))
 
 (defn wrap-formats [handler]
   (let [wrapped (wrap-restful-format
@@ -106,6 +83,7 @@
 ;;
 ;; ----------------
 
+
 (defn wrap-mw-fn
   [handler middleware]
   (fn [request]
@@ -119,6 +97,34 @@
                                "Cache-Control" "no-cache, no-store, must-revalidate"
                                "Expires" "Wed, 12 Jul 1978 08:00:00 GMT"
                                "Pragma" "no-cache")))))
+
+
+
+;; -----------------
+;;    CSRF ERROR
+;; -----------------
+
+
+(defn- csrf-error
+  ;; Takes request as argument but underscored to avoid unused variable type hint
+  [_]
+  (request-state/add-to-state-key! :info "CSRF error")
+  (error-page
+    {:status 403
+     :title  "Invalid anti-forgery token"}))
+
+(def ^:dynamic *skip-csrf* false)
+(defn csrf-wrapper
+  [handler request]
+  (if *skip-csrf*
+    (handler request)
+    ((wrap-anti-forgery
+       handler
+       {:error-handler csrf-error}) request)))
+
+(defn wrap-csrf [handler]
+  (fn [request]
+    (csrf-wrapper handler request)))
 
 
 ;; -----------------
@@ -153,14 +159,14 @@
         last-request-time (:last-request-time session)
         re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
         response          (if re-auth?
-                             (if (= (:request-method request) :get)
-                               (response/found (str "/re-auth?return-url=" (request-string request)))
-                               (auth-response/re-auth-440))
-                             (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
+                            (if (= (:request-method request) :get)
+                              (response/found (str "/re-auth?return-url=" (request-string request)))
+                              (auth-response/re-auth-440))
+                            (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
         session-map       {:last-request-time now
-                            :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                 (:auth-re-auth (:session response))
-                                                 re-auth?)}]
+                           :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
+                                                (:auth-re-auth (:session response))
+                                                re-auth?)}]
 
     (assoc response :session (if (nil? (:session response))
                                (merge session session-map)
@@ -171,12 +177,25 @@
   [handler request]
   "Check if user in identity exists
     yes: add user map to session
-    no: remove :identity key from from session"
-  (when (get-in request [:session :assessments-pending?])
-    (request-state/add-to-state-key! :info "Assessments pending"))
-  (handler (if-let [user (user/get-user (:identity request))]
-             (assoc-in request [:session :user] user)
-             (merge request {:identity nil :session (dissoc (:session request) :identity)}))))
+    no: remove :identity key from from session
+    Also adds some request state info"
+  (request-state/set-state! :session-cookie (get-in request [:cookies "JSESSIONID" :value]
+                                                    (get-in request [:cookies "ring-session" :value])))
+  (let [assessments-pending-pre?  (get-in request [:session :assessments-pending?])
+        res                       (handler (if-let [user (user/get-user (:identity request))]
+                                             (assoc-in request [:session :user] user)
+                                             (merge request {:identity nil :session (dissoc (:session request) :identity)})))
+        assessments-pending-post? (get-in res [:session :assessments-pending?])]
+    (cond
+      assessments-pending-post?
+      (request-state/add-to-state-key! :info "Assessments pending")
+
+      (and assessments-pending-pre? (not assessments-pending-post?))
+      (request-state/add-to-state-key! :info "Assessments completed")
+
+      assessments-pending-pre?
+      (request-state/add-to-state-key! :info "Assessments pending"))
+    res))
 
 ;; I tried to wrap around immutant.web.middleware/wrap-session
 ;; but it did not work. Worked in browser but not tests.

@@ -16,7 +16,7 @@
 (defn save-log!
   [req-state request time method status]
   (db/save-pageload! {:db-name         (:name req-state),
-                      :remote-ip       (:remote-addr request),
+                      :remote-ip       (:session-cookie req-state),
                       :sql-time        (when (:sql-times req-state)
                                          (/ (apply + (:sql-times req-state)) 1000)),
                       :sql-max-time    (when (:sql-times req-state)

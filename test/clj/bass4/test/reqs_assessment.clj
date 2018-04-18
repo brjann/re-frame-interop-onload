@@ -18,9 +18,6 @@
   test-fixtures
   disable-attack-detector)
 
-(deftest skip-csrf
-  (is (= true mw/*skip-csrf*)))
-
 (deftest active-assessment
   (with-redefs [auth-service/double-auth-code (constantly "666777")
                 t/now (constantly (t/date-time 2017 8 2 0 0 0))]
