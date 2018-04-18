@@ -44,26 +44,6 @@ SELECT
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
---  (CASE
---     WHEN (RegistrationAutoId = 0
---          OR
---          RegistrationAutoIdPrefix = ''
---          OR
---          RegistrationAutoIdLength = 0)
---          AND RegistrationAutoUsername = 'participantid'
---         THEN 'none'
---     ELSE
---         RegistrationAutoUsername
---  END) AS `auto-username`,
---  (CASE
---     WHEN (RegistrationAutoIdPrefix = ''
---          OR
---          RegistrationAutoIdLength = 0)
---         THEN 0
---     ELSE
---         RegistrationAutoId
---  END) AS `auto-id?`,
-
 -- :name check-duplicate-info :? :1
 SELECT
   count(*) AS `count`
@@ -89,4 +69,10 @@ SELECT
   count(*) AS `count`
 FROM c_participant
 WHERE
-  ParticipantId = :participant-id
+  ParticipantId = :participant-id;
+
+-- :name registration-show-finished :? :1
+SELECT
+  RegistrationAlwaysShowFinishedScreen AS `show-finished-screen?`
+FROM c_treatmentinterface
+WHERE ObjectId=:project-id;

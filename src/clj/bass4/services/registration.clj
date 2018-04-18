@@ -86,6 +86,13 @@
       {:fields fields :group group :sms-countries sms-countries}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown?]))))
 
+(defn show-finished-screen?
+  [project-id]
+  (:show-finished-screen? (db/bool-cols
+                            db/registration-show-finished
+                            {:project-id project-id}
+                            [:show-finished-screen?])))
+
 (defn create-user!
   [project-id field-values username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]

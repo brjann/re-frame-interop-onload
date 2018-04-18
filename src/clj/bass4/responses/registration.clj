@@ -31,16 +31,29 @@
 ;; FINISHED
 ;; ------------
 
-(defn finished-page
-  [project-id session]
+(defn- to-finished-page
+  [project-id]
+  (->
+    (response/found (str "/registration/" project-id "/finished"))
+    (assoc :session {})))
+
+(defn- to-assessments
+  [project-id user-id request]
+  (let [return-url (when (reg-service/show-finished-screen? project-id)
+                     (str (h-utils/get-host-address request) "/registration/" project-id "/finished"))]
+    (->
+      (response/found "/user")
+      (assoc :session (res-auth/create-new-session
+                        {:user-id user-id}
+                        {:external-login true :return-url return-url}
+                        true)))))
+
+(defn finished-router
+  [project-id session request]
   (if-let [user-id (get-in session [:reg-credentials :user-id])]
     (if (zero? (count (assessments/get-pending-assessments user-id)))
-      (->
-        (response/found (str "/registration/" project-id "/finished"))
-        (assoc :session {}))
-      (->
-        (response/found "/user")
-        (assoc :session (res-auth/create-new-session {:user-id user-id} {:double-authed true} true))))
+      (to-finished-page project-id)
+      (to-assessments project-id user-id request))
     (layout/render "registration-finished.html"
                    (reg-service/finished-content project-id))))
 

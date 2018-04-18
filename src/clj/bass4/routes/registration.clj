@@ -56,4 +56,4 @@
     (reg-response/credentials-page project-id (:session request) request))
 
   (GET "/registration/:project-id/finished" [project-id :as request]
-    (reg-response/finished-page project-id (:session request))))
+    (reg-response/finished-router project-id (:session request) request)))
