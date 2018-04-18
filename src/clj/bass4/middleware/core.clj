@@ -185,12 +185,13 @@
         res                       (handler (if-let [user (user/get-user (:identity request))]
                                              (assoc-in request [:session :user] user)
                                              (merge request {:identity nil :session (dissoc (:session request) :identity)})))
-        assessments-pending-post? (get-in res [:session :assessments-pending?])]
+        assessments-pending-post? (when (contains? res :session)
+                                    (true? (get-in res [:session :assessments-pending?])))]
     (cond
       assessments-pending-post?
       (request-state/add-to-state-key! :info "Assessments pending")
 
-      (and assessments-pending-pre? (not assessments-pending-post?))
+      (and assessments-pending-pre? (false? assessments-pending-post?))
       (request-state/add-to-state-key! :info "Assessments completed")
 
       assessments-pending-pre?
