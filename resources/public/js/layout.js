@@ -1,3 +1,16 @@
+/*
+ -------------------------
+     MARKDOWN CLASSES
+ -------------------------
+*/
+
+function add_markdown_classes() {
+   var markdowns = $('.markdown');
+   markdowns.find('img').addClass('img-fluid');
+   markdowns.find('table').addClass('table');
+   markdowns.find('textarea').addClass('form-control');
+}
+
 $(document).ready(function () {
    /*
     ----------------------------
@@ -73,19 +86,6 @@ $(document).ready(function () {
          $(window).resize(set_title_width);
          set_title_width();
       }
-   };
-
-   /*
-    -------------------------
-        MARKDOWN CLASSES
-    -------------------------
-   */
-
-   var add_markdown_classes = function () {
-      var markdowns = $('.markdown');
-      markdowns.find('img').addClass('img-fluid');
-      markdowns.find('table').addClass('table');
-      markdowns.find('textarea').addClass('form-control');
    };
 
    /*

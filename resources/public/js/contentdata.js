@@ -136,14 +136,15 @@ function content_create_tabs(content) {
 
 		var on_click = function (e) {
 			var tab = $(e.target);
-			if (tab.text() == '+') {
+         if (tab.text() === '+') {
 
 				// TODO: Static data
 				//fillStaticData(tab_content);
 				var tab_index = tabs_ul.children().length;
 				tab.text(tab_name + ' ' + tab_index);
-				var new_content = cloneContent(tabbed_content, tab_index)
+            var new_content = cloneContent(tabbed_content, tab_index);
 				$(tab.data('target')).append(new_content);
+            add_markdown_classes();
 
 				addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
 			}
@@ -164,7 +165,7 @@ function content_create_tabs(content) {
 		var active_tab_id = (Cookies.get(cookie_name) || "").substr(1);
 		var active_div;
 		var active_tab;
-		if (active_tab_id != '') {
+      if (active_tab_id !== '') {
 			active_div = tab_div.find('#' + active_tab_id);
 			active_tab = tabs_ul.find('#tab_' + active_tab_id);
 		}
@@ -175,10 +176,6 @@ function content_create_tabs(content) {
 		active_tab.addClass('active');
 		active_div.addClass('active');
 
-		// TODO: Don't show plus tab in readonly mode
-		/*if (!(content.hasClass('readonly') || container.parents('.readonly').length)) {
-		 addContentTabPlus(container, tabs_ul, tab_count + 1);
-		 }*/
 		if (!content.hasClass('read-only')) {
 			addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
 		}
