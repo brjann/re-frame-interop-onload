@@ -2,7 +2,9 @@
 {% block content %}
 <div class="treatment-content form {% if tabbed %}tabbed{% endif %}" data-data-name="{{data-name}}" id="{{content-id}}">
     {% if markdown %}
-    {{text|markdown}}
+    <div class="markdown">
+        {{text|markdown}}
+    </div>
     {% else %}
     {{text|safe}}
     {% endif %}
