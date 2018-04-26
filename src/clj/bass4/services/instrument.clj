@@ -59,6 +59,7 @@
 (defn options
   [{:keys [option-values option-labels option-specifications option-specifications-big option-jumps]}]
   (filter (comp (complement empty?) :value)
+          ;; TODO: Double check that these are of correct type!
           (map make-option
                (php->clj option-values)
                (php->clj option-labels)

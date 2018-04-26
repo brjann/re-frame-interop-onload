@@ -115,7 +115,7 @@ $(document).ready(function(){
 					}
 
 					if(layout_obj['border-top-width'] > 0){
-						row_div.css('border-bottom-style', 'solid').css('border-top-width', layout_obj['border-top-width']);
+                  row_div.css('border-top-style', 'solid').css('border-top-width', layout_obj['border-top-width']);
 					}
 
 					row_div.append(element_html);
