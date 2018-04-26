@@ -227,7 +227,8 @@ SELECT
   PageBreak AS `page-break`,
   SortOrder AS `sort-order`
 FROM c_instrumentitemelement
-WHERE ParentId = :instrument-id;
+WHERE ParentId = :instrument-id
+ORDER BY SortOrder;
 
 -- :name get-instrument-scoring :? :1
 -- :doc get scoring formula of instrument
