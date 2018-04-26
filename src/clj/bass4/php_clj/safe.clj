@@ -21,4 +21,4 @@
         (env :email-error)
         "Unserialize error in BASS4"
         "An php unserialize error happened in BASS4. See log for details")
-      (log/error (str "Failed php unserialize " php)))))
+      (log/error (str "Failed php unserialize\n" php "\n" e)))))

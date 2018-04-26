@@ -40,7 +40,15 @@
            (let [current-id (:item-id item)]
              (unserialize-key
                (select-keys item
-                            [:item-id :name :text :response-id :sort-order :layout-id :option-jumps :page-break :optional])
+                            [:item-id
+                             :name
+                             :text
+                             :response-id
+                             :sort-order
+                             :layout-id
+                             :option-jumps
+                             :page-break
+                             :optional])
                :option-jumps
                (fn [m] (map-map
                          (jumper-fn item-ids current-id)
@@ -56,15 +64,21 @@
      :specification-text (if specification? specification-text nil)
      :specification-big  (if specification? specification-big? nil)}))
 
+(defn- php->clj-vec
+  [s]
+  (let [v (php->clj s)]
+    (if (vector? v)
+      v
+      (throw (Exception. "Unserialized response def was not vector.")))))
+
 (defn options
-  [{:keys [option-values option-labels option-specifications option-specifications-big option-jumps]}]
+  [{:keys [option-values option-labels option-specifications option-specifications-big]}]
   (filter (comp (complement empty?) :value)
-          ;; TODO: Double check that these are of correct type!
           (map make-option
-               (php->clj option-values)
-               (php->clj option-labels)
-               (php->clj option-specifications)
-               (php->clj option-specifications-big))))
+               (php->clj-vec option-values)
+               (php->clj-vec option-labels)
+               (php->clj-vec option-specifications)
+               (php->clj-vec option-specifications-big))))
 
 (defn cols
   [{:keys [col-widths col-alignments]}]

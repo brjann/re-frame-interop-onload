@@ -30,14 +30,15 @@
       (has (some-text? "Registration not allowed"))))
 
 (deftest registration-flow
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                auth-service/letters-digits     (constantly "METALLICA")]
+  (with-redefs [captcha/captcha!                  (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params   (constantly {:fields                 #{:email :sms-number}
+                                                               :group                  564616
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none})
+                reg-service/show-finished-screen? (constantly true)
+                auth-service/letters-digits       (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610")
         ;; Captcha session is created
