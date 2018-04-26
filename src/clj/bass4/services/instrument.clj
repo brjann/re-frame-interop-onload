@@ -67,9 +67,9 @@
 (defn- php->clj-vec
   [s]
   (let [v (php->clj s)]
-    (if (vector? v)
+    (if (or (nil? v) (vector? v))
       v
-      (throw (Exception. "Unserialized response def was not vector.")))))
+      (throw (Exception. (str "Unserialized response def was not vector. " v))))))
 
 (defn options
   [{:keys [option-values option-labels option-specifications option-specifications-big]}]
