@@ -5,37 +5,34 @@
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]))
 
-(defn mail!
-  ([to subject message] (mail! to subject message nil))
-  ([to subject message reply-to]
+(defn mail*!
+  ([to subject message reply-to debug?]
    (when (env :dev)
      (log/info (str "Sent mail to " to)))
    (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
          args        (into {}
                            ;; Removes nil elements
                            (filter second
-                                   {"to" to "subject" subject "message" message "reply-to" reply-to}))
+                                   {"to" to "subject" subject "message" message "reply-to" reply-to "debug" debug?}))
          res         (shell/sh "php" (str mailer-path) :in (clj->php args))]
      res
      (when (not= 0 (:exit res))
        (throw (Exception. (str (:out res)))))
-     true)))
+     (if debug?
+       (str (:out res))
+       true))))
+
+(defn mail!
+  ([to subject message]
+   (mail*! to subject message nil false))
+  ([to subject message reply-to]
+   (mail*! to subject message reply-to false)))
 
 (defn mail-debug!
-  ([to subject message] (mail-debug! to subject message nil))
+  ([to subject message]
+   (mail*! to subject message nil true))
   ([to subject message reply-to]
-   (when (env :dev)
-     (log/info (str "Sent mail to " to)))
-   (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
-         args        (into {}
-                           ;; Removes nil elements
-                           (filter second
-                                   {"to" to "subject" subject "message" message "reply-to" reply-to "debug" true}))
-         res         (shell/sh "php" (str mailer-path) :in (clj->php args))]
-     res
-     (when (not= 0 (:exit res))
-       (throw (Exception. (str (:out res)))))
-     (str (:out res)))))
+   (mail*! to subject message reply-to true)))
 
 ;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
 (defn- match-regex?

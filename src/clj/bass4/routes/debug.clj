@@ -94,8 +94,12 @@
           (layout/error-403-page (get-in request [:session :identity])))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
+        (GET "/mail-debug" [& params :as request]
+          (let [email (env :error-email "brjann@gmail.com")]
+            (layout/text-response (mail/mail-debug! email "Test email" "This is the test message"))))
         (GET "/mail" [& params :as request]
-          (layout/text-response (mail/mail-debug! "brjann@gmail.com" "Test email" "This is the test message")))
+          (let [email (or (:mail params) (env :error-email "brjann@gmail.com"))]
+            (layout/text-response (mail/mail! email "Test email" "This is the test message"))))
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]

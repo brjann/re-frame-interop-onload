@@ -1,7 +1,7 @@
 (ns bass4.middleware.debug
   (:require [bass4.sms-sender :as sms]
             [bass4.config :refer [env]]
-            [bass4.mailer :refer [mail! is-email?]]
+            [bass4.mailer :refer [mail! mail*! is-email?]]
             [bass4.request-state :as request-state]
             [prone.middleware :refer [wrap-exceptions]]
             [clojure.tools.logging :as log]
@@ -19,16 +19,16 @@
     (sms-fn reroute-sms (str message "\n" "To: " recipient))))
 
 (defn mail-reroute-wrapper
-  [mailer-fn reroute-email]
-  (fn [to subject message & args]
+  [reroute-email]
+  (fn [to subject message & reply-to]
     ;; Must by called with all four args to prevent stack overflow
-    (mailer-fn reroute-email subject (str "To: " to "\n" message) nil)))
+    (mail*! reroute-email subject (str "To: " to "\n" message) (first reply-to) false)))
 
 (defn sms-reroute-to-mail-wrapper
-  [mailer-fn reroute-email]
+  [reroute-email]
   (fn [recipient message]
     ;; Must by called with all four args to prevent stack overflow
-    (mailer-fn reroute-email "SMS" (str "To: " recipient "\n" message) nil)
+    (mail*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)
     (sms/sms-success)))
 
 (defn sms-in-header!
@@ -84,7 +84,7 @@
       {#'sms/send-db-sms! sms-in-header!}
 
       (is-email? sms-reroute)
-      {#'sms/send-db-sms! (sms-reroute-to-mail-wrapper mail! sms-reroute)}
+      {#'sms/send-db-sms! (sms-reroute-to-mail-wrapper sms-reroute)}
 
       (string? sms-reroute)
       {#'sms/send-db-sms! (sms-reroute-wrapper mail! sms-reroute)}
@@ -105,7 +105,7 @@
       {#'mail! mail-in-header!}
 
       (is-email? mail-reroute)
-      {#'mail! (mail-reroute-wrapper mail! mail-reroute)}
+      {#'mail! (mail-reroute-wrapper mail-reroute)}
 
       ;; Production environment
       :else
