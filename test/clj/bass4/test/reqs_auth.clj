@@ -73,8 +73,8 @@
       (has (some-text? "message"))))
 
 (deftest double-auth-send-fail
-  (with-redefs [debug/test-send-sms! (constantly false)
-                debug/test-mail! (constantly false)]
+  (with-redefs [debug/sms-in-header!  (constantly false)
+                debug/mail-in-header! (constantly false)]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
@@ -88,7 +88,7 @@
         (debug-headers-text? "SMS" "777666"))))
 
 (deftest double-auth-mail-fallback
-  (with-redefs [debug/test-send-sms! (constantly false)
+  (with-redefs [debug/sms-in-header!          (constantly false)
                 auth-service/double-auth-code (constantly "777666")]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})

@@ -1,7 +1,7 @@
 (ns bass4.middleware.debug
   (:require [bass4.sms-sender :as sms]
             [bass4.config :refer [env]]
-            [bass4.mailer :refer [mail!]]
+            [bass4.mailer :refer [mail! is-email?]]
             [bass4.request-state :as request-state]
             [prone.middleware :refer [wrap-exceptions]]
             [clojure.tools.logging :as log]
@@ -13,64 +13,111 @@
 ;;  DEBUG REDEFS
 ;; ----------------
 
-(defn debug-send-sms!
-  [recipient message]
-  (when (mail! (env :email-error) "SMS" (str "To: " recipient "\n" message))
-    (sms/sms-success)))
+(defn sms-reroute-wrapper
+  [sms-fn reroute-sms]
+  (fn [recipient message]
+    (sms-fn reroute-sms (str message "\n" "To: " recipient))))
 
-(defn debug-wrap-mail-fn
-  [mailer-fn]
+(defn mail-reroute-wrapper
+  [mailer-fn reroute-email]
   (fn [to subject message & args]
     ;; Must by called with all four args to prevent stack overflow
-    (mailer-fn (env :email-error) subject (str "To: " to "\n" message) nil)))
+    (mailer-fn reroute-email subject (str "To: " to "\n" message) nil)))
 
-(defn test-send-sms!
+(defn sms-reroute-to-mail-wrapper
+  [mailer-fn reroute-email]
+  (fn [recipient message]
+    ;; Must by called with all four args to prevent stack overflow
+    (mailer-fn reroute-email "SMS" (str "To: " recipient "\n" message) nil)
+    (sms/sms-success)))
+
+(defn sms-in-header!
   [recipient message]
   (request-state/swap-state! :debug-headers #(conj %1 (str "SMS to " recipient "\n" message)) [])
   true)
 
-(defn test-mail!
+(defn mail-in-header!
   [to subject message & args]
   (request-state/swap-state! :debug-headers #(conj %1 (str "MAIL to " to "\n" subject "\n" message)) [])
   true)
 
+#_(defn- mail-redefs
+    []
+    (cond
+      ;; Put mail and sms in header in
+      ;; - test environment
+      ;; - dev environment unless
+      ;;   :dev-allow-email or :dev-allow-external-messages are true
+      (or (env :dev-test)
+          (and (env :dev)
+               (not (or
+                      (env :dev-allow-email)
+                      (env :dev-allow-external-messages)))))
+      {#'sms/send-db-sms! sms-in-header!
+       #'mail!            mail-in-header!}
+
+      ;; Send mail and sms to debug email in
+      ;; - debug mode unless :dev-allow-external-messages is true
+      ;; - dev environment if :dev-allow-email is true
+      ;;   unless :dev-allow-external-messages is true
+      (or (and (env :debug)
+               (not (env :dev-allow-external-messages)))
+          (and (env :dev)
+               (env :dev-allow-email)
+               (not (env :dev-allow-external-messages))))
+      {#'sms/send-db-sms! debug-send-sms!
+       #'mail!            (mail-reroute-wrapper mail!)}
+
+      ;; Production environment
+      :else
+      {}))
+
+(defn- sms-redefs
+  []
+  (let [sms-reroute (env :dev-reroute-sms)]
+    (cond
+      ;; Put sms in header when
+      ;; - in test environment, or
+      ;; - reroute-sms= :header
+      (or (env :dev-test)
+          (= :header sms-reroute))
+      {#'sms/send-db-sms! sms-in-header!}
+
+      (is-email? sms-reroute)
+      {#'sms/send-db-sms! (sms-reroute-to-mail-wrapper mail! sms-reroute)}
+
+      (string? sms-reroute)
+      {#'sms/send-db-sms! (sms-reroute-wrapper mail! sms-reroute)}
+
+      ;; Production environment
+      :else
+      {})))
+
 (defn- mail-redefs
   []
-  (cond
-    ;; Put mail and sms in header in
-    ;; - test environment
-    ;; - dev environment unless
-    ;;   :dev-allow-email or :dev-allow-external-messages are true
-    (or (env :dev-test)
-        (and (env :dev)
-             (not (or
-                    (env :dev-allow-email)
-                    (env :dev-allow-external-messages)))))
-    {#'sms/send-db-sms! test-send-sms!
-     #'mail!            test-mail!}
+  (let [mail-reroute (env :dev-reroute-email)]
+    (cond
+      ;; Put mail in header when
+      ;; - in test environment, or
+      ;; - reroute-email = :header
+      (or (env :dev-test)
+          (= :header mail-reroute))
+      {#'mail! mail-in-header!}
 
-    ;; Send mail and sms to debug email in
-    ;; - debug mode unless :dev-allow-external-messages is true
-    ;; - dev environment if :dev-allow-email is true
-    ;;   unless :dev-allow-external-messages is true
-    (or (and (env :debug)
-             (not (env :dev-allow-external-messages)))
-        (and (env :dev)
-             (env :dev-allow-email)
-             (not (env :dev-allow-external-messages))))
-    {#'sms/send-db-sms! debug-send-sms!
-     #'mail!            (debug-wrap-mail-fn mail!)}
+      (is-email? mail-reroute)
+      {#'mail! (mail-reroute-wrapper mail! mail-reroute)}
 
-    ;; Production environment
-    :else
-    {}))
+      ;; Production environment
+      :else
+      {})))
 
 (defn debug-redefs
   [handler request]
   ;; Test environment, dev-test and dev are true
   ;; Dev environment, dev-test is false and dev is true
   (let [redefs (merge
-                 (mail-redefs))]
+                 (mail-redefs)
+                 (sms-redefs))]
     (if redefs
       (with-redefs-fn redefs
         #(handler request))
