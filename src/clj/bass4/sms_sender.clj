@@ -9,8 +9,7 @@
             [selmer.parser :as parser]
             [bass4.request-state :as request-state]
             [bass4.bass-locals :as locals]
-            [clojure.tools.logging :as log])
-  (:import (java.io StringReader)))
+            [clojure.tools.logging :as log]))
 
 (defn smsteknik-url
   [id user password]
@@ -28,24 +27,24 @@
      :message                 message
      :recipient               recipient}))
 
-(defn sms-error
+(defn ^String sms-error
   [recipient message res]
-  (request-state/record-error!
-    (str "Could not send sms."
-         "\nRecipient " recipient
-         "\nMessage: " message
-         "\nError: " res))
-  false)
+  (let [error (str "Could not send sms."
+                   "\nRecipient " recipient
+                   "\nMessage: " message
+                   "\nError: " res)]
+    (request-state/record-error! error)
+    error))
 
 
 ;; TODO: Increase db sms counter
-(defn sms-success
-  []
-  true)
+(defn sms-success!
+  [])
 
-;; Overwritten by other function when in debug mode
-(defn send-db-sms!
+(defn send-sms*!
   [recipient message]
+  (when (env :dev)
+    (log/info (str "Sent sms to " recipient)))
   (let [config locals/common-config
         url    (smsteknik-url
                  (:smsteknik-id config)
@@ -58,5 +57,14 @@
                  (:smsteknik-status-return-url config))
         res    (:body (http/post url {:body xml}))]
     (if (= "0" (subs res 0 1))
-      (sms-error recipient message res)
-      (sms-success))))
+      (throw (Exception. (sms-error recipient message res)))
+      true)))
+
+;; Overwritten by other function when in debug mode
+(defn send-db-sms!
+  [recipient message]
+  (try
+    (when (send-sms*! recipient message)
+      (sms-success!)
+      true)
+    (catch Exception e false)))

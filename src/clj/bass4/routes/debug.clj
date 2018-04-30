@@ -20,7 +20,8 @@
             [bass4.mailer :as mail]
             [clj-http.client :as http]
             [bass4.http-utils :as h-utils]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [bass4.sms-sender :as sms]))
 
 (defn states-page
   []
@@ -94,12 +95,18 @@
           (layout/error-403-page (get-in request [:session :identity])))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
+
+        ;; sms and email test functions
         (GET "/mail-debug" [& params :as request]
           (let [email (env :error-email "brjann@gmail.com")]
             (layout/text-response (mail/mail-debug! email "Test email" "This is the test message"))))
         (GET "/mail" [& params :as request]
           (let [email (or (:mail params) (env :error-email "brjann@gmail.com"))]
             (layout/text-response (mail/mail! email "Test email" "This is the test message"))))
+        (GET "/sms" [& params :as request]
+          (let [sms-number (or (:sms params) (env :error-sms "+46707176562"))]
+            (layout/text-response (sms/send-db-sms! sms-number "This is the test sms"))))
+
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]

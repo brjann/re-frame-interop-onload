@@ -29,11 +29,11 @@
   [req-state]
   (try
     (mail!
-      (env :email-error)
+      (env :error-email)
       "Error in BASS4"
       (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
     (catch Exception x
-      (log/error "Could not send error email to: " (env :email-error) "\nError: " x))))
+      (log/error "Could not send error email to: " (env :error-email) "\nError: " x))))
 
 (defn catch-internal-error
   [handler req]

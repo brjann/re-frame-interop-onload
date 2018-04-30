@@ -22,6 +22,7 @@
        (str (:out res))
        true))))
 
+;; Overwritten by other function when in debug mode
 (defn mail!
   ([to subject message]
    (mail*! to subject message nil false))

@@ -18,7 +18,7 @@
     (php_clj/php->clj php true)
     (catch Exception e
       (mail/mail!
-        (env :email-error)
+        (env :error-email)
         "Unserialize error in BASS4"
         "An php unserialize error happened in BASS4. See log for details")
       (log/error (str "Failed php unserialize\n" php "\n" e)))))
