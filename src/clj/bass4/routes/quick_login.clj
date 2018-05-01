@@ -54,7 +54,6 @@
 
 (defn do-login
   [user]
-  (log/debug user)
   (-> (http-response/found "/user/")
       (assoc :session (auth-response/create-new-session user {:external-login true} true))))
 

@@ -11,7 +11,7 @@
   (seq (filter #(when (:activation-date %)
                   (<= 0 (b-time/day-diff-since-tz
                           (:activation-date %)
-                          last-login)))
+                          (or last-login (t/epoch)))))
                modules)))
 
 (defn treatment-dates
