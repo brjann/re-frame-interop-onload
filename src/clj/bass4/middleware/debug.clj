@@ -3,7 +3,9 @@
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail! mail*! is-email?]]
             [bass4.request-state :as request-state]
-            [prone.middleware :refer [wrap-exceptions]]))
+            [prone.middleware :refer [wrap-exceptions]]
+            [bass4.db.core :as db]
+            [clojure.tools.logging :as log]))
 
 
 
@@ -15,13 +17,13 @@
   [reroute-sms]
   (fn [recipient message]
     (when (sms/send-sms*! reroute-sms (str message "\n" "To: " recipient))
-      (sms/sms-success!))))
+      (sms/sms-success! db/*db*))))
 
 (defn- sms-reroute-to-mail-wrapper
   [reroute-email]
   (fn [recipient message]
     (when (mail*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)
-      (sms/sms-success!))))
+      (sms/sms-success! db/*db*))))
 
 (defn- sms-in-header!
   [recipient message]

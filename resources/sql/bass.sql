@@ -96,3 +96,10 @@ CALL create_bass_link(:linker-id, :linkee-id, :link-property, :linker-class, :li
 
 -- :name get-time-zone :? :1
 SELECT @@session.time_zone AS `time-zone`;
+
+
+-- :name increase-sms-count! :! :1
+-- :doc
+INSERT INTO sms_count (`day`, `count`)
+				VALUES (:day, 1)
+				ON DUPLICATE KEY UPDATE `count` = `count` + 1;

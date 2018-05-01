@@ -9,7 +9,9 @@
             [selmer.parser :as parser]
             [bass4.request-state :as request-state]
             [bass4.bass-locals :as locals]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass]
+            [bass4.time :as b-time]))
 
 (defn smsteknik-url
   [id user password]
@@ -36,10 +38,14 @@
     (request-state/record-error! error)
     error))
 
-
 ;; TODO: Increase db sms counter
 (defn sms-success!
-  [])
+  [db-connection]
+  (let [midnight (-> (bass/local-midnight)
+                     (b-time/to-unix))]
+    (db/increase-sms-count!
+      db-connection
+      {:day midnight})))
 
 (defn send-sms*!
   [recipient message]
@@ -63,8 +69,10 @@
 ;; Overwritten by other function when in debug mode
 (defn send-db-sms!
   [recipient message]
-  (try
-    (when (send-sms*! recipient message)
-      (sms-success!)
-      true)
-    (catch Exception e false)))
+  (let [db-name       (:name locals/*local-config*)
+        db-connection db/*db*]
+    (try
+      (when (send-sms*! recipient message)
+        (sms-success! db-connection)
+        true)
+      (catch Exception e false))))
