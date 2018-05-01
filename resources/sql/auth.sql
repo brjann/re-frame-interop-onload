@@ -79,6 +79,7 @@ WHERE ObjectId=:user-id;
 -- :doc
 SELECT
   ObjectId,
+  ObjectId AS `user-id`,
   FirstName AS `first-name`,
   LastName AS `last-name`,
   UserName,
