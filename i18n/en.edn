@@ -12,6 +12,10 @@
  :save-changes    "Save changes"
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
+ :quick-login     {:expired-title           "Login expired"
+                   :expired-text            "Your login code has expired. "
+                   :contact-project-manager "If you need a new code, contact project manager at"
+                   :username-password       "If you have a username and password:"}
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
  :download        "Download"
  :registration    {:provide-digits          "Enter the digits in the image."

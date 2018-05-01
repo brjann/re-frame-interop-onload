@@ -1,0 +1,9 @@
+{% extends "simple.html" %}
+{% block content %}
+<h1>{%tr quick-login/expired-title %}</h1>
+<p>{%tr quick-login/expired-text %}</p>
+{% if email %}
+<p>{%tr quick-login/contact-project-manager %} <a href="mailto:{{email}}">{{email}}</a></p>
+{% endif %}
+<p>{%tr quick-login/username-password %} <a href="/login">{%tr error/login %}</a></p>
+{% endblock %}

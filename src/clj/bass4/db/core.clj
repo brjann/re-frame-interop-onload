@@ -88,11 +88,13 @@
 
 ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
 
-(defn bool-cols [db-fn params cols]
-  (let [row-fn (fn [row]
-                 (merge row
-                        (map-map val-to-bool (select-keys row cols))))]
-    (db-fn *db* params nil {:row-fn row-fn})))
+(defn bool-cols
+  ([db-fn cols] (bool-cols db-fn {} cols))
+  ([db-fn params cols]
+   (let [row-fn (fn [row]
+                  (merge row
+                         (map-map val-to-bool (select-keys row cols))))]
+     (db-fn *db* params nil {:row-fn row-fn}))))
 
 ;---------------
 ; SQL WRAPPER

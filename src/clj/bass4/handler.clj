@@ -6,6 +6,7 @@
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
+            [bass4.routes.quick-login :refer [quick-login-routes]]
             [bass4.routes.debug :refer [debug-routes]]
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
@@ -42,6 +43,8 @@
         (wrap-routes #(middleware/wrap-mw-fn % reg-routes/captcha-mw)))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
+        (wrap-routes middleware/wrap-formats))
+    (-> #'quick-login-routes
         (wrap-routes middleware/wrap-formats))
     ;; Replacement for route/not-found
     (layout/route-not-found)))

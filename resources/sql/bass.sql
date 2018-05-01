@@ -103,3 +103,12 @@ SELECT @@session.time_zone AS `time-zone`;
 INSERT INTO sms_count (`day`, `count`)
 				VALUES (:day, 1)
 				ON DUPLICATE KEY UPDATE `count` = `count` + 1;
+
+
+-- :name get-quick-login-settings :? :1
+-- :doc
+SELECT
+  QuickLoginAllowed AS `allowed?`,
+  QuickLoginDeadline AS `expiration-days`
+FROM c_project
+WHERE ObjectId = 100;

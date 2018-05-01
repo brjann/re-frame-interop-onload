@@ -72,4 +72,22 @@ WHERE ObjectId=:user-id
 -- :doc
 UPDATE c_participant
 SET LoginCount = LoginCount + 1
-WHERE ObjectId=:user-id
+WHERE ObjectId=:user-id;
+
+
+-- :name get-user-by-quick-login-id :? :*
+-- :doc
+SELECT
+  ObjectId,
+  FirstName AS `first-name`,
+  LastName AS `last-name`,
+  UserName,
+  Email,
+  SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
+  ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login`,
+  `Password`,
+  from_unixtime(QuickLoginTimestamp) AS `quick-login-timestamp`
+FROM c_participant
+WHERE QuickLoginPassword = :quick-login-id;
