@@ -4,12 +4,19 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s* fix-time advance-time-d!]]
+            [bass4.test.core :refer [test-fixtures
+                                     not-text?
+                                     log-return
+                                     disable-attack-detector
+                                     *s*
+                                     fix-time
+                                     advance-time-d!
+                                     advance-time-s!]]
             [bass4.db.core :as db]
             [bass4.services.user :as user]
+            [bass4.middleware.core :refer [re-auth-timeout]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [clojure.string :as string]
             [bass4.time :as b-time]))
 
 (use-fixtures
@@ -74,11 +81,23 @@
           (has (some-text? "not allowed"))))))
 
 (deftest quick-login-too-long
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+    (-> *s*
+        (visit "/q/1234567890123456")
+        (has (status? 200))
+        (has (some-text? "too long")))))
+
+(deftest quick-login-no-timeout
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
       (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
       (-> *s*
-          (visit (str "/q/1234567890123456"))
+          (visit (str "/q/" q-id))
+          (has (status? 302))
+          (follow-redirect)
+          (visit "/user/")
           (has (status? 200))
-          (has (some-text? "too long"))))))
+          (advance-time-s! (re-auth-timeout))
+          (visit "/user/")
+          (has (status? 200))))))
