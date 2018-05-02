@@ -41,7 +41,7 @@
 (defn quick-login-expired?
   [user expiration-days]
   (let [days-since (b-time/days-since-tz (:quick-login-timestamp user))]
-    (when (< expiration-days days-since)
+    (when (<= expiration-days days-since)
       (log/info "Quick login expired")
       true)))
 

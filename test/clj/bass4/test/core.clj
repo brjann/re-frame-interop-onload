@@ -35,6 +35,13 @@
    (advance-time-s! secs)
    state))
 
+(defn advance-time-d!
+  ([days]
+   (swap! test-now (constantly (t/plus (t/now) (t/days days)))))
+  ([state days]
+   (advance-time-s! days)
+   state))
+
 (defn get-edn
   [edn]
   (let [res (-> (io/file (System/getProperty "user.dir") "test/test-edns" (str edn ".edn"))

@@ -4,87 +4,81 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s* fix-time advance-time-d!]]
             [bass4.db.core :as db]
             [bass4.services.user :as user]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [bass4.time :as b-time]))
 
 (use-fixtures
   :once
   test-fixtures
   disable-attack-detector)
 
-(deftest request-ext-login-not-allowed
-  (with-redefs [db/ext-login-settings (constantly {:allowed false :ips ""})]
-    (-> *s*
-        (visit "/ext-login/check-pending/900")
-        (has (some-text? "0 External login not allowed")))))
+(use-fixtures
+  :each
+  (fn [f]
+    (fix-time
+      (f))))
 
-(deftest request-ext-login-allowed-wrong-ip
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips ""})]
-    (-> *s*
-        (visit "/ext-login/check-pending/900")
-        (has (some-text? "0 External login not allowed from this IP")))))
+(deftest quick-login-assessments
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (has (some-text? "top top welcome"))
+          (visit "/user/")
+          (has (some-text? "HAD"))
+          (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "Agoraphobic"))
+          (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+          ;; Posting answers to instrument not shown yet - advanced stuff!
+          (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "AAQ"))
+          (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "top top top thanks"))
+          (has (some-text? "Thanks top"))))))
 
-(deftest request-ext-login-allowed-ok-ip-no-user
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (-> *s*
-        (visit "/ext-login/check-pending/ext-login-x")
-        (has (some-text? "0 No such user")))))
+(deftest quick-login-expired
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (advance-time-d! 11)
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (has (status? 200))
+          (has (some-text? "expired"))))))
 
-(deftest request-ext-login-allowed-ok-ip-double
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (-> *s*
-        (visit "/ext-login/check-pending/ext-login-double")
-        (has (some-text? "0 More than 1 matching user")))))
+(deftest quick-login-not-allowed
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (has (status? 200))
+          (has (some-text? "not allowed"))))))
 
-(deftest request-ext-login-allowed-ok-no-pending
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (-> *s*
-        (visit "/ext-login/check-pending/ext-login-1")
-        (has (some-text? "0 No pending administrations")))))
-
-(deftest request-ext-login-assessment-pending
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
-      (let [session  *s*
-            uri      (-> session
-                         (visit (str "/ext-login/check-pending/" user-id))
-                         (get-in [:response :body])
-                         (string/split #"localhost")
-                         (second))
-            redirect (-> session
-                         (visit (str uri "&returnURL=http://www.dn.se"))
-                         (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-                         (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
-                         (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
-                         (follow-redirect)
-                         (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-                         (follow-redirect)
-                         (visit "/user")
-                         (follow-redirect)
-                         (has (status? 302))
-                         (get-in [:response :headers "Location"]))]
-        (is (= "http://www.dn.se" redirect))
-        (-> session
-            (visit "/user/message")
-            (has (status? 403)))))))
-
-
-
-(deftest request-ext-login-error-uid
-  (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
-      (let [session  *s*
-            redirect (-> session
-                         (visit "/ext-login/do-login?uid=666&returnURL=http://www.dn.se")
-                         (has (status? 302))
-                         (get-in [:response :headers "Location"]))]
-        (is (= "http://www.dn.se" redirect))
-        (-> session
-            (visit "/user/message")
-            (has (status? 403)))))))
+(deftest quick-login-too-long
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
+    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/1234567890123456"))
+          (has (status? 200))
+          (has (some-text? "too long"))))))
