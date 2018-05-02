@@ -12,10 +12,28 @@
             [clojure.test]
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [clj-time.core :as t]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
+
+(def test-now (atom nil))
+
+(defmacro fix-time
+  [body]
+  `(do
+     (swap! test-now (constantly (t/now)))
+     (with-redefs
+       [t/now (fn [] @test-now)]
+       ~body)))
+
+(defn advance-time-s!
+  ([secs]
+   (swap! test-now (constantly (t/plus (t/now) (t/seconds secs)))))
+  ([state secs]
+   (advance-time-s! secs)
+   state))
 
 (defn get-edn
   [edn]

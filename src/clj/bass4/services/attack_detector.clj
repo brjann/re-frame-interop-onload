@@ -136,47 +136,74 @@
 
 (defn- route-success-fn
   [request]
-  (when (= (:request-method request) :post)
-    (let [attack-routes [{:route   #"/login"
-                          :success (fn [in out]
-                                     (and (:identity out)
-                                          (not= (:identity in) (:identity out))))}
-                         {:route   #"/double-auth"
-                          :success (fn [in out]
-                                     (and (nil-zero? (:double-authed in))
-                                          (= 1 (:double-authed out))))}
-                         {:route   #"/re-auth"
-                          :success (fn [in out]
-                                     (and (:auth-re-auth in)
-                                          (nil? (:auth-re-auth out))))}
-                         {:route   #"/re-auth-ajax"
-                          :success (fn [in out]
-                                     (and (:auth-re-auth in)
-                                          (nil? (:auth-re-auth out))))}
-                         {:route   #"/registration/[0-9]+/captcha"
-                          :success (fn [in out]
-                                     (and (not (:captcha-ok in))
-                                          (:captcha-ok out)))}]]
-      (->> attack-routes
-           (filter #(re-matches (:route %) (:uri request)))
-           (first)
-           (:success)))))
+  (let [fail-fn        (fn [response]
+                         (= 422 (:status response)))
+        delay-response (fn [delay] (layout/error-429 delay))
+        attack-routes  [{:method         :post
+                         :route          #"/login"
+                         :success        (fn [in out]
+                                           (and (:identity out)
+                                                (not= (:identity in) (:identity out))))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :post
+                         :route          #"/double-auth"
+                         :success        (fn [in out]
+                                           (and (nil-zero? (:double-authed in))
+                                                (= 1 (:double-authed out))))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :post
+                         :route          #"/re-auth"
+                         :success        (fn [in out]
+                                           (and (:auth-re-auth in)
+                                                (nil? (:auth-re-auth out))))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :post
+                         :route          #"/re-auth-ajax"
+                         :success        (fn [in out]
+                                           (and (:auth-re-auth in)
+                                                (nil? (:auth-re-auth out))))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :post
+                         :route          #"/registration/[0-9]+/captcha"
+                         :success        (fn [in out]
+                                           (and (not (:captcha-ok in))
+                                                (:captcha-ok out)))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :get
+                         :route          #"/q/[a-zA-Z0-9]+"
+                         :success        (fn [in out]
+                                           (contains? out :identity))
+                         :fail           (fn [response]
+                                           (not (contains? (:session response) :identity)))
+                         :delay-response (constantly (layout/error-page {:status 429 :message "Too many requests"}))}]]
+    (->> attack-routes
+         (filter #(and (= (:request-method request) (:method %))
+                       (re-matches (:route %) (:uri request))))
+         (first))))
 
 (defn attack-detector-mw
   [handler request]
-  (if-let [success-fn (route-success-fn request)]
+  (if-let [check-fns (route-success-fn request)]
     (if-let [delay (get-delay-time request)]
-      (layout/error-429 delay)
+      (do
+        (log/info "Possible attack detected - delaying response")
+        #_(layout/error-429 delay)
+        ((:delay-response check-fns) delay))
       (let [response (handler request)]
         (cond
-          (= 422 (:status response))
+          ((:fail check-fns) response)
           (do
             (register-failed-login! :login request)
             (delay-ip! request)
             (delay-global!)
             response)
 
-          (success-fn (:session request) (:session response))
+          ((:success check-fns) (:session request) (:session response))
           (do
             (register-successful-login! request)
             response)

@@ -4,35 +4,25 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? debug-headers-not-text? log-return *s*]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     debug-headers-not-text?
+                                     log-return
+                                     *s*
+                                     advance-time-s!
+                                     fix-time]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
             [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
             [bass4.middleware.core :as mw]
-            [bass4.middleware.debug :as debug]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [clojure.string :as string]
             [bass4.services.registration :as reg-service]
-            [bass4.responses.registration :as reg-response]
-            [bass4.passwords :as passwords]
             [bass4.services.attack-detector :as a-d]))
 
 
 (use-fixtures
   :once
   test-fixtures)
-
-(def now (atom nil))
-
-(defn advance-time!
-  ([secs]
-   (swap! now (constantly (t/plus (t/now) (t/seconds secs)))))
-  ([state secs]
-   (advance-time! secs)
-   state))
 
 (use-fixtures
   :each
@@ -42,11 +32,11 @@
     (swap! a-d/blocked-last-request (constantly {}))
     (swap! a-d/global-block (constantly nil))
     (swap! a-d/global-last-request (constantly nil))
-    (swap! now (constantly (t/now)))
-    (with-redefs
-      [t/now (fn [] @now)]
+    (fix-time
       (f))
     (db/clear-failed-logins!)))
+
+
 
 (defn attack-uri
   ([state uri post attacks]
@@ -56,7 +46,7 @@
      (if (seq attacks)
        (let [[wait status] (first attacks)]
          (-> current-state
-             (advance-time! wait)
+             (advance-time-s! wait)
              (visit uri :request-method :post :params post :remote-addr from-ip-address)
              (has (status? status))
              ((fn [state]
@@ -86,7 +76,7 @@
         standard-attack)
       (visit "/login" :request-method :post :params {:username 536975 :password 536975})
       (has (status? 429))
-      (advance-time! a-d/const-ip-block-delay)
+      (advance-time-s! a-d/const-ip-block-delay)
       (visit "/login" :request-method :post :params {:username 536975 :password 536975})
       (has (status? 302))))
 
@@ -159,11 +149,11 @@
              [0 429]
              [(dec a-d/const-ip-block-delay) 429]
              [1 422]]))
-        (advance-time! a-d/const-ip-block-delay)
+        (advance-time-s! a-d/const-ip-block-delay)
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
         (follow-redirect)
-        (advance-time! (mw/re-auth-timeout))
+        (advance-time-s! (mw/re-auth-timeout))
         (visit "/user/messages")
         (has (status? 302))
         (attack-uri
@@ -172,7 +162,7 @@
           (concat
             (repeat 10 [0 422])
             (repeat 10 [0 429])))
-        (advance-time! a-d/const-ip-block-delay)
+        (advance-time-s! a-d/const-ip-block-delay)
         (visit "/re-auth-ajax" :request-method :post :params {:password "536975"})
         (has (status? 200)))))
 
@@ -256,7 +246,7 @@
               (- a-d/const-fails-until-ip-block 8)
               [0 422])
             [[1 429]]))
-        (advance-time! 9)
+        (advance-time-s! 9)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -276,7 +266,7 @@
   (-> *s*
       (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hejsan")
       (has (status? 429)))
-  (advance-time! a-d/const-global-block-delay)
+  (advance-time-s! a-d/const-global-block-delay)
   (-> *s*
       (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hoppsan")
       (has (status? 422)))
@@ -286,11 +276,11 @@
   (-> *s*
       (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "METALLICA")
       (has (status? 429)))
-  (advance-time! a-d/const-global-block-delay)
+  (advance-time-s! a-d/const-global-block-delay)
   (-> *s*
       (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "SLAYER")
       (has (status? 422)))
-  (advance-time! a-d/const-attack-interval)
+  (advance-time-s! a-d/const-attack-interval)
   (dotimes [ip-address 5]
     (attack-uri
       *s*
@@ -298,3 +288,13 @@
       {:username "xxx" :password "xxx"}
       (repeat (/ a-d/const-fails-until-global-block 10) [1 422])
       (str ip-address))))
+
+
+(deftest attack-quick-login
+  (dotimes [_ 10]
+    (-> *s*
+        (visit "/q/xx" :request-method :get)
+        (has (status? 200))))
+  (-> *s*
+      (visit "/q/xx" :request-method :get)
+      (has (status? 429))))
