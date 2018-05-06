@@ -33,10 +33,9 @@
 (defn- quick-login-user
   [quick-login-id]
   (let [users (db/get-user-by-quick-login-id {:quick-login-id quick-login-id})]
-    (when (not= 1 (count users))
+    (if-not (= 1 (count users))
       (log/info "Incorrect number of matches" (count users))
-      (throw (Exception. "Incorrect quick login")))
-    (first users)))
+      (first users))))
 
 (defn quick-login-expired?
   [user expiration-days]
@@ -52,6 +51,12 @@
                    {:email (or (:project-email emails)
                                (:db-email emails))})))
 
+(defn invalid-response
+  []
+  (let [emails (bass/db-contact-info (:project-id 0))]
+    (layout/render "quick-login-invalid.html"
+                   {:email (:db-email emails)})))
+
 (defn do-login
   [user]
   (-> (http-response/found "/user/")
@@ -64,9 +69,11 @@
     (log/info "Checking quick-login ID" quick-login-id)
     (let [expiration-days (quick-login-settings)
           user            (quick-login-user quick-login-id)]
-      (if (quick-login-expired? user expiration-days)
-        (expired-response user)
-        (do-login user)))
+      (if (nil? user)
+        (invalid-response)
+        (if (quick-login-expired? user expiration-days)
+          (expired-response user)
+          (do-login user))))
     (catch Exception e
       (layout/text-response (:cause (Throwable->map e))))))
 

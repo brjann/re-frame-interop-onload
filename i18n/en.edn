@@ -13,7 +13,9 @@
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
  :quick-login     {:expired-title           "Login expired"
-                   :expired-text            "Your login code has expired. "
+                   :expired-text            "Your login code has expired."
+                   :invalid-title           "Invalid login code"
+                   :invalid-text            "Your login code is not valid."
                    :contact-project-manager "If you need a new code, contact project manager at"
                    :username-password       "If you have a username and password:"}
  :offline-warning "You seem to be offline. Please make sure you are online before posting."

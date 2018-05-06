@@ -70,6 +70,13 @@
           (has (status? 200))
           (has (some-text? "expired"))))))
 
+(deftest quick-login-invalid
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+    (-> *s*
+        (visit "/q/123456789012345")
+        (has (status? 200))
+        (has (some-text? "Invalid")))))
+
 (deftest quick-login-not-allowed
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
     (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
