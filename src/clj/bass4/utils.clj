@@ -3,7 +3,6 @@
             [bass4.php-clj.safe :refer [php->clj]]
             [clojure.string :as s]))
 
-1
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
   ([m k f]

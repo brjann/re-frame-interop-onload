@@ -7,6 +7,7 @@
                  [compojure "1.5.2"]
                  [conman "0.6.6"]
                  [cprop "0.1.10"]
+                 [org.clojure/core.async "0.4.474"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.3.0"]
@@ -37,7 +38,7 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/data.json "0.2.6"]
                  [prone "1.1.4"]
-                 [clj-http "3.6.1"]]
+                 [clj-http "3.9.0"]]
 
   :min-lein-version "2.0.0"
 
