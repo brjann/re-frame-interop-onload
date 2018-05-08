@@ -4,7 +4,8 @@
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe]]
             [clojure.walk :as walk]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import (java.util UUID)))
 
 (defn print-status
   [uid s]
@@ -75,7 +76,7 @@
 
 (defn launch-bankid
   []
-  (let [uid (java.util.UUID/randomUUID)]
+  (let [uid (UUID/randomUUID)]
     (set-status! uid :initializing)
     (go (let [start-chan (start-bankid-session uid)
               response   (<! start-chan)]
@@ -85,14 +86,16 @@
               (print-status uid (str "BankID session started with order-ref" order-ref))
               (set-status! uid :started)
               (while (contains? #{:started :pending} (get-status uid))
-                ;; Poll once every second
-                (<! (timeout 1000))
+                ;; Poll once every 1.5 seconds
+                (<! (timeout 1500))
                 (let [collect-chan (collect-bankid uid order-ref)
                       response     (<! collect-chan)]
                   (if (seq response)
-                    (let [status    (keyword (:status response))
-                          hint-code (keyword (:hintCode response))]
-                      (set-status! uid status))
+                    (set-status!
+                      uid
+                      (keyword (:status response))
+                      {:hint-code       (keyword (:hintCode response))
+                       :completion-data (:completionData response)})
                     (set-status! uid :failed)))))
             (print-status uid "Launch failed")))
         (print-status uid (str "Request completed with status " (get @statuses uid))))
