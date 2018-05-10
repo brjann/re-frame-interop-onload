@@ -12,15 +12,16 @@
   ^:always-validate
   launch-bankid
   [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
-  (log/debug personnummer)
-  (let [uid (bankid/launch-bankid personnummer)]
-    (-> (response/found "/e-auth/bankid")
-        (assoc :session (merge
-                          session
-                          {:e-auth {:uid              uid
-                                    :type             :bankid
-                                    :redirect-success redirect-success
-                                    :redirect-fail    redirect-fail}})))))
+  (if (re-matches #"[0-9]{12}" personnummer)
+    (let [uid (bankid/launch-bankid personnummer)]
+      (-> (response/found "/e-auth/bankid")
+          (assoc :session (merge
+                            session
+                            {:e-auth {:uid              uid
+                                      :type             :bankid
+                                      :redirect-success redirect-success
+                                      :redirect-fail    redirect-fail}}))))
+    (layout/error-422 "error")))
 
 (defn bankid-status-page
   [session]
