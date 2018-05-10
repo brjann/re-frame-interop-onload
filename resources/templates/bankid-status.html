@@ -17,6 +17,7 @@
    $(document).ready(function () {
       var $status = $('#status');
       var $hint_code = $('#hint-code');
+      var $message = $('#message');
       var $personnummer = $('#personnummer');
       var $name = $('#name');
       var $error_code = $('#error-code');
@@ -30,6 +31,7 @@
          if (!check_redirect(data)) {
             status = data['status'];
             $status.text(data['status']);
+            $message.text(data['message']);
             $hint_code.text(data['hint-code']);
             $personnummer.text(data['personnummer']);
             $name.text(data['name']);

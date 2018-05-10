@@ -10,13 +10,16 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]))
 
-(def bankid-response-map
+(def bankid-message-map
   {:pending {:outstanding-transaction {:auto   :rfa13
-                                       :manual :rfa1}
+                                       :manual :rfa1
+                                       :else   :rfa1}
              :no-client               {:auto   :rfa1
-                                       :manual :rfa1}
+                                       :manual :rfa1
+                                       :else   :rfa1}
              :started                 {:without-start-token :rfa14
-                                       :with-start-token    :rfa15}
+                                       :with-start-token    :rfa15
+                                       :else                :rfa14}
              :user-sign               :rfa9
              :else                    :rfa21}
    :failed  {:expired-transaction :rfa8
@@ -25,17 +28,35 @@
              :cancelled           :rfa3
              :start-failed        :rfa17
              :else                :rfa22}
-   :error   {:400 {:already-in-progress :rfa3
-                   :invalid-parameters  :exception
-                   :else                :rfa22}
-             :401 :exception
-             :404 :exception
-             :408 :rfa5
-             :415 :exception
-             :500 :rfa5
-             :503 :rfa5}})
+   :error   {:400  {:already-in-progress :rfa3
+                    :invalid-parameters  :exception
+                    :else                :rfa22}
+             :401  :exception
+             :404  :exception
+             :408  :rfa5
+             :415  :exception
+             :500  :rfa5
+             :503  :rfa5
+             :else :exception}})
 
 ;; TODO: 503 allows for retries before showing RFA5
+
+(defn get-bankid-message
+  [status code & specifics]
+  (let [status-responses (get bankid-message-map status)
+        response         (get status-responses code)]
+    (cond
+      (nil? response)
+      (:else status-responses)
+
+      (keyword? response)
+      response
+
+      (map? response)
+      (let [sub-response (select-keys response specifics)]
+        (if (seq sub-response)
+          (first (vals sub-response))
+          (:else response))))))
 
 (s/defn
   ^:always-validate
@@ -71,6 +92,7 @@
       (throw (ex-info "BankID completed data invalid" data)))
     data))
 
+;; TODO: Remove kebab-case out of here and into bankid service
 (defn bankid-collect
   [session]
   (let [uid              (get-in session [:e-auth :uid])
@@ -83,33 +105,37 @@
         (assoc :session (merge session {:e-auth (completed-data info)})))
       (h-utils/json-response
         (cond
-          (nil? uid)
-          {:status    :error
-           :hint-code "No uid in session"}
-
-          (nil? info)
-          {:status    :error
-           :hint-code "No session info for uid "}
-
           (= :exception status)
           (throw (:exception info))
 
+          (nil? uid)
+          {:status    :error
+           :hint-code "No uid in session"
+           :message   :no-session}
+
+          (nil? info)
+          {:status    :error
+           :hint-code "No session info for uid "
+           :message   :no-session}
+
           (contains? #{:starting :started} status)
           {:status    :starting
-           :hint-code :contacting-bankid}
-
-          (= :complete status)
-          {:personnummer (get-in info [:completion-data :user :personal-number])
-           :name         (get-in info [:completion-data :user :name])}
+           :hint-code :contacting-bankid
+           :message   :contacting-bankid}
 
           (= :error status)
-          {:status     :error
-           :error-code (kebab-case-keyword (:error-code info))
-           :details    (:details info)}
+          (let [error-code (kebab-case-keyword (:error-code info))
+                details    (kebab-case-keyword (:details info))]
+            {:status     :error
+             :error-code error-code
+             :details    details
+             :message    (get-bankid-message status error-code details)})
 
           (contains? #{:pending :failed} status)
-          {:status    status
-           :hint-code (kebab-case-keyword (:hint-code info))}
+          (let [hint-code (kebab-case-keyword (:hint-code info))]
+            {:status    status
+             :hint-code hint-code
+             :message   (get-bankid-message status hint-code)})
 
           :else
           (throw (ex-info (str "Unknown BankID status " status) info)))))))
