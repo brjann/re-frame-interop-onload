@@ -142,15 +142,15 @@
     (if (= :complete status)
       (->
         (http-response/found redirect-success)
-        (assoc :session (merge session {:e-auth (completed-data info)}))))
-    (let [response (bankid-collect-response uid status info)
-          message  (:message response)]
-      (if (= :exception message)
-        (throw (ex-info "BankID error" response))
-        (h-utils/json-response
-          (merge
-            response
-            {:message (i18n/tr [(keyword (str "bankid/" (name message)))])}))))))
+        (assoc :session (merge session {:e-auth (completed-data info)})))
+      (let [response (bankid-collect-response uid status info)
+            message  (:message response)]
+        (if (= :exception message)
+          (throw (ex-info "BankID error" response))
+          (h-utils/json-response
+            (merge
+              response
+              {:message (i18n/tr [(keyword (str "bankid/" (name message)))])})))))))
 
 (defn bankid-success
   [session]
