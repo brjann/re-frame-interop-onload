@@ -8,19 +8,20 @@
 
 (defroutes e-auth-routes
   (context "/e-auth" []
-    (GET "/bankid/test" []
-      (layout/render "bankid-test.html"))
-    (POST "/bankid/launch" [& params :as request]
-      (e-auth-response/launch-bankid
-        (:session request)
-        (:personnummer params)
-        (:redirect-success params)
-        (:redirect-fail params)))
-    (GET "/bankid/status" [:as request]
-      (e-auth-response/bankid-status-page (:session request)))
-    (GET "/bankid-reset" [:as request]
-      (e-auth-response/bankid-reset (:session request)))
-    (GET "/bankid/success" [:as request]
-      (e-auth-response/bankid-success (:session request)))
-    (POST "/bankid/collect" [:as request]
-      (e-auth-response/bankid-collect (:session request)))))
+    (context "/bankid" []
+      (GET "/test" []
+        (layout/render "bankid-test.html"))
+      (POST "/launch" [& params :as request]
+        (e-auth-response/launch-bankid
+          (:session request)
+          (:personnummer params)
+          (:redirect-success params)
+          (:redirect-fail params)))
+      (GET "/status" [:as request]
+        (e-auth-response/bankid-status-page (:session request)))
+      (GET "/reset" [:as request]
+        (e-auth-response/bankid-reset (:session request)))
+      (GET "/success" [:as request]
+        (e-auth-response/bankid-success (:session request)))
+      (POST "/collect" [:as request]
+        (e-auth-response/bankid-collect (:session request))))))
