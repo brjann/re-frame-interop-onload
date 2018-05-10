@@ -4,13 +4,13 @@
             [compojure.core :refer [defroutes routes context GET POST ANY]]
             [bass4.db.core :as db]
             [ring.util.http-response :as http-response]
-            [ring.util.response :as response]
             [ring.util.request :as request]
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [clojure.java.io :as io]
             [bass4.bass-locals :as locals]
+            [clojure.data.json :as json]
             [bass4.responses.instrument :as instruments]
             [bass4.services.bass :as bass]
             [mount.core :as mount]
@@ -106,11 +106,13 @@
         (GET "/sms" [& params :as request]
           (let [sms-number (or (:sms params) (env :error-sms "+46707176562"))]
             (layout/text-response (sms/send-db-sms! sms-number "This is the test sms"))))
-
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]
           (layout/print-var-response params))
+        (GET "/json" [& params]
+          (-> (http-response/ok (json/write-str params))
+              (http-response/content-type "application/json")))
         (GET "/encode" []
           (-> (http-response/found (str "/debug/decode?url=" (codec/url-encode "/debug/encode-decode?arg1=val1&arg2=val2&arg3=path%2fto%2fresource")))))
         (GET "/decode" [& params]

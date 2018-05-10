@@ -1,10 +1,11 @@
-(ns bass4.bankid
+(ns bass4.services.bankid
   (:require [clojure.core.async
              :refer [>! <! go chan timeout]]
             [clj-http.client :as http]
-            [bass4.utils :refer [json-safe]]
+            [bass4.utils :refer [json-safe filter-map]]
             [clojure.walk :as walk]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clj-time.core :as t])
   (:import (java.util UUID)))
 
 (defn print-status
@@ -58,45 +59,96 @@
       (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
-(def statuses (atom {}))
+;; --------------------------
+;;   BANKID SESSION HANDLER
+;; --------------------------
 
-(defn get-status
+(def session-statuses (atom {}))
+
+(defn filter-old-uids
+  [status-map]
+  (let [start-time (:start-time status-map)
+        age        (t/in-minutes (t/interval start-time (t/now)))]
+    (> 30 age)))
+
+(defn remove-old-sessions!
+  "Also deletes sessions older than 30 minutes."
+  []
+  (let [before-count (count @session-statuses)]
+    (swap!
+      session-statuses
+      #(filter-map filter-old-uids %))
+    (log/debug "Removed" (- before-count (count @session-statuses)) "sessions")))
+
+(defn get-session-status
+  "Also deletes sessions older than 30 minutes."
   [uid]
-  (get-in @statuses [uid :status]))
+  (remove-old-sessions!)
+  (get-in @session-statuses [uid :status]))
 
-(defn get-status-info
+(defn get-session-info
   [uid]
-  (get @statuses uid))
+  (remove-old-sessions!)
+  (get @session-statuses uid))
 
-(defn set-status!
-  ([uid status] (set-status! uid status {}))
+(defn create-session!
+  [uid]
+  (swap! session-statuses #(assoc % uid {:status :launching :start-time (t/now)})))
+
+(defn set-session-order-ref!
+  [uid order-ref]
+  (swap! session-statuses
+         (fn
+           [session-map]
+           (let [status-map (get session-map uid)]
+             (assoc session-map uid (merge status-map {:status :started :order-ref order-ref}))))))
+
+(defn set-session-status!
+  ([uid status] (set-session-status! uid status {}))
   ([uid status info]
    (print-status uid (str "status of uid =" status))
-   (swap! statuses #(assoc % uid (merge {:status status} info)))))
+   (swap! session-statuses
+          (fn
+            [session-map]
+            (let [status-map (get session-map uid)]
+              (assoc session-map uid (merge status-map {:status status} info)))))))
+
+;; --------------------------
+;;      BANKID LAUNCHER
+;; --------------------------
+
+(defn poll-interval
+  "Poll once every 1.5 seconds.
+  Should be between 1 and 2 according to BankID spec"
+  []
+  1500)
 
 (defn launch-bankid
-  []
+  [personnummer]
   (let [uid (UUID/randomUUID)]
-    (set-status! uid :initializing)
+    (create-session! uid)
     (go (let [start-chan (start-bankid-session uid)
               response   (<! start-chan)]
           (if (seq response)
             (let [order-ref        (:orderRef response)
                   auto-start-token (:autoStartToken response)]
               (print-status uid (str "BankID session started with order-ref" order-ref))
-              (set-status! uid :started)
-              (while (contains? #{:started :pending} (get-status uid))
-                ;; Poll once every 1.5 seconds
-                (<! (timeout 1500))
+              (set-session-order-ref! uid order-ref)
+              (while (contains? #{:started :pending} (get-session-status uid))
+                (<! (timeout (poll-interval)))
                 (let [collect-chan (collect-bankid uid order-ref)
                       response     (<! collect-chan)]
                   (if (seq response)
-                    (set-status!
+                    (set-session-status!
                       uid
                       (keyword (:status response))
                       {:hint-code       (keyword (:hintCode response))
                        :completion-data (:completionData response)})
-                    (set-status! uid :failed)))))
-            (print-status uid "Launch failed")))
-        (print-status uid (str "Request completed with status " (get @statuses uid))))
+                    (set-session-status! uid :failed)))))
+            (set-session-status! uid :failed {:hint-code :launch-failed})))
+        (print-status uid (str "Request completed with status " (get @session-statuses uid))))
     uid))
+
+;; TODO: Log requests
+;; TODO: Web interface
+;; TODO: Tests: general, different responses, old session removal...

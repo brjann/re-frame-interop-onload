@@ -1,0 +1,40 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>BankID status</h1>
+<div class="alert alert-primary" role="alert">
+    <h4 class="alert-heading" id="status"></h4>
+    <p id="hint-code"></p>
+    <p id="load-counter"></p>
+</div>
+
+<script type="application/javascript">
+   $(document).ready(function () {
+      var collect_status = function () {
+         $.ajax(
+            "/e-auth/bankid-collect",
+            {
+               method: "get",
+               success: function (data) {
+                  console.log(data);
+                  console.log(typeof data);
+               },
+               error: function (jqXHR) {
+                  console.log('ERROR');
+                  console.log(jqXHR);
+               }
+            }
+         );
+      };
+      collect_status();
+      /*
+      setInterval(function(){
+				if((text_input.val() != last_text  || subject_input.val() != last_subject) && !message_saving){
+					save_draft();
+				}
+			}, 5000)
+       */
+   })
+</script>
+
+{% endblock %}

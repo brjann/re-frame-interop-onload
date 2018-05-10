@@ -1,0 +1,18 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>{%tr login/login %}</h1>
+<form method="post" action="/e-auth/bankid">
+    <input type="hidden" name="redirect" value="https://www.dn.se">
+    <div class="form-group row">
+        <label for="personnummer" class="col-sm-2 col-form-label">Personnummer</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="personnummer" data-clear-on="error" name="personnummer"
+                   placeholder="{%tr username %}" required autofocus>
+            <div class="invalid-feedback">{%tr login/must-username %}</div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Test!</button>
+</form>
+
+{% endblock %}

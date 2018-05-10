@@ -1,4 +1,6 @@
 (ns bass4.http-utils
+  (:require [ring.util.http-response :as http-response]
+            [clojure.data.json :as json])
   (:import (java.net URLEncoder)))
 
 (defn get-ip
@@ -24,3 +26,8 @@
 (defn
   url-escape
   [s] (URLEncoder/encode s))
+
+(defn json-response
+  [x]
+  (-> (http-response/ok (json/write-str x))
+      (http-response/content-type "application/json")))

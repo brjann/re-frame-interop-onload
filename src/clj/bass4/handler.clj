@@ -8,6 +8,7 @@
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
             [bass4.routes.quick-login :refer [quick-login-routes]]
             [bass4.routes.debug :refer [debug-routes]]
+            [bass4.routes.e-auth :refer [e-auth-routes]]
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
@@ -30,6 +31,10 @@
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-restricted)
+        (wrap-routes wrap-schema-error))
+    (-> #'e-auth-routes
+        (wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-formats)
         (wrap-routes wrap-schema-error))
     (-> #'embedded-routes
         ;; TODO: Bring back wrap-csrf
