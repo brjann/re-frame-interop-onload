@@ -34,9 +34,9 @@
        (catch Exception _ nil)))
 
 (defn bankid-auth
-  []
+  [personnummer]
   (bankid-request "auth"
-                  {"personalNumber" "197807129379"
+                  {"personalNumber" personnummer
                    "endUserIp"      "81.232.173.180"}))
 
 (defn bankid-collect
@@ -44,11 +44,10 @@
   (bankid-request "collect" {"orderRef" order-ref}))
 
 (defn start-bankid-session
-  [uid]
-  (print-status uid "Started request")
+  [personnummer]
   (let [start-chan (chan)]
     (go
-      (>! start-chan (or (bankid-auth) {})))
+      (>! start-chan (or (bankid-auth personnummer) {})))
     start-chan))
 
 (defn collect-bankid
@@ -124,7 +123,7 @@
   [personnummer]
   (let [uid (UUID/randomUUID)]
     (create-session! uid)
-    (go (let [start-chan (start-bankid-session uid)
+    (go (let [start-chan (start-bankid-session personnummer)
               response   (<! start-chan)]
           (if (seq response)
             (let [order-ref        (:orderRef response)
