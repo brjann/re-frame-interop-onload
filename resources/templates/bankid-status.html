@@ -60,7 +60,7 @@
       var collect_status = function () {
          $load_counter.text((parseInt($load_counter.text()) || 0) + 1);
          $.ajax(
-            "/e-auth/bankid-collect",
+            "/e-auth/bankid/collect",
             {
                method: "post",
                success: success_fn,

@@ -65,7 +65,7 @@
   [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
   (if (re-matches #"[0-9]{12}" personnummer)
     (let [uid (bankid/launch-bankid personnummer)]
-      (-> (response/found "/e-auth/bankid-status")
+      (-> (response/found "/e-auth/bankid/status")
           (assoc :session (merge
                             session
                             {:e-auth {:uid              uid
@@ -164,7 +164,6 @@
             message  (:message response)]
         (if (= :exception message)
           (throw (ex-info "BankID error" response))
-          (bankid-collect-json response message)
           (h-utils/json-response
             (merge
               response
@@ -189,5 +188,5 @@
           (:uid e-auth)
           (= :bankid (:type e-auth))
           (not (string/starts-with? (:uri request) "/e-auth/bankid")))
-      (http-response/found "/e-auth/bankid-status")
+      (http-response/found "/e-auth/bankid/status")
       (handler request))))
