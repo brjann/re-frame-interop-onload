@@ -10,13 +10,13 @@
   (context "/e-auth" []
     (GET "/bankid-test" []
       (layout/render "bankid-test.html"))
-    (POST "/bankid" [& params :as request]
+    (POST "/bankid-launch" [& params :as request]
       (e-auth-response/launch-bankid
         (:session request)
         (:personnummer params)
         (:redirect-success params)
         (:redirect-fail params)))
-    (GET "/bankid" [:as request]
+    (GET "/bankid-status" [:as request]
       (e-auth-response/bankid-status-page (:session request)))
     (GET "/bankid-reset" [:as request]
       (e-auth-response/bankid-reset (:session request)))

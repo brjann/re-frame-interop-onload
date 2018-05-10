@@ -8,7 +8,8 @@
             [bass4.http-utils :as h-utils]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [clojure.string :as string]))
 
 (def bankid-message-map
   {:pending {:outstanding-transaction {:auto   :rfa13
@@ -64,7 +65,7 @@
   [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
   (if (re-matches #"[0-9]{12}" personnummer)
     (let [uid (bankid/launch-bankid personnummer)]
-      (-> (response/found "/e-auth/bankid")
+      (-> (response/found "/e-auth/bankid-status")
           (assoc :session (merge
                             session
                             {:e-auth {:uid              uid
@@ -163,6 +164,7 @@
             message  (:message response)]
         (if (= :exception message)
           (throw (ex-info "BankID error" response))
+          (bankid-collect-json response message)
           (h-utils/json-response
             (merge
               response
@@ -177,3 +179,15 @@
     (if-not (and personnummer first-name last-name)
       (layout/error-403-page (:user-id session) "No BankID info in session")
       (layout/text-response (:e-auth session)))))
+
+;; This is not thought through enough. Not implemented.
+(defn bankid-middleware
+  [handler request]
+  (let [e-auth (get-in request [:session :e-auth])]
+    #_(handler request)
+    (if (and
+          (:uid e-auth)
+          (= :bankid (:type e-auth))
+          (not (string/starts-with? (:uri request) "/e-auth/bankid")))
+      (http-response/found "/e-auth/bankid-status")
+      (handler request))))

@@ -88,9 +88,12 @@
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."
   []
-  (swap!
-    session-statuses
-    #(filter-map filter-old-uids %)))
+  (let [old-count (count @session-statuses)]
+    (swap!
+      session-statuses
+      #(filter-map filter-old-uids %))
+    (if (< old-count (count @session-statuses))
+      (log/debug "Deleted " (- (count @session-statuses) old-count) " sessions."))))
 
 (defn get-session-status
   [uid]
@@ -149,10 +152,10 @@
     uid))
 
 ;; TODO: Log requests
-;; TODO: Validate input to BankID launch
-;; TODO: Web interface
-;; TODO: Middleware
+;; TODO: Generalize ajax post handler?
+;; TODO: Validate personnummer to BankID launch
+;; TODO: Web interface for production
+;; TODO: Check that client calls collect regularly?
 ;; TODO: Success-return, fail-return
-;; TODO: Implement BankID texts
 ;; TODO: Auto-launch BankID
 ;; TODO: Tests: general, different responses, old session removal...
