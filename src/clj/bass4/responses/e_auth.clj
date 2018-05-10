@@ -6,9 +6,9 @@
             [bass4.layout :as layout]
             [bass4.utils :refer [kebab-case-keyword]]
             [bass4.http-utils :as h-utils]
-            [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [bass4.i18n :as i18n]))
 
 (def bankid-message-map
   {:pending {:outstanding-transaction {:auto   :rfa13
@@ -93,6 +93,46 @@
     data))
 
 ;; TODO: Remove kebab-case out of here and into bankid service
+(defn bankid-collect-response
+  [uid status info]
+  (cond
+    (= :exception status)
+    (throw (:exception info))
+
+    (nil? uid)
+    {:status    :error
+     :hint-code "No uid in session"
+     :message   :no-session}
+
+    (nil? info)
+    {:status    :error
+     :hint-code (str "No session info for uid " uid)
+     :message   :no-session}
+
+    (contains? #{:starting :started} status)
+    {:status    :starting
+     :hint-code :contacting-bankid
+     :message   :contacting-bankid}
+
+    (= :error status)
+    (let [error-code  (kebab-case-keyword (:error-code info))
+          details     (kebab-case-keyword (:details info))
+          http-status (:http-status info)]
+      (log/debug info)
+      {:status     :error
+       :error-code error-code
+       :details    details
+       :message    (get-bankid-message status http-status error-code)})
+
+    (contains? #{:pending :failed} status)
+    (let [hint-code (kebab-case-keyword (:hint-code info))]
+      {:status    status
+       :hint-code hint-code
+       :message   (get-bankid-message status hint-code)})
+
+    :else
+    (throw (ex-info (str "Unknown BankID status " status) info))))
+
 (defn bankid-collect
   [session]
   (let [uid              (get-in session [:e-auth :uid])
@@ -102,45 +142,15 @@
     (if (= :complete status)
       (->
         (http-response/found redirect-success)
-        (assoc :session (merge session {:e-auth (completed-data info)})))
-      (h-utils/json-response
-        (cond
-          (= :exception status)
-          (throw (:exception info))
-
-          (nil? uid)
-          {:status    :error
-           :hint-code "No uid in session"
-           :message   :no-session}
-
-          (nil? info)
-          {:status    :error
-           :hint-code "No session info for uid "
-           :message   :no-session}
-
-          (contains? #{:starting :started} status)
-          {:status    :starting
-           :hint-code :contacting-bankid
-           :message   :contacting-bankid}
-
-          (= :error status)
-          (let [error-code  (kebab-case-keyword (:error-code info))
-                details     (kebab-case-keyword (:details info))
-                http-status (:http-status info)]
-            (log/debug info)
-            {:status     :error
-             :error-code error-code
-             :details    details
-             :message    (get-bankid-message status http-status error-code)})
-
-          (contains? #{:pending :failed} status)
-          (let [hint-code (kebab-case-keyword (:hint-code info))]
-            {:status    status
-             :hint-code hint-code
-             :message   (get-bankid-message status hint-code)})
-
-          :else
-          (throw (ex-info (str "Unknown BankID status " status) info)))))))
+        (assoc :session (merge session {:e-auth (completed-data info)}))))
+    (let [response (bankid-collect-response uid status info)
+          message  (:message response)]
+      (if (= :exception message)
+        (throw (ex-info "BankID error" response))
+        (h-utils/json-response
+          (merge
+            response
+            {:message (i18n/tr [(keyword (str "bankid/" (name message)))])}))))))
 
 (defn bankid-success
   [session]
