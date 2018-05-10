@@ -34,49 +34,64 @@
       (layout/render "bankid-status.html")
       (layout/error-403-page (:user-id session) "No active BankID session"))))
 
+(defn completed-data
+  [info]
+  (let [data {:personnummer (get-in info [:completion-data :user :personal-number])
+              :first-name   (get-in info [:completion-data :user :given-name])
+              :last-name    (get-in info [:completion-data :user :surname])}]
+    (when-not (every? data [:personnummer :first-name :last-name])
+      (throw (ex-info "BankID completed data invalid" data)))
+    data))
+
 (defn bankid-collect
   [session]
-  (let [uid    (get-in session [:e-auth :uid])
-        info   (bankid/get-session-info uid)
-        status (:status info)]
-    (h-utils/json-response
-      (cond
-        (nil? uid)
-        {:status    :error
-         :hint-code "No uid in session"}
+  (let [uid              (get-in session [:e-auth :uid])
+        info             (bankid/get-session-info uid)
+        status           (:status info)
+        redirect-success (get-in session [:e-auth :redirect-success])]
+    (if (= :complete status)
+      (->
+        (http-response/found redirect-success)
+        (assoc :session (merge session {:e-auth (completed-data info)})))
+      (h-utils/json-response
+        (cond
+          (nil? uid)
+          {:status    :error
+           :hint-code "No uid in session"}
 
-        (nil? info)
-        {:status    :error
-         :hint-code (str "No session info for uid ")}
+          (nil? info)
+          {:status    :error
+           :hint-code (str "No session info for uid ")}
 
-        (= :exception status)
-        (throw (:exception info))
+          (= :exception status)
+          (throw (:exception info))
 
-        (contains? #{:starting :started} status)
-        {:status    :starting
-         :hint-code :contacting-bankid}
+          (contains? #{:starting :started} status)
+          {:status    :starting
+           :hint-code :contacting-bankid}
 
-        (= :completed status)
-        {:personnummer (get-in info [:completion-data :user :personal-number])
-         :name         (get-in info [:completion-data :user :name])}
+          (= :complete status)
+          {:personnummer (get-in info [:completion-data :user :personal-number])
+           :name         (get-in info [:completion-data :user :name])}
 
-        (= :error status)
-        {:status     :error
-         :error-code (kebab-case-keyword (:error-code info))
-         :details    (:details info)}
+          (= :error status)
+          {:status     :error
+           :error-code (kebab-case-keyword (:error-code info))
+           :details    (:details info)}
 
-        (contains? #{:pending :failed} status)
-        {:status    status
-         :hint-code (kebab-case-keyword (:hint-code info))}
+          (contains? #{:pending :failed} status)
+          {:status    status
+           :hint-code (kebab-case-keyword (:hint-code info))}
 
-        :else
-        (throw (ex-info (str "Unknown BankID status " status) info))))))
+          :else
+          (throw (ex-info (str "Unknown BankID status " status) info)))))))
 
 (defn bankid-success
   [session]
   (let [personnummer (get-in session [:e-auth :personnummer])
         first-name   (get-in session [:e-auth :first-name])
         last-name    (get-in session [:e-auth :last-name])]
+    (log/debug session)
     (if-not (and personnummer first-name last-name)
       (layout/error-403-page (:user-id session) "No BankID info in session")
-      (layout/text-response "OK"))))
+      (layout/text-response (:e-auth session)))))

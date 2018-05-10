@@ -22,16 +22,18 @@
       var interval;
 
       var success_fn = function (data) {
+         var status;
          console.log(data);
-         var status = data['status'];
-         $status.text(data['status']);
-         $hint_code.text(data['hint-code']);
-         $personnummer.text(data['personnummer']);
-         $name.text(data['name']);
-         $error.text(data['error-code']);
-
-         if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
-            clearInterval(interval);
+         if (!check_redirect(data)) {
+            status = data['status'];
+            $status.text(data['status']);
+            $hint_code.text(data['hint-code']);
+            $personnummer.text(data['personnummer']);
+            $name.text(data['name']);
+            $error.text(data['error-code']);
+            if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
+               clearInterval(interval);
+            }
          }
       };
 

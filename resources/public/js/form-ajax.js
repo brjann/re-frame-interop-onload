@@ -11,6 +11,22 @@ $(document).ajaxSend(function (event, jqxhr, settings) {
  If page should just be reloaded, then the url returned should simply be "reload".
  */
 
+function check_redirect(data) {
+   if (typeof data === 'string') {
+      var response = data.split(" ");
+      if (response[0] == "found") {
+         if (response[1] == "reload") {
+            window.location.reload(true);
+         }
+         else {
+            window.location.href = response[1];
+         }
+         return true;
+      }
+   }
+   return false;
+}
+
 function post_success(form, complete_fn) {
 	return function (data, textStatus, jqXHR) {
 		if (complete_fn !== undefined) {
@@ -20,17 +36,7 @@ function post_success(form, complete_fn) {
 			var on_success = eval($(form).data("on-success"));
 			on_success.call(form, data, textStatus, jqXHR);
 		}
-		if (typeof data === 'string') {
-			var response = data.split(" ");
-			if (response[0] == "found") {
-				if (response[1] == "reload") {
-					window.location.reload(true);
-				}
-				else {
-					window.location.href = response[1];
-				}
-			}
-		}
+      check_redirect(data);
 	}
 }
 
