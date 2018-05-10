@@ -2,11 +2,9 @@
   (:require [clojure.core.async
              :refer [>! <! go chan timeout]]
             [clj-http.client :as http]
-            [bass4.utils :refer [json-safe filter-map]]
+            [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.walk :as walk]
             [clojure.tools.logging :as log]
-            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-            [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as t])
   (:import (java.util UUID)))
 
@@ -29,7 +27,7 @@
   (->> response
        :body
        json-safe
-       (transform-keys ->kebab-case-keyword)))
+       kebab-case-keys))
 
 (defn bankid-error
   [e]
@@ -38,9 +36,10 @@
     (if-not http-status
       {:status    :exception
        :exception e}
-      {:status      :error
-       :http-status http-status
-       :response    (response-body data)})))
+      (merge
+        {:status      :error
+         :http-status http-status}
+        (response-body data)))))
 
 (defn bankid-request
   [endpoint form-params]
@@ -108,7 +107,7 @@
 
 (defn create-session!
   [uid]
-  (swap! session-statuses #(assoc % uid {:status :launching :start-time (t/now)})))
+  (swap! session-statuses #(assoc % uid {:status :starting :start-time (t/now)})))
 
 (defn set-session-status!
   [uid status-map]

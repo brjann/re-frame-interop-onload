@@ -28,7 +28,7 @@
          $hint_code.text(data['hint-code']);
          $personnummer.text(data['personnummer']);
          $name.text(data['name']);
-         $error.text(data['error']);
+         $error.text(data['error-code']);
 
          if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
             clearInterval(interval);

@@ -4,6 +4,7 @@
             [bass4.config :refer [env]]
             [bass4.services.bankid :as bankid]
             [bass4.layout :as layout]
+            [bass4.utils :refer [kebab-case-keyword]]
             [bass4.http-utils :as h-utils]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
@@ -51,11 +52,25 @@
         (= :exception status)
         (throw (:exception info))
 
+        (contains? #{:starting :started} status)
+        {:status    :starting
+         :hint-code :contacting-bankid}
+
+        (= :completed status)
+        {:personnummer (get-in info [:completion-data :user :personal-number])
+         :name         (get-in info [:completion-data :user :name])}
+
+        (= :error status)
+        {:status     :error
+         :error-code (kebab-case-keyword (:error-code info))
+         :details    (:details info)}
+
+        (contains? #{:pending :failed} status)
+        {:status    status
+         :hint-code (kebab-case-keyword (:hint-code info))}
+
         :else
-        {:status       (:status info)
-         :hint-code    (:hint-code info)
-         :personnummer (get-in info [:completion-data :user :personal-number])
-         :name         (get-in info [:completion-data :user :name])}))))
+        (throw (ex-info (str "Unknown BankID status " status) info))))))
 
 (defn bankid-success
   [session]

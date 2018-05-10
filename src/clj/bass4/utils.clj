@@ -1,7 +1,9 @@
 (ns bass4.utils
   (:require [clojure.data.json :as json]
             [bass4.php-clj.safe :refer [php->clj]]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
+            [camel-snake-kebab.extras :refer [transform-keys]]))
 
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
@@ -157,3 +159,11 @@
     (if (some identity vs)
       (reduce #(rec-merge %1 %2) v vs)
       v)))
+
+(defn kebab-case-keys
+  [m]
+  (transform-keys ->kebab-case-keyword m))
+
+(defn kebab-case-keyword
+  [s]
+  (fnil+ ->kebab-case-keyword s))
