@@ -11,8 +11,14 @@
     (GET "/bankid-test" []
       (layout/render "bankid-test.html"))
     (POST "/bankid" [& params :as request]
-      (e-auth-response/launch-bankid (:session request) (:personnummer params) (:redirect params)))
+      (e-auth-response/launch-bankid
+        (:session request)
+        (:personnummer params)
+        (:redirect-success params)
+        (:redirect-fail params)))
     (GET "/bankid" [:as request]
       (e-auth-response/bankid-status-page (:session request)))
+    (GET "/bankid-success" [:as request]
+      (e-auth-response/bankid-success (:session request)))
     (POST "/bankid-collect" [:as request]
       (e-auth-response/bankid-collect (:session request)))))

@@ -5,6 +5,8 @@
             [bass4.utils :refer [json-safe filter-map]]
             [clojure.walk :as walk]
             [clojure.tools.logging :as log]
+            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
+            [camel-snake-kebab.extras :refer [transform-keys]]
             [clj-time.core :as t])
   (:import (java.util UUID)))
 
@@ -22,16 +24,33 @@
    :trust-store-pass "changeit"
    :content-type     :json})
 
+(defn response-body
+  [response]
+  (->> response
+       :body
+       json-safe
+       (transform-keys ->kebab-case-keyword)))
+
+(defn bankid-error
+  [e]
+  (let [data        (ex-data e)
+        http-status (:status data)]
+    (if-not http-status
+      {:status    :exception
+       :exception e}
+      {:status      :error
+       :http-status http-status
+       :response    (response-body data)})))
+
 (defn bankid-request
   [endpoint form-params]
   (try (let [response (http/post (str "https://appapi2.test.bankid.com/rp/v5/" endpoint)
                                  (merge auth-params {:form-params form-params}))]
-         (when (= 200 (:status response))
-           (-> response
-               :body
-               json-safe
-               walk/keywordize-keys)))
-       (catch Exception _ nil)))
+         (if (= 200 (:status response))
+           (response-body response)
+           (throw (ex-info "Not 200 response" response))))
+       (catch Exception e
+         (bankid-error e))))
 
 (defn bankid-auth
   [personnummer]
@@ -91,23 +110,22 @@
   [uid]
   (swap! session-statuses #(assoc % uid {:status :launching :start-time (t/now)})))
 
-(defn set-session-order-ref!
-  [uid order-ref]
+(defn set-session-status!
+  [uid status-map]
   (swap! session-statuses
          (fn
            [session-map]
-           (let [status-map (get session-map uid)]
-             (assoc session-map uid (merge status-map {:status :started :order-ref order-ref}))))))
-
-(defn set-session-status!
-  ([uid status] (set-session-status! uid status {}))
-  ([uid status info]
-   (print-status uid (str "status of uid =" status))
-   (swap! session-statuses
-          (fn
-            [session-map]
-            (let [status-map (get session-map uid)]
-              (assoc session-map uid (merge status-map {:status status} info)))))))
+           (let [old-map (get session-map uid)
+                 new-map (merge
+                           old-map
+                           {:status :started}
+                           status-map)]
+             (assoc
+               session-map
+               uid
+               (merge new-map
+                      {:status (keyword (:status new-map))})))))
+  (print-status uid (str "status of uid =" (:status (get @session-statuses uid)))))
 
 ;; --------------------------
 ;;      BANKID LAUNCHER
@@ -125,25 +143,17 @@
     (create-session! uid)
     (go (let [start-chan (start-bankid-session personnummer)
               response   (<! start-chan)]
-          (if (seq response)
-            (let [order-ref        (:orderRef response)
-                  auto-start-token (:autoStartToken response)]
-              (set-session-order-ref! uid order-ref)
-              (while (contains? #{:started :pending} (get-session-status uid))
-                (<! (timeout (poll-interval)))
-                (let [collect-chan (collect-bankid uid order-ref)
-                      response     (<! collect-chan)]
-                  (if (seq response)
-                    (set-session-status!
-                      uid
-                      (keyword (:status response))
-                      {:hint-code       (keyword (:hintCode response))
-                       :completion-data (:completionData response)})
-                    (set-session-status! uid :failed)))))
-            (set-session-status! uid :failed {:hint-code :launch-failed}))))
+          (set-session-status! uid response)
+          (let [order-ref (:order-ref response)]
+            (while (contains? #{:started :pending} (get-session-status uid))
+              (<! (timeout (poll-interval)))
+              (let [collect-chan (collect-bankid uid order-ref)
+                    response     (<! collect-chan)]
+                (set-session-status! uid response))))))
     uid))
 
 ;; TODO: Log requests
+;; TODO: Validate input to BankID launch
 ;; TODO: Web interface
 ;; TODO: Middleware
 ;; TODO: Success-return, fail-return

@@ -38,6 +38,7 @@
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/data.json "0.2.6"]
                  [prone "1.1.4"]
+                 [camel-snake-kebab "0.4.0"]
                  [clj-http "3.9.0"]]
 
   :min-lein-version "2.0.0"

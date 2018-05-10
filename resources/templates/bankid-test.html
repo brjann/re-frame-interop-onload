@@ -3,7 +3,8 @@
 
 <h1>{%tr login/login %}</h1>
 <form method="post" action="/e-auth/bankid">
-    <input type="hidden" name="redirect" value="https://www.dn.se">
+    <input type="hidden" name="redirect-success" value="/bankid-success">
+    <input type="hidden" name="redirect-fail" value="/bankid-test">
     <div class="form-group row">
         <label for="personnummer" class="col-sm-2 col-form-label">Personnummer</label>
         <div class="col-sm-10">
