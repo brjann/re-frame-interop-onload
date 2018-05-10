@@ -28,15 +28,15 @@
              :cancelled           :rfa3
              :start-failed        :rfa17
              :else                :rfa22}
-   :error   {:400  {:already-in-progress :rfa3
+   :error   {400   {:already-in-progress :rfa3
                     :invalid-parameters  :exception
                     :else                :rfa22}
-             :401  :exception
-             :404  :exception
-             :408  :rfa5
-             :415  :exception
-             :500  :rfa5
-             :503  :rfa5
+             401   :exception
+             404   :exception
+             408   :rfa5
+             415   :exception
+             500   :rfa5
+             503   :rfa5
              :else :exception}})
 
 ;; TODO: 503 allows for retries before showing RFA5
@@ -124,12 +124,14 @@
            :message   :contacting-bankid}
 
           (= :error status)
-          (let [error-code (kebab-case-keyword (:error-code info))
-                details    (kebab-case-keyword (:details info))]
+          (let [error-code  (kebab-case-keyword (:error-code info))
+                details     (kebab-case-keyword (:details info))
+                http-status (:http-status info)]
+            (log/debug info)
             {:status     :error
              :error-code error-code
              :details    details
-             :message    (get-bankid-message status error-code details)})
+             :message    (get-bankid-message status http-status error-code)})
 
           (contains? #{:pending :failed} status)
           (let [hint-code (kebab-case-keyword (:hint-code info))]
