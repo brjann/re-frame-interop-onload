@@ -74,11 +74,9 @@
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."
   []
-  (let [before-count (count @session-statuses)]
-    (swap!
-      session-statuses
-      #(filter-map filter-old-uids %))
-    (log/debug "Removed" (- before-count (count @session-statuses)) "sessions")))
+  (swap!
+    session-statuses
+    #(filter-map filter-old-uids %)))
 
 (defn get-session-status
   [uid]

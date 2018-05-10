@@ -14,5 +14,5 @@
       (e-auth-response/launch-bankid (:session request) (:personnummer params) (:redirect params)))
     (GET "/bankid" [:as request]
       (e-auth-response/bankid-status-page (:session request)))
-    (GET "/bankid-collect" [:as request]
+    (POST "/bankid-collect" [:as request]
       (e-auth-response/bankid-collect (:session request)))))
