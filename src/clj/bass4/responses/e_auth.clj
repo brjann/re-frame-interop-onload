@@ -35,17 +35,27 @@
 
 (defn bankid-collect
   [session]
-  (if-let [uid (get-in session [:e-auth :uid])]
-    (let [info (bankid/get-session-info uid)]
-      (if (nil? info)
-        (h-utils/json-response {:status    :error
-                                :hint-code (str "No session info for uid " uid)})
-        (h-utils/json-response {:status       (:status info)
-                                :hint-code    (:hint-code info)
-                                :personnummer (get-in info [:completion-data :user :personal-number])
-                                :name         (get-in info [:completion-data :user :name])})))
-    (h-utils/json-response {:status    :error
-                            :hint-code "No uid in session"})))
+  (let [uid    (get-in session [:e-auth :uid])
+        info   (bankid/get-session-info uid)
+        status (:status info)]
+    (h-utils/json-response
+      (cond
+        (nil? uid)
+        {:status    :error
+         :hint-code "No uid in session"}
+
+        (nil? info)
+        {:status    :error
+         :hint-code (str "No session info for uid ")}
+
+        (= :exception status)
+        (throw (:exception info))
+
+        :else
+        {:status       (:status info)
+         :hint-code    (:hint-code info)
+         :personnummer (get-in info [:completion-data :user :personal-number])
+         :name         (get-in info [:completion-data :user :name])}))))
 
 (defn bankid-success
   [session]

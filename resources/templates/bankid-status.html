@@ -35,6 +35,12 @@
          }
       };
 
+      var error_fn = function (jqXHR) {
+         $status.text('ERROR');
+         $hint_code.text(jqXHR.status);
+         clearInterval(interval);
+      };
+
       var collect_status = function () {
          $load_counter.text((parseInt($load_counter.text()) || 0) + 1);
          $.ajax(
@@ -42,10 +48,7 @@
             {
                method: "post",
                success: success_fn,
-               error: function (jqXHR) {
-                  console.log('ERROR');
-                  console.log(jqXHR);
-               }
+               error: error_fn
             }
          );
       };
