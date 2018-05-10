@@ -69,10 +69,10 @@
   [status-map]
   (let [start-time (:start-time status-map)
         age        (t/in-minutes (t/interval start-time (t/now)))]
-    (> 30 age)))
+    (> 10 age)))
 
 (defn remove-old-sessions!
-  "Also deletes sessions older than 30 minutes."
+  "Deletes sessions older than 10 minutes."
   []
   (let [before-count (count @session-statuses)]
     (swap!
@@ -81,7 +81,6 @@
     (log/debug "Removed" (- before-count (count @session-statuses)) "sessions")))
 
 (defn get-session-status
-  "Also deletes sessions older than 30 minutes."
   [uid]
   (remove-old-sessions!)
   (get-in @session-statuses [uid :status]))
