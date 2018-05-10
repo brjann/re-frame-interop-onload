@@ -22,16 +22,18 @@
   [session]
   (if-let [uid (get-in session [:e-auth :uid])]
     (layout/render "bankid-status.html")
-    (layout/text-response "no active bankid session")))
+    (layout/error-403-page "no active bankid session")))
 
 (defn bankid-collect
   [session]
   (if-let [uid (get-in session [:e-auth :uid])]
     (let [info (bankid/get-session-info uid)]
       (if (nil? info)
-        (h-utils/json-response {:error (str "No session info for uid " uid)})
+        (h-utils/json-response {:status    :error
+                                :hint-code (str "No session info for uid " uid)})
         (h-utils/json-response {:status       (:status info)
                                 :hint-code    (:hint-code info)
                                 :personnummer (get-in info [:completion-data :user :personalNumber])
                                 :name         (get-in info [:completion-data :user :name])})))
-    (h-utils/json-response {:error "No uid in session"})))
+    (h-utils/json-response {:status    :error
+                            :hint-code "No uid in session"})))
