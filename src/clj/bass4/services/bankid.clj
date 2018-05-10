@@ -12,9 +12,6 @@
   [uid s]
   (println (str (subs (str uid) 0 4) " " s)))
 
-#_(def collect-responses
-    {:pending {:outstandingTransaction :RFA13}})
-
 (def auth-params
   {:keystore         "/Users/brjljo/Dropbox/Plattform/bass4/BankID/keystore_with_private.jks"
    :keystore-pass    "changeit"

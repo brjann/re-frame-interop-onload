@@ -4,10 +4,12 @@
 <h1>BankID status</h1>
 <div class="alert alert-primary" role="alert">
     <p>Status: <span id="status"></span></p>
+    <p>Message: <span id="message"></span></p>
     <p>Hint code: <span id="hint-code"></span></p>
     <p>Personnummer: <span id="personnummer"></span></p>
     <p>Name: <span id="name"></span></p>
-    <p>Error: <span id="error"></span></p>
+    <p>Error code: <span id="error-code"></span></p>
+    <p>Error details: <span id="error-details"></span></p>
     <p>Loads: <span id="load-counter">0</span></p>
 </div>
 
@@ -17,7 +19,8 @@
       var $hint_code = $('#hint-code');
       var $personnummer = $('#personnummer');
       var $name = $('#name');
-      var $error = $('#error');
+      var $error_code = $('#error-code');
+      var $error_details = $('#error-details');
       var $load_counter = $('#load-counter');
       var interval;
 
@@ -30,7 +33,8 @@
             $hint_code.text(data['hint-code']);
             $personnummer.text(data['personnummer']);
             $name.text(data['name']);
-            $error.text(data['error-code']);
+            $error_code.text(data['error-code']);
+            $error_details.text(data['error-details']);
             if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
                clearInterval(interval);
             }

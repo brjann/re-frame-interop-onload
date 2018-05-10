@@ -9,6 +9,34 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]))
+
+(def bankid-response-map
+  {:pending {:outstanding-transaction {:auto   :rfa13
+                                       :manual :rfa1}
+             :no-client               {:auto   :rfa1
+                                       :manual :rfa1}
+             :started                 {:without-start-token :rfa14
+                                       :with-start-token    :rfa15}
+             :user-sign               :rfa9
+             :else                    :rfa21}
+   :failed  {:expired-transaction :rfa8
+             :certificate-err     :rfa16
+             :user-cancel         :rfa6
+             :cancelled           :rfa3
+             :start-failed        :rfa17
+             :else                :rfa22}
+   :error   {:400 {:already-in-progress :rfa3
+                   :invalid-parameters  :exception
+                   :else                :rfa22}
+             :401 :exception
+             :404 :exception
+             :408 :rfa5
+             :415 :exception
+             :500 :rfa5
+             :503 :rfa5}})
+
+;; TODO: 503 allows for retries before showing RFA5
+
 (s/defn
   ^:always-validate
   launch-bankid
@@ -61,7 +89,7 @@
 
           (nil? info)
           {:status    :error
-           :hint-code (str "No session info for uid ")}
+           :hint-code "No session info for uid "}
 
           (= :exception status)
           (throw (:exception info))
