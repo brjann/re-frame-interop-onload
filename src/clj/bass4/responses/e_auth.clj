@@ -111,17 +111,20 @@
     (throw (:exception info))
 
     (nil? uid)
-    {:status    :error
+    {:title     (i18n/tr [:bankid/error])
+     :status    :error
      :hint-code "No uid in session"
      :message   :no-session}
 
     (nil? info)
-    {:status    :error
+    {:title     (i18n/tr [:bankid/error])
+     :status    :error
      :hint-code (str "No session info for uid " uid)
      :message   :no-session}
 
     (contains? #{:starting :started} status)
-    {:status    :starting
+    {:title     (i18n/tr [:bankid/contacting])
+     :status    :starting
      :hint-code :contacting-bankid
      :message   :contacting-bankid}
 
@@ -130,14 +133,16 @@
           details     (kebab-case-keyword (:details info))
           http-status (:http-status info)]
       (log/debug info)
-      {:status     :error
+      {:title      (i18n/tr [:bankid/error])
+       :status     :error
        :error-code error-code
        :details    details
        :message    (get-bankid-message status http-status error-code)})
 
     (contains? #{:pending :failed} status)
     (let [hint-code (kebab-case-keyword (:hint-code info))]
-      {:status    status
+      {:title     (i18n/tr (if (= :pending status) [:bankid/pending] [:bankid/failed]))
+       :status    status
        :hint-code hint-code
        :message   (get-bankid-message status hint-code)})
 

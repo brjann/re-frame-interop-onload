@@ -44,16 +44,19 @@
 {% script "/js/sprintf.min.js" %}
 <script src="/js/instruments.js"></script>
 <script type="text/javascript">
-	var csrfToken = "{{csrf-token}}";
-	var context = "{{servlet-context}}";
-	var text_offline_warning = "{%tr offline-warning %}";
-	var text_timeout_hard = "{%tr error/timeout-hard %}";
-	var text_try_reloading = "{%tr error/try-reload %}";
-    var text_server_busy = "{%tr error/server-busy %}";
-	var text_unsaved_changes = "{%tr unsaved-changes %}";
-	var text_tab = "{%tr tab %}";
-	var text_logout_confirm = "{%tr logout-confirm %}";
-    var text_page_top = "{%tr modules/page-top %}";
+   var csrfToken = "{{csrf-token}}";
+   var context = "{{servlet-context}}";
+   var text_offline_warning = "{%tr offline-warning %}";
+   var text_timeout_hard = "{%tr error/timeout-hard %}";
+   var text_try_reloading = "{%tr error/try-reload %}";
+   var text_server_busy = "{%tr error/server-busy %}";
+   var text_unsaved_changes = "{%tr unsaved-changes %}";
+   var text_tab = "{%tr tab %}";
+   var text_logout_confirm = "{%tr logout-confirm %}";
+   var text_page_top = "{%tr modules/page-top %}";
+   var text_bankid_error = "{%tr bankid/error %}";
+   var text_bankid_cancel = "{%tr bankid/cancel-go-back %}";
+   var text_bankid_error_text = "{%tr bankid/error-text %}";
 </script>
 {% block page-scripts %}
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "simple.html" %}
 {% block content %}
 
-<h1>{%tr login/login %}</h1>
+<h1>BankID Test</h1>
 <form method="post" action="/e-auth/bankid">
     <input type="hidden" name="redirect-success" value="/e-auth/bankid-success">
     <input type="hidden" name="redirect-fail" value="/e-auth/bankid-test">
