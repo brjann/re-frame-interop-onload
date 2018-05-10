@@ -148,4 +148,5 @@
 ;; TODO: Middleware
 ;; TODO: Success-return, fail-return
 ;; TODO: Implement BankID texts
+;; TODO: Auto-launch BankID
 ;; TODO: Tests: general, different responses, old session removal...
