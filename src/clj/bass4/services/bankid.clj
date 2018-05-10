@@ -128,7 +128,6 @@
           (if (seq response)
             (let [order-ref        (:orderRef response)
                   auto-start-token (:autoStartToken response)]
-              (print-status uid (str "BankID session started with order-ref" order-ref))
               (set-session-order-ref! uid order-ref)
               (while (contains? #{:started :pending} (get-session-status uid))
                 (<! (timeout (poll-interval)))
@@ -141,10 +140,12 @@
                       {:hint-code       (keyword (:hintCode response))
                        :completion-data (:completionData response)})
                     (set-session-status! uid :failed)))))
-            (set-session-status! uid :failed {:hint-code :launch-failed})))
-        (print-status uid (str "Request completed with status " (get @session-statuses uid))))
+            (set-session-status! uid :failed {:hint-code :launch-failed}))))
     uid))
 
 ;; TODO: Log requests
 ;; TODO: Web interface
+;; TODO: Middleware
+;; TODO: Success-return, fail-return
+;; TODO: Implement BankID texts
 ;; TODO: Tests: general, different responses, old session removal...
