@@ -18,6 +18,8 @@
         (:redirect-fail params)))
     (GET "/bankid" [:as request]
       (e-auth-response/bankid-status-page (:session request)))
+    (GET "/bankid-reset" [:as request]
+      (e-auth-response/bankid-reset (:session request)))
     (GET "/bankid-success" [:as request]
       (e-auth-response/bankid-success (:session request)))
     (POST "/bankid-collect" [:as request]

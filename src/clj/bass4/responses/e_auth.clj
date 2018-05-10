@@ -83,6 +83,17 @@
       (layout/render "bankid-status.html")
       (layout/error-403-page (:user-id session) "No active BankID session"))))
 
+(defn bankid-reset
+  "Resets the e-auth map in session and redirects to redirect-failure"
+  [session]
+  (let [uid              (get-in session [:e-auth :uid])
+        bankid?          (= :bankid (get-in session [:e-auth :type]))
+        redirect-success (get-in session [:e-auth :redirect-success])
+        redirect-fail    (get-in session [:e-auth :redirect-fail])]
+    (if (and uid bankid? redirect-success redirect-fail)
+      (-> (response/found redirect-fail)
+          (assoc :session (dissoc session :e-auth))))))
+
 (defn completed-data
   [info]
   (let [data {:personnummer (get-in info [:completion-data :user :personal-number])
