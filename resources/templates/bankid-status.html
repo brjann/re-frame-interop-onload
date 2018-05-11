@@ -7,7 +7,7 @@
         <h5 class="card-title bankid-info" id="title">{%tr bankid/contacting %}</h5>
         <p class="card-text bankid-info" id="message">{%tr bankid/contacting-bankid %}</p>
     </div>
-    <a class="btn btn-warning" href="/e-auth/bankid/reset">Cancel</a>
+    <button class="btn btn-warning" onclick="bankid_cancel();">Cancel</button>
 </div>
 
 <h1>BankID debug status</h1>
@@ -20,6 +20,7 @@
 </div>
 
 <script type="application/javascript">
+   var bankid_cancel;
    $(document).ready(function () {
 
       var $title = $('#title');
@@ -28,6 +29,12 @@
       var $load_counter = $('#load-counter');
       var interval;
       var pending = true;
+
+      bankid_cancel = function () {
+         pending = false;
+         clearInterval(interval);
+         window.location.href = "/e-auth/bankid/reset";
+      };
 
       var success_fn = function (data) {
          // TODO: Remove this
@@ -53,6 +60,11 @@
                pending = false;
             }
          }
+         else {
+            // If redirected, then clear pending variables
+            clearInterval(interval);
+            pending = false;
+         }
       };
 
       var error_fn = function (jqXHR) {
@@ -76,18 +88,20 @@
       };
 
       $(window).on('beforeunload', function () {
+         // TODO: Remove console.log
          console.log('leaving page');
-         $.ajax(
-            "/e-auth/bankid/cancel",
-            {
-               method: "get",
-               async: false,
-               // TODO: Remove console.log
-               success: function (data) {
-                  console.log(data)
+         if (pending) {
+            console.log('cancelling session');
+            pending = false;
+            clearInterval(interval);
+            $.ajax(
+               "/e-auth/bankid/cancel",
+               {
+                  method: "get",
+                  async: false
                }
-            }
-         );
+            );
+         }
       });
       interval = setInterval(collect_status, 1000)
    })

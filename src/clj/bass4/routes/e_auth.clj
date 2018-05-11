@@ -20,7 +20,7 @@
       (GET "/status" [:as request]
         (e-auth-response/bankid-status-page (:session request)))
       (GET "/cancel" [:as request]
-        (layout/text-response "OK"))
+        (e-auth-response/bankid-cancel (:session request)))
       (GET "/reset" [:as request]
         (e-auth-response/bankid-reset (:session request)))
       (GET "/success" [:as request]

@@ -12,9 +12,9 @@
   [uid s]
   (println (str (subs (str uid) 0 4) " " s)))
 
-;; --------------------------
-;;  BANKID REQUESTS HANDLER
-;; --------------------------
+;; -------------------
+;;   BANKID REQUESTS
+;; -------------------
 
 (def auth-params
   {:keystore         "/Users/brjljo/Dropbox/Plattform/bass4/BankID/keystore_with_private.jks"
@@ -81,11 +81,15 @@
       (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
-;; --------------------------
-;;   BANKID SESSION HANDLER
-;; --------------------------
+;; -------------------
+;;   BANKID SESSION
+;; -------------------
 
 (def session-statuses (atom {}))
+
+(defn session-active?
+  [info]
+  (contains? #{:starting :started :pending} (:status info)))
 
 (defn filter-old-uids
   [status-map]
@@ -102,11 +106,6 @@
       #(filter-map filter-old-uids %))
     (if (< old-count (count @session-statuses))
       (log/debug "Deleted " (- (count @session-statuses) old-count) " sessions."))))
-
-(defn get-session-status
-  [uid]
-  (remove-old-sessions!)
-  (get-in @session-statuses [uid :status]))
 
 (defn get-session-info
   [uid]
@@ -127,7 +126,7 @@
                            old-map
                            {:status :started}
                            status-map)]
-             (if (contains? #{:starting :started :pending nil} (:status old-map))
+             (if (session-active? old-map)
                (assoc
                  all-sessions
                  uid
@@ -137,7 +136,7 @@
   (print-status uid (str "status of uid =" (:status (get @session-statuses uid)))))
 
 ;; --------------------------
-;;      BANKID LAUNCHER
+;;        BANKID API
 ;; --------------------------
 
 (defn poll-interval
@@ -154,18 +153,19 @@
               response   (<! start-chan)]
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
-            (while (contains? #{:started :pending} (get-session-status uid))
+            (while (session-active? (get-session-info uid))
               (<! (timeout (poll-interval)))
               (let [collect-chan (collect-bankid uid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status! uid response))))))
     uid))
 
-(defn cancel-bankid
+(defn cancel-bankid!
   [uid]
-  (set-session-status! uid {:status :failed :hint-code :user-cancel})
-  (if-let [order-ref (:order-ref (get-session-info uid))]
-    (bankid-request "cancel" {:orderRef order-ref})))
+  (let [info (get-session-info uid)]
+    (when (session-active? info)
+      (set-session-status! uid {:status :failed :hint-code :user-cancel})
+      (bankid-cancel (:order-ref info)))))
 
 ;; TODO: Log requests
 ;; TODO: Generalize ajax post handler?

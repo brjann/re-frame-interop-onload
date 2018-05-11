@@ -11,6 +11,55 @@
             [bass4.i18n :as i18n]
             [clojure.string :as string]))
 
+
+
+;; --------------------------------
+;;              NOTE
+;; --------------------------------
+;;
+;;  POST requests are wrapped in CSRF. So if the app is restarted, then test
+;;  screen will report "you have been logged out".
+;;
+
+
+;; --------------------------------
+;;            LAUNCHER
+;; --------------------------------
+
+(s/defn
+  ^:always-validate
+  launch-bankid
+  [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
+  (if (re-matches #"[0-9]{12}" personnummer)
+    (let [uid (bankid/launch-bankid personnummer)]
+      (-> (response/found "/e-auth/bankid/status")
+          (assoc :session (merge
+                            session
+                            {:e-auth {:uid              uid
+                                      :type             :bankid
+                                      :redirect-success redirect-success
+                                      :redirect-fail    redirect-fail}}))))
+    (layout/error-422 "error")))
+
+;; --------------------------------
+;;           STATUS PAGE
+;; --------------------------------
+
+(defn bankid-status-page
+  [session]
+  (let [uid              (get-in session [:e-auth :uid])
+        bankid?          (= :bankid (get-in session [:e-auth :type]))
+        redirect-success (get-in session [:e-auth :redirect-success])
+        redirect-fail    (get-in session [:e-auth :redirect-fail])]
+    (if (and uid bankid? redirect-success redirect-fail)
+      (layout/render "bankid-status.html")
+      (layout/error-400-page "No active BankID session"))))
+
+
+;; --------------------------------
+;;   COLLECTING DATA FROM BANKID
+;; --------------------------------
+
 (def bankid-message-map
   {:pending {:outstanding-transaction {:auto   :rfa13
                                        :manual :rfa1
@@ -39,7 +88,6 @@
              500   :rfa5
              503   :rfa5
              :else :exception}})
-
 ;; TODO: 503 allows for retries before showing RFA5
 
 (defn get-bankid-message
@@ -58,42 +106,6 @@
         (if (seq sub-response)
           (first (vals sub-response))
           (:else response))))))
-
-(s/defn
-  ^:always-validate
-  launch-bankid
-  [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
-  (if (re-matches #"[0-9]{12}" personnummer)
-    (let [uid (bankid/launch-bankid personnummer)]
-      (-> (response/found "/e-auth/bankid/status")
-          (assoc :session (merge
-                            session
-                            {:e-auth {:uid              uid
-                                      :type             :bankid
-                                      :redirect-success redirect-success
-                                      :redirect-fail    redirect-fail}}))))
-    (layout/error-422 "error")))
-
-(defn bankid-status-page
-  [session]
-  (let [uid              (get-in session [:e-auth :uid])
-        bankid?          (= :bankid (get-in session [:e-auth :type]))
-        redirect-success (get-in session [:e-auth :redirect-success])
-        redirect-fail    (get-in session [:e-auth :redirect-fail])]
-    (if (and uid bankid? redirect-success redirect-fail)
-      (layout/render "bankid-status.html")
-      (layout/error-403-page (:user-id session) "No active BankID session"))))
-
-(defn bankid-reset
-  "Resets the e-auth map in session and redirects to redirect-failure"
-  [session]
-  (let [uid              (get-in session [:e-auth :uid])
-        bankid?          (= :bankid (get-in session [:e-auth :type]))
-        redirect-success (get-in session [:e-auth :redirect-success])
-        redirect-fail    (get-in session [:e-auth :redirect-fail])]
-    (if (and uid bankid? redirect-success redirect-fail)
-      (-> (response/found redirect-fail)
-          (assoc :session (dissoc session :e-auth))))))
 
 (defn completed-data
   [info]
@@ -133,7 +145,6 @@
     (let [error-code  (kebab-case-keyword (:error-code info))
           details     (kebab-case-keyword (:details info))
           http-status (:http-status info)]
-      (log/debug info)
       {:title      (i18n/tr [:bankid/error])
        :status     :error
        :error-code error-code
@@ -174,13 +185,40 @@
   (let [personnummer (get-in session [:e-auth :personnummer])
         first-name   (get-in session [:e-auth :first-name])
         last-name    (get-in session [:e-auth :last-name])]
-    (log/debug session)
-    (if-not (and personnummer first-name last-name)
-      (layout/error-403-page (:user-id session) "No BankID info in session")
-      (layout/text-response (:e-auth session)))))
+    (if (and personnummer first-name last-name)
+      (layout/text-response (:e-auth session))
+      (layout/error-400-page "No BankID info in session"))))
+
+;; --------------------------------
+;;   CANCELLING AND ABORTING REQS
+;; --------------------------------
+(defn bankid-reset
+  "Resets the e-auth map in session and redirects to redirect-failure"
+  [session]
+  (let [uid           (get-in session [:e-auth :uid])
+        bankid?       (= :bankid (get-in session [:e-auth :type]))
+        redirect-fail (get-in session [:e-auth :redirect-fail])]
+    (let [response (when (and uid bankid?)
+                     (bankid/cancel-bankid! uid)
+                     (when redirect-fail
+                       (-> (response/found redirect-fail)
+                           (assoc :session (dissoc session :e-auth)))))]
+      (if response
+        response
+        (layout/error-400-page "No active BankID session")))))
+
+(defn bankid-cancel
+  "Cancels a bankid request and resets e-auth map in session"
+  [session]
+  (let [uid     (get-in session [:e-auth :uid])
+        bankid? (= :bankid (get-in session [:e-auth :type]))]
+    (when (and uid bankid?)
+      (bankid/cancel-bankid! uid)
+      (-> (response/ok)
+          (assoc :session (dissoc session :e-auth))))))
 
 ;; This is not thought through enough. Not implemented.
-(defn bankid-middleware
+#_(defn bankid-middleware
   [handler request]
   (let [e-auth (get-in request [:session :e-auth])]
     #_(handler request)
