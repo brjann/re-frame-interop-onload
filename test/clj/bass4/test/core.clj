@@ -106,6 +106,10 @@
                              :expected (str "does not have " text)}))
   response)
 
+(defmacro pass-by
+  [x form]
+  `((fn [] ~form ~x)))
+
 (defn log-return
   ([x]
    (log/debug x)

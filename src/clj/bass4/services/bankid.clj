@@ -1,6 +1,6 @@
 (ns bass4.services.bankid
   (:require [clojure.core.async
-             :refer [>! <! go chan timeout]]
+             :refer [>! <! <!! >!! go chan timeout dropping-buffer]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.walk :as walk]
@@ -52,34 +52,20 @@
        (catch Exception e
          (bankid-error e))))
 
-(defn bankid-auth
+(defn ^:dynamic *bankid-auth*
   [personnummer]
   (bankid-request "auth"
                   {"personalNumber" personnummer
                    "endUserIp"      "81.232.173.180"}))
 
-(defn bankid-collect
+(defn ^:dynamic *bankid-collect*
   [order-ref]
   (bankid-request "collect" {"orderRef" order-ref}))
 
-(defn bankid-cancel
+(defn ^:dynamic *bankid-cancel*
   [order-ref]
   (bankid-request "cancel" {"orderRef" order-ref}))
 
-(defn start-bankid-session
-  [personnummer]
-  (let [start-chan (chan)]
-    (go
-      (>! start-chan (or (bankid-auth personnummer) {})))
-    start-chan))
-
-(defn collect-bankid
-  [uid order-ref]
-  (print-status uid "Collecting")
-  (let [collect-chan (chan)]
-    (go
-      (>! collect-chan (or (bankid-collect order-ref) {})))
-    collect-chan))
 
 ;; -------------------
 ;;   BANKID SESSION
@@ -139,11 +125,29 @@
 ;;        BANKID API
 ;; --------------------------
 
-(defn poll-interval
+
+(defn start-bankid-session
+  [personnummer]
+  (let [start-chan (chan)]
+    (go
+      (>! start-chan (or (*bankid-auth* personnummer) {})))
+    start-chan))
+
+(defn collect-bankid
+  [uid order-ref]
+  (print-status uid "Collecting")
+  (let [collect-chan (chan)]
+    (go
+      (>! collect-chan (or (*bankid-collect* order-ref) {})))
+    collect-chan))
+
+(defn ^:dynamic *poll-timeout*
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
   []
-  1500)
+  (<!! (timeout 1500)))
+
+(def ^:dynamic *collect-chan* (chan (dropping-buffer 0)))
 
 (defn launch-bankid
   [personnummer]
@@ -154,10 +158,11 @@
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))
-              (<! (timeout (poll-interval)))
+              (*poll-timeout*)
               (let [collect-chan (collect-bankid uid order-ref)
                     response     (<! collect-chan)]
-                (set-session-status! uid response))))))
+                (set-session-status! uid response)
+                (>!! *collect-chan* true))))))
     uid))
 
 (defn cancel-bankid!
@@ -165,7 +170,7 @@
   (let [info (get-session-info uid)]
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
-      (bankid-cancel (:order-ref info))))
+      (*bankid-cancel* (:order-ref info))))
   nil)
 
 ;; TODO: Log requests

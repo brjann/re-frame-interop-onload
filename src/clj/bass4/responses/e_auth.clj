@@ -9,7 +9,8 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
             [bass4.i18n :as i18n]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.data.json :as json]))
 
 
 
@@ -186,7 +187,7 @@
         first-name   (get-in session [:e-auth :first-name])
         last-name    (get-in session [:e-auth :last-name])]
     (if (and personnummer first-name last-name)
-      (layout/text-response (:e-auth session))
+      (layout/text-response (json/write-str (:e-auth session)))
       (layout/error-400-page "No BankID info in session"))))
 
 ;; --------------------------------

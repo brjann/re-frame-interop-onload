@@ -101,6 +101,10 @@
         {:sessions        (dissoc sessions order-ref)
          :by-personnummer (dissoc by-personnummer personnummer)}))))
 
+(defn clear-sessions!
+  []
+  (reset! mock-sessions {}))
+
 ;; -------------------
 ;;      MOCK API
 ;; -------------------
@@ -122,7 +126,7 @@
         existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
     (if (= :pending (:status existing-session))
       (already-in-progress existing-order-ref)
-      (create-session! personnummer))))
+      {:order-ref (create-session! personnummer)})))
 
 (defn no-such-order
   []
@@ -157,7 +161,7 @@
       (select-keys session [:order-ref :status :hint-code])
 
       (= :complete status)
-      (select-keys session [:order-ref :user])
+      (select-keys session [:order-ref :status :completion-data])
 
       :else
       (throw (ex-info "Impossible status" session)))))
@@ -175,6 +179,8 @@
     (if (nil? session)
       (no-such-order)
       (delete-session! session))))
+
+
 
 
 ;; -------------------
@@ -198,10 +204,10 @@
   [personnummer]
   (update-session-by-personnummer
     personnummer
-    {:status :complete
-     :user   {:personal-number personnummer
-              :given-name      "Johan"
-              :surname         "Bjureberg"}}))
+    {:status          :complete
+     :completion-data {:user {:personal-number personnummer
+                              :given-name      "Johan"
+                              :surname         "Bjureberg"}}}))
 
 (defn user-advance-time!
   [personnummer seconds]
