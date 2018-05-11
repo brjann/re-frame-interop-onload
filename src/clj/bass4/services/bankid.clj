@@ -93,9 +93,9 @@
 
 (defn filter-old-uids
   [status-map]
-  (let [start-time (:start-time status-map)
-        age        (t/in-minutes (t/interval start-time (t/now)))]
-    (> 10 age)))
+  (let [start-time  (:start-time status-map)
+        age-minutes (t/in-minutes (t/interval start-time (t/now)))]
+    (> 10 age-minutes)))
 
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."
@@ -165,7 +165,8 @@
   (let [info (get-session-info uid)]
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
-      (bankid-cancel (:order-ref info)))))
+      (bankid-cancel (:order-ref info))))
+  nil)
 
 ;; TODO: Log requests
 ;; TODO: Generalize ajax post handler?
