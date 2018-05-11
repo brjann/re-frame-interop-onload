@@ -159,3 +159,5 @@
 ;; TODO: Success-return, fail-return
 ;; TODO: Auto-launch BankID
 ;; TODO: Tests: general, different responses, old session removal...
+;; TODO: Timeout guard in go block?
+;; TODO: Add cancel request when cancelling

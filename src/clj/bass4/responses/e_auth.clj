@@ -26,10 +26,10 @@
    :failed  {:expired-transaction :rfa8
              :certificate-err     :rfa16
              :user-cancel         :rfa6
-             :cancelled           :rfa3
+             :cancelled           :rfa3-first
              :start-failed        :rfa17
              :else                :rfa22}
-   :error   {400   {:already-in-progress :rfa3
+   :error   {400   {:already-in-progress :rfa3-second
                     :invalid-parameters  :exception
                     :else                :rfa22}
              401   :exception

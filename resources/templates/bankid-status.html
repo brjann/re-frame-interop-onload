@@ -29,10 +29,12 @@
       var interval;
 
       var success_fn = function (data) {
+         console.log(data);
          var status;
          if (!check_redirect(data)) {
             $('.bankid-info').each(
                function () {
+                  //console.log(this);
                   var $el = $(this);
                   var id = $el.prop('id');
                   $el.text(data[id]);

@@ -159,6 +159,8 @@
                    :rfa1              "Start your BankID app."
                    :rfa2              "The BankID app is not installed. Please contact your internet bank."
                    :rfa3              "Action cancelled. Please try again."
+                   :rfa3-first        "Another request for BankID has been made for the same personal number. Action cancelled. Please try again."
+                   :rfa3-second       "A BankID login or sign process is already ongoing for this personal number. Action cancelled. Please try again."
                    :rfa5              "Internal error. Please try again."
                    :rfa6              "Action cancelled."
                    :rfa8              "The BankID app is not responding. Please check that the program is started and that you have internet access. If you don't have a valid BankID you can get one from your bank. Try again."
