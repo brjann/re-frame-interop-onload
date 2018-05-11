@@ -21,16 +21,27 @@
   :once
   test-fixtures)
 
+(def ^:dynamic *poll-next*)
+
 (use-fixtures
   :each
   (fn [f]
     (bankid-mock/clear-sessions!)
     (reset! bankid/session-statuses {})
-    (f)))
-
-(defn test-response
-  [response criterion]
-  (let [body (:body response)]))
+    (let [poll-chan    (chan)
+          collect-chan (chan)
+          poll-timeout (fn [] (alts!! [poll-chan (timeout 5000)]))
+          poll-next    (fn [x]
+                         (>!! poll-chan :x)
+                         (<!! collect-chan)
+                         x)]
+      (binding [bankid/*bankid-auth*    bankid-mock/api-auth
+                bankid/*bankid-collect* bankid-mock/api-collect
+                bankid/*bankid-cancel*  bankid-mock/api-cancel
+                bankid/*poll-timeout*   poll-timeout
+                bankid/*collect-chan*   collect-chan
+                *poll-next*             poll-next]
+        (f)))))
 
 (defn user-opens-app!
   [x pnr]
@@ -61,78 +72,98 @@
   response)
 
 (deftest bankid-auth
-  (let [pnr          "191212121212"
-        poll-chan    (chan)
-        collect-chan (chan)
-        poll-timeout (fn [] (alts!! [poll-chan (timeout 5000)]))
-        poll-next    (fn [x]
-                       (>!! poll-chan :x)
-                       (<!! collect-chan)
-                       x)]
-    (binding [bankid/*bankid-auth*    bankid-mock/api-auth
-              bankid/*bankid-collect* bankid-mock/api-collect
-              bankid/*bankid-cancel*  bankid-mock/api-cancel
-              bankid/*poll-timeout*   poll-timeout
-              bankid/*collect-chan*   collect-chan]
-      (-> *s*
-          (visit "/e-auth/bankid/launch" :request-method :post :params {:personnummer     pnr
-                                                                        :redirect-success "/e-auth/bankid/success"
-                                                                        :redirect-fail    "/e-auth/bankid/test"})
-          (has (status? 302))
-          (follow-redirect)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "starting" "hint-code" "contacting-bankid"})
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
-          (user-opens-app! pnr)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "user-sign"})
-          (user-authenticates! pnr)
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (test-response {"personnummer" pnr})))))
+  (let [pnr "191212121212"]
+    (-> *s*
+        (visit "/e-auth/bankid/launch"
+               :request-method
+               :post
+               :params
+               {:personnummer     pnr
+                :redirect-success "/e-auth/bankid/success"
+                :redirect-fail    "/e-auth/bankid/test"})
+        (has (status? 302))
+        (follow-redirect)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (user-opens-app! pnr)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "user-sign"})
+        (user-authenticates! pnr)
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (follow-redirect)
+        (test-response {"personnummer" pnr}))))
 
+(deftest bankid-cancels
+  (let [pnr "191212121212"]
+    (-> *s*
+        (visit "/e-auth/bankid/launch"
+               :request-method
+               :post
+               :params
+               {:personnummer     pnr
+                :redirect-success "/e-auth/bankid/success"
+                :redirect-fail    "/e-auth/bankid/test"})
+        (has (status? 302))
+        (follow-redirect)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (user-opens-app! pnr)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (user-cancels! pnr)
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "failed" "hint-code" "user-cancel"})
+        (visit "/e-auth/bankid/reset")
+        (follow-redirect)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "error" "hint-code" "No uid in session"})
+        (visit "/e-auth/bankid/status")
+        (has (status? 400)))))
 
+(deftest bankid-clicks-cancel
+  (let [pnr "191212121212"]
+    (-> *s*
+        (visit "/e-auth/bankid/launch"
+               :request-method
+               :post
+               :params
+               {:personnummer     pnr
+                :redirect-success "/e-auth/bankid/success"
+                :redirect-fail    "/e-auth/bankid/test"})
+        (has (status? 302))
+        (follow-redirect)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (user-opens-app! pnr)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (visit "/e-auth/bankid/cancel")
+        (*poll-next*)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (test-response {"status" "error" "hint-code" "No uid in session"})
+        (visit "/e-auth/bankid/status")
+        (has (status? 400)))))
 
-(deftest bankid-auth2
-  (let [pnr           "191212121212"
-        poll-chan     (chan)
-        collect-chan  (chan)
-        poll-timeout  (fn [] (alts!! [poll-chan (timeout 5000)]))
-        poll-next     (fn [x]
-                        (>!! poll-chan :x)
-                        (<!! collect-chan)
-                        x)
-        mock-bindings {#'bankid/*bankid-auth*    bankid-mock/api-auth
-                       #'bankid/*bankid-collect* bankid-mock/api-collect
-                       #'bankid/*bankid-cancel*  bankid-mock/api-cancel
-                       #'bankid/*poll-timeout*   poll-timeout
-                       #'bankid/*collect-chan*   collect-chan}]
-    (with-bindings mock-bindings
-      (-> *s*
-          (visit "/e-auth/bankid/launch" :request-method :post :params {:personnummer     pnr
-                                                                        :redirect-success "/e-auth/bankid/success"
-                                                                        :redirect-fail    "/e-auth/bankid/test"})
-          (has (status? 302))
-          (follow-redirect)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "starting" "hint-code" "contacting-bankid"})
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
-          (user-opens-app! pnr)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (test-response {"status" "pending" "hint-code" "user-sign"})
-          (user-authenticates! pnr)
-          (poll-next)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (test-response {"personnummer" pnr})))))
+#_(defmacro x
+    [& forms]
+    (loop [x# (first forms)]
+      ~x#
+      (recur (rest forms))))
+
+#_(macroexpand-1 '(x (* 2) (* 9)))
+
+#_(deftest bankid-parallel)

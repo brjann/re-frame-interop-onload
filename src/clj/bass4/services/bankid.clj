@@ -162,6 +162,8 @@
               (let [collect-chan (collect-bankid uid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status! uid response)
+                ;; To make sure that test function
+                ;; checks status after it has been set
                 (>!! *collect-chan* true))))))
     uid))
 
