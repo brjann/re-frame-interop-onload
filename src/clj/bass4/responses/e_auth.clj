@@ -193,7 +193,8 @@
 ;;   CANCELLING AND ABORTING REQS
 ;; --------------------------------
 (defn bankid-reset
-  "Resets the e-auth map in session and redirects to redirect-failure"
+  "Resets the e-auth map in session and redirects to redirect-failure
+  This is the response to the user clicking Cancel in the status page"
   [session]
   (let [uid           (get-in session [:e-auth :uid])
         bankid?       (= :bankid (get-in session [:e-auth :type]))
@@ -208,7 +209,9 @@
         (layout/error-400-page "No active BankID session")))))
 
 (defn bankid-cancel
-  "Cancels a bankid request and resets e-auth map in session"
+  "Cancels a bankid request and resets e-auth map in session.
+  This is the response to the user leaving the status page
+  (if the authentication is still pending)"
   [session]
   (let [uid     (get-in session [:e-auth :uid])
         bankid? (= :bankid (get-in session [:e-auth :type]))]
