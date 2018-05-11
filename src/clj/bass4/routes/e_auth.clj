@@ -19,6 +19,8 @@
           (:redirect-fail params)))
       (GET "/status" [:as request]
         (e-auth-response/bankid-status-page (:session request)))
+      (GET "/cancel" [:as request]
+        (layout/text-response "OK"))
       (GET "/reset" [:as request]
         (e-auth-response/bankid-reset (:session request)))
       (GET "/success" [:as request]

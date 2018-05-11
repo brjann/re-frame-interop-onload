@@ -12,6 +12,10 @@
   [uid s]
   (println (str (subs (str uid) 0 4) " " s)))
 
+;; --------------------------
+;;  BANKID REQUESTS HANDLER
+;; --------------------------
+
 (def auth-params
   {:keystore         "/Users/brjljo/Dropbox/Plattform/bass4/BankID/keystore_with_private.jks"
    :keystore-pass    "changeit"
@@ -57,6 +61,10 @@
 (defn bankid-collect
   [order-ref]
   (bankid-request "collect" {"orderRef" order-ref}))
+
+(defn bankid-cancel
+  [order-ref]
+  (bankid-request "cancel" {"orderRef" order-ref}))
 
 (defn start-bankid-session
   [personnummer]
@@ -113,17 +121,19 @@
   [uid status-map]
   (swap! session-statuses
          (fn
-           [session-map]
-           (let [old-map (get session-map uid)
+           [all-sessions]
+           (let [old-map (get all-sessions uid)
                  new-map (merge
                            old-map
                            {:status :started}
                            status-map)]
-             (assoc
-               session-map
-               uid
-               (merge new-map
-                      {:status (keyword (:status new-map))})))))
+             (if (contains? #{:starting :started :pending nil} (:status old-map))
+               (assoc
+                 all-sessions
+                 uid
+                 (merge new-map
+                        {:status (keyword (:status new-map))}))
+               all-sessions))))
   (print-status uid (str "status of uid =" (:status (get @session-statuses uid)))))
 
 ;; --------------------------
@@ -150,6 +160,12 @@
                     response     (<! collect-chan)]
                 (set-session-status! uid response))))))
     uid))
+
+(defn cancel-bankid
+  [uid]
+  (set-session-status! uid {:status :failed :hint-code :user-cancel})
+  (if-let [order-ref (:order-ref (get-session-info uid))]
+    (bankid-request "cancel" {:orderRef order-ref})))
 
 ;; TODO: Log requests
 ;; TODO: Generalize ajax post handler?

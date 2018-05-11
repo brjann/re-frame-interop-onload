@@ -27,8 +27,10 @@
       var $hint_code = $('#hint-code');
       var $load_counter = $('#load-counter');
       var interval;
+      var pending = true;
 
       var success_fn = function (data) {
+         // TODO: Remove this
          console.log(data);
          var status;
          if (!check_redirect(data)) {
@@ -48,6 +50,7 @@
 
             if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
                clearInterval(interval);
+               pending = false;
             }
          }
       };
@@ -57,6 +60,7 @@
          $message.text(text_bankid_error_text + ' ' + text_bankid_cancel);
          $hint_code.text(jqXHR.status);
          clearInterval(interval);
+         pending = false;
       };
 
       var collect_status = function () {
@@ -70,6 +74,21 @@
             }
          );
       };
+
+      $(window).on('beforeunload', function () {
+         console.log('leaving page');
+         $.ajax(
+            "/e-auth/bankid/cancel",
+            {
+               method: "get",
+               async: false,
+               // TODO: Remove console.log
+               success: function (data) {
+                  console.log(data)
+               }
+            }
+         );
+      });
       interval = setInterval(collect_status, 1000)
    })
 </script>
