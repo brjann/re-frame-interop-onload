@@ -166,8 +166,12 @@
       :else
       (throw (ex-info "Impossible status" session)))))
 
+(def ^:dynamic *delay-collect* false)
+
 (defn api-collect
   [order-ref]
+  (when *delay-collect*
+    (http/get "https://httpbin.org/delay/1"))
   (let [session (get-in @mock-sessions [:sessions order-ref])]
     (if (nil? session)
       (no-such-order)

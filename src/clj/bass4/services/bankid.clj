@@ -44,6 +44,7 @@
 
 (defn bankid-request
   [endpoint form-params]
+  (log/debug "XXXXXXX XXXXXX running request")
   (try (let [response (http/post (str "https://appapi2.test.bankid.com/rp/v5/" endpoint)
                                  (merge auth-params {:form-params form-params}))]
          (if (= 200 (:status response))
@@ -60,6 +61,7 @@
 
 (defn ^:dynamic *bankid-collect*
   [order-ref]
+  (log/debug "XXXXXXXXXXX XXXXXXX real collect")
   (bankid-request "collect" {"orderRef" order-ref}))
 
 (defn ^:dynamic *bankid-cancel*
@@ -134,8 +136,7 @@
     start-chan))
 
 (defn collect-bankid
-  [uid order-ref]
-  (print-status uid "Collecting")
+  [order-ref]
   (let [collect-chan (chan)]
     (go
       (>! collect-chan (or (*bankid-collect* order-ref) {})))
@@ -159,7 +160,7 @@
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))
               (*poll-timeout*)
-              (let [collect-chan (collect-bankid uid order-ref)
+              (let [collect-chan (collect-bankid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status! uid response)
                 ;; To make sure that test function

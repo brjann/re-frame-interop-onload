@@ -10,6 +10,7 @@
             [bass4.services.user :as user]
             [bass4.services.bankid :as bankid]
             [bass4.services.bankid-mock :as bankid-mock]
+            [bass4.services.bankid-stress-test :as bankid-stress :refer [*poll-next*]]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
@@ -21,27 +22,11 @@
   :once
   test-fixtures)
 
-(def ^:dynamic *poll-next*)
+#_(def ^:dynamic *poll-next*)
 
 (use-fixtures
   :each
-  (fn [f]
-    (bankid-mock/clear-sessions!)
-    (reset! bankid/session-statuses {})
-    (let [poll-chan    (chan)
-          collect-chan (chan)
-          poll-timeout (fn [] (alts!! [poll-chan (timeout 5000)]))
-          poll-next    (fn [x]
-                         (>!! poll-chan :x)
-                         (<!! collect-chan)
-                         x)]
-      (binding [bankid/*bankid-auth*    bankid-mock/api-auth
-                bankid/*bankid-collect* bankid-mock/api-collect
-                bankid/*bankid-cancel*  bankid-mock/api-cancel
-                bankid/*poll-timeout*   poll-timeout
-                bankid/*collect-chan*   collect-chan
-                *poll-next*             poll-next]
-        (f)))))
+  (bankid-stress/wrap-mock true))
 
 (defn user-opens-app!
   [x pnr]
@@ -165,5 +150,3 @@
       (recur (rest forms))))
 
 #_(macroexpand-1 '(x (* 2) (* 9)))
-
-#_(deftest bankid-parallel)
