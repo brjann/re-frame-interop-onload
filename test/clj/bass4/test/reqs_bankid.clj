@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [clojure.core.async :refer [>!! <!! go chan timeout alts!!]]
+            [clojure.core.async :refer [>! >!! <!! go chan timeout alts!! dropping-buffer go-loop]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
@@ -104,6 +104,7 @@
 
 (defn test-bankid-clicks-cancel
   [pnr]
+  (log/debug "Running test")
   (-> *s*
       (visit "/e-auth/bankid/launch"
              :request-method
@@ -174,3 +175,42 @@
 
 (deftest bankid-clicks-concurrent
   (test-bankid-concurrent "191212121212"))
+
+(defn massive-reqs-test
+  ([] (massive-reqs-test 10))
+  ([n]
+   (let [test-fns       [test-bankid-auth
+                         ;test-bankid-cancels
+                         ;test-bankid-clicks-cancel
+                         ;test-bankid-concurrent
+                         ]
+         leaved         (apply interleave (mapv #(repeat n %) test-fns))
+         start-pnr      190000000000
+         pnrs           (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
+         f-p            (map #(vector %1 %2) leaved pnrs)
+         test-completed (chan)
+         trash-chan     (chan (dropping-buffer 0))
+         executor       (fn []
+                          ;; Future occupies all threads.
+                          #_(go-loop [f-p f-p]
+                              (when (seq f-p)
+                                (let [[f p] (first f-p)]
+                                  (println "Running loop test on " p)
+                                  (>! trash-chan (f p))
+                                  (recur (rest f-p)))))
+                          (loop [f-p f-p]
+                            (when (seq f-p)
+                              (let [[f p] (first f-p)]
+                                (println "Running loop test on " p)
+                                (f p)
+                                #_(go (>! trash-chan (f p)))
+                                (recur (rest f-p)))))
+                          #_(doseq [[f p] f-p]
+                              (println "Running test on " p)
+                              ;; Future occupies all threads.
+                              #_(f p)
+                              (go (>! trash-chan (f p))
+                                  (println "test completed")
+                                  #_(go (>! test-completed true)))))
+         xx             #((bankid-mock/wrap-mock true) executor)]
+     (test-fixtures xx))))

@@ -159,9 +159,11 @@
 (defn launch-bankid
   [personnummer]
   (let [uid (UUID/randomUUID)]
+    (log/debug "Creating session" uid "for" personnummer)
     (create-session! uid)
     (go (let [start-chan (start-bankid-session personnummer)
               response   (<! start-chan)]
+          (log/debug "Session created - loop about to start")
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))

@@ -51,6 +51,7 @@
 
 (defn add-session-map
   [all-sessions personnummer order-ref]
+  (log/debug "Creating session map for" personnummer)
   (let [sessions               (:sessions all-sessions)
         by-personnummer        (:by-personnummer all-sessions)
         collect-force-chans    (:collect-force-chans all-sessions)
@@ -131,6 +132,7 @@
 
 (defn api-auth
   [personnummer]
+  (log/debug "Auth for" personnummer)
   (let [existing-order-ref (get-in @mock-sessions [:by-personnummer personnummer])
         existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
     (if (= :pending (:status existing-session))
@@ -215,6 +217,8 @@
     (log/debug "Forcing collect")
     (go (>! force-chan order-ref))
     (log/debug "Forced collect completed. Waiting for collect completed response")
+    (if (nil? complete-chan)
+      (log/debug @mock-sessions))
     (let [res (alts!! [complete-chan (timeout 1000)])]
       (when (nil? (first res))
         (log/error "Complete chan timed out")))
@@ -316,6 +320,7 @@
   ([manual-collect? max-collects] (wrap-mock manual-collect? max-collects false))
   ([manual-collect? max-collects delay-collect?]
    (fn [f & args]
+     (log/debug "Clearing all sessions")
      (clear-sessions!)
      (reset! bankid/session-statuses {})
      (binding [bankid/bankid-auth        api-auth
