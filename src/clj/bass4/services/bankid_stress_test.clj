@@ -66,9 +66,9 @@
            collect-fn   (if max-collects
                           (collect-counter max-collects)
                           bankid-mock/api-collect)]
-       (binding [bankid/*bankid-auth*        bankid-mock/api-auth
-                 bankid/*bankid-collect*     collect-fn
-                 bankid/*bankid-cancel*      bankid-mock/api-cancel
+       (binding [bankid/bankid-auth          bankid-mock/api-auth
+                 bankid/bankid-collect       collect-fn
+                 bankid/bankid-cancel        bankid-mock/api-cancel
                  bankid/*poll-timeout*       poll-timeout
                  bankid/*collect-chan*       collect-chan
                  *poll-next*                 poll-next

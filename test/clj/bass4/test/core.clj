@@ -117,3 +117,10 @@
   ([x y]
    (log/debug y)
    x))
+
+(defmacro ->! [a & forms]
+  `(if-not (and (symbol? '~a)
+                (= (class ~a) clojure.lang.Atom))
+     (throw (Exception. "Arg a must be an atom and symbol"))
+     (let [new-a# (-> @~a ~@forms)]
+       (reset! ~a new-a#))))

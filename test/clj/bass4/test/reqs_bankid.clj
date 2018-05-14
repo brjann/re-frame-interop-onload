@@ -5,7 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [clojure.core.async :refer [>!! <!! go chan timeout alts!!]]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.services.bankid :as bankid]
@@ -143,10 +143,44 @@
         (visit "/e-auth/bankid/status")
         (has (status? 400)))))
 
-#_(defmacro x
-    [& forms]
-    (loop [x# (first forms)]
-      ~x#
-      (recur (rest forms))))
-
-#_(macroexpand-1 '(x (* 2) (* 9)))
+(deftest bankid-clicks-concurrent
+  (let [pnr "191212121212"
+        s1  (atom *s*)
+        s2  (atom *s*)]
+    (->! s1
+         (visit "/e-auth/bankid/launch"
+                :request-method
+                :post
+                :params
+                {:personnummer     pnr
+                 :redirect-success "/e-auth/bankid/success"
+                 :redirect-fail    "/e-auth/bankid/test"})
+         (has (status? 302))
+         (follow-redirect)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "starting" "hint-code" "contacting-bankid"})
+         (*poll-next*)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+         (user-opens-app! pnr)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "pending" "hint-code" "outstanding-transaction"}))
+    (->! s2
+         (visit "/e-auth/bankid/launch"
+                :request-method
+                :post
+                :params
+                {:personnummer     pnr
+                 :redirect-success "/e-auth/bankid/success"
+                 :redirect-fail    "/e-auth/bankid/test"})
+         (has (status? 302))
+         (follow-redirect)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "error" "error-code" "already-in-progress"})
+         (*poll-next*)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "error" "error-code" "already-in-progress"}))
+    (->! s1
+         #_(*poll-next*)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (test-response {"status" "failed" "hint-code" "cancelled"}))))

@@ -53,18 +53,18 @@
        (catch Exception e
          (bankid-error e))))
 
-(defn ^:dynamic *bankid-auth*
+(defn ^:dynamic bankid-auth
   [personnummer]
   (bankid-request "auth"
                   {"personalNumber" personnummer
                    "endUserIp"      "81.232.173.180"}))
 
-(defn ^:dynamic *bankid-collect*
+(defn ^:dynamic bankid-collect
   [order-ref]
   (log/debug "XXXXXXXXXXX XXXXXXX real collect")
   (bankid-request "collect" {"orderRef" order-ref}))
 
-(defn ^:dynamic *bankid-cancel*
+(defn ^:dynamic bankid-cancel
   [order-ref]
   (bankid-request "cancel" {"orderRef" order-ref}))
 
@@ -132,14 +132,14 @@
   [personnummer]
   (let [start-chan (chan)]
     (go
-      (>! start-chan (or (*bankid-auth* personnummer) {})))
+      (>! start-chan (or (bankid-auth personnummer) {})))
     start-chan))
 
 (defn collect-bankid
   [order-ref]
   (let [collect-chan (chan)]
     (go
-      (>! collect-chan (or (*bankid-collect* order-ref) {})))
+      (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
 (defn ^:dynamic *poll-timeout*
@@ -162,7 +162,13 @@
               (*poll-timeout*)
               (let [collect-chan (collect-bankid order-ref)
                     response     (<! collect-chan)]
-                (set-session-status! uid response)
+                (set-session-status!
+                  uid
+                  (if (nil? (:status response))
+                    {:status     :error
+                     :error-code :collect-returned-nil-status
+                     :order-ref  order-ref}
+                    response))
                 ;; To make sure that test function
                 ;; checks status after it has been set
                 (>!! *collect-chan* true))))))
@@ -173,7 +179,7 @@
   (let [info (get-session-info uid)]
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
-      (*bankid-cancel* (:order-ref info))))
+      (bankid-cancel (:order-ref info))))
   nil)
 
 ;; TODO: Log requests
