@@ -100,6 +100,10 @@
   (remove-old-sessions!)
   (get @session-statuses uid))
 
+(defn ^:dynamic get-collected-info
+  [uid]
+  (get-session-info uid))
+
 (defn create-session!
   [uid]
   (swap! session-statuses #(assoc % uid {:status :starting :start-time (t/now)})))
@@ -145,7 +149,7 @@
 (defn ^:dynamic *poll-timeout*
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
-  []
+  [uid]
   (<!! (timeout 1500)))
 
 (def ^:dynamic *collect-chan* (chan (dropping-buffer 0)))
@@ -159,7 +163,7 @@
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))
-              (*poll-timeout*)
+              (*poll-timeout* uid)
               (let [collect-chan (collect-bankid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status!

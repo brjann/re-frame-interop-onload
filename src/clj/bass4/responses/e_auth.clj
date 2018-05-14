@@ -165,7 +165,7 @@
 (defn bankid-collect
   [session]
   (let [uid              (get-in session [:e-auth :uid])
-        info             (bankid/get-session-info uid)
+        info             (bankid/get-collected-info uid)
         status           (:status info)
         redirect-success (get-in session [:e-auth :redirect-success])]
     (if (= :complete status)

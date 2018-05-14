@@ -45,6 +45,17 @@
                      :elapsed-global (double (/ (- current-time global-start-time) 1000000.0))}))))
             {:order-ref order-ref :status :failed :hint-code :user-cancel}))))))
 
+
+#_(def input-chan (chan))
+#_(defn get-collected-info-mock
+    [uid]
+    (let [info (get-session-info uid)]
+      (if (session-active? info))
+      ()
+      info))
+
+
+
 (defn wrap-mock
   ([manual-collect?] (wrap-mock manual-collect? nil))
   ([manual-collect? max-collects] (wrap-mock manual-collect? max-collects false))
@@ -57,8 +68,8 @@
                           (chan)
                           (chan (dropping-buffer 0)))
            poll-timeout (if manual-collect?
-                          (fn [] (alts!! [poll-chan (timeout 5000)]))
-                          (fn [] true))
+                          (fn [_] (alts!! [poll-chan (timeout 5000)]))
+                          (fn [_] true))
            poll-next    (fn [x]
                           (>!! poll-chan :x)
                           (<!! collect-chan)
