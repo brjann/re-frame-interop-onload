@@ -1,10 +1,11 @@
 (ns bass4.services.bankid-mock
   (:require [clojure.core.async
-             :refer [>! <! go chan timeout]]
+             :refer [>! >!! <! <!! go chan timeout alts!! dropping-buffer]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [bass4.services.bankid :as bankid])
   (:import (java.util UUID)))
 
 
@@ -50,15 +51,19 @@
 
 (defn add-session-map
   [all-sessions personnummer order-ref]
-  (let [sessions        (:sessions all-sessions)
-        by-personnummer (:by-personnummer all-sessions)
-        new-session     {:personnummer personnummer
-                         :order-ref    order-ref
-                         :elapsed-time 0
-                         :status       :pending
-                         :hint-code    :outstanding-transaction}]
-    {:sessions        (assoc sessions order-ref new-session)
-     :by-personnummer (assoc by-personnummer personnummer order-ref)}))
+  (let [sessions                      (:sessions all-sessions)
+        by-personnummer               (:by-personnummer all-sessions)
+        manual-collect-chans          (:manual-collect-chans all-sessions)
+        manual-collect-complete-chans (:manual-collect-complete-chans all-sessions)
+        new-session                   {:personnummer personnummer
+                                       :order-ref    order-ref
+                                       :elapsed-time 0
+                                       :status       :pending
+                                       :hint-code    :outstanding-transaction}]
+    {:sessions                      (assoc sessions order-ref new-session)
+     :by-personnummer               (assoc by-personnummer personnummer order-ref)
+     :manual-collect-chans          (assoc manual-collect-chans order-ref (chan))
+     :manual-collect-complete-chans (assoc manual-collect-complete-chans order-ref (chan))}))
 
 (defn create-session!
   [personnummer]
@@ -110,6 +115,7 @@
 ;; -------------------
 
 ;; Note that the API functions are not concurrency safe!
+
 
 (defn already-in-progress
   [existing-order-ref]
@@ -185,7 +191,48 @@
       (delete-session! session))))
 
 
+;; -------------------
+;;   MANUAL COLLECT
+;; -------------------
 
+
+(defn manual-collect-waiter
+  [order-ref]
+  (log/debug "Waiting for manual collect.")
+  (let [force-chan (get-in @mock-sessions [:manual-collect-chans order-ref])
+        res        (alts!! [force-chan (timeout 1000)])]
+    (when (nil? (first res))
+      (log/debug "Manual chan timed out")))
+  (log/debug "Manual collect received"))
+
+(defn force-collect
+  [uid order-ref]
+  (let [force-chan    (get-in @mock-sessions [:manual-collect-chans order-ref])
+        complete-chan (get-in @mock-sessions [:manual-collect-complete-chans order-ref])]
+    (log/debug "Forcing collect")
+    (go (>! force-chan order-ref))
+    (log/debug "Forced collect completed. Waiting for collect completed response")
+    (let [res (alts!! [complete-chan (timeout 1000)])]
+      (when (nil? (first res))
+        (log/debug "Complete chan timed out")))
+    (log/debug "Collect completed response received")
+    (bankid/get-session-info uid)))
+
+(defn api-get-collected-info
+  [uid]
+  (log/debug "Fake get collected info")
+  (let [info (bankid/get-session-info uid)]
+    (if (bankid/session-active? info)
+      (force-collect uid (:order-ref info))
+      info)))
+
+(defn manual-collect-complete
+  [order-ref]
+  (log/debug "Sending signal that manual collect is completed")
+  (log/debug @mock-sessions)
+  (if-let [complete-chan (get-in @mock-sessions [:manual-collect-complete-chans order-ref])]
+    (go (>! complete-chan order-ref))
+    (log/debug "Complete chan for" order-ref "not available")))
 
 ;; -------------------
 ;;     USER ACTIONS
@@ -220,3 +267,93 @@
     (update-session-by-personnummer
       personnummer
       {:elapsed-time (+ elapsed-time seconds)})))
+
+
+
+(def ^:dynamic *poll-next*)
+
+(def collect-counts (atom {}))
+
+(defn collect-counter
+  [max-collects]
+  (reset! collect-counts {})
+  (let [global-start-time (. System (nanoTime))]
+    (fn [order-ref]
+      (let [current-count (get-in @collect-counts [order-ref :count] 0)]
+        (if (> max-collects current-count)
+          (do
+            (swap!
+              collect-counts
+              (fn [all-counts]
+                (let [current-count (get-in all-counts [order-ref :count] 0)
+                      start-time    (get-in all-counts [order-ref :start-time] (. System (nanoTime)))]
+                  (assoc
+                    all-counts
+                    order-ref
+                    {:count      (inc current-count)
+                     :start-time start-time}))))
+            (api-collect order-ref))
+          (do
+            (swap!
+              collect-counts
+              (fn [all-counts]
+                (let [current-count (get-in all-counts [order-ref :count])
+                      current-time  (. System (nanoTime))
+                      start-time    (get-in all-counts [order-ref :start-time])]
+                  (assoc
+                    all-counts
+                    order-ref
+                    {:count          current-count
+                     :start-time     start-time
+                     :end-time       current-time
+                     :elapsed-time   (double (/ (- current-time start-time) 1000000.0))
+                     :elapsed-global (double (/ (- current-time global-start-time) 1000000.0))}))))
+            {:order-ref order-ref :status :failed :hint-code :user-cancel}))))))
+
+
+
+(defn wrap-mock
+  ([manual-collect?] (wrap-mock manual-collect? nil))
+  ([manual-collect? max-collects] (wrap-mock manual-collect? max-collects false))
+  ([manual-collect? max-collects delay-collect?]
+   (fn [f & args]
+     (log/debug "XXXXClearing sessions")
+     (clear-sessions!)
+     (reset! bankid/session-statuses {})
+     (let [collect-chan (if manual-collect?
+                          (chan)
+                          (chan (dropping-buffer 0)))
+           collect-fn   (if max-collects
+                          (collect-counter max-collects)
+                          api-collect)]
+       (binding [bankid/bankid-auth        api-auth
+                 bankid/bankid-collect     collect-fn
+                 bankid/bankid-cancel      api-cancel
+                 bankid/*collect-timeout*  (if manual-collect?
+                                             manual-collect-waiter
+                                             bankid/*collect-timeout*)
+                 bankid/collect-complete   (if manual-collect?
+                                             manual-collect-complete
+                                             bankid/collect-complete)
+                 bankid/get-collected-info (if manual-collect?
+                                             api-get-collected-info
+                                             bankid/get-collected-info)
+                 *delay-collect*           delay-collect?]
+         (apply f args))))))
+
+(defn stress-1
+  [x]
+  (let [pnrs (repeatedly x #(UUID/randomUUID))]
+    (doall
+      (for [pnr pnrs]
+        (do
+          (bankid/launch-bankid pnr))))))
+
+
+;#_((wrap-mock false) stress-1 1000)
+;#_(reset! bankid/session-statuses {})
+;
+;#_((wrap-mock false 1000) stress-1 100)
+;;; Note that fractions can be used as delay https://httpbin.org/delay/0.5
+;#_((wrap-mock false 10 true) stress-1 10)
+;#_((wrap-mock false 10 true) stress-1 30)

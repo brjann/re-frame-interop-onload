@@ -10,7 +10,7 @@
 
 (defn print-status
   [uid s]
-  (println (str (subs (str uid) 0 4) " " s)))
+  (log/debug (str (subs (str uid) 0 4) " " s)))
 
 ;; -------------------
 ;;   BANKID REQUESTS
@@ -146,13 +146,16 @@
       (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
-(defn ^:dynamic *poll-timeout*
+(defn ^:dynamic *collect-timeout*
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
   [uid]
   (<!! (timeout 1500)))
 
 (def ^:dynamic *collect-chan* (chan (dropping-buffer 0)))
+
+(defn ^:dynamic collect-complete
+  [order-ref])
 
 (defn launch-bankid
   [personnummer]
@@ -163,7 +166,7 @@
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))
-              (*poll-timeout* uid)
+              (*collect-timeout* order-ref)
               (let [collect-chan (collect-bankid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status!
@@ -175,7 +178,9 @@
                     response))
                 ;; To make sure that test function
                 ;; checks status after it has been set
-                (>!! *collect-chan* true))))))
+                (log/debug "Collector ready")
+                (collect-complete order-ref)
+                #_(>!! *collect-chan* true))))))
     uid))
 
 (defn cancel-bankid!
