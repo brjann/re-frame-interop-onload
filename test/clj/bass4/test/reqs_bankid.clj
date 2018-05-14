@@ -21,8 +21,6 @@
   :once
   test-fixtures)
 
-#_(def ^:dynamic *poll-next*)
-
 (use-fixtures
   :each
   (bankid-mock/wrap-mock true))
@@ -55,7 +53,7 @@
     (is (= criterion sub-map)))
   response)
 
-#_(deftest bankid-auth
+(deftest bankid-auth
   (log/debug @bankid/session-statuses)
   (log/debug @bankid-mock/mock-sessions)
   (let [pnr "191212121212"]
@@ -79,7 +77,7 @@
         (follow-redirect)
         (test-response {"personnummer" pnr}))))
 
-#_(deftest bankid-cancels
+(deftest bankid-cancels
   (let [pnr "191212121212"]
     (-> *s*
         (visit "/e-auth/bankid/launch"
@@ -129,7 +127,7 @@
         (visit "/e-auth/bankid/status")
         (has (status? 400)))))
 
-#_(deftest bankid-clicks-concurrent
+(deftest bankid-clicks-concurrent
   (let [pnr "191212121212"
         s1  (atom *s*)
         s2  (atom *s*)]
@@ -144,13 +142,10 @@
          (has (status? 302))
          (follow-redirect)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "starting" "hint-code" "contacting-bankid"})
-         #_(*poll-next*)
-         (visit "/e-auth/bankid/collect" :request-method :post)
          (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
          (user-opens-app! pnr)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "pending" "hint-code" "outstanding-transaction"}))
+         (test-response {"status" "pending" "hint-code" "user-sign"}))
     (->! s2
          (visit "/e-auth/bankid/launch"
                 :request-method
@@ -166,8 +161,6 @@
          #_(*poll-next*)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (test-response {"status" "error" "error-code" "already-in-progress"}))
-    (log/debug s1)
-    #_(->! s1
-           #_#_(*poll-next*)
+    (->! s1
          (visit "/e-auth/bankid/collect" :request-method :post)
-           (test-response {"status" "failed" "hint-code" "cancelled"}))))
+         (test-response {"status" "failed" "hint-code" "cancelled"}))))

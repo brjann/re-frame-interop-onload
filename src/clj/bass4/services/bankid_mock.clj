@@ -51,19 +51,19 @@
 
 (defn add-session-map
   [all-sessions personnummer order-ref]
-  (let [sessions                      (:sessions all-sessions)
-        by-personnummer               (:by-personnummer all-sessions)
-        manual-collect-chans          (:manual-collect-chans all-sessions)
-        manual-collect-complete-chans (:manual-collect-complete-chans all-sessions)
-        new-session                   {:personnummer personnummer
-                                       :order-ref    order-ref
-                                       :elapsed-time 0
-                                       :status       :pending
-                                       :hint-code    :outstanding-transaction}]
-    {:sessions                      (assoc sessions order-ref new-session)
-     :by-personnummer               (assoc by-personnummer personnummer order-ref)
-     :manual-collect-chans          (assoc manual-collect-chans order-ref (chan))
-     :manual-collect-complete-chans (assoc manual-collect-complete-chans order-ref (chan))}))
+  (let [sessions               (:sessions all-sessions)
+        by-personnummer        (:by-personnummer all-sessions)
+        collect-force-chans    (:collect-force-chans all-sessions)
+        collect-complete-chans (:collect-complete-chans all-sessions)
+        new-session            {:personnummer personnummer
+                                :order-ref    order-ref
+                                :elapsed-time 0
+                                :status       :pending
+                                :hint-code    :outstanding-transaction}]
+    {:sessions               (assoc sessions order-ref new-session)
+     :by-personnummer        (assoc by-personnummer personnummer order-ref)
+     :collect-force-chans    (assoc collect-force-chans order-ref (chan))
+     :collect-complete-chans (assoc collect-complete-chans order-ref (chan))}))
 
 (defn create-session!
   [personnummer]
@@ -202,16 +202,16 @@
 (defn manual-collect-waiter
   [order-ref]
   (log/debug "Waiting for manual collect.")
-  (let [force-chan (get-in @mock-sessions [:manual-collect-chans order-ref])
+  (let [force-chan (get-in @mock-sessions [:collect-force-chans order-ref])
         res        (alts!! [force-chan (timeout 1000)])]
     (if (nil? (first res))
-      (log/debug "Manual chan timed out")))
-  (log/debug "Manual collect received"))
+      (log/debug "Manual chan timed out")
+      (log/debug "Manual collect received"))))
 
 (defn force-collect
   [uid order-ref]
-  (let [force-chan    (get-in @mock-sessions [:manual-collect-chans order-ref])
-        complete-chan (get-in @mock-sessions [:manual-collect-complete-chans order-ref])]
+  (let [force-chan    (get-in @mock-sessions [:collect-force-chans order-ref])
+        complete-chan (get-in @mock-sessions [:collect-complete-chans order-ref])]
     (log/debug "Forcing collect")
     (go (>! force-chan order-ref))
     (log/debug "Forced collect completed. Waiting for collect completed response")
@@ -232,7 +232,7 @@
 (defn manual-collect-complete
   [order-ref]
   (log/debug "Sending signal that manual collect is completed")
-  (if-let [complete-chan (get-in @mock-sessions [:manual-collect-complete-chans order-ref])]
+  (if-let [complete-chan (get-in @mock-sessions [:collect-complete-chans order-ref])]
     (go (>! complete-chan order-ref))
     (log/error "Complete chan for" order-ref "not available")))
 
@@ -270,9 +270,6 @@
       personnummer
       {:elapsed-time (+ elapsed-time seconds)})))
 
-
-
-(def ^:dynamic *poll-next*)
 
 (def collect-counts (atom {}))
 
@@ -319,7 +316,6 @@
   ([manual-collect? max-collects] (wrap-mock manual-collect? max-collects false))
   ([manual-collect? max-collects delay-collect?]
    (fn [f & args]
-     (log/debug "XXXXClearing sessions")
      (clear-sessions!)
      (reset! bankid/session-statuses {})
      (binding [bankid/bankid-auth        api-auth
