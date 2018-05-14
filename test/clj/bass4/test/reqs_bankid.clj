@@ -55,7 +55,7 @@
     (is (= criterion sub-map)))
   response)
 
-(deftest bankid-auth
+#_(deftest bankid-auth
   (log/debug @bankid/session-statuses)
   (log/debug @bankid-mock/mock-sessions)
   (let [pnr "191212121212"]
@@ -69,8 +69,6 @@
                 :redirect-fail    "/e-auth/bankid/test"})
         (has (status? 302))
         (follow-redirect)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
         (visit "/e-auth/bankid/collect" :request-method :post)
         (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
         (user-opens-app! pnr)
@@ -94,15 +92,11 @@
         (has (status? 302))
         (follow-redirect)
         (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
-        #_(*poll-next*)
-        (visit "/e-auth/bankid/collect" :request-method :post)
         (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
         (user-opens-app! pnr)
         (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (test-response {"status" "pending" "hint-code" "user-sign"})
         (user-cancels! pnr)
-        #_(*poll-next*)
         (visit "/e-auth/bankid/collect" :request-method :post)
         (test-response {"status" "failed" "hint-code" "user-cancel"})
         (visit "/e-auth/bankid/reset")
@@ -112,7 +106,7 @@
         (visit "/e-auth/bankid/status")
         (has (status? 400)))))
 
-#_(deftest bankid-clicks-cancel
+(deftest bankid-clicks-cancel
   (let [pnr "191212121212"]
     (-> *s*
         (visit "/e-auth/bankid/launch"
@@ -125,15 +119,11 @@
         (has (status? 302))
         (follow-redirect)
         (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "starting" "hint-code" "contacting-bankid"})
-        #_(*poll-next*)
-        (visit "/e-auth/bankid/collect" :request-method :post)
         (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
         (user-opens-app! pnr)
         (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+        (test-response {"status" "pending" "hint-code" "user-sign"})
         (visit "/e-auth/bankid/cancel")
-        #_(*poll-next*)
         (visit "/e-auth/bankid/collect" :request-method :post)
         (test-response {"status" "error" "hint-code" "No uid in session"})
         (visit "/e-auth/bankid/status")

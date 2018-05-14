@@ -1,6 +1,6 @@
 (ns bass4.services.bankid
   (:require [clojure.core.async
-             :refer [>! <! <!! >!! go chan timeout dropping-buffer]]
+             :refer [>! <! <!! go chan timeout]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.walk :as walk]
@@ -146,13 +146,11 @@
       (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
-(defn ^:dynamic *collect-timeout*
+(defn ^:dynamic collect-waiter
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
-  [uid]
+  [order-ref]
   (<!! (timeout 1500)))
-
-(def ^:dynamic *collect-chan* (chan (dropping-buffer 0)))
 
 (defn ^:dynamic collect-complete
   [order-ref])
@@ -166,7 +164,7 @@
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (while (session-active? (get-session-info uid))
-              (*collect-timeout* order-ref)
+              (collect-waiter order-ref)
               (let [collect-chan (collect-bankid order-ref)
                     response     (<! collect-chan)]
                 (set-session-status!
@@ -178,14 +176,14 @@
                     response))
                 ;; To make sure that test function
                 ;; checks status after it has been set
-                (log/debug "Collector ready")
-                (collect-complete order-ref)
-                #_(>!! *collect-chan* true))))))
+                (log/debug "Collector cycle completed")
+                (collect-complete order-ref)))
+            (log/debug "Collect loop aborted"))))
     uid))
 
 (defn cancel-bankid!
   [uid]
-  (let [info (get-session-info uid)]
+  (let [info (get-collected-info uid)]
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
       (bankid-cancel (:order-ref info))))

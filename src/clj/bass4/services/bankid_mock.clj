@@ -1,6 +1,6 @@
 (ns bass4.services.bankid-mock
   (:require [clojure.core.async
-             :refer [>! >!! <! <!! go chan timeout alts!! dropping-buffer]]
+             :refer [>! <! <!! go chan timeout alts!!]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
@@ -103,11 +103,14 @@
       (let [sessions        (:sessions all-sessions)
             by-personnummer (:by-personnummer all-sessions)
             personnummer    (get-in sessions [order-ref :personnummer])]
-        {:sessions        (dissoc sessions order-ref)
-         :by-personnummer (dissoc by-personnummer personnummer)}))))
+        (merge
+          all-sessions
+          {:sessions        (dissoc sessions order-ref)
+           :by-personnummer (dissoc by-personnummer personnummer)})))))
 
 (defn clear-sessions!
   []
+  (log/debug "Clearing mock sessions")
   (reset! mock-sessions {}))
 
 ;; -------------------
@@ -201,7 +204,7 @@
   (log/debug "Waiting for manual collect.")
   (let [force-chan (get-in @mock-sessions [:manual-collect-chans order-ref])
         res        (alts!! [force-chan (timeout 1000)])]
-    (when (nil? (first res))
+    (if (nil? (first res))
       (log/debug "Manual chan timed out")))
   (log/debug "Manual collect received"))
 
@@ -214,7 +217,7 @@
     (log/debug "Forced collect completed. Waiting for collect completed response")
     (let [res (alts!! [complete-chan (timeout 1000)])]
       (when (nil? (first res))
-        (log/debug "Complete chan timed out")))
+        (log/error "Complete chan timed out")))
     (log/debug "Collect completed response received")
     (bankid/get-session-info uid)))
 
@@ -229,10 +232,9 @@
 (defn manual-collect-complete
   [order-ref]
   (log/debug "Sending signal that manual collect is completed")
-  (log/debug @mock-sessions)
   (if-let [complete-chan (get-in @mock-sessions [:manual-collect-complete-chans order-ref])]
     (go (>! complete-chan order-ref))
-    (log/debug "Complete chan for" order-ref "not available")))
+    (log/error "Complete chan for" order-ref "not available")))
 
 ;; -------------------
 ;;     USER ACTIONS
@@ -320,26 +322,22 @@
      (log/debug "XXXXClearing sessions")
      (clear-sessions!)
      (reset! bankid/session-statuses {})
-     (let [collect-chan (if manual-collect?
-                          (chan)
-                          (chan (dropping-buffer 0)))
-           collect-fn   (if max-collects
-                          (collect-counter max-collects)
-                          api-collect)]
-       (binding [bankid/bankid-auth        api-auth
-                 bankid/bankid-collect     collect-fn
-                 bankid/bankid-cancel      api-cancel
-                 bankid/*collect-timeout*  (if manual-collect?
-                                             manual-collect-waiter
-                                             bankid/*collect-timeout*)
-                 bankid/collect-complete   (if manual-collect?
-                                             manual-collect-complete
-                                             bankid/collect-complete)
-                 bankid/get-collected-info (if manual-collect?
-                                             api-get-collected-info
-                                             bankid/get-collected-info)
-                 *delay-collect*           delay-collect?]
-         (apply f args))))))
+     (binding [bankid/bankid-auth        api-auth
+               bankid/bankid-collect     (if max-collects
+                                           (collect-counter max-collects)
+                                           api-collect)
+               bankid/bankid-cancel      api-cancel
+               bankid/collect-waiter     (if manual-collect?
+                                           manual-collect-waiter
+                                           bankid/collect-waiter)
+               bankid/collect-complete   (if manual-collect?
+                                           manual-collect-complete
+                                           bankid/collect-complete)
+               bankid/get-collected-info (if manual-collect?
+                                           api-get-collected-info
+                                           bankid/get-collected-info)
+               *delay-collect*           delay-collect?]
+       (apply f args)))))
 
 (defn stress-1
   [x]
