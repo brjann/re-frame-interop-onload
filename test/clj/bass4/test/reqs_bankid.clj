@@ -180,10 +180,9 @@
   ([] (massive-reqs-test 10))
   ([n]
    (let [test-fns       [test-bankid-auth
-                         ;test-bankid-cancels
-                         ;test-bankid-clicks-cancel
-                         ;test-bankid-concurrent
-                         ]
+                         test-bankid-cancels
+                         test-bankid-clicks-cancel
+                         test-bankid-concurrent]
          leaved         (apply interleave (mapv #(repeat n %) test-fns))
          start-pnr      190000000000
          pnrs           (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
@@ -202,8 +201,8 @@
                             (when (seq f-p)
                               (let [[f p] (first f-p)]
                                 (println "Running loop test on " p)
-                                (f p)
-                                #_(go (>! trash-chan (f p)))
+                                #_(f p)
+                                (go (>! trash-chan (f p)))
                                 (recur (rest f-p)))))
                           #_(doseq [[f p] f-p]
                               (println "Running test on " p)

@@ -200,11 +200,14 @@
 ;;   MANUAL COLLECT
 ;; -------------------
 
+(defn get-collect-chan
+  [key order-ref]
+  (get-in @mock-sessions [key order-ref]))
 
 (defn manual-collect-waiter
   [order-ref]
   (log/debug "Waiting for manual collect.")
-  (let [force-chan (get-in @mock-sessions [:collect-force-chans order-ref])
+  (let [force-chan (get-collect-chan :collect-force-chans order-ref)
         res        (alts!! [force-chan (timeout 1000)])]
     (if (nil? (first res))
       (log/debug "Manual chan timed out")
@@ -212,8 +215,8 @@
 
 (defn force-collect
   [uid order-ref]
-  (let [force-chan    (get-in @mock-sessions [:collect-force-chans order-ref])
-        complete-chan (get-in @mock-sessions [:collect-complete-chans order-ref])]
+  (let [force-chan    (get-collect-chan :collect-force-chans order-ref)
+        complete-chan (get-collect-chan :collect-complete-chans order-ref)]
     (log/debug "Forcing collect")
     (go (>! force-chan order-ref))
     (log/debug "Forced collect completed. Waiting for collect completed response")
@@ -236,7 +239,7 @@
 (defn manual-collect-complete
   [order-ref]
   (log/debug "Sending signal that manual collect is completed")
-  (if-let [complete-chan (get-in @mock-sessions [:collect-complete-chans order-ref])]
+  (if-let [complete-chan (get-collect-chan :collect-complete-chans order-ref)]
     (go (>! complete-chan order-ref))
     (log/error "Complete chan for" order-ref "not available")))
 

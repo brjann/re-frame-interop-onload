@@ -134,6 +134,7 @@
 
 (defn start-bankid-session
   [personnummer]
+  (log/debug "Starting bankID session")
   (let [start-chan (chan)]
     (go
       (>! start-chan (or (bankid-auth personnummer) {})))
