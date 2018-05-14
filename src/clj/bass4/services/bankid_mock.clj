@@ -180,7 +180,7 @@
 (defn api-collect
   [order-ref]
   (when *delay-collect*
-    (http/get "https://httpbin.org/delay/1"))
+    (http/get "https://httpbin.org/delay/0.1"))
   (let [session (get-in @mock-sessions [:sessions order-ref])]
     (if (nil? session)
       (no-such-order)
@@ -325,10 +325,10 @@
                bankid/bankid-cancel      api-cancel
                bankid/collect-waiter     (if manual-collect?
                                            manual-collect-waiter
-                                           bankid/collect-waiter)
+                                           (constantly nil))
                bankid/collect-complete   (if manual-collect?
                                            manual-collect-complete
-                                           bankid/collect-complete)
+                                           (constantly nil))
                bankid/get-collected-info (if manual-collect?
                                            api-get-collected-info
                                            bankid/get-collected-info)

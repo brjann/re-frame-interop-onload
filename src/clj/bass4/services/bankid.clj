@@ -9,8 +9,8 @@
   (:import (java.util UUID)))
 
 (defn print-status
-  [uid s]
-  (log/debug (str (subs (str uid) 0 4) " " s)))
+  [uid & s]
+  (log/debug (str (subs (str uid) 0 4) " " (apply str s))))
 
 ;; -------------------
 ;;   BANKID REQUESTS
@@ -150,6 +150,7 @@
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
   [order-ref]
+  (log/debug "Waiting 1500 ms")
   (<!! (timeout 1500)))
 
 (defn ^:dynamic collect-complete
@@ -176,9 +177,9 @@
                     response))
                 ;; To make sure that test function
                 ;; checks status after it has been set
-                (log/debug "Collector cycle completed")
+                (print-status uid "Collector cycle completed")
                 (collect-complete order-ref)))
-            (log/debug "Collect loop aborted"))))
+            (print-status uid "Collect loop aborted"))))
     uid))
 
 (defn cancel-bankid!

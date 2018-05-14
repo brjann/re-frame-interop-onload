@@ -54,8 +54,6 @@
   response)
 
 (deftest bankid-auth
-  (log/debug @bankid/session-statuses)
-  (log/debug @bankid-mock/mock-sessions)
   (let [pnr "191212121212"]
     (-> *s*
         (visit "/e-auth/bankid/launch"
