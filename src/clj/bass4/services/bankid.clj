@@ -97,6 +97,7 @@
 
 (defn get-session-info
   [uid]
+  #_(print-status uid "Checking session info")
   (remove-old-sessions!)
   (get @session-statuses uid))
 
@@ -106,7 +107,9 @@
 
 (defn create-session!
   [uid]
-  (swap! session-statuses #(assoc % uid {:status :starting :start-time (t/now)})))
+  (swap! session-statuses #(assoc % uid {:status     :starting
+                                         :start-time (t/now)
+                                         :status-no  0})))
 
 (defn set-session-status!
   [uid status-map]
@@ -116,7 +119,7 @@
            (let [old-map (get all-sessions uid)
                  new-map (merge
                            old-map
-                           {:status :started}
+                           {:status :started :status-no (inc (:status-no old-map))}
                            status-map)]
              (if (session-active? old-map)
                (assoc
@@ -125,7 +128,8 @@
                  (merge new-map
                         {:status (keyword (:status new-map))}))
                all-sessions))))
-  (print-status uid (str "status of uid =" (:status (get @session-statuses uid)))))
+  #_(let [info (get @session-statuses uid)]
+      (print-status uid (str "status of uid =" (:status info)) " number " (:status-no info))))
 
 ;; --------------------------
 ;;        BANKID API
@@ -150,12 +154,12 @@
 (defn ^:dynamic collect-waiter
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
-  [order-ref]
+  [uid order-ref]
   (log/debug "Waiting 1500 ms")
   (<!! (timeout 1500)))
 
 (defn ^:dynamic collect-complete
-  [order-ref])
+  [uid order-ref])
 
 (defn launch-bankid
   [personnummer]
@@ -167,21 +171,23 @@
           (log/debug "Session created - loop about to start")
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
-            (while (session-active? (get-session-info uid))
-              (collect-waiter order-ref)
-              (let [collect-chan (collect-bankid order-ref)
-                    response     (<! collect-chan)]
-                (set-session-status!
-                  uid
-                  (if (nil? (:status response))
-                    {:status     :error
-                     :error-code :collect-returned-nil-status
-                     :order-ref  order-ref}
-                    response))
-                ;; To make sure that test function
-                ;; checks status after it has been set
-                (print-status uid "Collector cycle completed")
-                (collect-complete order-ref)))
+            (go
+              (while (session-active? (get-session-info uid))
+                (collect-waiter uid order-ref)
+                (let [collect-chan (collect-bankid order-ref)
+                      response     (<! collect-chan)]
+                  (set-session-status!
+                    uid
+                    (if (nil? (:status response))
+                      {:status     :error
+                       :error-code :collect-returned-nil-status
+                       :order-ref  order-ref}
+                      response))
+                  ;; To make sure that test function
+                  ;; checks status after it has been set
+                  #_(print-status uid "Collector cycle completed")
+                  (collect-complete uid order-ref))))
+            (collect-complete uid order-ref)
             (print-status uid "Collect loop aborted"))))
     uid))
 

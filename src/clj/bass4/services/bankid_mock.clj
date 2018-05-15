@@ -1,6 +1,6 @@
 (ns bass4.services.bankid-mock
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout alts!!]]
+             :refer [>! <! <!! go chan timeout alts!! dropping-buffer]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
@@ -111,7 +111,7 @@
 
 (defn clear-sessions!
   []
-  (log/debug "Clearing mock sessions")
+  #_(log/debug "Clearing mock sessions")
   (reset! mock-sessions {}))
 
 ;; -------------------
@@ -200,48 +200,77 @@
 ;;   MANUAL COLLECT
 ;; -------------------
 
-(defn get-collect-chan
-  [key order-ref]
-  (get-in @mock-sessions [key order-ref]))
+(def collect-atoms (atom {}))
+(def collect-chans (atom {}))
+
+
+(def collector-states-atom (atom {}))
+
+(defn collector-has-state?
+  [collector-states uid state-key state-id]
+  (contains? (get-in collector-states [uid state-key]) state-id))
+
+(defn add-collector-state
+  [collector-states uid new-state]
+  (let [uid-state (get collector-states uid)
+        started   (get uid-state :waiting #{})
+        merged    (conj started new-state)]
+    (assoc collector-states uid (merge
+                                  uid-state
+                                  {:waiting merged}))))
+
+(defn move-collector-state
+  [collector-states uid from-key to-key]
+  (let [uid-state (get collector-states uid)
+        from      (get uid-state from-key #{})
+        to        (get uid-state to-key #{})
+        merged    (clojure.set/union from to)]
+    (assoc collector-states uid (merge
+                                  uid-state
+                                  {to-key   merged
+                                   from-key #{}}))))
+
+(def check-channel (chan (dropping-buffer 1)))
 
 (defn manual-collect-waiter
-  [order-ref]
-  (log/debug "Waiting for manual collect.")
-  (let [force-chan (get-collect-chan :collect-force-chans order-ref)
-        res        (alts!! [force-chan (timeout 1000)])]
-    (if (nil? (first res))
-      (log/debug "Manual chan timed out")
-      (log/debug "Manual collect received"))))
-
-(defn force-collect
   [uid order-ref]
-  (let [force-chan    (get-collect-chan :collect-force-chans order-ref)
-        complete-chan (get-collect-chan :collect-complete-chans order-ref)]
-    (log/debug "Forcing collect")
-    (go (>! force-chan order-ref))
-    (log/debug "Forced collect completed. Waiting for collect completed response")
-    (if (nil? complete-chan)
-      (log/debug @mock-sessions))
-    (let [res (alts!! [complete-chan (timeout 1000)])]
-      (when (nil? (first res))
-        (log/error "Complete chan timed out")))
-    (log/debug "Collect completed response received")
-    (bankid/get-session-info uid)))
+  (go (>! check-channel (. System (nanoTime))))
+  (let [state-ids (get-in @collector-states-atom [uid :waiting])]
+    (when (seq state-ids) (log/debug "Pending state ids" state-ids)))
+  (swap! collector-states-atom move-collector-state uid :waiting :pending)
+  #_(if-let [api-uid (get uid @collector-uids-by-uid)]
+      (log/debug "New collector uid" api-uid)))
+
+(defn wait-for-api-uid
+  [uid state-id]
+  (let [cycles (atom 0)]
+    (log/debug "Waiting for collect uid " uid state-id)
+    (<!! (go (while (and (bankid/session-active? (bankid/get-session-info uid))
+                         (not (collector-has-state? @collector-states-atom uid :complete state-id))
+                         (> 4 @cycles))
+               #_(swap! cycles inc))))
+    (log/debug "Waiting completed")))
 
 (defn api-get-collected-info
   [uid]
-  (log/debug "Fake get collected info")
-  (let [info (bankid/get-session-info uid)]
-    (if (bankid/session-active? info)
-      (force-collect uid (:order-ref info))
-      info)))
+  (if (nil? uid)
+    nil
+    (let [state-id (UUID/randomUUID)]
+      (log/debug "New state id" state-id)
+      (swap! collector-states-atom add-collector-state uid state-id)
+      (wait-for-api-uid uid state-id)
+      (let [info (bankid/get-session-info uid)]
+        (log/debug "Received new status" info)
+        info))))
 
 (defn manual-collect-complete
-  [order-ref]
-  (log/debug "Sending signal that manual collect is completed")
-  (if-let [complete-chan (get-collect-chan :collect-complete-chans order-ref)]
-    (go (>! complete-chan order-ref))
-    (log/error "Complete chan for" order-ref "not available")))
+  [uid order-ref]
+  (let [state-ids (get-in @collector-states-atom [uid :pending])]
+    (when (seq state-ids) (log/debug "Completed state ids" state-ids)))
+  (swap! collector-states-atom move-collector-state uid :pending :complete)
+  #_(if-let [complete-uid (get uid @completed-uids-by-uid)]
+      (log/debug "New complete uid" (get uid @completed-uids-by-uid))))
+
 
 ;; -------------------
 ;;     USER ACTIONS
@@ -325,6 +354,7 @@
    (fn [f & args]
      (log/debug "Clearing all sessions")
      (clear-sessions!)
+     (reset! collector-states-atom {})
      (reset! bankid/session-statuses {})
      (binding [bankid/bankid-auth        api-auth
                bankid/bankid-collect     (if max-collects

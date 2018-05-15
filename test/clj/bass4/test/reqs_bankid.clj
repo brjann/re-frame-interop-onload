@@ -104,7 +104,6 @@
 
 (defn test-bankid-clicks-cancel
   [pnr]
-  (log/debug "Running test")
   (-> *s*
       (visit "/e-auth/bankid/launch"
              :request-method
@@ -191,25 +190,15 @@
          trash-chan     (chan (dropping-buffer 0))
          executor       (fn []
                           ;; Future occupies all threads.
-                          #_(go-loop [f-p f-p]
-                              (when (seq f-p)
-                                (let [[f p] (first f-p)]
-                                  (println "Running loop test on " p)
-                                  (>! trash-chan (f p))
-                                  (recur (rest f-p)))))
-                          (loop [f-p f-p]
+                          (go-loop [f-p f-p]
                             (when (seq f-p)
                               (let [[f p] (first f-p)]
                                 (println "Running loop test on " p)
                                 #_(f p)
-                                (go (>! trash-chan (f p)))
-                                (recur (rest f-p)))))
-                          #_(doseq [[f p] f-p]
-                              (println "Running test on " p)
-                              ;; Future occupies all threads.
-                              #_(f p)
-                              (go (>! trash-chan (f p))
-                                  (println "test completed")
-                                  #_(go (>! test-completed true)))))
+                                (go
+                                  #_(<!! (timeout 10))
+                                  (>!! trash-chan (f p)))
+                                #_(future (f p))
+                                (recur (rest f-p))))))
          xx             #((bankid-mock/wrap-mock true) executor)]
      (test-fixtures xx))))

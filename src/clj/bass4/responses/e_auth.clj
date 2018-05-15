@@ -120,6 +120,7 @@
 ;; TODO: Remove kebab-case out of here and into bankid service
 (defn bankid-collect-response
   [uid status info]
+  (log/debug uid)
   (cond
     (= :exception status)
     (throw (:exception info))
