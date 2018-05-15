@@ -154,26 +154,26 @@
 (defn ^:dynamic collect-waiter
   "Poll once every 1.5 seconds.
   Should be between 1 and 2 according to BankID spec"
-  [uid order-ref]
+  [uid]
   (log/debug "Waiting 1500 ms")
   (<!! (timeout 1500)))
 
-(defn ^:dynamic collect-complete
-  [uid order-ref])
+(defn ^:dynamic collect-loop-complete
+  [uid])
 
 (defn launch-bankid
   [personnummer]
   (let [uid (UUID/randomUUID)]
-    (log/debug "Creating session" uid "for" personnummer)
+    (print-status uid "Creating session for" personnummer)
     (create-session! uid)
     (go (let [start-chan (start-bankid-session personnummer)
               response   (<! start-chan)]
-          (log/debug "Session created - loop about to start")
+          (print-status uid "Session created - loop about to start")
           (set-session-status! uid response)
           (let [order-ref (:order-ref response)]
             (go
               (while (session-active? (get-session-info uid))
-                (collect-waiter uid order-ref)
+                (collect-waiter uid)
                 (let [collect-chan (collect-bankid order-ref)
                       response     (<! collect-chan)]
                   (set-session-status!
@@ -186,9 +186,9 @@
                   ;; To make sure that test function
                   ;; checks status after it has been set
                   #_(print-status uid "Collector cycle completed")
-                  (collect-complete uid order-ref))))
-            (collect-complete uid order-ref)
-            (print-status uid "Collect loop aborted"))))
+                  (collect-loop-complete uid)))
+              (collect-loop-complete uid)
+              (print-status uid "Collect loop aborted")))))
     uid))
 
 (defn cancel-bankid!

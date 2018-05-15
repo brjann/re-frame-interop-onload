@@ -1,6 +1,6 @@
 (ns bass4.services.bankid-mock
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout alts!! dropping-buffer]]
+             :refer [>! <! <!! go chan timeout alts!! dropping-buffer thread]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
@@ -230,24 +230,33 @@
                                   {to-key   merged
                                    from-key #{}}))))
 
-(def check-channel (chan (dropping-buffer 1)))
+(def check-collect-channel (chan (dropping-buffer 1)))
+
+(def collect-loop-started (atom {}))
 
 (defn manual-collect-waiter
-  [uid order-ref]
-  (go (>! check-channel (. System (nanoTime))))
+  [uid]
+  (swap! collect-loop-started #(assoc % uid true))
+  (go (>! check-collect-channel (. System (nanoTime))))
   (let [state-ids (get-in @collector-states-atom [uid :waiting])]
     (when (seq state-ids) (log/debug "Pending state ids" state-ids)))
   (swap! collector-states-atom move-collector-state uid :waiting :pending)
   #_(if-let [api-uid (get uid @collector-uids-by-uid)]
       (log/debug "New collector uid" api-uid)))
 
-(defn wait-for-api-uid
+(def check-wait-channel (chan (dropping-buffer 1)))
+
+(defn wait-for-collect-status
   [uid state-id]
   (let [cycles (atom 0)]
+    (when-not (get @collect-loop-started uid)
+      (log/debug "The collect loop hasn't started - probably a bad idea to wait. XXXXXXXXX XXXXXXXX"))
     (log/debug "Waiting for collect uid " uid state-id)
     (<!! (go (while (and (bankid/session-active? (bankid/get-session-info uid))
                          (not (collector-has-state? @collector-states-atom uid :complete state-id))
                          (> 4 @cycles))
+
+               #_(go (>! check-wait-channel (. System (nanoTime))))
                #_(swap! cycles inc))))
     (log/debug "Waiting completed")))
 
@@ -258,13 +267,13 @@
     (let [state-id (UUID/randomUUID)]
       (log/debug "New state id" state-id)
       (swap! collector-states-atom add-collector-state uid state-id)
-      (wait-for-api-uid uid state-id)
+      (wait-for-collect-status uid state-id)
       (let [info (bankid/get-session-info uid)]
         (log/debug "Received new status" info)
         info))))
 
 (defn manual-collect-complete
-  [uid order-ref]
+  [uid]
   (let [state-ids (get-in @collector-states-atom [uid :pending])]
     (when (seq state-ids) (log/debug "Completed state ids" state-ids)))
   (swap! collector-states-atom move-collector-state uid :pending :complete)
@@ -356,21 +365,21 @@
      (clear-sessions!)
      (reset! collector-states-atom {})
      (reset! bankid/session-statuses {})
-     (binding [bankid/bankid-auth        api-auth
-               bankid/bankid-collect     (if max-collects
+     (binding [bankid/bankid-auth           api-auth
+               bankid/bankid-collect        (if max-collects
                                            (collect-counter max-collects)
                                            api-collect)
-               bankid/bankid-cancel      api-cancel
-               bankid/collect-waiter     (if manual-collect?
+               bankid/bankid-cancel         api-cancel
+               bankid/collect-waiter        (if manual-collect?
                                            manual-collect-waiter
                                            (constantly nil))
-               bankid/collect-complete   (if manual-collect?
+               bankid/collect-loop-complete (if manual-collect?
                                            manual-collect-complete
                                            (constantly nil))
-               bankid/get-collected-info (if manual-collect?
+               bankid/get-collected-info    (if manual-collect?
                                            api-get-collected-info
                                            bankid/get-collected-info)
-               *delay-collect*           delay-collect?]
+               *delay-collect*              delay-collect?]
        (apply f args)))))
 
 (defn stress-1
