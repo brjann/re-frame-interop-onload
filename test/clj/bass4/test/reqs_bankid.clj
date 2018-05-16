@@ -23,7 +23,7 @@
 
 (use-fixtures
   :each
-  (bankid-mock/wrap-mock true))
+  (bankid-mock/wrap-mock :manual))
 
 (defn user-opens-app!
   [x pnr]
@@ -179,37 +179,38 @@
   ([] (massive-reqs-test 10))
   ([n]
    (let [test-fns  [test-bankid-auth
-                         test-bankid-cancels
-                         test-bankid-clicks-cancel
-                         test-bankid-concurrent]
+                    test-bankid-cancels
+                    test-bankid-clicks-cancel
+                    test-bankid-concurrent]
          leaved    (apply interleave (mapv #(repeat n %) test-fns))
          start-pnr 190000000000
          pnrs      (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
          f-p       (map #(vector %1 %2) leaved pnrs)
          executor  (fn []
-                          (loop [f-p f-p]
-                            (when (seq f-p)
-                              (let [[f p] (first f-p)]
-                                (println "Running loop test on " p)
-                                ;; (go (f p)) did absolutely not work
-                                ;; PROBABLY because of the trouble with
-                                ;; sync response to the test and the
-                                ;; async collect loop.
-                                ;;
-                                ;; So future will instead run the tests
-                                ;; in separate threads. Which is not test
-                                ;; of super-concurrency but nevertheless
-                                ;; a few simultaneous processes.
-                                ;;
-                                ;; Running to many requests seems to lead to
-                                ;; trouble with non-existent uids. Maybe because
-                                ;; of timeout?
-                                ;;
-                                ;; What have I learned regarding go-blocks?
-                                ;; <!! can lead to total block if there are too
-                                ;; many of them active at the same time.
-                                ;; Don't do it man.
-                                (future (f p))
-                                (recur (rest f-p))))))
-         xx        #((bankid-mock/wrap-mock true nil true) executor)]
-     (test-fixtures xx))))
+                     (assert (empty @bankid/session-statuses))
+                     (loop [f-p f-p]
+                       (when (seq f-p)
+                         (let [[f p] (first f-p)]
+                           (println "Running loop test on " p)
+                           ;; (go (f p)) did absolutely not work
+                           ;; PROBABLY because of the trouble with
+                           ;; sync response to the test and the
+                           ;; async collect loop.
+                           ;;
+                           ;; So future will instead run the tests
+                           ;; in separate threads. Which is not test
+                           ;; of super-concurrency but nevertheless
+                           ;; a few simultaneous processes.
+                           ;;
+                           ;; Running to many requests seems to lead to
+                           ;; trouble with non-existent uids. Maybe because
+                           ;; of timeout?
+                           ;;
+                           ;; What have I learned regarding go-blocks?
+                           ;; <!! can lead to total block if there are too
+                           ;; many of them active at the same time.
+                           ;; Don't do it man.
+                           (future (f p))
+                           (recur (rest f-p))))))
+         test-fn   #((bankid-mock/wrap-mock :manual nil true) executor)]
+     (test-fixtures test-fn))))

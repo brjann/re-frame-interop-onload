@@ -349,9 +349,11 @@
 
 
 (defn wrap-mock
-  ([manual-collect?] (wrap-mock manual-collect? nil))
-  ([manual-collect? max-collects] (wrap-mock manual-collect? max-collects false))
-  ([manual-collect? max-collects delay-collect?]
+  ([] (wrap-mock :immediate nil))
+  ([collect-method] (wrap-mock collect-method nil))
+  ([collect-method max-collects] (wrap-mock collect-method max-collects false))
+  ([collect-method max-collects http-request?]
+   (assert (contains? #{:immediate :manual :wait} collect-method))
    (fn [f & args]
      (log/debug "Clearing all sessions")
      (clear-sessions!)
@@ -362,16 +364,22 @@
                                               (collect-counter max-collects)
                                               api-collect)
                bankid/bankid-cancel         api-cancel
-               bankid/collect-waiter        (if manual-collect?
+               bankid/collect-waiter        (case collect-method
+                                              :immediate
+                                              (fn [uid] (log/debug "Collecting info for" uid))
+
+                                              :manual
                                               manual-collect-waiter
-                                              (fn [uid] (log/debug "Collecting info for" uid)))
-               bankid/collect-loop-complete (if manual-collect?
+
+                                              :wait
+                                              bankid/collect-waiter)
+               bankid/collect-loop-complete (if (= :manual collect-method)
                                               manual-collect-complete
                                               (constantly nil))
-               bankid/get-collected-info    (if manual-collect?
+               bankid/get-collected-info    (if (= :manual collect-method)
                                               api-get-collected-info
                                               bankid/get-collected-info)
-               *delay-collect*              delay-collect?]
+               *delay-collect*              http-request?]
        (apply f args)))))
 
 (defn stress-1
@@ -383,10 +391,10 @@
           (bankid/launch-bankid pnr))))))
 
 
-;#_((wrap-mock false) stress-1 1000)
+;#_((wrap-mock :immediate) stress-1 1000)
 ;#_(reset! bankid/session-statuses {})
 ;
-;#_((wrap-mock false 1000) stress-1 100)
+;#_((wrap-mock :immediate 1000) stress-1 100)
 ;;; Note that fractions can be used as delay https://httpbin.org/delay/0.5
-;#_((wrap-mock false 10 true) stress-1 10)
-;#_((wrap-mock false 10 true) stress-1 30)
+;#_((wrap-mock :immediate 10 true) stress-1 10)
+;#_((wrap-mock :immediate 10 true) stress-1 30)
