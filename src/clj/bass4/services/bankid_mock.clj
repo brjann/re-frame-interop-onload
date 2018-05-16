@@ -364,7 +364,7 @@
                bankid/bankid-cancel         api-cancel
                bankid/collect-waiter        (if manual-collect?
                                               manual-collect-waiter
-                                              (constantly nil))
+                                              (fn [uid] (log/debug "Collecting info for" uid)))
                bankid/collect-loop-complete (if manual-collect?
                                               manual-collect-complete
                                               (constantly nil))
