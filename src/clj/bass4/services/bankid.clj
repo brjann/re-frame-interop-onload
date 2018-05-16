@@ -193,36 +193,6 @@
       (print-status uid "Collect loop completed"))
     uid))
 
-#_(defn launch-bankid
-    [personnummer]
-    (let [uid (UUID/randomUUID)]
-      (print-status uid "Creating session for " personnummer)
-      (create-session! uid)
-      (go (let [start-chan (start-bankid-session personnummer)
-                response   (<! start-chan)]
-            (print-status uid "Session created - loop about to start")
-            (set-session-status! uid response)
-            (let [order-ref (:order-ref response)]
-              (go
-                (while (session-active? (get-session-info uid))
-                  (collect-waiter uid)
-                  (let [collect-chan (collect-bankid order-ref)
-                        response     (<! collect-chan)]
-                    (set-session-status!
-                      uid
-                      (if (nil? (:status response))
-                        {:status     :error
-                         :error-code :collect-returned-nil-status
-                         :order-ref  order-ref}
-                        response))
-                    ;; To make sure that test function
-                    ;; checks status after it has been set
-                    #_(print-status uid "Collector cycle completed")
-                    (collect-loop-complete uid)))
-                (collect-loop-complete uid)
-                (print-status uid "Collect loop aborted")))))
-      uid))
-
 (defn cancel-bankid!
   [uid]
   (let [info (get-collected-info uid)]
