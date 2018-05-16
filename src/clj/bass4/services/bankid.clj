@@ -12,6 +12,10 @@
   [uid & s]
   (log/debug (str (subs (str uid) 0 4) " " (apply str s))))
 
+(defn ^:dynamic bankid-now
+  []
+  (t/now))
+
 ;; -------------------
 ;;   BANKID REQUESTS
 ;; -------------------
@@ -79,11 +83,12 @@
   [info]
   (contains? #{:starting :started :pending} (:status info)))
 
-(defn filter-old-uids
-  [status-map]
-  (let [start-time  (:start-time status-map)
-        age-minutes (t/in-minutes (t/interval start-time (t/now)))]
-    (> 10 age-minutes)))
+(defn session-not-timed-out?
+  ([status-map] (session-not-timed-out? status-map 600))
+  ([status-map time-limit-secs]
+   (let [start-time  (:start-time status-map)
+         age-seconds (t/in-seconds (t/interval start-time (bankid-now)))]
+     (> time-limit-secs age-seconds))))
 
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."
@@ -91,9 +96,9 @@
   (let [old-count (count @session-statuses)]
     (swap!
       session-statuses
-      #(filter-map filter-old-uids %))
+      #(filter-map session-not-timed-out? %))
     (if (< old-count (count @session-statuses))
-      (log/debug "Deleted " (- (count @session-statuses) old-count) " sessions."))))
+      (log/debug "Deleted circa " (- old-count (count @session-statuses)) " sessions."))))
 
 (defn get-session-info
   [uid]
@@ -108,7 +113,7 @@
 (defn create-session!
   [uid]
   (swap! session-statuses #(assoc % uid {:status     :starting
-                                         :start-time (t/now)
+                                         :start-time (bankid-now)
                                          :status-no  0})))
 
 (defn set-session-status!
@@ -167,28 +172,39 @@
     (print-status uid "Creating session for " personnummer)
     (create-session! uid)
     (go
-      (let [started?  (atom false)
-            order-ref (atom nil)]
+      (let [started?   (atom false)
+            order-ref  (atom nil)
+            timed-out? (atom false)
+            start-time (bankid-now)]
         (log/debug "Inside go block - starting collect loop")
-        (while (session-active? (get-session-info uid))
-          (let [collect-chan (if-not @started?
-                               (start-bankid-session personnummer)
-                               (collect-bankid @order-ref))
-                response     (merge
-                               (when-not @started?
-                                 {:status :started})
-                               (<! collect-chan))]
-            (reset! started? true)
-            (reset! order-ref (:order-ref response))
-            #_(log/debug response)
-            (set-session-status!
-              uid
-              (if (nil? (:status response))
+        (while (and (session-active? (get-session-info uid))
+                    (not @timed-out?))
+          (if-not (session-not-timed-out? {:start-time start-time} 300)
+            (do
+              (log/debug "Session timed out")
+              (reset! timed-out? true)
+              (set-session-status!
+                uid
                 {:status     :error
-                 :error-code :collect-returned-nil-status
-                 :order-ref  order-ref}
-                response))
-            (collect-waiter uid))))
+                 :error-code :loop-timeout}))
+            (let [collect-chan (if-not @started?
+                                 (start-bankid-session personnummer)
+                                 (collect-bankid @order-ref))
+                  response     (merge
+                                 (when-not @started?
+                                   {:status :started})
+                                 (<! collect-chan))]
+              (reset! started? true)
+              (reset! order-ref (:order-ref response))
+              #_(log/debug response)
+              (set-session-status!
+                uid
+                (if (nil? (:status response))
+                  {:status     :error
+                   :error-code :collect-returned-nil-status
+                   :order-ref  order-ref}
+                  response))
+              (collect-waiter uid)))))
       (collect-loop-complete uid)
       (print-status uid "Collect loop completed"))
     uid))
