@@ -156,7 +156,7 @@
   Should be between 1 and 2 according to BankID spec"
   [uid]
   (log/debug "Waiting 1500 ms")
-  (<!! (timeout 1500)))
+  (go (<! (timeout 1500))))
 
 (defn ^:dynamic collect-loop-complete
   [uid])
