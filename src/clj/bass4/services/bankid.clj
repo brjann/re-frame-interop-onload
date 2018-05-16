@@ -1,6 +1,6 @@
 (ns bass4.services.bankid
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout]]
+             :refer [>! <! <!! go chan timeout thread]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.walk :as walk]
@@ -156,12 +156,16 @@
       (>! collect-chan (or (bankid-collect order-ref) {})))
     collect-chan))
 
-(defn ^:dynamic collect-waiter
-  "Poll once every 1.5 seconds.
-  Should be between 1 and 2 according to BankID spec"
-  [uid]
-  (log/debug "Waiting 1500 ms")
-  (<!! (go (<! (timeout 1500)))))
+
+;; Originally, the wait was in a separate function.
+;; However, it needed to be a blocked go
+;; (<!! (go (<! (timeout 1500))) to actually wait
+;; and this blocked all threads when multiple loops
+;; were running. Therefore, it's solved like this.
+;; If the collect-waiter is not set by testing
+;; environment, then the loop does the
+;; (<! (timeout 1500)) itself.
+(def ^:dynamic collect-waiter nil)
 
 (defn ^:dynamic collect-loop-complete
   [uid])
@@ -204,7 +208,15 @@
                    :error-code :collect-returned-nil-status
                    :order-ref  order-ref}
                   response))
-              (collect-waiter uid)))))
+
+              ;; Poll once every 1.5 seconds.
+              ;; Should be between 1 and 2 according to BankID spec
+              (if (nil? collect-waiter)
+                (do
+                  (log/debug "Waiting 1500 ms")
+                  (<! (timeout 1500)))
+                (collect-waiter uid))
+              #_(collect-waiter uid)))))
       (collect-loop-complete uid)
       (print-status uid "Collect loop completed"))
     uid))
@@ -227,3 +239,4 @@
 ;; TODO: Tests: general, different responses, old session removal...
 ;; TODO: Timeout guard in go block?
 ;; TODO: Add cancel request when cancelling
+

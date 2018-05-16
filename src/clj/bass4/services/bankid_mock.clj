@@ -396,17 +396,19 @@
 ; Abort infinite loop
 #_(reset! bankid/session-statuses {})
 
-; Multiple processes with immediate and max 100 faked collects
-#_((wrap-mock :immediate 1000) stress-1 100)
+; Multiple processes with immediate and max 10 faked collects
+#_((wrap-mock :immediate 10) stress-1 100)
 
 ; Multiple processes with immediate and max X http collects
 #_((wrap-mock :immediate 10 true) stress-1 10)
 #_((wrap-mock :immediate 10 true) stress-1 30)
 
 ; Multiple processes that wait
-#_((wrap-mock :wait 20 true) stress-1 10)
+#_((wrap-mock :wait 10 true) stress-1 5)
+#_((wrap-mock :wait 10 true) stress-1 10)
 
 ; Multiple processes that both wait and do http polling
+; I.e., testing of real-life conditions.
 #_((wrap-mock :wait 20 true) stress-1 10)
 #_((wrap-mock :wait 100 true) stress-1 100)                 ;Takes a looong time but does not block.
 
