@@ -195,10 +195,11 @@
                               (let [[f p] (first f-p)]
                                 (println "Running loop test on " p)
                                 #_(f p)
-                                (go
-                                  #_(<!! (timeout 10))
-                                  (>!! trash-chan (f p)))
-                                #_(future (f p))
+                                #_(go
+                                    (f p)
+                                    #_(<!! (timeout 10))
+                                    #_(>!! trash-chan (f p)))
+                                (future (f p))
                                 (recur (rest f-p))))))
          xx             #((bankid-mock/wrap-mock true) executor)]
      (test-fixtures xx))))

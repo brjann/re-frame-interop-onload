@@ -230,35 +230,47 @@
                                   {to-key   merged
                                    from-key #{}}))))
 
-(def check-collect-channel (chan (dropping-buffer 1)))
+#_(def check-collect-running (atom {}))
+#_(def check-wait-running (atom {}))
 
-(def collect-loop-started (atom {}))
+#_(def collect-loop-chans (atom {}))
+
+#_(defn get-collect-loop-chan
+    [uid]
+    (when-not (get @collect-loop-chans uid)
+      (log/debug "Creating loop collector for " uid)
+      (swap! collect-loop-chans #(assoc % uid (chan (dropping-buffer 1)))))
+    (get @collect-loop-chans uid))
 
 (defn manual-collect-waiter
   [uid]
-  (swap! collect-loop-started #(assoc % uid true))
-  (go (>! check-collect-channel (. System (nanoTime))))
-  (let [state-ids (get-in @collector-states-atom [uid :waiting])]
+  #_(<!! (timeout 1000))
+  #_(go (>! (get-collect-loop-chan uid) uid))
+  #_(swap! check-collect-running #(assoc % uid (. System (nanoTime))))
+  #_(let [state-ids (get-in @collector-states-atom [uid :waiting])]
     (when (seq state-ids) (log/debug "Pending state ids" state-ids)))
-  (swap! collector-states-atom move-collector-state uid :waiting :pending)
+  (swap! collector-states-atom move-collector-state uid :waiting :complete)
   #_(if-let [api-uid (get uid @collector-uids-by-uid)]
       (log/debug "New collector uid" api-uid)))
 
-(def check-wait-channel (chan (dropping-buffer 1)))
 
 (defn wait-for-collect-status
   [uid state-id]
   (let [cycles (atom 0)]
-    (when-not (get @collect-loop-started uid)
-      (log/debug "The collect loop hasn't started - probably a bad idea to wait. XXXXXXXXX XXXXXXXX"))
-    (log/debug "Waiting for collect uid " uid state-id)
-    (<!! (go (while (and (bankid/session-active? (bankid/get-session-info uid))
-                         (not (collector-has-state? @collector-states-atom uid :complete state-id))
-                         (> 4 @cycles))
+    #_(log/debug "Waiting for collect uid " uid state-id)
+    #_(<!! (thread (go)))
+    #_(log/debug "Outside waiting thread go block")
+    #_(when-not (get @collect-loop-chans uid)
+        (log/debug "The collect loop for hasn't " uid "started - let's wait for it to start. XXXXXXXXX XXXXXXXX")
+        (<!! (get-collect-loop-chan uid)))
+    (while (and (bankid/session-active? (bankid/get-session-info uid))
+                (not (collector-has-state? @collector-states-atom uid :complete state-id))
+                (> 4 @cycles))
 
-               #_(go (>! check-wait-channel (. System (nanoTime))))
-               #_(swap! cycles inc))))
-    (log/debug "Waiting completed")))
+      #_(swap! check-wait-running #(assoc % uid (. System (nanoTime))))
+      #_(<!! (get-collect-loop-chan uid))
+      #_(swap! cycles inc))
+    #_(log/debug "Waiting completed")))
 
 (defn api-get-collected-info
   [uid]
@@ -270,13 +282,18 @@
       (wait-for-collect-status uid state-id)
       (let [info (bankid/get-session-info uid)]
         (log/debug "Received new status" info)
-        info))))
+        (if (contains? #{:starting :started} (:status info))
+          (merge info
+                 {:status    :pending
+                  :hint-code :outstanding-transaction})
+          info)))))
 
 (defn manual-collect-complete
   [uid]
-  (let [state-ids (get-in @collector-states-atom [uid :pending])]
+  #_(go (>! (get-collect-loop-chan uid) uid))
+  #_(let [state-ids (get-in @collector-states-atom [uid :waiting])]
     (when (seq state-ids) (log/debug "Completed state ids" state-ids)))
-  (swap! collector-states-atom move-collector-state uid :pending :complete)
+  (swap! collector-states-atom move-collector-state uid :waiting :complete)
   #_(if-let [complete-uid (get uid @completed-uids-by-uid)]
       (log/debug "New complete uid" (get uid @completed-uids-by-uid))))
 
@@ -287,6 +304,7 @@
 
 (defn user-opens-app!
   [personnummer]
+  (log/debug "User opens app!")
   (update-session-by-personnummer
     personnummer
     {:hint-code :user-sign}))
@@ -367,18 +385,18 @@
      (reset! bankid/session-statuses {})
      (binding [bankid/bankid-auth           api-auth
                bankid/bankid-collect        (if max-collects
-                                           (collect-counter max-collects)
-                                           api-collect)
+                                              (collect-counter max-collects)
+                                              api-collect)
                bankid/bankid-cancel         api-cancel
                bankid/collect-waiter        (if manual-collect?
-                                           manual-collect-waiter
-                                           (constantly nil))
+                                              manual-collect-waiter
+                                              (constantly nil))
                bankid/collect-loop-complete (if manual-collect?
-                                           manual-collect-complete
-                                           (constantly nil))
+                                              manual-collect-complete
+                                              (constantly nil))
                bankid/get-collected-info    (if manual-collect?
-                                           api-get-collected-info
-                                           bankid/get-collected-info)
+                                              api-get-collected-info
+                                              bankid/get-collected-info)
                *delay-collect*              delay-collect?]
        (apply f args)))))
 
