@@ -111,7 +111,6 @@
 
 (defn clear-sessions!
   []
-  #_(log/debug "Clearing mock sessions")
   (reset! mock-sessions {}))
 
 ;; -------------------
@@ -242,35 +241,16 @@
       (swap! collect-loop-chans #(assoc % uid (chan (dropping-buffer 1)))))
     (get @collect-loop-chans uid))
 
+
 (defn manual-collect-waiter
   [uid]
-  #_(<!! (timeout 1000))
-  #_(go (>! (get-collect-loop-chan uid) uid))
-  #_(swap! check-collect-running #(assoc % uid (. System (nanoTime))))
-  #_(let [state-ids (get-in @collector-states-atom [uid :waiting])]
-    (when (seq state-ids) (log/debug "Pending state ids" state-ids)))
-  (swap! collector-states-atom move-collector-state uid :waiting :complete)
-  #_(if-let [api-uid (get uid @collector-uids-by-uid)]
-      (log/debug "New collector uid" api-uid)))
+  (swap! collector-states-atom move-collector-state uid :waiting :complete))
 
 
 (defn wait-for-collect-status
   [uid state-id]
-  (let [cycles (atom 0)]
-    #_(log/debug "Waiting for collect uid " uid state-id)
-    #_(<!! (thread (go)))
-    #_(log/debug "Outside waiting thread go block")
-    #_(when-not (get @collect-loop-chans uid)
-        (log/debug "The collect loop for hasn't " uid "started - let's wait for it to start. XXXXXXXXX XXXXXXXX")
-        (<!! (get-collect-loop-chan uid)))
-    (while (and (bankid/session-active? (bankid/get-session-info uid))
-                (not (collector-has-state? @collector-states-atom uid :complete state-id))
-                (> 4 @cycles))
-
-      #_(swap! check-wait-running #(assoc % uid (. System (nanoTime))))
-      #_(<!! (get-collect-loop-chan uid))
-      #_(swap! cycles inc))
-    #_(log/debug "Waiting completed")))
+  (while (and (bankid/session-active? (bankid/get-session-info uid))
+              (not (collector-has-state? @collector-states-atom uid :complete state-id)))))
 
 (defn api-get-collected-info
   [uid]
@@ -290,12 +270,7 @@
 
 (defn manual-collect-complete
   [uid]
-  #_(go (>! (get-collect-loop-chan uid) uid))
-  #_(let [state-ids (get-in @collector-states-atom [uid :waiting])]
-    (when (seq state-ids) (log/debug "Completed state ids" state-ids)))
-  (swap! collector-states-atom move-collector-state uid :waiting :complete)
-  #_(if-let [complete-uid (get uid @completed-uids-by-uid)]
-      (log/debug "New complete uid" (get uid @completed-uids-by-uid))))
+  (swap! collector-states-atom move-collector-state uid :waiting :complete))
 
 
 ;; -------------------
@@ -304,7 +279,6 @@
 
 (defn user-opens-app!
   [personnummer]
-  (log/debug "User opens app!")
   (update-session-by-personnummer
     personnummer
     {:hint-code :user-sign}))

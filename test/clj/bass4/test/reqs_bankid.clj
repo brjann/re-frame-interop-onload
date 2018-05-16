@@ -178,28 +178,20 @@
 (defn massive-reqs-test
   ([] (massive-reqs-test 10))
   ([n]
-   (let [test-fns       [test-bankid-auth
+   (let [test-fns  [test-bankid-auth
                          test-bankid-cancels
                          test-bankid-clicks-cancel
                          test-bankid-concurrent]
-         leaved         (apply interleave (mapv #(repeat n %) test-fns))
-         start-pnr      190000000000
-         pnrs           (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
-         f-p            (map #(vector %1 %2) leaved pnrs)
-         test-completed (chan)
-         trash-chan     (chan (dropping-buffer 0))
-         executor       (fn []
-                          ;; Future occupies all threads.
+         leaved    (apply interleave (mapv #(repeat n %) test-fns))
+         start-pnr 190000000000
+         pnrs      (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
+         f-p       (map #(vector %1 %2) leaved pnrs)
+         executor  (fn []
                           (loop [f-p f-p]
                             (when (seq f-p)
                               (let [[f p] (first f-p)]
                                 (println "Running loop test on " p)
-                                #_(f p)
-                                #_(go
-                                    (f p)
-                                    #_(<!! (timeout 10))
-                                    #_(>!! trash-chan (f p)))
                                 (future (f p))
                                 (recur (rest f-p))))))
-         xx             #((bankid-mock/wrap-mock true) executor)]
+         xx        #((bankid-mock/wrap-mock true nil true) executor)]
      (test-fixtures xx))))
