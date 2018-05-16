@@ -119,7 +119,7 @@
            (let [old-map (get all-sessions uid)
                  new-map (merge
                            old-map
-                           {:status :started :status-no (inc (:status-no old-map))}
+                           {:status :started :status-no (inc (or (:status-no old-map) 0))}
                            status-map)]
              (if (session-active? old-map)
                (assoc
