@@ -190,7 +190,7 @@
          trash-chan     (chan (dropping-buffer 0))
          executor       (fn []
                           ;; Future occupies all threads.
-                          (go-loop [f-p f-p]
+                          (loop [f-p f-p]
                             (when (seq f-p)
                               (let [[f p] (first f-p)]
                                 (println "Running loop test on " p)
