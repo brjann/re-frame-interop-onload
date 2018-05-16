@@ -24,6 +24,19 @@
 
 
 ;; --------------------------------
+;;              UTILS
+;; --------------------------------
+
+(defn bankid-active?
+  [session]
+  (let [uid     (get-in session [:e-auth :uid])
+        bankid? (= :bankid (get-in session [:e-auth :type]))
+        info    (bankid/get-session-info uid)]
+    (when (and uid bankid? (bankid/session-active? info))
+      uid)))
+
+
+;; --------------------------------
 ;;            LAUNCHER
 ;; --------------------------------
 
@@ -120,7 +133,6 @@
 ;; TODO: Remove kebab-case out of here and into bankid service
 (defn bankid-collect-response
   [uid status info]
-  (log/debug uid)
   (cond
     (= :exception status)
     (throw (:exception info))
@@ -212,24 +224,41 @@
 
 (defn bankid-cancel
   "Cancels a bankid request and resets e-auth map in session.
-  This is the response to the user leaving the status page
-  (if the authentication is still pending)"
-  [session]
-  (let [uid     (get-in session [:e-auth :uid])
-        bankid? (= :bankid (get-in session [:e-auth :type]))]
-    (when (and uid bankid?)
-      (bankid/cancel-bankid! uid)
+  This function is called from the ongoing screen if the user
+  chooses to cancel (if the authentication is still pending)
+  Also called by test function to cancel request."
+  [session return-url]
+  (let [uid (get-in session [:e-auth :uid])]
+    (bankid/cancel-bankid! uid)
+    (if return-url
+      (-> (response/found return-url)
+          (assoc :session (dissoc session :e-auth)))
       (-> (response/ok)
           (assoc :session (dissoc session :e-auth))))))
 
+
+;; --------------------------------
+;;    ONGOING SESSION RETURN PAGE
+;; --------------------------------
+(defn bankid-ongoing
+  [session return-url]
+  (if (bankid-active? session)
+    (layout/render "bankid-ongoing.html"
+                   {:return-url return-url})
+    (response/found return-url)))
+
+
 ;; This is not thought through enough. Not implemented.
-#_(defn bankid-middleware
+(defn bankid-middleware
   [handler request]
-  (let [e-auth (get-in request [:session :e-auth])]
-    #_(handler request)
-    (if (and
-          (:uid e-auth)
-          (= :bankid (:type e-auth))
-          (not (string/starts-with? (:uri request) "/e-auth/bankid")))
-      (http-response/found "/e-auth/bankid/status")
-      (handler request))))
+  #_(handler request)
+  (if (and
+        (bankid-active? (:session request))
+        (= :get (:request-method request))
+        (not (contains? #{"/e-auth/bankid/status"
+                          "/e-auth/bankid/ongoing"
+                          "/e-auth/bankid/cancel"
+                          "/e-auth/bankid/reset"}
+                        (:uri request))))
+    (http-response/found (str "/e-auth/bankid/ongoing?return-url=" (h-utils/url-escape (:uri request))))
+    (handler request)))

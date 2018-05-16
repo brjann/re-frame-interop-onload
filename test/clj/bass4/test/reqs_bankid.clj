@@ -14,7 +14,8 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.services.attack-detector :as a-d]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [bass4.i18n :as i18n]))
 
 
 (use-fixtures
@@ -163,6 +164,47 @@
          (visit "/e-auth/bankid/collect" :request-method :post)
          (test-response {"status" "failed" "hint-code" "cancelled"}))))
 
+(defn test-bankid-ongoing
+  [pnr]
+  (-> *s*
+      (visit "/e-auth/bankid/launch"
+             :request-method
+             :post
+             :params
+             {:personnummer     pnr
+              :redirect-success "/e-auth/bankid/success"
+              :redirect-fail    "/e-auth/bankid/test"})
+      (has (status? 302))
+      (follow-redirect)
+      (visit "/login")
+      (follow-redirect)
+      (has (some-text? "Ongoing"))
+      (follow (i18n/tr [:bankid/ongoing-return]))
+      (has (some-text? "BankID"))
+      (visit "/e-auth/bankid/cancel")
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (test-response {"status" "error" "hint-code" "No uid in session"}))
+  (<!! (timeout 100))
+  (-> *s*
+      (visit "/e-auth/bankid/launch"
+             :request-method
+             :post
+             :params
+             {:personnummer     pnr
+              :redirect-success "/e-auth/bankid/success"
+              :redirect-fail    "/e-auth/bankid/test"})
+      (has (status? 302))
+      (follow-redirect)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (visit "/login")
+      (follow-redirect)
+      (has (some-text? "Ongoing"))
+      (follow (i18n/tr [:bankid/ongoing-cancel]))
+      (follow-redirect)
+      (has (some-text? "Login"))
+      (visit "/e-auth/bankid/status")
+      (has (status? 400))))
+
 (deftest bankid-auth
   (test-bankid-auth "191212121212"))
 
@@ -174,6 +216,9 @@
 
 (deftest bankid-clicks-concurrent
   (test-bankid-concurrent "191212121212"))
+
+(deftest bankid-clicks-ongoing
+  (test-bankid-ongoing "191212121212"))
 
 (defn massive-reqs-test
   ([] (massive-reqs-test 10))

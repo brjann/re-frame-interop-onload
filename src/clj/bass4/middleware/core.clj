@@ -37,7 +37,8 @@
             [ring.util.mime-type :as mime-type]
             [bass4.responses.auth :as auth-response]
             [bass4.middleware.file-php :as file-php]
-            [bass4.services.attack-detector :as a-d])
+            [bass4.services.attack-detector :as a-d]
+            [bass4.responses.e-auth :as e-auth])
 
   (:import [javax.servlet ServletContext]
            (clojure.lang ExceptionInfo)))
@@ -249,9 +250,10 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
-
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
+      (wrap-mw-fn #'e-auth/bankid-middleware)
+      (wrap-mw-fn #'user-identity)
       (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions
       (wrap-mw-fn #'embedded-mw)

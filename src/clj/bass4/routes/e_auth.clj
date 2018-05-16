@@ -19,11 +19,13 @@
           (:redirect-fail params)))
       (GET "/status" [:as request]
         (e-auth-response/bankid-status-page (:session request)))
-      (GET "/cancel" [:as request]
-        (e-auth-response/bankid-cancel (:session request)))
+      (GET "/cancel" [return-url :as request]
+        (e-auth-response/bankid-cancel (:session request) return-url))
       (GET "/reset" [:as request]
         (e-auth-response/bankid-reset (:session request)))
       (GET "/success" [:as request]
         (e-auth-response/bankid-success (:session request)))
+      (GET "/ongoing" [return-url :as request]
+        (e-auth-response/bankid-ongoing (:session request) return-url))
       (POST "/collect" [:as request]
         (e-auth-response/bankid-collect (:session request))))))

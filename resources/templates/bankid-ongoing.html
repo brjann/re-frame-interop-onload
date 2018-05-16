@@ -1,0 +1,9 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>{%tr bankid/ongoing-title %}</h1>
+<p>{%tr bankid/ongoing-text %}</p>
+<a href="/e-auth/bankid/status" class="btn btn-primary">{%tr bankid/ongoing-return %}</a>
+<a href="/e-auth/bankid/cancel?return-url={{return-url|urlescape}}" class="btn btn-warning">{%tr bankid/ongoing-cancel
+    %}</a>
+{% endblock content %}

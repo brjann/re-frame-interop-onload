@@ -192,7 +192,7 @@
   (let [session (get-in @mock-sessions [:sessions order-ref])]
     (if (nil? session)
       (no-such-order)
-      (delete-session! session))))
+      (delete-session! order-ref))))
 
 
 ;; -------------------

@@ -86,23 +86,6 @@
             }
          );
       };
-
-      $(window).on('beforeunload', function () {
-         // TODO: Remove console.log
-         console.log('leaving page');
-         if (pending) {
-            console.log('cancelling session');
-            pending = false;
-            clearInterval(interval);
-            $.ajax(
-               "/e-auth/bankid/cancel",
-               {
-                  method: "get",
-                  async: false
-               }
-            );
-         }
-      });
       interval = setInterval(collect_status, 1000)
    })
 </script>
