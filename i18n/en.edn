@@ -20,7 +20,9 @@
                    :username-password       "If you have a username and password:"}
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
  :download        "Download"
- :registration    {:provide-digits          "Enter the digits in the image."
+ :registration    {:personnummer            "Personnummer"
+                   :personnummer-error      "Provide your personal number in the format 19121212-1212 (YYYYMMDD-XXXX)"
+                   :provide-digits          "Enter the digits in the image."
                    :captcha-error           "Wrong digits entered."
                    :first-name              "First name"
                    :last-name               "Last name"

@@ -40,7 +40,9 @@ SELECT
   RegistrationAutoId AS `auto-id?`,
   RegistrationAutoIdPrefix AS `auto-id-prefix`,
   RegistrationAutoIdLength AS `auto-id-length`,
-  RegistrationAutoPassword AS `auto-password?`
+  RegistrationAutoPassword AS `auto-password?`,
+  RegistrationUseBankID AS `bankid?`,
+  RegistrationAllowChangeBankIDNames AS `bankid-change-names?`
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 

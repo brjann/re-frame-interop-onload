@@ -20,7 +20,9 @@
                    :username-password       "If you have a username and password:"}
  :offline-warning "Du verkar inte ha någon internetuppkoppling. Försäkra dig om att du är uppkopplad innan du postar."
  :download        "Ladda ned"
- :registration    {:provide-digits          "Skriv in siffrorna i bilden."
+ :registration    {:personnummer            "Personal number"
+                   :personnummer-error      "Ange personnummer på formen 19121212-1212 (ÅÅÅÅMMDD-XXXX)"
+                   :provide-digits          "Skriv in siffrorna i bilden."
                    :captcha-error           "Fel siffror skrivna."
                    :first-name              "Förnamn"
                    :last-name               "Efternamn"

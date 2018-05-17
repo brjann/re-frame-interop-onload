@@ -47,6 +47,11 @@
         fields           (if (= auto-username :email)
                            (conj fields :email)
                            fields)
+        fields           (if (:bankid? params)
+                           (clojure.set/union
+                             fields
+                             #{:pid-number :first-name :last-name})
+                           fields)
         auto-password?   (cond
                            (contains? fields :password) false
                            (not= auto-username :none) true
@@ -69,7 +74,12 @@
   (let [params        (consolidate-params (db/bool-cols
                                             db/registration-params
                                             {:project-id project-id}
-                                            [:allow-duplicate-email? :allow-duplicate-sms? :auto-id? :auto-password?]))
+                                            [:allow-duplicate-email?
+                                             :allow-duplicate-sms?
+                                             :auto-id?
+                                             :auto-password?
+                                             :bankid?
+                                             :bankid-change-names?]))
         sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
     (merge
       params

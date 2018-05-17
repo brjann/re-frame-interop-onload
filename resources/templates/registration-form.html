@@ -161,8 +161,9 @@
 {% if pid-validator %}
 <script type="application/javascript">
    // @formatter:off
-   var pid_validator = {{pid-validator|safe}};
+   var pid_validator = {% if bankid? %} personnummer_valid {% else %} {{pid-validator|safe}} {% endif %};
    // @formatter:on
+   var text_personnummer_error = "{%tr registration/personnummer-error %}"
 </script>
 {% endif %}
 {% endif %}
