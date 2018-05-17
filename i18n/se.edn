@@ -148,10 +148,12 @@
                    :8  "åtta"
                    :9  "nio"
                    :10 "tio"}
- :bankid          {:ongoing-title     "Pågående BankID verifiering"
+ :bankid          {:ongoing-title     "Pågående BankID-verifiering"
                    :ongoing-text      "Du har en pågående verifieringsprocess i BankID. Vill då återgå till BankID?"
                    :ongoing-return    "Ja, jag vill fortsätta med BankID"
                    :ongoing-cancel    "Nej, jag vill avbryta BankID"
+                   :no-session-title  "Ingen pågående BankID-verifiering"
+                   :no-session-text   "Du har ingen pågående verifieringsprocess i BankID. Klicka på bakåt i din webbläsare för att återgå till föregående sida."
                    :contacting        "Kontaktar"
                    :contacting-bankid "Kontaktar BankID"
                    :pending           "Väntar"

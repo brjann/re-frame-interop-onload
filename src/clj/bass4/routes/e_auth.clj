@@ -27,5 +27,7 @@
         (e-auth-response/bankid-success (:session request)))
       (GET "/ongoing" [return-url :as request]
         (e-auth-response/bankid-ongoing (:session request) return-url))
+      (GET "/no-session" []
+        (e-auth-response/bankid-no-session))
       (POST "/collect" [:as request]
         (e-auth-response/bankid-collect (:session request))))))

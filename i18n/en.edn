@@ -152,6 +152,8 @@
                    :ongoing-text      "You have an ongoing BankID verification process. Would you like to return to BankID?"
                    :ongoing-return    "Yes, I want to continue with BankID"
                    :ongoing-cancel    "No, I want to cancel BankID"
+                   :no-session-title  "No ongoing BankID verification"
+                   :no-session-text   "You do not have an ongoing BankID verification process. Press back in your browser to return to the previous page."
                    :contacting        "Contacting"
                    :contacting-bankid "Contacting BankID"
                    :pending           "Waiting"

@@ -101,7 +101,13 @@
       (visit "/e-auth/bankid/collect" :request-method :post)
       (test-response {"status" "error" "hint-code" "No uid in session"})
       (visit "/e-auth/bankid/status")
-      (has (status? 400))))
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))
+      (visit "/e-auth/bankid/cancel")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))))
 
 (defn test-bankid-clicks-cancel
   [pnr]
@@ -124,7 +130,9 @@
       (visit "/e-auth/bankid/collect" :request-method :post)
       (test-response {"status" "error" "hint-code" "No uid in session"})
       (visit "/e-auth/bankid/status")
-      (has (status? 400))))
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))))
 
 (defn test-bankid-concurrent
   [pnr]
@@ -203,7 +211,24 @@
       (follow-redirect)
       (has (some-text? "Login"))
       (visit "/e-auth/bankid/status")
-      (has (status? 400))))
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))))
+
+(deftest test-bankid-no-ongoing
+  (-> *s*
+      (visit "/e-auth/bankid/status")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))
+      (visit "/e-auth/bankid/cancel")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))
+      (visit "/e-auth/bankid/reset")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))))
 
 (deftest bankid-auth
   (test-bankid-auth "191212121212"))

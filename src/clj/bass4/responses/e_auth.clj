@@ -67,7 +67,7 @@
         redirect-fail    (get-in session [:e-auth :redirect-fail])]
     (if (and uid bankid? redirect-success redirect-fail)
       (layout/render "bankid-status.html")
-      (layout/error-400-page "No active BankID session"))))
+      (response/found "/e-auth/bankid/no-session"))))
 
 
 ;; --------------------------------
@@ -220,7 +220,7 @@
                            (assoc :session (dissoc session :e-auth)))))]
       (if response
         response
-        (layout/error-400-page "No active BankID session")))))
+        (response/found "/e-auth/bankid/no-session")))))
 
 (defn bankid-cancel
   "Cancels a bankid request and resets e-auth map in session.
@@ -233,12 +233,11 @@
     (if return-url
       (-> (response/found return-url)
           (assoc :session (dissoc session :e-auth)))
-      (-> (response/ok)
+      (-> (response/found "/e-auth/bankid/no-session")
           (assoc :session (dissoc session :e-auth))))))
 
-
 ;; --------------------------------
-;;    ONGOING SESSION RETURN PAGE
+;;   ONGOING SESSION RETURN PAGE
 ;; --------------------------------
 (defn bankid-ongoing
   [session return-url]
@@ -247,11 +246,8 @@
                    {:return-url return-url})
     (response/found return-url)))
 
-
-;; This is not thought through enough. Not implemented.
 (defn bankid-middleware
   [handler request]
-  #_(handler request)
   (if (and
         (bankid-active? (:session request))
         (= :get (:request-method request))
@@ -262,3 +258,12 @@
                         (:uri request))))
     (http-response/found (str "/e-auth/bankid/ongoing?return-url=" (h-utils/url-escape (:uri request))))
     (handler request)))
+
+
+;; --------------------------------
+;;      NO SESSION INFO PAGE
+;; --------------------------------
+
+(defn bankid-no-session
+  []
+  (layout/render "bankid-no-session.html"))
