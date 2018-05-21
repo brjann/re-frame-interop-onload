@@ -324,10 +324,15 @@
 ;; --------------
 ;;     BANKID
 ;; --------------
+(defn bankid-done?
+  [session]
+  (let [e-auth (:e-auth session)]
+    (and e-auth (every? e-auth [:personnummer :first-name :last-name]))))
+
 (defn bankid-page
-  [project-id]
+  [project-id session]
   (let [params (reg-service/registration-content project-id)]
-    (if (:bankid? params)
+    (if (and (:bankid? params) (not (bankid-done? session)))
       (layout/render "registration-bankid.html" params)
       (response/found (str "/registration/" project-id "/")))))
 
@@ -341,10 +346,12 @@
 ;;   REGISTRATION
 ;; --------------
 
+
+
 (defn bankid-params
   [session params]
-  (let [e-auth (:e-auth session)]
-    (if (and e-auth (every? e-auth [:personnummer :first-name :last-name]))
+  (if (bankid-done? session)
+    (let [e-auth (:e-auth session)]
       (merge
         {:first-name-value   (:first-name e-auth)
          :last-name-value    (:last-name e-auth)
@@ -353,8 +360,8 @@
           {:first-name true
            :last-name  true}
           {:first-name false
-           :last-name  false}))
-      :error)))
+           :last-name  false})))
+    :error))
 
 (defn registration-page
   [project-id session]

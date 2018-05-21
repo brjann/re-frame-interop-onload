@@ -23,6 +23,7 @@
  :registration    {:personnummer            "Personal number"
                    :personnummer-error      "Ange personnummer på formen 19121212-1212 (ÅÅÅÅMMDD-XXXX)"
                    :personnummer-title      "Ange ditt personnummer för att starta verifiering med BankID."
+                   :bankid-start            "Starta verifiering med BankID."
                    :provide-digits          "Skriv in siffrorna i bilden."
                    :captcha-error           "Fel siffror skrivna."
                    :first-name              "Förnamn"
