@@ -136,6 +136,13 @@
         <div class="col-sm-3 form-text">{%tr registration/first-name %}</div>
         <div class="col-sm-9 form-text" id="first-name-confirm"></div>
     </div>
+    {% else %}
+    {% if first-name-value %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/first-name %}</div>
+        <div class="col-sm-9 form-text">{{first-name-value}}</div>
+    </div>
+    {% endif %}
     {% endif %}
 
     <!-- LAST NAME -->
@@ -144,6 +151,13 @@
         <div class="col-sm-3 form-text">{%tr registration/last-name %}</div>
         <div class="col-sm-9 form-text" id="last-name-confirm"></div>
     </div>
+    {% else %}
+    {% if last-name-value %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/last-name %}</div>
+        <div class="col-sm-9 form-text">{{last-name-value}}</div>
+    </div>
+    {% endif %}
     {% endif %}
 
     <!-- EMAIL -->
@@ -155,11 +169,18 @@
     {% endif %}
 
     <!-- PID NUMBER -->
+    {% if bankid? %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/personnummer %}</div>
+        <div class="col-sm-9 form-text">{{personnummer-value}}</div>
+    </div>
+    {% else %}
     {% if pid-number %}
     <div class="form-group row">
         <div class="col-sm-3 form-text">{{pid-name}}</div>
         <div class="col-sm-9 form-text" id="pid-number-confirm"></div>
     </div>
+    {% endif %}
     {% endif %}
 
     <!-- SMS NUMBER -->

@@ -344,7 +344,7 @@
 (defn bankid-params
   [session params]
   (let [e-auth (:e-auth session)]
-    (if (every? e-auth [:personnummer :first-name :last-name])
+    (if (and e-auth (every? e-auth [:personnummer :first-name :last-name]))
       (merge
         {:first-name-value   (:first-name e-auth)
          :last-name-value    (:last-name e-auth)
