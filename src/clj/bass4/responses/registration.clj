@@ -341,11 +341,20 @@
 ;;   REGISTRATION
 ;; --------------
 
-(defn check-bankid
-  [session]
-  (if (every? (:e-auth session) [:personnummer :first-name :last-name])
-    (:e-auth session)
-    :error))
+(defn bankid-params
+  [session params]
+  (let [e-auth (:e-auth session)]
+    (if (every? e-auth [:personnummer :first-name :last-name])
+      (merge
+        {:first-name-value   (:first-name e-auth)
+         :last-name-value    (:last-name e-auth)
+         :personnummer-value (:personnummer e-auth)}
+        (if (:bankid-change-names? params)
+          {:first-name true
+           :last-name  true}
+          {:first-name false
+           :last-name  false}))
+      :error)))
 
 (defn registration-page
   [project-id session]
@@ -354,15 +363,15 @@
         fields-map    (zipmap fields (repeat (count fields) true))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
     (let [bankid-info (when (:bankid? params)
-                        (check-bankid session))]
+                        (bankid-params session params))]
       (log/debug bankid-info)
       (if (= :error bankid-info)
         (response/found (str "/registration/" project-id "/bankid"))
         (layout/render "registration-form.html"
                        (merge
-                         bankid-info
                          params
                          fields-map
+                         bankid-info
                          {:sms-countries sms-countries}))))))
 
 (def country-codes

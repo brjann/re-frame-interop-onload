@@ -25,9 +25,17 @@
                 <label for="first-name" class="col-sm-3 col-form-label">{%tr registration/first-name %}</label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" id="first-name" name="first-name"
+                           value="{{first-name-value}}"
                            placeholder="" required>
                 </div>
             </div>
+            {% else %}
+            {% if first-name-value %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{%tr registration/first-name %}</div>
+                <div class="col-sm-9 form-text">{{first-name-value}}</div>
+            </div>
+            {% endif %}
             {% endif %}
 
             <!-- LAST NAME -->
@@ -35,10 +43,17 @@
             <div class="form-group row">
                 <label for="last-name" class="col-sm-3 col-form-label">{%tr registration/last-name %}</label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" id="last-name" name="last-name"
+                    <input type="text" class="form-control" id="last-name" name="last-name" value="{{last-name-value}}"
                            placeholder="" required>
                 </div>
             </div>
+            {% else %}
+            {% if last-name-value %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{%tr registration/last-name %}</div>
+                <div class="col-sm-9 form-text">{{last-name-value}}</div>
+            </div>
+            {% endif %}
             {% endif %}
 
             <!-- EMAIL -->
@@ -53,6 +68,12 @@
             {% endif %}
 
             <!-- PID NUMBER -->
+            {% if bankid? %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{%tr registration/personnummer %}</div>
+                <div class="col-sm-9 form-text">{{personnummer-value}}</div>
+            </div>
+            {% else %}
             {% if pid-number %}
             <div class="form-group row">
                 <label for="pid-number" class="col-sm-3 col-form-label">{{pid-name}}</label>
@@ -61,6 +82,7 @@
                            placeholder="{{pid-format}}" oninput="validate_pid();" required>
                 </div>
             </div>
+            {% endif %}
             {% endif %}
 
             <!-- SMS NUMBER -->

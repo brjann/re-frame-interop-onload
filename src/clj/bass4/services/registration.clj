@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [clojure.set :as set]
             [clojure.string :as string]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]))
 
 (defn registration-allowed?
   [project-id]
@@ -46,11 +47,6 @@
         fields           (-> (transform-fields (:fields params)))
         fields           (if (= auto-username :email)
                            (conj fields :email)
-                           fields)
-        fields           (if (:bankid? params)
-                           (clojure.set/union
-                             fields
-                             #{:pid-number :first-name :last-name})
                            fields)
         auto-password?   (cond
                            (contains? fields :password) false
