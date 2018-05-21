@@ -8,26 +8,70 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
+(defn registration-params
+  [project-id-str]
+  (let [project-id (str->int project-id-str)]
+    (when project-id
+      (let [params (reg-service/registration-params project-id)]
+        (when (:allowed? params)
+          params)))))
+
 (defn captcha-mw
   [handler request]
-  (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)", (:uri request))]
-    (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
-      (if (or
-            (= "/captcha" path)
-            (= "/validate" path)
-            (= "/duplicate" path)
-            (= "/credentials" path)
-            (= "/finished" path)
-            (get-in request [:session :captcha-ok]))
-        (handler request)
-        (response/found (str "/registration/" project-id "/captcha")))
-      (layout/text-response "Registration not allowed"))
+  (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)" (:uri request))]
+    (if-let [params (registration-params project-id)]
+      (let [session (:session request)
+            res     (case path
+                      ("" "/")
+                      (if (:bankid? params)
+                        (if (reg-response/bankid-done? session)
+                          true
+                          "/bankid")
+                        (if (:captcha-ok session)
+                          true
+                          "/captcha"))
 
-    #_(if (string/starts-with? path "/registration/register/")
-        (handler request))
-    #_(if (get-in request [:session :captcha-ok])
-        (handler request)
-        (layout/text-response "CAPTCHA!"))))
+                      "/bankid"
+                      (if (:bankid? params)
+                        (if (:captcha-ok session)
+                          (if (reg-response/bankid-done? session)
+                            "/"
+                            true)
+                          "/captcha")
+                        "/")
+
+                      "/captcha"
+                      (if (:captcha-ok session)
+                        "/"
+                        true)
+
+                      true)]
+        (cond
+          (true? res)
+          (handler request)
+
+          (string? res)
+          (response/found (str "/registration/" project-id res))
+
+          :else
+          (throw (ex-info "Checker returned illegal value" {:res res}))))
+      (layout/text-response "Registration not allowed"))))
+
+#_(defn captcha-mw
+    [handler request]
+    (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)", (:uri request))]
+      (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
+
+        (if (or
+              (= "/captcha" path)
+              (= "/validate" path)
+              (= "/duplicate" path)
+              (= "/credentials" path)
+              (= "/finished" path)
+              (get-in request [:session :captcha-ok]))
+          (handler request)
+          (response/found (str "/registration/" project-id "/captcha")))
+        (layout/text-response "Registration not allowed"))))
 
 (defroutes registration-routes
   (GET "/registration/:project-id" [project-id :as request]

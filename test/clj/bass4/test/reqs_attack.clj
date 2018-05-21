@@ -219,7 +219,8 @@
 
 (deftest attack-registration
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:first-name :last-name}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:first-name :last-name}
                                                              :group                  570281 ;;No assessments in this group
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true

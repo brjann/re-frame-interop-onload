@@ -31,7 +31,8 @@
 
 (deftest registration-flow
   (with-redefs [captcha/captcha!                  (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params   (constantly {:fields                 #{:email :sms-number}
+                reg-service/registration-params   (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
                                                                :group                  564616
                                                                :allow-duplicate-email? true
                                                                :allow-duplicate-sms?   true
@@ -95,7 +96,8 @@
 
 (deftest registration-flow-no-finish
   (with-redefs [captcha/captcha!                  (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params   (constantly {:fields                 #{:email :sms-number}
+                reg-service/registration-params   (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
                                                                :group                  564616
                                                                :allow-duplicate-email? true
                                                                :allow-duplicate-sms?   true
@@ -135,7 +137,8 @@
 
 (deftest registration-back-to-registration-at-validation
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:email :sms-number}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
                                                              :group                  564616
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
@@ -163,7 +166,8 @@
 
 (deftest registration-back-try-to-access-user
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:email :sms-number}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
                                                              :group                  564616
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
@@ -189,7 +193,8 @@
 (deftest registration-auto-id
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                  reg-service/registration-params     (constantly {:allowed?               true
+                                                                   :fields                 #{:email :sms-number}
                                                                    :group                  564616
                                                                    :allow-duplicate-email? true
                                                                    :allow-duplicate-sms?   true
@@ -221,7 +226,8 @@
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (apply str (take 20 (repeatedly #(char (+ (rand 26) 65)))))]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number :password}
+                  reg-service/registration-params     (constantly {:allowed?               true
+                                                                   :fields                 #{:email :sms-number :password}
                                                                    :group                  570281 ;;No assessments in this group
                                                                    :allow-duplicate-email? false
                                                                    :allow-duplicate-sms?   true
@@ -257,7 +263,8 @@
 
 (deftest registration-no-credentials-no-assessments
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:first-name :last-name :email}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:first-name :last-name :email}
                                                              :group                  570281 ;;No assessments in this group
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
@@ -285,7 +292,8 @@
 
 (deftest registration-no-validation-no-credentials-no-assessments
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:first-name :last-name}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:first-name :last-name}
                                                              :group                  570281 ;;No assessments in this group
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
@@ -313,7 +321,8 @@
   (let [participant-id (reg-service/generate-participant-id 564610 "" 0)
         password       (passwords/password)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:fields                 #{:email :sms-number}
+                  reg-service/registration-params     (constantly {:allowed?               true
+                                                                   :fields                 #{:email :sms-number}
                                                                    :group                  564616
                                                                    :allow-duplicate-email? true
                                                                    :allow-duplicate-sms?   true
@@ -349,7 +358,8 @@
 
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:fields                 #{:email :sms-number}
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
                                                              :group                  564616
                                                              :allow-duplicate-email? false
                                                              :allow-duplicate-sms?   false

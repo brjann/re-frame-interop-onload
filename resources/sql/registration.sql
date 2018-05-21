@@ -19,6 +19,7 @@ WHERE ObjectId=:project-id;
 
 -- :name registration-content :? :1
 SELECT
+  RegistrationPossible AS `allowed?`,
   RegistrationFields AS `fields`,
   RegistrationPIDValidator AS `pid-validator`,
   RegistrationPIDName AS `pid-name`,
@@ -34,6 +35,7 @@ WHERE ObjectId=:project-id;
 
 -- :name registration-params :? :1
 SELECT
+  RegistrationPossible AS `allowed?`,
   RegistrationFields AS `fields`,
   DefaultRegistrationGroup AS `group`,
   RegistrationSMSCountries AS `sms-countries`,

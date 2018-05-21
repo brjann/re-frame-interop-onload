@@ -73,27 +73,31 @@
 
 (defn registration-params
   [project-id]
-  (let [params        (consolidate-params (db/bool-cols
-                                            db/registration-params
-                                            {:project-id project-id}
-                                            [:allow-duplicate-email?
-                                             :allow-duplicate-sms?
-                                             :auto-id?
-                                             :auto-password?
-                                             :bankid?
-                                             :bankid-change-names?]))
-        sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
-    (merge
-      params
-      {:fields        (:fields params)
-       :sms-countries sms-countries})))
+  (if-let [params (db/bool-cols
+                    db/registration-params
+                    {:project-id project-id}
+                    [:allowed?
+                     :allow-duplicate-email?
+                     :allow-duplicate-sms?
+                     :auto-id?
+                     :auto-password?
+                     :bankid?
+                     :bankid-change-names?])]
+    (let [params        (consolidate-params params)
+          sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
+      (merge
+        params
+        {:fields        (:fields params)
+         :sms-countries sms-countries}))))
 
 (defn registration-content
   [project-id]
   (let [params        (db/bool-cols
                         db/registration-content
                         {:project-id project-id}
-                        [:bankid? :bankid-change-names?])
+                        [:allowed?
+                         :bankid?
+                         :bankid-change-names?])
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
         sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
