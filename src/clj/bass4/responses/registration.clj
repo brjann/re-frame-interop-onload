@@ -19,7 +19,8 @@
             [clojure.java.io :as io]
             [bass4.services.bass :as bass]
             [bass4.services.assessments :as assessments]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.responses.e-auth :as e-auth]))
 
 
 (defn- all-fields?
@@ -62,10 +63,10 @@
 ;; ------------
 
 #_(defn- login-url
-  [request]
+    [request]
     (let [host   (h-utils/get-host request)
           scheme (name (:scheme request))]
-    (str scheme "://" host)))
+      (str scheme "://" host)))
 
 (defn credentials-page
   [project-id session request]
@@ -236,8 +237,12 @@
   [project-id captcha session]
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
-      (-> (response/found (str "/registration/" project-id ""))
-          (assoc :session {:captcha-ok true}))
+      (let [params (reg-service/registration-params project-id)]
+        (if (:bankid? params)
+          (-> (response/found (str "/registration/" project-id "/bankid"))
+              (assoc :session {:captcha-ok true}))
+          (-> (response/found (str "/registration/" project-id ""))
+              (assoc :session {:captcha-ok true}))))
       (wrong-captcha-response project-id (inc-tries session)))
     (response/found (str "/registration/" project-id "/captcha"))))
 
@@ -316,6 +321,21 @@
       :else
       (complete-registration project-id field-values reg-params))))
 
+;; --------------
+;;     BANKID
+;; --------------
+(defn bankid-page
+  [project-id]
+  (let [params (reg-service/registration-content project-id)]
+    (if (:bankid? params)
+      (layout/render "registration-bankid.html" params)
+      (response/found (str "/registration/" project-id "/")))))
+
+(defn bankid-poster
+  [project-id personnummer session]
+  (if (e-auth/personnummer-valid? personnummer)
+    (e-auth/launch-bankid session personnummer (str "/registration/" project-id) (str "/registration/" project-id "/bankid"))
+    (layout/error-400-page (str "Personnummer does not have valid format " personnummer))))
 
 ;; --------------
 ;;   REGISTRATION
@@ -331,7 +351,9 @@
                    (merge
                      params
                      fields-map
-                     {:sms-countries sms-countries}))))
+                     {:sms-countries        sms-countries
+                      :bankid?              (:bankid? params)
+                      :bankid-change-names? (:bankid-change-names? params)}))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))

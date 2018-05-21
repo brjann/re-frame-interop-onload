@@ -62,6 +62,7 @@
         auto-id?         (if (= auto-username :participant-id)
                            true
                            (:auto-id? params))]
+    ;; pid-validator is replaced by swedish validator later if bankid? is true
     (merge params
            {:auto-username          auto-username
             :auto-id?               auto-id?
@@ -88,13 +89,16 @@
 
 (defn registration-content
   [project-id]
-  (let [params        (db/registration-content {:project-id project-id})
+  (let [params        (db/bool-cols
+                        db/registration-content
+                        {:project-id project-id}
+                        [:bankid? :bankid-change-names?])
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
         sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
     (merge
       {:fields fields :group group :sms-countries sms-countries}
-      (select-keys params [:pid-name :pid-format :pid-validator :info :markdown?]))))
+      (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
 
 (defn show-finished-screen?
   [project-id]

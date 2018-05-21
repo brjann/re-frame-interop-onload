@@ -1,0 +1,32 @@
+{% extends "simple.html" %}
+
+{% block content %}
+XXX
+<div id="registration-div">
+    {% if markdown? %}
+    <div class="markdown">
+        {{info|markdown}}
+    </div>
+    {% else %}
+    {{info|safe}}
+    {% endif %}
+
+    <h3>{%tr registration/bankid-title %}</h3>
+    <form method="post" class="no-validate" id="registration-form">
+        <input type="text" name="personnummer" id="personnummer">
+        <div class="form-group row">
+            <label for="personnummer-input" class="col-sm-3 col-form-label">{%tr registration/personnummer %}</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="personnummer-input"
+                       placeholder="19121212-1212" oninput="validate_personnummer();" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
+    </form>
+</div>
+
+<script src="/js/personnummer.js"></script>
+<script type="application/javascript">
+   var text_personnummer_error = "{%tr registration/personnummer-error %}";
+</script>
+{% endblock %}

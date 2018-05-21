@@ -12,7 +12,7 @@
       (GET "/test" []
         (layout/render "bankid-test.html"))
       (POST "/launch" [& params :as request]
-        (e-auth-response/launch-bankid
+        (e-auth-response/launch-bankid-test
           (:session request)
           (:personnummer params)
           (:redirect-success params)

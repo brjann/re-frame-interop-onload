@@ -1,5 +1,5 @@
 function personnummer_valid(nr) {
-   var error_str = 'Ange personnummer på formen 19121212-1212 (ÅÅÅÅMMDD-XXXX)';
+   var error_str = text_personnummer_error;
    this.valid = false;
    var century = nr.substr(0, 2);
    if (century != '19' && century != '20') {
@@ -37,4 +37,19 @@ function personnummer_valid(nr) {
    this.valid = (this.checksum % 10 == 0) ? true : false;
    this.sex = parseInt(this.controldigits.substring(2, 3)) % 2;
    return this.valid ? '' : error_str;
-};
+}
+
+function validate_personnummer() {
+   var p_input = event.target;
+   var personnummer = $('#personnummer');
+   var error = personnummer_valid($(p_input).val());
+   if (typeof error === 'string' && error.length > 0) {
+      p_input.setCustomValidity(error);
+      personnummer.val('');
+   }
+   else {
+      console.log('hejsan');
+      p_input.setCustomValidity('');
+      personnummer.val($(p_input).val().replace('-', ''))
+   }
+}

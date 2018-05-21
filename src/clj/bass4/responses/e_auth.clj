@@ -40,20 +40,34 @@
 ;;            LAUNCHER
 ;; --------------------------------
 
+(defn personnummer-valid?
+  [personnummer]
+  (re-matches #"[0-9]{12}" personnummer))
+
+(defn
+  bankid-session
+  [personnummer redirect-success redirect-fail]
+  (if (personnummer-valid? personnummer)
+    (let [uid (bankid/launch-bankid personnummer)]
+      {:e-auth {:uid              uid
+                :type             :bankid
+                :redirect-success redirect-success
+                :redirect-fail    redirect-fail}})
+    (throw (ex-info "Personnummer not in right format" {:personnummer personnummer}))))
+
+(defn
+  launch-bankid
+  [session personnummer redirect-success redirect-fail]
+  (-> (response/found "/e-auth/bankid/status")
+      (assoc :session (merge
+                        session
+                        (bankid-session personnummer redirect-success redirect-fail)))))
+
 (s/defn
   ^:always-validate
-  launch-bankid
+  launch-bankid-test
   [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
-  (if (re-matches #"[0-9]{12}" personnummer)
-    (let [uid (bankid/launch-bankid personnummer)]
-      (-> (response/found "/e-auth/bankid/status")
-          (assoc :session (merge
-                            session
-                            {:e-auth {:uid              uid
-                                      :type             :bankid
-                                      :redirect-success redirect-success
-                                      :redirect-fail    redirect-fail}}))))
-    (layout/error-422 "error")))
+  (launch-bankid session personnummer redirect-success redirect-fail))
 
 ;; --------------------------------
 ;;           STATUS PAGE

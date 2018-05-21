@@ -25,7 +25,10 @@ SELECT
   RegistrationPIDFOrmat AS `pid-format`,
   RegistrationSMSCountries AS `sms-countries`,
   RegistrationInfo AS info,
-  RegistrationIsMarkdown AS `markdown?`
+  RegistrationIsMarkdown AS `markdown?`,
+  RegistrationUseBankID AS `bankid?`,
+  RegistrationAllowChangeBankIDNames AS `bankid-change-names?`
+
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
