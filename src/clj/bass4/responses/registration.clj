@@ -396,12 +396,24 @@
            (str "+" (get % "callingCode")))
         matching))))
 
+(defn get-bankid-fields
+  [posted-fields session params]
+  (when (:bankid? params)
+    (let [e-auth (:e-auth session)]
+      (if (:bankid-change-names? params)
+        {:pid-number (:personnummer e-auth)
+         :first-name (:first-name posted-fields)
+         :last-name  (:last-name posted-fields)}
+        {:pid-number (:personnummer e-auth)
+         :first-name (:first-name e-auth)
+         :last-name  (:last-name e-auth)}))))
 
 (defn handle-registration
-  [project-id posted-fields]
+  [project-id posted-fields session]
   (let [params       (reg-service/registration-params project-id)
         fields       (:fields params)
-        field-values (select-keys posted-fields fields)]
+        field-values (merge (select-keys posted-fields fields)
+                            (get-bankid-fields posted-fields session params))]
     (if (all-fields? fields field-values)
       (if (check-sms (:sms-number field-values) (:sms-countries params))
         (if (or (contains? field-values :sms-number) (contains? field-values :email))

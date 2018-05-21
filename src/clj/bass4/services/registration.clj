@@ -48,6 +48,11 @@
         fields           (if (= auto-username :email)
                            (conj fields :email)
                            fields)
+        fields           (if (:bankid? params)
+                           (clojure.set/union
+                             fields
+                             #{:pid-number :first-name :last-name})
+                           fields)
         auto-password?   (cond
                            (contains? fields :password) false
                            (not= auto-username :none) true
