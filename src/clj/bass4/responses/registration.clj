@@ -341,19 +341,29 @@
 ;;   REGISTRATION
 ;; --------------
 
+(defn check-bankid
+  [session]
+  (if (every? (:e-auth session) [:personnummer :first-name :last-name])
+    (:e-auth session)
+    :error))
+
 (defn registration-page
-  [project-id]
+  [project-id session]
   (let [params        (reg-service/registration-content project-id)
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
-    (layout/render "registration-form.html"
-                   (merge
-                     params
-                     fields-map
-                     {:sms-countries        sms-countries
-                      :bankid?              (:bankid? params)
-                      :bankid-change-names? (:bankid-change-names? params)}))))
+    (let [bankid-info (when (:bankid? params)
+                        (check-bankid session))]
+      (log/debug bankid-info)
+      (if (= :error bankid-info)
+        (response/found (str "/registration/" project-id "/bankid"))
+        (layout/render "registration-form.html"
+                       (merge
+                         bankid-info
+                         params
+                         fields-map
+                         {:sms-countries sms-countries}))))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))

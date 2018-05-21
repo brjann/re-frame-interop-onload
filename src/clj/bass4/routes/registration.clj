@@ -31,11 +31,11 @@
 
 (defroutes registration-routes
   (GET "/registration/:project-id" [project-id :as request]
-    (reg-response/registration-page project-id))
+    (reg-response/registration-page project-id (:session request)))
   (POST "/registration/:project-id" [project-id & fields]
     (reg-response/handle-registration project-id fields))
   (GET "/registration/:project-id/" [project-id :as request]
-    (reg-response/registration-page project-id))
+    (reg-response/registration-page project-id (:session request)))
   (POST "/registration/:project-id/" [project-id & fields]
     (reg-response/handle-registration project-id fields))
 
