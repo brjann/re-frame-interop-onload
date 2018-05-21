@@ -13,7 +13,8 @@
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.services.bankid :as bankid]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -63,6 +64,7 @@
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
+  (reset! bankid/session-statuses {})
   (binding [clojure.test/*stack-trace-depth* 5
             mw/*skip-csrf*                   true
             *s*                              @s]

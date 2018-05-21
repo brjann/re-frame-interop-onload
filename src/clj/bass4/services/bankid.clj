@@ -87,7 +87,14 @@
   ([status-map] (session-not-timed-out? status-map 600))
   ([status-map time-limit-secs]
    (let [start-time  (:start-time status-map)
-         age-seconds (t/in-seconds (t/interval start-time (bankid-now)))]
+         now         (bankid-now)
+         age-seconds (if (t/before? now start-time)
+                       ;; If now is before start-time, then we're
+                       ;; in testing mode and it is screwing
+                       ;; with the time. Return time-limit to delete
+                       ;; this session.
+                       time-limit-secs
+                       (t/in-seconds (t/interval start-time now)))]
      (> time-limit-secs age-seconds))))
 
 (defn remove-old-sessions!

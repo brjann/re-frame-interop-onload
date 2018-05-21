@@ -269,7 +269,8 @@
                           "/e-auth/bankid/ongoing"
                           "/e-auth/bankid/cancel"
                           "/e-auth/bankid/reset"}
-                        (:uri request))))
+                        (:uri request)))
+        (not (string/starts-with? (:uri request) "/debug/")))
     (http-response/found (str "/e-auth/bankid/ongoing?return-url=" (h-utils/url-escape (:uri request))))
     (handler request)))
 
