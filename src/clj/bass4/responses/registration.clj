@@ -330,11 +330,9 @@
     (and e-auth (every? e-auth [:personnummer :first-name :last-name]))))
 
 (defn bankid-page
-  [project-id session]
+  [project-id]
   (let [params (reg-service/registration-content project-id)]
-    (if (and (:bankid? params) (not (bankid-done? session)))
-      (layout/render "registration-bankid.html" params)
-      (response/found (str "/registration/" project-id "/")))))
+    (layout/render "registration-bankid.html" params)))
 
 (defn bankid-poster
   [project-id personnummer session]
@@ -347,21 +345,18 @@
 ;; --------------
 
 
-
 (defn bankid-params
   [session params]
-  (if (bankid-done? session)
-    (let [e-auth (:e-auth session)]
-      (merge
-        {:first-name-value   (:first-name e-auth)
-         :last-name-value    (:last-name e-auth)
-         :personnummer-value (:personnummer e-auth)}
-        (if (:bankid-change-names? params)
-          {:first-name true
-           :last-name  true}
-          {:first-name false
-           :last-name  false})))
-    :error))
+  (let [e-auth (:e-auth session)]
+    (merge
+      {:first-name-value   (:first-name e-auth)
+       :last-name-value    (:last-name e-auth)
+       :personnummer-value (:personnummer e-auth)}
+      (if (:bankid-change-names? params)
+        {:first-name true
+         :last-name  true}
+        {:first-name false
+         :last-name  false}))))
 
 (defn registration-page
   [project-id session]
@@ -369,17 +364,16 @@
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
+    ;; BankID already checked by captcha middleware
     (let [bankid-info (when (:bankid? params)
                         (bankid-params session params))]
-      (log/debug bankid-info)
-      (if (= :error bankid-info)
-        (response/found (str "/registration/" project-id "/bankid"))
-        (layout/render "registration-form.html"
-                       (merge
-                         params
-                         fields-map
-                         bankid-info
-                         {:sms-countries sms-countries}))))))
+      (response/found (str "/registration/" project-id "/bankid"))
+      (layout/render "registration-form.html"
+                     (merge
+                       params
+                       fields-map
+                       bankid-info
+                       {:sms-countries sms-countries})))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))

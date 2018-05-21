@@ -16,7 +16,7 @@
         (when (:allowed? params)
           params)))))
 
-(defn captcha-mw
+(defn captcha-bankid-mw
   [handler request]
   (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)" (:uri request))]
     (if-let [params (registration-params project-id)]
@@ -57,22 +57,6 @@
           (throw (ex-info "Checker returned illegal value" {:res res}))))
       (layout/text-response "Registration not allowed"))))
 
-#_(defn captcha-mw
-    [handler request]
-    (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)", (:uri request))]
-      (if (and project-id (reg-service/registration-allowed? (str->int project-id)))
-
-        (if (or
-              (= "/captcha" path)
-              (= "/validate" path)
-              (= "/duplicate" path)
-              (= "/credentials" path)
-              (= "/finished" path)
-              (get-in request [:session :captcha-ok]))
-          (handler request)
-          (response/found (str "/registration/" project-id "/captcha")))
-        (layout/text-response "Registration not allowed"))))
-
 (defroutes registration-routes
   (GET "/registration/:project-id" [project-id :as request]
     (reg-response/registration-page project-id (:session request)))
@@ -84,7 +68,7 @@
     (reg-response/handle-registration project-id fields (:session request)))
 
   (GET "/registration/:project-id/bankid" [project-id :as request]
-    (reg-response/bankid-page project-id (:session request)))
+    (reg-response/bankid-page project-id))
   (POST "/registration/:project-id/bankid" [project-id & params :as request]
     (reg-response/bankid-poster project-id (:personnummer params) (:session request)))
 

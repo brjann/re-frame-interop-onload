@@ -45,7 +45,7 @@
         (wrap-routes middleware/wrap-formats))
     (-> #'registration-routes
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes #(middleware/wrap-mw-fn % reg-routes/captcha-mw)))
+        (wrap-routes #(middleware/wrap-mw-fn % reg-routes/captcha-bankid-mw)))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
         (wrap-routes middleware/wrap-formats))
