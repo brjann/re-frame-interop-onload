@@ -170,8 +170,8 @@
                         {:method         :post
                          :route          #"/registration/[0-9]+/captcha"
                          :success        (fn [in out]
-                                           (and (not (:captcha-ok in))
-                                                (:captcha-ok out)))
+                                           (and (not (:captcha-ok? in))
+                                                (:captcha-ok? out)))
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :get

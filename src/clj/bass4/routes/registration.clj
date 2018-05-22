@@ -20,32 +20,33 @@
   [handler request]
   (let [[_ project-id path] (re-matches #"/registration/([0-9]+)(.*)" (:uri request))]
     (if-let [params (registration-params project-id)]
-      (let [session (:session request)
-            res     (case path
-                      ("" "/")
-                      (if (:bankid? params)
-                        (if (reg-response/bankid-done? session)
+      (let [session     (:session request)
+            captcha-ok? (get-in session [:registration :captcha-ok?])
+            res         (case path
+                          ("" "/")
+                          (if (:bankid? params)
+                            (if (reg-response/bankid-done? session)
                           true
                           "/bankid")
-                        (if (:captcha-ok session)
+                            (if captcha-ok?
                           true
                           "/captcha"))
 
-                      "/bankid"
-                      (if (:bankid? params)
-                        (if (:captcha-ok session)
+                          "/bankid"
+                          (if (:bankid? params)
+                            (if captcha-ok?
                           (if (reg-response/bankid-done? session)
                             "/"
                             true)
                           "/captcha")
-                        "/")
+                            "/")
 
-                      "/captcha"
-                      (if (:captcha-ok session)
+                          "/captcha"
+                          (if captcha-ok?
                         "/"
                         true)
 
-                      true)]
+                          true)]
         (cond
           (true? res)
           (handler request)

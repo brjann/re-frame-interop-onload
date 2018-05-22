@@ -32,11 +32,17 @@
 ;; FINISHED
 ;; ------------
 
+(defn assoc-reg-session
+  [response session reg-map]
+  (assoc response :session (merge
+                             session
+                             {:registration reg-map})))
+
 (defn- to-finished-page
-  [project-id]
+  [project-id session]
   (->
     (response/found (str "/registration/" project-id "/finished"))
-    (assoc :session {})))
+    (assoc-reg-session session {})))
 
 (defn- to-assessments
   [project-id user-id request]
@@ -51,9 +57,9 @@
 
 (defn finished-router
   [project-id session request]
-  (if-let [user-id (get-in session [:reg-credentials :user-id])]
+  (if-let [user-id (get-in session [:registration :credentials :user-id])]
     (if (zero? (count (assessments/get-pending-assessments user-id)))
-      (to-finished-page project-id)
+      (to-finished-page project-id session)
       (to-assessments project-id user-id request))
     (layout/render "registration-finished.html"
                    (reg-service/finished-content project-id))))
@@ -70,7 +76,7 @@
 
 (defn credentials-page
   [project-id session request]
-  (let [credentials (:reg-credentials session)]
+  (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
       (layout/render "registration-credentials.html"
                      {:username   (:username credentials)
@@ -135,45 +141,45 @@
     field-values))
 
 (defn- created-redirect
-  [project-id user-id username password auto-password?]
+  [project-id user-id username password auto-password? session]
   (if username
     (->
       (response/found (str "/registration/" project-id "/credentials"))
-      (assoc :session {:reg-credentials (merge
-                                          {:user-id user-id :username username}
-                                          (if auto-password? {:password password}))}))
+      (assoc-reg-session session {:credentials (merge
+                                                 {:user-id user-id :username username}
+                                                 (if auto-password? {:password password}))}))
     (->
       (response/found (str "/registration/" project-id "/finished"))
-      (assoc :session {:reg-credentials {:user-id user-id}}))))
+      (assoc-reg-session session {:credentials {:user-id user-id}}))))
 
 (defn- create-user
-  [project-id field-values reg-params]
+  [project-id field-values reg-params session]
   (let [participant-id (gen-participant-id project-id reg-params)
         username       (gen-username field-values participant-id reg-params)
         field-values   (gen-password field-values reg-params)
         user-id        (reg-service/create-user! project-id field-values username participant-id (:group reg-params))]
-    (-> (created-redirect project-id user-id username (:password field-values) (:auto-password? reg-params)))))
+    (-> (created-redirect project-id user-id username (:password field-values) (:auto-password? reg-params) session))))
 
 (defn- complete-registration
   "This function relies on previous checking of presence of field-values"
-  [project-id field-values reg-params]
+  [project-id field-values reg-params session]
   (if (duplicate-conflict? field-values reg-params)
     (-> (response/found (str "/registration/" project-id "/duplicate"))
-        (assoc :session {}))
-    (create-user project-id field-values reg-params)))
+        (assoc-reg-session session {}))
+    (create-user project-id field-values reg-params session)))
 
 ;; ---------------
 ;;     CAPTCHA
 ;; ---------------
 
 (defn- captcha-session
-  [project-id]
+  [project-id session]
   (let [{:keys [filename digits]} (captcha/captcha!)]
     (-> (response/found (str "/registration/" project-id "/captcha"))
-        (assoc :session {:captcha-filename  filename
-                         :captcha-digits    digits
-                         :captcha-timestamp (t/now)
-                         :captcha-tries     0}))))
+        (assoc-reg-session session {:captcha-filename  filename
+                                    :captcha-digits    digits
+                                    :captcha-timestamp (t/now)
+                                    :captcha-tries     0}))))
 
 (defn- captcha-page
   [project-id filename]
@@ -191,8 +197,9 @@
   "60 seconds before new captcha is generated
    5 tries before new captcha is generated"
   [session]
-  (let [timestamp (:captcha-timestamp session)
-        tries     (:captcha-tries session)]
+  (let [reg-session (:registration session)
+        timestamp   (:captcha-timestamp reg-session)
+        tries       (:captcha-tries reg-session)]
     (when (and timestamp tries)
       (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
         (and (> const-captcha-timeout time-elapsed)
@@ -200,38 +207,39 @@
 
 (defn current-captcha
   [session]
-  (let [filename (:captcha-filename session)
-        digits   (:captcha-digits session)]
+  (let [reg-session (:registration session)
+        filename    (:captcha-filename reg-session)
+        digits      (:captcha-digits reg-session)]
     (when (and filename digits (captcha-valid? session))
       {:filename filename
        :digits   digits})))
 
 (defn captcha
   [project-id session]
-  (if (:captcha-ok session)
+  (if (get-in session [:registration :captcha-ok?])
     (response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
       (if (and filename digits)
         (captcha-page project-id filename)
-        (captcha-session project-id)))))
+        (captcha-session project-id session)))))
 
 (defn- inc-tries
   [session]
-  (let [tries (inc (:captcha-tries session))]
-    (assoc-in session [:captcha-tries] tries)))
+  (let [tries (inc (get-in session [:registration :captcha-tries]))]
+    (assoc-in session [:registration :captcha-tries] tries)))
 
 (defn- captcha-digits
   [session]
   (when (captcha-valid? session)
-    (:captcha-digits session)))
+    (get-in session [:registration :captcha-digits])))
 
 (defn- wrong-captcha-response
-  [project-id session]
-  (if (captcha-valid? session)
+  [project-id new-session]
+  (if (captcha-valid? new-session)
     (-> (layout/error-422 "error")
-        (assoc :session session))
+        (assoc :session new-session))
     (-> (response/found (str "/registration/" project-id "/captcha"))
-        (assoc :session session))))
+        (assoc :session new-session))))
 
 (defn validate-captcha
   [project-id captcha session]
@@ -240,9 +248,9 @@
       (let [params (reg-service/registration-params project-id)]
         (if (:bankid? params)
           (-> (response/found (str "/registration/" project-id "/bankid"))
-              (assoc :session {:captcha-ok true}))
+              (assoc-reg-session session {:captcha-ok? true}))
           (-> (response/found (str "/registration/" project-id ""))
-              (assoc :session {:captcha-ok true}))))
+              (assoc-reg-session session {:captcha-ok? true}))))
       (wrong-captcha-response project-id (inc-tries session)))
     (response/found (str "/registration/" project-id "/captcha"))))
 
@@ -263,20 +271,21 @@
     {:code-sms code}))
 
 (defn- prepare-validation
-  [project-id field-values]
+  [project-id field-values session]
   (let [codes (merge
                 (fnil+ sms-map (:sms-number field-values))
                 (fnil+ email-map (:email field-values)))]
     (->
       (response/found (str "/registration/" project-id "/validate"))
-      (assoc :session {:reg-field-values field-values
-                       :reg-codes        codes
-                       :captcha-ok       nil}))))
+      (assoc-reg-session session {:field-values     field-values
+                                  :validation-codes codes
+                                  :captcha-ok?      nil}))))
 
 (defn validation-page
   [project-id session]
-  (let [field-values (:reg-field-values session)
-        codes        (:reg-codes session)]
+  (let [reg-session  (:registration session)
+        field-values (:field-values reg-session)
+        codes        (:validation-codes reg-session)]
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (layout/render "registration-validation.html"
                      (merge
@@ -290,8 +299,9 @@
 
 (defn handle-validation
   [project-id posted-codes session]
-  (let [field-values (:reg-field-values session)
-        codes        (:reg-codes session)
+  (let [reg-session  (:registration session)
+        field-values (:field-values reg-session)
+        codes        (:validation-codes reg-session)
         reg-params   (reg-service/registration-params project-id)]
     (cond
       ;; All fields are present in session
@@ -319,7 +329,7 @@
       (layout/error-422 "sms-error")
 
       :else
-      (complete-registration project-id field-values reg-params))))
+      (complete-registration project-id field-values reg-params session))))
 
 ;; --------------
 ;;     BANKID
@@ -418,8 +428,8 @@
     (if (all-fields? fields field-values)
       (if (check-sms (:sms-number field-values) (:sms-countries params))
         (if (or (contains? field-values :sms-number) (contains? field-values :email))
-          (prepare-validation project-id field-values)
-          (complete-registration project-id field-values params))
+          (prepare-validation project-id field-values session)
+          (complete-registration project-id field-values params session))
         (layout/error-422 "sms-country-error"))
       (layout/error-400-page))))
 
