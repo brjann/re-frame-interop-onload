@@ -344,10 +344,19 @@
   (let [params (reg-service/registration-content project-id)]
     (layout/render "registration-bankid.html" params)))
 
+(defn bankid-finished
+  "Resets captcha and continues registration"
+  [project-id session]
+  (if (bankid-done? session)
+    (->
+      (response/found (str "/registration/" project-id))
+      (assoc-reg-session session {:captcha-ok? nil}))
+    (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
+
 (defn bankid-poster
   [project-id personnummer session]
   (if (e-auth/personnummer-valid? personnummer)
-    (e-auth/launch-bankid session personnummer (str "/registration/" project-id) (str "/registration/" project-id "/bankid"))
+    (e-auth/launch-bankid session personnummer (str "/registration/" project-id "/bankid-finished") (str "/registration/" project-id "/bankid"))
     (layout/error-400-page (str "Personnummer does not have valid format " personnummer))))
 
 ;; --------------
