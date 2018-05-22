@@ -32,7 +32,7 @@ function post_success(form, complete_fn) {
 		if (complete_fn !== undefined) {
 			complete_fn();
 		}
-		if ($(form).data("on-success") != undefined) {
+      if ($(form).data("on-success") !== undefined) {
 			var on_success = eval($(form).data("on-success"));
 			on_success.call(form, data, textStatus, jqXHR);
 		}

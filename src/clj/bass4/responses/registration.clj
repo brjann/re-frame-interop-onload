@@ -376,7 +376,7 @@
         (if (all-codes-validated? uid validation-codes)
           (complete-registration project-id field-values reg-params session)
           (if correct?
-            (response/ok)
+            (response/ok "ok")
             (layout/error-422 "error")))))))
 
 

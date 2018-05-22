@@ -14,14 +14,15 @@
 <div class="col-10">
     <!-- EMAIL -->
     {% if email %}
-    <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-email">
+    <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-email"
+          data-on-success="successful_confirmation">
         <div class="alert alert-danger hidden" data-show-on="error" role="alert">
             {%tr login/code-error %}
         </div>
         <div class="form-group row">
             <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}
                 {{code-email}}</label>
-            <div class="col-sm-3">
+            <div class="col-sm-3 middle">
                 <input type="text" class="form-control" id="email" name="code-email" autocomplete="off" required>
             </div>
             <div class="col-sm-3">
@@ -38,15 +39,15 @@
 
     <!-- SMS NUMBER -->
     {% if sms-number %}
-    <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-sms">
+    <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-sms"
+          data-on-success="successful_confirmation">
         <div class="alert alert-danger hidden" data-show-on="error" role="alert">
             {%tr login/code-error %}
         </div>
-
         <div class="form-group row">
             <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}
                 {{code-sms}}</label>
-            <div class="col-sm-3">
+            <div class="col-sm-3 middle">
                 <input type="text" class="form-control" id="sms-number" name="code-sms" autocomplete="off" required>
             </div>
             <div class="col-sm-3">
@@ -71,4 +72,12 @@
     </button>
     </form>
 </div>
+<script type="application/javascript">
+   function successful_confirmation() {
+      var $form = $(this);
+      $form.find(':text').remove();
+      $form.find(':button').remove();
+      $form.find('.middle').text('CONFIRMED!!!!');
+   }
+</script>
 {% endblock %}
