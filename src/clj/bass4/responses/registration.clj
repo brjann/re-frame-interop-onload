@@ -191,7 +191,8 @@
       "registration-captcha.html"
       (merge
         content
-        {:filename filename}))))
+        {:project-id project-id
+         :filename   filename}))))
 
 (def ^:const const-captcha-tries 5)
 (def ^:const const-captcha-timeout 60)
@@ -345,7 +346,11 @@
 (defn bankid-page
   [project-id]
   (let [params (reg-service/registration-content project-id)]
-    (layout/render "registration-bankid.html" params)))
+    (layout/render
+      "registration-bankid.html"
+      (merge
+        params
+        {:project-id project-id}))))
 
 (defn bankid-finished
   "Resets captcha and continues registration"
@@ -353,7 +358,7 @@
   (if (bankid-done? session)
     (->
       (response/found (str "/registration/" project-id))
-      (assoc-reg-session session {:captcha-ok? nil}))
+      #_(assoc-reg-session session {:captcha-ok? nil}))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
 (defn bankid-poster
