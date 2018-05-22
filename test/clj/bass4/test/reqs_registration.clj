@@ -160,8 +160,8 @@
         (has (status? 422))
         (visit "/registration/564610")
         (follow-redirect)
-        (follow-redirect)
-        (visit "/registration/564610/validate")
+        #_(follow-redirect)
+        #_(visit "/registration/564610/validate")
         #_(has (status? 302)))))
 
 (deftest registration-back-try-to-access-user

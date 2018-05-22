@@ -34,15 +34,18 @@
 
 (defn assoc-reg-session
   [response session reg-map]
-  (assoc response :session (merge
-                             session
-                             {:registration reg-map})))
+  (let [reg-session (:registration session)]
+    (assoc-in response [:session :registration] (merge reg-session reg-map))))
+
+(defn reset-reg-session
+  [response session]
+  (assoc-in response [:session :registration] nil))
 
 (defn- to-finished-page
   [project-id session]
   (->
     (response/found (str "/registration/" project-id "/finished"))
-    (assoc-reg-session session {})))
+    (reset-reg-session session)))
 
 (defn- to-assessments
   [project-id user-id request]
@@ -165,7 +168,7 @@
   [project-id field-values reg-params session]
   (if (duplicate-conflict? field-values reg-params)
     (-> (response/found (str "/registration/" project-id "/duplicate"))
-        (assoc-reg-session session {}))
+        (reset-reg-session session))
     (create-user project-id field-values reg-params session)))
 
 ;; ---------------
@@ -442,5 +445,14 @@
         (layout/error-422 "sms-country-error"))
       (layout/error-400-page))))
 
+
+;; --------------
+;;     CANCEL
+;; --------------
+
+(defn cancel-registration
+  [project-id session]
+  (-> (response/found (str "/registration/" project-id))
+      (reset-reg-session session)))
 
 ;; TODO: Max number of sms

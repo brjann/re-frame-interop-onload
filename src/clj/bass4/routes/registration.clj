@@ -92,4 +92,7 @@
     (reg-response/credentials-page project-id (:session request) request))
 
   (GET "/registration/:project-id/finished" [project-id :as request]
-    (reg-response/finished-router project-id (:session request) request)))
+    (reg-response/finished-router project-id (:session request) request))
+
+  (GET "/registration/:project-id/cancel" [project-id :as request]
+    (reg-response/cancel-registration project-id (:session request))))
