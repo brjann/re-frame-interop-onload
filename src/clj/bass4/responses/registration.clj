@@ -353,7 +353,7 @@
         {:project-id project-id}))))
 
 (defn bankid-finished
-  "Resets captcha and continues registration"
+  "DOES NOT Reset captcha but continues registration"
   [project-id session]
   (if (bankid-done? session)
     (->

@@ -45,6 +45,10 @@
         {% endif %}
 
         <button type="submit" class="btn btn-primary" onclick="">{%tr submit %}</button>
+        <button onclick="document.location = '/registration/{{project-id}}/'; return false;"
+                class="btn btn-warning">{%tr
+            registration/change-contact-information %}
+        </button>
         <button onclick="document.location = '/registration/{{project-id}}/cancel'; return false;"
                 class="btn btn-warning">{%tr
             registration/cancel %}
