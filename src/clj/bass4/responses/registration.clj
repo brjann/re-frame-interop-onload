@@ -20,7 +20,9 @@
             [bass4.services.bass :as bass]
             [bass4.services.assessments :as assessments]
             [bass4.http-utils :as h-utils]
-            [bass4.responses.e-auth :as e-auth]))
+            [bass4.responses.e-auth :as e-auth]
+            [clojure.set :as set])
+  (:import (java.util UUID)))
 
 
 (defn- all-fields?
@@ -262,15 +264,17 @@
 ;;   VALIDATION
 ;; --------------
 
+(def validation-code-length 5)
+
 (defn email-map
   [email]
-  (let [code (auth-service/letters-digits 5)]
+  (let [code (auth-service/letters-digits validation-code-length)]
     (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
     {:code-email code}))
 
 (defn- sms-map
   [sms-number]
-  (let [code (auth-service/letters-digits 5)]
+  (let [code (auth-service/letters-digits validation-code-length)]
     (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
     {:code-sms code}))
 
@@ -278,7 +282,8 @@
   [project-id field-values session]
   (let [codes (merge
                 (fnil+ sms-map (:sms-number field-values))
-                (fnil+ email-map (:email field-values)))]
+                (fnil+ email-map (:email field-values))
+                {:uid (UUID/randomUUID)})]
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
@@ -301,39 +306,79 @@
       ;; Wrong page - redirect
       (response/found (str "/registration/" project-id)))))
 
-(defn handle-validation
-  [project-id posted-codes session]
-  (let [reg-session  (:registration session)
-        field-values (:field-values reg-session)
-        codes        (:validation-codes reg-session)
-        reg-params   (reg-service/registration-params project-id)]
-    (cond
-      ;; All fields are present in session
-      (not (all-fields? (:fields reg-params) field-values))
+#_(defn handle-validation
+    [project-id posted-codes session]
+    (let [reg-session  (:registration session)
+          field-values (:field-values reg-session)
+          codes        (:validation-codes reg-session)
+          reg-params   (reg-service/registration-params project-id)]
+      (cond
+        ;; All fields are present in session
+        (not (all-fields? (:fields reg-params) field-values))
+        (layout/error-400-page)
+
+        ;; If check if email code has been submitted if required
+        (when (contains? codes :code-email)
+          (not (contains? posted-codes :code-email)))
+        (layout/error-400-page)
+
+        ;; If check if sms code has been submitted if required
+        (when (contains? codes :code-sms)
+          (not (contains? posted-codes :code-sms)))
+        (layout/error-400-page)
+
+        ;; Check if email code is correct
+        (and (contains? codes :code-email)
+             (not= (string/trim (:code-email posted-codes)) (:code-email codes)))
+        (layout/error-422 "email-error")
+
+        ;; Check if sms code is correct
+        (and (contains? codes :code-sms)
+             (not= (string/trim (:code-sms posted-codes)) (:code-sms codes)))
+        (layout/error-422 "sms-error")
+
+        :else
+        (complete-registration project-id field-values reg-params session))))
+
+(def validated-codes (atom {}))
+
+;; TODO: Evict old code uids
+(defn- code-validated!
+  [uid code-key]
+  (swap! validated-codes #(assoc % uid (set/union (get % uid) #{code-key}))))
+
+(defn- code-validated?
+  [uid code-key]
+  (contains? (get @validated-codes uid) code-key))
+
+(defn- code-correct?!
+  [uid code-key validation-codes posted-code]
+  (if (code-validated? uid code-key)
+    true
+    (when (= (string/trim posted-code) (get validation-codes code-key))
+      (code-validated! uid code-key)
+      true)))
+
+(defn- all-codes-validated?
+  [uid validation-codes]
+  (= (get @validated-codes uid) (set/difference (set (keys validation-codes)) #{:uid})))
+
+(defn validate-code
+  [project-id code-key posted-code session]
+  (let [reg-session      (:registration session)
+        field-values     (:field-values reg-session)
+        validation-codes (:validation-codes reg-session)
+        uid              (:uid validation-codes)
+        reg-params       (reg-service/registration-params project-id)]
+    (if (not (all-fields? (:fields reg-params) field-values))
       (layout/error-400-page)
+      (let [correct? (code-correct?! uid code-key validation-codes posted-code)]
+        (if (all-codes-validated? uid validation-codes)
+          (complete-registration project-id field-values reg-params session)
+          (if correct?
+            (response/ok)
+            (layout/error-422 "error")))))))
 
-      ;; If check if email code has been submitted if required
-      (when (contains? codes :code-email)
-        (not (contains? posted-codes :code-email)))
-      (layout/error-400-page)
-
-      ;; If check if sms code has been submitted if required
-      (when (contains? codes :code-sms)
-        (not (contains? posted-codes :code-sms)))
-      (layout/error-400-page)
-
-      ;; Check if email code is correct
-      (and (contains? codes :code-email)
-           (not= (string/trim (:code-email posted-codes)) (:code-email codes)))
-      (layout/error-422 "email-error")
-
-      ;; Check if sms code is correct
-      (and (contains? codes :code-sms)
-           (not= (string/trim (:code-sms posted-codes)) (:code-sms codes)))
-      (layout/error-422 "sms-error")
-
-      :else
-      (complete-registration project-id field-values reg-params session))))
 
 ;; --------------
 ;;     BANKID

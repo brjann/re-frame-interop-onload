@@ -82,8 +82,10 @@
 
   (GET "/registration/:project-id/validate" [project-id :as request]
     (reg-response/validation-page project-id (:session request)))
-  (POST "/registration/:project-id/validate" [project-id & params :as request]
-    (reg-response/handle-validation project-id params (:session request)))
+  (POST "/registration/:project-id/validate-email" [project-id & params :as request]
+    (reg-response/validate-code project-id :code-email (:code-email params) (:session request)))
+  (POST "/registration/:project-id/validate-sms" [project-id & params :as request]
+    (reg-response/validate-code project-id :code-sms (:code-sms params) (:session request)))
 
   (GET "/registration/:project-id/duplicate" [project-id :as request]
     (reg-response/duplicate-page project-id))
