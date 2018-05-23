@@ -412,22 +412,31 @@
         {:first-name false
          :last-name  false}))))
 
+(defn merge-fields-with-field-vals
+  [fields field-values]
+  (merge (if (seq (:fixed-fields field-values))
+           (apply dissoc fields (:fixed-fields field-values))
+           fields)
+         (zipmap (mapv #(keyword (str (name %) "-value")) (keys field-values))
+                 (vals field-values))))
+
 (defn registration-page
   [project-id session]
   (let [params        (reg-service/registration-content project-id)
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
+        fields-map    (merge-fields-with-field-vals fields-map (get-in session [:registration :field-values]))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
     ;; BankID done already checked by captcha middleware
-    (let [bankid-info (when (:bankid? params)
-                        (bankid-params session params))]
-      (response/found (str "/registration/" project-id "/bankid"))
-      (layout/render "registration-form.html"
-                     (merge
-                       params
-                       fields-map
-                       bankid-info
-                       {:sms-countries sms-countries})))))
+    (response/found (str "/registration/" project-id "/bankid"))
+    (layout/render "registration-form.html"
+                   (merge
+                     params
+                     fields-map
+                     {:sms-countries sms-countries
+                      :pid-name      (if (:bankid? params)
+                                       (i18n/tr [:registration/personnummer])
+                                       (:pid-name params))}))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))

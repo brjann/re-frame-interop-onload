@@ -68,12 +68,6 @@
             {% endif %}
 
             <!-- PID NUMBER -->
-            {% if bankid? %}
-            <div class="form-group row">
-                <div class="col-sm-3 form-text">{%tr registration/personnummer %}</div>
-                <div class="col-sm-9 form-text">{{personnummer-value}}</div>
-            </div>
-            {% else %}
             {% if pid-number %}
             <div class="form-group row">
                 <label for="pid-number" class="col-sm-3 col-form-label">{{pid-name}}</label>
@@ -81,6 +75,12 @@
                     <input type="text" class="form-control" id="pid-number" name="pid-number"
                            placeholder="{{pid-format}}" oninput="validate_pid();" required>
                 </div>
+            </div>
+            {% else %}
+            {% if pid-number-value %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{{pid-name}}</div>
+                <div class="col-sm-9 form-text">{{pid-number-value}}</div>
             </div>
             {% endif %}
             {% endif %}
@@ -169,16 +169,16 @@
     {% endif %}
 
     <!-- PID NUMBER -->
-    {% if bankid? %}
-    <div class="form-group row">
-        <div class="col-sm-3 form-text">{%tr registration/personnummer %}</div>
-        <div class="col-sm-9 form-text">{{personnummer-value}}</div>
-    </div>
-    {% else %}
     {% if pid-number %}
     <div class="form-group row">
         <div class="col-sm-3 form-text">{{pid-name}}</div>
         <div class="col-sm-9 form-text" id="pid-number-confirm"></div>
+    </div>
+    {% else %}
+    {% if pid-number-value %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{{pid-name}}</div>
+        <div class="col-sm-9 form-text">{{pid-number-value}}</div>
     </div>
     {% endif %}
     {% endif %}
