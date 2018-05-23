@@ -30,18 +30,19 @@
   (if (seq field-values)
     (= (into #{} fields) (into #{} (keys field-values)))))
 
+
+(defn assoc-reg-session
+  [response session reg-map]
+  (let [reg-session (merge (:registration session) reg-map)]
+    (assoc response :session (assoc session :registration reg-session))))
+
 ;; ------------
 ;; FINISHED
 ;; ------------
 
-(defn assoc-reg-session
-  [response session reg-map]
-  (let [reg-session (:registration session)]
-    (assoc-in response [:session :registration] (merge reg-session reg-map))))
-
 (defn reset-reg-session
   [response session]
-  (assoc-in response [:session :registration] nil))
+  (assoc response :session (assoc session :registration nil)))
 
 (defn- to-finished-page
   [project-id session]
@@ -306,40 +307,6 @@
       ;; Wrong page - redirect
       (response/found (str "/registration/" project-id)))))
 
-#_(defn handle-validation
-    [project-id posted-codes session]
-    (let [reg-session  (:registration session)
-          field-values (:field-values reg-session)
-          codes        (:validation-codes reg-session)
-          reg-params   (reg-service/registration-params project-id)]
-      (cond
-        ;; All fields are present in session
-        (not (all-fields? (:fields reg-params) field-values))
-        (layout/error-400-page)
-
-        ;; If check if email code has been submitted if required
-        (when (contains? codes :code-email)
-          (not (contains? posted-codes :code-email)))
-        (layout/error-400-page)
-
-        ;; If check if sms code has been submitted if required
-        (when (contains? codes :code-sms)
-          (not (contains? posted-codes :code-sms)))
-        (layout/error-400-page)
-
-        ;; Check if email code is correct
-        (and (contains? codes :code-email)
-             (not= (string/trim (:code-email posted-codes)) (:code-email codes)))
-        (layout/error-422 "email-error")
-
-        ;; Check if sms code is correct
-        (and (contains? codes :code-sms)
-             (not= (string/trim (:code-sms posted-codes)) (:code-sms codes)))
-        (layout/error-422 "sms-error")
-
-        :else
-        (complete-registration project-id field-values reg-params session))))
-
 (def validated-codes (atom {}))
 
 ;; TODO: Evict old code uids
@@ -397,13 +364,28 @@
         params
         {:project-id project-id}))))
 
+(defn get-bankid-fields2
+  [session params]
+  (when (:bankid? params)
+    (let [e-auth (:e-auth session)]
+      {:pid-number   (:personnummer e-auth)
+       :first-name   (:first-name e-auth)
+       :last-name    (:last-name e-auth)
+       :fixed-fields (set/union
+                       #{:pid-number}
+                       (when-not (:bankid-change-names? params)
+                         #{:first-name :last-name}))})))
+
 (defn bankid-finished
   "DOES NOT Reset captcha but continues registration"
   [project-id session]
   (if (bankid-done? session)
-    (->
-      (response/found (str "/registration/" project-id))
-      #_(assoc-reg-session session {:captcha-ok? nil}))
+    (let [params (reg-service/registration-params project-id)]
+      (->
+        (response/found (str "/registration/" project-id))
+        (assoc-reg-session session {:field-values (get-bankid-fields2 session params)
+                                    :bankid-done? true})
+        (assoc-in [:session :e-auth] nil)))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
 (defn bankid-poster
@@ -436,7 +418,7 @@
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
-    ;; BankID already checked by captcha middleware
+    ;; BankID done already checked by captcha middleware
     (let [bankid-info (when (:bankid? params)
                         (bankid-params session params))]
       (response/found (str "/registration/" project-id "/bankid"))
