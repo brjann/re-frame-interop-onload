@@ -368,9 +368,9 @@
   [session params]
   (when (:bankid? params)
     (let [e-auth (:e-auth session)]
-      {:pid-number   (:personnummer e-auth)
-       :first-name   (:first-name e-auth)
-       :last-name    (:last-name e-auth)
+      {:field-values {:pid-number (:personnummer e-auth)
+                      :first-name (:first-name e-auth)
+                      :last-name  (:last-name e-auth)}
        :fixed-fields (set/union
                        #{:pid-number}
                        (when-not (:bankid-change-names? params)
@@ -383,8 +383,8 @@
     (let [params (reg-service/registration-params project-id)]
       (->
         (response/found (str "/registration/" project-id))
-        (assoc-reg-session session {:field-values (get-bankid-fields2 session params)
-                                    :bankid-done? true})
+        (assoc-reg-session session (merge (get-bankid-fields2 session params)
+                                          {:bankid-done? true}))
         (assoc-in [:session :e-auth] nil)))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
@@ -413,9 +413,9 @@
          :last-name  false}))))
 
 (defn merge-fields-with-field-vals
-  [fields field-values]
-  (merge (if (seq (:fixed-fields field-values))
-           (apply dissoc fields (:fixed-fields field-values))
+  [fields field-values fixed-fields]
+  (merge (if (seq fixed-fields)
+           (apply dissoc fields fixed-fields)
            fields)
          (zipmap (mapv #(keyword (str (name %) "-value")) (keys field-values))
                  (vals field-values))))
@@ -423,9 +423,13 @@
 (defn registration-page
   [project-id session]
   (let [params        (reg-service/registration-content project-id)
+        reg-session   (:registration session)
         fields        (:fields params)
         fields-map    (zipmap fields (repeat (count fields) true))
-        fields-map    (merge-fields-with-field-vals fields-map (get-in session [:registration :field-values]))
+        fields-map    (merge-fields-with-field-vals
+                        fields-map
+                        (:field-values reg-session)
+                        (:fixed-fields reg-session))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
     ;; BankID done already checked by captcha middleware
     (response/found (str "/registration/" project-id "/bankid"))
@@ -433,7 +437,8 @@
                    (merge
                      params
                      fields-map
-                     {:sms-countries sms-countries
+                     {:project-id    project-id
+                      :sms-countries sms-countries
                       :pid-name      (if (:bankid? params)
                                        (i18n/tr [:registration/personnummer])
                                        (:pid-name params))}))))
@@ -460,24 +465,13 @@
            (str "+" (get % "callingCode")))
         matching))))
 
-(defn get-bankid-fields
-  [posted-fields session params]
-  (when (:bankid? params)
-    (let [e-auth (:e-auth session)]
-      (if (:bankid-change-names? params)
-        {:pid-number (:personnummer e-auth)
-         :first-name (:first-name posted-fields)
-         :last-name  (:last-name posted-fields)}
-        {:pid-number (:personnummer e-auth)
-         :first-name (:first-name e-auth)
-         :last-name  (:last-name e-auth)}))))
-
 (defn handle-registration
   [project-id posted-fields session]
   (let [params       (reg-service/registration-params project-id)
         fields       (:fields params)
+        reg-session  (:registration session)
         field-values (merge (select-keys posted-fields fields)
-                            (get-bankid-fields posted-fields session params))]
+                            (select-keys (:field-values reg-session) (:fixed-fields reg-session)))]
     (if (all-fields? fields field-values)
       (if (check-sms (:sms-number field-values) (:sms-countries params))
         (if (or (contains? field-values :sms-number) (contains? field-values :email))

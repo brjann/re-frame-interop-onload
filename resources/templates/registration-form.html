@@ -61,7 +61,7 @@
             <div class="form-group row">
                 <label for="email" class="col-sm-3 col-form-label">{%tr registration/email %}</label>
                 <div class="col-sm-9">
-                    <input type="email" class="form-control" id="email" name="email"
+                    <input type="email" class="form-control" id="email" name="email" value="{{email-value}}"
                            placeholder="" required>
                 </div>
             </div>
@@ -95,6 +95,7 @@
                 <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/sms-number %}</label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" id="sms-number" onchange="sms_change();"
+                           value="{{sms-number-value}}"
                            required>
                 </div>
             </div>
@@ -123,6 +124,10 @@
             </div>
             {% endif %}
             <button onclick="return confirm_registration_dialog();" class="btn btn-primary">{%tr submit %}</button>
+            <button onclick="document.location = '/registration/{{project-id}}/cancel'; return false;"
+                    class="btn btn-warning">{%tr
+                registration/cancel %}
+            </button>
         </form>
     </div>
 </div>
