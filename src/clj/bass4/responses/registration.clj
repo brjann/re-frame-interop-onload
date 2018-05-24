@@ -278,15 +278,27 @@
     {:code-sms {:address sms-number
                 :code    code}}))
 
+(defn- code-map
+  [code-key field-key send-fn field-values fixed-fields validation-codes]
+  (when-not (contains? fixed-fields field-key)
+    (if-let [address (get field-values field-key)]
+      (send-fn address))))
+
 (defn- prepare-validation
   [project-id field-values session]
-  (let [fixed-fields (get-in session [:registration :fixed-fields])
-        codes        (merge
-                       (fnil+ sms-map (when-not (contains? fixed-fields :sms-number)
-                                        (:sms-number field-values)))
-                       (fnil+ email-map (when-not (contains? fixed-fields :email)
-                                          (:email field-values)))
-                       {:uid (UUID/randomUUID)})]
+  (let [reg-session      (:registration session)
+        fixed-fields     (:fixed-fields reg-session)
+        validation-codes (:validation-codes reg-session)
+        codes            (merge
+                           (code-map :code-sms :sms-number sms-map field-values fixed-fields validation-codes)
+                           (code-map :code-email :email email-map field-values fixed-fields validation-codes)
+                           {:uid (UUID/randomUUID)})
+        #_(merge
+            (fnil+ sms-map (when-not (contains? fixed-fields :sms-number)
+                             (:sms-number field-values)))
+            (fnil+ email-map (when-not (contains? fixed-fields :email)
+                               (:email field-values)))
+            {:uid (UUID/randomUUID)})]
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
