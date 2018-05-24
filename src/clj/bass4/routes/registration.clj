@@ -81,7 +81,7 @@
   (GET "/registration/:project-id/bankid" [project-id]
     (reg-response/bankid-page project-id))
   (POST "/registration/:project-id/bankid" [project-id & params :as request]
-    (reg-response/bankid-poster project-id (:personnummer params) (:session request)))
+    (reg-response/bankid-poster project-id (:personnummer params) request))
   (GET "/registration/:project-id/bankid-finished" [project-id :as request]
     (reg-response/bankid-finished project-id (:session request)))
 

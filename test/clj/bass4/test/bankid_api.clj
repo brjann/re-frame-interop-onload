@@ -40,7 +40,7 @@
 
 
 (deftest loop-timeout
-  (let [uid (bankid/launch-bankid "191212121212")]
+  (let [uid (bankid/launch-bankid "191212121212" "127.0.0.1")]
     (<!! (timeout 10))
     (is (true? (bankid/session-active? (bankid/get-session-info uid))))
     (advance-time-s! 299)

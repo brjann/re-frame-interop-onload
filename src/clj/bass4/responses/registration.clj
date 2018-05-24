@@ -409,9 +409,13 @@
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
 (defn bankid-poster
-  [project-id personnummer session]
+  [project-id personnummer request]
   (if (e-auth/personnummer-valid? personnummer)
-    (e-auth/launch-bankid session personnummer (str "/registration/" project-id "/bankid-finished") (str "/registration/" project-id "/bankid"))
+    (e-auth/launch-bankid
+      request
+      personnummer
+      (str "/registration/" project-id "/bankid-finished")
+      (str "/registration/" project-id "/bankid"))
     (layout/error-400-page (str "Personnummer does not have valid format " personnummer))))
 
 ;; ----------------

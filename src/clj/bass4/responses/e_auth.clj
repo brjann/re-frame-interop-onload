@@ -44,30 +44,30 @@
   [personnummer]
   (re-matches #"[0-9]{12}" personnummer))
 
-(defn
-  bankid-session
-  [personnummer redirect-success redirect-fail]
+(defn bankid-session
+  [personnummer user-ip redirect-success redirect-fail]
   (if (personnummer-valid? personnummer)
-    (let [uid (bankid/launch-bankid personnummer)]
+    (let [uid (bankid/launch-bankid personnummer user-ip)]
       {:e-auth {:uid              uid
                 :type             :bankid
                 :redirect-success redirect-success
                 :redirect-fail    redirect-fail}})
     (throw (ex-info "Personnummer not in right format" {:personnummer personnummer}))))
 
-(defn
-  launch-bankid
-  [session personnummer redirect-success redirect-fail]
-  (-> (response/found "/e-auth/bankid/status")
-      (assoc :session (merge
-                        session
-                        (bankid-session personnummer redirect-success redirect-fail)))))
+(defn launch-bankid
+  [request personnummer redirect-success redirect-fail]
+  (let [session (:session request)
+        user-ip (h-utils/get-ip request)]
+    (-> (response/found "/e-auth/bankid/status")
+        (assoc :session (merge
+                          session
+                          (bankid-session personnummer user-ip redirect-success redirect-fail))))))
 
 (s/defn
   ^:always-validate
   launch-bankid-test
-  [session personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
-  (launch-bankid session personnummer redirect-success redirect-fail))
+  [request personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
+  (launch-bankid request personnummer redirect-success redirect-fail))
 
 ;; --------------------------------
 ;;           STATUS PAGE

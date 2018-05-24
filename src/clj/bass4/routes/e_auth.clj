@@ -13,7 +13,7 @@
         (layout/render "bankid-test.html"))
       (POST "/launch" [& params :as request]
         (e-auth-response/launch-bankid-test
-          (:session request)
+          request
           (:personnummer params)
           (:redirect-success params)
           (:redirect-fail params)))

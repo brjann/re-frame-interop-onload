@@ -130,13 +130,14 @@
    :error-details ""})
 
 (defn api-auth
-  [personnummer]
-  (log/debug "Auth for" personnummer)
-  (let [existing-order-ref (get-in @mock-sessions [:by-personnummer personnummer])
-        existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
-    (if (= :pending (:status existing-session))
-      (already-in-progress existing-order-ref)
-      {:order-ref (create-session! personnummer)})))
+  ([personnummer] (api-auth personnummer "127.0.0.1"))
+  ([personnummer user-ip]
+   (log/debug "Auth for" personnummer)
+   (let [existing-order-ref (get-in @mock-sessions [:by-personnummer personnummer])
+         existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
+     (if (= :pending (:status existing-session))
+       (already-in-progress existing-order-ref)
+       {:order-ref (create-session! personnummer)}))))
 
 (defn no-such-order
   []
@@ -388,7 +389,7 @@
     (doall
       (for [pnr pnrs]
         (do
-          (bankid/launch-bankid pnr))))))
+          (bankid/launch-bankid pnr "127.0.0.1"))))))
 
 ; Check that many processes can be launched in infinite loop
 #_((wrap-mock :immediate) stress-1 1000)

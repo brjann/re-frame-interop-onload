@@ -4,6 +4,7 @@
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.walk :as walk]
+            [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t])
   (:import (java.util UUID)))
@@ -56,19 +57,26 @@
 (defn bankid-request
   [endpoint form-params]
   (log/debug "XXXXXXX XXXXXX running request")
-  (try (let [response (http/post (str "https://appapi2.test.bankid.com/rp/v5/" endpoint)
-                                 (merge auth-params {:form-params form-params}))]
+  (try (let [bankid-config (get-in env [:bankid :test])
+             cert-params   (:cert-params bankid-config)
+             url           (:url bankid-config)
+             response      (http/post (str url endpoint)
+                                      (merge cert-params
+                                             {:form-params  form-params
+                                              :content-type :json}))]
          (if (= 200 (:status response))
            (response-body response)
            (throw (ex-info "Not 200 response" response))))
        (catch Exception e
          (bankid-error e))))
 
+;; TODO: End user IP
 (defn ^:dynamic bankid-auth
-  [personnummer]
+  [personnummer user-ip]
   (bankid-request "auth"
                   {"personalNumber" personnummer
-                   "endUserIp"      "81.232.173.180"}))
+                   "endUserIp"      user-ip}))
+;; "81.232.173.180"
 
 (defn ^:dynamic bankid-collect
   [order-ref]
@@ -156,11 +164,11 @@
 
 
 (defn start-bankid-session
-  [personnummer]
+  [personnummer user-ip]
   (log/debug "Starting bankID session")
   (let [start-chan (chan)]
     (go
-      (>! start-chan (or (bankid-auth personnummer) {})))
+      (>! start-chan (or (bankid-auth personnummer user-ip) {})))
     start-chan))
 
 (defn collect-bankid
@@ -185,7 +193,7 @@
   [uid])
 
 (defn launch-bankid
-  [personnummer]
+  [personnummer user-ip]
   (let [uid (UUID/randomUUID)]
     (print-status uid "Creating session for " personnummer)
     (create-session! uid)
@@ -206,7 +214,7 @@
                 {:status     :error
                  :error-code :loop-timeout}))
             (let [collect-chan (if-not @started?
-                                 (start-bankid-session personnummer)
+                                 (start-bankid-session personnummer user-ip)
                                  (collect-bankid @order-ref))
                   response     (merge
                                  (when-not @started?
