@@ -25,13 +25,13 @@
             bankid-done? (get-in session [:registration :bankid-done?])
             res          (case path
                            ("" "/")
-                           (if (:bankid? params)
-                             (if bankid-done?
-                               true
-                               "/bankid")
-                             (if captcha-ok?
-                               true
-                               "/captcha"))
+                           (if captcha-ok?
+                             (if (:bankid? params)
+                               (if bankid-done?
+                                 true
+                                 "/bankid")
+                               true)
+                             "/captcha")
 
                            "/bankid"
                            (if (:bankid? params)

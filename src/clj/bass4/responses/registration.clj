@@ -266,7 +266,6 @@
 ;; --------------
 
 
-;; TODO: Automatic submission of codes.
 (def validation-code-length 5)
 
 (defn email-map
@@ -293,8 +292,7 @@
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
-                                  :validation-codes codes
-                                  :captcha-ok?      nil}))))
+                                  :validation-codes codes}))))
 
 (defn validation-page
   [project-id session]
