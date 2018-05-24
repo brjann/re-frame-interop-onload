@@ -49,6 +49,7 @@
                    :troubleshoot-e             "It may take a few minutes for the confirmation e-mail to arrive. If the code does not reach your e-mail, check your spam folder."
                    :code-sms                   "Code sent to mobile"
                    :code-email                 "Code sent to e-mail"
+                   :code-confirmed             "Code confirmed!"
                    :change-contact-information "Change contact information"
                    :cancel                     "Cancel registration"
                    :duplicate-heading          "User already exists!"

@@ -15,7 +15,7 @@
     <!-- EMAIL -->
     {% if email %}
     <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-email"
-          data-on-success="successful_confirmation">
+          data-on-success="successful_confirmation" data-on-error="failed_confirmation">
         <div class="alert alert-danger hidden" data-show-on="error" role="alert">
             {%tr login/code-error %}
         </div>
@@ -23,10 +23,12 @@
             <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}
                 {{code-email}}</label>
             <div class="col-sm-3 middle">
-                <input type="text" class="form-control" id="email" name="code-email" autocomplete="off" required>
+                <input type="text" class="form-control" id="email" name="code-email"
+                       autocomplete="off" oninput="code_change();" maxlength="{{code-length}}"
+                       data-clear-on="error" required>
             </div>
             <div class="col-sm-3">
-                <button type="submit" class="btn btn-primary" onclick="">{%tr submit %}</button>
+                <button type="submit" class="btn btn-primary" onclick="">{%tr confirm %}</button>
             </div>
         </div>
         <div class="form-group row">
@@ -40,7 +42,7 @@
     <!-- SMS NUMBER -->
     {% if sms-number %}
     <form method="post" class="no-validate" action="/registration/{{project-id}}/validate-sms"
-          data-on-success="successful_confirmation">
+          data-on-success="successful_confirmation" data-on-error="failed_confirmation">
         <div class="alert alert-danger hidden" data-show-on="error" role="alert">
             {%tr login/code-error %}
         </div>
@@ -48,10 +50,12 @@
             <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}
                 {{code-sms}}</label>
             <div class="col-sm-3 middle">
-                <input type="text" class="form-control" id="sms-number" name="code-sms" autocomplete="off" required>
+                <input type="text" class="form-control" id="sms-number" name="code-sms"
+                       autocomplete="off" oninput="code_change();" maxlength="{{code-length}}"
+                       data-clear-on="error" required>
             </div>
             <div class="col-sm-3">
-                <button type="submit" class="btn btn-primary" onclick="">{%tr submit %}</button>
+                <button type="submit" class="btn btn-primary" onclick="">{%tr confirm %}</button>
             </div>
         </div>
         <div class="form-group row">
@@ -73,11 +77,34 @@
     </form>
 </div>
 <script type="application/javascript">
+
+   // @formatter:off
+   var code_length = {{code-length}};
+   // @formatter:on
+
+   var text_code_confirmed = "{%tr registration/code-confirmed %}";
+
    function successful_confirmation() {
       var $form = $(this);
       $form.find(':text').remove();
       $form.find(':button').remove();
-      $form.find('.middle').text('CONFIRMED!!!!');
+      $form.find('.middle').html('<span class="badge badge-success">' + text_code_confirmed + '</span>');
+   }
+
+   function failed_confirmation() {
+      var $form = $(this);
+      $form.find(':text').prop('readonly', false);
+   }
+
+   function code_change() {
+      var $input = $(event.target);
+      var code = $input.val();
+      var $form = $input.parents('form');
+      if (code_length === code.length) {
+         $input.prop('readonly', true);
+         $input.val(code);
+         $form.submit();
+      }
    }
 </script>
 {% endblock %}

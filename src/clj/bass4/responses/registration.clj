@@ -304,11 +304,12 @@
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (layout/render "registration-validation.html"
                      (merge
-                       {:email      (when (contains? codes :code-email)
-                                      (:email field-values))
-                        :sms-number (when (contains? codes :code-sms)
-                                      (:sms-number field-values))
-                        :project-id project-id}
+                       {:email       (when (contains? codes :code-email)
+                                       (:email field-values))
+                        :sms-number  (when (contains? codes :code-sms)
+                                       (:sms-number field-values))
+                        :project-id  project-id
+                        :code-length validation-code-length}
                        (when (or (env :dev) (env :debug-mode))
                          codes)))
       ;; Wrong page - redirect
@@ -346,7 +347,7 @@
         reg-params       (reg-service/registration-params project-id)]
     (if (not (all-fields? (:fields reg-params) field-values))
       (layout/error-400-page)
-      (let [correct? (code-correct?! uid code-key validation-codes posted-code)]
+      (let [correct? (and (string? posted-code) (code-correct?! uid code-key validation-codes posted-code))]
         (if (all-codes-validated? uid validation-codes)
           (complete-registration project-id field-values reg-params session)
           (if correct?

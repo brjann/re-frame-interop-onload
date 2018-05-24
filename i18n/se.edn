@@ -49,6 +49,7 @@
                    :troubleshoot-e             "Det kan dröja några minuter innan mejlet når dig. Om mejlet inte når dig, kontrollera din skräppost."
                    :code-sms                   "Kod skickad till mobil"
                    :code-email                 "Kod skickad till e-post"
+                   :code-confirmed             "Kod bekräftad!"
                    :change-contact-information "Ändra kontaktinformation"
                    :cancel                     "Avbryt registrering"
                    :duplicate-heading          "Användare existerar redan"
