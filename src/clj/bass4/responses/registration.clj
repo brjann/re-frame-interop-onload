@@ -4,7 +4,6 @@
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [bass4.passwords :as passwords]
-            [clojure.walk :as walk]
             [bass4.services.registration :as reg-service]
             [bass4.responses.auth :as res-auth]
             [bass4.services.auth :as auth-service]
@@ -254,6 +253,7 @@
     (if (= digits captcha)
       (let [params (reg-service/registration-params project-id)]
         (if (:bankid? params)
+          ;; TODO: Remove captcha values
           (-> (response/found (str "/registration/" project-id "/bankid"))
               (assoc-reg-session session {:captcha-ok? true}))
           (-> (response/found (str "/registration/" project-id ""))
@@ -265,6 +265,8 @@
 ;;   VALIDATION
 ;; --------------
 
+
+;; TODO: Automatic submission of codes.
 (def validation-code-length 5)
 
 (defn email-map
@@ -364,7 +366,7 @@
         params
         {:project-id project-id}))))
 
-(defn get-bankid-fields2
+(defn get-bankid-fields
   [session params]
   (when (:bankid? params)
     (let [e-auth (:e-auth session)]
@@ -383,7 +385,7 @@
     (let [params (reg-service/registration-params project-id)]
       (->
         (response/found (str "/registration/" project-id))
-        (assoc-reg-session session (merge (get-bankid-fields2 session params)
+        (assoc-reg-session session (merge (get-bankid-fields session params)
                                           {:bankid-done? true}))
         (assoc-in [:session :e-auth] nil)))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
@@ -394,23 +396,9 @@
     (e-auth/launch-bankid session personnummer (str "/registration/" project-id "/bankid-finished") (str "/registration/" project-id "/bankid"))
     (layout/error-400-page (str "Personnummer does not have valid format " personnummer))))
 
-;; --------------
+;; ----------------
 ;;   REGISTRATION
-;; --------------
-
-
-(defn bankid-params
-  [session params]
-  (let [e-auth (:e-auth session)]
-    (merge
-      {:first-name-value   (:first-name e-auth)
-       :last-name-value    (:last-name e-auth)
-       :personnummer-value (:personnummer e-auth)}
-      (if (:bankid-change-names? params)
-        {:first-name true
-         :last-name  true}
-        {:first-name false
-         :last-name  false}))))
+;; ----------------
 
 (defn merge-fields-with-field-vals
   [fields field-values fixed-fields]
@@ -491,3 +479,5 @@
       (reset-reg-session session)))
 
 ;; TODO: Max number of sms
+;; TODO: Separate info screen
+;; TODO: Clear session before registration
