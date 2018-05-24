@@ -21,7 +21,7 @@
         </div>
         <div class="form-group row">
             <label for="email" class="col-sm-3 col-form-label">{%tr registration/code-email %} {{email}}
-                {{code-email}}</label>
+                {{code-email.code}}</label>
             <div class="col-sm-3 middle">
                 <input type="text" class="form-control" id="email" name="code-email"
                        autocomplete="off" oninput="code_change();" maxlength="{{code-length}}"
@@ -48,7 +48,7 @@
         </div>
         <div class="form-group row">
             <label for="sms-number" class="col-sm-3 col-form-label">{%tr registration/code-sms %} {{sms-number}}
-                {{code-sms}}</label>
+                {{code-sms.code}}</label>
             <div class="col-sm-3 middle">
                 <input type="text" class="form-control" id="sms-number" name="code-sms"
                        autocomplete="off" oninput="code_change();" maxlength="{{code-length}}"

@@ -268,13 +268,15 @@
   [email]
   (let [code (auth-service/letters-digits validation-code-length)]
     (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-email code}))
+    {:code-email {:address email
+                  :code    code}}))
 
 (defn- sms-map
   [sms-number]
   (let [code (auth-service/letters-digits validation-code-length)]
     (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-sms code}))
+    {:code-sms {:address sms-number
+                :code    code}}))
 
 (defn- prepare-validation
   [project-id field-values session]
@@ -329,7 +331,7 @@
   [uid code-key validation-codes posted-code]
   (if (code-validated? uid code-key)
     true
-    (when (= (string/trim posted-code) (get validation-codes code-key))
+    (when (= (string/trim posted-code) (get-in validation-codes [code-key :code]))
       (code-validated! uid code-key)
       true)))
 
