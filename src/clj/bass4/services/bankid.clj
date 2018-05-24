@@ -21,11 +21,18 @@
 ;; -------------------
 
 (def auth-params
-  {:keystore         "/Users/brjljo/Dropbox/Plattform/bass4/BankID/keystore_with_private.jks"
+  {:keystore         "/Users/brjljo/bankid-bass4/test/keystore_with_private.jks"
    :keystore-pass    "changeit"
-   :trust-store      "/Users/brjljo/Dropbox/Plattform/bass4/BankID/truststore.jks"
+   :trust-store      "/Users/brjljo/bankid-bass4/test/truststore.jks"
    :trust-store-pass "changeit"
    :content-type     :json})
+
+#_(def auth-params
+    {:keystore         "/Users/brjljo/bankid-bass4/prod/client-cert-keystore.jks"
+     :keystore-pass    "XXXX"
+     :trust-store      "/Users/brjljo/bankid-bass4/prod/root-cert-truststore.jks"
+     :trust-store-pass "changeit"
+     :content-type     :json})
 
 (defn response-body
   [response]
