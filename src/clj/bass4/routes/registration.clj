@@ -46,7 +46,7 @@
                              "/form"
                              (if bankid?
                                "/bankid"
-                               "/captcha"))
+                               true))
 
                            "/bankid"
                            (if reg-started?
@@ -56,6 +56,9 @@
                                "/form"))
                            true)]
         (cond
+          (= path res)
+          (throw (ex-info "Checker returned identical path" {:res res}))
+
           (true? res)
           (handler request)
 
