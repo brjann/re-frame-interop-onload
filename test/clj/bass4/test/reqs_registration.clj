@@ -162,10 +162,10 @@
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
         (has (status? 422))
         (visit "/registration/564610")
-        (follow-redirect)
-        #_(follow-redirect)
-        #_(visit "/registration/564610/validate")
-        #_(has (status? 302)))))
+        (has (status? 200))
+        (has (some-text? "Mobile phone"))
+        (visit "/registration/564610/validate")
+        (has (status? 200)))))
 
 (deftest registration-back-try-to-access-user
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
