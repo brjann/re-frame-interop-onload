@@ -300,13 +300,18 @@
   [project-id session]
   (let [reg-session  (:registration session)
         field-values (:field-values reg-session)
+        fixed-fields (:fixed-fields reg-session)
         codes        (:validation-codes reg-session)]
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (layout/render "registration-validation.html"
                      (merge
-                       {:email       (when (contains? codes :code-email)
+                       {:email       (when (and
+                                             (contains? codes :code-email)
+                                             (not (contains? fixed-fields :email)))
                                        (:email field-values))
-                        :sms-number  (when (contains? codes :code-sms)
+                        :sms-number  (when (and
+                                             (contains? codes :code-sms)
+                                             (not (contains? fixed-fields :sms-number)))
                                        (:sms-number field-values))
                         :project-id  project-id
                         :code-length validation-code-length}
