@@ -21,7 +21,8 @@
             [clj-http.client :as http]
             [bass4.http-utils :as h-utils]
             [bass4.i18n :as i18n]
-            [bass4.sms-sender :as sms]))
+            [bass4.sms-sender :as sms]
+            [bass4.responses.e-auth :as e-auth-response]))
 
 (defn states-page
   []
@@ -139,6 +140,17 @@
         (GET "/markdown-list" [& params]
           (layout/render "render.html"
                          {:text     "1. Foo\n2. Bar\n3. Baz"
-                          :markdown true})))
+                          :markdown true}))
+        (GET "/bankid-test" []
+          (layout/render "bankid-test.html"))
+        (POST "/bankid-launch" [& params :as request]
+          (e-auth-response/launch-bankid-test
+            request
+            (:personnummer params)
+            (:redirect-success params)
+            (:redirect-fail params)))
+        (GET "/bankid-success" [:as request]
+          (e-auth-response/bankid-success (:session request)))
+        )
       (routes
         (ANY "*" [] "Not in debug mode")))))

@@ -2,9 +2,9 @@
 {% block content %}
 
 <h1>BankID Test</h1>
-<form method="post" action="/e-auth/bankid/launch">
-    <input type="hidden" name="redirect-success" value="/e-auth/bankid/success">
-    <input type="hidden" name="redirect-fail" value="/e-auth/bankid/test">
+<form method="post" action="/debug/bankid-launch">
+    <input type="hidden" name="redirect-success" value="/debug/bankid-success">
+    <input type="hidden" name="redirect-fail" value="/debug/bankid-test">
     <div class="form-group row">
         <label for="personnummer" class="col-sm-2 col-form-label">Personnummer</label>
         <div class="col-sm-10">

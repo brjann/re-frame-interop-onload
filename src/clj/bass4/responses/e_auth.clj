@@ -63,12 +63,6 @@
                           session
                           (bankid-session personnummer user-ip redirect-success redirect-fail))))))
 
-(s/defn
-  ^:always-validate
-  launch-bankid-test
-  [request personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
-  (launch-bankid request personnummer redirect-success redirect-fail))
-
 ;; --------------------------------
 ;;           STATUS PAGE
 ;; --------------------------------
@@ -207,6 +201,16 @@
             (merge
               response
               {:message (i18n/tr [(keyword (str "bankid/" (name message)))])})))))))
+
+;; --------------------------------
+;;   TESTING - CALLED FROM DEBUG
+;; --------------------------------
+
+(s/defn
+  ^:always-validate
+  launch-bankid-test
+  [request personnummer :- s/Str redirect-success :- s/Str redirect-fail :- s/Str]
+  (launch-bankid request personnummer redirect-success redirect-fail))
 
 (defn bankid-success
   [session]
