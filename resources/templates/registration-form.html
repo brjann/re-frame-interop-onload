@@ -55,7 +55,7 @@
                 <label for="pid-number" class="col-sm-3 col-form-label">{{pid-name}}</label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" id="pid-number" name="pid-number"
-                           placeholder="{{pid-format}}" oninput="validate_pid();" required>
+                           placeholder="{{pid-format}}" oninput="validate_pid();" value="{{pid-number-value}}" required>
                 </div>
             </div>
             {% else %}

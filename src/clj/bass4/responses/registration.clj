@@ -264,25 +264,25 @@
 
 (def validation-code-length 5)
 
-(defn email-map
-  [email]
-  (let [code (auth-service/letters-digits validation-code-length)]
-    (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-email {:address email
-                  :code    code}}))
+(defn send-email!
+  [email code]
+  (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
 
-(defn- sms-map
-  [sms-number]
-  (let [code (auth-service/letters-digits validation-code-length)]
-    (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code))
-    {:code-sms {:address sms-number
-                :code    code}}))
+(defn- send-sms!
+  [sms-number code]
+  (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- code-map
-  [code-key field-key send-fn field-values fixed-fields validation-codes]
+  [code-key field-key send-fn! field-values fixed-fields validation-codes]
   (when-not (contains? fixed-fields field-key)
     (if-let [address (get field-values field-key)]
-      (send-fn address))))
+      ;; Only send new code if code hasn't already been sent to email/sms
+      (if (= (get-in validation-codes [code-key :address]) address)
+        (select-keys validation-codes [code-key])
+        (let [code (auth-service/letters-digits validation-code-length)]
+          (send-fn! address code)
+          {code-key {:address address
+                     :code    code}})))))
 
 (defn- prepare-validation
   [project-id field-values session]
@@ -290,15 +290,9 @@
         fixed-fields     (:fixed-fields reg-session)
         validation-codes (:validation-codes reg-session)
         codes            (merge
-                           (code-map :code-sms :sms-number sms-map field-values fixed-fields validation-codes)
-                           (code-map :code-email :email email-map field-values fixed-fields validation-codes)
-                           {:uid (UUID/randomUUID)})
-        #_(merge
-            (fnil+ sms-map (when-not (contains? fixed-fields :sms-number)
-                             (:sms-number field-values)))
-            (fnil+ email-map (when-not (contains? fixed-fields :email)
-                               (:email field-values)))
-            {:uid (UUID/randomUUID)})]
+                           (code-map :code-sms :sms-number send-sms! field-values fixed-fields validation-codes)
+                           (code-map :code-email :email send-email! field-values fixed-fields validation-codes)
+                           {:uid (UUID/randomUUID)})]
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
