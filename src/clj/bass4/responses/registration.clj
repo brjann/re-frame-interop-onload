@@ -283,10 +283,13 @@
 
 (defn- prepare-validation
   [project-id field-values session]
-  (let [codes (merge
-                (fnil+ sms-map (:sms-number field-values))
-                (fnil+ email-map (:email field-values))
-                {:uid (UUID/randomUUID)})]
+  (let [fixed-fields (get-in session [:registration :fixed-fields])
+        codes        (merge
+                       (fnil+ sms-map (when-not (contains? fixed-fields :sms-number)
+                                        (:sms-number field-values)))
+                       (fnil+ email-map (when-not (contains? fixed-fields :email)
+                                          (:email field-values)))
+                       {:uid (UUID/randomUUID)})]
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
@@ -301,8 +304,10 @@
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (layout/render "registration-validation.html"
                      (merge
-                       {:email      (:email field-values)
-                        :sms-number (:sms-number field-values)
+                       {:email      (when (contains? codes :code-email)
+                                      (:email field-values))
+                        :sms-number (when (contains? codes :code-sms)
+                                      (:sms-number field-values))
                         :project-id project-id}
                        (when (or (env :dev) (env :debug-mode))
                          codes)))
@@ -489,3 +494,4 @@
 ;; TODO: Max number of sms
 ;; TODO: Separate info screen
 ;; TODO: Clear session before registration
+;; TODO: Test confirming one contact info and then going back changing the other - only one code sent
