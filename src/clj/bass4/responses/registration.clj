@@ -345,7 +345,12 @@
         (if (all-codes-validated? uid validation-codes)
           (complete-registration project-id field-values reg-params session)
           (if correct?
-            (response/ok "ok")
+            (let [fixed-fields (:fixed-fields reg-session)
+                  field-name   (if (= :code-email code-key)
+                                 :email
+                                 :sms-number)]
+              (-> (response/ok "ok")
+                  (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
             (layout/error-422 "error")))))))
 
 
@@ -421,12 +426,15 @@
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
     ;; BankID done already checked by captcha middleware
     (response/found (str "/registration/" project-id "/bankid"))
+    ;; TODO: Show country for fixed sms number
     (layout/render "registration-form.html"
                    (merge
                      params
                      fields-map
                      {:project-id    project-id
                       :sms-countries sms-countries
+                      :sms?          (or (contains? fields-map :sms-number)
+                                         (contains? fields-map :sms-number-value))
                       :pid-name      (if (:bankid? params)
                                        (i18n/tr [:registration/personnummer])
                                        (:pid-name params))}))))

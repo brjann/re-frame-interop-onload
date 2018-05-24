@@ -1,7 +1,7 @@
 {% extends "simple.html" %}
 
 {% block head %}
-{% if sms-number %}
+{% if sms? %}
 {% style "/js/intl-tel-input/css/intlTelInput.css" %}
 {% style "/css/intl-override.css" %}
 {% endif %}
@@ -56,17 +56,6 @@
             {% endif %}
             {% endif %}
 
-            <!-- EMAIL -->
-            {% if email %}
-            <div class="form-group row">
-                <label for="email" class="col-sm-3 col-form-label">{%tr registration/email %}</label>
-                <div class="col-sm-9">
-                    <input type="email" class="form-control" id="email" name="email" value="{{email-value}}"
-                           placeholder="" required>
-                </div>
-            </div>
-            {% endif %}
-
             <!-- PID NUMBER -->
             {% if pid-number %}
             <div class="form-group row">
@@ -85,6 +74,24 @@
             {% endif %}
             {% endif %}
 
+            <!-- EMAIL -->
+            {% if email %}
+            <div class="form-group row">
+                <label for="email" class="col-sm-3 col-form-label">{%tr registration/email %}</label>
+                <div class="col-sm-9">
+                    <input type="email" class="form-control" id="email" name="email" value="{{email-value}}"
+                           placeholder="" required>
+                </div>
+            </div>
+            {% else %}
+            {% if email-value %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{%tr registration/email %}</div>
+                <div class="col-sm-9 form-text">{{email-value}}</div>
+            </div>
+            {% endif %}
+            {% endif %}
+
             <!-- SMS NUMBER -->
             {% if sms-number %}
             <div class="alert alert-danger hidden" data-show-on="sms-country-error" role="alert">
@@ -99,6 +106,13 @@
                            required>
                 </div>
             </div>
+            {% else %}
+            {% if sms-number-value %}
+            <div class="form-group row">
+                <div class="col-sm-3 form-text">{%tr registration/sms-number %}</div>
+                <div class="col-sm-9 form-text">{{sms-number-value}}</div>
+            </div>
+            {% endif %}
             {% endif %}
 
             <!-- PASSWORD -->
@@ -165,14 +179,6 @@
     {% endif %}
     {% endif %}
 
-    <!-- EMAIL -->
-    {% if email %}
-    <div class="form-group row">
-        <div class="col-sm-3 form-text">{%tr registration/email %}</div>
-        <div class="col-sm-9 form-text" id="email-confirm"></div>
-    </div>
-    {% endif %}
-
     <!-- PID NUMBER -->
     {% if pid-number %}
     <div class="form-group row">
@@ -188,6 +194,21 @@
     {% endif %}
     {% endif %}
 
+    <!-- EMAIL -->
+    {% if email %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/email %}</div>
+        <div class="col-sm-9 form-text" id="email-confirm"></div>
+    </div>
+    {% else %}
+    {% if email-value %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/email %}</div>
+        <div class="col-sm-9 form-text">{{email-value}}</div>
+    </div>
+    {% endif %}
+    {% endif %}
+
     <!-- SMS NUMBER -->
     {% if sms-number %}
     <div class="form-group row">
@@ -197,7 +218,13 @@
             <small class="form-text" id="sms-country"></small>
         </div>
     </div>
-
+    {% else %}
+    {% if sms-number-value %}
+    <div class="form-group row">
+        <div class="col-sm-3 form-text">{%tr registration/sms-number %}</div>
+        <div class="col-sm-9 form-text">{{sms-number-value}}</div>
+    </div>
+    {% endif %}
     {% endif %}
 
     <button class="btn btn-primary" onclick="confirm_registration();">{%tr confirm %}</button>
@@ -215,7 +242,7 @@
 {% endif %}
 {% endif %}
 
-{% if sms-number %}
+{% if sms? %}
 <script src="/js/intl-tel-input/js/intlTelInput.min.js"></script>
 <script type="text/javascript">
    var sms_countries = eval('{{sms-countries|safe}}');
