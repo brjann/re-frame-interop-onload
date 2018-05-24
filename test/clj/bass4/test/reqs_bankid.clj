@@ -57,13 +57,13 @@
 (defn test-bankid-auth
   [pnr]
   (-> *s*
-      (visit "/e-auth/bankid/launch"
+      (visit "/debug/bankid-launch"
              :request-method
              :post
              :params
              {:personnummer     pnr
-              :redirect-success "/e-auth/bankid/success"
-              :redirect-fail    "/e-auth/bankid/test"})
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
@@ -79,13 +79,13 @@
 (defn test-bankid-cancels
   [pnr]
   (-> *s*
-      (visit "/e-auth/bankid/launch"
+      (visit "/debug/bankid-launch"
              :request-method
              :post
              :params
              {:personnummer     pnr
-              :redirect-success "/e-auth/bankid/success"
-              :redirect-fail    "/e-auth/bankid/test"})
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
@@ -112,13 +112,13 @@
 (defn test-bankid-clicks-cancel
   [pnr]
   (-> *s*
-      (visit "/e-auth/bankid/launch"
+      (visit "/debug/bankid-launch"
              :request-method
              :post
              :params
              {:personnummer     pnr
-              :redirect-success "/e-auth/bankid/success"
-              :redirect-fail    "/e-auth/bankid/test"})
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
@@ -139,13 +139,13 @@
   (let [s1 (atom *s*)
         s2 (atom *s*)]
     (->! s1
-         (visit "/e-auth/bankid/launch"
+         (visit "/debug/bankid-launch"
                 :request-method
                 :post
                 :params
                 {:personnummer     pnr
-                 :redirect-success "/e-auth/bankid/success"
-                 :redirect-fail    "/e-auth/bankid/test"})
+                 :redirect-success "/debug/bankid-success"
+                 :redirect-fail    "/debug/bankid-test"})
          (has (status? 302))
          (follow-redirect)
          (visit "/e-auth/bankid/collect" :request-method :post)
@@ -154,13 +154,13 @@
          (visit "/e-auth/bankid/collect" :request-method :post)
          (test-response {"status" "pending" "hint-code" "user-sign"}))
     (->! s2
-         (visit "/e-auth/bankid/launch"
+         (visit "/debug/bankid-launch"
                 :request-method
                 :post
                 :params
                 {:personnummer     pnr
-                 :redirect-success "/e-auth/bankid/success"
-                 :redirect-fail    "/e-auth/bankid/test"})
+                 :redirect-success "/debug/bankid-success"
+                 :redirect-fail    "/debug/bankid-test"})
          (has (status? 302))
          (follow-redirect)
          (visit "/e-auth/bankid/collect" :request-method :post)
@@ -175,13 +175,13 @@
 (defn test-bankid-ongoing
   [pnr]
   (-> *s*
-      (visit "/e-auth/bankid/launch"
+      (visit "/debug/bankid-launch"
              :request-method
              :post
              :params
              {:personnummer     pnr
-              :redirect-success "/e-auth/bankid/success"
-              :redirect-fail    "/e-auth/bankid/test"})
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
       (visit "/login")
@@ -194,13 +194,13 @@
       (test-response {"status" "error" "hint-code" "No uid in session"}))
   (<!! (timeout 100))
   (-> *s*
-      (visit "/e-auth/bankid/launch"
+      (visit "/debug/bankid-launch"
              :request-method
              :post
              :params
              {:personnummer     pnr
-              :redirect-success "/e-auth/bankid/success"
-              :redirect-fail    "/e-auth/bankid/test"})
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
