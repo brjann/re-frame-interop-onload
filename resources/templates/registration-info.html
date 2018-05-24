@@ -1,0 +1,14 @@
+{% extends "simple.html" %}
+
+{% block content %}
+<div>
+    {% if markdown? %}
+    <div class="markdown">
+        {{info|markdown}}
+    </div>
+    {% else %}
+    {{info|safe}}
+    {% endif %}
+    <a href="/registration/{{project-id}}/captcha" class="btn btn-primary">{%tr registration/begin-registration %}</a>
+</div>
+{% endblock %}

@@ -22,31 +22,38 @@
     (if-let [params (registration-params project-id)]
       (let [session      (:session request)
             captcha-ok?  (get-in session [:registration :captcha-ok?])
+            bankid?      (:bankid? params)
             bankid-done? (get-in session [:registration :bankid-done?])
+            reg-started? (or captcha-ok? (and bankid? bankid-done?))
             res          (case path
                            ("" "/")
-                           (if captcha-ok?
-                             (if (:bankid? params)
-                               (if bankid-done?
-                                 true
-                                 "/bankid")
-                               true)
-                             "/captcha")
+                           "/info"
 
-                           "/bankid"
-                           (if (:bankid? params)
-                             (if captcha-ok?
-                               (if bankid-done?
-                                 "/"
-                                 true)
-                               "/captcha")
-                             "/")
-
-                           "/captcha"
-                           (if captcha-ok?
-                             "/"
+                           "/info"
+                           (if reg-started?
+                             "/form"
                              true)
 
+                           "/form"
+                           (if reg-started?
+                             true
+                             (if bankid?
+                               "/bankid"
+                               "/captcha"))
+
+                           "/captcha"
+                           (if reg-started?
+                             "/form"
+                             (if bankid?
+                               "/bankid"
+                               "/captcha"))
+
+                           "/bankid"
+                           (if reg-started?
+                             "/form"
+                             (if bankid?
+                               true
+                               "/form"))
                            true)]
         (cond
           (true? res)
@@ -60,16 +67,15 @@
       (layout/text-response "Registration not allowed"))))
 
 (defroutes registration-routes
-  (GET "/registration/:project-id" [project-id :as request]
-    (reg-response/registration-page project-id (:session request)))
-  (POST "/registration/:project-id" [project-id & fields :as request]
-    (reg-response/handle-registration project-id fields (:session request)))
-  (GET "/registration/:project-id/" [project-id :as request]
-    (reg-response/registration-page project-id (:session request)))
-  (POST "/registration/:project-id/" [project-id & fields :as request]
-    (reg-response/handle-registration project-id fields (:session request)))
+  (GET "/registration/:project-id" []
+    (layout/text-response "You are not supposed to be here."))
+  (GET "/registration/:project-id/" []
+    (layout/text-response "You are not supposed to be here."))
 
-  (GET "/registration/:project-id/bankid" [project-id :as request]
+  (GET "/registration/:project-id/info" [project-id]
+    (reg-response/info-page project-id))
+
+  (GET "/registration/:project-id/bankid" [project-id]
     (reg-response/bankid-page project-id))
   (POST "/registration/:project-id/bankid" [project-id & params :as request]
     (reg-response/bankid-poster project-id (:personnummer params) (:session request)))
@@ -80,6 +86,11 @@
     (reg-response/captcha project-id (:session request)))
   (POST "/registration/:project-id/captcha" [project-id & params :as request]
     (reg-response/validate-captcha project-id (:captcha params) (:session request)))
+
+  (GET "/registration/:project-id/form" [project-id :as request]
+    (reg-response/registration-page project-id (:session request)))
+  (POST "/registration/:project-id/form" [project-id & fields :as request]
+    (reg-response/handle-registration project-id fields (:session request)))
 
   (GET "/registration/:project-id/validate" [project-id :as request]
     (reg-response/validation-page project-id (:session request)))

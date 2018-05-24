@@ -2,14 +2,6 @@
 
 {% block content %}
 <div id="registration-div">
-    {% if markdown? %}
-    <div class="markdown">
-        {{info|markdown}}
-    </div>
-    {% else %}
-    {{info|safe}}
-    {% endif %}
-
     <h3>{%tr registration/bankid-title %}</h3>
     <form method="post" class="no-validate" id="registration-form">
         <input type="hidden" name="personnummer" id="personnummer">
