@@ -8,6 +8,7 @@
                                      debug-headers-text?
                                      debug-headers-not-text?
                                      log-return
+                                     log-body
                                      *s*
                                      advance-time-s!
                                      fix-time]]
@@ -230,10 +231,8 @@
                                                              :auto-id-length         3
                                                              :auto-id?               true})]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (attack-uri
           "/registration/564610/captcha"
@@ -250,8 +249,8 @@
         (advance-time-s! 9)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "we promise")))))

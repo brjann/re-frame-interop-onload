@@ -251,13 +251,9 @@
   [project-id captcha session]
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
-      (let [params (reg-service/registration-params project-id)]
-        (if (:bankid? params)
-          ;; TODO: Remove captcha values
-          (-> (response/found (str "/registration/" project-id "/bankid"))
-              (assoc-reg-session session {:captcha-ok? true}))
-          (-> (response/found (str "/registration/" project-id ""))
-              (assoc-reg-session session {:captcha-ok? true}))))
+      ;; TODO: Remove captcha values
+      (-> (response/found (str "/registration/" project-id "/form"))
+          (assoc-reg-session session {:captcha-ok? true}))
       (wrong-captcha-response project-id (inc-tries session)))
     (response/found (str "/registration/" project-id "/captcha"))))
 
@@ -398,7 +394,7 @@
   (if (bankid-done? session)
     (let [params (reg-service/registration-params project-id)]
       (->
-        (response/found (str "/registration/" project-id))
+        (response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session (merge (get-bankid-fields session params)
                                           {:bankid-done? true}))
         (assoc-in [:session :e-auth] nil)))

@@ -120,6 +120,11 @@
    (log/debug y)
    x))
 
+(defn log-body
+  ([x]
+   (log/debug (get-in x [:response :body]))
+   x))
+
 (defmacro ->! [a & forms]
   `(if-not (and (symbol? '~a)
                 (= (class ~a) clojure.lang.Atom))

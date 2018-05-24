@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return log-body disable-attack-detector *s*]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -41,10 +41,8 @@
                 reg-service/show-finished-screen? (constantly true)
                 auth-service/letters-digits       (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (has (some-text? "code below"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
@@ -54,23 +52,23 @@
         (visit "/registration/564610/captcha")
         (has (status? 302))
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:captcha "234234"})
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
         (has (status? 400))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com"})
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
         (has (status? 400))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
         (has (status? 422))
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
         (has (status? 400))
         (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
         (has (status? 400))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (has (status? 302))
         (debug-headers-text? "MAIL" "SMS" "METALLICA")
         (follow-redirect)
         (has (some-text? "Validate"))
-        (visit "/registration/564610")
+        (visit "/registration/564610/form")
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434" :code-sms "345345"})
         (has (status? 422))
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA" :code-sms "345345"})
@@ -106,15 +104,13 @@
                 reg-service/show-finished-screen? (constantly false)
                 auth-service/letters-digits       (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (has (some-text? "code below"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (has (status? 200))
@@ -149,19 +145,23 @@
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610")
+        ;; Redirected to info page
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (visit "/registration/564610/form")
         ;; Captcha session is created
         (follow-redirect)
         ;; Redirected do captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (has (some-text? "Enter your information"))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
         (has (status? 422))
-        (visit "/registration/564610")
+        (visit "/registration/564610/form")
         (has (status? 200))
         (has (some-text? "Mobile phone"))
         (visit "/registration/564610/validate")
@@ -178,15 +178,13 @@
                                                              :auto-username          :none})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
         (has (status? 422))
@@ -209,15 +207,13 @@
                   reg-service/generate-participant-id (constantly participant-id)
                   auth-service/letters-digits         (constantly "METALLICA")]
       (-> *s*
-          (visit "/registration/564610")
+          (visit "/registration/564610/captcha")
           ;; Captcha session is created
-          (follow-redirect)
-          ;; Redirected do captcha page
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (has (some-text? "Enter your"))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})))
@@ -243,15 +239,13 @@
                   reg-service/generate-participant-id (constantly participant-id)
                   auth-service/letters-digits         (constantly "METALLICA")]
       (-> *s*
-          (visit "/registration/564610")
+          (visit "/registration/564610/captcha")
           ;; Captcha session is created
-          (follow-redirect)
-          ;; Redirected do captcha page
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/registration/564610" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY"})
+          (has (some-text? "Enter your information"))
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
@@ -280,15 +274,13 @@
                                                              :auto-id?               true})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (follow-redirect)
@@ -309,15 +301,13 @@
                                                              :auto-id?               true})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
+        (has (some-text? "Enter your information here"))
+        (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "we promise")))))
@@ -341,15 +331,13 @@
                   auth-service/letters-digits         (constantly "METALLICA")
                   passwords/password                  (constantly password)]
       (-> *s*
-          (visit "/registration/564610")
+          (visit "/registration/564610/captcha")
           ;; Captcha session is created
-          (follow-redirect)
-          ;; Redirected do captcha page
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (has (some-text? "Enter your"))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
@@ -372,15 +360,13 @@
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]})
                 auth-service/letters-digits     (constantly "METALLICA")]
     (-> *s*
-        (visit "/registration/564610")
+        (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
-        ;; Redirected do captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
@@ -398,10 +384,8 @@
   (let [now (t/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
-                  (visit "/registration/564610")
+                  (visit "/registration/564610/captcha")
                   ;; Captcha session is created
-                  (follow-redirect)
-                  ;; Redirected do captcha page
                   (follow-redirect)
                   (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
                   (has (status? 422)))]
@@ -425,10 +409,8 @@
   (let [now (t/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
-                  (visit "/registration/564610")
+                  (visit "/registration/564610/captcha")
                   ;; Captcha session is created
-                  (follow-redirect)
-                  ;; Redirected do captcha page
                   (follow-redirect))]
         (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
           (-> x
@@ -457,4 +439,4 @@
               (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 5 - correct
               ;; Correct captcha, redirected to registration page.
               (follow-redirect)
-              (has (some-text? "Welcome"))))))))
+              (has (some-text? "Enter your"))))))))
