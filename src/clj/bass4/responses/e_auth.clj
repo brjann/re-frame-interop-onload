@@ -142,8 +142,6 @@
 (defn bankid-collect-response
   [uid status info]
   (cond
-    (= :exception status)
-    (throw (:exception info))
 
     (nil? uid)
     {:title     (i18n/tr [:bankid/error])
@@ -154,7 +152,7 @@
     (nil? info)
     {:title     (i18n/tr [:bankid/error])
      :status    :error
-     :hint-code (str "No session info for uid " uid)
+     :hint-code (str "No session info for uid")
      :message   :no-session}
 
     (contains? #{:starting :started} status)
@@ -189,18 +187,23 @@
         info             (bankid/get-collected-info uid)
         status           (:status info)
         redirect-success (get-in session [:e-auth :redirect-success])]
+    (when (= :exception status)
+      (bankid/delete-session! uid)
+      (throw (ex-info "BankID collect error" info)))
     (if (= :complete status)
       (->
         (http-response/found redirect-success)
         (assoc :session (merge session {:e-auth (completed-data info)})))
       (let [response (bankid-collect-response uid status info)
             message  (:message response)]
-        (if (= :exception message)
-          (throw (ex-info "BankID error" response))
-          (h-utils/json-response
-            (merge
-              response
-              {:message (i18n/tr [(keyword (str "bankid/" (name message)))])})))))))
+        (when (= :exception message)
+          (bankid/delete-session! uid)
+          (throw (ex-info "BankID message error" response)))
+        ;; TODO: If error or failed status - can uid be deleted from session?
+        (h-utils/json-response
+          (merge
+            response
+            {:message (i18n/tr [(keyword (str "bankid/" (name message)))])}))))))
 
 ;; --------------------------------
 ;;   TESTING - CALLED FROM DEBUG

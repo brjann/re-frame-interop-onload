@@ -138,6 +138,10 @@
                                          :start-time (bankid-now)
                                          :status-no  0})))
 
+(defn delete-session!
+  [uid]
+  (swap! session-statuses #(dissoc % uid)))
+
 (defn set-session-status!
   [uid status-map]
   (swap! session-statuses
