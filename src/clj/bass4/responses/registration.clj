@@ -516,7 +516,5 @@
                      params))))
 
 ;; TODO: Max number of sms
-;; TODO: Separate info screen
 ;; TODO: Clear session before registration
 ;; TODO: Test confirming one contact info and then going back changing the other - only one code sent
-;; TODO: If email/sms is not changed - then don't send new code!
