@@ -112,3 +112,41 @@ SELECT
   QuickLoginDeadline AS `expiration-days`
 FROM c_project
 WHERE ObjectId = 100;
+
+-- :name log-bankid! :! :1
+-- :doc
+INSERT INTO
+  bankid_log
+    (`uid`,
+    `personal-number`,
+    `order-ref`,
+    `auto-start-token`,
+    `status`,
+    `hint-code`,
+    `http-status`,
+    `user`,
+    `device`,
+    `cert`,
+    `signature`,
+    `ocsp-response`,
+    `error-code`,
+    `details`,
+    `exception`,
+    `other`)
+  VALUES(
+    :uid,
+    :personal-number,
+    :order-ref,
+    :auto-start-token,
+    :status,
+    :hint-code,
+    :http-status,
+    :user,
+    :device,
+    :cert,
+    :signature,
+    :ocsp-response,
+    :error-code,
+    :details,
+    :exception,
+    :other);

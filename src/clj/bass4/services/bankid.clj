@@ -2,8 +2,9 @@
   (:require [clojure.core.async
              :refer [>! <! <!! go chan timeout thread]]
             [clj-http.client :as http]
-            [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
+            [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
             [clojure.walk :as walk]
+            [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t])
@@ -196,9 +197,41 @@
 (defn ^:dynamic collect-loop-complete
   [uid])
 
+(defn log-bankid-event!
+  [response]
+  (let [response (merge
+                   (dissoc response :completion-data)
+                   (:completion-data response)
+                   {:personal-number (get-in
+                                       response
+                                       [:completion-data :user :personal-number]
+                                       (:personal-number response))})
+        cols     [:uid
+                  :personal-number
+                  :order-ref
+                  :auto-start-token
+                  :status
+                  :hint-code
+                  :http-status
+                  :user
+                  :device
+                  :cert
+                  :signature
+                  :ocsp-response
+                  :error-code
+                  :details
+                  :exception]
+        other    {:other (str (apply dissoc response cols))}
+        empty    (zipmap cols (repeat (count cols) nil))
+        stringed (map-map str (select-keys response cols))]
+    (db/log-bankid! (merge empty
+                           stringed
+                           other))))
+
 (defn launch-bankid
   [personnummer user-ip]
   (let [uid (UUID/randomUUID)]
+    (log-bankid-event! {:uid uid :personal-number personnummer :status :started})
     (print-status uid "Creating session for " personnummer)
     (create-session! uid)
     (go
@@ -226,7 +259,7 @@
                                  (<! collect-chan))]
               (reset! started? true)
               (reset! order-ref (:order-ref response))
-              #_(log/debug response)
+              (log-bankid-event! (assoc response :uid uid))
               (set-session-status!
                 uid
                 (if (nil? (:status response))
@@ -241,8 +274,7 @@
                 (do
                   (log/debug "Waiting 1500 ms")
                   (<! (timeout 1500)))
-                (collect-waiter uid))
-              #_(collect-waiter uid)))))
+                (collect-waiter uid))))))
       (collect-loop-complete uid)
       (print-status uid "Collect loop completed"))
     uid))
@@ -252,6 +284,7 @@
   (let [info (get-collected-info uid)]
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
+      (log-bankid-event! {:uid uid :order-ref (:order-ref info) :status :failed :hint-code :user-cancel})
       (bankid-cancel (:order-ref info))))
   nil)
 
