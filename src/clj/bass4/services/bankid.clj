@@ -41,12 +41,10 @@
          :http-status http-status}
         (response-body data)))))
 
-(def ^:dynamic *config-key* :test)
-
 (defn bankid-request
-  [endpoint form-params]
+  [endpoint form-params config-key]
   (log/debug "XXXXXXX XXXXXX running request")
-  (try (let [bankid-config (get-in env [:bankid *config-key*])
+  (try (let [bankid-config (get-in env [:bankid config-key])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
              response      (http/post (str url endpoint)
@@ -61,19 +59,20 @@
 
 ;; TODO: End user IP
 (defn ^:dynamic bankid-auth
-  [personnummer user-ip]
+  [personnummer user-ip config-key]
   (bankid-request "auth"
                   {"personalNumber" personnummer
-                   "endUserIp"      user-ip}))
+                   "endUserIp"      user-ip}
+                  config-key))
 ;; "81.232.173.180"
 
 (defn ^:dynamic bankid-collect
-  [order-ref]
-  (bankid-request "collect" {"orderRef" order-ref}))
+  [order-ref config-key]
+  (bankid-request "collect" {"orderRef" order-ref} config-key))
 
 (defn ^:dynamic bankid-cancel
-  [order-ref]
-  (bankid-request "cancel" {"orderRef" order-ref}))
+  [order-ref config-key]
+  (bankid-request "cancel" {"orderRef" order-ref} config-key))
 
 
 ;; -------------------
@@ -156,18 +155,18 @@
 
 
 (defn start-bankid-session
-  [personnummer user-ip]
+  [personnummer user-ip config-key]
   (log/debug "Starting bankID session")
   (let [start-chan (chan)]
     (go
-      (>! start-chan (or (bankid-auth personnummer user-ip) {})))
+      (>! start-chan (or (bankid-auth personnummer user-ip config-key) {})))
     start-chan))
 
 (defn collect-bankid
-  [order-ref]
+  [order-ref config-key]
   (let [collect-chan (chan)]
     (go
-      (>! collect-chan (or (bankid-collect order-ref) {})))
+      (>! collect-chan (or (bankid-collect order-ref config-key) {})))
     collect-chan))
 
 
@@ -216,56 +215,58 @@
                            other))))
 
 (defn launch-bankid
-  [personnummer user-ip]
-  (let [uid (UUID/randomUUID)]
-    (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    (print-status uid "Creating session for " personnummer)
-    (create-session! uid)
-    (go
-      (let [started?   (atom false)
-            order-ref  (atom nil)
-            timed-out? (atom false)
-            start-time (bankid-now)]
-        (log/debug "Inside go block - starting collect loop")
-        (while (and (session-active? (get-session-info uid))
-                    (not @timed-out?))
-          (if-not (session-not-timed-out? {:start-time start-time} 300)
-            (do
-              (log/debug "Session timed out")
-              (reset! timed-out? true)
-              (set-session-status!
-                uid
-                {:status     :error
-                 :error-code :loop-timeout}))
-            (let [collect-chan (if-not @started?
-                                 (start-bankid-session personnummer user-ip)
-                                 (collect-bankid @order-ref))
-                  response     (merge
-                                 (when-not @started?
-                                   {:status :started})
-                                 (<! collect-chan))]
-              (reset! started? true)
-              (reset! order-ref (:order-ref response))
-              (set-session-status!
-                uid
-                (if (nil? (:status response))
-                  {:status     :error
-                   :error-code :collect-returned-nil-status
-                   :order-ref  order-ref}
-                  response))
-              (log-bankid-event! (assoc response :uid uid))
+  ([personnummer user-ip] (launch-bankid personnummer user-ip :prod))
+  ([personnummer user-ip config-key]
+   (let [uid (UUID/randomUUID)]
+     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
+     (print-status uid "Creating session for " personnummer)
+     (create-session! uid)
+     (go
+       (let [started?   (atom false)
+             order-ref  (atom nil)
+             timed-out? (atom false)
+             start-time (bankid-now)]
+         (log/debug "Inside go block - starting collect loop")
+         (while (and (session-active? (get-session-info uid))
+                     (not @timed-out?))
+           (if-not (session-not-timed-out? {:start-time start-time} 300)
+             (do
+               (log/debug "Session timed out")
+               (reset! timed-out? true)
+               (set-session-status!
+                 uid
+                 {:status     :error
+                  :error-code :loop-timeout}))
+             (let [collect-chan (if-not @started?
+                                  (start-bankid-session personnummer user-ip config-key)
+                                  (collect-bankid @order-ref config-key))
+                   response     (merge
+                                  (when-not @started?
+                                    {:status     :started
+                                     :config-key config-key})
+                                  (<! collect-chan))]
+               (reset! started? true)
+               (reset! order-ref (:order-ref response))
+               (set-session-status!
+                 uid
+                 (if (nil? (:status response))
+                   {:status     :error
+                    :error-code :collect-returned-nil-status
+                    :order-ref  order-ref}
+                   response))
+               (log-bankid-event! (assoc response :uid uid))
 
-              ;; Poll once every 1.5 seconds.
-              ;; Should be between 1 and 2 according to BankID spec
-              (if (nil? collect-waiter)
-                (do
-                  (log/debug "Waiting 1500 ms")
-                  (<! (timeout 1500)))
-                (collect-waiter uid))))))
-      (collect-loop-complete uid)
-      (log-bankid-event! {:uid uid :status :loop-complete})
-      (print-status uid "Collect loop completed"))
-    uid))
+               ;; Poll once every 1.5 seconds.
+               ;; Should be between 1 and 2 according to BankID spec
+               (if (nil? collect-waiter)
+                 (do
+                   (log/debug "Waiting 1500 ms")
+                   (<! (timeout 1500)))
+                 (collect-waiter uid))))))
+       (collect-loop-complete uid)
+       (log-bankid-event! {:uid uid :status :loop-complete})
+       (print-status uid "Collect loop completed"))
+     uid)))
 
 (defn cancel-bankid!
   [uid]
@@ -273,7 +274,7 @@
     (when (session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
       (log-bankid-event! {:uid uid :order-ref (:order-ref info) :status :failed :hint-code :user-cancel})
-      (bankid-cancel (:order-ref info))))
+      (bankid-cancel (:order-ref info) (:config-key info))))
   nil)
 
 ;; TODO: Generalize ajax post handler?

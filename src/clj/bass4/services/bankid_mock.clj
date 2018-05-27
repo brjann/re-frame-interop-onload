@@ -130,8 +130,8 @@
    :error-details ""})
 
 (defn api-auth
-  ([personnummer] (api-auth personnummer "127.0.0.1"))
-  ([personnummer user-ip]
+  ([personnummer] (api-auth personnummer "127.0.0.1" nil))
+  ([personnummer user-ip _]
    (log/debug "Auth for" personnummer)
    (let [existing-order-ref (get-in @mock-sessions [:by-personnummer personnummer])
          existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
@@ -180,7 +180,7 @@
 (def ^:dynamic *delay-collect* false)
 
 (defn api-collect
-  [order-ref]
+  [order-ref _]
   (when *delay-collect*
     (http/get "https://httpbin.org/delay/0.1"))
   (let [session (get-in @mock-sessions [:sessions order-ref])]
@@ -189,7 +189,7 @@
       (session-info session order-ref))))
 
 (defn api-cancel
-  [order-ref]
+  [order-ref _]
   (let [session (get-in @mock-sessions [:sessions order-ref])]
     (if (nil? session)
       (no-such-order)
