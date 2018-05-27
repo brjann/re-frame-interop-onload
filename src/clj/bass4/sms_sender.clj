@@ -8,7 +8,7 @@
             [bass4.services.bass :as bass-service]
             [selmer.parser :as parser]
             [bass4.request-state :as request-state]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]))
@@ -51,7 +51,7 @@
   [recipient message]
   (when (env :dev)
     (log/info (str "Sent sms to " recipient)))
-  (let [config locals/common-config
+  (let [config db-config/common-config
         url    (smsteknik-url
                  (:smsteknik-id config)
                  (:smsteknik-user config)
@@ -69,7 +69,7 @@
 ;; Overwritten by other function when in debug mode
 (defn send-db-sms!
   [recipient message]
-  (let [db-name       (:name locals/*local-config*)
+  (let [db-name       (:name db-config/*local-config*)
         db-connection db/*db*]
     (try
       (when (send-sms*! recipient message)

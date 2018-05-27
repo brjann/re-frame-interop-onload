@@ -7,7 +7,6 @@
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
-            [bass4.bass-locals :as bass-locals]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]

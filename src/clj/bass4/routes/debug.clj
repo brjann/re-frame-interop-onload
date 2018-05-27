@@ -9,7 +9,7 @@
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [clojure.java.io :as io]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [clojure.data.json :as json]
             [bass4.responses.instrument :as instruments]
             [bass4.services.bass :as bass]
@@ -50,7 +50,7 @@
   (context "/debug" [:as request]
     (if (or (env :debug-mode) (env :dev))
       (routes
-        (GET "/timezone" [:as req] (layout/print-var-response (locals/time-zone)))
+        (GET "/timezone" [:as req] (layout/print-var-response (db-config/time-zone)))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-state/record-error! "An evil error message")

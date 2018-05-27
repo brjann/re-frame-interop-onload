@@ -6,7 +6,7 @@
             [bass4.config :refer [env]]
             [bass4.utils :refer [filter-map nil-zero?]]
             [bass4.http-utils :as h-utils]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [bass4.request-state :as request-state]
@@ -65,7 +65,7 @@
          ip-address (h-utils/get-ip request)]
      (save-failed-login!
        (name type)
-       (:db-name locals/*local-config*)
+       (:db-name db-config/*local-config*)
        ip-address
        info
        now)

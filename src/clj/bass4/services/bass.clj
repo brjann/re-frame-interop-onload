@@ -1,6 +1,6 @@
 (ns bass4.services.bass
   (:require [bass4.db.core :as db]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [clj-time.core :as t]
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
@@ -35,9 +35,9 @@
 (defn time-zone
   []
   (try
-    (t/time-zone-for-id (locals/time-zone))
+    (t/time-zone-for-id (db-config/time-zone))
     (catch Exception e
-      (log/error "Time zone illegal: " (locals/time-zone))
+      (log/error "Time zone illegal: " (db-config/time-zone))
       (t/default-time-zone))))
 
 (defn local-midnight
@@ -57,7 +57,7 @@
   (^File [base-path] (db-dir base-path nil))
   (^File [base-path sub-path]
    (try
-     (let [db-name        (:name locals/*local-config*)
+     (let [db-name        (:name db-config/*local-config*)
            full-base-path (io/file (env :bass-path) "projects" db-name base-path)]
        (if sub-path
          (get-sub-path full-base-path sub-path)

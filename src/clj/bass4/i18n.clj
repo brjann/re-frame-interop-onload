@@ -2,7 +2,7 @@
   (:require [selmer.parser :as parser]
             [taoensso.tempura :as tempura]
             [bass4.utils :refer [map-map map-map-keys filter-map deep-merge in?]]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [bass4.php_clj.reader :as reader]
             [clj-time.core :as t]
             [clj-time.format :as f]
@@ -46,7 +46,7 @@
             (fn
               [{:keys [opts locales resource-ids resource-args]}]
               (str "Missing translation keys: " resource-ids))}
-     [(or (locals/language) "en")]
+     [(or (db-config/language) "en")]
      resource-ids
      resource-args)))
 

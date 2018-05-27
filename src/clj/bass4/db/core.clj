@@ -7,10 +7,9 @@
     [clojure.set :as set]
     [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
-    [bass4.bass-locals :as locals]
+    [bass4.db-config :as db-config]
     [clojure.tools.logging :as log]
     [bass4.request-state :as request-state]
-    [bass4.bass-locals :as bass-locals]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
     [bass4.http-utils :as h-utils])
@@ -57,12 +56,12 @@
 
 (defstate db-connections
   :start (map-map db-connect!
-                  locals/local-configs)
+                  db-config/local-configs)
   :stop (map-map db-disconnect!
                  db-connections))
 
 (defstate db-common
-  :start @(db-connect! locals/common-config)
+  :start @(db-connect! db-config/common-config)
   :stop (do (log/info "Detaching common")
             (conman/disconnect! db-common)))
 
@@ -156,8 +155,8 @@
   [handler request]
   (let [[db-name db-conn] (resolve-db request)]
     (request-state/set-state! :name (name db-name))
-    (binding [*db*                       db-conn
-              bass-locals/*local-config* (merge bass-locals/local-defaults (get bass-locals/local-configs db-name))]
+    (binding [*db*                     db-conn
+              db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
       (handler request))))
 
 (defn init-repl
@@ -168,5 +167,5 @@
      (do
        (alter-var-root (var host-db) (constantly (constantly db-name)))
        (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
-       (alter-var-root (var locals/*local-config*) (constantly (merge bass-locals/local-defaults (get bass-locals/local-configs db-name))))
+       (alter-var-root (var db-config/*local-config*) (constantly (merge db-config/local-defaults (get db-config/local-configs db-name))))
        (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))))

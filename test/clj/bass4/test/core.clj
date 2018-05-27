@@ -3,7 +3,6 @@
             [clojure.edn :as edn]
             [mount.core :as mount]
             [bass4.db.core]
-            [bass4.bass-locals :as locals]
             [bass4.utils :refer [map-map]]
             [kerodon.core :refer :all]
             [bass4.handler :refer :all]
@@ -14,7 +13,8 @@
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
             [clj-time.core :as t]
-            [bass4.services.bankid :as bankid]))
+            [bass4.services.bankid :as bankid]
+            [bass4.db-config :as db-config]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -56,8 +56,8 @@
   [f]
   (mount/start
     #'bass4.config/env
-    #'locals/local-configs
-    #'locals/common-config
+    #'db-config/local-configs
+    #'db-config/common-config
     #'bass4.db.core/db-connections
     #'bass4.db.core/db-common
     #'bass4.i18n/i18n-map)

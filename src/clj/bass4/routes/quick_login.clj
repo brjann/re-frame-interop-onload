@@ -6,7 +6,7 @@
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [clojure.string :as string]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [bass4.responses.auth :as auth-response]
             [bass4.services.assessments :as assessments]
             [bass4.services.user :as user-service]

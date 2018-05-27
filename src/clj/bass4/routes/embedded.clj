@@ -5,7 +5,7 @@
             [bass4.db.core :as db]
             [ring.util.http-response :as response]
             [clojure.java.io :as io]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [bass4.responses.instrument :as instruments]
             [bass4.responses.content-example :as content-example]
             [bass4.responses.modules :as modules]

@@ -1,6 +1,6 @@
 (ns bass4.passwords
   (:require [bass4.utils :refer [map-map map-map-keys filter-map]]
-            [bass4.bass-locals :as locals]
+            [bass4.db-config :as db-config]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.string :as s]
@@ -34,7 +34,7 @@
 (defn password
   ([] (password :word 3 :word))
   ([& config]
-   (let [words (words (locals/language))]
+   (let [words (words (db-config/language))]
      (apply str (mapv (fn [x]
                         (if (integer? x)
                           (random-number x)
