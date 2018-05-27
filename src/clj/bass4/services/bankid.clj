@@ -1,6 +1,6 @@
 (ns bass4.services.bankid
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout thread]]
+             :refer [>! <! <!! go chan timeout thread alts!]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
             [clojure.walk :as walk]
@@ -22,20 +22,6 @@
 ;;   BANKID REQUESTS
 ;; -------------------
 
-(def auth-params
-  {:keystore         "/Users/brjljo/bankid-bass4/test/keystore_with_private.jks"
-   :keystore-pass    "changeit"
-   :trust-store      "/Users/brjljo/bankid-bass4/test/truststore.jks"
-   :trust-store-pass "changeit"
-   :content-type     :json})
-
-#_(def auth-params
-    {:keystore         "/Users/brjljo/bankid-bass4/prod/client-cert-keystore.jks"
-     :keystore-pass    "XXXX"
-     :trust-store      "/Users/brjljo/bankid-bass4/prod/root-cert-truststore.jks"
-     :trust-store-pass "changeit"
-     :content-type     :json})
-
 (defn response-body
   [response]
   (->> response
@@ -55,10 +41,12 @@
          :http-status http-status}
         (response-body data)))))
 
+(def ^:dynamic *config-key* :test)
+
 (defn bankid-request
   [endpoint form-params]
   (log/debug "XXXXXXX XXXXXX running request")
-  (try (let [bankid-config (get-in env [:bankid :test])
+  (try (let [bankid-config (get-in env [:bankid *config-key*])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
              response      (http/post (str url endpoint)
@@ -81,7 +69,6 @@
 
 (defn ^:dynamic bankid-collect
   [order-ref]
-  (log/debug "XXXXXXXXXXX XXXXXXX real collect")
   (bankid-request "collect" {"orderRef" order-ref}))
 
 (defn ^:dynamic bankid-cancel
