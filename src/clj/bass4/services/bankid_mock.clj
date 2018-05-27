@@ -200,10 +200,6 @@
 ;;   MANUAL COLLECT
 ;; -------------------
 
-(def collect-atoms (atom {}))
-(def collect-chans (atom {}))
-
-
 (def collector-states-atom (atom {}))
 
 (defn collector-has-state?
@@ -315,7 +311,7 @@
   [max-collects]
   (reset! collect-counts {})
   (let [global-start-time (. System (nanoTime))]
-    (fn [order-ref]
+    (fn [order-ref _]
       (let [current-count (get-in @collect-counts [order-ref :count] 0)]
         (if (> max-collects current-count)
           (do
@@ -329,7 +325,7 @@
                     order-ref
                     {:count      (inc current-count)
                      :start-time start-time}))))
-            (api-collect order-ref))
+            (api-collect order-ref nil))
           (do
             (swap!
               collect-counts
