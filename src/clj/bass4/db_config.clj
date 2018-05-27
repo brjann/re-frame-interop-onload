@@ -27,9 +27,12 @@
   (->> (.listFiles (io/file bass-path))
        (filter #(clojure.string/starts-with? (.getName %) "local_"))))
 
+;; Please note that :db-name and :name are not the same!
+;; :db-name is the name of MySQL database
+;; :name    is the name of the BASS database/client, i.e. local_xxx.php <- xxx = name
 (defn db-name
   []
-  (:db-name *local-config*))
+  (:name *local-config*))
 
 (defn db-setting
   [setting-key]

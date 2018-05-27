@@ -143,7 +143,7 @@
         db-name     (host-db host db-mappings)]
     (if (contains? db-connections db-name)
       [db-name @(get db-connections db-name)]
-      (throw (ex-info (str "No db present for key " db-name " mappings: " db-mappings) request)))))
+      (throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
 ;; occur after this file has changed? It seems that mount stops and starts the

@@ -156,7 +156,8 @@
                    :8  "eight"
                    :9  "nine"
                    :10 "ten"}
- :bankid          {:ongoing-title     "Ongoing BankID verification"
+ :bankid          {:title             "BankID verification"
+                   :ongoing-title     "Ongoing BankID verification"
                    :ongoing-text      "You have an ongoing BankID verification process. Would you like to return to BankID?"
                    :ongoing-return    "Yes, I want to continue with BankID"
                    :ongoing-cancel    "No, I want to cancel BankID"
