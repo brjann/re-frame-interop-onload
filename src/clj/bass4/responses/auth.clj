@@ -12,7 +12,8 @@
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [bass4.db-config :as db-config]))
 
 
 ;; -------------------
@@ -38,7 +39,7 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    (when (or (env :dev) (env :debug-mode)) {:double-auth-code double-auth-code})))
+    (when (db-config/debug-mode?) {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]
   (cond

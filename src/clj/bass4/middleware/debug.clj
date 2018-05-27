@@ -5,7 +5,8 @@
             [bass4.request-state :as request-state]
             [prone.middleware :refer [wrap-exceptions]]
             [bass4.db.core :as db]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.db-config :as db-config]))
 
 
 
@@ -99,7 +100,7 @@
 (defn wrap-debug-exceptions
   [handler]
   (fn [request]
-    (if (or (env :debug-mode) (env :dev))
+    (if (db-config/debug-mode?)
       ((wrap-exceptions handler) request)
       (handler request))))
 
@@ -117,6 +118,6 @@
 (defn wrap-session-modification
   [handler]
   (fn [request]
-    (if (or (env :debug-mode) (env :dev))
+    (if (db-config/debug-mode?)
       (session-modification-wrapper handler request)
       (handler request))))

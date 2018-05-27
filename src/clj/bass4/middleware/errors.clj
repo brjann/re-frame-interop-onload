@@ -9,7 +9,8 @@
             [clojure.tools.logging :as log]
             [bass4.layout :refer [*app-context* error-page error-400-page]]
             [bass4.request-state :as request-state]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [bass4.db-config :as db-config])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -66,5 +67,5 @@
               (string/starts-with? (.getMessage e) "400"))
           (do
             (request-state/record-error! (.getMessage e))
-            (error-400-page (when (env :debug-mode (.getMessage e)))))
+            (error-400-page (when (db-config/debug-mode?) (.getMessage e))))
           (throw e))))))

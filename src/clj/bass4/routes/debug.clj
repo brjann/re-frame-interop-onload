@@ -48,7 +48,7 @@
 
 (def debug-routes
   (context "/debug" [:as request]
-    (if (or (env :debug-mode) (env :dev))
+    (if (or (db-config/debug-mode?))
       (routes
         (GET "/timezone" [:as req] (layout/print-var-response (db-config/time-zone)))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))

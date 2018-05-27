@@ -20,7 +20,8 @@
             [bass4.services.assessments :as assessments]
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [bass4.db-config :as db-config])
   (:import (java.util UUID)))
 
 
@@ -317,7 +318,7 @@
                                        (:sms-number field-values))
                         :project-id  project-id
                         :code-length validation-code-length}
-                       (when (or (env :dev) (env :debug-mode))
+                       (when (db-config/debug-mode?)
                          codes)))
       ;; Wrong page - redirect
       (response/found (str "/registration/" project-id)))))
