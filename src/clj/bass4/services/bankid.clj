@@ -231,7 +231,7 @@
 (defn launch-bankid
   [personnummer user-ip]
   (let [uid (UUID/randomUUID)]
-    (log-bankid-event! {:uid uid :personal-number personnummer :status :started})
+    (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
     (print-status uid "Creating session for " personnummer)
     (create-session! uid)
     (go
@@ -276,6 +276,7 @@
                   (<! (timeout 1500)))
                 (collect-waiter uid))))))
       (collect-loop-complete uid)
+      (log-bankid-event! {:uid uid :status :loop-complete})
       (print-status uid "Collect loop completed"))
     uid))
 
