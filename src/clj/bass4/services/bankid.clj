@@ -259,7 +259,6 @@
                                  (<! collect-chan))]
               (reset! started? true)
               (reset! order-ref (:order-ref response))
-              (log-bankid-event! (assoc response :uid uid))
               (set-session-status!
                 uid
                 (if (nil? (:status response))
@@ -267,6 +266,7 @@
                    :error-code :collect-returned-nil-status
                    :order-ref  order-ref}
                   response))
+              (log-bankid-event! (assoc response :uid uid))
 
               ;; Poll once every 1.5 seconds.
               ;; Should be between 1 and 2 according to BankID spec
@@ -289,14 +289,8 @@
       (bankid-cancel (:order-ref info))))
   nil)
 
-;; TODO: Log requests
 ;; TODO: Generalize ajax post handler?
-;; TODO: Validate personnummer to BankID launch
 ;; TODO: Web interface for production
 ;; TODO: Check that client calls collect regularly?
-;; TODO: Success-return, fail-return
-;; TODO: Auto-launch BankID
 ;; TODO: Tests: general, different responses, old session removal...
-;; TODO: Timeout guard in go block?
-;; TODO: Add cancel request when cancelling
-
+;; TODO: Async tests are failing again (after adding the logs?)
