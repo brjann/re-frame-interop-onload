@@ -27,6 +27,15 @@
   (->> (.listFiles (io/file bass-path))
        (filter #(clojure.string/starts-with? (.getName %) "local_"))))
 
+(defn db-name
+  []
+  (:db-name *local-config*))
+
+(defn db-setting
+  [setting-key]
+  (let [db-name (keyword (db-name))]
+    (get-in config/env [:db-settings db-name setting-key] (get config/env setting-key))))
+
 (defn- check-keys
   [local-config]
   (set/subset? #{:db-host :db-name :db-user :db-password} (set (keys local-config))))
