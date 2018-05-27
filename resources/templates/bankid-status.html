@@ -9,7 +9,7 @@
     </div>
     <button class="btn btn-warning" onclick="bankid_cancel();">Cancel</button>
 </div>
-
+<!--
 <h1>BankID debug status</h1>
 <div class="alert alert-primary" role="alert">
     <p>Status: <span class="bankid-info" id="status"></span></p>
@@ -18,7 +18,7 @@
     <p>Error details: <span class="bankid-info" id="error-details"></span></p>
     <p>Loads: <span id="load-counter">0</span></p>
 </div>
-
+-->
 <script type="application/javascript">
    var bankid_cancel;
    $(document).ready(function () {
@@ -37,13 +37,11 @@
       };
 
       var success_fn = function (data) {
-         // TODO: Remove this
-         console.log(data);
+         //console.log(data);
          var status;
          if (!check_redirect(data)) {
             $('.bankid-info').each(
                function () {
-                  //console.log(this);
                   var $el = $(this);
                   var id = $el.prop('id');
                   $el.text(data[id]);
