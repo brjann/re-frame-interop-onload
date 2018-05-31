@@ -31,6 +31,7 @@
       var $load_counter = $('#load-counter');
       var interval;
       var pending = true;
+      var error_count = 0;
 
       bankid_cancel = function () {
          pending = false;
@@ -41,6 +42,7 @@
       var success_fn = function (data) {
          //console.log(data);
          var status;
+         error_count = 0;
          if (!check_redirect(data)) {
             $('.bankid-info').each(
                function () {
@@ -67,7 +69,6 @@
          }
       };
 
-      var error_count = 0;
       var error_fn = function (jqXHR) {
          error_count++;
          // Try contacting collect function ten times before reporting error.
