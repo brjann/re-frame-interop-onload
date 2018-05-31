@@ -4,7 +4,9 @@
 <div class="card border-dark mb-3">
     <div class="card-header">{%tr bankid/title %}</div>
     <div class="card-body text-dark">
-        <h5 class="card-title bankid-info" id="title">{%tr bankid/contacting %}</h5>
+        <h5 class="card-title">
+            <span class="bankid-info" id="title">{%tr bankid/contacting %}</span>
+        </h5>
         <p class="card-text bankid-info" id="message">{%tr bankid/contacting-bankid %}</p>
     </div>
     <button class="btn btn-warning" onclick="bankid_cancel();">Cancel</button>
@@ -65,12 +67,17 @@
          }
       };
 
+      var error_count = 0;
       var error_fn = function (jqXHR) {
-         $title.text(text_bankid_error);
-         $message.text(text_bankid_error_text + ' ' + text_bankid_cancel);
-         $hint_code.text(jqXHR.status);
-         clearInterval(interval);
-         pending = false;
+         error_count++;
+         // Try contacting collect function ten times before reporting error.
+         if (error_count > 10) {
+            $title.text(text_bankid_error);
+            $message.text(text_bankid_error_text + ' ' + text_bankid_cancel + ' (' + jqXHR.status + ')');
+            $hint_code.text(jqXHR.status);
+            clearInterval(interval);
+            pending = false;
+         }
       };
 
       var collect_status = function () {
