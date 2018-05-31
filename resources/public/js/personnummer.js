@@ -48,7 +48,6 @@ function validate_personnummer() {
       personnummer.val('');
    }
    else {
-      console.log('hejsan');
       p_input.setCustomValidity('');
       personnummer.val($(p_input).val().replace('-', ''))
    }
