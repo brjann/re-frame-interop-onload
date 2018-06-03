@@ -77,9 +77,3 @@ SELECT
 FROM c_participant
 WHERE
   ParticipantId = :participant-id;
-
--- :name registration-show-finished :? :1
-SELECT
-  RegistrationAlwaysShowFinishedScreen AS `show-finished-screen?`
-FROM c_treatmentinterface
-WHERE ObjectId=:project-id;

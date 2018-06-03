@@ -52,14 +52,12 @@
 
 (defn- to-assessments
   [project-id user-id request]
-  (let [return-url (when (reg-service/show-finished-screen? project-id)
-                     (str (h-utils/get-host-address request) "/registration/" project-id "/finished"))]
-    (->
-      (response/found "/user")
-      (assoc :session (res-auth/create-new-session
-                        {:user-id user-id}
-                        {:external-login true :return-url return-url}
-                        true)))))
+  (->
+    (response/found "/user")
+    (assoc :session (res-auth/create-new-session
+                      {:user-id user-id}
+                      {:external-login true}
+                      true))))
 
 (defn finished-router
   [project-id session request]
