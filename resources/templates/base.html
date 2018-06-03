@@ -10,8 +10,8 @@
     {% style "/assets/bootstrap/css/bootstrap.min.css" %}
     {% style "/assets/font-awesome/css/font-awesome.min.css" %}
 
-    {% style "/css/screen.css" %}
-    {% style "/css/bass.css" %}
+    {% style-modified "/css/screen.css" %}
+    {% style-modified "/css/bass.css" %}
 
     {% block head %}
     {% endblock %}
@@ -36,13 +36,13 @@
 {% script "/assets/jquery-color/jquery.color.js" %}
 {% script "/assets/tether/dist/js/tether.min.js" %}
 {% script "/assets/bootstrap/js/bootstrap.bundle.min.js" %}
-{% script "/js/layout.js" %}
+{% script-modified "/js/layout.js" %}
 <script src="/js/underscore-min.js"></script>
-{% script "/js/form-ajax.js?xxx" %}
-{% script "/js/are-you-sure.js" %}
+{% script-modified "/js/form-ajax.js" %}
+{% script-modified "/js/are-you-sure.js" %}
 {% script "/js/js.cookie.js" %}
 {% script "/js/sprintf.min.js" %}
-<script src="/js/instruments.js"></script>
+{% script-modified "/js/instruments.js" %}
 <script type="text/javascript">
    var csrfToken = "{{csrf-token}}";
    var context = "{{servlet-context}}";

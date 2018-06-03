@@ -18,7 +18,11 @@
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [compojure.response :as response]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure.java.io :as io]
+            [ring.util.response :as util-response]
+            [clj-time.coerce :as tc]
+            [selmer.tags :as tags]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -216,6 +220,33 @@
   (fn [args context-map]
     (i18n/tr [(keyword (first args))]
              (split (join " " (rest args)) #"[|]"))))
+
+(def resource-mtimes (atom {}))
+
+(defn get-resource-mtime
+  [path]
+  (if-not (contains? @resource-mtimes path)
+    (let [url   (io/resource (str "public" path))
+          data  (util-response/resource-data url)
+          mtime (b-time/to-unix (tc/from-date (:last-modified data)))]
+      (swap! resource-mtimes #(assoc % path mtime))))
+  (get @resource-mtimes path))
+
+(parser/add-tag!
+  :script-modified
+  (fn [[path & args] context-map]
+    (let [len   (count path)
+          path  (subs path 1 (- len 1))
+          mtime (get-resource-mtime path)]
+      ((tags/script-handler (cons (str "\"" path "?" mtime "\"") args) nil nil nil) context-map))))
+
+(parser/add-tag!
+  :style-modified
+  (fn [[path & args] context-map]
+    (let [len   (count path)
+          path  (subs path 1 (- len 1))
+          mtime (get-resource-mtime path)]
+      ((tags/style-handler (cons (str "\"" path "?" mtime "\"") args) nil nil nil) context-map))))
 
 (parser/add-tag!
   :trb
