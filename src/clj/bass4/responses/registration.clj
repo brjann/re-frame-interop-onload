@@ -292,6 +292,8 @@
                            (code-map :code-sms :sms-number send-sms! field-values fixed-fields validation-codes)
                            (code-map :code-email :email send-email! field-values fixed-fields validation-codes)
                            {:uid (UUID/randomUUID)})]
+    (when (and (nil? (:code-sms codes)) (nil? (:code-email codes)))
+      (throw (ex-info "Prepare validation did not render codes" reg-session)))
     (->
       (response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
