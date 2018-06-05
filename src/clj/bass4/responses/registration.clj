@@ -297,6 +297,23 @@
       (assoc-reg-session session {:field-values     field-values
                                   :validation-codes codes}))))
 
+(defn render-validation-page
+  [project-id codes fixed-fields field-values]
+  (layout/render "registration-validation.html"
+                 (merge
+                   {:email       (when (and
+                                         (contains? codes :code-email)
+                                         (not (contains? fixed-fields :email)))
+                                   (:email field-values))
+                    :sms-number  (when (and
+                                         (contains? codes :code-sms)
+                                         (not (contains? fixed-fields :sms-number)))
+                                   (:sms-number field-values))
+                    :project-id  project-id
+                    :code-length validation-code-length}
+                   (when (db-config/debug-mode?)
+                     codes))))
+
 (defn validation-page
   [project-id session]
   (let [reg-session  (:registration session)
@@ -304,20 +321,7 @@
         fixed-fields (:fixed-fields reg-session)
         codes        (:validation-codes reg-session)]
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
-      (layout/render "registration-validation.html"
-                     (merge
-                       {:email       (when (and
-                                             (contains? codes :code-email)
-                                             (not (contains? fixed-fields :email)))
-                                       (:email field-values))
-                        :sms-number  (when (and
-                                             (contains? codes :code-sms)
-                                             (not (contains? fixed-fields :sms-number)))
-                                       (:sms-number field-values))
-                        :project-id  project-id
-                        :code-length validation-code-length}
-                       (when (db-config/debug-mode?)
-                         codes)))
+      (render-validation-page project-id codes fixed-fields field-values)
       ;; Wrong page - redirect
       (response/found (str "/registration/" project-id)))))
 
