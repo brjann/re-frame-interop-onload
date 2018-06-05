@@ -482,9 +482,12 @@
   (let [params       (reg-service/registration-params project-id)
         fields       (:fields params)
         reg-session  (:registration session)
+        fixed-fields (:fixed-fields reg-session)
         field-values (merge (select-keys posted-fields fields)
-                            (select-keys (:field-values reg-session) (:fixed-fields reg-session)))]
-    (if (all-fields? fields field-values)
+                            (select-keys (:field-values reg-session) fixed-fields))]
+    ;; TODO: Rewrite to cond
+    (if (and (all-fields? fields field-values)
+             (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
       (if (check-sms (:sms-number field-values) (:sms-countries params))
         (if (or (contains? field-values :sms-number) (contains? field-values :email))
           (prepare-validation project-id field-values session)

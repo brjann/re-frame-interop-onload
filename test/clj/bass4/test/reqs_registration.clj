@@ -91,6 +91,75 @@
         (follow-redirect)
         (has (some-text? "Login")))))
 
+(deftest registration-change-sms
+  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
+                                                             :group                  564616
+                                                             :allow-duplicate-email? true
+                                                             :allow-duplicate-sms?   true
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none})
+                auth-service/letters-digits     (let [pos (atom 0)]
+                                                  (fn [& _]
+                                                    (let [code (int (Math/floor (/ @pos 2)))]
+                                                      (swap! pos inc)
+                                                      (str "code-" code))))]
+    (-> *s*
+        (visit "/registration/564610/captcha")
+        ;; Captcha session is created
+        (follow-redirect)
+        (has (some-text? "code below"))
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
+        (has (status? 422))
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (has (status? 302))
+        (visit "/registration/564610/captcha")
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
+        (has (status? 400))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
+        (has (status? 400))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
+        (has (status? 422))
+        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
+        (has (status? 400))
+        (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
+        (has (status? 400))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (has (status? 302))
+        (debug-headers-text? "MAIL" "SMS" "code-0")
+        (follow-redirect)
+        (has (some-text? "Validate"))
+        (visit "/registration/564610/form")
+        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
+        (has (status? 422))
+        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "3434"})
+        (has (status? 422))
+        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "code-0" :code-sms "345345"})
+        (has (status? 200))
+        (visit "/registration/564610/form")
+        (has (status? 200))
+        (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
+                                                                          :sms-number "+46070717652"})
+        (has (status? 400))
+        (visit "/registration/564610/form" :request-method :post :params {:sms-number "+460707000000"})
+        (has (status? 302))
+        (debug-headers-text? "SMS" "code-1")
+        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-0"})
+        (has (status? 422))
+        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-1"})
+        (has (status? 302))
+        ;; Redirect to finish
+        (follow-redirect)
+        ;; Redirect to pending assessments
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (visit "/user")
+        (has (some-text? "AAQ")))))
+
 ;; This was a test of the old Always show finish screen property.
 ;; Probably not needed anymore but keeping anyway.
 (deftest registration-flow-no-finish

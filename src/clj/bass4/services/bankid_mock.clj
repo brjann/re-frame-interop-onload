@@ -51,7 +51,7 @@
 
 (defn add-session-map
   [all-sessions personnummer order-ref]
-  (log/debug "Creating session map for" personnummer)
+  #_(log/debug "Creating session map for" personnummer)
   (let [sessions               (:sessions all-sessions)
         by-personnummer        (:by-personnummer all-sessions)
         collect-force-chans    (:collect-force-chans all-sessions)
@@ -132,7 +132,7 @@
 (defn api-auth
   ([personnummer] (api-auth personnummer "127.0.0.1" nil))
   ([personnummer user-ip _]
-   (log/debug "Auth for" personnummer)
+    #_(log/debug "Auth for" personnummer)
    (let [existing-order-ref (get-in @mock-sessions [:by-personnummer personnummer])
          existing-session   (get-in @mock-sessions [:sessions existing-order-ref])]
      (if (= :pending (:status existing-session))
@@ -254,11 +254,11 @@
   (if (nil? uid)
     nil
     (let [state-id (UUID/randomUUID)]
-      (log/debug "New state id" state-id)
+      #_(log/debug "New state id" state-id)
       (swap! collector-states-atom add-collector-state uid state-id)
       (wait-for-collect-status uid state-id)
       (let [info (bankid/get-session-info uid)]
-        (log/debug "Received new status" info)
+        #_(log/debug "Received new status" info)
         (if (contains? #{:starting :started} (:status info))
           (merge info
                  {:status    :pending
@@ -352,7 +352,7 @@
   ([collect-method max-collects http-request?]
    (assert (contains? #{:immediate :manual :wait} collect-method))
    (fn [f & args]
-     (log/debug "Clearing all sessions")
+     #_(log/debug "Clearing all sessions")
      (clear-sessions!)
      (reset! collector-states-atom {})
      (reset! bankid/session-statuses {})
@@ -363,7 +363,8 @@
                bankid/bankid-cancel         api-cancel
                bankid/collect-waiter        (case collect-method
                                               :immediate
-                                              (fn [uid] (log/debug "Collecting info for" uid))
+                                              (constantly nil)
+                                              #_(fn [uid] (log/debug "Collecting info for" uid))
 
                                               :manual
                                               manual-collect-waiter

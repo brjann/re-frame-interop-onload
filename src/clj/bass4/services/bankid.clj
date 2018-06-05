@@ -43,7 +43,7 @@
 
 (defn bankid-request
   [endpoint form-params config-key]
-  (log/debug "XXXXXXX XXXXXX running request")
+  #_(log/debug "XXXXXXX XXXXXX running request")
   (try (let [bankid-config (get-in env [:bankid config-key])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
@@ -106,7 +106,7 @@
     (swap!
       session-statuses
       #(filter-map session-not-timed-out? %))
-    (if (< old-count (count @session-statuses))
+    #_(if (< old-count (count @session-statuses))
       (log/debug "Deleted circa " (- old-count (count @session-statuses)) " sessions."))))
 
 (defn get-session-info
@@ -156,7 +156,7 @@
 
 (defn start-bankid-session
   [personnummer user-ip config-key]
-  (log/debug "Starting bankID session")
+  #_(log/debug "Starting bankID session")
   (let [start-chan (chan)]
     (go
       (>! start-chan (or (bankid-auth personnummer user-ip config-key) {})))
@@ -219,19 +219,19 @@
   ([personnummer user-ip config-key]
    (let [uid (UUID/randomUUID)]
      (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-     (print-status uid "Creating session for " personnummer)
+     #_(print-status uid "Creating session for " personnummer)
      (create-session! uid)
      (go
        (let [started?   (atom false)
              order-ref  (atom nil)
              timed-out? (atom false)
              start-time (bankid-now)]
-         (log/debug "Inside go block - starting collect loop")
+         #_(log/debug "Inside go block - starting collect loop")
          (while (and (session-active? (get-session-info uid))
                      (not @timed-out?))
            (if-not (session-not-timed-out? {:start-time start-time} 300)
              (do
-               (log/debug "Session timed out")
+               #_(log/debug "Session timed out")
                (reset! timed-out? true)
                (set-session-status!
                  uid
@@ -260,12 +260,12 @@
                ;; Should be between 1 and 2 according to BankID spec
                (if (nil? collect-waiter)
                  (do
-                   (log/debug "Waiting 1500 ms")
+                   #_(log/debug "Waiting 1500 ms")
                    (<! (timeout 1500)))
                  (collect-waiter uid))))))
        (collect-loop-complete uid)
        (log-bankid-event! {:uid uid :status :loop-complete})
-       (print-status uid "Collect loop completed"))
+       #_(print-status uid "Collect loop completed"))
      uid)))
 
 (defn cancel-bankid!
