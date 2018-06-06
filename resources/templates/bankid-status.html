@@ -5,6 +5,7 @@
     <div class="card-header">{%tr bankid/title %}</div>
     <div class="card-body text-dark">
         <h5 class="card-title">
+            <span class="fa fa-spinner fa-spin" style="color: black;" id="bankid-spinner"></span>
             <span class="bankid-info" id="title">{%tr bankid/contacting %}</span>
         </h5>
         <p class="card-text bankid-info" id="message">{%tr bankid/contacting-bankid %}</p>
@@ -22,6 +23,7 @@
 </div>
 -->
 <script type="application/javascript">
+   // Declared outside function because called by html element.
    var bankid_cancel;
    $(document).ready(function () {
 
@@ -32,14 +34,21 @@
       var interval;
       var pending = true;
       var error_count = 0;
+      var $spinner = $('#bankid-spinner');
 
-      bankid_cancel = function () {
+      var bankid_stop = function () {
          pending = false;
          clearInterval(interval);
+         $spinner.removeClass('fa-spin');
+      };
+
+      bankid_cancel = function () {
+         bankid_stop();
          window.location.href = "/e-auth/bankid/reset";
       };
 
       var success_fn = function (data) {
+         $spinner.css('color', 'black');
          //console.log(data);
          var status;
          error_count = 0;
@@ -58,31 +67,30 @@
             }
 
             if ($.inArray(status, ['complete', 'failed', 'error']) > -1) {
-               clearInterval(interval);
-               pending = false;
+               bankid_stop();
             }
          }
          else {
             // If redirected, then clear pending variables
-            clearInterval(interval);
-            pending = false;
+            bankid_stop();
          }
       };
 
       var error_fn = function (jqXHR) {
+         $spinner.css('color', 'red');
          error_count++;
          // Try contacting collect function ten times before reporting error.
          if (error_count > 10) {
             $title.text(text_bankid_error);
             $message.text(text_bankid_error_text + ' ' + text_bankid_cancel + ' (' + jqXHR.status + ')');
             $hint_code.text(jqXHR.status);
-            clearInterval(interval);
-            pending = false;
+            bankid_stop();
          }
       };
 
       var collect_status = function () {
          $load_counter.text((parseInt($load_counter.text()) || 0) + 1);
+         $spinner.css('color', 'green');
          $.ajax(
             "/e-auth/bankid/collect",
             {
