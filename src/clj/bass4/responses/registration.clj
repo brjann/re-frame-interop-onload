@@ -291,6 +291,7 @@
         codes            (merge
                            (code-map :code-sms :sms-number send-sms! field-values fixed-fields validation-codes)
                            (code-map :code-email :email send-email! field-values fixed-fields validation-codes)
+                           ;; New uid for the newly sent codes is created each time.
                            {:uid (UUID/randomUUID)})]
     (when (and (nil? (:code-sms codes)) (nil? (:code-email codes)))
       (throw (ex-info "Prepare validation did not render codes" reg-session)))
@@ -360,6 +361,8 @@
     (if (not (all-fields? (:fields reg-params) field-values))
       (layout/error-400-page)
       (let [correct? (and (string? posted-code) (code-correct?! uid code-key validation-codes posted-code))]
+        ;; Are all outstanding codes validated?
+        ;; Already validated codes are not present in map
         (if (all-codes-validated? uid validation-codes)
           (complete-registration project-id field-values reg-params session)
           (if correct?
