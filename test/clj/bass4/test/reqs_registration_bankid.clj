@@ -199,13 +199,12 @@
                                                                             :first-name "Jason"
                                                                             :last-name  "Newsted"})
           (has (status? 302))
+          (debug-headers-text? "MAIL" "SMS" "METALLICA")
           (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
                                                                             :sms-number "+46070717652"
                                                                             :first-name "James"
                                                                             :last-name  "Hetfield"})
           (has (status? 302))
-          (log-body)
-          (debug-headers-text? "MAIL" "SMS" "METALLICA")
           (follow-redirect)
           (has (some-text? "Validate"))
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
