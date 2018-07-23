@@ -28,7 +28,7 @@
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [ring-middleware-format "0.7.2"]
                  [ring-webjars "0.1.1"]
-                 [ring/ring-core "1.6.0-RC1"]
+                 [ring/ring-core "1.7.0-RC1"]
                  [ring/ring-defaults "0.2.3"]
                  [selmer "1.10.6"]
                  [com.taoensso/tempura "1.1.2"]
