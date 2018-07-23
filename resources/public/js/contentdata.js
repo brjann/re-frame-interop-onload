@@ -212,6 +212,7 @@ function content_fill_statics(content) {
 }
 
 function content_submit() {
+   // TODO: Don't handle inputs without name
 	var form = event.target;
 	var content_div = $(form).parent();
 	var all_values = {};

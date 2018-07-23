@@ -74,6 +74,7 @@
         (if (quick-login-expired? user expiration-days)
           (expired-response user)
           (do-login user))))
+    ;; TODO: Why is Exception forwarded to user?
     (catch Exception e
       (layout/text-response (:cause (Throwable->map e))))))
 

@@ -12,12 +12,12 @@
  :save-changes    "Spara ändringar"
  :unsaved-changes "Du har ändringar som inte är sparade!"
  :tab             "Flik"
- :quick-login     {:expired-title           "Login expired"
-                   :expired-text            "Your login code has expired."
-                   :invalid-title           "Invalid login code"
-                   :invalid-text            "Your login code is not valid."
-                   :contact-project-manager "If you need a new code, contact project manager at"
-                   :username-password       "If you have a username and password:"}
+ :quick-login     {:expired-title           "Upphörd inloggning"
+                   :expired-text            "Din inloggningskod har upphört."
+                   :invalid-title           "Felaktig inloggningskod"
+                   :invalid-text            "Din inloggningskod är felaktig."
+                   :contact-project-manager "Om du behöver en ny kod, kontakta projektansvarig på"
+                   :username-password       "Om du har användarnamn och lösenord:"}
  :offline-warning "Du verkar inte ha någon internetuppkoppling. Försäkra dig om att du är uppkopplad innan du postar."
  :download        "Ladda ned"
  :registration    {:begin-registration         "Påbörja registrering"
