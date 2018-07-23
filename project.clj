@@ -4,6 +4,7 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[buddy "1.3.0"]
+                 [buddy/buddy-hashers "1.3.0"]
                  [compojure "1.5.2"]
                  [conman "0.6.6"]
                  [cprop "0.1.10"]

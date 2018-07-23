@@ -5,7 +5,8 @@
             [ring.util.http-response :as response]
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [buddy.hashers :as hashers]))
 
 (defroutes auth-routes
   (GET "/logout" [& params]
@@ -20,6 +21,9 @@
     (auth-response/login-page))
   (POST "/login" [& params :as request]
     (auth-response/handle-login request (:username params) (:password params)))
+
+  (POST "/password-hash" [& params]
+    (layout/text-response (hashers/derive (:password params))))
 
   (GET "/double-auth" [:as request]
     (auth-response/double-auth (:session request)))
