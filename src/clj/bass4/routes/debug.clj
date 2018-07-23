@@ -63,7 +63,7 @@
           (layout/render "test.html"
                          {:url :url}))
         (GET "/sleep1" []
-          (do (Thread/sleep 20000)
+          (do (Thread/sleep 10000)
               (layout/text-response "I slept for 20 secs")))
         (GET "/sleep2" []
           (do (Thread/sleep 20000)
