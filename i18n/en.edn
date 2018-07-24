@@ -36,7 +36,7 @@
                    :must-password              "You must enter a password"
                    :must-repeat                "You must repeat your password"
                    :repeat-not-match           "Repeated password does not match password."
-                   :password-req-error         "Password must be 8-20 characters and contain at lowercase and uppercase letter(s) and number(s)"
+                   :password-req-error         "Password must be 8-20 characters and contain lowercase and uppercase letter(s) and number(s)"
                    :password-req-info          "8-20 characters, upper- and lowercase and number"
                    :must-enter                 "You must enter your"
                    :change-information         "Change information"
