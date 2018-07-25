@@ -114,7 +114,7 @@
                 <label for="password" class="col-sm-3 col-form-label">{%tr password %}</label>
                 <div class="col-sm-9">
                     <input type="password" class="form-control" id="password"
-                           pattern="^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$" name="password"
+                           pattern="{{password-regex}}" name="password"
                            oninvalid="password_invalid();"
                            oninput="setCustomValidity(''); validate_password();"
                            placeholder="{%tr registration/password-req-info %}" required>

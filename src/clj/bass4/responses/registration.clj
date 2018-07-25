@@ -24,6 +24,8 @@
             [bass4.db-config :as db-config])
   (:import (java.util UUID)))
 
+(def password-regex
+  #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
 
 (defn- all-fields?
   [fields field-values]
@@ -456,13 +458,14 @@
                    (merge
                      params
                      fields-map
-                     {:project-id    project-id
-                      :sms-countries sms-countries
-                      :sms?          (or (contains? fields-map :sms-number)
-                                         (contains? fields-map :sms-number-value))
-                      :pid-name      (if (:bankid? params)
-                                       (i18n/tr [:registration/personnummer])
-                                       (:pid-name params))}))))
+                     {:project-id     project-id
+                      :sms-countries  sms-countries
+                      :sms?           (or (contains? fields-map :sms-number)
+                                          (contains? fields-map :sms-number-value))
+                      :password-regex password-regex
+                      :pid-name       (if (:bankid? params)
+                                        (i18n/tr [:registration/personnummer])
+                                        (:pid-name params))}))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
