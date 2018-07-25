@@ -1,5 +1,7 @@
 (ns bass4.services.user
-  (:require [bass4.db.core :as db]))
+  (:require [bass4.db.core :as db]
+            [buddy.hashers :as hashers]
+            [bass4.config :as config]))
 
 (defn get-user [user-id]
   (when user-id
@@ -13,9 +15,31 @@
 (defn support-email [user]
   (:email (db/bool-cols db/get-support-email {:project-id (:project-id user)} [:double-auth-use-both?])))
 
+(defn password-hasher
+  [password]
+  (let [algo (config/env :password-hash)]
+    (hashers/derive password algo)))
+
+(defn upgrade-password!
+  [user]
+  (if-not (empty? (:old-password user))
+    (do
+      (when-not (empty? (:password user))
+        (throw (Exception. (str "User " (:user-id user) " has both new and old password"))))
+      (let [password-hash (password-hasher (:old-password user))]
+        (db/update-password! {:user-id (:user-id user) :password password-hash})
+        (assoc user :password password-hash)))
+    user))
+
 (defn update-user-properties!
   [user-id properties]
-  (db/update-user-properties! {:user-id user-id :updates properties}))
+  (let [properties (if (:password properties)
+                     (let [password-hash (-> (:password properties)
+                                             (str)
+                                             (password-hasher))]
+                       (assoc properties :password password-hash))
+                     properties)]
+    (db/update-user-properties! {:user-id user-id :updates properties})))
 
 (defn create-user!
   ([project-id] (create-user! [project-id nil]))

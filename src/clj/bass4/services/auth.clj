@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [clojure.tools.logging :as log]
             [buddy.hashers :as hashers]
-            [bass4.config :refer [env]]))
+            [bass4.config :refer [env]]
+            [bass4.services.user :as user-service]))
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
@@ -29,22 +30,9 @@
         :else settings))
     false))
 
-(defn- upgrade-password!
-  [user]
-  (if-not (empty? (:old-password user))
-    (do
-      (when-not (empty? (:password user))
-        (throw (Exception. (str "User " (:user-id user) " has both new and old password"))))
-      (let [algo          (env :password-hash)
-            password-hash (hashers/derive (:old-password user) algo)]
-        (log/debug algo)
-        (db/update-password! {:user-id (:user-id user) :password password-hash})
-        (assoc user :password password-hash)))
-    user))
-
 (defn- authenticate-user
   [user password]
-  (let [user (upgrade-password! user)]
+  (let [user (user-service/upgrade-password! user)]
     (when-not (empty? (:password user))
       (try (when (hashers/check password (:password user))
              user)
