@@ -2,6 +2,7 @@
 -- :doc retrieve a user given the id.
 SELECT
   ObjectId,
+  ObjectId AS `user-id`,
   FirstName AS `first-name`,
   LastName AS `last-name`,
   UserName,
@@ -10,7 +11,8 @@ SELECT
   DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`
+  `Password`,
+  `OldPassword` AS `old-password`
 FROM c_participant
 WHERE ObjectId = :user-id;
 
@@ -19,6 +21,7 @@ WHERE ObjectId = :user-id;
 -- :doc retrieve a user given the username.
 SELECT
   ObjectId,
+  ObjectId AS `user-id`,
   FirstName AS `first-name`,
   LastName AS `last-name`,
   UserName,
@@ -27,7 +30,8 @@ SELECT
   DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`
+  `Password`,
+  `OldPassword` AS `old-password`
 FROM c_participant
 WHERE UserName = :username;
 
@@ -35,6 +39,7 @@ WHERE UserName = :username;
 -- :doc retrieve a user given the id.
 SELECT
   ObjectId,
+  ObjectId AS `user-id`,
   FirstName AS `first-name`,
   LastName AS `last-name`,
   UserName,
@@ -43,11 +48,10 @@ SELECT
   DoubleAuthUseBoth AS 'double-auth-use-both?',
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`
+  `Password`,
+  `OldPassword` AS `old-password`
 FROM c_participant
 WHERE ParticipantId = :participant-id;
-
-
 
 -- :name get-double-auth-settings :? :1
 -- :doc
@@ -61,6 +65,13 @@ FROM c_participant AS cp
   JOIN c_treatmentinterface AS ct
     ON cp.ParentInterface = ct.ObjectId
 WHERE cp.objectid = :user-id;
+
+-- :name update-password! :! :1
+-- :doc
+UPDATE c_participant
+SET `Password` = :password,
+    `OldPassword` = ''
+WHERE ObjectId=:user-id;
 
 -- :name update-last-login! :! :1
 -- :doc
@@ -89,6 +100,7 @@ SELECT
   ParentInterface AS `project-id`,
   from_unixtime(LastLogin) AS `last-login-time`,
   `Password`,
+  `OldPassword` AS `old-password`,
   from_unixtime(QuickLoginTimestamp) AS `quick-login-timestamp`
 FROM c_participant
 WHERE QuickLoginPassword = :quick-login-id;

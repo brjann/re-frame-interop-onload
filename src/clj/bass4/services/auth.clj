@@ -1,15 +1,8 @@
 (ns bass4.services.auth
   (:require [bass4.db.core :as db]
-            [ring.util.http-response :as response]
-    #_[buddy.hashers :as hashers]
             [clojure.tools.logging :as log]
-            [bass4.services.user :as user]
-            [clj-time.core :as t]))
-
-#_(defn authenticate [id password]
-    (when-let [user (db/get-user {:id id})]
-      (when (hashers/check password (:password user))
-        id)))
+            [buddy.hashers :as hashers]
+            [bass4.config :refer [env]]))
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
@@ -36,16 +29,34 @@
         :else settings))
     false))
 
+(defn- upgrade-password!
+  [user]
+  (if-not (empty? (:old-password user))
+    (do
+      (when-not (empty? (:password user))
+        (throw (Exception. (str "User " (:user-id user) " has both new and old password"))))
+      (let [algo          (env :password-hash)
+            password-hash (hashers/derive (:old-password user) algo)]
+        (log/debug algo)
+        (db/update-password! {:user-id (:user-id user) :password password-hash})
+        (assoc user :password password-hash)))
+    user))
+
+(defn- authenticate-user
+  [user password]
+  (let [user (upgrade-password! user)]
+    (when-not (empty? (:password user))
+      (try (when (hashers/check password (:password user))
+             user)
+           (catch Exception _)))))
+
 (defn authenticate-by-user-id [user-id password]
   (when-let [user (db/get-user-by-user-id {:user-id user-id})]
-    (when (= (:password user) password)
-      (:objectid user))))
+    (authenticate-user user password)))
 
 (defn authenticate-by-username [username password]
   (when-let [user (db/get-user-by-username {:username username})]
-    (when (= (:password user) password)
-      (assoc user :user-id (:objectid user))
-      #_(:objectid user))))
+    (authenticate-user user password)))
 
 (defn register-user-login! [user-id]
   (db/update-last-login! {:user-id user-id})
@@ -67,10 +78,3 @@
 
 (defn double-auth-done? [session]
   (:double-authed session))
-
-
-;; -------------
-;;  AUTH TIMEOUT
-;; -------------
-
-
