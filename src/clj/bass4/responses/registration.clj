@@ -489,6 +489,12 @@
            (str "+" (get % "callingCode")))
         matching))))
 
+(defn- password-valid?
+  [field-values]
+  (if (:password field-values)
+    (re-matches password-regex (:password field-values))
+    true))
+
 (defn handle-registration
   [project-id posted-fields session]
   (let [params       (reg-service/registration-params project-id)
@@ -504,6 +510,10 @@
 
       ;; No fixed fields should have been posted
       (not (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
+      (layout/error-400-page)
+
+      ;; If password has been posted - must be valid
+      (not (password-valid? field-values))
       (layout/error-400-page)
 
       ;; Only sms number from legal countries

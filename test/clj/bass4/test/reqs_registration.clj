@@ -314,7 +314,7 @@
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (follow-redirect)
           (has (some-text? "Enter your information"))
-          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY2015xxx"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
