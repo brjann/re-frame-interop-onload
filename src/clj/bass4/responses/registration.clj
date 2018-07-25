@@ -494,15 +494,26 @@
         fixed-fields (:fixed-fields reg-session)
         field-values (merge (select-keys posted-fields fields)
                             (select-keys (:field-values reg-session) fixed-fields))]
-    ;; TODO: Rewrite to cond
-    (if (and (all-fields? fields field-values)
-             (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
-      (if (check-sms (:sms-number field-values) (:sms-countries params))
-        (if (or (contains? field-values :sms-number) (contains? field-values :email))
-          (prepare-validation project-id field-values session)
-          (complete-registration project-id field-values params session))
-        (layout/error-422 "sms-country-error"))
-      (layout/error-400-page))))
+    (cond
+      ;; All required fields should be present
+      (not (all-fields? fields field-values))
+      (layout/error-400-page)
+
+      ;; No fixed fields should have been posted
+      (not (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
+      (layout/error-400-page)
+
+      ;; Only sms number from legal countries
+      (not (check-sms (:sms-number field-values) (:sms-countries params)))
+      (layout/error-422 "sms-country-error")
+
+      ;; If field values include email or sms - these should be validated
+      ;; before registration is complete.
+      (or (contains? field-values :sms-number) (contains? field-values :email))
+      (prepare-validation project-id field-values session)
+
+      :else
+      (complete-registration project-id field-values params session))))
 
 
 ;; --------------
