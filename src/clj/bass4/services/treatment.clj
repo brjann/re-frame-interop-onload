@@ -26,6 +26,8 @@
     (mapv (fn [treatment-access]
             (-> treatment-access
                 (unserialize-key :module-accesses)
+                ;; Evidently, the access dates can be strings when 0
+                (#(assoc % :module-accesses (map-map str->int (:module-accesses %))))
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
                 (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))

@@ -75,9 +75,10 @@
                                  [ring/ring-devel "1.5.1"]
                                  [pjstadig/humane-test-output "0.8.1"]
                                  [peridot "0.4.4"]
+                                 [philoskim/debux "0.4.8"]
                                  [kerodon "0.8.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.20.0"]]
-                  
+
                   :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user}
