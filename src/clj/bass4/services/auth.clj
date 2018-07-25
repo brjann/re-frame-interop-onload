@@ -72,6 +72,7 @@
 
 
 (defn double-auth-no-code [session]
+  ;; TODO: This comment doesn't make sense
   "Returns true if double auth is not required or if double auth code has not been created.
   Is used in the context where any of these are EXPECTED"
   (nil? (:double-auth-code session)))
