@@ -11,7 +11,8 @@
                                      log-body
                                      *s*
                                      advance-time-s!
-                                     fix-time]]
+                                     fix-time
+                                     modify-session]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -99,10 +100,10 @@
 (deftest attack-re-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
     (let [state (-> *s*
-                    (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+                    (modify-session {:identity 536975 :double-authed? true})
                     (visit "/user/messages")
                     (has (status? 200))
-                    (visit "/debug/set-session" :params {:auth-re-auth true})
+                    (modify-session {:auth-re-auth true})
                     (visit "/user/messages")
                     (has (status? 302))
                     (follow-redirect)
@@ -116,10 +117,10 @@
 (deftest attack-re-auth-ajax
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
     (let [state (-> *s*
-                    (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+                    (modify-session {:identity 536975 :double-authed? true})
                     (visit "/user/messages")
                     (has (status? 200))
-                    (visit "/debug/set-session" :params {:auth-re-auth true})
+                    (modify-session {:auth-re-auth true})
                     (visit "/user/messages")
                     (has (status? 302))
                     (follow-redirect)

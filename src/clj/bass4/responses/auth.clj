@@ -44,7 +44,7 @@
   (nil? (:double-auth-code session)))
 
 (defn double-auth-done? [session]
-  (:double-authed session))
+  (:double-authed? session))
 
 (defn- double-auth-page [double-auth-code]
   (layout/render
@@ -64,9 +64,9 @@
     (:external-login session)
     false
 
-    ;; TODO: Check :double-authed first!
+    ;; TODO: Check :double-authed? first!
     (auth-service/double-auth-required? (:identity session))
-    (not (boolean (:double-authed session)))
+    (not (:double-authed? session))
 
     :else
     false))
@@ -81,7 +81,7 @@
     (response/found redirect)
     (if (= code (:double-auth-code session))
       (-> (response/found "/user/")
-          (assoc :session (assoc session :double-authed 1 :double-auth-code nil)))
+          (assoc :session (assoc session :double-authed? true :double-auth-code nil)))
       (layout/error-422 "error"))))
 
 
@@ -145,7 +145,7 @@
       (case send-res
         :success
         {:redirect "/double-auth"
-         :session  {:double-authed    nil
+         :session  {:double-authed?   nil
                     :double-auth-code code}}
 
         :no-method
@@ -153,7 +153,7 @@
 
         :send-error
         {:redirect "/user/"
-         :session  {:double-authed true}}))
+         :session  {:double-authed? true}}))
 
     {:redirect "/user/"}))
 

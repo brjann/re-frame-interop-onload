@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* modify-session]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
@@ -42,14 +42,14 @@
 
 (deftest wrap-identity-exists
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536834})
+      (modify-session {:identity 536834})
       (visit "/debug/session")
       (has (some-text? "identity"))
       (has (some-text? "skipper@gmail.com"))))
 
 (deftest wrap-identity-not-exists
   (is (= false (-> *s*
-                   (visit "/debug/set-session" :params {:identity 666})
+                   (modify-session {:identity 666})
                    (visit "/debug/session")
                    (get-in [:response :body])
                    (.contains ":identity")))))
@@ -96,26 +96,26 @@
 
 (deftest request-double-authentication
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666"})
+      (modify-session {:identity 536975 :double-auth-code "666-666-666"})
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
-      (visit "/debug/set-session" :params {:double-authed 1})
+      (modify-session {:double-authed? true})
       (visit "/user/messages")
       (has (status? 200))))
 
 (deftest request-double-authentication-no-re-auth
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-auth-code "666-666-666" :external-login true})
+      (modify-session {:identity 536975 :double-auth-code "666-666-666" :external-login true})
       (visit "/user/messages")
       (has (status? 200))))
 
 (deftest request-no-double-authentication
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536821})
+      (modify-session {:identity 536821})
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
@@ -123,14 +123,14 @@
 
 (deftest request-no-double-authentication-visit
   (is (= true (-> *s*
-                  (visit "/debug/set-session" :params {:identity 536821})
+                  (modify-session {:identity 536821})
                   (visit "/double-auth")
                   (get-in [:response :headers "Location"])
                   (.contains "/user/")))))
 
 (deftest request-not-user-double-authentication-visit
   (is (= true (-> *s*
-                  (visit "/debug/set-session" :params {:identity 666})
+                  (modify-session {:identity 666})
                   (visit "/double-auth")
                   (get-in [:response :headers "Location"])
                   (.contains "/login")))))
@@ -142,10 +142,10 @@
 
 (deftest request-re-auth
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+      (modify-session {:identity 536975 :double-authed? true})
       (visit "/user/messages")
       (has (status? 200))
-      (visit "/debug/set-session" :params {:auth-re-auth true})
+      (modify-session {:auth-re-auth true})
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
@@ -153,16 +153,16 @@
 
 (deftest request-re-auth-ext-login
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+      (modify-session {:identity 536975 :double-authed? true})
       (visit "/user/messages")
       (has (status? 200))
-      (visit "/debug/set-session" :params {:auth-re-auth true :external-login true})
+      (modify-session {:auth-re-auth true :external-login true})
       (visit "/user/messages")
       (has (status? 200))))
 
 (deftest request-re-auth-pwd
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
+      (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
       (visit "/re-auth" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth" :request-method :post :params {:password 536975})
@@ -170,14 +170,14 @@
 
 (deftest request-re-auth-pwd-redirect
   (is (= true (-> *s*
-                  (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
+                  (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
                   (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/messages"})
                   (get-in [:response :headers "Location"])
                   (.contains "/user/messages")))))
 
 (deftest request-re-auth-pwd-ajax
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :auth-re-auth true})
+      (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
       (visit "/re-auth-ajax" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth-ajax" :request-method :post :params {:password 536975})
@@ -196,18 +196,18 @@
 (deftest request-re-auth-pwd-unnecessary-wrong
   "User is not timed out and it should not matter what password is sent"
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+      (modify-session {:identity 536975 :double-authed? true})
       (visit "/re-auth" :request-method :post :params {:password 23254})
       (has (status? 302))))
 
 (deftest request-re-auth-pwd-unnecessary-right
   "User is not timed out and it should not matter what password is sent"
   (-> *s*
-      (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+      (modify-session {:identity 536975 :double-authed? true})
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))))
 
-(deftest modify-session
+(deftest modify-session-test
   (let [x *s*]
     (-> (binding [debug/*session-modification* {:test888 "hejsan"}]
           (-> x
@@ -218,7 +218,7 @@
 
 (deftest request-re-auth-last-request-time
   (let [x (-> *s*
-              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1})
+              (modify-session {:identity 536975 :double-authed? true})
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
@@ -237,7 +237,7 @@
 
 (deftest request-re-auth-last-request-time-no-re-auth
   (let [x (-> *s*
-              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1 :external-login true})
+              (modify-session {:identity 536975 :double-authed? true :external-login true})
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
@@ -250,7 +250,7 @@
 
 (deftest request-re-auth-last-request-time2
   (let [x (-> *s*
-              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1}))]
+              (modify-session {:identity 536975 :double-authed? true}))]
     ;; TODO: Rewrite session modification as macro
     (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
           (-> x
@@ -265,7 +265,7 @@
 
 (deftest request-re-auth-last-request-time3
   (let [x (-> *s*
-              (visit "/debug/set-session" :params {:identity 536975 :double-authed 1}))
+              (modify-session {:identity 536975 :double-authed? true}))
         y (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
                 (-> x
                     (visit "/debug/session")

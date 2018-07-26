@@ -53,6 +53,7 @@
   (context "/debug" [:as request]
     (if (or (db-config/debug-mode?))
       (routes
+        (GET "/nothing" [] (layout/text-response "nothing"))
         (GET "/timezone" [:as req] (layout/print-var-response (db-config/time-zone)))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do

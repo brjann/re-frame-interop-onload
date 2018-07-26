@@ -149,8 +149,8 @@
                         {:method         :post
                          :route          #"/double-auth"
                          :success        (fn [in out]
-                                           (and (nil-zero? (:double-authed in))
-                                                (= 1 (:double-authed out))))
+                                           (and (not (:double-authed? in))
+                                                (:double-authed? out)))
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :post

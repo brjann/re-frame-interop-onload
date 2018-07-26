@@ -175,7 +175,7 @@
 ;
 ; Failing test using kerodon
 ;(get-in (-> (session (app))
-;            (visit "/debug/set-session" :params {:identity 549821 :double-authed 1})
+;            (modify-session {:identity 549821 :double-authed? true})
 ;            (visit "/debug/session")) [:response :body])
 
 ;; So extra wrapper instead
