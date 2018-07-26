@@ -36,6 +36,19 @@
 ;;    DOUBLE-AUTH
 ;; ------------------
 
+
+(defn not-authenticated? [session]
+  (nil? (:identity session)))
+
+(defn double-auth-no-code [session]
+  ;; TODO: This comment doesn't make sense
+  "Returns true if double auth is not required or if double auth code has not been created.
+  Is used in the context where any of these are EXPECTED"
+  (nil? (:double-auth-code session)))
+
+(defn double-auth-done? [session]
+  (:double-authed session))
+
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
@@ -43,10 +56,10 @@
 
 (defn- double-auth-redirect [session]
   (cond
-    (auth-service/not-authenticated? session) "/login"
+    (not-authenticated? session) "/login"
     (not (auth-service/double-auth-required? (:identity session))) "/user/"
-    (auth-service/double-auth-done? session) "/user/"
-    (auth-service/double-auth-no-code session) "/login"))
+    (double-auth-done? session) "/user/"
+    (double-auth-no-code session) "/login"))
 
 (defn need-double-auth? [session]
   (cond

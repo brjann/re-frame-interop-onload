@@ -49,21 +49,3 @@
 (defn register-user-login! [user-id]
   (db/update-last-login! {:user-id user-id})
   (db/update-login-count! {:user-id user-id}))
-
-;; -------------
-;;  DOUBLE AUTH
-;; -------------
-
-
-(defn not-authenticated? [session]
-  (nil? (:identity session)))
-
-
-(defn double-auth-no-code [session]
-  ;; TODO: This comment doesn't make sense
-  "Returns true if double auth is not required or if double auth code has not been created.
-  Is used in the context where any of these are EXPECTED"
-  (nil? (:double-auth-code session)))
-
-(defn double-auth-done? [session]
-  (:double-authed session))
