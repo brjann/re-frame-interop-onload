@@ -2,6 +2,7 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [bass4.layout :refer [error-page] :as layout]
             [bass4.routes.auth :refer [auth-routes]]
+            [bass4.responses.auth :as auth-res]
             [bass4.routes.user :refer [user-routes]]
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
@@ -26,7 +27,7 @@
         (wrap-routes wrap-schema-error))
     (-> #'user-routes
         ;; (wrap-routes middleware/wrap-auth-re-auth)
-        (wrap-routes #(middleware/wrap-mw-fn % middleware/auth-re-auth-wrapper))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)

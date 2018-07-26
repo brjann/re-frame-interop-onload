@@ -17,6 +17,7 @@
             [bass4.db.core :as db]
             [bass4.services.auth :as auth-service]
             [bass4.middleware.core :as mw]
+            [bass4.responses.auth :as res-auth]
             [bass4.services.registration :as reg-service]
             [bass4.services.attack-detector :as a-d]))
 
@@ -154,7 +155,7 @@
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
         (follow-redirect)
-        (advance-time-s! (mw/re-auth-timeout))
+        (advance-time-s! (res-auth/re-auth-timeout))
         (visit "/user/messages")
         (has (status? 302))
         (attack-uri

@@ -131,46 +131,6 @@
 ;;  RE-AUTHENTICATE
 ;; -----------------
 
-(defn- re-auth-timeout
-  []
-  (or (env :timeout-soft) (* 30 60)))
-
-(defn- request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
-
-(defn- should-re-auth?
-  [session now last-request-time re-auth-time-limit]
-  (cond
-    (:external-login session) false
-    (:auth-re-auth session) true
-    (nil? last-request-time) nil
-    (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-      (>= time-elapsed re-auth-time-limit)) true
-    :else nil))
-
-(defn auth-re-auth-wrapper
-  [handler request]
-  (let [session           (:session request)
-        now               (t/now)
-        last-request-time (:last-request-time session)
-        re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
-        response          (if re-auth?
-                            (if (= (:request-method request) :get)
-                              (response/found (str "/re-auth?return-url=" (request-string request)))
-                              (auth-response/re-auth-440))
-                            (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
-        session-map       {:last-request-time now
-                           :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                (:auth-re-auth (:session response))
-                                                re-auth?)}]
-
-    (assoc response :session (if (nil? (:session response))
-                               (merge session session-map)
-                               (merge (:session response) session-map)))))
 
 
 (defn user-identity
