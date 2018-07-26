@@ -131,18 +131,18 @@
 ;;  RE-AUTHENTICATE
 ;; -----------------
 
-(defn re-auth-timeout
+(defn- re-auth-timeout
   []
   (or (env :timeout-soft) (* 30 60)))
 
-(defn request-string
+(defn- request-string
   "Return the request part of the request."
   [request]
   (str (:uri request)
        (when-let [query (:query-string request)]
          (str "?" query))))
 
-(defn should-re-auth?
+(defn- should-re-auth?
   [session now last-request-time re-auth-time-limit]
   (cond
     (:external-login session) false
