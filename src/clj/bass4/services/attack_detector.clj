@@ -215,4 +215,13 @@
 ;;
 ;; TODO: Block user after too many failed login attempts
 ;;
-
+; An idea on how to implement a function that monitors whether
+; caller is registered as an attack vector.
+;(defn stack-traces []
+;  (->> (Thread/currentThread)
+;       (.getStackTrace)
+;       (map (juxt #(.getClassName %) #(.getMethodName %) #(.getLineNumber %)))
+;       (map #(clojure.string/join ":" %))))
+;
+;(defn x [] (stack-traces))
+;(defn y [] (x))
