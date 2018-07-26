@@ -41,9 +41,6 @@
   (nil? (:identity session)))
 
 (defn double-auth-no-code [session]
-  ;; TODO: This comment doesn't make sense
-  "Returns true if double auth is not required or if double auth code has not been created.
-  Is used in the context where any of these are EXPECTED"
   (nil? (:double-auth-code session)))
 
 (defn double-auth-done? [session]
@@ -52,7 +49,8 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    (when (db-config/debug-mode?) {:double-auth-code double-auth-code})))
+    (when (db-config/debug-mode?)
+      {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]
   (cond
