@@ -253,7 +253,6 @@
       ;; Else the actual functions are passed as arguments
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)
-      (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions
       (wrap-mw-fn #'embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
