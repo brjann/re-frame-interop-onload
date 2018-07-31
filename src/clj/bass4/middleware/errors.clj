@@ -5,19 +5,11 @@
             [clojure.string :as string]
             [bass4.mailer :refer [mail!]]
             [clojure.tools.logging :as log]
-            [bass4.layout :refer [*app-context* error-page error-400-page]]
+            [bass4.layout :refer [error-page error-400-page]]
             [bass4.request-state :as request-state]
             [clojure.string :as string]
             [bass4.db-config :as db-config])
   (:import (clojure.lang ExceptionInfo)))
-
-
-(defn wrap-restricted [handler]
-  (fn [request]
-    (if (:identity request)
-      (handler request)
-      (layout/error-403-page))))
-
 
 (defn mail-error!
   [req-state]

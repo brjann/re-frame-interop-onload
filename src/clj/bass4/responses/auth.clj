@@ -292,3 +292,14 @@
     (assoc response :session (if (nil? (:session response))
                                (merge session session-map)
                                (merge (:session response) session-map)))))
+
+
+;; -----------------------
+;;  RESTRICTED MIDDLEWARE
+;; -----------------------
+
+(defn wrap-restricted [handler]
+  (fn [request]
+    (if (:identity request)
+      (handler request)
+      (layout/error-403-page))))

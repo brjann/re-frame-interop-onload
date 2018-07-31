@@ -72,7 +72,6 @@
         (assoc li-index only-ul)
         (#(cons remove-comments %)))))
 
-(declare ^:dynamic *app-context*)
 (parser/set-resource-path! (clojure.java.io/resource "templates"))
 (parser/add-tag! :csrf-field (fn [_ _] (anti-forgery-field)))
 (filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content)]))
@@ -89,7 +88,6 @@
           :dev (env :dev)
           :page template
           :csrf-token *anti-forgery-token*
-          :servlet-context *app-context*
           :title (bass-service/db-title))))
     "text/html; charset=utf-8"))
 

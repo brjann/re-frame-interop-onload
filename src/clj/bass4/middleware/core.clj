@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
-            [bass4.layout :refer [*app-context* error-page error-400-page]]
+            [bass4.layout :refer [error-page error-400-page]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
@@ -24,25 +24,7 @@
             [bass4.middleware.errors :refer [internal-error]]
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
-            [bass4.responses.e-auth :as e-auth])
-
-  (:import [javax.servlet ServletContext]
-           (clojure.lang ExceptionInfo)))
-
-(defn wrap-context [handler]
-  (fn [request]
-    (binding [*app-context*
-              (if-let [context (:servlet-context request)]
-                ;; If we're not inside a servlet environment
-                ;; (for example when using mock requests), then
-                ;; .getContextPath might not exist
-                (try (.getContextPath ^ServletContext context)
-                     (catch IllegalArgumentException _ context))
-                ;; if the context is not specified in the request
-                ;; we check if one has been specified in the environment
-                ;; instead
-                (:app-context env))]
-      (handler request))))
+            [bass4.responses.e-auth :as e-auth]))
 
 
 (defn wrap-formats [handler]
@@ -226,7 +208,6 @@
           (assoc-in [:security :anti-forgery] false)
 
           (dissoc :session)))
-      wrap-context
       ;; wrap-reload-headers
       (wrap-mw-fn #'embedded-iframe)                        ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'internal-error)

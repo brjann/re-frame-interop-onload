@@ -14,7 +14,8 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware]
-            [bass4.middleware.errors :refer [wrap-schema-error wrap-restricted]]))
+            [bass4.responses.auth :refer [wrap-restricted]]
+            [bass4.middleware.errors :refer [wrap-schema-error]]))
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
