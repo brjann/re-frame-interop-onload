@@ -17,27 +17,28 @@
                  [org.clojure/clojure "1.9.0"]              ; https://github.com/clojure/clojure
                  [org.clojure/tools.cli "0.3.7"]            ; https://github.com/clojure/tools.cli
                  [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging
-                 [org.webjars.bower/tether "1.4.0"]
-                 [org.webjars/bootstrap "4.0.0-beta.2"]
-                 [org.webjars/font-awesome "4.7.0"]
-                 [org.webjars/jquery "3.2.1"]
-                 [org.webjars/jquery-ui "1.12.1"]
-                 [org.webjars.bower/jquery-color "2.1.2"]
-                 [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
-                 [ring-middleware-format "0.7.2"]
-                 [ring-webjars "0.1.1"]
-                 [ring/ring-core "1.7.0-RC1"]
-                 [ring/ring-defaults "0.2.3"]
-                 [selmer "1.10.6"]
-                 [com.taoensso/tempura "1.1.2"]
-                 [clj-time "0.13.0"]
-                 [prismatic/schema "1.1.3"]
-                 [org.flatland/ordered "1.5.4"]
-                 [org.clojure/math.numeric-tower "0.0.4"]
-                 [org.clojure/data.json "0.2.6"]
-                 [prone "1.1.4"]
-                 [camel-snake-kebab "0.4.0"]
-                 [clj-http "3.9.0"]]
+                 ;; TODO: Is tether really used?
+                 [org.webjars.bower/tether "1.4.4"]         ; https://github.com/HubSpot/tether
+                 [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap
+                 [org.webjars/font-awesome "4.7.0"]         ; https://fontawesome.com/
+                 [org.webjars/jquery "3.3.1"]               ; https://jquery.com/
+                 [org.webjars/jquery-ui "1.12.1"]           ; https://jqueryui.com/
+                 [org.webjars.bower/jquery-color "2.1.2"]   ; https://github.com/jquery/jquery-color
+                 [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;
+                 [ring-middleware-format "0.7.2"]           ; https://github.com/ngrunwald/ring-middleware-format
+                 [ring-webjars "0.2.0"]                     ; https://github.com/weavejester/ring-webjars
+                 [ring/ring-core "1.7.0-RC1"]               ; https://github.com/ring-clojure/ring
+                 [ring/ring-defaults "0.3.2"]               ; https://github.com/ring-clojure/ring-defaults
+                 [selmer "1.11.8"]                          ; https://github.com/yogthos/Selmer
+                 [com.taoensso/tempura "1.2.1"]             ; https://github.com/ptaoussanis/tempura
+                 [clj-time "0.14.4"]                        ; https://github.com/clj-time/clj-time
+                 [prismatic/schema "1.1.9"]                 ; https://github.com/plumatic/schema
+                 [org.flatland/ordered "1.5.6"]             ; https://github.com/amalloy/ordered
+                 [org.clojure/math.numeric-tower "0.0.4"]   ; https://github.com/clojure/math.numeric-tower
+                 [org.clojure/data.json "0.2.6"]            ; https://github.com/clojure/data.json
+                 [prone "1.6.0"]                            ; https://github.com/magnars/prone
+                 [camel-snake-kebab "0.4.0"]                ; https://github.com/qerub/camel-snake-kebab
+                 [clj-http "3.9.0"]]                        ; https://github.com/dakrone/clj-http
 
   :min-lein-version "2.0.0"
 
