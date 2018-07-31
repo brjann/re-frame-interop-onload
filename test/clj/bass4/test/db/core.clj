@@ -1,17 +1,10 @@
 (ns bass4.test.db.core
   (:require [bass4.db.core :refer [*db*] :as db]
             [bass4.services.messages :refer [save-message!]]
-            [bass4.services.assessments :as assessments]
-            [luminus-migrations.core :as migrations]
             [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [bass4.config :refer [env]]
-            [mount.core :as mount]
             [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [clj-time.core :as t]
-            [bass4.services.user :as user]
             [bass4.test.core :refer [get-edn test-fixtures]]))
 
 

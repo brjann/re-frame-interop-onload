@@ -2,7 +2,6 @@
   (:require [bass4.handler :as handler]
             [luminus.repl-server :as repl]
             [luminus.http-server :as http]
-            [luminus-migrations.core :as migrations]
             [bass4.config :refer [env]]
             [bass4.i18n]
             [clojure.tools.cli :refer [parse-opts]]
@@ -50,15 +49,3 @@
 
 (defn -main [& args]
   (start-app args))
-
-;; Migrations not used
-#_(defn -main [& args]
-  (cond
-    (some #{"migrate" "rollback"} args)
-    (do
-      (mount/start #'bass4.config/env)
-      (migrations/migrate args (select-keys env [:database-url]))
-      (System/exit 0))
-    :else
-    (start-app args)))
-  

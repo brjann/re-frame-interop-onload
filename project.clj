@@ -3,21 +3,20 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
-  :dependencies [[buddy/buddy-hashers "1.3.0"]
-                 [compojure "1.6.1"]
-                 [conman "0.8.2"]
-                 [cprop "0.1.11"]
-                 [org.clojure/core.async "0.4.474"]
-                 [luminus-immutant "0.2.3"]
-                 [luminus-migrations "0.3.0"]
-                 [luminus-nrepl "0.1.4"]
-                 [markdown-clj "1.0.2"]
-                 [metosin/ring-http-response "0.9.0"]
-                 [mount "0.1.11"]
-                 [mysql/mysql-connector-java "6.0.5"]
-                 [org.clojure/clojure "1.9.0"]
-                 [org.clojure/tools.cli "0.3.5"]
-                 [org.clojure/tools.logging "0.3.1"]
+  :dependencies [[buddy/buddy-hashers "1.3.0"]              ; https://github.com/funcool/buddy-hashers
+                 [compojure "1.6.1"]                        ; https://github.com/weavejester/compojure
+                 [conman "0.8.2"]                           ; https://github.com/luminus-framework/conman
+                 [cprop "0.1.11"]                           ; https://github.com/tolitius/cprop
+                 [org.clojure/core.async "0.4.474"]         ; https://github.com/clojure/core.async
+                 [luminus-immutant "0.2.4"]                 ; https://github.com/luminus-framework/luminus-immutant
+                 [luminus-nrepl "0.1.4"]                    ; https://github.com/luminus-framework/luminus-nrepl
+                 [markdown-clj "1.0.2"]                     ; https://github.com/yogthos/markdown-clj
+                 [metosin/ring-http-response "0.9.0"]       ; https://github.com/metosin/ring-http-response
+                 [mount "0.1.12"]                           ; https://github.com/tolitius/mount
+                 [mysql/mysql-connector-java "8.0.11"]      ; https://mvnrepository.com/artifact/mysql/mysql-connector-java
+                 [org.clojure/clojure "1.9.0"]              ; https://github.com/clojure/clojure
+                 [org.clojure/tools.cli "0.3.7"]            ; https://github.com/clojure/tools.cli
+                 [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging
                  [org.webjars.bower/tether "1.4.0"]
                  [org.webjars/bootstrap "4.0.0-beta.2"]
                  [org.webjars/font-awesome "4.7.0"]
