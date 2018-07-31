@@ -24,6 +24,7 @@
             [bass4.middleware.errors :refer [internal-error]]
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
+            [bass4.responses.auth :as auth]
             [bass4.responses.e-auth :as e-auth]))
 
 
@@ -36,10 +37,7 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn identity-mw [handler request]
-  (if-let [id (get-in request [:session :identity])]
-    (handler (assoc request :identity id))
-    (handler request)))
+
 
 
 ;; ----------------
@@ -188,7 +186,7 @@
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
-      (wrap-mw-fn #'identity-mw)
+      (wrap-mw-fn #'auth/identity-mw)
       #_wrap-auth
       wrap-reload-headers
       wrap-webjars

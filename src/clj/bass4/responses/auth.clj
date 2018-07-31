@@ -303,3 +303,8 @@
     (if (:identity request)
       (handler request)
       (layout/error-403-page))))
+
+(defn identity-mw [handler request]
+  (if-let [id (get-in request [:session :identity])]
+    (handler (assoc request :identity id))
+    (handler request)))
