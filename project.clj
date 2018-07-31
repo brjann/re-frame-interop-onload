@@ -17,8 +17,6 @@
                  [org.clojure/clojure "1.9.0"]              ; https://github.com/clojure/clojure
                  [org.clojure/tools.cli "0.3.7"]            ; https://github.com/clojure/tools.cli
                  [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging
-                 ;; TODO: Is tether really used?
-                 [org.webjars.bower/tether "1.4.4"]         ; https://github.com/HubSpot/tether
                  [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap
                  [org.webjars/font-awesome "4.7.0"]         ; https://fontawesome.com/
                  [org.webjars/jquery "3.3.1"]               ; https://jquery.com/
