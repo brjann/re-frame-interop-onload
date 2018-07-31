@@ -64,12 +64,11 @@
     (:external-login session)
     false
 
-    ;; TODO: Check :double-authed? first!
-    (auth-service/double-auth-required? (:identity session))
-    (not (:double-authed? session))
+    (:double-authed? session)
+    false
 
     :else
-    false))
+    (auth-service/double-auth-required? (:identity session))))
 
 (defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]
