@@ -4,8 +4,9 @@
             [luminus.http-server :as http]
             [bass4.config :refer [env]]
             [bass4.i18n]
-            [clojure.tools.cli :refer [parse-opts]]
+            [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
+            [immutant.util]
             [mount.core :as mount])
   (:gen-class))
 
@@ -13,24 +14,30 @@
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
 
-(mount/defstate ^{:on-reload :noop}
-                http-server
-                :start
-                (http/start
-                  (-> env
-                      (assoc :handler (handler/app))
-                      (update :port #(or (-> env :options :port) %))))
-                :stop
-                (http/stop http-server))
+(mount/defstate
+  ^{:on-reload :noop} http-server
 
-(mount/defstate ^{:on-reload :noop}
-                repl-server
-                :start
-                (when-let [nrepl-port (env :nrepl-port)]
-                  (repl/start {:port nrepl-port}))
-                :stop
-                (when repl-server
-                  (repl/stop repl-server)))
+  :start
+  (do
+    (http/start
+      (-> env
+          (assoc :handler (handler/app))
+          (update :port #(or (-> env :options :port) %))))
+    (immutant.util/set-log-level! :INFO))
+
+  :stop
+  (http/stop http-server))
+
+(mount/defstate
+  ^{:on-reload :noop} repl-server
+
+  :start
+  (when-let [nrepl-port (env :nrepl-port)]
+    (repl/start {:port nrepl-port}))
+
+  :stop
+  (when repl-server
+    (repl/stop repl-server)))
 
 
 (defn stop-app []
@@ -40,8 +47,7 @@
 
 (defn start-app [args]
   (doseq [component (-> args
-                        ;; TOOD: Wrong arity - is this really clojure.core/parse-opts?
-                        (parse-opts cli-options)
+                        (cli/parse-opts cli-options)
                         mount/start-with-args
                         :started)]
     (log/info component "started"))
