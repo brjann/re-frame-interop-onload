@@ -133,7 +133,7 @@ $(document).ready(function () {
             var tag = header.prop('tagName').toLowerCase();
             if ($.inArray(tag, section_tags) >= 0) {
                counter++;
-               var section_id = module_text_id + '-s' + counter;
+               var section_id = 'x' + module_text_id + '-s' + counter;
                header.prop('id', section_id);
                if (header.data('label') === undefined) {
                   header.data('label', header.text());
