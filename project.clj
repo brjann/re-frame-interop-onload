@@ -3,8 +3,7 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
-  :dependencies [[buddy "1.3.0"]
-                 [buddy/buddy-hashers "1.3.0"]
+  :dependencies [[buddy/buddy-hashers "1.3.0"]
                  [compojure "1.5.2"]
                  [conman "0.6.6"]
                  [cprop "0.1.10"]
@@ -52,12 +51,10 @@
   :resource-paths ["resources"]
   :target-path "target/%s/"
   :main bass4.core
-  :migratus {:store :database :db ~(get (System/getenv) "DATABASE_URL")}
 
   ;; Difference between plugins and dependencies:
   ;; https://www.quora.com/In-Clojure-whats-the-difference-between-plugins-dependencies-require-use-import-etc
   :plugins [[lein-cprop "1.0.1"]
-            [migratus-lein "0.4.4"]
             [lein-immutant "2.1.0"]]
 
   :profiles

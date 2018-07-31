@@ -10,10 +10,6 @@
             [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
-            [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
-            [buddy.auth.backends.session :refer [session-backend]]
             [cprop.tools]
             [clj-time.core :as t]
             [bass4.db.core :as db]
@@ -58,11 +54,11 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn wrap-auth [handler]
-  (let [backend (session-backend)]
-    (-> handler
-        (wrap-authentication backend)
-        (wrap-authorization backend))))
+(defn identity-mw [handler request]
+  (if-let [id (get-in request [:session :identity])]
+    (handler (assoc request :identity id))
+    (handler request)))
+
 
 ;; ----------------
 ;;
@@ -210,7 +206,8 @@
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
-      wrap-auth
+      (wrap-mw-fn #'identity-mw)
+      #_wrap-auth
       wrap-reload-headers
       wrap-webjars
       wrap-flash

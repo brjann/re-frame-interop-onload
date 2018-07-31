@@ -3,8 +3,6 @@
             [bass4.config :refer [env]]
             [bass4.utils :refer [nil-zero?]]
             [clojure.string :as string]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
             [bass4.mailer :refer [mail!]]
             [clojure.tools.logging :as log]
             [bass4.layout :refer [*app-context* error-page error-400-page]]
@@ -14,16 +12,11 @@
   (:import (clojure.lang ExceptionInfo)))
 
 
-
-(defn on-error [request response]
-  (layout/error-403-page (get-in request [:session :identity]))
-  #_(error-page
-      {:status 403
-       :title (str "Access to " (:uri request) " is not authorized")}))
-
 (defn wrap-restricted [handler]
-  (restrict handler {:handler authenticated?
-                     :on-error on-error}))
+  (fn [request]
+    (if (:identity request)
+      (handler request)
+      (layout/error-403-page))))
 
 
 (defn mail-error!
