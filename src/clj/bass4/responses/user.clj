@@ -1,10 +1,6 @@
 (ns bass4.responses.user
-  (:require [ring.util.http-response :as response]
-            [bass4.utils :refer [json-safe]]
-            [clojure.tools.logging :as log]
-            [bass4.request-state :as request-state]
-            [schema.core :as s]
-            [bass4.layout :as layout]))
+  (:require [bass4.utils :refer [json-safe]]
+            [clojure.tools.logging :as log]))
 
 
 (defn user-page-map

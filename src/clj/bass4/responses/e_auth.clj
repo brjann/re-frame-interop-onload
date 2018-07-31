@@ -1,5 +1,5 @@
 (ns bass4.responses.e-auth
-  (:require [ring.util.http-response :as response]
+  (:require [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.config :refer [env]]
             [bass4.services.bankid :as bankid]
@@ -59,7 +59,7 @@
   ([request personnummer redirect-success redirect-fail config-key]
    (let [session (:session request)
          user-ip (h-utils/get-ip request)]
-     (-> (response/found "/e-auth/bankid/status")
+     (-> (http-response/found "/e-auth/bankid/status")
          (assoc :session (merge
                            session
                            (bankid-session personnummer user-ip redirect-success redirect-fail config-key)))))))
@@ -76,7 +76,7 @@
         redirect-fail    (get-in session [:e-auth :redirect-fail])]
     (if (and uid bankid? redirect-success redirect-fail)
       (layout/render "bankid-status.html")
-      (response/found "/e-auth/bankid/no-session"))))
+      (http-response/found "/e-auth/bankid/no-session"))))
 
 
 ;; --------------------------------
@@ -238,11 +238,11 @@
     (let [response (when (and uid bankid?)
                      (bankid/cancel-bankid! uid)
                      (when redirect-fail
-                       (-> (response/found redirect-fail)
+                       (-> (http-response/found redirect-fail)
                            (assoc :session (dissoc session :e-auth)))))]
       (if response
         response
-        (response/found "/e-auth/bankid/no-session")))))
+        (http-response/found "/e-auth/bankid/no-session")))))
 
 (defn bankid-cancel
   "Cancels a bankid request and resets e-auth map in session.
@@ -253,9 +253,9 @@
   (let [uid (get-in session [:e-auth :uid])]
     (bankid/cancel-bankid! uid)
     (if return-url
-      (-> (response/found return-url)
+      (-> (http-response/found return-url)
           (assoc :session (dissoc session :e-auth)))
-      (-> (response/found "/e-auth/bankid/no-session")
+      (-> (http-response/found "/e-auth/bankid/no-session")
           (assoc :session (dissoc session :e-auth))))))
 
 ;; --------------------------------
@@ -266,7 +266,7 @@
   (if (bankid-active? session)
     (layout/render "bankid-ongoing.html"
                    {:return-url return-url})
-    (response/found return-url)))
+    (http-response/found return-url)))
 
 (defn bankid-middleware
   [handler request]

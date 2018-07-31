@@ -1,5 +1,5 @@
 (ns bass4.responses.registration
-  (:require [ring.util.http-response :as response]
+  (:require [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
@@ -48,13 +48,13 @@
 (defn- to-finished-page
   [project-id session]
   (->
-    (response/found (str "/registration/" project-id "/finished"))
+    (http-response/found (str "/registration/" project-id "/finished"))
     (reset-reg-session session)))
 
 (defn- to-assessments
   [project-id user-id request]
   (->
-    (response/found "/user")
+    (http-response/found "/user")
     (assoc :session (res-auth/create-new-session
                       {:user-id user-id}
                       {:external-login? true}
@@ -89,7 +89,7 @@
                       :login-url  (h-utils/get-host-address request)
                       :project-id project-id})
       ;; Wrong place - redirect
-      (response/found (str "/registration/" project-id)))))
+      (http-response/found (str "/registration/" project-id)))))
 
 ;; -------------
 ;;   DUPLICATE
@@ -149,12 +149,12 @@
   [project-id user-id username password auto-password? session]
   (if username
     (->
-      (response/found (str "/registration/" project-id "/credentials"))
+      (http-response/found (str "/registration/" project-id "/credentials"))
       (assoc-reg-session session {:credentials (merge
                                                  {:user-id user-id :username username}
                                                  (if auto-password? {:password password}))}))
     (->
-      (response/found (str "/registration/" project-id "/finished"))
+      (http-response/found (str "/registration/" project-id "/finished"))
       (assoc-reg-session session {:credentials {:user-id user-id}}))))
 
 (defn- create-user
@@ -169,7 +169,7 @@
   "This function relies on previous checking of presence of field-values"
   [project-id field-values reg-params session]
   (if (duplicate-conflict? field-values reg-params)
-    (-> (response/found (str "/registration/" project-id "/duplicate"))
+    (-> (http-response/found (str "/registration/" project-id "/duplicate"))
         (reset-reg-session session))
     (create-user project-id field-values reg-params session)))
 
@@ -180,7 +180,7 @@
 (defn- captcha-session
   [project-id session]
   (let [{:keys [filename digits]} (captcha/captcha!)]
-    (-> (response/found (str "/registration/" project-id "/captcha"))
+    (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc-reg-session session {:captcha-filename  filename
                                     :captcha-digits    digits
                                     :captcha-timestamp (t/now)
@@ -223,7 +223,7 @@
 (defn captcha
   [project-id session]
   (if (get-in session [:registration :captcha-ok?])
-    (response/found (str "/registration/" project-id))
+    (http-response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
       (if (and filename digits)
         (captcha-page project-id filename)
@@ -244,7 +244,7 @@
   (if (captcha-valid? new-session)
     (-> (layout/error-422 "error")
         (assoc :session new-session))
-    (-> (response/found (str "/registration/" project-id "/captcha"))
+    (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc :session new-session))))
 
 (defn validate-captcha
@@ -252,10 +252,10 @@
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       ;; TODO: Remove captcha values
-      (-> (response/found (str "/registration/" project-id "/form"))
+      (-> (http-response/found (str "/registration/" project-id "/form"))
           (assoc-reg-session session {:captcha-ok? true}))
       (wrong-captcha-response project-id (inc-tries session)))
-    (response/found (str "/registration/" project-id "/captcha"))))
+    (http-response/found (str "/registration/" project-id "/captcha"))))
 
 ;; --------------
 ;;   VALIDATION
@@ -297,7 +297,7 @@
     (when (and (nil? (:code-sms codes)) (nil? (:code-email codes)))
       (throw (ex-info "Prepare validation did not render codes" reg-session)))
     (->
-      (response/found (str "/registration/" project-id "/validate"))
+      (http-response/found (str "/registration/" project-id "/validate"))
       (assoc-reg-session session {:field-values     field-values
                                   :validation-codes codes}))))
 
@@ -327,7 +327,7 @@
     (if (or (contains? codes :code-sms) (contains? codes :code-email))
       (render-validation-page project-id codes fixed-fields field-values)
       ;; Wrong page - redirect
-      (response/found (str "/registration/" project-id)))))
+      (http-response/found (str "/registration/" project-id)))))
 
 (def validated-codes (atom {}))
 
@@ -371,7 +371,7 @@
                   field-name   (if (= :code-email code-key)
                                  :email
                                  :sms-number)]
-              (-> (response/ok "ok")
+              (-> (http-response/ok "ok")
                   (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
             (layout/error-422 "error")))))))
 
@@ -411,7 +411,7 @@
   (if (bankid-done? session)
     (let [params (reg-service/registration-params project-id)]
       (->
-        (response/found (str "/registration/" project-id "/form"))
+        (http-response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session (merge (get-bankid-fields session params)
                                           {:bankid-done? true}))
         (assoc-in [:session :e-auth] nil)))
@@ -451,7 +451,7 @@
                         (:fixed-fields reg-session))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
     ;; BankID done already checked by captcha middleware
-    (response/found (str "/registration/" project-id "/bankid"))
+    (http-response/found (str "/registration/" project-id "/bankid"))
     ;; TODO: Show country for fixed sms number
     (layout/render "registration-form.html"
                    (merge
@@ -534,7 +534,7 @@
 
 (defn cancel-registration
   [project-id session]
-  (-> (response/found (str "/registration/" project-id))
+  (-> (http-response/found (str "/registration/" project-id))
       (reset-reg-session session)))
 
 

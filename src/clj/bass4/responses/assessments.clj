@@ -1,6 +1,6 @@
 (ns bass4.responses.assessments
   (:require [bass4.services.assessments :as assessments-service]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]
             [bass4.services.instrument :as instruments]
@@ -29,7 +29,7 @@
         ;; Could not find instrument - return error screen and mark step as completed
         (assessments-service/step-completed! step)
         (request-state/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
-        (response/found "/user")))))
+        (http-response/found "/user")))))
 
 (defn- assessment-page
   [round]
@@ -44,7 +44,7 @@
 
 (defn- assessments-completed
   [session]
-  (-> (response/found "/user")
+  (-> (http-response/found "/user")
       (assoc :session (merge session {:assessments-pending? false}))))
 
 (defn- instrument-completed
@@ -54,10 +54,10 @@
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
           (assessments-service/administrations-completed! user-id round instrument-id)
-          (-> (response/found "/user")))
+          (-> (http-response/found "/user")))
       (do
         (request-state/record-error! "Something went wrong")
-        (response/found "/user")))))
+        (http-response/found "/user")))))
 
 (defn handle-assessments
   [user-id session]

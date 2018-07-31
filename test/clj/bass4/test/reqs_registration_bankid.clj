@@ -5,16 +5,8 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->! log-body]]
-            [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
-            [bass4.services.bankid :as bankid]
+            [bass4.passwords :as passwords]
             [bass4.services.bankid-mock :as bankid-mock]
-            [bass4.middleware.debug :as debug]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [bass4.services.attack-detector :as a-d]
-            [clojure.data.json :as json]
-            [bass4.i18n :as i18n]
             [bass4.services.registration :as reg-service]))
 
 
@@ -56,7 +48,7 @@
                                                                :auto-username          :none
                                                                :bankid?                true
                                                                :bankid-change-names?   false})
-                  auth-service/letters-digits     (constantly "METALLICA")]
+                  passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
           (follow-redirect)
@@ -112,7 +104,7 @@
                                                                :auto-username          :none
                                                                :bankid?                true
                                                                :bankid-change-names?   false})
-                  auth-service/letters-digits     (constantly "METALLICA")]
+                  passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
           (follow-redirect)
@@ -172,7 +164,7 @@
                                                                :auto-username          :none
                                                                :bankid?                true
                                                                :bankid-change-names?   true})
-                  auth-service/letters-digits     (constantly "METALLICA")]
+                  passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
           (follow-redirect)

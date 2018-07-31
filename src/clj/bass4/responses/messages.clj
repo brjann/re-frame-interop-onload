@@ -1,8 +1,7 @@
 (ns bass4.responses.messages
   (:require [bass4.services.messages :as messages-service]
-            [bass4.services.user :as user]
             [clojure.string :as string]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.layout :as layout]))
 
@@ -21,12 +20,12 @@
 
 (s/defn ^:always-validate save-message [user-id :- s/Int text :- s/Str]
   (messages-service/save-message! user-id text)
-  (response/found "/user/messages"))
+  (http-response/found "/user/messages"))
 
 (s/defn ^:always-validate save-draft [user-id :- s/Int text :- s/Str]
   (messages-service/save-draft! user-id text)
-  (response/ok "ok"))
+  (http-response/ok "ok"))
 
 (s/defn ^:always-validate message-read [user-id :- s/Int message-id :- s/Int]
   (messages-service/mark-message-as-read! user-id message-id)
-  (response/ok "ok"))
+  (http-response/ok "ok"))

@@ -1,14 +1,10 @@
 (ns bass4.responses.content-example
-  (:require [bass4.services.user :as user]
-            [ring.util.http-response :as response]
-            [bass4.services.treatment :as treatment-service]
+  (:require [bass4.services.treatment :as treatment-service]
             [schema.core :as s]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
-            [bass4.services.content-data :as content-data]
-            [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]))
+            [bass4.services.content-data :as content-data]))
 
 (defn edit-example
   [content-id]

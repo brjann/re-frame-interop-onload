@@ -1,16 +1,10 @@
 (ns bass4.routes.embedded
   (:require [bass4.layout :as layout]
-            [bass4.services.auth :as auth]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
-            [bass4.db.core :as db]
-            [ring.util.http-response :as response]
-            [clojure.java.io :as io]
-            [bass4.db-config :as db-config]
             [bass4.responses.instrument :as instruments]
             [bass4.responses.content-example :as content-example]
             [bass4.responses.modules :as modules]
-            [bass4.utils :refer [str->int json-safe]]
-            [bass4.services.bass :as bass]))
+            [bass4.utils :refer [str->int json-safe]]))
 
 
 ;; TODO: Wrap only user requests in timeout/re-auth

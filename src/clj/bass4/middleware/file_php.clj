@@ -1,5 +1,5 @@
 (ns bass4.middleware.file-php
-  (:require [ring.util.response :as response-utils]
+  (:require [ring.util.http-response :as http-response]
             [ring.util.mime-type :as mime-type]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass]))
@@ -703,9 +703,9 @@
 (defn file-response
   [file]
   (if file
-    (-> (response-utils/file-response (str file))
-        (response-utils/header "Content-Disposition" (str "filename= \"" (.getName file) "\""))
-        (response-utils/header "Content-Type" (mime-type/ext-mime-type (.getName file) mime-types)))
+    (-> (http-response/file-response (str file))
+        (http-response/header "Content-Disposition" (str "filename= \"" (.getName file) "\""))
+        (http-response/header "Content-Type" (mime-type/ext-mime-type (.getName file) mime-types)))
     (layout/error-404-page "File not found")))
 
 (defn File-php

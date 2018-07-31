@@ -1,11 +1,8 @@
 (ns bass4.routes.auth
   (:require [bass4.layout :as layout]
-            [bass4.services.auth :as auth-service]
             [compojure.core :refer [defroutes context GET POST routes]]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [bass4.responses.auth :as auth-response]
-            [bass4.services.user :as user]
-            [bass4.request-state :as request-state]
             [buddy.hashers :as hashers]))
 
 (defroutes auth-routes
@@ -14,8 +11,8 @@
 
   (GET "/" [:as request]
     (if (get-in request [:session :identity])
-      (response/found "/user")
-      (response/found "/login")))
+      (http-response/found "/user")
+      (http-response/found "/login")))
 
   (GET "/login" []
     (auth-response/login-page))

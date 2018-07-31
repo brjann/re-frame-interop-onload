@@ -38,7 +38,7 @@
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
@@ -100,7 +100,7 @@
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
-                auth-service/letters-digits     (let [pos (atom 0)]
+                passwords/letters-digits        (let [pos (atom 0)]
                                                   (fn [& _]
                                                     (let [code (int (Math/floor (/ @pos 2)))]
                                                       (swap! pos inc)
@@ -171,7 +171,7 @@
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
@@ -211,7 +211,7 @@
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610")
         ;; Redirected to info page
@@ -245,7 +245,7 @@
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                              :auto-username          :none})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
@@ -274,7 +274,7 @@
                                                                    :auto-id-length         3
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
-                  auth-service/letters-digits         (constantly "METALLICA")]
+                  passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -306,7 +306,7 @@
                                                                    :auto-id-length         3
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
-                  auth-service/letters-digits         (constantly "METALLICA")]
+                  passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -341,7 +341,7 @@
                                                              :auto-id-prefix         "xxx-"
                                                              :auto-id-length         3
                                                              :auto-id?               true})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
@@ -368,7 +368,7 @@
                                                              :auto-id-prefix         "xxx-"
                                                              :auto-id-length         3
                                                              :auto-id?               true})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
@@ -397,7 +397,7 @@
                                                                    :auto-id-length         0
                                                                    :auto-id?               true})
                   reg-service/generate-participant-id (constantly participant-id)
-                  auth-service/letters-digits         (constantly "METALLICA")
+                  passwords/letters-digits            (constantly "METALLICA")
                   passwords/password                  (constantly password)]
       (-> *s*
           (visit "/registration/564610/captcha")
@@ -427,7 +427,7 @@
                                                              :allow-duplicate-email? false
                                                              :allow-duplicate-sms?   false
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]})
-                auth-service/letters-digits     (constantly "METALLICA")]
+                passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created

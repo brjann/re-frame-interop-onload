@@ -2,15 +2,14 @@
   (:require [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clojure.string :as string]
             [bass4.services.bass :as bass]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
-            [ring.util.response :as response-utils]
             [clojure.tools.logging :as log]))
 
 (defn embedded-session
   [handler request uid]
   (if-let [{:keys [user-id path]} (bass/read-session-file uid)]
-    (-> (response/found path)
+    (-> (http-response/found path)
         (assoc :session {:identity user-id :embedded-path path}))
     (layout/print-var-response "Wrong uid.")))
 

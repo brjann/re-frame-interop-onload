@@ -2,7 +2,7 @@
   (:require [bass4.services.auth :as auth-service]
             [bass4.services.user :as user-service]
             [bass4.services.assessments :as administrations]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
@@ -12,7 +12,6 @@
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]
-            [bass4.services.attack-detector :as a-d]
             [bass4.db-config :as db-config]))
 
 
@@ -29,7 +28,7 @@
 ;; -------------
 
 (defn logout []
-  (-> (response/found "/login")
+  (-> (http-response/found "/login")
       (assoc :session {})))
 
 ;; ------------------
@@ -72,14 +71,14 @@
 
 (defn double-auth [session]
   (if-let [redirect (double-auth-redirect session)]
-    (response/found redirect)
+    (http-response/found redirect)
     (double-auth-page (:double-auth-code session))))
 
 (s/defn ^:always-validate double-auth-check [session code :- s/Str]
   (if-let [redirect (double-auth-redirect session)]
-    (response/found redirect)
+    (http-response/found redirect)
     (if (= code (:double-auth-code session))
-      (-> (response/found "/user/")
+      (-> (http-response/found "/user/")
           (assoc :session (assoc session :double-authed? true :double-auth-code nil)))
       (layout/error-422 "error"))))
 
@@ -193,7 +192,7 @@
     (let [{:keys [redirect error session]} (redirect-map user)]
       (if error
         (layout/error-422 error)
-        (-> (response/found redirect)
+        (-> (http-response/found redirect)
             (assoc :session (create-new-session user session true)))))
     (layout/error-422 "error")))
 
@@ -219,8 +218,8 @@
   (if (:auth-re-auth session)
     (re-auth-page return-url)
     (if (:identity session)
-      (response/found "/user/")
-      (response/found "/login"))))
+      (http-response/found "/user/")
+      (http-response/found "/login"))))
 
 (defn handle-re-auth
   [session password response]
@@ -232,7 +231,7 @@
                                             :last-request-time (t/now)})))
         (layout/error-422 "error"))
       response)
-    (response/forbidden)))
+    (http-response/forbidden)))
 
 ;; TODO: Validate URL
 ;; [commons-validator "1.5.1"]
@@ -240,12 +239,12 @@
 (s/defn ^:always-validate check-re-auth
   [session password :- s/Str return-url]
   (handle-re-auth session password
-                  (response/found (if (nil? return-url)
+                  (http-response/found (if (nil? return-url)
                                     "/user/"
                                     return-url))))
 
 (s/defn check-re-auth-ajax [session password :- s/Str]
-  (handle-re-auth session password (response/ok "ok")))
+  (handle-re-auth session password (http-response/ok "ok")))
 
 
 ;; --------------------
@@ -282,7 +281,7 @@
         re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
         response          (if re-auth?
                             (if (= (:request-method request) :get)
-                              (response/found (str "/re-auth?return-url=" (request-string request)))
+                              (http-response/found (str "/re-auth?return-url=" (request-string request)))
                               (re-auth-440))
                             (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
         session-map       {:last-request-time now

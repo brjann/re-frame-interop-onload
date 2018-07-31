@@ -1,11 +1,10 @@
 (ns bass4.responses.instrument
   (:require [bass4.services.instrument :as instruments]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [clojure.tools.logging :as log]
             [schema.core :as s]
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
-            [clojure.string :as string]
             [bass4.request-state :as request-state]))
 
 (defn instrument-page [instrument-id]
@@ -17,7 +16,7 @@
   (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
     (do
       (instruments/save-test-answers! instrument-id answers-map)
-      (response/found (str "/embedded/instrument/" instrument-id "/summary")))
+      (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
     (do
       (request-state/record-error! "Instrument post was not in valid JSON format")
       (layout/error-400-page))))

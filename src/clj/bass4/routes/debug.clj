@@ -23,7 +23,7 @@
             [bass4.i18n :as i18n]
             [bass4.sms-sender :as sms]
             [bass4.responses.e-auth :as e-auth-response]
-            [ring.util.response :as util-response]
+            [ring.util.http-response :as http-response]
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]))
 
@@ -157,7 +157,7 @@
           (e-auth-response/bankid-success (:session request)))
         (GET "/resource" []
           (let [url  (io/resource "public/js/form-ajax.js")
-                data (util-response/resource-data url)]
+                data (http-response/resource-data url)]
             (layout/text-response (b-time/to-unix (tc/from-date (:last-modified data)))))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

@@ -1,6 +1,6 @@
 (ns bass4.responses.modules
   (:require [bass4.services.user :as user]
-            [ring.util.http-response :as response]
+            [ring.util.http-response :as http-response]
             [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
             [schema.core :as s]
@@ -160,24 +160,24 @@
 (defn save-worksheet-data
   [treatment-access-id content-data]
   (when (handle-content-data content-data treatment-access-id)
-    (response/found "reload")))
+    (http-response/found "reload")))
 
 (defn save-main-text-data
   [treatment-access content-data]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
-    (response/ok {})))
+    (http-response/ok {})))
 
 (defn save-homework
   [treatment-access module content-data submit?]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (when submit?
       (treatment-service/submit-homework! treatment-access module))
-    (response/found "reload")))
+    (http-response/found "reload")))
 
 (defn retract-homework
   [treatment-access module]
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
     (when (not (:ok submitted))
       (treatment-service/retract-homework! submitted module)
-      (response/found "reload"))
+      (http-response/found "reload"))
     (layout/throw-400!)))

@@ -4,8 +4,7 @@
             [bass4.responses.registration :as reg-response]
             [bass4.utils :refer [str->int]]
             [compojure.core :refer [defroutes context GET POST routes]]
-            [ring.util.http-response :as response]
-            [clojure.string :as string]
+            [ring.util.http-response :as http-response]
             [clojure.tools.logging :as log]))
 
 (defn registration-params
@@ -63,7 +62,7 @@
           (handler request)
 
           (string? res)
-          (response/found (str "/registration/" project-id res))
+          (http-response/found (str "/registration/" project-id res))
 
           :else
           (throw (ex-info "Checker returned illegal value" {:res res}))))

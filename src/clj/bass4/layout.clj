@@ -6,8 +6,6 @@
             [markdown.lists :refer :all]
             [bass4.config :refer [env]]
             [bass4.time :as b-time]
-            [ring.util.http-response :refer [content-type ok]]
-            [ring.util.response :refer [status] :as ring-response]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [bass4.i18n :as i18n]
@@ -20,7 +18,7 @@
             [compojure.response :as response]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [ring.util.response :as util-response]
+            [ring.util.http-response :refer [content-type ok] :as http-response]
             [clj-time.coerce :as tc]
             [selmer.tags :as tags]))
 
@@ -164,22 +162,19 @@
    (let [sep (if (zero? (count message)) "" " ")]
      (throw (ex-info (str "400" sep message) {})))))
 
-#_(defn text-response
-    [var]
-    (ring-response/content-type (ring-response/response (with-out-str (clojure.pprint/pprint var))) "text/plain"))
 
 (defn text-response
   [var]
   (-> (str var)
-      (ring-response/response)
-      (ring-response/content-type "text/plain")))
+      (http-response/ok)
+      (http-response/content-type "text/plain")))
 
 (defn print-var-response
   [var]
   (-> (clojure.pprint/pprint var)
       (with-out-str)
-      (ring-response/response)
-      (ring-response/content-type "text/plain")))
+      (http-response/ok)
+      (http-response/content-type "text/plain")))
 
 
 #_(defn datetime-str
@@ -227,7 +222,7 @@
   [path]
   (if-not (contains? @resource-mtimes path)
     (let [url   (io/resource (str "public" path))
-          data  (util-response/resource-data url)
+          data  (http-response/resource-data url)
           mtime (b-time/to-unix (tc/from-date (:last-modified data)))]
       (swap! resource-mtimes #(assoc % path mtime))))
   (get @resource-mtimes path))
@@ -290,5 +285,5 @@
   (fn [request]
     (let [body (error-404-page)]
       (-> (response/render body request)
-          (status 404)
+          (http-response/status 404)
           (cond-> (= (:request-method request) :head) (assoc :body nil))))))

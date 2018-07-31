@@ -3,21 +3,15 @@
             [bass4.responses.messages :as messages-response]
             [bass4.responses.dashboard :as dashboard]
             [bass4.responses.user :as user-response]
-            [bass4.services.user :as user-service]
-            [bass4.services.content-data :as content-data-service]
             [bass4.services.treatment :as treatment-service]
             [bass4.responses.modules :as modules-response]
             [bass4.config :refer [env]]
             [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.assessments :as assessments-response]
-            [ring.util.http-response :as response]
-            [ring.util.request :as request]
-            [ring.util.codec :as codec]
-            [bass4.request-state :as request-state]
+            [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
-            [clojure.data.json :as json]
             [clojure.tools.logging :as log]))
 
 (defn request-string
@@ -86,10 +80,10 @@
   [session]
   (if (:assessments-performed? session)
     (->
-      (response/found "/login")
+      (http-response/found "/login")
       (assoc :session {}))
     (->
-      (response/found "/no-activities")
+      (http-response/found "/no-activities")
       (assoc :session {}))))
 
 (defn- treatment-routes
@@ -139,7 +133,7 @@
     (let [user (get-in request [:session :user])]
       (if (auth-response/need-double-auth? (:session request))
         (routes
-          (ANY "*" [] (response/found "/double-auth")))
+          (ANY "*" [] (http-response/found "/double-auth")))
         (if (:assessments-pending? (:session request))
           (assessment-routes user request)
           (treatment-routes user request))))))
