@@ -81,7 +81,7 @@
     <orderEntry type="library" name="Leiningen: javax.servlet/javax.servlet-api:3.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: joda-time:2.9.6" level="project" />
     <orderEntry type="library" name="Leiningen: json-html:0.4.0" level="project" />
-    <orderEntry type="library" name="Leiningen: kerodon:0.8.0" level="project" />
+    <orderEntry type="library" name="Leiningen: kerodon:0.9.0" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-immutant:0.2.4" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-nrepl:0.1.4" level="project" />
     <orderEntry type="library" name="Leiningen: markdown-clj:1.0.2" level="project" />
@@ -89,9 +89,9 @@
     <orderEntry type="library" name="Leiningen: metosin/ring-http-response:0.9.0" level="project" />
     <orderEntry type="library" name="Leiningen: mount:0.1.12" level="project" />
     <orderEntry type="library" name="Leiningen: mysql/mysql-connector-java:8.0.11" level="project" />
-    <orderEntry type="library" name="Leiningen: ns-tracker:0.3.0" level="project" />
+    <orderEntry type="library" name="Leiningen: ns-tracker:0.3.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.commons/commons-compress:1.9" level="project" />
-    <orderEntry type="library" name="Leiningen: org.apache.commons/commons-lang3:3.1" level="project" />
+    <orderEntry type="library" name="Leiningen: org.apache.commons/commons-lang3:3.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.httpcomponents/httpasyncclient:4.1.3" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.httpcomponents/httpclient-cache:4.5.5" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.httpcomponents/httpclient:4.5.5" level="project" />
@@ -112,7 +112,7 @@
     <orderEntry type="library" name="Leiningen: org.clojure/data.priority-map:0.0.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/google-closure-library-third-party:0.0-20170519-fa0499ef" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/google-closure-library:0.0-20170519-fa0499ef" level="project" />
-    <orderEntry type="library" name="Leiningen: org.clojure/java.classpath:0.2.2" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/java.classpath:0.2.3" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/java.jdbc:0.7.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/math.numeric-tower:0.0.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/spec.alpha:0.1.143" level="project" />
@@ -121,7 +121,7 @@
     <orderEntry type="library" name="Leiningen: org.clojure/tools.cli:0.3.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.logging:0.4.1" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.macro:0.1.5" level="project" />
-    <orderEntry type="library" name="Leiningen: org.clojure/tools.namespace:0.2.10" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/tools.namespace:0.2.11" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.nrepl:0.2.12" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.reader:0.10.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.flatland/ordered:1.5.6" level="project" />
@@ -146,7 +146,6 @@
     <orderEntry type="library" name="Leiningen: org.slf4j/slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Leiningen: org.tobereplaced/lettercase:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars.bower/jquery-color:2.1.2" level="project" />
-    <orderEntry type="library" name="Leiningen: org.webjars.bower/tether:1.4.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/bootstrap:4.1.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/font-awesome:4.7.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/jquery-ui:1.12.1" level="project" />
@@ -156,9 +155,8 @@
     <orderEntry type="library" name="Leiningen: org.webjars/webjars-locator-jboss-vfs:0.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.webjars/webjars-locator:0.27" level="project" />
     <orderEntry type="library" name="Leiningen: org.yaml/snakeyaml:1.13" level="project" />
-    <orderEntry type="library" name="Leiningen: peridot:0.4.4" level="project" />
+    <orderEntry type="library" name="Leiningen: peridot:0.5.1" level="project" />
     <orderEntry type="library" name="Leiningen: philoskim/debux:0.4.8" level="project" />
-    <orderEntry type="library" name="Leiningen: pjstadig/humane-test-output:0.8.1" level="project" />
     <orderEntry type="library" name="Leiningen: potemkin:0.4.3" level="project" />
     <orderEntry type="library" name="Leiningen: prismatic/schema:1.1.9" level="project" />
     <orderEntry type="library" name="Leiningen: prone:1.6.0" level="project" />
@@ -171,9 +169,8 @@
     <orderEntry type="library" name="Leiningen: ring/ring-codec:1.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-core:1.7.0-RC1" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-defaults:0.3.2" level="project" />
-    <orderEntry type="library" name="Leiningen: ring/ring-devel:1.5.1" level="project" />
+    <orderEntry type="library" name="Leiningen: ring/ring-devel:1.7.0-RC1" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-headers:0.3.0" level="project" />
-    <orderEntry type="library" name="Leiningen: ring/ring-mock:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: ring/ring-ssl:0.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: selmer:1.11.8" level="project" />
     <orderEntry type="library" name="Leiningen: slingshot:0.12.2" level="project" />
