@@ -708,14 +708,6 @@
         (response-utils/header "Content-Type" (mime-type/ext-mime-type (.getName file) mime-types)))
     (layout/error-404-page "File not found")))
 
-
-;; if(isset($_GET['uid'])){
-;$sFileName = str_replace('/', '', $_GET['uid']);
-;$sPath = dirname(__FILE__);
-;
-;$sFullPath = "$sPath/../../projects/temp/$sFileName";
-;}
-
 (defn File-php
   [handler request]
   (let [uri       (:uri request)

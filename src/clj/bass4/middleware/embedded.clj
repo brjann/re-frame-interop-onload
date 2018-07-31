@@ -9,8 +9,7 @@
 
 (defn embedded-session
   [handler request uid]
-  (if-let [{:keys [user-id path]}
-           (bass/read-session-file uid)]
+  (if-let [{:keys [user-id path]} (bass/read-session-file uid)]
     (-> (response/found path)
         (assoc :session {:identity user-id :embedded-path path}))
     (layout/print-var-response "Wrong uid.")))

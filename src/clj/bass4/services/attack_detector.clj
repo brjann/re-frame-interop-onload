@@ -192,7 +192,6 @@
     (if-let [delay (get-delay-time request)]
       (do
         (log/info "Possible attack detected - delaying response")
-        #_(layout/error-429 delay)
         ((:delay-response check-fns) delay))
       (let [response (handler request)]
         (cond
