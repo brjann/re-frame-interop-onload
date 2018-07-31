@@ -41,6 +41,7 @@
                  [org.flatland/ordered "1.5.6"]             ; https://github.com/amalloy/ordered
                  [clj-time "0.14.4"]                        ; https://github.com/clj-time/clj-time
                  [camel-snake-kebab "0.4.0"]                ; https://github.com/qerub/camel-snake-kebab
+                 [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
 
                  ; Webjars
                  [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap

@@ -6,13 +6,15 @@
             [bass4.i18n]
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
-            [immutant.util]
+            [clj-logging-config.log4j :as log-config]
             [mount.core :as mount])
   (:gen-class))
 
 (def cli-options
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
+
+(log-config/set-loggers! "io.undertow.request" {:level :info})
 
 (mount/defstate
   ^{:on-reload :noop} http-server
@@ -22,8 +24,7 @@
     (http/start
       (-> env
           (assoc :handler (handler/app))
-          (update :port #(or (-> env :options :port) %))))
-    (immutant.util/set-log-level! :INFO))
+          (update :port #(or (-> env :options :port) %)))))
 
   :stop
   (http/stop http-server))

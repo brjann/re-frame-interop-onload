@@ -26,6 +26,7 @@
     <orderEntry type="library" name="Leiningen: cheshire:5.6.3" level="project" />
     <orderEntry type="library" name="Leiningen: circleci/clj-yaml:0.5.5" level="project" />
     <orderEntry type="library" name="Leiningen: clj-http:3.9.0" level="project" />
+    <orderEntry type="library" name="Leiningen: clj-logging-config:1.9.12" level="project" />
     <orderEntry type="library" name="Leiningen: clj-stacktrace:0.2.8" level="project" />
     <orderEntry type="library" name="Leiningen: clj-time:0.14.4" level="project" />
     <orderEntry type="library" name="Leiningen: clj-tuple:0.2.2" level="project" />
@@ -82,6 +83,7 @@
     <orderEntry type="library" name="Leiningen: joda-time:2.9.6" level="project" />
     <orderEntry type="library" name="Leiningen: json-html:0.4.0" level="project" />
     <orderEntry type="library" name="Leiningen: kerodon:0.9.0" level="project" />
+    <orderEntry type="library" name="Leiningen: log4j:1.2.16" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-immutant:0.2.4" level="project" />
     <orderEntry type="library" name="Leiningen: luminus-nrepl:0.1.4" level="project" />
     <orderEntry type="library" name="Leiningen: markdown-clj:1.0.2" level="project" />
