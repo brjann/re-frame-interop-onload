@@ -109,7 +109,7 @@
 
 (deftest request-double-authentication-no-re-auth
   (-> *s*
-      (modify-session {:identity 536975 :double-auth-code "666-666-666" :external-login true})
+      (modify-session {:identity 536975 :double-auth-code "666-666-666" :external-login? true})
       (visit "/user/messages")
       (has (status? 200))))
 
@@ -156,7 +156,7 @@
       (modify-session {:identity 536975 :double-authed? true})
       (visit "/user/messages")
       (has (status? 200))
-      (modify-session {:auth-re-auth true :external-login true})
+      (modify-session {:auth-re-auth true :external-login? true})
       (visit "/user/messages")
       (has (status? 200))))
 
@@ -237,7 +237,7 @@
 
 (deftest request-re-auth-last-request-time-no-re-auth
   (let [x (-> *s*
-              (modify-session {:identity 536975 :double-authed? true :external-login true})
+              (modify-session {:identity 536975 :double-authed? true :external-login? true})
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]

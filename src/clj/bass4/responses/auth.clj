@@ -61,7 +61,7 @@
 
 (defn need-double-auth? [session]
   (cond
-    (:external-login session)
+    (:external-login? session)
     false
 
     (:double-authed? session)
@@ -267,7 +267,7 @@
 (defn- should-re-auth?
   [session now last-request-time re-auth-time-limit]
   (cond
-    (:external-login session) false
+    (:external-login? session) false
     (:auth-re-auth session) true
     (nil? last-request-time) nil
     (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]

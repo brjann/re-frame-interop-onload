@@ -58,7 +58,7 @@
     (response/found "/user")
     (assoc :session (res-auth/create-new-session
                       {:user-id user-id}
-                      {:external-login true}
+                      {:external-login? true}
                       true))))
 
 (defn finished-router

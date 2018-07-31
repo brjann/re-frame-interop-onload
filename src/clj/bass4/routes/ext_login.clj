@@ -100,7 +100,7 @@
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user/")
-        (assoc :session (auth-response/create-new-session user {:external-login true :return-url return-url} true)))
+        (assoc :session (auth-response/create-new-session user {:external-login? true :return-url return-url} true)))
     (if return-url
       (http-response/found return-url)
       (layout/error-400-page "Bad UID and no return url"))))
