@@ -6,7 +6,6 @@
             [bass4.passwords :as passwords]
             [bass4.services.registration :as reg-service]
             [bass4.responses.auth :as res-auth]
-            [bass4.services.auth :as auth-service]
             [clj-time.core :as t]
             [bass4.utils :refer [filter-map fnil+ in? json-safe]]
             [bass4.layout :as layout]
@@ -280,7 +279,7 @@
       ;; Only send new code if code hasn't already been sent to email/sms
       (if (= (get-in validation-codes [code-key :address]) address)
         (select-keys validation-codes [code-key])
-        (let [code (auth-service/letters-digits validation-code-length)]
+        (let [code (passwords/letters-digits validation-code-length)]
           (send-fn! address code)
           {code-key {:address address
                      :code    code}})))))

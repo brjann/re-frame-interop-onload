@@ -3,20 +3,11 @@
             [clojure.tools.logging :as log]
             [buddy.hashers :as hashers]
             [bass4.config :refer [env]]
-            [bass4.services.user :as user-service]))
-
-(def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
-
-(defn letters-digits
-  [length]
-  (clojure.string/join
-    ""
-    (map
-      #(get password-chars %1)
-      (repeatedly length #(rand-int (- (count password-chars) 1))))))
+            [bass4.services.user :as user-service]
+            [bass4.passwords :as passwords]))
 
 (defn double-auth-code []
-  (letters-digits 3))
+  (passwords/letters-digits 3))
 
 (defn double-auth-required? [user-id]
   (if-let [settings (db/bool-cols
