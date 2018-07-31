@@ -22,19 +22,7 @@
       (request-state/record-error! "Instrument post was not in valid JSON format")
       (layout/error-400-page))))
 
-#_(defn checkboxize
-    [items]
-    (map (fn [item]
-           (let [response (get (:responses instrument) (:response-id item))]
-             (if (= "CB" (:response-type response))
-               (map #(merge
-                       {:item-id (:item-id item)
-                        :spec-id (str (:item-id item) "_" (:value %))} %)
-                    (:options response))
-               item)))
-         items))
-
-(defn checkboxize
+(defn- checkboxize
   "Makes checkbox items into one item per checkbox option."
   [instrument]
   (let [items (->> instrument
