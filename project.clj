@@ -4,11 +4,10 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[buddy/buddy-hashers "1.3.0"]
-                 [compojure "1.5.2"]
-                 [conman "0.6.6"]
-                 [cprop "0.1.10"]
+                 [compojure "1.6.1"]
+                 [conman "0.8.2"]
+                 [cprop "0.1.11"]
                  [org.clojure/core.async "0.4.474"]
-                 [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.3.0"]
                  [luminus-nrepl "0.1.4"]
@@ -16,7 +15,7 @@
                  [metosin/ring-http-response "0.9.0"]
                  [mount "0.1.11"]
                  [mysql/mysql-connector-java "6.0.5"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.webjars.bower/tether "1.4.0"]

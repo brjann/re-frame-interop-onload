@@ -160,7 +160,7 @@
   ([] (throw-400! ""))
   ([message]
    (let [sep (if (zero? (count message)) "" " ")]
-     (throw (ex-info (str "400" sep message) {})))))
+     (throw (Exception. (str "400" sep message))))))
 
 
 (defn text-response

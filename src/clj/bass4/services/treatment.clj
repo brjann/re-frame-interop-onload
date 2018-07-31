@@ -4,7 +4,7 @@
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [clojure.set]
-            [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool boolean? fnil+]]
+            [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
             [bass4.services.messages :as messages]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]

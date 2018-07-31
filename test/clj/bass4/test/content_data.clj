@@ -11,6 +11,6 @@
 
 (deftest no-post
   (is (nil? (content-data/save-content-data! [] 666)))
-  (is (thrown-with-msg? Exception #"400" (content-data/save-content-data! {"hejsan" 88} 666)))
-  (is (thrown-with-msg? Exception #"400" (content-data/save-content-data! {"hejsan.hoppsan" 88} 666)))
+  (is (thrown? Exception (content-data/save-content-data! {"hejsan" 88} 666)))
+  (is (thrown? Exception (content-data/save-content-data! {"hejsan.hoppsan" 88} 666)))
   (is (= nil (content-data/save-content-data! {"hejsan.hoppsan" "88"} 666))))
