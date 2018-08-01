@@ -79,8 +79,8 @@
 
   (GET "/registration/:project-id/bankid" [project-id]
     (reg-response/bankid-page project-id))
-  (POST "/registration/:project-id/bankid" [project-id & params :as request]
-    (reg-response/bankid-poster project-id (:personnummer params) request))
+  (POST "/registration/:project-id/bankid" [project-id personnummer :as request]
+    (reg-response/bankid-poster project-id personnummer request))
   (GET "/registration/:project-id/bankid-finished" [project-id :as request]
     (reg-response/bankid-finished project-id (:session request)))
 
@@ -96,10 +96,10 @@
 
   (GET "/registration/:project-id/validate" [project-id :as request]
     (reg-response/validation-page project-id (:session request)))
-  (POST "/registration/:project-id/validate-email" [project-id & params :as request]
-    (reg-response/validate-code project-id :code-email (:code-email params) (:session request)))
-  (POST "/registration/:project-id/validate-sms" [project-id & params :as request]
-    (reg-response/validate-code project-id :code-sms (:code-sms params) (:session request)))
+  (POST "/registration/:project-id/validate-email" [project-id code-email :as request]
+    (reg-response/validate-email project-id code-email (:session request)))
+  (POST "/registration/:project-id/validate-sms" [project-id code-sms :as request]
+    (reg-response/validate-sms project-id code-sms (:session request)))
 
   (GET "/registration/:project-id/duplicate" [project-id :as request]
     (reg-response/duplicate-page project-id))

@@ -1,6 +1,5 @@
 (ns bass4.responses.registration
   (:require [ring.util.http-response :as http-response]
-            [schema.core :as s]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [bass4.passwords :as passwords]
@@ -44,7 +43,7 @@
 
 (defn reset-reg-session
   [response session]
-  (assoc response :session (assoc session :registration nil)))
+  (assoc response :session (dissoc session :registration)))
 
 (defn- to-finished-page
   [project-id session]
@@ -61,8 +60,8 @@
                       {:external-login? true}
                       true))))
 
-(defn finished-router
-  [project-id session request]
+(def-api finished-router
+  [project-id :- api/Int session :- api/Map request]
   (if-let [user-id (get-in session [:registration :credentials :user-id])]
     (if (zero? (count (assessments/get-pending-assessments user-id)))
       (to-finished-page project-id session)
@@ -80,8 +79,8 @@
           scheme (name (:scheme request))]
       (str scheme "://" host)))
 
-(defn credentials-page
-  [project-id session request]
+(def-api credentials-page
+  [project-id :- api/Int session :- api/Map request]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
       (layout/render "registration-credentials.html"
@@ -96,8 +95,8 @@
 ;;   DUPLICATE
 ;; -------------
 
-(defn duplicate-page
-  [project-id]
+(def-api duplicate-page
+  [project-id :- api/Int]
   (let [emails (bass/db-contact-info project-id)]
     (layout/render "registration-duplicate.html"
                    {:email      (or (:project-email emails)
@@ -221,8 +220,8 @@
       {:filename filename
        :digits   digits})))
 
-(defn captcha
-  [project-id session]
+(def-api captcha
+  [project-id :- api/Int session :- api/Map]
   (if (get-in session [:registration :captcha-ok?])
     (http-response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
@@ -319,8 +318,8 @@
                    (when (db-config/debug-mode?)
                      codes))))
 
-(defn validation-page
-  [project-id session]
+(def-api validation-page
+  [project-id :- api/Int session :- api/Map]
   (let [reg-session  (:registration session)
         field-values (:field-values reg-session)
         fixed-fields (:fixed-fields reg-session)
@@ -376,6 +375,14 @@
                   (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
             (layout/error-422 "error")))))))
 
+(def-api validate-email
+  [project-id :- api/Int posted-code :- api/Str+ session :- api/Map]
+  (validate-code project-id :code-email posted-code session))
+
+(def-api validate-sms
+  [project-id :- api/Int posted-code :- api/Str+ session :- api/Map]
+  (validate-code project-id :code-sms posted-code session))
+
 
 ;; --------------
 ;;     BANKID
@@ -385,8 +392,8 @@
   (let [e-auth (:e-auth session)]
     (and e-auth (every? e-auth [:personnummer :first-name :last-name]))))
 
-(defn bankid-page
-  [project-id]
+(def-api bankid-page
+  [project-id :- api/Int]
   (let [params (reg-service/registration-content project-id)]
     (layout/render
       "registration-bankid.html"
@@ -406,9 +413,9 @@
                        (when-not (:bankid-change-names? params)
                          #{:first-name :last-name}))})))
 
-(defn bankid-finished
+(def-api bankid-finished
   "DOES NOT Reset captcha but continues registration"
-  [project-id session]
+  [project-id :- api/Int session :- api/Map]
   (if (bankid-done? session)
     (let [params (reg-service/registration-params project-id)]
       (->
@@ -418,8 +425,8 @@
         (assoc-in [:session :e-auth] nil)))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
-(defn bankid-poster
-  [project-id personnummer request]
+(def-api bankid-poster
+  [project-id :- api/Int personnummer :- api/Str+ request]
   (if (e-auth/personnummer-valid? personnummer)
     (e-auth/launch-bankid
       request
@@ -440,8 +447,8 @@
          (zipmap (mapv #(keyword (str (name %) "-value")) (keys field-values))
                  (vals field-values))))
 
-(defn registration-page
-  [project-id session]
+(def-api registration-page
+  [project-id :- api/Int session :- api/Map]
   (let [params        (reg-service/registration-content project-id)
         reg-session   (:registration session)
         fields        (:fields params)
@@ -495,8 +502,8 @@
     (re-matches password-regex (:password field-values))
     true))
 
-(defn handle-registration
-  [project-id posted-fields session]
+(def-api handle-registration
+  [project-id :- api/Int posted-fields :- api/Map session :- api/Map]
   (let [params       (reg-service/registration-params project-id)
         fields       (:fields params)
         reg-session  (:registration session)
@@ -533,8 +540,8 @@
 ;;     CANCEL
 ;; --------------
 
-(defn cancel-registration
-  [project-id session]
+(def-api cancel-registration
+  [project-id :- api/Int session :- api/Map]
   (-> (http-response/found (str "/registration/" project-id))
       (reset-reg-session session)))
 
@@ -542,8 +549,8 @@
 ;; --------------
 ;;   INFO PAGE
 ;; --------------
-(defn info-page
-  [project-id]
+(def-api info-page
+  [project-id :- api/Int]
   (let [params (reg-service/registration-content project-id)]
     (layout/render "registration-info.html"
                    (merge
