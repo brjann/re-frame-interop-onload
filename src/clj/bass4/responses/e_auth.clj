@@ -250,7 +250,7 @@
   This function is called from the ongoing screen if the user
   chooses to cancel (if the authentication is still pending)
   Also called by test function to cancel request."
-  [session :- api/Map return-url :- api/Str?]
+  [session :- api/Map return-url :- api/URL?]
   (let [uid (get-in session [:e-auth :uid])]
     (bankid/cancel-bankid! uid)
     (if return-url

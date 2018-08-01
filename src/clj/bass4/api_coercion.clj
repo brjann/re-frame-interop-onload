@@ -1,7 +1,20 @@
 (ns bass4.api-coercion
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log])
-  (:import (clojure.lang Symbol)))
+  (:import (clojure.lang Symbol)
+           (java.net URI)))
+
+(defn URL
+  "A very basic URL validator which does very limited validation
+  of relative URLs"
+  [s]
+  ;; This will throw exception if URI is not valid
+  (URI. s)
+  s)
+
+(defn URL?
+  [s]
+  (when-not (nil? s) (URL s)))
 
 (defn Int
   [s]
@@ -11,6 +24,7 @@
     (if (nil? x)
       (throw (Exception.))
       x)))
+
 
 (def Str
   str)
