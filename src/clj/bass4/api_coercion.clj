@@ -3,14 +3,17 @@
             [clojure.tools.logging :as log]
             [clojure.data.json :as json])
   (:import (clojure.lang Symbol)
-           (java.net URI)))
+           (java.net.URL)))
+
+(def try-url (java.net.URL. "http://example.com"))
 
 (defn URL
-  "A very basic URL validator which does very limited validation
-  of relative URLs"
   [s]
-  ;; This will throw exception if URI is not valid
-  (URI. s)
+  (let [test-url (try (java.net.URL. s)
+                      (catch Exception _
+                        (java.net.URL. try-url s)))]
+    (when (empty? (.getHost test-url))
+      (throw (Exception.))))
   s)
 
 (defn URL?
@@ -59,13 +62,11 @@
     v
     (throw (Exception.))))
 
-
-
-
 (defn eval-spec
   [api-name spec v spec-name v-name]
   (try (spec v)
-       (catch Exception e
+       (catch Throwable e
+         (log/debug "Caught exception")
          (let [msg (.getMessage e)]
            (throw (ex-info
                     (str "API validation failed. API: "

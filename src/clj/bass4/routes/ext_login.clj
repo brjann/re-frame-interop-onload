@@ -14,6 +14,7 @@
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
+            [bass4.api-coercion :as api :refer [def-api]]
             [bass4.time :as b-time]))
 
 
@@ -82,8 +83,8 @@
         filename (bass/write-session-file user-id "extlogin")]
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
-(defn- check-pending
-  [participant-id request]
+(def-api check-pending
+  [participant-id :- api/Str+ request]
   (log/info "Check pending for" participant-id)
   (let [user-id (check-participant-id participant-id)]
     (if (string? user-id)
@@ -95,8 +96,8 @@
         :else
         (logged-response (uid-url user-id request))))))
 
-(defn- do-login
-  [uid return-url]
+(def-api do-login
+  [uid :- api/Str+ return-url :- api/URL]
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user/")
@@ -112,8 +113,7 @@
 
 (defroutes ext-login-routes
   (context "/ext-login" [:as request]
-    (GET "/check-pending/:participant-id" [participant-id] (check-pending participant-id request))
-    (GET "/do-login" [& params]
-      (let [uid        (:uid params)
-            return-url (:returnURL params)]
-        (do-login uid return-url)))))
+    (GET "/check-pending/:participant-id" [participant-id]
+      (check-pending participant-id request))
+    (GET "/do-login" [uid returnURL]
+      (do-login uid returnURL))))
