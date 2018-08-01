@@ -14,8 +14,7 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware]
-            [bass4.responses.auth :refer [wrap-restricted]]
-            [bass4.middleware.errors :refer [wrap-schema-error]]))
+            [bass4.responses.auth :refer [wrap-restricted]]))
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
@@ -24,25 +23,21 @@
 (def app-routes
   (routes
     (-> #'auth-routes
-        (wrap-routes middleware/wrap-formats)
-        (wrap-routes wrap-schema-error))
+        (wrap-routes middleware/wrap-formats))
     (-> #'user-routes
         ;; (wrap-routes middleware/wrap-auth-re-auth)
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes wrap-restricted)
-        (wrap-routes wrap-schema-error))
+        (wrap-routes wrap-restricted))
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats)
-        (wrap-routes wrap-schema-error))
+        (wrap-routes middleware/wrap-formats))
     (-> #'embedded-routes
         ;; TODO: Bring back wrap-csrf
         #_(wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats)
-        (wrap-routes wrap-schema-error))
+        (wrap-routes middleware/wrap-formats))
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'registration-routes

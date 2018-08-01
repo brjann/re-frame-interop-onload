@@ -41,6 +41,20 @@
       (mail-error! req-state))
     res))
 
+(defn wrap-api-error [handler request]
+  (try
+    (handler request)
+    (catch ExceptionInfo e
+      (if (or
+            (= (:type (.data e)) :bass4.api-coercion/api-exception)
+            (= (:type (.data e)) :schema.core/error)
+            (string/starts-with? (.getMessage e) "400"))
+        (do
+          (let [msg (.getMessage e)]
+            (log/error msg)
+            (request-state/record-error! msg))
+          (error-400-page (when (db-config/debug-mode?) (.getMessage e))))
+        (throw e)))))
 
 (defn wrap-schema-error [handler]
   (fn [req]

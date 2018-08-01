@@ -86,8 +86,8 @@
 
   (GET "/registration/:project-id/captcha" [project-id :as request]
     (reg-response/captcha project-id (:session request)))
-  (POST "/registration/:project-id/captcha" [project-id & params :as request]
-    (reg-response/validate-captcha project-id (:captcha params) (:session request)))
+  (POST "/registration/:project-id/captcha" [project-id captcha :as request]
+    (reg-response/validate-captcha project-id captcha (:session request)))
 
   (GET "/registration/:project-id/form" [project-id :as request]
     (reg-response/registration-page project-id (:session request)))

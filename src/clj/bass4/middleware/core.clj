@@ -21,7 +21,7 @@
             [bass4.middleware.request-state :refer [request-state]]
             [bass4.middleware.ajax-post :refer [ajax-post]]
             [bass4.middleware.embedded :refer [embedded-mw embedded-iframe]]
-            [bass4.middleware.errors :refer [internal-error]]
+            [bass4.middleware.errors :refer [internal-error] :as errors]
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
             [bass4.responses.auth :as auth]
@@ -178,6 +178,7 @@
       ;wrap-auth-re-auth
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
+      (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)
       wrap-debug-exceptions

@@ -20,7 +20,8 @@
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
             [clojure.set :as set]
-            [bass4.db-config :as db-config])
+            [bass4.db-config :as db-config]
+            [bass4.api-coercion :as api :refer [def-api]])
   (:import (java.util UUID)))
 
 (def password-regex
@@ -247,8 +248,8 @@
     (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc :session new-session))))
 
-(defn validate-captcha
-  [project-id captcha session]
+(def-api validate-captcha
+  [project-id :- api/Int captcha :- api/Str+ session :- api/Map]
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       ;; TODO: Remove captcha values

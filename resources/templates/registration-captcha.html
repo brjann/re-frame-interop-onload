@@ -15,7 +15,7 @@
     <div class="form-group">
         <label for="captcha">{%tr registration/provide-digits %}</label>
         <input class="form-control" type="text" name="captcha" id="captcha" data-clear-on="error" autocomplete="off"
-               autofocus>
+               autofocus required>
     </div>
     <button class="btn btn-primary" type="submit">{%tr submit %}</button>
     <button onclick="document.location = '/registration/{{project-id}}/cancel'; return false;" class="btn btn-warning">
