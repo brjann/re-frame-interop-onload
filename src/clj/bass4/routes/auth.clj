@@ -6,7 +6,7 @@
             [buddy.hashers :as hashers]))
 
 (defroutes auth-routes
-  (GET "/logout" [& params]
+  (GET "/logout" []
     (auth-response/logout))
 
   (GET "/" [:as request]
@@ -16,22 +16,22 @@
 
   (GET "/login" []
     (auth-response/login-page))
-  (POST "/login" [& params :as request]
-    (auth-response/handle-login request (:username params) (:password params)))
+  (POST "/login" [username password]
+    (auth-response/handle-login username password))
 
-  (POST "/password-hash" [& params]
-    (layout/text-response (hashers/derive (:password params))))
+  (POST "/password-hash" [password]
+    (layout/text-response (hashers/derive password)))
 
   (GET "/double-auth" [:as request]
     (auth-response/double-auth (:session request)))
-  (POST "/double-auth" [& params :as request]
-    (auth-response/double-auth-check (:session request) (:code params)))
+  (POST "/double-auth" [code :as request]
+    (auth-response/double-auth-check (:session request) code))
 
-  (GET "/re-auth" [& params :as request]
-    (auth-response/re-auth (:session request) (:return-url params)))
-  (POST "/re-auth" [& params :as request]
-    (auth-response/check-re-auth (:session request) (:password params) (:return-url params)))
-  (POST "/re-auth-ajax" [& params :as request]
-    (auth-response/check-re-auth-ajax (:session request) (:password params)))
-  (GET "/no-activities" [& params :as request]
+  (GET "/re-auth" [return-url :as request]
+    (auth-response/re-auth (:session request) return-url))
+  (POST "/re-auth" [password return-url :as request]
+    (auth-response/check-re-auth (:session request) password return-url))
+  (POST "/re-auth-ajax" [password :as request]
+    (auth-response/check-re-auth-ajax (:session request) password))
+  (GET "/no-activities" []
     (auth-response/no-activities-page)))

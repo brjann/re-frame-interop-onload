@@ -12,14 +12,15 @@
             [bass4.sms-sender :as sms]
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]
-            [bass4.db-config :as db-config]))
+            [bass4.db-config :as db-config]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
 
 ;; -------------------
 ;;    NO ACTIVITIES
 ;; -------------------
 
-(defn no-activities-page []
+(def-api no-activities-page []
   (layout/render
     "auth/no-activities.html"))
 
@@ -27,7 +28,7 @@
 ;;    LOGOUT
 ;; -------------
 
-(defn logout []
+(def-api logout []
   (-> (http-response/found "/login")
       (assoc :session {})))
 
@@ -69,12 +70,14 @@
     :else
     (auth-service/double-auth-required? (:identity session))))
 
-(defn double-auth [session]
+(def-api double-auth
+  [session :- api/Map]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (double-auth-page (:double-auth-code session))))
 
-(s/defn ^:always-validate double-auth-check [session code :- s/Str]
+(def-api double-auth-check
+  [session :- api/Map code :- api/Str+]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (if (= code (:double-auth-code session))
@@ -160,7 +163,7 @@
 ;;    LOGIN
 ;; ------------
 
-(defn login-page []
+(def-api login-page []
   (layout/render
     "auth/login.html"))
 
@@ -184,10 +187,8 @@
     (when check-assessments?
       (assessments-map user))))
 
-(s/defn
-  ^:always-validate
-  handle-login
-  [request username :- s/Str password :- s/Str]
+(def-api handle-login
+  [username :- api/Str+ password :- api/Str+]
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
       (if error
@@ -214,7 +215,8 @@
     :headers {}
     :body    body}))
 
-(defn re-auth [session return-url]
+(def-api re-auth
+  [session :- api/Map return-url :- api/Str?]
   (if (:auth-re-auth session)
     (re-auth-page return-url)
     (if (:identity session)
@@ -236,14 +238,15 @@
 ;; TODO: Validate URL
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
-(s/defn ^:always-validate check-re-auth
-  [session password :- s/Str return-url]
+(def-api check-re-auth
+  [session :- api/Map password :- api/Str+ return-url :- api/Str?]
   (handle-re-auth session password
                   (http-response/found (if (nil? return-url)
                                     "/user/"
                                     return-url))))
 
-(s/defn check-re-auth-ajax [session password :- s/Str]
+(def-api check-re-auth-ajax
+  [session :- api/Map password :- api/Str+]
   (handle-re-auth session password (http-response/ok "ok")))
 
 

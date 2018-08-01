@@ -13,6 +13,12 @@
 (def Str
   str)
 
+(defn Str?
+  [s]
+  (if (nil? s)
+    nil
+    (str s)))
+
 (defn Str+
   [s]
   (let [s (str s)]
