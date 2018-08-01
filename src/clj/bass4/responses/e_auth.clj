@@ -183,8 +183,8 @@
     :else
     (throw (ex-info (str "Unknown BankID status " status) info))))
 
-(defn bankid-collect
-  [session]
+(def-api bankid-collect
+  [session :- api/Map]
   (let [uid              (get-in session [:e-auth :uid])
         info             (bankid/get-collected-info uid)
         status           (:status info)
@@ -229,10 +229,10 @@
 ;; --------------------------------
 ;;   CANCELLING AND ABORTING REQS
 ;; --------------------------------
-(defn bankid-reset
+(def-api bankid-reset
   "Resets the e-auth map in session and redirects to redirect-failure
   This is the response to the user clicking Cancel in the status page"
-  [session]
+  [session :- api/Map]
   (let [uid           (get-in session [:e-auth :uid])
         bankid?       (= :bankid (get-in session [:e-auth :type]))
         redirect-fail (get-in session [:e-auth :redirect-fail])]
@@ -262,8 +262,8 @@
 ;; --------------------------------
 ;;   ONGOING SESSION RETURN PAGE
 ;; --------------------------------
-(defn bankid-ongoing
-  [session return-url]
+(def-api bankid-ongoing
+  [session :- api/Map return-url :- api/URL]
   (if (bankid-active? session)
     (layout/render "bankid-ongoing.html"
                    {:return-url return-url})
@@ -288,6 +288,6 @@
 ;;      NO SESSION INFO PAGE
 ;; --------------------------------
 
-(defn bankid-no-session
+(def-api bankid-no-session
   []
   (layout/render "bankid-no-session.html"))
