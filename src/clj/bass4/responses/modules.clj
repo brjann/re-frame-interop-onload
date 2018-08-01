@@ -3,7 +3,7 @@
             [ring.util.http-response :as http-response]
             [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
-            [schema.core :as s]
+            [bass4.api-coercion :as api :refer [def-api]]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
@@ -157,8 +157,8 @@
       true)
     (layout/throw-400!)))
 
-(defn save-worksheet-data
-  [treatment-access-id content-data]
+(def-api save-worksheet-data
+  [treatment-access-id :- api/Int content-data :- api/JSON-map]
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 

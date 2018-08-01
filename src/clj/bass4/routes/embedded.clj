@@ -14,14 +14,14 @@
       (GET "/instrument/:instrument-id" [instrument-id]
         (instruments/instrument-page instrument-id))
       (POST "/instrument/:instrument-id" [instrument-id & params]
-        (instruments/post-answers (str->int instrument-id) (:items params) (:specifications params)))
+        (instruments/post-answers instrument-id (:items params) (:specifications params)))
       (GET "/instrument/:instrument-id/summary" [instrument-id]
         (instruments/summary-page instrument-id))
       (GET "/content-example/:content-id" [content-id]
-        (content-example/edit-example (str->int content-id)))
-      (POST "/content-example/:content-id" [content-id & params]
-        (modules/save-worksheet-data content-id (json-safe (:content-data params))))
-      (POST "/render" [& params]
+        (content-example/edit-example content-id))
+      (POST "/content-example/:content-id" [content-id content-data]
+        (modules/save-worksheet-data content-id content-data))
+      (POST "/render" [text markdown]
         (layout/render "render.html"
-                       {:text     (:text params)
-                        :markdown (:markdown params)})))))
+                       {:text     text
+                        :markdown markdown})))))

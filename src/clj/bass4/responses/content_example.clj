@@ -1,13 +1,13 @@
 (ns bass4.responses.content-example
   (:require [bass4.services.treatment :as treatment-service]
-            [schema.core :as s]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
-            [bass4.services.content-data :as content-data]))
+            [bass4.services.content-data :as content-data]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
-(defn edit-example
-  [content-id]
+(def-api edit-example
+  [content-id :- api/Int]
   (when-let [content (treatment-service/get-content content-id)]
     (let [data-name    (:data-name content)
           example-data (content-data/get-content-data

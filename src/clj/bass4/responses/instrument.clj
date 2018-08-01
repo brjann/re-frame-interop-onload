@@ -26,15 +26,6 @@
       (request-state/record-error! (str "Instrument " instrument-id " does not exist"))
       (layout/error-400-page))))
 
-#_(s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]
-    (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
-      (do
-        (instruments/save-test-answers! instrument-id answers-map)
-        (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
-      (do
-        (request-state/record-error! "Instrument post was not in valid JSON format")
-        (layout/error-400-page))))
-
 (defn- checkboxize
   "Makes checkbox items into one item per checkbox option."
   [instrument]
@@ -78,7 +69,8 @@
                                                         (str (:item-id item) "_" value)))})))
             items))))))
 
-(defn summary-page [instrument-id]
+(def-api summary-page
+  [instrument-id :- api/Int]
   (let [answers (get-test-answers instrument-id)]
     (when (:items answers)
       (bass4.layout/render
