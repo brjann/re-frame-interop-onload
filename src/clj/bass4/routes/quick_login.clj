@@ -13,7 +13,8 @@
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
 
 (defn- quick-login-check-length
@@ -62,8 +63,8 @@
   (-> (http-response/found "/user/")
       (assoc :session (auth-response/create-new-session user {:external-login? true} true))))
 
-(defn- quick-login
-  [quick-login-id]
+(def-api quick-login
+  [quick-login-id :- api/Str+]
   (try
     (quick-login-check-length quick-login-id)
     (log/info "Checking quick-login ID" quick-login-id)
