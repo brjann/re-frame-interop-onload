@@ -13,4 +13,5 @@ prod-config.edn
 /log
 /.idea
 *.iml
+bass4.iml
 local*.edn
