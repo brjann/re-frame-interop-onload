@@ -62,14 +62,10 @@
     <orderEntry type="library" name="Leiningen: com.taoensso/tempura:1.2.1" level="project" />
     <orderEntry type="library" name="Leiningen: com.taoensso/truss:1.5.0" level="project" />
     <orderEntry type="library" name="Leiningen: com.zaxxer/HikariCP:3.2.0" level="project" />
-    <orderEntry type="library" name="Leiningen: commons-beanutils:1.9.2" level="project" />
     <orderEntry type="library" name="Leiningen: commons-codec:1.10" level="project" />
-    <orderEntry type="library" name="Leiningen: commons-collections:3.2.2" level="project" />
-    <orderEntry type="library" name="Leiningen: commons-digester:1.8.1" level="project" />
     <orderEntry type="library" name="Leiningen: commons-fileupload:1.3.3" level="project" />
     <orderEntry type="library" name="Leiningen: commons-io:2.6" level="project" />
     <orderEntry type="library" name="Leiningen: commons-logging:1.2" level="project" />
-    <orderEntry type="library" name="Leiningen: commons-validator:1.6" level="project" />
     <orderEntry type="library" name="Leiningen: compojure:1.6.1" level="project" />
     <orderEntry type="library" name="Leiningen: conman:0.8.2" level="project" />
     <orderEntry type="library" name="Leiningen: cprop:0.1.11" level="project" />
