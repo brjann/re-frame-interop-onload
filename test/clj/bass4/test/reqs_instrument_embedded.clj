@@ -21,7 +21,7 @@
         (has (status? 200))
         (visit "/embedded/instrument/1647" :request-method :post :params {})
         (has (status? 400))
-        (debug-headers-text? "MAIL" "schema")
+        (debug-headers-text? "MAIL" "JSON")
         (visit "/embedded/instrument/1647" :request-method :post :params {:items "x" :specifications "y"})
         (debug-headers-text? "MAIL" "JSON")
         (has (status? 400))
@@ -36,6 +36,8 @@
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
+        (has (status? 400))
+        (visit "/embedded/instrument/666")
         (has (status? 404)))))
 
 (deftest request-not-embedded

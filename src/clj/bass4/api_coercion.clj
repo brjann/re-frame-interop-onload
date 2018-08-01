@@ -1,6 +1,7 @@
 (ns bass4.api-coercion
   (:require [clojure.string :as s]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clojure.data.json :as json])
   (:import (clojure.lang Symbol)
            (java.net URI)))
 
@@ -19,12 +20,22 @@
 (defn Int
   [s]
   (let [x (cond
-            (integer? s) s
-            (re-find #"^\d+$" (s/trim s)) (read-string s))]
-    (if (nil? x)
-      (throw (Exception.))
-      x)))
+            (integer? s)
+            s
 
+            (re-find #"^\d+$" (s/trim s))
+            (read-string s)
+
+            :else
+            (throw (Exception.)))]
+    x))
+
+(defn JSON-map
+  [s]
+  (let [m (json/read-str s)]
+    (when-not (map? m)
+      (throw (Exception.)))
+    m))
 
 (def Str
   str)

@@ -5,21 +5,35 @@
             [schema.core :as s]
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
-            [bass4.request-state :as request-state]))
+            [bass4.request-state :as request-state]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
-(defn instrument-page [instrument-id]
+(def-api instrument-page
+  [instrument-id :- api/Int]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (layout/render "instrument-preview.html" {:instrument instrument :instrument-id instrument-id})
     (layout/error-404-page)))
 
-(s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]
-  (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
-    (do
+(def-api post-answers
+  [instrument-id :- api/Int items :- api/JSON-map specifications :- api/JSON-map]
+  (if-let [instrument (instruments/get-instrument instrument-id)]
+    (let [answers-map {:items          items
+                       :specifications specifications
+                       :sums           (instruments/score-items items (instruments/get-scoring instrument-id))}]
       (instruments/save-test-answers! instrument-id answers-map)
       (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
     (do
-      (request-state/record-error! "Instrument post was not in valid JSON format")
+      (request-state/record-error! (str "Instrument " instrument-id " does not exist"))
       (layout/error-400-page))))
+
+#_(s/defn ^:always-validate post-answers [instrument-id :- s/Int items-str :- s/Str specifications-str :- s/Str]
+    (if-let [answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
+      (do
+        (instruments/save-test-answers! instrument-id answers-map)
+        (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
+      (do
+        (request-state/record-error! "Instrument post was not in valid JSON format")
+        (layout/error-400-page))))
 
 (defn- checkboxize
   "Makes checkbox items into one item per checkbox option."
