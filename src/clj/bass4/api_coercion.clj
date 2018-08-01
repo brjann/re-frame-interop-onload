@@ -1,5 +1,7 @@
 (ns bass4.api-coercion
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as s]
+            [clojure.tools.logging :as log])
+  (:import (clojure.lang Symbol)))
 
 (defn Int
   [s]
@@ -32,14 +34,7 @@
     v
     (throw (Exception.))))
 
-(defn- extract-args
-  [args]
-  (loop [acc [] args args]
-    (if-not (seq args)
-      acc
-      (if (= :- (second args))
-        (recur (conj acc (list (first args) (nth args 2))) (drop 3 args))
-        (recur (conj acc (list (first args))) (rest args))))))
+
 
 
 (defn eval-spec
@@ -58,9 +53,29 @@
                            ". Message: ") (.getMessage e))
                     {:type ::api-exception}))))))
 
+(defn- extract-args
+  [args]
+  (loop [acc [] args args]
+    (if-not (seq args)
+      acc
+      (if (= :- (second args))
+        (recur (conj acc (list (first args) (nth args 2))) (drop 3 args))
+        (recur (conj acc (list (first args))) (rest args))))))
+
+(defn- destruct-api
+  [more]
+  (let [[doc-string more] (if (string? (first more))
+                            [(first more) (rest more)]
+                            [nil more])
+        [arg-spec body] [(first more) (rest more)]]
+    [doc-string arg-spec body]))
+
 (defmacro def-api
-  [name arg-spec & body]
-  (let [arg-list#    (extract-args arg-spec)
+  [name & more]
+  (when-not (instance? Symbol name)
+    (throw (IllegalArgumentException. "First argument to def-api must be a symbol")))
+  (let [[doc-string# arg-spec# body#] (destruct-api more)
+        arg-list#    (extract-args arg-spec#)
         ns#          (ns-name *ns*)
         speced-args# (filter #(= 2 (count %)) arg-list#)
         let-vector#  (reduce #(concat %1 (list (first %2) `(eval-spec
@@ -71,8 +86,12 @@
                                                              ~(str (first %2)))))
                              nil
                              speced-args#)]
-    `(defn ~name ~(into [] (map first arg-list#))
-       ~(if (seq speced-args#)
-          `(let [~@let-vector#]
-             ~@body)
-          `(do ~@body)))))
+    (concat
+      `(defn ~name)
+      (when doc-string#
+        (list doc-string#))
+      (list (into [] (map first arg-list#)))
+      (list (if (seq speced-args#)
+              `(let [~@let-vector#]
+                 ~@body#)
+              `(do ~@body#))))))

@@ -10,7 +10,8 @@
             [ring.util.http-response :as http-response]
             [bass4.i18n :as i18n]
             [clojure.string :as string]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
 
 
@@ -68,8 +69,8 @@
 ;;           STATUS PAGE
 ;; --------------------------------
 
-(defn bankid-status-page
-  [session]
+(def-api bankid-status-page
+  [session :- api/Map]
   (let [uid              (get-in session [:e-auth :uid])
         bankid?          (= :bankid (get-in session [:e-auth :type]))
         redirect-success (get-in session [:e-auth :redirect-success])
@@ -244,12 +245,12 @@
         response
         (http-response/found "/e-auth/bankid/no-session")))))
 
-(defn bankid-cancel
+(def-api bankid-cancel
   "Cancels a bankid request and resets e-auth map in session.
   This function is called from the ongoing screen if the user
   chooses to cancel (if the authentication is still pending)
   Also called by test function to cancel request."
-  [session return-url]
+  [session :- api/Map return-url :- api/Str?]
   (let [uid (get-in session [:e-auth :uid])]
     (bankid/cancel-bankid! uid)
     (if return-url
