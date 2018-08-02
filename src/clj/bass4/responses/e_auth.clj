@@ -70,7 +70,7 @@
 ;; --------------------------------
 
 (def-api bankid-status-page
-  [session :- api/Map?]
+  [session :- map?]
   (let [uid              (get-in session [:e-auth :uid])
         bankid?          (= :bankid (get-in session [:e-auth :type]))
         redirect-success (get-in session [:e-auth :redirect-success])
@@ -184,7 +184,7 @@
     (throw (ex-info (str "Unknown BankID status " status) info))))
 
 (def-api bankid-collect
-  [session :- api/Map?]
+  [session :- map?]
   (let [uid              (get-in session [:e-auth :uid])
         info             (bankid/get-collected-info uid)
         status           (:status info)
@@ -232,7 +232,7 @@
 (def-api bankid-reset
   "Resets the e-auth map in session and redirects to redirect-failure
   This is the response to the user clicking Cancel in the status page"
-  [session :- api/Map?]
+  [session :- map?]
   (let [uid           (get-in session [:e-auth :uid])
         bankid?       (= :bankid (get-in session [:e-auth :type]))
         redirect-fail (get-in session [:e-auth :redirect-fail])]
@@ -250,7 +250,7 @@
   This function is called from the ongoing screen if the user
   chooses to cancel (if the authentication is still pending)
   Also called by test function to cancel request."
-  [session :- api/Map? return-url :- api/?URL?]
+  [session :- map? return-url :- api/?URL?]
   (let [uid (get-in session [:e-auth :uid])]
     (bankid/cancel-bankid! uid)
     (if return-url
@@ -263,7 +263,7 @@
 ;;   ONGOING SESSION RETURN PAGE
 ;; --------------------------------
 (def-api bankid-ongoing
-  [session :- api/Map? return-url :- api/URL?]
+  [session :- map? return-url :- api/URL?]
   (if (bankid-active? session)
     (layout/render "bankid-ongoing.html"
                    {:return-url return-url})

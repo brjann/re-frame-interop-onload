@@ -71,13 +71,13 @@
     (auth-service/double-auth-required? (:identity session))))
 
 (def-api double-auth
-  [session :- api/Map?]
+  [session :- map?]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (double-auth-page (:double-auth-code session))))
 
 (def-api double-auth-check
-  [session :- api/Map? code :- api/str+!]
+  [session :- map? code :- api/str+!]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (if (= code (:double-auth-code session))
@@ -216,7 +216,7 @@
     :body    body}))
 
 (def-api re-auth
-  [session :- api/Map? return-url :- api/?str!]
+  [session :- map? return-url :- api/?str!]
   (if (:auth-re-auth session)
     (re-auth-page return-url)
     (if (:identity session)
@@ -239,14 +239,14 @@
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
 (def-api check-re-auth
-  [session :- api/Map? password :- api/str+! return-url :- api/?str!]
+  [session :- map? password :- api/str+! return-url :- api/?str!]
   (handle-re-auth session password
                   (http-response/found (if (nil? return-url)
                                     "/user/"
                                     return-url))))
 
 (def-api check-re-auth-ajax
-  [session :- api/Map? password :- api/str+!]
+  [session :- map? password :- api/str+!]
   (handle-re-auth session password (http-response/ok "ok")))
 
 

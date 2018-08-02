@@ -53,17 +53,6 @@
       (throw (Exception.))
       s)))
 
-(defn Map?
-  [v]
-  (if (map? v)
-    v
-    (throw (Exception.))))
-
-(defn ?map?
-  [v]
-  (when v
-    (map? v)))
-
 (defn eval-spec
   [api-name spec v spec-name v-name]
   (let [api-exception (fn [msg]
