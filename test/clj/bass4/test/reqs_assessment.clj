@@ -43,6 +43,8 @@
         (has (some-text? "top top welcome"))
         (visit "/user/")
         (has (some-text? "HAD"))
+        (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "tjosan" :specifications "tjosan"})
+        (has (status? 400))
         (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
         (has (status? 302))
         (follow-redirect)

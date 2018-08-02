@@ -243,13 +243,9 @@
   (when-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
     (instrument-answers/save-answers! answers-id answers-map)))
 
-(defn parse-answers-post
-  [instrument-id items-str specifications-str]
-  (let [instrument     (get-instrument instrument-id)
-        items          (json-safe items-str)
-        specifications (json-safe specifications-str)]
-    (if (or (nil? items) (nil? specifications) (nil? instrument))
-      nil
-      {:items          items
-       :specifications specifications
-       :sums           (score-items items (get-scoring instrument-id))})))
+(defn parse-answers-post2
+  [instrument-id items specifications]
+  (when (get-instrument instrument-id)
+    {:items          items
+     :specifications specifications
+     :sums           (score-items items (get-scoring instrument-id))}))

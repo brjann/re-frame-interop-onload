@@ -5,7 +5,7 @@
             [clojure.tools.logging :as log]
             [bass4.services.instrument :as instruments]
             [bass4.request-state :as request-state]
-            [schema.core :as s]))
+            [bass4.api-coercion :as api :refer [def-api]]))
 
 (defn- text-page
   [step]
@@ -48,9 +48,9 @@
       (assoc :session (merge session {:assessments-pending? false}))))
 
 (defn- instrument-completed
-  [user-id round instrument-id items-str specifications-str]
+  [user-id round instrument-id items specifications]
   (let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))
-        answers-map (instruments/parse-answers-post instrument-id items-str specifications-str)]
+        answers-map        (instruments/parse-answers-post2 instrument-id items specifications)]
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
           (assessments-service/administrations-completed! user-id round instrument-id)
@@ -59,15 +59,15 @@
         (request-state/record-error! "Something went wrong")
         (http-response/found "/user")))))
 
-(defn handle-assessments
-  [user-id session]
+(def-api handle-assessments
+  [user-id :- integer? session :- map?]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       (assessment-page round))))
 
-(s/defn ^:always-validate post-instrument-answers
-  [user-id session instrument-id :- s/Int items :- s/Str specifications :- s/Str]
+(def-api post-instrument-answers
+  [user-id :- integer? session :- map? instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
