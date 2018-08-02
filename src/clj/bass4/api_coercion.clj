@@ -64,7 +64,7 @@
                                       ". Arg name: " v-name
                                       ". Arg value: " v
                                       (when-not (empty? msg)
-                                        ". Message: " msg))
+                                        (str ". Message: " msg)))
                                  {:type ::api-exception})))
         validation?   (= \? (last spec-name))
         nil-ok?       (= \? (first spec-name))]
