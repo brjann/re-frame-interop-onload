@@ -59,22 +59,35 @@
     v
     (throw (Exception.))))
 
+(defn ?map?
+  [v]
+  (when v
+    (map? v)))
+
 (defn eval-spec
   [api-name spec v spec-name v-name]
-  (try (spec v)
-       (catch Throwable e
-         (log/debug "Caught exception")
-         (let [msg (.getMessage e)]
-           (throw (ex-info
-                    (str "API validation failed. API: "
-                         api-name
-                         ". Spec-name: "
-                         spec-name
-                         ". Arg name: " v-name
-                         ". Arg value: " v
-                         (when-not (zero? (count msg))
-                           ". Message: ") (.getMessage e))
-                    {:type ::api-exception}))))))
+  (let [api-exception (fn [msg]
+                        (throw (ex-info
+                                 (str "API validation failed. API: "
+                                      api-name
+                                      ". Spec-name: "
+                                      spec-name
+                                      ". Arg name: " v-name
+                                      ". Arg value: " v
+                                      (when-not (empty? msg)
+                                        ". Message: " msg))
+                                 {:type ::api-exception})))
+        validation?   (= \? (last spec-name))
+        nil-ok?       (= \? (first spec-name))]
+    (try (let [ret (spec v)]
+           (if validation?
+             (if (or ret (and (nil? v) nil-ok?))
+               v
+               (api-exception "Validation failed"))
+             ret))
+         (catch Throwable e
+           (let [msg (.getMessage e)]
+             (api-exception msg))))))
 
 (defn- extract-args
   [args]
@@ -94,23 +107,23 @@
     [doc-string arg-spec body]))
 
 (defmacro def-api
-  [name & more]
-  (when-not (instance? Symbol name)
+  [api-name & more]
+  (when-not (instance? Symbol api-name)
     (throw (IllegalArgumentException. "First argument to def-api must be a symbol")))
   (let [[doc-string# arg-spec# body#] (destruct-api more)
         arg-list#    (extract-args arg-spec#)
         ns#          (ns-name *ns*)
         speced-args# (filter #(= 2 (count %)) arg-list#)
         let-vector#  (reduce #(concat %1 (list (first %2) `(eval-spec
-                                                             ~(str ns# "/" name)
+                                                             ~(str ns# "/" api-name)
                                                              ~(second %2)
                                                              ~(first %2)
-                                                             ~(str (second %2))
-                                                             ~(str (first %2)))))
+                                                             ~(name (second %2))
+                                                             ~(name (first %2)))))
                              nil
                              speced-args#)]
     (concat
-      `(defn ~name)
+      `(defn ~api-name)
       (when doc-string#
         (list doc-string#))
       (list (into [] (map first arg-list#)))
