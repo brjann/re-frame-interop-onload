@@ -9,13 +9,13 @@
             [bass4.api-coercion :as api :refer [def-api]]))
 
 (def-api instrument-page
-  [instrument-id :- api/Int]
+  [instrument-id :- api/int!]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (layout/render "instrument-preview.html" {:instrument instrument :instrument-id instrument-id})
     (layout/error-404-page)))
 
 (def-api post-answers
-  [instrument-id :- api/Int items :- api/JSON-map specifications :- api/JSON-map]
+  [instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (let [answers-map {:items          items
                        :specifications specifications
@@ -70,7 +70,7 @@
             items))))))
 
 (def-api summary-page
-  [instrument-id :- api/Int]
+  [instrument-id :- api/int!]
   (let [answers (get-test-answers instrument-id)]
     (when (:items answers)
       (bass4.layout/render

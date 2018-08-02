@@ -7,7 +7,7 @@
             [bass4.api-coercion :as api :refer [def-api]]))
 
 (def-api edit-example
-  [content-id :- api/Int]
+  [content-id :- api/int!]
   (when-let [content (treatment-service/get-content content-id)]
     (let [data-name    (:data-name content)
           example-data (content-data/get-content-data

@@ -84,7 +84,7 @@
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
 (def-api check-pending
-  [participant-id :- api/Str+ request]
+  [participant-id :- api/str+! request]
   (log/info "Check pending for" participant-id)
   (let [user-id (check-participant-id participant-id)]
     (if (string? user-id)
@@ -97,7 +97,7 @@
         (logged-response (uid-url user-id request))))))
 
 (def-api do-login
-  [uid :- api/Str+ return-url :- api/URL]
+  [uid :- api/str+! return-url :- api/URL?]
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user/")

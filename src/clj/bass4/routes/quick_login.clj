@@ -64,7 +64,7 @@
       (assoc :session (auth-response/create-new-session user {:external-login? true} true))))
 
 (def-api quick-login
-  [quick-login-id :- api/Str+]
+  [quick-login-id :- api/str+!]
   (try
     (quick-login-check-length quick-login-id)
     (log/info "Checking quick-login ID" quick-login-id)

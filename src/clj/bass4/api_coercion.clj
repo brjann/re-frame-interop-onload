@@ -3,60 +3,57 @@
             [clojure.tools.logging :as log]
             [clojure.data.json :as json])
   (:import (clojure.lang Symbol)
-           (java.net.URL)))
+           (java.net URL)))
 
-(def try-url (java.net.URL. "http://example.com"))
+(def try-url (URL. "http://example.com"))
 
-(defn URL
+(defn URL?
   [s]
-  (let [test-url (try (java.net.URL. s)
+  (let [test-url (try (URL. s)
                       (catch Exception _
-                        (java.net.URL. try-url s)))]
+                        (URL. try-url s)))]
     (when (empty? (.getHost test-url))
       (throw (Exception.))))
   s)
 
-(defn URL?
+(defn ?URL?
   [s]
-  (when-not (nil? s) (URL s)))
+  (when-not (nil? s) (URL? s)))
 
-(defn Int
-  [s]
+(defn int!
+  [i]
   (let [x (cond
-            (integer? s)
-            s
+            (integer? i)
+            i
 
-            (re-find #"^\d+$" (s/trim s))
-            (read-string s)
+            (re-find #"^\d+$" (s/trim i))
+            (read-string i)
 
             :else
             (throw (Exception.)))]
     x))
 
-(defn JSON-map
+(defn JSON-map!
   [s]
   (let [m (json/read-str s)]
     (when-not (map? m)
       (throw (Exception.)))
     m))
 
-(def Str
-  str)
-
-(defn Str?
+(defn ?str!
   [s]
   (if (nil? s)
     nil
     (str s)))
 
-(defn Str+
+(defn str+!
   [s]
   (let [s (str s)]
     (if (zero? (count s))
       (throw (Exception.))
       s)))
 
-(defn Map
+(defn Map?
   [v]
   (if (map? v)
     v
