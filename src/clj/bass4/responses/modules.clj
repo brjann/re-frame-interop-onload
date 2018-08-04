@@ -74,7 +74,8 @@
               :page-title   (:content-name content)}
              params))))
 
-(defn main-text [treatment-access render-map module]
+(def-api main-text
+  [treatment-access :- map? render-map :- map? module :- map?]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
@@ -87,7 +88,8 @@
       {:module-id  module-text-id
        :page-title (:module-name module)})))
 
-(defn homework [treatment-access render-map module]
+(def-api homework
+  [treatment-access :- map? render-map :- map? module :- map?]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
@@ -163,20 +165,20 @@
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 
-(defn save-main-text-data
-  [treatment-access content-data]
+(def-api save-main-text-data
+  [treatment-access :- map? content-data :- api/JSON-map!]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (http-response/ok {})))
 
-(defn save-homework
-  [treatment-access module content-data submit?]
+(def-api save-homework
+  [treatment-access :- map? module :- map? content-data :- api/JSON-map! submit? :- api/bool!]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (when submit?
       (treatment-service/submit-homework! treatment-access module))
     (http-response/found "reload")))
 
-(defn retract-homework
-  [treatment-access module]
+(def-api retract-homework
+  [treatment-access :- map? module :- map?]
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
     (when (not (:ok submitted))
       (treatment-service/retract-homework! submitted module)

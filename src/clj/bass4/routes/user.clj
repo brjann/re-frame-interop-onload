@@ -37,17 +37,13 @@
   [treatment-access render-map module]
   (routes
     (GET "/" [] (modules-response/main-text treatment-access render-map module))
-    (POST "/" [& params]
-      (modules-response/save-main-text-data
-        treatment-access
-        (json-safe (:content-data params))))
-    (GET "/homework" [] (modules-response/homework treatment-access render-map module))
-    (POST "/homework" [& params]
-      (modules-response/save-homework
-        treatment-access
-        module
-        (json-safe (:content-data params))
-        (= 1 (str->int (:submitting params)))))
+    (POST "/" [content-data]
+      (modules-response/save-main-text-data treatment-access content-data))
+    (GET "/homework" []
+      (modules-response/homework treatment-access render-map module))
+    (POST "/homework" [content-data submit?]
+      (log/debug submit?)
+      (modules-response/save-homework treatment-access module content-data submit?))
     (POST "/retract-homework" []
       (modules-response/retract-homework
         treatment-access

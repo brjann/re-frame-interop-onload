@@ -33,6 +33,13 @@
             (throw (Exception.)))]
     x))
 
+(defn bool!
+  [x]
+  (if (boolean? x)
+    x
+    (let [x (int! x)]
+      (not (zero? x)))))
+
 (defn JSON-map!
   [s]
   (let [m (json/read-str s)]
