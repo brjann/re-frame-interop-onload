@@ -431,7 +431,7 @@
   (db/set-instrument-completed! {:user-id user-id :instrument-id instrument-id})
   (instrument-answers/save-administrations-answers! administration-ids instrument-id answers-map))
 
-(defn administrations-completed!
+(defn check-completed-administrations!
   [user-id round completed-instrument-id]
   (let [non-empty (->> round
                        (remove #(= completed-instrument-id (:instrument-id %)))

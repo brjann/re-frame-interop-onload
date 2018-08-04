@@ -53,7 +53,7 @@
         answers-map        (instruments/score-instrument instrument-id items specifications)]
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
-          (assessments-service/administrations-completed! user-id round instrument-id)
+          (assessments-service/check-completed-administrations! user-id round instrument-id)
           (-> (http-response/found "/user")))
       (do
         (request-state/record-error! "Something went wrong")
