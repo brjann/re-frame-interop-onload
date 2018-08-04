@@ -9,7 +9,8 @@
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]))
+            [bass4.services.content-data :as content-data-service]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
 (defn- context-menu
   [module module-contents]
@@ -130,7 +131,7 @@
                         :content-data example-data}))
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(defn modules-list [render-map modules treatment-access-id]
+(def-api modules-list [render-map :- map? modules :- seq? treatment-access-id :- integer?]
   (let [module-contents      (treatment-service/get-module-contents-with-update-time
                                (mapv :module-id modules)
                                treatment-access-id)
