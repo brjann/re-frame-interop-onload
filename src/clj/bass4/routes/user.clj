@@ -73,7 +73,7 @@
         (messages-response/save-draft (:user-id user) (:text params))
         (layout/error-404-page)))
     (POST "/message-read" [& params]
-      (messages-response/message-read (:user-id user) (str->int (:message-id params))))))
+      (messages-response/message-read (:user-id user) (:message-id params)))))
 
 
 (defn no-treatment-response

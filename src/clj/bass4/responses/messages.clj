@@ -3,9 +3,10 @@
             [clojure.string :as string]
             [ring.util.http-response :as http-response]
             [schema.core :as s]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [bass4.api-coercion :as api :refer [def-api]]))
 
-(defn messages-page [render-map user]
+(def-api messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
         messages (->> (messages-service/get-all-messages user-id)
                       (map #(assoc % :text (string/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
@@ -18,14 +19,17 @@
                            :messages   messages
                            :draft      draft}))))
 
-(s/defn ^:always-validate save-message [user-id :- s/Int text :- s/Str]
+(def-api save-message
+  [user-id :- integer? text :- api/str+!]
   (messages-service/save-message! user-id text)
   (http-response/found "/user/messages"))
 
-(s/defn ^:always-validate save-draft [user-id :- s/Int text :- s/Str]
+(def-api save-draft
+  [user-id :- integer? text :- api/str+!]
   (messages-service/save-draft! user-id text)
   (http-response/ok "ok"))
 
-(s/defn ^:always-validate message-read [user-id :- s/Int message-id :- s/Int]
+(def-api message-read
+  [user-id :- integer? message-id :- api/int!]
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))
