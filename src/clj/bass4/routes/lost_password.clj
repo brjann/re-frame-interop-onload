@@ -8,4 +8,4 @@
 (def lost-password-routes
   (context "/lost-password" []
     (GET "/" []
-      (layout/text-response "hejsan"))))
+      )))
