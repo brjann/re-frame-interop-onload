@@ -233,17 +233,12 @@
       (reduce (statement-resolver default-value) $items statements)
       exports)))
 
-(defn score-instrument
-  [items instrument-id]
-  (if-let [scoring (get-scoring instrument-id)]
-    (score-items items scoring)))
-
 (defn save-test-answers!
   [instrument-id answers-map]
   (when-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
     (instrument-answers/save-answers! answers-id answers-map)))
 
-(defn parse-answers-post2
+(defn score-instrument
   [instrument-id items specifications]
   (when (get-instrument instrument-id)
     {:items          items

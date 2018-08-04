@@ -50,7 +50,7 @@
 (defn- instrument-completed
   [user-id round instrument-id items specifications]
   (let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))
-        answers-map        (instruments/parse-answers-post2 instrument-id items specifications)]
+        answers-map        (instruments/score-instrument instrument-id items specifications)]
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
           (assessments-service/administrations-completed! user-id round instrument-id)

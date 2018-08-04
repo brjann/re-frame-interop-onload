@@ -86,6 +86,13 @@
       (-> s2
           (visit "/user/")
           (has (some-text? "HAD"))
+          ;; Posting answers to wrong instrument. Silently fails but "Something went wrong" is recorded
+          ;; in request log.
+          (visit "/user/" :request-method :post :params {:instrument-id 6371 :items "{}" :specifications "{}"})
+          (has (status? 302)))
+      (-> s2
+          (visit "/user/")
+          (has (some-text? "HAD"))
           (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"}))
       (-> s1
           (visit "/user/")
