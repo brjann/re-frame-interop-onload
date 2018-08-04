@@ -159,7 +159,7 @@
     (layout/throw-400!)))
 
 (def-api save-worksheet-data
-  [treatment-access-id :- api/int! content-data :- api/JSON-map!]
+  [treatment-access-id :- integer? content-data :- api/JSON-map!]
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 
