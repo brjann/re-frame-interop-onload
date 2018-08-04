@@ -134,7 +134,8 @@
                    :please-re-auth          "Please provide your password to continue to use the system."
                    :please-re-auth-form     "Your password is needed before you can submit your data."
                    :no-activities           "No activities"
-                   :no-activities-info      "There are no active tasks for this user. You have been logged out."}
+                   :no-activities-info      "There are no active tasks for this user. You have been logged out."
+                   :lost-password           "I lost my password"}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

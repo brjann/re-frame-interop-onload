@@ -10,6 +10,7 @@
             [bass4.routes.quick-login :refer [quick-login-routes]]
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
+            [bass4.routes.lost-password :refer [lost-password-routes]]
             [compojure.route :as route]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
@@ -23,6 +24,8 @@
 (def app-routes
   (routes
     (-> #'auth-routes
+        (wrap-routes middleware/wrap-formats))
+    (-> #'lost-password-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes
         ;; (wrap-routes middleware/wrap-auth-re-auth)
