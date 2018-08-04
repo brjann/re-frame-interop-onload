@@ -5,4 +5,6 @@
 (def lost-password-routes
   (context "/lost-password" []
     (GET "/" []
-      (lpw-res/lost-password-page))))
+      (lpw-res/lost-password-page))
+    (POST "/" [username]
+      (lpw-res/handle-username username))))

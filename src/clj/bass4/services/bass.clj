@@ -35,6 +35,16 @@
                                      :count         count}))]
     (range (inc (- last-object-id count)) (inc last-object-id))))
 
+(defn create-flag!
+  [user-id flag-text flag-icon]
+  (let [flag-id (:objectid (db/create-bass-object! {:class-name    "cFlag"
+                                                    :parent-id     user-id
+                                                    :property-name "Flags"}))]
+    (db/update-object-properties! {:table-name "c_flag"
+                                   :object-id  flag-id
+                                   :updates    {:FlagText   flag-text
+                                                :CustomIcon flag-icon}})))
+
 (defn time-zone
   []
   (try
