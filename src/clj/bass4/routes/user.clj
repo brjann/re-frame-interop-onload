@@ -45,11 +45,14 @@
       (modules-response/save-homework treatment-access module content-data submit?))
     (POST "/retract-homework" []
       (modules-response/retract-homework treatment-access module))
-    ;; TODO: API!!
     (GET "/worksheet/:worksheet-id" [worksheet-id]
-      (modules-response/worksheet treatment-access render-map module (str->int worksheet-id)))
-    (GET "/worksheet/:worksheet-id/example" [worksheet-id & params]
-      (modules-response/worksheet-example module (str->int worksheet-id) (:return params)))))
+      (modules-response/worksheet
+        treatment-access
+        render-map
+        module
+        worksheet-id))
+    (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
+      (modules-response/worksheet-example module worksheet-id return-path))))
 
 (defn- messages-routes
   [user treatment render-map]

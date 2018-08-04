@@ -20,7 +20,7 @@
       (GET "/content-example/:content-id" [content-id]
         (content-example/edit-example content-id))
       (POST "/content-example/:content-id" [content-id content-data]
-        (modules/save-worksheet-data content-id content-data))
+        (modules/save-worksheet-example-data content-id content-data))
       (POST "/render" [text markdown]
         (layout/render "render.html"
                        {:text     text

@@ -103,7 +103,8 @@
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
-(defn worksheet [treatment-access render-map module worksheet-id]
+(def-api worksheet
+  [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/int!]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
@@ -115,7 +116,8 @@
         worksheet-id)
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(defn worksheet-example [module worksheet-id return-path]
+(def-api worksheet-example
+  [module :- map? worksheet-id :- api/int! return-path :- api/URL?]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
@@ -159,6 +161,11 @@
         treatment-access-id)
       true)
     (layout/throw-400!)))
+
+(def-api save-worksheet-example-data
+  [content-id :- api/int! content-data :- api/JSON-map!]
+  (when (handle-content-data content-data content-id)
+    (http-response/found "reload")))
 
 (def-api save-worksheet-data
   [treatment-access-id :- integer? content-data :- api/JSON-map!]
