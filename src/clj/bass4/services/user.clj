@@ -3,17 +3,16 @@
             [buddy.hashers :as hashers]
             [bass4.config :as config]))
 
-(defn get-user [user-id]
+(defn get-user
+  [user-id]
   (when user-id
     (if-let [user (db/bool-cols db/get-user-by-user-id {:user-id user-id} [:double-auth-use-both?])]
       (assoc user :user-id (:objectid user)))))
 
-(defn get-users-by-participant-id [participant-id]
+(defn get-users-by-participant-id
+  [participant-id]
   (when-let [users (db/bool-cols db/get-user-by-participant-id {:participant-id participant-id} [:double-auth-use-both?])]
     (mapv #(assoc % :user-id (:objectid %)) users)))
-
-(defn support-email [user]
-  (:email (db/bool-cols db/get-support-email {:project-id (:project-id user)} [:double-auth-use-both?])))
 
 (defn password-hasher
   [password]

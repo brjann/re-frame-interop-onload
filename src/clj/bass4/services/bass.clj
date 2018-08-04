@@ -19,9 +19,12 @@
   (:sms-sender (db/get-sms-sender)))
 
 (defn db-contact-info
-  ([] (db-contact-info "_"))
+  ([] (db-contact-info 0))
   ([project-id]
-   (db/get-contact-info {:project-id project-id})))
+   (let [emails (db/get-contact-info {:project-id project-id})]
+     (assoc emails :email (if-not (empty? (:project-email emails))
+                            (:project-email emails)
+                            (:db-email emails))))))
 
 ;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!

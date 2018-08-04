@@ -49,14 +49,13 @@
   [user]
   (let [emails (bass/db-contact-info (:project-id user))]
     (layout/render "quick-login-expired.html"
-                   {:email (or (:project-email emails)
-                               (:db-email emails))})))
+                   {:email (:email emails)})))
 
 (defn invalid-response
   []
   (let [emails (bass/db-contact-info (:project-id 0))]
     (layout/render "quick-login-invalid.html"
-                   {:email (:db-email emails)})))
+                   {:email (:email emails)})))
 
 (defn do-login
   [user]

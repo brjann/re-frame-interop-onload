@@ -28,7 +28,9 @@ FROM c_project
 WHERE ObjectId=100;
 
 -- :name get-contact-info :? :1
-SELECT cp.Email AS `db-email`, ct.DefaultEmailRecipient AS `project-email`
+SELECT
+  cp.Email AS `db-email`,
+  ct.DefaultEmailRecipient AS `project-email`
 FROM c_project AS cp LEFT JOIN c_treatmentinterface AS ct ON ct.ObjectId = :project-id
 WHERE cp.ObjectId=100;
 
@@ -44,20 +46,12 @@ WHERE ObjectId=100;
 INSERT IGNORE INTO links_properties_reverse
 (LinkeeId, PropertyName, LinkerClass) VALUES (:linkee-id, :property-name, :linker-class);
 
--- :name get-support-email :? :1
-SELECT (CASE
-        WHEN ct.DefaultEmailRecipient="" OR ct.DefaultEmailRecipient IS NULL
-          THEN cp.Email
-        ELSE ct.DefaultEmailRecipient
-        END) AS email
-FROM c_treatmentinterface AS ct
-  JOIN c_project AS cp ON cp.ObjectId=100
-WHERE ct.ObjectId=:project-id;
 
 -- :name get-project-participant-collection :? :1
 SELECT ObjectId AS `collection-id`
 FROM c_participantscollection
 WHERE ParentId=:project-id;
+
 
 -- :name update-user-properties! :! :1
 -- :doc This is SQL injection safe!

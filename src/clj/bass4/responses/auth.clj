@@ -13,7 +13,8 @@
             [bass4.mailer :as mail]
             [bass4.i18n :as i18n]
             [bass4.db-config :as db-config]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.services.bass :as bass-service]))
 
 
 ;; -------------------
@@ -130,8 +131,8 @@
 ;; TODO: This is not perfect - wrong password and then no-method looks weird
 (defn- no-method-message
   [user]
-  (let [email (user-service/support-email user)]
-    (str "message " (i18n/tr [:login/no-send-method] [email]))))
+  (let [email (bass-service/db-contact-info user)]
+    (str "message " (i18n/tr [:login/no-send-method] [(:email email)]))))
 
 (defn- redirect-map
   [user]
