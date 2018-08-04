@@ -2,7 +2,7 @@
 {% block user-content %}
 {% if submitted %}
 <div class="alert alert-{% if submitted.ok %}success{% else %}info{% endif %}" role="alert">
-    {% if submitted.ok %}
+    {% if submitted.ok? %}
     <strong>{%tr modules/submitted-ok-title %}</strong>
     {% tr modules/submitted-ok-text %}
     {% else %}

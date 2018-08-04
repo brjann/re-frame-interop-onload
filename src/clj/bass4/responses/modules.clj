@@ -180,7 +180,8 @@
 (def-api retract-homework
   [treatment-access :- map? module :- map?]
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
-    (when (not (:ok submitted))
-      (treatment-service/retract-homework! submitted module)
+    (do
+      (when (not (:ok? submitted))
+        (treatment-service/retract-homework! submitted module))
       (http-response/found "reload"))
     (layout/throw-400!)))

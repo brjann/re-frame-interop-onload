@@ -15,10 +15,13 @@
 
 (defn- submitted-homeworks
   [treatment-access]
-  (->> (db/get-submitted-homeworks {:treatment-access-id (:treatment-access-id treatment-access)})
+  (->> (db/bool-cols
+         db/get-submitted-homeworks
+         {:treatment-access-id (:treatment-access-id treatment-access)}
+         [:ok?])
        (group-by :module-id)
        (map-map first)
-       (map-map #(assoc % :ok (= 1 (:ok %))))))
+       #_(map-map #(assoc % :ok (= 1 (:ok %))))))
 
 (defn- user-treatment-accesses
   [user-id]
@@ -157,7 +160,7 @@
                               (get-in treatment-access
                                       [:modules-activation-dates (:module-id %)]))
         homework-status-fn #(case (get-in treatment-access
-                                          [:submitted-homeworks (:module-id %) :ok])
+                                          [:submitted-homeworks (:module-id %) :ok?])
                               nil nil
                               true :ok
                               false :submitted)]

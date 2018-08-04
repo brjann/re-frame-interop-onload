@@ -42,12 +42,10 @@
     (GET "/homework" []
       (modules-response/homework treatment-access render-map module))
     (POST "/homework" [content-data submit?]
-      (log/debug submit?)
       (modules-response/save-homework treatment-access module content-data submit?))
     (POST "/retract-homework" []
-      (modules-response/retract-homework
-        treatment-access
-        module))
+      (modules-response/retract-homework treatment-access module))
+    ;; TODO: API!!
     (GET "/worksheet/:worksheet-id" [worksheet-id]
       (modules-response/worksheet treatment-access render-map module (str->int worksheet-id)))
     (GET "/worksheet/:worksheet-id/example" [worksheet-id & params]
