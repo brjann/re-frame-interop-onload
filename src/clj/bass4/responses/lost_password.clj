@@ -36,9 +36,10 @@
   (http-response/found "/lost-password/request/sent"))
 
 (def-api request-sent
-  []
+  [request :- map?]
   (layout/render "lost-password-request-sent.html"
-                 {:email (:email (bass-service/db-contact-info))}))
+                 {:email     (:email (bass-service/db-contact-info))
+                  :login-url (h-utils/get-host-address request)}))
 
 (def-api handle-request-uid
   [uid :- api/str+!]
@@ -47,8 +48,9 @@
         (http-response/found "/lost-password/request/received"))))
 
 (def-api request-received
-  []
-  (layout/text-response "Thank you - flag created!"))
+  [request]
+  (layout/render "lost-password-request-received.html"
+                 {:login-url (h-utils/get-host-address request)}))
 
 ;; TODO: Tests
 ;; - Flow post - mail - request - flag created
