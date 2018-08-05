@@ -6,5 +6,5 @@
   (context "/lost-password" []
     (GET "/" []
       (lpw-res/lost-password-page))
-    (POST "/" [username]
-      (lpw-res/handle-username username))))
+    (POST "/" [username :as request]
+      (lpw-res/handle-username username request))))

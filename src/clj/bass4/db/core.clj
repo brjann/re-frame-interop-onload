@@ -78,6 +78,7 @@
 (conman/bind-connection *db* "sql/assessments.sql")
 (conman/bind-connection *db* "sql/instrument-answers.sql")
 (conman/bind-connection *db* "sql/registration.sql")
+(conman/bind-connection *db* "sql/lost-password.sql")
 (conman/bind-connection db-common "sql/common.sql")
 (conman/bind-connection db-common "sql/attack-detector.sql")
 

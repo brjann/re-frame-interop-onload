@@ -3,7 +3,8 @@
             [bass4.services.bass :as bass-service]
             [clj-time.format :as f]
             [bass4.services.bass :as bass]
-            [clj-time.core :as t]))
+            [clj-time.core :as t])
+  (:import (java.util UUID)))
 
 (defn create-flag!
   [user]
@@ -13,3 +14,13 @@
       (:user-id user)
       (str "User reported lost password on " date-str)
       "questionmark.png")))
+
+(defn create-request-uid
+  [user]
+  (let [uid (str (UUID/randomUUID) "-" (:user-id user))]
+    (db/set-lost-password-request-uid! {:user-id user :uid uid})
+    uid))
+
+(defn get-user-by-username-or-email
+  [username-or-email]
+  (db/get-user-by-username-or-email {:username-or-email username-or-email}))

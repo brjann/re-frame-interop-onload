@@ -136,9 +136,10 @@
                    :no-activities           "No activities"
                    :no-activities-info      "There are no active tasks for this user. You have been logged out."
                    :lost-password           "I lost my password"}
- :lost-password   {:title                  "Lost password"
-                   :enter-username-contact "Enter your username here and we will contact you."
-                   :forgot-username        "If you lost your password, contact us on this email address "}
+ :lost-password   {:title         "Lost password"
+                   :request-info  "Enter your username or email address. We will send you an email with a link. Follow that link to request a new password."
+                   :request-email "Click the link below to request a new password. \n\n %1\n\n If you have not requested a new password, please contact us at %2."}
+ :forgot-username "If you don't know your username or registered email address, contact us at "
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

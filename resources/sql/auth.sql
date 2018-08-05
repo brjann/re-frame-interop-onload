@@ -53,6 +53,26 @@ SELECT
 FROM c_participant
 WHERE ParticipantId = :participant-id;
 
+
+-- :name get-user-by-username-or-email :? :1
+-- :doc retrieve a user given the username.
+SELECT
+  ObjectId,
+  ObjectId AS `user-id`,
+  FirstName AS `first-name`,
+  LastName AS `last-name`,
+  UserName,
+  Email,
+  SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
+  ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login-time`,
+  `Password`,
+  `OldPassword` AS `old-password`
+FROM c_participant
+WHERE UserName = :username-or-email OR Email = :username-or-email;
+
+
 -- :name get-double-auth-settings :? :1
 -- :doc
 SELECT

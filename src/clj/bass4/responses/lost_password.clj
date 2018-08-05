@@ -5,7 +5,10 @@
             [bass4.services.user :as user-service]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.services.lost-password :as lpw-service]))
+            [bass4.services.lost-password :as lpw-service]
+            [bass4.mailer :as mailer]
+            [bass4.i18n :as i18n]
+            [bass4.http-utils :as h-utils]))
 
 
 ;; -------------------
@@ -19,7 +22,12 @@
       {:email email})))
 
 (def-api handle-username
-  [username :- api/str+!]
+  [username :- api/str+! request :- map?]
   (when-let [user (user-service/get-user-by-username username)]
-    (lpw-service/create-flag! user))
+    (when (mailer/is-email? (:email user))
+      (future
+        (let [uid  (lpw-service/create-request-uid user)
+              url  (str (h-utils/get-host-address request) "/lost-password/request-uid/" uid)
+              mail (i18n/tr [:lost-password/request-email] [url (:email (bass-service/db-contact-info))])]
+          (mailer/mail! (:email user) "Request new password" mail)))))
   (http-response/ok))
