@@ -136,13 +136,14 @@
                    :no-activities           "No activities"
                    :no-activities-info      "There are no active tasks for this user. You have been logged out."
                    :lost-password           "I lost my password"}
- :lost-password   {:title               "Lost password"
-                   :request-info        "Enter your username or email address. We will send you an email with a link. Follow that link to request a new password."
-                   :request-email       "Click the link below to request a new password. \n\n %1\n\n The link is valid for one hour and can only be used once. If you have not requested a new password, please contact us at %2."
-                   :request-sent-title  "Email sent"
-                   :request-sent-info-1 "If your username or email address exists, we have sent an email to your registered email address. Click the link in the email to request a new password."
-                   :request-sent-info-2 "It may take a few minutes for the email to arrive. If you do not receive an email, you may have entered the wrong email address or username. Please contact us at the address below if you do not receive the email."}
- :forgot-username "If you don't know your username or registered email address, contact us at "
+ :lost-password   {:title                "Lost password"
+                   :request-info         "Enter your username or email address. We will send you an email with a link. Follow that link to request a new password."
+                   :request-email-header "Request new password"
+                   :request-email-text   "Click the link below to request a new password. \n\n %1\n\n The link is valid for one hour and can only be used once. If you have not requested a new password, please contact us at %2."
+                   :request-sent-title   "Email sent"
+                   :request-sent-info-1  "If your username or email address exists, we have sent an email to your registered email address. Click the link in the email to request a new password."
+                   :request-sent-info-2  "It may take a few minutes for the email to arrive. If you do not receive an email, you may have entered the wrong email address or username. Please contact us at the address below if you do not receive the email."
+                   :forgot-username      "If you don't know your username or registered email address, contact us at "}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

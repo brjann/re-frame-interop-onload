@@ -15,12 +15,18 @@
       (str "User reported lost password on " date-str)
       "questionmark.png")))
 
-(defn create-request-uid
-  [user]
-  (let [uid (str (UUID/randomUUID) "-" (:user-id user))]
-    (db/set-lost-password-request-uid! {:user-id user :uid uid})
-    uid))
-
 (defn get-user-by-username-or-email
   [username-or-email]
   (db/get-user-by-username-or-email {:username-or-email username-or-email}))
+
+(defn create-request-uid!
+  [user]
+  (let [uid (str (subs (str (UUID/randomUUID)) 0 13) "-" (:user-id user))]
+    (db/set-lost-password-request-uid! {:user-id (:user-id user) :uid uid :now (t/now)})
+    uid))
+
+(defn get-user-by-request-uid
+  [uid]
+  (when-let [user (db/get-user-by-lost-password-request-uid! {:uid uid :now (t/now)})]
+    (db/reset-lost-password-request-uid! {:user-id (:user-id user)})
+    user))

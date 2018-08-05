@@ -23,16 +23,24 @@
 
 (def-api handle-request
   [username :- api/str+! request :- map?]
-  (when-let [user (user-service/get-user-by-username username)]
-    (when (mailer/is-email? (:email user))
-      (future
-        (let [uid  (lpw-service/create-request-uid user)
-              url  (str (h-utils/get-host-address request) "/lost-password/request/uid/" uid)
-              mail (i18n/tr [:lost-password/request-email] [url (:email (bass-service/db-contact-info))])]
-          (mailer/mail! (:email user) "Request new password" mail)))))
+  (if-let [user (lpw-service/get-user-by-username-or-email username)]
+    (if (mailer/is-email? (:email user))
+      (let [uid    (lpw-service/create-request-uid! user)
+            url    (str (h-utils/get-host-address request) "/lpw-uid/" uid)
+            mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
+            header (i18n/tr [:lost-password/request-email-header])]
+        (future (mailer/mail! (:email user) header mail)))
+      ;; TODO: Flag if no email address
+      ))
   (http-response/found "/lost-password/request/sent"))
 
 (def-api request-sent
   []
   (layout/render "lost-password-request-sent.html"
                  {:email (:email (bass-service/db-contact-info))}))
+
+(def-api handle-request-uid
+  [uid :- api/str+!]
+  (if-let [user (lpw-service/get-user-by-request-uid uid)]
+    (do (lpw-service/create-flag! user)
+        (http-response/found "/lost-password/request/received"))))
