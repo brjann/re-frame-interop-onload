@@ -14,4 +14,6 @@
     (GET "/request/sent" []
       (lpw-res/request-sent))
     (GET "/request/uid/:uid" [uid]
-      (lpw-res/handle-request-uid uid))))
+      (lpw-res/handle-request-uid uid))
+    (GET "/request/received" []
+      (lpw-res/request-received))))

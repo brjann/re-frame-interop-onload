@@ -12,6 +12,7 @@
  :save-changes    "Save changes"
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
+ :contact-support "You contact support at "
  :quick-login     {:expired-title           "Login expired"
                    :expired-text            "Your login code has expired."
                    :invalid-title           "Invalid login code"
@@ -142,8 +143,9 @@
                    :request-email-text   "Click the link below to request a new password. \n\n %1\n\n The link is valid for one hour and can only be used once. If you have not requested a new password, please contact us at %2."
                    :request-sent-title   "Email sent"
                    :request-sent-info-1  "If your username or email address exists, we have sent an email to your registered email address. Click the link in the email to request a new password."
-                   :request-sent-info-2  "It may take a few minutes for the email to arrive. If you do not receive an email, you may have entered the wrong email address or username. Please contact us at the address below if you do not receive the email."
-                   :forgot-username      "If you don't know your username or registered email address, contact us at "}
+                   :request-sent-info-2  "It may take a few minutes for the email to arrive. If you do not receive an email, you may have entered the wrong email address or username. Please contact support at the address below if you do not receive the email."
+                   :forgot-username      "If you don't know your username or registered email address, contact support at "
+                   :close-window         "You can close this browser window."}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

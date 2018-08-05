@@ -29,6 +29,7 @@
             url    (str (h-utils/get-host-address request) "/lpw-uid/" uid)
             mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
             header (i18n/tr [:lost-password/request-email-header])]
+        ;; Using future to prevent sniffing of existing accounts
         (future (mailer/mail! (:email user) header mail)))
       ;; If user has no email address - then flag anyway but act as if email was sent.
       (lpw-service/create-flag! user)))
@@ -44,3 +45,14 @@
   (if-let [user (lpw-service/get-user-by-request-uid uid)]
     (do (lpw-service/create-flag! user)
         (http-response/found "/lost-password/request/received"))))
+
+(def-api request-received
+  []
+  (layout/text-response "Thank you - flag created!"))
+
+;; TODO: Tests
+;; - Flow post - mail - request - flag created
+;; - Flow post - sms - request - flag created
+;; - Flow post - mail - request after timeout - no flag created
+;; - Flow post - sms - request after timeout - no flag created
+;; - No email / sms - flag created anyway
