@@ -67,7 +67,7 @@
       true)))
 
 ;; Overwritten by other function when in debug mode
-(defn send-db-sms!
+(defn ^:dynamic send-db-sms!
   [recipient message]
   (let [db-name       (:name db-config/*local-config*)
         db-connection db/*db*]

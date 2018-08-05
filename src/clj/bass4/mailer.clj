@@ -23,7 +23,7 @@
        true))))
 
 ;; Overwritten by other function when in debug mode
-(defn mail!
+(defn ^:dynamic mail!
   ([to subject message]
    (mail*! to subject message nil false))
   ([to subject message reply-to]

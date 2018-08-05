@@ -93,8 +93,8 @@
                  (mail-redefs)
                  (sms-redefs))]
     (if redefs
-      (with-redefs-fn redefs
-        #(handler request))
+      (with-bindings redefs
+        (handler request))
       (handler request))))
 
 (defn wrap-debug-exceptions
