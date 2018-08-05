@@ -46,9 +46,12 @@
   (request-state/swap-state! :debug-headers #(conj %1 (str "MAIL to " to "\n" subject "\n" message)) [])
   true)
 
+(def ^:dynamic *sms-reroute*)
+
 (defn- sms-redefs
   []
-  (let [sms-reroute (env :dev-reroute-sms)]
+  (let [sms-reroute (or *sms-reroute*
+                        (env :dev-reroute-sms))]
     (cond
       ;; Put sms in header when
       ;; - in test environment, or
@@ -67,9 +70,12 @@
       :else
       {})))
 
+(def ^:dynamic *mail-reroute*)
+
 (defn- mail-redefs
   []
-  (let [mail-reroute (env :dev-reroute-email)]
+  (let [mail-reroute (or *mail-reroute*
+                         (env :dev-reroute-email))]
     (cond
       ;; Put mail in header when
       ;; - in test environment, or

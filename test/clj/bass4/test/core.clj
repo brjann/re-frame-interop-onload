@@ -71,7 +71,9 @@
     (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
   (reset! bankid/session-statuses {})
-  (binding [clojure.test/*stack-trace-depth* 5
+  (binding [mw-debug/*mail-reroute*          :header
+            mw-debug/*sms-reroute*           :header
+            clojure.test/*stack-trace-depth* 5
             mw/*skip-csrf*                   true
             *s*                              @s]
     (f)))
