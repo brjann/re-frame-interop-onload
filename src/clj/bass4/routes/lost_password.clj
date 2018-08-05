@@ -11,9 +11,11 @@
       (lpw-res/lost-password-page))
     (POST "/" [username :as request]
       (lpw-res/handle-request username request))
-    (GET "/request/sent" [:as request]
-      (lpw-res/request-sent request))
+    (GET "/request/sent" []
+      (lpw-res/request-sent))
     (GET "/request/uid/:uid" [uid]
       (lpw-res/handle-request-uid uid))
-    (GET "/request/received" [:as request]
-      (lpw-res/request-received request))))
+    (GET "/request/received" []
+      (lpw-res/request-received))
+    (GET "/request/not-found" []
+      (lpw-res/request-not-found))))

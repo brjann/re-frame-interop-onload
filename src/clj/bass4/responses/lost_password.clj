@@ -36,21 +36,25 @@
   (http-response/found "/lost-password/request/sent"))
 
 (def-api request-sent
-  [request :- map?]
+  []
   (layout/render "lost-password-request-sent.html"
-                 {:email     (:email (bass-service/db-contact-info))
-                  :login-url (h-utils/get-host-address request)}))
+                 {:email (:email (bass-service/db-contact-info))}))
 
 (def-api handle-request-uid
   [uid :- api/str+!]
   (if-let [user (lpw-service/get-user-by-request-uid uid)]
     (do (lpw-service/create-flag! user)
-        (http-response/found "/lost-password/request/received"))))
+        (http-response/found "/lost-password/request/received"))
+    (http-response/found "/lost-password/request/not-found")))
 
 (def-api request-received
-  [request]
-  (layout/render "lost-password-request-received.html"
-                 {:login-url (h-utils/get-host-address request)}))
+  []
+  (layout/render "lost-password-request-received.html"))
+
+(def-api request-not-found
+  []
+  (layout/render "lost-password-request-not-found.html"
+                 {:email (:email (bass-service/db-contact-info))}))
 
 ;; TODO: Tests
 ;; - Flow post - mail - request - flag created
