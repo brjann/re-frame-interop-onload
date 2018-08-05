@@ -1,21 +1,14 @@
 (ns bass4.i18n
-  (:require [selmer.parser :as parser]
-            [taoensso.tempura :as tempura]
+  (:require [taoensso.tempura :as tempura]
             [bass4.utils :refer [map-map map-map-keys filter-map deep-merge in?]]
             [bass4.db-config :as db-config]
             [bass4.php_clj.reader :as reader]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
             [clojure.java.io :as io]
-            [clojure.walk :as walk]
             [clojure.edn :as edn]
             [clojure.string :as s]
             [flatland.ordered.map :refer [ordered-map]]
             [mount.core :refer [defstate]]
-            [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass])
-  (:import [java.io.File]
-           (java.io BufferedInputStream)))
+            [clojure.tools.logging :as log]))
 
 (defn ls [d]
   (remove #(.isDirectory %) (.listFiles d)))
@@ -44,7 +37,7 @@
      {:dict i18n-map
       :missing-resource-fn
             (fn
-              [{:keys [opts locales resource-ids resource-args]}]
+              [{:keys [resource-ids]}]
               (str "Missing translation keys: " resource-ids))}
      [(or (db-config/language) "en")]
      resource-ids
