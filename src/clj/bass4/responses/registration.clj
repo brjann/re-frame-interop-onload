@@ -98,7 +98,6 @@
 (def-api duplicate-page
   [project-id :- api/int!]
   (let [emails (bass/db-contact-info project-id)]
-    (log/debug emails)
     (layout/render "registration-duplicate.html"
                    {:email      (:email emails)
                     :project-id project-id})))
