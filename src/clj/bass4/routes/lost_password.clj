@@ -7,4 +7,6 @@
     (GET "/" []
       (lpw-res/lost-password-page))
     (POST "/" [username :as request]
-      (lpw-res/handle-username username request))))
+      (lpw-res/handle-request username request))
+    (GET "/request/sent" []
+      (lpw-res/request-sent))))

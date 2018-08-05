@@ -21,13 +21,18 @@
       "lost-password.html"
       {:email email})))
 
-(def-api handle-username
+(def-api handle-request
   [username :- api/str+! request :- map?]
   (when-let [user (user-service/get-user-by-username username)]
     (when (mailer/is-email? (:email user))
       (future
         (let [uid  (lpw-service/create-request-uid user)
-              url  (str (h-utils/get-host-address request) "/lost-password/request-uid/" uid)
+              url  (str (h-utils/get-host-address request) "/lost-password/request/uid/" uid)
               mail (i18n/tr [:lost-password/request-email] [url (:email (bass-service/db-contact-info))])]
           (mailer/mail! (:email user) "Request new password" mail)))))
-  (http-response/ok))
+  (http-response/found "/lost-password/request/sent"))
+
+(def-api request-sent
+  []
+  (layout/render "lost-password-request-sent.html"
+                 {:email (:email (bass-service/db-contact-info))}))
