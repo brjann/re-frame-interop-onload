@@ -30,8 +30,8 @@
             mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
             header (i18n/tr [:lost-password/request-email-header])]
         (future (mailer/mail! (:email user) header mail)))
-      ;; TODO: Flag if no email address
-      ))
+      ;; If user has no email address - then flag anyway but act as if email was sent.
+      (lpw-service/create-flag! user)))
   (http-response/found "/lost-password/request/sent"))
 
 (def-api request-sent
