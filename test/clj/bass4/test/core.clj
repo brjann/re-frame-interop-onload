@@ -73,7 +73,7 @@
   (reset! bankid/session-statuses {})
   (binding [mw-debug/*mail-reroute*          :header
             mw-debug/*sms-reroute*           :header
-            clojure.test/*stack-trace-depth* 5
+            clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
             *s*                              @s]
     (f)))

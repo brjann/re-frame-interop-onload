@@ -8,8 +8,10 @@
     (http-response/found (str "/lost-password/request/uid/" uid)))
   (context "/lost-password" []
     (GET "/" []
+      (http-response/found "/lost-password/request"))
+    (GET "/request" []
       (lpw-res/lost-password-page))
-    (POST "/" [username :as request]
+    (POST "/request" [username :as request]
       (lpw-res/handle-request username request))
     (GET "/request/sent" []
       (lpw-res/request-sent))
