@@ -43,7 +43,8 @@
     (db/update-object-properties! {:table-name "c_flag"
                                    :object-id  flag-id
                                    :updates    {:FlagText   flag-text
-                                                :CustomIcon flag-icon}})))
+                                                :CustomIcon flag-icon
+                                                :Open       1}})))
 
 (defn time-zone
   []
