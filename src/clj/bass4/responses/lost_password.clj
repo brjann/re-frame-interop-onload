@@ -18,7 +18,7 @@
 (def-api request-page []
   (let [email (:email (bass-service/db-contact-info))]
     (layout/render
-      "lost-password.html"
+      "lpw-request-email.html"
       {:email email})))
 
 (def-api handle-request
@@ -38,7 +38,7 @@
 
 (def-api request-sent
   []
-  (layout/render "lost-password-request-sent.html"
+  (layout/render "lpw-request-email-sent.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
 (def-api handle-request-uid
@@ -50,16 +50,16 @@
 
 (def-api request-received
   []
-  (layout/render "lost-password-request-received.html"))
+  (layout/render "lpw-request-email-received.html"))
 
 (def-api request-not-found
   []
-  (layout/render "lost-password-request-not-found.html"
+  (layout/render "lpw-request-email-not-found.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
 (def-api report-page
   []
-  (layout/render "lost-password-request-not-found.html"
+  (layout/render "lpw-request-email-not-found.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
 (def-api handle-report
