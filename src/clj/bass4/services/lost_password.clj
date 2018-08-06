@@ -7,6 +7,16 @@
             [clojure.tools.logging :as log])
   (:import (java.util UUID)))
 
+(defn lost-password-method []
+  (let [method (->
+                 (db/get-lost-password-method)
+                 first
+                 val
+                 keyword)]
+    (if (#{:report :request-email} method)
+      method
+      :report)))
+
 (def uid-time-limit
   5400)
 
