@@ -7,19 +7,25 @@
             [bass4.services.lost-password :as lpw-service]))
 
 (def rules
-  [{:pattern  #"^/lost-password/request-email.*"
-    :handler  (fn [_] (= :request-email (lpw-service/lost-password-method)))
-    :on-error (constantly (layout/text-response "No way!"))}
-   {:pattern  #"^/lost-password/report.*"
-    :handler  (fn [_] (= :report (lpw-service/lost-password-method)))
-    :on-error (constantly (layout/text-response "No way!"))}])
+  [{:pattern #"^/lost-password/request-email.*"
+    :handler (fn [_] (= :request-email (lpw-service/lost-password-method)))}
+   {:pattern #"^/lost-password/report.*"
+    :handler (fn [_] (= :report (lpw-service/lost-password-method)))}])
+
+(defn- re-router
+  []
+  (let [method (lpw-service/lost-password-method)
+        route  (case method
+                 :request-email "/lost-password/request-email"
+                 :report "/lost-password/report")]
+    (http-response/found route)))
 
 (defroutes lost-password-routes
   (GET "/lpw-uid/:uid" [uid]
     (http-response/found (str "/lost-password/request-email/uid/" uid)))
   (context "/lost-password" []
     (GET "/" []
-      (http-response/found "/lost-password/request-email"))
+      (re-router))
     (context "/request-email" []
       (GET "/" []
         (lpw-res/request-page))

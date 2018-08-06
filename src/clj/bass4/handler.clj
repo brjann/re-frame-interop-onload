@@ -27,7 +27,8 @@
     (-> #'auth-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'lost-password-routes
-        (wrap-access-rules {:rules lost-password/rules})
+        (wrap-access-rules {:rules    lost-password/rules
+                            :on-error (constantly (layout/error-403-page))})
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes
         ;; (wrap-routes middleware/wrap-auth-re-auth)
