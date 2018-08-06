@@ -59,23 +59,19 @@
 
 (def-api report-page
   []
-  (layout/render "lpw-request-email-not-found.html"
+  (layout/render "lpw-report.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
 (def-api handle-report
-  [username :- api/str+! request :- map?]
+  [username :- api/str+!]
   (if-let [user (lpw-service/get-user-by-username-or-email username)]
-    (if (mailer/is-email? (:email user))
-      (let [uid    (lpw-service/create-request-uid! user)
-            url    (str (h-utils/get-host-address request) "/lpw-uid/" uid)
-            mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
-            header (i18n/tr [:lost-password/request-email-header])]
-        ;; TODO: Use future someway to prevent sniffing of existing accounts
-        ;; Cannot be done now because it breaks tests
-        (mailer/mail! (:email user) header mail))
-      ;; If user has no email address - then flag anyway but act as if email was sent.
-      (lpw-service/create-flag! user)))
-  (http-response/found "/lost-password/request-email/sent"))
+    (lpw-service/create-flag! user))
+  (http-response/found "/lost-password/report/received"))
+
+(def-api report-received
+  []
+  (layout/render "lpw-report-received.html"
+                 {:email (:email (bass-service/db-contact-info))}))
 
 ;; TODO: Tests
 ;; - Flow post - sms - request - flag created

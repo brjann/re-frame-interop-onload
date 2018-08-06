@@ -148,6 +148,9 @@
                    :request-received-info   "We will contact you to provide you with a new password."
                    :request-not-found-title "Invalid link"
                    :request-not-found-info  "The link that you clicked is not valid. Links only last for one hour and can only be used once."
+                   :report-info             "Enter your username or email address."
+                   :report-received-info-1  "We will contact you to provide you with a new password."
+                   :report-received-info-2  "If we do not contact you within the next few days, you may have entered the wrong username or password. You can then contact support at"
                    :again                   "Request a new password again."
                    :forgot-username         "If you don't know your username or registered email address, contact support at "
                    :close-window            "You can close this browser window"}

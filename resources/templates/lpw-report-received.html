@@ -1,0 +1,9 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>{%tr lost-password/request-received-title %}</h1>
+<p>{%tr lost-password/report-received-info-1 %}</p>
+<p>{%tr lost-password/report-received-info-2 %} <a href="mailto:{{email}}">{{email}}</a></p></p>
+<p>{%tr lost-password/close-window %} <a href="/">{%tr error/or-login %}</a></p>
+
+{% endblock %}

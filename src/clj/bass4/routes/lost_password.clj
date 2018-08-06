@@ -36,5 +36,7 @@
     (context "/report" []
       (GET "/" []
         (lpw-res/report-page))
-      (POST "/" [username :as request]
-        (lpw-res/handle-report username request)))))
+      (POST "/" [username]
+        (lpw-res/handle-report username))
+      (GET "/received" []
+        (lpw-res/report-received)))))
