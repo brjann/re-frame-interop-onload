@@ -134,15 +134,17 @@
         (has (some-text? "received")))
     (is (has-flag?))))
 
-;; TODO: This test
-(comment (deftest lost-password-report-flow-wrong-user
-           (with-redefs [lpw-service/lost-password-method (constantly :report)]
-             (-> *s*
-                 (visit "/lost-password")
-                 (has (status? 302))
-                 (follow-redirect)
-                 (has (status? 200))
-                 (visit "/lost-password/report" :request-method :post :params {:username "lost-password"})
-                 (follow-redirect)
-                 (has (some-text? "received")))
-             (is (has-flag?)))))
+(deftest lost-password-report-flow-email
+  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+    (-> *s*
+        (visit "/lost-password/report" :request-method :post :params {:username "lost@password.com"})
+        (follow-redirect)
+        (has (some-text? "received")))
+    (is (has-flag?))))
+
+(deftest lost-password-report-no-user
+  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+    (-> *s*
+        (visit "/lost-password/report" :request-method :post :params {:username "////////////"})
+        (follow-redirect)
+        (has (some-text? "received")))))
