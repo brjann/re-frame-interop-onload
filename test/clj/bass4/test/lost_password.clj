@@ -13,7 +13,8 @@
             [bass4.services.attack-detector :as a-d]
             [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
-            [bass4.db.core :as db]))
+            [bass4.db.core :as db]
+            [bass4.services.lost-password :as lpw-service]))
 
 
 (use-fixtures
@@ -90,14 +91,10 @@
 
 (deftest lost-password-uid-expired
   (-> *s*
-      (pass-by (log/debug (t/now)))
       (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
       (set-uid!)
-      (pass-by (log/debug (t/now)))
-      (advance-time-s! 10000)
-      (pass-by (log/debug (t/now)))
+      (advance-time-s! (inc lpw-service/uid-time-limit))
       (visit (str "/lost-password/request/uid/" @uid))
       (follow-redirect)
-      (has (some-text? "Invalid"))
-      (pass-by (log/debug (t/now))))
+      (has (some-text? "Invalid")))
   (is (false? (has-flag?))))

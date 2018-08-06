@@ -48,4 +48,4 @@ SELECT
   `Password`,
   `OldPassword` AS `old-password`
 FROM c_participant
-WHERE LostPasswordRequestUID = :uid AND LostPasswordRequestTime > UNIX_TIMESTAMP(:now - 7200)
+WHERE LostPasswordRequestUID = :uid AND LostPasswordRequestTime > UNIX_TIMESTAMP(:now) - :time-limit

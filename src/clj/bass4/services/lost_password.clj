@@ -3,8 +3,12 @@
             [bass4.services.bass :as bass-service]
             [clj-time.format :as f]
             [bass4.services.bass :as bass]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [clojure.tools.logging :as log])
   (:import (java.util UUID)))
+
+(def uid-time-limit
+  5400)
 
 (defn create-flag!
   [user]
@@ -27,6 +31,6 @@
 
 (defn get-user-by-request-uid
   [uid]
-  (when-let [user (db/get-user-by-lost-password-request-uid! {:uid uid :now (t/now)})]
+  (when-let [user (db/get-user-by-lost-password-request-uid! {:uid uid :now (t/now) :time-limit uid-time-limit})]
     (db/reset-lost-password-request-uid! {:user-id (:user-id user)})
     user))
