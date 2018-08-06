@@ -22,13 +22,17 @@
                 :start ((or (:init defaults) identity))
                 :stop  ((or (:stop defaults) identity)))
 
+(defn auth-error
+  [_ _]
+  (layout/error-403-page))
+
 (def app-routes
   (routes
     (-> #'auth-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'lost-password-routes
         (wrap-access-rules {:rules    lost-password/rules
-                            :on-error (constantly (layout/error-403-page))})
+                            :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes
         ;; (wrap-routes middleware/wrap-auth-re-auth)
