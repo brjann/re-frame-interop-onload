@@ -48,53 +48,101 @@
     (swap! uid (constantly uid*)))
   s)
 
+(deftest lost-password-router
+  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+    (-> *s*
+        (visit "/lost-password/request-email")
+        (has (status? 403))))
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password/report")
+        (has (status? 403)))))
 
-(deftest lost-password-flow
-  (-> *s*
-      (visit "/lost-password")
-      (has (status? 302))
-      (follow-redirect)
-      (has (status? 200))
-      (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
-      (debug-headers-text? "can only be used once")
-      (set-uid!)
-      (follow-redirect)
-      (has (some-text? "sent"))
-      ;; Shortcut
-      (visit (str "/lpw-uid/" @uid))
-      (has (status? 302))
-      ;; Redirected from shortcut
-      (follow-redirect)
-      (follow-redirect)
-      (advance-time-s! 10000)
-      (has (some-text? "received")))
-  (is (has-flag?)))
+(deftest lost-password-request-email-flow
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password")
+        (has (status? 302))
+        (follow-redirect)
+        (has (status? 200))
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
+        (debug-headers-text? "can only be used once")
+        (set-uid!)
+        (follow-redirect)
+        (has (some-text? "sent"))
+        ;; Shortcut
+        (visit (str "/lpw-uid/" @uid))
+        (has (status? 302))
+        ;; Redirected from shortcut
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "received")))
+    (is (has-flag?))))
 
-(deftest lost-password-wrong-uid
-  (-> *s*
-      (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
-      (set-uid!)
-      (visit (str "/lost-password/request/uid/xxx"))
-      (follow-redirect)
-      (has (some-text? "Invalid")))
-  (is (false? (has-flag?))))
+(deftest lost-password-request-email-email
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost@password.com"})
+        (set-uid!)
+        (follow-redirect)
+        (visit (str "/lost-password/request-email/uid/" @uid))
+        (follow-redirect)
+        (has (some-text? "received")))
+    (is (has-flag?))))
 
-(deftest lost-password-old-uid
-  (-> *s*
-      (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
-      (set-uid!)
-      (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
-      (visit (str "/lost-password/request/uid/" @uid))
-      (follow-redirect)
-      (has (some-text? "Invalid")))
-  (is (false? (has-flag?))))
+(deftest lost-password-request-email-wrong-uid
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
+        (set-uid!)
+        (visit (str "/lost-password/request-email/uid/xxx"))
+        (follow-redirect)
+        (has (some-text? "Invalid")))
+    (is (false? (has-flag?)))))
 
-(deftest lost-password-uid-expired
-  (-> *s*
-      (visit "/lost-password/request" :request-method :post :params {:username "lost-password"})
-      (set-uid!)
-      (advance-time-s! (inc lpw-service/uid-time-limit))
-      (visit (str "/lost-password/request/uid/" @uid))
-      (follow-redirect)
-      (has (some-text? "Invalid")))
-  (is (false? (has-flag?))))
+(deftest lost-password-request-email-old-uid
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
+        (set-uid!)
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
+        (visit (str "/lost-password/request-email/uid/" @uid))
+        (follow-redirect)
+        (has (some-text? "Invalid")))
+    (is (false? (has-flag?)))))
+
+(deftest lost-password-request-email-uid-expired
+  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+    (-> *s*
+        (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
+        (set-uid!)
+        (advance-time-s! (inc lpw-service/uid-time-limit))
+        (visit (str "/lost-password/request-email/uid/" @uid))
+        (follow-redirect)
+        (has (some-text? "Invalid")))
+    (is (false? (has-flag?)))))
+
+(deftest lost-password-report-flow
+  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+    (-> *s*
+        (visit "/lost-password")
+        (has (status? 302))
+        (follow-redirect)
+        (has (status? 200))
+        (visit "/lost-password/report" :request-method :post :params {:username "lost-password"})
+        (follow-redirect)
+        (has (some-text? "received")))
+    (is (has-flag?))))
+
+;; TODO: This test
+(comment (deftest lost-password-report-flow-wrong-user
+           (with-redefs [lpw-service/lost-password-method (constantly :report)]
+             (-> *s*
+                 (visit "/lost-password")
+                 (has (status? 302))
+                 (follow-redirect)
+                 (has (status? 200))
+                 (visit "/lost-password/report" :request-method :post :params {:username "lost-password"})
+                 (follow-redirect)
+                 (has (some-text? "received")))
+             (is (has-flag?)))))
