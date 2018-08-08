@@ -26,6 +26,7 @@
                      (f/unparse (t/now)))]
     (bass-service/create-flag!
       (:user-id user)
+      "lost-password"
       (str "User reported lost password on " date-str)
       "questionmark.png")))
 

@@ -21,17 +21,24 @@
       "lpw-request-email.html"
       {:email email})))
 
+;; Exists for to allow testing.
+;; Awaiting a general async external messaging support.
+(def ^:dynamic *async-email?* true)
+
 (def-api handle-request
   [username :- api/str+! request :- map?]
   (if-let [user (lpw-service/get-user-by-username-or-email username)]
     (if (mailer/is-email? (:email user))
-      (let [uid    (lpw-service/create-request-uid! user)
-            url    (str (h-utils/get-host-address request) "/lpw-uid/" uid)
-            mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
-            header (i18n/tr [:lost-password/request-email-header])]
+      (let [uid     (lpw-service/create-request-uid! user)
+            url     (str (h-utils/get-host-address request) "/lpw-uid/" uid)
+            mail    (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
+            header  (i18n/tr [:lost-password/request-email-header])
+            mail-fn #(mailer/mail! (:email user) header mail)]
         ;; TODO: Use future someway to prevent sniffing of existing accounts
         ;; Cannot be done now because it breaks tests
-        (mailer/mail! (:email user) header mail))
+        (if *async-email?*
+          (future (mail-fn))
+          (mail-fn)))
       ;; If user has no email address - then flag anyway but act as if email was sent.
       (lpw-service/create-flag! user)))
   (http-response/found "/lost-password/request-email/sent"))

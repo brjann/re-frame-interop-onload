@@ -36,7 +36,7 @@
     (range (inc (- last-object-id count)) (inc last-object-id))))
 
 (defn create-flag!
-  [user-id flag-text flag-icon]
+  [user-id issuer flag-text flag-icon]
   (let [flag-id (:objectid (db/create-bass-object! {:class-name    "cFlag"
                                                     :parent-id     user-id
                                                     :property-name "Flags"}))]
@@ -44,7 +44,8 @@
                                    :object-id  flag-id
                                    :updates    {:FlagText   flag-text
                                                 :CustomIcon flag-icon
-                                                :Open       1}})))
+                                                :Open       1
+                                                :Issuer     issuer}})))
 
 (defn time-zone
   []

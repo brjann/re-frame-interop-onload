@@ -14,7 +14,8 @@
             [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
-            [bass4.services.lost-password :as lpw-service]))
+            [bass4.services.lost-password :as lpw-service]
+            [bass4.responses.lost-password :as lpw-response]))
 
 
 (use-fixtures
@@ -26,8 +27,9 @@
   :each
   (fn [f]
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")
-    (fix-time
-      (f))
+    (binding [lpw-response/*async-email?* false]
+      (fix-time
+        (f)))
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")))
 
 (def uid (atom nil))
