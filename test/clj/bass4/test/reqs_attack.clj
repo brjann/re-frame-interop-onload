@@ -250,6 +250,7 @@
             [[1 429]]))
         (advance-time-s! 9)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (follow-redirect)
         (has (some-text? "Enter your"))
         (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})

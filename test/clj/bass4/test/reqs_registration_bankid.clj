@@ -217,4 +217,3 @@
           (has (status? 302))
           ;; Redirect to finish
           (follow-redirect)))))
-
