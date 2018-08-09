@@ -66,6 +66,11 @@
   (let [field-values (:field-values reg-session)]
     (reg-response/all-fields? (:fields reg-params) field-values)))
 
+(defn privacy-consent?
+  [_ reg-session]
+  (let [consent (:privacy-consent reg-session)]
+    (every? #(contains? consent %) [:privacy-notice :time])))
+
 (def route-rules
   [{:pattern #"^/registration/[0-9]+/info"
     :handler (fn [request] (eval-rules request))}
@@ -80,13 +85,19 @@
                                        [spam-check-done? "/form" :ok]
                                        [use-bankid? :ok "/captcha"]))}
 
-   {:pattern #"^/registration/[0-9]+/form"
+   {:pattern #"^/registration/[0-9]+/privacy"
     :handler (fn [request] (eval-rules request
                                        [spam-check-done? :ok "/captcha"]))}
+
+   {:pattern #"^/registration/[0-9]+/form"
+    :handler (fn [request] (eval-rules request
+                                       [spam-check-done? :ok "/captcha"]
+                                       [privacy-consent? :ok "/privacy"]))}
 
    {:pattern #"^/registration/[0-9]+/validate.*"
     :handler (fn [request] (eval-rules request
                                        [spam-check-done? :ok "/captcha"]
+                                       [privacy-consent? :ok "/privacy"]
                                        [all-fields-present? :ok "/form"]
                                        [needs-validation? :ok "/form"]))}])
 

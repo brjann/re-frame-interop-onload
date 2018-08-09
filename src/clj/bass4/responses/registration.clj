@@ -251,7 +251,7 @@
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       ;; TODO: Remove captcha values
-      (-> (http-response/found (str "/registration/" project-id "/form"))
+      (-> (http-response/found (str "/registration/" project-id "/privacy"))
           (assoc-reg-session session {:captcha-ok? true}))
       (wrong-captcha-response project-id (inc-tries session)))
     (http-response/found (str "/registration/" project-id "/captcha"))))
@@ -408,12 +408,11 @@
                          #{:first-name :last-name}))})))
 
 (def-api bankid-finished
-  "DOES NOT Reset captcha but continues registration"
   [project-id :- api/int! session :- api/?map?]
   (if (bankid-done? session)
     (let [params (reg-service/registration-params project-id)]
       (->
-        (http-response/found (str "/registration/" project-id "/form"))
+        (http-response/found (str "/registration/" project-id "/privacy"))
         (assoc-reg-session session (merge (get-bankid-fields session params)
                                           {:bankid-done? true}))
         (assoc-in [:session :e-auth] nil)))
@@ -545,8 +544,8 @@
       (layout/error-400-page)
       (->
         (http-response/found (str "/registration/" project-id "/form"))
-        (assoc-reg-session session {:privacy-notice {:privacy-notice privacy-notice
-                                                     :time           (t/now)}})))))
+        (assoc-reg-session session {:privacy-consent {:privacy-notice privacy-notice
+                                                      :time           (t/now)}})))))
 
 ;; --------------
 ;;     CANCEL
