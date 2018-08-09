@@ -53,9 +53,18 @@
     (or captcha-ok? (and bankid? bankid-done?))))
 
 (defn use-bankid?
-  [reg-params reg-session]
+  [reg-params _]
   (:bankid? reg-params))
 
+(defn needs-validation?
+  [_ reg-session]
+  (let [codes (:validation-codes reg-session)]
+    (or (contains? codes :code-sms) (contains? codes :code-email))))
+
+(defn all-fields-present?
+  [reg-params reg-session]
+  (let [field-values (:field-values reg-session)]
+    (reg-response/all-fields? (:fields reg-params) field-values)))
 
 (def route-rules
   [{:pattern #"^/registration/[0-9]+/info"
@@ -73,7 +82,13 @@
 
    {:pattern #"^/registration/[0-9]+/form"
     :handler (fn [request] (eval-rules request
-                                       [spam-check-done? :ok "/captcha"]))}])
+                                       [spam-check-done? :ok "/captcha"]))}
+
+   {:pattern #"^/registration/[0-9]+/validate.*"
+    :handler (fn [request] (eval-rules request
+                                       [spam-check-done? :ok "/captcha"]
+                                       [all-fields-present? :ok "/form"]
+                                       [needs-validation? :ok "/form"]))}])
 
 
 (defroutes registration-routes
@@ -121,46 +136,46 @@
       (reg-response/cancel-registration project-id (:session request)))))
 
 #_(defroutes registration-routes
-  (GET "/registration/:project-id" []
-    (layout/text-response "You are not supposed to be here."))
-  (GET "/registration/:project-id/" []
-    (layout/text-response "You are not supposed to be here."))
+    (GET "/registration/:project-id" []
+      (layout/text-response "You are not supposed to be here."))
+    (GET "/registration/:project-id/" []
+      (layout/text-response "You are not supposed to be here."))
 
-  (GET "/registration/:project-id/info" [project-id]
-    (reg-response/info-page project-id))
+    (GET "/registration/:project-id/info" [project-id]
+      (reg-response/info-page project-id))
 
-  (GET "/registration/:project-id/bankid" [project-id]
-    (reg-response/bankid-page project-id))
-  (POST "/registration/:project-id/bankid" [project-id personnummer :as request]
-    (reg-response/bankid-poster project-id personnummer request))
-  (GET "/registration/:project-id/bankid-finished" [project-id :as request]
-    (reg-response/bankid-finished project-id (:session request)))
+    (GET "/registration/:project-id/bankid" [project-id]
+      (reg-response/bankid-page project-id))
+    (POST "/registration/:project-id/bankid" [project-id personnummer :as request]
+      (reg-response/bankid-poster project-id personnummer request))
+    (GET "/registration/:project-id/bankid-finished" [project-id :as request]
+      (reg-response/bankid-finished project-id (:session request)))
 
-  (GET "/registration/:project-id/captcha" [project-id :as request]
-    (reg-response/captcha project-id (:session request)))
-  (POST "/registration/:project-id/captcha" [project-id captcha :as request]
-    (reg-response/validate-captcha project-id captcha (:session request)))
+    (GET "/registration/:project-id/captcha" [project-id :as request]
+      (reg-response/captcha project-id (:session request)))
+    (POST "/registration/:project-id/captcha" [project-id captcha :as request]
+      (reg-response/validate-captcha project-id captcha (:session request)))
 
-  (GET "/registration/:project-id/form" [project-id :as request]
-    (reg-response/registration-page project-id (:session request)))
-  (POST "/registration/:project-id/form" [project-id & fields :as request]
-    (reg-response/handle-registration project-id fields (:session request)))
+    (GET "/registration/:project-id/form" [project-id :as request]
+      (reg-response/registration-page project-id (:session request)))
+    (POST "/registration/:project-id/form" [project-id & fields :as request]
+      (reg-response/handle-registration project-id fields (:session request)))
 
-  (GET "/registration/:project-id/validate" [project-id :as request]
-    (reg-response/validation-page project-id (:session request)))
-  (POST "/registration/:project-id/validate-email" [project-id code-email :as request]
-    (reg-response/validate-email project-id code-email (:session request)))
-  (POST "/registration/:project-id/validate-sms" [project-id code-sms :as request]
-    (reg-response/validate-sms project-id code-sms (:session request)))
+    (GET "/registration/:project-id/validate" [project-id :as request]
+      (reg-response/validation-page project-id (:session request)))
+    (POST "/registration/:project-id/validate-email" [project-id code-email :as request]
+      (reg-response/validate-email project-id code-email (:session request)))
+    (POST "/registration/:project-id/validate-sms" [project-id code-sms :as request]
+      (reg-response/validate-sms project-id code-sms (:session request)))
 
-  (GET "/registration/:project-id/duplicate" [project-id :as request]
-    (reg-response/duplicate-page project-id))
+    (GET "/registration/:project-id/duplicate" [project-id :as request]
+      (reg-response/duplicate-page project-id))
 
-  (GET "/registration/:project-id/credentials" [project-id :as request]
-    (reg-response/credentials-page project-id (:session request) request))
+    (GET "/registration/:project-id/credentials" [project-id :as request]
+      (reg-response/credentials-page project-id (:session request) request))
 
-  (GET "/registration/:project-id/finished" [project-id :as request]
-    (reg-response/finished-router project-id (:session request) request))
+    (GET "/registration/:project-id/finished" [project-id :as request]
+      (reg-response/finished-router project-id (:session request) request))
 
-  (GET "/registration/:project-id/cancel" [project-id :as request]
-    (reg-response/cancel-registration project-id (:session request))))
+    (GET "/registration/:project-id/cancel" [project-id :as request]
+      (reg-response/cancel-registration project-id (:session request))))

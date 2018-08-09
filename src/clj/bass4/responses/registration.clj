@@ -26,7 +26,7 @@
 (def password-regex
   #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
 
-(defn- all-fields?
+(defn all-fields?
   [fields field-values]
   (if (seq field-values)
     (= (into #{} fields) (into #{} (keys field-values)))))
@@ -165,7 +165,6 @@
     (-> (created-redirect project-id user-id username (:password field-values) (:auto-password? reg-params) session))))
 
 (defn- complete-registration
-  "This function relies on previous checking of presence of field-values"
   [project-id field-values reg-params session]
   (if (duplicate-conflict? field-values reg-params)
     (-> (http-response/found (str "/registration/" project-id "/duplicate"))
@@ -323,10 +322,7 @@
         field-values (:field-values reg-session)
         fixed-fields (:fixed-fields reg-session)
         codes        (:validation-codes reg-session)]
-    (if (or (contains? codes :code-sms) (contains? codes :code-email))
-      (render-validation-page project-id codes fixed-fields field-values)
-      ;; Wrong page - redirect
-      (http-response/found (str "/registration/" project-id)))))
+    (render-validation-page project-id codes fixed-fields field-values)))
 
 (def validated-codes (atom {}))
 
@@ -358,21 +354,19 @@
         validation-codes (:validation-codes reg-session)
         uid              (:uid validation-codes)
         reg-params       (reg-service/registration-params project-id)]
-    (if (not (all-fields? (:fields reg-params) field-values))
-      (layout/error-400-page)
-      (let [correct? (and (string? posted-code) (code-correct?! uid code-key validation-codes posted-code))]
-        ;; Are all outstanding codes validated?
-        ;; Already validated codes are not present in map
-        (if (all-codes-validated? uid validation-codes)
-          (complete-registration project-id field-values reg-params session)
-          (if correct?
-            (let [fixed-fields (:fixed-fields reg-session)
-                  field-name   (if (= :code-email code-key)
-                                 :email
-                                 :sms-number)]
-              (-> (http-response/ok "ok")
-                  (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
-            (layout/error-422 "error")))))))
+    (let [correct? (and (string? posted-code) (code-correct?! uid code-key validation-codes posted-code))]
+      ;; Are all outstanding codes validated?
+      ;; Already validated codes are not present in map
+      (if (all-codes-validated? uid validation-codes)
+        (complete-registration project-id field-values reg-params session)
+        (if correct?
+          (let [fixed-fields (:fixed-fields reg-session)
+                field-name   (if (= :code-email code-key)
+                               :email
+                               :sms-number)]
+            (-> (http-response/ok "ok")
+                (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
+          (layout/error-422 "error"))))))
 
 (def-api validate-email
   [project-id :- api/int! posted-code :- api/str+! session :- api/?map?]
