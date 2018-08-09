@@ -19,8 +19,8 @@
             [bass4.responses.auth :refer [wrap-restricted]]))
 
 (mount/defstate init-app
-                :start ((or (:init defaults) identity))
-                :stop  ((or (:stop defaults) identity)))
+  :start ((or (:init defaults) identity))
+  :stop ((or (:stop defaults) identity)))
 
 (defn auth-error
   [_ _]
@@ -51,8 +51,8 @@
     (-> #'debug-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'registration-routes
-        (wrap-routes middleware/wrap-formats)
-        (wrap-routes #(middleware/wrap-mw-fn % reg-routes/captcha-bankid-mw)))
+        (wrap-access-rules {:rules reg-routes/route-rules})
+        (wrap-routes middleware/wrap-formats))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
         (wrap-routes middleware/wrap-formats))

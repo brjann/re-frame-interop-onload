@@ -24,7 +24,7 @@
                (get-in treatment [:treatment-access :end-date]))))]))
 
 (def-api dashboard
-  [user :- map? session :- map? render-map :- map? treatment :- map?]
+  [user :- map? session :- api/?map? render-map :- map? treatment :- map?]
   (let [new-modules (new-modules (:modules (:user-components treatment)) (:last-login-time session))
         [start-date end-date days-remaining] (treatment-dates treatment)]
     (layout/render "dashboard.html"

@@ -61,7 +61,7 @@
                       true))))
 
 (def-api finished-router
-  [project-id :- api/int! session :- map? request]
+  [project-id :- api/int! session :- api/?map? request]
   (if-let [user-id (get-in session [:registration :credentials :user-id])]
     (if (zero? (count (assessments/get-pending-assessments user-id)))
       (to-finished-page project-id session)
@@ -80,7 +80,7 @@
       (str scheme "://" host)))
 
 (def-api credentials-page
-  [project-id :- api/int! session :- map? request]
+  [project-id :- api/int! session :- api/?map? request]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
       (layout/render "registration-credentials.html"
@@ -220,7 +220,7 @@
        :digits   digits})))
 
 (def-api captcha
-  [project-id :- api/int! session :- map?]
+  [project-id :- api/int! session :- api/?map?]
   (if (get-in session [:registration :captcha-ok?])
     (http-response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
@@ -247,7 +247,7 @@
         (assoc :session new-session))))
 
 (def-api validate-captcha
-  [project-id :- api/int! captcha :- api/str+! session :- map?]
+  [project-id :- api/int! captcha :- api/str+! session :- api/?map?]
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       ;; TODO: Remove captcha values
@@ -318,7 +318,7 @@
                      codes))))
 
 (def-api validation-page
-  [project-id :- api/int! session :- map?]
+  [project-id :- api/int! session :- api/?map?]
   (let [reg-session  (:registration session)
         field-values (:field-values reg-session)
         fixed-fields (:fixed-fields reg-session)
@@ -375,11 +375,11 @@
             (layout/error-422 "error")))))))
 
 (def-api validate-email
-  [project-id :- api/int! posted-code :- api/str+! session :- map?]
+  [project-id :- api/int! posted-code :- api/str+! session :- api/?map?]
   (validate-code project-id :code-email posted-code session))
 
 (def-api validate-sms
-  [project-id :- api/int! posted-code :- api/str+! session :- map?]
+  [project-id :- api/int! posted-code :- api/str+! session :- api/?map?]
   (validate-code project-id :code-sms posted-code session))
 
 
@@ -414,7 +414,7 @@
 
 (def-api bankid-finished
   "DOES NOT Reset captcha but continues registration"
-  [project-id :- api/int! session :- map?]
+  [project-id :- api/int! session :- api/?map?]
   (if (bankid-done? session)
     (let [params (reg-service/registration-params project-id)]
       (->
@@ -447,7 +447,7 @@
                  (vals field-values))))
 
 (def-api registration-page
-  [project-id :- api/int! session :- map?]
+  [project-id :- api/int! session :- api/?map?]
   (let [params        (reg-service/registration-content project-id)
         reg-session   (:registration session)
         fields        (:fields params)
@@ -502,7 +502,7 @@
     true))
 
 (def-api handle-registration
-  [project-id :- api/int! posted-fields :- map? session :- map?]
+  [project-id :- api/int! posted-fields :- map? session :- api/?map?]
   (let [params       (reg-service/registration-params project-id)
         fields       (:fields params)
         reg-session  (:registration session)
@@ -540,7 +540,7 @@
 ;; --------------
 
 (def-api cancel-registration
-  [project-id :- api/int! session :- map?]
+  [project-id :- api/int! session :- api/?map?]
   (-> (http-response/found (str "/registration/" project-id))
       (reset-reg-session session)))
 

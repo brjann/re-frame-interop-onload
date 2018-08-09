@@ -26,7 +26,7 @@
 
 (deftest registration-not-allowed
   (-> *s*
-      (visit "/registration/564612")
+      (visit "/registration/564612/info")
       (has (some-text? "Registration not allowed"))))
 
 (deftest registration-flow

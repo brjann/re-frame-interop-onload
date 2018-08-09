@@ -60,6 +60,10 @@
       (throw (Exception.))
       s)))
 
+(defn ?map?
+  [m]
+  (or (nil? m) (map? m)))
+
 (defn eval-spec
   [api-name spec v spec-name v-name]
   (let [api-exception (fn [msg]

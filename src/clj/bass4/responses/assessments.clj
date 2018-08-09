@@ -60,14 +60,14 @@
         (http-response/found "/user")))))
 
 (def-api handle-assessments
-  [user-id :- integer? session :- map?]
+  [user-id :- integer? session :- api/?map?]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       (assessment-page round))))
 
 (def-api post-instrument-answers
-  [user-id :- integer? session :- map? instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
+  [user-id :- integer? session :- api/?map? instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
