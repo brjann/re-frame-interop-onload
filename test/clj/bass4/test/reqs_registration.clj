@@ -52,7 +52,6 @@
         (has (status? 302))
         (follow-redirect)
         (follow-redirect)
-        (log-body)
         (has (some-text? "Who is collecting the data"))
         (visit "/registration/564610/privacy" :request-method :post :params {})
         (has (status? 400))
