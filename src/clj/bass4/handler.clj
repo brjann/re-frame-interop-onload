@@ -52,6 +52,7 @@
         (wrap-routes middleware/wrap-formats))
     (-> #'registration-routes
         (wrap-access-rules {:rules reg-routes/route-rules})
+        (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
