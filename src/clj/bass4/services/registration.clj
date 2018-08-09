@@ -106,7 +106,7 @@
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
 
 (defn create-user!
-  [project-id field-values username participant-id group]
+  [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
     (user/create-user! project-id (merge insert-values
                                          (when username {:username username})

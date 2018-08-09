@@ -158,19 +158,31 @@
       (assoc-reg-session session {:credentials {:user-id user-id}}))))
 
 (defn- create-user
-  [project-id field-values reg-params session]
+  [project-id field-values privacy-consent reg-params session]
   (let [participant-id (gen-participant-id project-id reg-params)
         username       (gen-username field-values participant-id reg-params)
         field-values   (gen-password field-values reg-params)
-        user-id        (reg-service/create-user! project-id field-values username participant-id (:group reg-params))]
-    (-> (created-redirect project-id user-id username (:password field-values) (:auto-password? reg-params) session))))
+        user-id        (reg-service/create-user!
+                         project-id
+                         field-values
+                         privacy-consent
+                         username
+                         participant-id
+                         (:group reg-params))]
+    (-> (created-redirect
+          project-id
+          user-id
+          username
+          (:password field-values)
+          (:auto-password? reg-params)
+          session))))
 
 (defn- complete-registration
-  [project-id field-values reg-params session]
+  [project-id field-values privacy-consent reg-params session]
   (if (duplicate-conflict? field-values reg-params)
     (-> (http-response/found (str "/registration/" project-id "/duplicate"))
         (reset-reg-session session))
-    (create-user project-id field-values reg-params session)))
+    (create-user project-id field-values privacy-consent reg-params session)))
 
 ;; ---------------
 ;;     CAPTCHA
@@ -359,7 +371,11 @@
       ;; Are all outstanding codes validated?
       ;; Already validated codes are not present in map
       (if (all-codes-validated? uid validation-codes)
-        (complete-registration project-id field-values reg-params session)
+        (complete-registration
+          project-id
+          field-values
+          (:privacy-consent reg-session)
+          reg-params session)
         (if correct?
           (let [fixed-fields (:fixed-fields reg-session)
                 field-name   (if (= :code-email code-key)
@@ -524,7 +540,12 @@
       (prepare-validation project-id field-values session)
 
       :else
-      (complete-registration project-id field-values params session))))
+      (complete-registration
+        project-id
+        field-values
+        (:privacy-consent reg-session)
+        params
+        session))))
 
 
 ;; --------------
