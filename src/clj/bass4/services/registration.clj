@@ -7,7 +7,8 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [bass4.time :as b-time]))
 
 (defn registration-allowed?
   [project-id]
@@ -109,6 +110,8 @@
   [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
     (user/create-user! project-id (merge insert-values
+                                         {:PrivacyNotice            (:privacy-notice privacy-consent)
+                                          :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))}
                                          (when username {:username username})
                                          (when participant-id {:participantid participant-id})
                                          (when group {:group group})))))
