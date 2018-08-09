@@ -12,7 +12,15 @@
         </div>
         <input type="hidden" value="i-consent" name="i-consent">
         <div class="text-center">
-            <button href="/registration/{{project-id}}/form" class="btn btn-primary">{%tr i-consent %}</button>
+            <p>
+                <button href="/registration/{{project-id}}/form" class="btn btn-primary">{%tr i-consent %}</button>
+            </p>
+            <p>
+                <button onclick="document.location = '/registration/{{project-id}}/cancel'; return false;"
+                        class="btn btn-warning">{%tr
+                    registration/cancel %}
+                </button>
+            </p>
         </div>
     </form>
     {% else %}
