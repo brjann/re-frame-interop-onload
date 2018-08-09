@@ -99,6 +99,9 @@
     (GET "/info" []
       (reg-response/info-page project-id))
 
+    (GET "/privacy" []
+      (reg-response/privacy-page project-id))
+
     (GET "/bankid" []
       (reg-response/bankid-page project-id))
     (POST "/bankid" [personnummer :as request]

@@ -20,7 +20,8 @@
             [bass4.responses.e-auth :as e-auth]
             [clojure.set :as set]
             [bass4.db-config :as db-config]
-            [bass4.api-coercion :as api :refer [def-api]])
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.services.privacy :as privacy-service])
   (:import (java.util UUID)))
 
 (def password-regex
@@ -525,6 +526,18 @@
 
       :else
       (complete-registration project-id field-values params session))))
+
+
+;; --------------
+;;    PRIVACY
+;; --------------
+(def-api privacy-page
+  [project-id :- api/int!]
+  (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (layout/render "registration-privacy-notice.html"
+                   {:project-id     project-id
+                    :privacy-notice privacy-notice})))
+
 
 
 ;; --------------
