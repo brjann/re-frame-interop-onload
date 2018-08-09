@@ -63,6 +63,13 @@
           (user-authenticates! pnr)
           (visit "/e-auth/bankid/collect" :request-method :post)
           (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Who is collecting the data"))
+          (visit "/registration/564610/privacy" :request-method :post :params {})
+          (has (status? 400))
+          (visit "/registration/564610/form")
+          (has (status? 302))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
                                                                             :sms-number "+46070717652"})
           (has (status? 302))
@@ -138,6 +145,7 @@
                                                                             :last-name  "Bjureberg"
                                                                             :pid-number "191212121212"})
           (has (status? 400))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
                                                                             :sms-number "+46070717652"})
           (has (status? 302))
@@ -181,6 +189,7 @@
           (user-authenticates! pnr)
           (visit "/e-auth/bankid/collect" :request-method :post)
           (follow-redirect)
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
           (has (status? 400))
           (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
