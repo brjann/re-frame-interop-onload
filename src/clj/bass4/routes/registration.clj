@@ -43,7 +43,7 @@
 
           :else
           (throw (Exception. "Rule did not return true or string"))))
-      (buddy-rules/error (layout/text-response "Registration not allowed by rules")))))
+      (buddy-rules/error (layout/text-response "Registration not allowed")))))
 
 (defn spam-check-done?
   [reg-params reg-session]
