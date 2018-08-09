@@ -99,15 +99,17 @@
     (GET "/info" []
       (reg-response/info-page project-id))
 
-    (GET "/privacy" []
-      (reg-response/privacy-page project-id))
-
     (GET "/bankid" []
       (reg-response/bankid-page project-id))
     (POST "/bankid" [personnummer :as request]
       (reg-response/bankid-poster project-id personnummer request))
     (GET "/bankid-finished" [:as request]
       (reg-response/bankid-finished project-id (:session request)))
+
+    (GET "/privacy" []
+      (reg-response/privacy-page project-id))
+    (POST "/privacy" [i-consent :as request]
+      (reg-response/handle-privacy-consent project-id i-consent (:session request)))
 
     (GET "/captcha" [:as request]
       (reg-response/captcha project-id (:session request)))

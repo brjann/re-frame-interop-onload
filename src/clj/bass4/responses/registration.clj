@@ -538,7 +538,15 @@
                    {:project-id     project-id
                     :privacy-notice privacy-notice})))
 
-
+(def-api handle-privacy-consent
+  [project-id :- api/int! i-consent :- api/str+! session :- api/?map?]
+  (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (if-not (and privacy-notice (= "i-consent" i-consent))
+      (layout/error-400-page)
+      (->
+        (http-response/found (str "/registration/" project-id "/form"))
+        (assoc-reg-session session {:privacy-notice {:privacy-notice privacy-notice
+                                                     :time           (t/now)}})))))
 
 ;; --------------
 ;;     CANCEL
