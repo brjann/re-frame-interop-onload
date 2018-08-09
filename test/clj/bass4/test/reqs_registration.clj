@@ -51,6 +51,16 @@
         (visit "/registration/564610/captcha")
         (has (status? 302))
         (follow-redirect)
+        (follow-redirect)
+        (log-body)
+        (has (some-text? "Who is collecting the data"))
+        (visit "/registration/564610/privacy" :request-method :post :params {})
+        (has (status? 400))
+        (visit "/registration/564610/form")
+        (has (status? 302))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+        (has (status? 302))
+        (follow-redirect)
         (has (some-text? "Enter your"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (has (status? 400))
@@ -112,11 +122,10 @@
         ;; Captcha session is created
         (follow-redirect)
         (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
-        (has (status? 422))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (has (status? 302))
-        (visit "/registration/564610/captcha")
+        (follow-redirect)
+        (has (some-text? "Who is collecting the data"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "Enter your"))
@@ -178,11 +187,9 @@
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
         (follow-redirect)
-        (has (some-text? "code below"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (has (status? 200))
         (visit "/registration/564610/validate-sms" :request-method :post :params {::code-sms "METALLICA"})
@@ -218,15 +225,11 @@
         (visit "/registration/564610")
         ;; Redirected to info page
         (follow-redirect)
-        (has (some-text? "Welcome"))
         (visit "/registration/564610/form")
         ;; Captcha session is created
         (follow-redirect)
-        ;; Redirected do captcha page
-        (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Enter your information"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
@@ -253,8 +256,7 @@
         ;; Captcha session is created
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Enter your"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (follow-redirect)
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
@@ -282,8 +284,7 @@
           ;; Captcha session is created
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-          (follow-redirect)
-          (has (some-text? "Enter your"))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
@@ -314,8 +315,7 @@
           ;; Captcha session is created
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-          (follow-redirect)
-          (has (some-text? "Enter your information"))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY2015xxx"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
@@ -349,8 +349,7 @@
         ;; Captcha session is created
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Enter your"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
         (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
@@ -376,8 +375,7 @@
         ;; Captcha session is created
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Enter your information here"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
         (follow-redirect)
         (follow-redirect)
@@ -406,8 +404,7 @@
           ;; Captcha session is created
           (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-          (follow-redirect)
-          (has (some-text? "Enter your"))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
           (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
@@ -435,13 +432,10 @@
         ;; Captcha session is created
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Enter your"))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (follow-redirect)
         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-        (has (status? 302))
         (follow-redirect)
         (has (some-text? "already exists")))))
 
@@ -508,6 +502,6 @@
               (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}) ;; 4
               (has (status? 422))
               (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 5 - correct
-              ;; Correct captcha, redirected to registration page.
+              ;; Correct captcha, redirected to privacy page.
               (follow-redirect)
-              (has (some-text? "Enter your"))))))))
+              (has (some-text? "Who is collecting"))))))))
