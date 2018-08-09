@@ -123,12 +123,7 @@
         (follow-redirect)
         (has (some-text? "code below"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Who is collecting the data"))
         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "Enter your"))
         (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
         (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
@@ -226,7 +221,7 @@
         ;; Redirected to info page
         (follow-redirect)
         (visit "/registration/564610/form")
-        ;; Captcha session is created
+        ;; Redirected to captcha page
         (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
@@ -312,8 +307,6 @@
                   passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
-          ;; Captcha session is created
-          (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY2015xxx"})
@@ -346,8 +339,6 @@
                 passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
@@ -373,7 +364,6 @@
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
-        (follow-redirect)
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
@@ -402,11 +392,9 @@
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
-          (follow-redirect)
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
           (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
           (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-          (follow-redirect)
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
           (follow-redirect)
