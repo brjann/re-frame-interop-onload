@@ -37,7 +37,9 @@
           true
 
           (string? res)
-          (buddy-rules/error (http-response/found (str "/registration/" project-id res)))
+          (if (= :get (:request-method request))
+            (buddy-rules/error (http-response/found (str "/registration/" project-id res)))
+            (buddy-rules/error (layout/error-400-page)))
 
           :else
           (throw (Exception. "Rule did not return true or string"))))

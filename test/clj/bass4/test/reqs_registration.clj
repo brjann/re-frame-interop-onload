@@ -52,6 +52,8 @@
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "Enter your"))
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
         (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
