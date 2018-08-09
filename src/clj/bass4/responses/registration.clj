@@ -457,8 +457,6 @@
                         (:field-values reg-session)
                         (:fixed-fields reg-session))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
-    ;; BankID done already checked by captcha middleware
-    (http-response/found (str "/registration/" project-id "/bankid"))
     ;; TODO: Show country for fixed sms number
     (layout/render "registration-form.html"
                    (merge
