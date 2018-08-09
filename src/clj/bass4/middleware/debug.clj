@@ -46,7 +46,7 @@
   (request-state/swap-state! :debug-headers #(conj %1 (str "MAIL to " to "\n" subject "\n" message)) [])
   true)
 
-(def ^:dynamic *sms-reroute*)
+(def ^:dynamic *sms-reroute* nil)
 
 (defn- sms-redefs
   []
@@ -70,7 +70,7 @@
       :else
       {})))
 
-(def ^:dynamic *mail-reroute*)
+(def ^:dynamic *mail-reroute* nil)
 
 (defn- mail-redefs
   []
