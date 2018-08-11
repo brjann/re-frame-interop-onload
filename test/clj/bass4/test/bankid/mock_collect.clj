@@ -36,36 +36,35 @@
   #_(reset! collect-counts {})
   (let [global-start-time (. System (nanoTime))]
     (fn [order-ref _]
-      (let [current-count (get-in @collect-counts [order-ref :count] 0)]
+      (let [update-count-fn (fn [all-counts info inc-count?]
+                              (let [current-status (get all-counts order-ref {:start-time        (. System (nanoTime))
+                                                                              :global-start-time global-start-time
+                                                                              :count             0})]
+                                (assoc
+                                  all-counts
+                                  order-ref
+                                  (merge
+                                    current-status
+                                    {:last-time   (. System (nanoTime))
+                                     :last-status info}
+                                    (when inc-count?
+                                      {:count (inc (:count current-status))})))))
+            current-count   (get-in @collect-counts [order-ref :count] 0)]
         (if (> max-collects current-count)
-          (do
+          (let [info (backend/api-collect order-ref nil)]
             (swap!
               collect-counts
-              (fn [all-counts]
-                (let [current-count (get-in all-counts [order-ref :count] 0)
-                      start-time    (get-in all-counts [order-ref :start-time] (. System (nanoTime)))]
-                  (assoc
-                    all-counts
-                    order-ref
-                    {:count      (inc current-count)
-                     :start-time start-time}))))
-            (backend/api-collect order-ref nil))
-          (do
+              update-count-fn
+              info
+              true)
+            info)
+          (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
             (swap!
               collect-counts
-              (fn [all-counts]
-                (let [current-count (get-in all-counts [order-ref :count])
-                      current-time  (. System (nanoTime))
-                      start-time    (get-in all-counts [order-ref :start-time])]
-                  (assoc
-                    all-counts
-                    order-ref
-                    {:count          current-count
-                     :start-time     start-time
-                     :end-time       current-time
-                     :elapsed-time   (double (/ (- current-time start-time) 1000000.0))
-                     :elapsed-global (double (/ (- current-time global-start-time) 1000000.0))}))))
-            {:order-ref order-ref :status :failed :hint-code :user-cancel}))))))
+              update-count-fn
+              info
+              false)
+            info))))))
 
 
 
@@ -80,7 +79,7 @@
      #_(reset! bankid/session-statuses {})
      ;; TODO: Why does session statuses have to be dynamic?
      (let [collect-counts (atom {})]
-       (binding [bankid/session-statuses       (atom {})
+       (binding [;bankid/session-statuses       (atom {})
                  backend/mock-backend-sessions (atom {})
                  bankid/bankid-auth            backend/api-auth
                  bankid/bankid-collect         (if max-collects

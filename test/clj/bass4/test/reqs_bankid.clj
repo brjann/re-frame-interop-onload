@@ -258,7 +258,7 @@
          pnrs      (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
          f-p       (map #(vector %1 %2) leaved pnrs)
          executor  (fn []
-                     (assert (empty @bankid/session-statuses))
+                     #_(assert (empty @bankid/session-statuses))
                      (loop [f-p f-p]
                        (when (seq f-p)
                          (let [[f p] (first f-p)]
@@ -283,5 +283,5 @@
                            ;; Don't do it man.
                            (future (f p))
                            (recur (rest f-p))))))
-         test-fn   #((mock-collect/wrap-mock :manual nil false) executor)]
+         test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
      (test-fixtures test-fn))))
