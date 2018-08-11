@@ -31,8 +31,8 @@
 
 #_(def collect-counts (atom {}))
 
-(defn collect-counter
-  [max-collects collect-counts]
+(defn collect-logger
+  [collect-counts max-collects]
   #_(reset! collect-counts {})
   (let [global-start-time (. System (nanoTime))]
     (fn [order-ref _]
@@ -50,20 +50,12 @@
                                     (when inc-count?
                                       {:count (inc (:count current-status))})))))
             current-count   (get-in @collect-counts [order-ref :count] 0)]
-        (if (> max-collects current-count)
+        (if (or (nil? max-collects) (> max-collects current-count))
           (let [info (backend/api-collect order-ref nil)]
-            (swap!
-              collect-counts
-              update-count-fn
-              info
-              true)
+            (swap! collect-counts update-count-fn info true)
             info)
           (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
-            (swap!
-              collect-counts
-              update-count-fn
-              info
-              false)
+            (swap! collect-counts update-count-fn info false)
             info))))))
 
 
@@ -82,9 +74,7 @@
        (binding [;bankid/session-statuses       (atom {})
                  backend/mock-backend-sessions (atom {})
                  bankid/bankid-auth            backend/api-auth
-                 bankid/bankid-collect         (if max-collects
-                                                 (collect-counter max-collects collect-counts)
-                                                 backend/api-collect)
+                 bankid/bankid-collect         (collect-logger collect-counts max-collects)
                  bankid/bankid-cancel          backend/api-cancel
                  bankid/collect-waiter         (case collect-method
                                                  (:immediate :manual)
