@@ -21,6 +21,8 @@
     nil
     (let [info            (bankid/get-session-info uid)
           first-status-no (:status-no info)]
+      ;; Make sure two collects are performed or session is completed
+      ;; before returning
       (loop [info info cycle-count 0]
         (when (and (bankid/session-active? info)
                    (> 2 (- (:status-no info) first-status-no)))
