@@ -32,10 +32,9 @@
 #_(def collect-counts (atom {}))
 
 (defn collect-counter
-  [max-collects]
+  [max-collects collect-counts]
   #_(reset! collect-counts {})
-  (let [global-start-time (. System (nanoTime))
-        collect-counts    (atom {})]
+  (let [global-start-time (. System (nanoTime))]
     (fn [order-ref _]
       (let [current-count (get-in @collect-counts [order-ref :count] 0)]
         (if (> max-collects current-count)
@@ -80,24 +79,26 @@
      #_(backend/clear-sessions!)
      #_(reset! bankid/session-statuses {})
      ;; TODO: Why does session statuses have to be dynamic?
-     (binding [bankid/session-statuses       (atom {})
-               backend/mock-backend-sessions (atom {})
-               bankid/bankid-auth            backend/api-auth
-               bankid/bankid-collect         (if max-collects
-                                               (collect-counter max-collects)
-                                               backend/api-collect)
-               bankid/bankid-cancel          backend/api-cancel
-               bankid/collect-waiter         (case collect-method
-                                               (:immediate :manual)
-                                               (constantly nil)
+     (let [collect-counts (atom {})]
+       (binding [bankid/session-statuses       (atom {})
+                 backend/mock-backend-sessions (atom {})
+                 bankid/bankid-auth            backend/api-auth
+                 bankid/bankid-collect         (if max-collects
+                                                 (collect-counter max-collects collect-counts)
+                                                 backend/api-collect)
+                 bankid/bankid-cancel          backend/api-cancel
+                 bankid/collect-waiter         (case collect-method
+                                                 (:immediate :manual)
+                                                 (constantly nil)
 
-                                               :wait
-                                               bankid/collect-waiter)
-               bankid/get-collected-info     (if (= :manual collect-method)
-                                               get-collected-info-mock
-                                               bankid/get-collected-info)
-               backend/*delay-collect*       http-request?]
-       (apply f args)))))
+                                                 :wait
+                                                 bankid/collect-waiter)
+                 bankid/get-collected-info     (if (= :manual collect-method)
+                                                 get-collected-info-mock
+                                                 bankid/get-collected-info)
+                 backend/*delay-collect*       http-request?]
+         (apply f args))
+       collect-counts))))
 
 (defn stress-1
   [x]
