@@ -17,18 +17,9 @@
 
 (def collector-states-atom (atom {}))
 
-(defn collector-has-state?
-  [collector-states uid state-key state-id]
-  (contains? (get-in collector-states [uid state-key]) state-id))
 
-(defn add-collector-state
-  [collector-states uid new-state]
-  (let [uid-state (get collector-states uid)
-        started   (get uid-state :waiting #{})
-        merged    (conj started new-state)]
-    (assoc collector-states uid (merge
-                                  uid-state
-                                  {:waiting merged}))))
+
+
 
 (defn move-collector-state
   [collector-states uid from-key to-key]
@@ -42,31 +33,8 @@
                                    from-key #{}}))))
 
 
-(defn manual-collect-waiter
-  [uid]
-  (swap! collector-states-atom move-collector-state uid :waiting :complete))
 
 
-(defn wait-for-collect-status
-  [uid state-id]
-  (while (and (bankid/session-active? (bankid/get-session-info uid))
-              (not (collector-has-state? @collector-states-atom uid :complete state-id)))))
-
-#_(defn get-collected-info
-    [uid]
-    (if (nil? uid)
-      nil
-      (let [state-id (UUID/randomUUID)]
-        #_(log/debug "New state id" state-id)
-        (swap! collector-states-atom add-collector-state uid state-id)
-        (wait-for-collect-status uid state-id)
-        (let [info (bankid/get-session-info uid)]
-          #_(log/debug "Received new status" info)
-          (if (contains? #{:starting :started} (:status info))
-            (merge info
-                   {:status    :pending
-                    :hint-code :outstanding-transaction})
-            info)))))
 
 (defn get-collected-info-mock
   [uid]
@@ -75,15 +43,9 @@
     (let [info            (bankid/get-session-info uid)
           first-status-no (:status-no info)]
       (loop [info info cycle-count 0]
-        #_(log/debug "collect loop cycle" cycle-count)
         (when (and (bankid/session-active? info)
                    (> 2 (- (:status-no info) first-status-no)))
           (recur (bankid/get-session-info uid) (inc cycle-count))))
-      #_(if (contains? #{:starting :started} (:status info))
-          (merge info
-                 {:status    :pending
-                  :hint-code :outstanding-transaction})
-          info)
       (bankid/get-session-info uid))))
 
 (defn manual-collect-complete
@@ -160,7 +122,8 @@
                                               :wait
                                               bankid/collect-waiter)
                bankid/collect-loop-complete (if (= :manual collect-method)
-                                              manual-collect-complete
+                                              #_manual-collect-complete
+                                              (constantly nil)
                                               (constantly nil))
                bankid/get-collected-info    (if (= :manual collect-method)
                                               get-collected-info-mock
