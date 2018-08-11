@@ -6,7 +6,8 @@
             [kerodon.test :refer :all]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->! log-body]]
             [bass4.passwords :as passwords]
-            [bass4.services.bankid-mock :as bankid-mock]
+            [bass4.test.bankid.mock-collect :as mock-collect]
+            [bass4.test.bankid.mock-backend :as mock-backend]
             [bass4.services.registration :as reg-service]))
 
 
@@ -16,21 +17,21 @@
 
 (use-fixtures
   :each
-  (bankid-mock/wrap-mock :manual))
+  (mock-collect/wrap-mock :manual))
 
 (defn user-opens-app!
   [x pnr]
-  (bankid-mock/user-opens-app! pnr)
+  (mock-backend/user-opens-app! pnr)
   x)
 
 (defn user-cancels!
   [x pnr]
-  (bankid-mock/user-cancels! pnr)
+  (mock-backend/user-cancels! pnr)
   x)
 
 (defn user-authenticates!
   [x pnr]
-  (bankid-mock/user-authenticates! pnr)
+  (mock-backend/user-authenticates! pnr)
   x)
 
 (deftest registration-flow-bankid

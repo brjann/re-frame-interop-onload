@@ -20,7 +20,8 @@
             [bass4.middleware.core :as mw]
             [bass4.services.registration :as reg-service]
             [bass4.services.attack-detector :as a-d]
-            [bass4.services.bankid-mock :as bankid-mock]
+    #_[bass4.services.bankid-mock-api :as bankid-mock]
+            [bass4.test.bankid.mock-collect :as mock-collect]
             [clojure.tools.logging :as log]
             [bass4.services.bankid :as bankid]
             [clj-time.core :as t]))
@@ -36,7 +37,7 @@
   (fn [f]
     (swap! test-now (constantly (t/now)))
     (binding [bankid/bankid-now (fn [] @test-now)]
-      ((bankid-mock/wrap-mock :immediate) f))))
+      ((mock-collect/wrap-mock :immediate) f))))
 
 
 (deftest loop-timeout

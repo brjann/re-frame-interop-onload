@@ -245,6 +245,7 @@
                                     {:status     :started
                                      :config-key config-key})
                                   (<! collect-chan))]
+               (log/debug "Collect cycle")
                (reset! started? true)
                (reset! order-ref (:order-ref response))
                (set-session-status!

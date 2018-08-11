@@ -9,7 +9,7 @@
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.services.bankid :as bankid]
-            [bass4.services.bankid-mock :as bankid-mock]
+            [bass4.services.bankid-mock-api :as bankid-mock]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
