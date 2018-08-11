@@ -44,7 +44,7 @@
 ;;      SESSIONS
 ;; -------------------
 
-(def mock-backend-sessions (atom {}))
+(def ^:dynamic mock-backend-sessions nil)
 
 (defn add-session-map
   [all-sessions personnummer order-ref]
@@ -178,7 +178,7 @@
 
 (defn api-collect
   [order-ref _]
-  (log/debug "Calling collect")
+  #_(log/debug "Calling collect")
   (when *delay-collect*
     (http/get "https://httpbin.org/delay/0.1"))
   (let [session (get-in @mock-backend-sessions [:sessions order-ref])]

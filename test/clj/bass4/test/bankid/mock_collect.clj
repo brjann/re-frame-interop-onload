@@ -78,21 +78,22 @@
    (fn [f & args]
      #_(backend/clear-sessions!)
      #_(reset! bankid/session-statuses {})
-     (binding [bankid/bankid-auth           backend/api-auth
-               bankid/bankid-collect        (if max-collects
-                                              (collect-counter max-collects)
-                                              backend/api-collect)
-               bankid/bankid-cancel         backend/api-cancel
-               bankid/collect-waiter        (case collect-method
-                                              (:immediate :manual)
-                                              (constantly nil)
+     (binding [backend/mock-backend-sessions (atom {})
+               bankid/bankid-auth            backend/api-auth
+               bankid/bankid-collect         (if max-collects
+                                               (collect-counter max-collects)
+                                               backend/api-collect)
+               bankid/bankid-cancel          backend/api-cancel
+               bankid/collect-waiter         (case collect-method
+                                               (:immediate :manual)
+                                               (constantly nil)
 
-                                              :wait
-                                              bankid/collect-waiter)
-               bankid/get-collected-info    (if (= :manual collect-method)
-                                              get-collected-info-mock
-                                              bankid/get-collected-info)
-               backend/*delay-collect*      http-request?]
+                                               :wait
+                                               bankid/collect-waiter)
+               bankid/get-collected-info     (if (= :manual collect-method)
+                                               get-collected-info-mock
+                                               bankid/get-collected-info)
+               backend/*delay-collect*       http-request?]
        (apply f args)))))
 
 (defn stress-1

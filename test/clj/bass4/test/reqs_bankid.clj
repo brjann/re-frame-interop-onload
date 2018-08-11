@@ -283,5 +283,5 @@
                            ;; Don't do it man.
                            (future (f p))
                            (recur (rest f-p))))))
-         test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
+         test-fn   #((mock-collect/wrap-mock :manual nil false) executor)]
      (test-fixtures test-fn))))
