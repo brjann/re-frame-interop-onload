@@ -11,30 +11,9 @@
 
 
 
-;; -------------------
-;;   MANUAL COLLECT
-;; -------------------
-
-(def collector-states-atom (atom {}))
-
-
-
-
-
-(defn move-collector-state
-  [collector-states uid from-key to-key]
-  (let [uid-state (get collector-states uid)
-        from      (get uid-state from-key #{})
-        to        (get uid-state to-key #{})
-        merged    (clojure.set/union from to)]
-    (assoc collector-states uid (merge
-                                  uid-state
-                                  {to-key   merged
-                                   from-key #{}}))))
-
-
-
-
+;; --------------------
+;;   BLOCKING COLLECT
+;; --------------------
 
 (defn get-collected-info-mock
   [uid]
@@ -95,23 +74,16 @@
   ([collect-method max-collects http-request?]
    (assert (contains? #{:immediate :manual :wait} collect-method))
    (fn [f & args]
-     #_(log/debug "Clearing all sessions")
-     (backend/clear-sessions!)
-     (reset! collector-states-atom {})
-     (reset! bankid/session-statuses {})
+     #_(backend/clear-sessions!)
+     #_(reset! bankid/session-statuses {})
      (binding [bankid/bankid-auth           backend/api-auth
                bankid/bankid-collect        (if max-collects
                                               (collect-counter max-collects)
                                               backend/api-collect)
                bankid/bankid-cancel         backend/api-cancel
                bankid/collect-waiter        (case collect-method
-                                              :immediate
+                                              (:immediate :manual)
                                               (constantly nil)
-                                              #_(fn [uid] (log/debug "Collecting info for" uid))
-
-                                              :manual
-                                              (constantly nil)
-                                              #_manual-collect-waiter
 
                                               :wait
                                               bankid/collect-waiter)
