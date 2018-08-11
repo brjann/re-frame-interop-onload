@@ -229,6 +229,7 @@
          #_(log/debug "Inside go block - starting collect loop")
          (while (and (session-active? (get-session-info uid))
                      (not @timed-out?))
+           (log/debug "Collect cycle")
            (if-not (session-not-timed-out? {:start-time start-time} 300)
              (do
                #_(log/debug "Session timed out")
@@ -245,7 +246,6 @@
                                     {:status     :started
                                      :config-key config-key})
                                   (<! collect-chan))]
-               (log/debug "Collect cycle")
                (reset! started? true)
                (reset! order-ref (:order-ref response))
                (set-session-status!

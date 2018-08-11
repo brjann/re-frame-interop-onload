@@ -89,11 +89,7 @@
 (defn update-session-by-personnummer
   [personnummer session]
   (if-let [order-ref (get-in @mock-backend-sessions [:by-personnummer personnummer])]
-    (do
-      (update-session! order-ref session)
-      (log/debug "before wait")
-      (Thread/sleep 1000)
-      (log/debug "after wait"))
+    (update-session! order-ref session)
     (throw (ex-info "Order for personnummer does not exist" {:personnummer personnummer
                                                              :info         session}))))
 
@@ -182,6 +178,7 @@
 
 (defn api-collect
   [order-ref _]
+  (log/debug "Calling collect")
   (when *delay-collect*
     (http/get "https://httpbin.org/delay/0.1"))
   (let [session (get-in @mock-backend-sessions [:sessions order-ref])]

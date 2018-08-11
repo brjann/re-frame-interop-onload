@@ -52,25 +52,45 @@
   (while (and (bankid/session-active? (bankid/get-session-info uid))
               (not (collector-has-state? @collector-states-atom uid :complete state-id)))))
 
-(defn api-get-collected-info
+#_(defn get-collected-info
+    [uid]
+    (if (nil? uid)
+      nil
+      (let [state-id (UUID/randomUUID)]
+        #_(log/debug "New state id" state-id)
+        (swap! collector-states-atom add-collector-state uid state-id)
+        (wait-for-collect-status uid state-id)
+        (let [info (bankid/get-session-info uid)]
+          #_(log/debug "Received new status" info)
+          (if (contains? #{:starting :started} (:status info))
+            (merge info
+                   {:status    :pending
+                    :hint-code :outstanding-transaction})
+            info)))))
+
+(defn get-collected-info-mock
   [uid]
   (if (nil? uid)
     nil
-    (let [state-id (UUID/randomUUID)]
-      #_(log/debug "New state id" state-id)
-      (swap! collector-states-atom add-collector-state uid state-id)
-      (wait-for-collect-status uid state-id)
-      (let [info (bankid/get-session-info uid)]
-        #_(log/debug "Received new status" info)
-        (if (contains? #{:starting :started} (:status info))
+    (let [info            (bankid/get-session-info uid)
+          first-status-no (:status-no info)]
+      (loop [info info cycle-count 0]
+        #_(log/debug "collect loop cycle" cycle-count)
+        (when (and (bankid/session-active? info)
+                   (> 2 (- (:status-no info) first-status-no)))
+          (recur (bankid/get-session-info uid) (inc cycle-count))))
+      #_(if (contains? #{:starting :started} (:status info))
           (merge info
                  {:status    :pending
                   :hint-code :outstanding-transaction})
-          info)))))
+          info)
+      (bankid/get-session-info uid))))
 
 (defn manual-collect-complete
   [uid]
   (swap! collector-states-atom move-collector-state uid :waiting :complete))
+
+
 
 (def collect-counts (atom {}))
 
@@ -134,7 +154,8 @@
                                               #_(fn [uid] (log/debug "Collecting info for" uid))
 
                                               :manual
-                                              manual-collect-waiter
+                                              (constantly nil)
+                                              #_manual-collect-waiter
 
                                               :wait
                                               bankid/collect-waiter)
@@ -142,7 +163,7 @@
                                               manual-collect-complete
                                               (constantly nil))
                bankid/get-collected-info    (if (= :manual collect-method)
-                                              api-get-collected-info
+                                              get-collected-info-mock
                                               bankid/get-collected-info)
                backend/*delay-collect*      http-request?]
        (apply f args)))))

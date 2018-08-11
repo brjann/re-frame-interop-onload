@@ -9,7 +9,8 @@
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.services.bankid :as bankid]
-            [bass4.services.bankid-mock-api :as bankid-mock]
+            [bass4.test.bankid.mock-collect :as mock-collect]
+            [bass4.test.bankid.mock-backend :as mock-backend]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
@@ -24,26 +25,26 @@
 
 (use-fixtures
   :each
-  (bankid-mock/wrap-mock :manual))
+  (mock-collect/wrap-mock :manual nil true))
 
 (defn user-opens-app!
   [x pnr]
-  (bankid-mock/user-opens-app! pnr)
+  (mock-backend/user-opens-app! pnr)
   x)
 
 (defn user-cancels!
   [x pnr]
-  (bankid-mock/user-cancels! pnr)
+  (mock-backend/user-cancels! pnr)
   x)
 
 (defn user-authenticates!
   [x pnr]
-  (bankid-mock/user-authenticates! pnr)
+  (mock-backend/user-authenticates! pnr)
   x)
 
 (defn user-advance-time!
   [x pnr secs]
-  (bankid-mock/user-advance-time! pnr secs)
+  (mock-backend/user-advance-time! pnr secs)
   x)
 
 (defn test-response
@@ -282,5 +283,5 @@
                            ;; Don't do it man.
                            (future (f p))
                            (recur (rest f-p))))))
-         test-fn   #((bankid-mock/wrap-mock :manual nil true) executor)]
+         test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
      (test-fixtures test-fn))))
