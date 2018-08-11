@@ -25,7 +25,7 @@
 
 (use-fixtures
   :each
-  (mock-collect/wrap-mock :manual nil true))
+  (mock-collect/wrap-mock :manual nil false))
 
 (defn user-opens-app!
   [x pnr]

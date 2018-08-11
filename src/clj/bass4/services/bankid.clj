@@ -180,9 +180,6 @@
 ;; (<! (timeout 1500)) itself.
 (def ^:dynamic collect-waiter nil)
 
-(defn ^:dynamic collect-loop-complete
-  [uid])
-
 (defn log-bankid-event!
   [response]
   (let [response (merge
@@ -264,7 +261,6 @@
                    #_(log/debug "Waiting 1500 ms")
                    (<! (timeout 1500)))
                  (collect-waiter uid))))))
-       (collect-loop-complete uid)
        (log-bankid-event! {:uid uid :status :loop-complete})
        #_(print-status uid "Collect loop completed"))
      uid)))

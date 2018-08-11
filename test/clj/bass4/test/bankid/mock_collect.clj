@@ -48,12 +48,6 @@
           (recur (bankid/get-session-info uid) (inc cycle-count))))
       (bankid/get-session-info uid))))
 
-(defn manual-collect-complete
-  [uid]
-  (swap! collector-states-atom move-collector-state uid :waiting :complete))
-
-
-
 (def collect-counts (atom {}))
 
 (defn collect-counter
@@ -121,10 +115,6 @@
 
                                               :wait
                                               bankid/collect-waiter)
-               bankid/collect-loop-complete (if (= :manual collect-method)
-                                              #_manual-collect-complete
-                                              (constantly nil)
-                                              (constantly nil))
                bankid/get-collected-info    (if (= :manual collect-method)
                                               get-collected-info-mock
                                               bankid/get-collected-info)
