@@ -29,12 +29,13 @@
           (recur (bankid/get-session-info uid) (inc cycle-count))))
       (bankid/get-session-info uid))))
 
-(def collect-counts (atom {}))
+#_(def collect-counts (atom {}))
 
 (defn collect-counter
   [max-collects]
-  (reset! collect-counts {})
-  (let [global-start-time (. System (nanoTime))]
+  #_(reset! collect-counts {})
+  (let [global-start-time (. System (nanoTime))
+        collect-counts    (atom {})]
     (fn [order-ref _]
       (let [current-count (get-in @collect-counts [order-ref :count] 0)]
         (if (> max-collects current-count)
