@@ -79,7 +79,9 @@
    (fn [f & args]
      #_(backend/clear-sessions!)
      #_(reset! bankid/session-statuses {})
-     (binding [backend/mock-backend-sessions (atom {})
+     ;; TODO: Why does session statuses have to be dynamic?
+     (binding [bankid/session-statuses       (atom {})
+               backend/mock-backend-sessions (atom {})
                bankid/bankid-auth            backend/api-auth
                bankid/bankid-collect         (if max-collects
                                                (collect-counter max-collects)

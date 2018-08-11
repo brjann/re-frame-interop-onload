@@ -79,7 +79,7 @@
 ;;   BANKID SESSION
 ;; -------------------
 
-(def session-statuses (atom {}))
+(def ^:dynamic session-statuses (atom {}))
 
 (defn session-active?
   [info]
