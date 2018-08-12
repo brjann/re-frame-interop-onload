@@ -5,6 +5,7 @@
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
+            [bass4.utils :as utils]
             [bass4.services.bankid :as bankid]
             [bass4.test.bankid.mock-backend :as backend]
             [clojure.math.numeric-tower :as math])
@@ -45,8 +46,9 @@
   [collect-log max-collects]
   (let [global-start-time (. System (nanoTime))]
     (fn [order-ref _]
-      (when-not (get @collect-log order-ref)
-        #_(log/debug "Started collect for" order-ref))
+      (when max-collects
+        (log/debug "Collecting (max collects)"))
+      (when-not (get @collect-log order-ref))
       (let [update-count-fn (fn [all-counts inc-count?]
                               (let [current-status (get all-counts order-ref {:start-time        (. System (nanoTime))
                                                                               :global-start-time global-start-time
@@ -60,18 +62,11 @@
                                     (when inc-count?
                                       {:count (inc (:count current-status))})))))
             current-count   (get-in @collect-log [order-ref :count] 0)]
-        (let [info (if (or (nil? max-collects) (> max-collects current-count))
-                     (let [info (backend/api-collect order-ref nil)]
-                       (swap! collect-log update-count-fn true)
-                       info)
-                     (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
-                       (swap! collect-log update-count-fn false)
-                       info))]
-          (when-not (bankid/session-active? info)
-            #_(log/debug "Collect finished for " order-ref))
-          info)))))
-
-
+        (if (or (nil? max-collects) (> max-collects current-count))
+          (do
+            (swap! collect-log update-count-fn true)
+            (backend/api-collect order-ref nil))
+          {:order-ref order-ref :status :failed :hint-code :user-cancel})))))
 
 (defn wrap-mock
   ([] (wrap-mock :immediate nil))
@@ -99,44 +94,12 @@
          (apply f args))
        collect-counts))))
 
-(defn mean
-  ([vs] (mean (reduce + vs) (count vs)))
-  ([sm sz] (/ sm sz)))
-
-(defn sd
-  ([vs]
-   (sd vs (count vs) (mean vs)))
-  ([vs sz u]
-   (Math/sqrt (/ (reduce + (map #(Math/pow (- % u) 2) vs))
-                 sz))))
-
-(defn quantile
-  ([p vs]
-   (let [svs (sort vs)]
-     (quantile p (count vs) svs (first svs) (last svs))))
-  ([p c svs mn mx]
-   (let [pic (* p (inc c))
-         k   (int pic)
-         d   (- pic k)
-         ndk (if (zero? k) mn (nth svs (dec k)))]
-     (cond
-       (zero? k) mn
-       (= c (dec k)) mx
-       (= c k) mx
-       :else (+ ndk (* d (- (nth svs k) ndk)))))))
-
-(defn round-to
-  [v p]
-  (let [x (* (math/expt 10 p) v)
-        r (math/round x)]
-    (double (/ r (math/expt 10 p)))))
-
 (defn analyze-mock-log
   [res]
   (let [to-msec        #(double (/ % 1000000.0))
-        quarts         (fn [vs] (map #(round-to (quantile % vs) 2) [0.25 0.5 0.75]))
-        m-sd-q         #(str (round-to (mean %) 2)
-                             " (" (round-to (sd %) 2) ")"
+        quarts         (fn [vs] (map #(utils/round-to (utils/quantile % vs) 2) [0.25 0.5 0.75]))
+        m-sd-q         #(str (utils/round-to (utils/mean %) 2)
+                             " (" (utils/round-to (utils/sd %) 2) ")"
                              "[" (apply str (interpose ", " (quarts %))) "]")
         logs           (vals @res)
         no             (count logs)
@@ -151,35 +114,5 @@
     (println (str "Startup time: " (m-sd-q startup-times)))
     (println (str "End times: " (m-sd-q end-times)))
     (println (str "Run times: " (m-sd-q run-times)))))
-
-(defn stress-1
-  [x]
-  (let [pnrs (repeatedly x #(UUID/randomUUID))]
-    (doall
-      (for [pnr pnrs]
-        (do
-          (bankid/launch-bankid pnr "127.0.0.1"))))))
-
-; Check that many processes can be launched in infinite loop
-#_((wrap-mock :immediate) stress-1 1000)
-
-; Abort infinite loop
-#_(reset! bankid/session-statuses {})
-
-; Multiple processes with immediate and max 10 faked collects
-#_((wrap-mock :immediate 10) stress-1 100)
-
-; Multiple processes with immediate and max X http collects
-#_((wrap-mock :immediate 10 true) stress-1 10)
-#_((wrap-mock :immediate 10 true) stress-1 30)
-
-; Multiple processes that wait
-#_((wrap-mock :wait 10 true) stress-1 5)
-#_((wrap-mock :wait 10 true) stress-1 10)
-
-; Multiple processes that both wait and do http polling
-; I.e., testing of real-life conditions.
-#_((wrap-mock :wait 20 true) stress-1 10)
-#_((wrap-mock :wait 100 true) stress-1 100)                 ;Takes a looong time but does not block.
 
 

@@ -3,7 +3,8 @@
             [bass4.php-clj.safe :refer [php->clj]]
             [clojure.string :as s]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
-            [camel-snake-kebab.extras :refer [transform-keys]]))
+            [camel-snake-kebab.extras :refer [transform-keys]]
+            [clojure.math.numeric-tower :as math]))
 
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
@@ -161,3 +162,36 @@
 (defn kebab-case-keyword
   [s]
   (fnil+ ->kebab-case-keyword s))
+
+
+(defn mean
+  ([vs] (mean (reduce + vs) (count vs)))
+  ([sm sz] (/ sm sz)))
+
+(defn sd
+  ([vs]
+   (sd vs (count vs) (mean vs)))
+  ([vs sz u]
+   (Math/sqrt (/ (reduce + (map #(Math/pow (- % u) 2) vs))
+                 sz))))
+
+(defn quantile
+  ([p vs]
+   (let [svs (sort vs)]
+     (quantile p (count vs) svs (first svs) (last svs))))
+  ([p c svs mn mx]
+   (let [pic (* p (inc c))
+         k   (int pic)
+         d   (- pic k)
+         ndk (if (zero? k) mn (nth svs (dec k)))]
+     (cond
+       (zero? k) mn
+       (= c (dec k)) mx
+       (= c k) mx
+       :else (+ ndk (* d (- (nth svs k) ndk)))))))
+
+(defn round-to
+  [v p]
+  (let [x (* (math/expt 10 p) v)
+        r (math/round x)]
+    (double (/ r (math/expt 10 p)))))

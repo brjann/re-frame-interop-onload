@@ -6,17 +6,12 @@
             [kerodon.test :refer :all]
             [clojure.core.async :refer [<! >! >!! <!! thread go chan timeout alts!! dropping-buffer go-loop]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
-            [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
             [bass4.services.bankid :as bankid]
-            [bass4.test.bankid.mock-collect :as mock-collect]
+            [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log]]
             [bass4.test.bankid.mock-backend :as mock-backend]
-            [bass4.middleware.debug :as debug]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [bass4.services.attack-detector :as a-d]
             [clojure.data.json :as json]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n])
+  (:import (java.util UUID)))
 
 
 (use-fixtures
@@ -291,3 +286,33 @@
          test-fn   #((mock-collect/wrap-mock :manual nil false) executor)]
      (test-fixtures test-fn))))
 
+
+(defn stress-1
+  [x]
+  (let [pnrs (repeatedly x #(UUID/randomUUID))]
+    (doall
+      (for [pnr pnrs]
+        (do
+          (bankid/launch-bankid pnr "127.0.0.1"))))))
+
+; Check that many processes can be launched in infinite loop
+#_((wrap-mock :immediate) stress-1 1000)
+
+; Abort infinite loop
+#_(reset! bankid/session-statuses {})
+
+; Multiple processes with immediate and max 10 faked collects
+#_((wrap-mock :immediate 10) stress-1 100)
+
+; Multiple processes with immediate and max X http collects
+#_((wrap-mock :immediate 10 true) stress-1 10)
+#_((wrap-mock :immediate 10 true) stress-1 30)
+
+; Multiple processes that wait
+#_((wrap-mock :wait 10 true) stress-1 5)
+#_((wrap-mock :wait 10 true) stress-1 10)
+
+; Multiple processes that both wait and do http polling
+; I.e., testing of real-life conditions.
+#_((wrap-mock :wait 20 true) stress-1 10)
+#_((wrap-mock :wait 100 true) stress-1 100)                 ;Takes a looong time but does not block.
