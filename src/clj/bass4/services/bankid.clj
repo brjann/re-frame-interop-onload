@@ -129,7 +129,7 @@
   [uid]
   (swap! session-statuses #(dissoc % uid)))
 
-(defn set-session-status!
+(defn ^:dynamic set-session-status!
   [uid status-map]
   (swap! session-statuses
          (fn

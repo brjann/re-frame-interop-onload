@@ -30,41 +30,24 @@
           (recur (bankid/get-session-info uid) (inc cycle-count))))
       (bankid/get-session-info uid))))
 
-#_(def collect-counts (atom {}))
-
-(defn collect-logger
-  [collect-counts max-collects]
-  #_(reset! collect-counts {})
-  (let [global-start-time (. System (nanoTime))]
-    (fn [order-ref _]
-      (let [update-count-fn (fn [all-counts info inc-count?]
-                              (let [current-status (get all-counts order-ref {:start-time        (. System (nanoTime))
-                                                                              :global-start-time global-start-time
-                                                                              :count             0})]
-                                (assoc
-                                  all-counts
-                                  order-ref
-                                  (merge
-                                    current-status
-                                    {:last-time   (. System (nanoTime))
-                                     :last-status info}
-                                    (when inc-count?
-                                      {:count (inc (:count current-status))})))))
-            current-count   (get-in @collect-counts [order-ref :count] 0)]
-        (if (or (nil? max-collects) (> max-collects current-count))
-          (let [info (backend/api-collect order-ref nil)]
-            (swap! collect-counts update-count-fn info true)
-            info)
-          (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
-            (swap! collect-counts update-count-fn info false)
-            info))))))
+(defn wrap-set-session-status!
+  [collect-log set-session-status!]
+  (fn [uid status-map]
+    (set-session-status! uid status-map)
+    (let [new-status (get @bankid/session-statuses uid)]
+      (if-let [order-ref (:order-ref new-status)]
+        (swap! collect-log (fn [logs]
+                             (if (get logs order-ref)
+                               (assoc-in logs [order-ref :last-info] new-status)
+                               logs)))))))
 
 (defn collect-logger
   [collect-log max-collects]
-  #_(reset! collect-log {})
   (let [global-start-time (. System (nanoTime))]
     (fn [order-ref _]
-      (let [update-count-fn (fn [all-counts info inc-count?]
+      (when-not (get @collect-log order-ref)
+        #_(log/debug "Started collect for" order-ref))
+      (let [update-count-fn (fn [all-counts inc-count?]
                               (let [current-status (get all-counts order-ref {:start-time        (. System (nanoTime))
                                                                               :global-start-time global-start-time
                                                                               :count             0})]
@@ -73,39 +56,32 @@
                                   order-ref
                                   (merge
                                     current-status
-                                    {:last-time   (. System (nanoTime))
-                                     :last-status info}
+                                    {:last-time (. System (nanoTime))}
                                     (when inc-count?
                                       {:count (inc (:count current-status))})))))
             current-count   (get-in @collect-log [order-ref :count] 0)]
-        (when-not (get @collect-log order-ref)
-          (log/debug "Started collect for" order-ref))
         (let [info (if (or (nil? max-collects) (> max-collects current-count))
                      (let [info (backend/api-collect order-ref nil)]
-                       (swap! collect-log update-count-fn info true)
+                       (swap! collect-log update-count-fn true)
                        info)
                      (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
-                       (swap! collect-log update-count-fn info false)
+                       (swap! collect-log update-count-fn false)
                        info))]
           (when-not (bankid/session-active? info)
-            (log/debug "Collect finished for " order-ref))
+            #_(log/debug "Collect finished for " order-ref))
           info)))))
 
 
 
-#_(defn wrap-mock
+(defn wrap-mock
   ([] (wrap-mock :immediate nil))
   ([collect-method] (wrap-mock collect-method nil))
   ([collect-method max-collects] (wrap-mock collect-method max-collects false))
   ([collect-method max-collects http-request?]
    (assert (contains? #{:immediate :manual :wait} collect-method))
    (fn [f & args]
-     #_(backend/clear-sessions!)
-     #_(reset! bankid/session-statuses {})
-     ;; TODO: Why does session statuses have to be dynamic?
      (let [collect-counts (atom {})]
-       (binding [;bankid/session-statuses       (atom {})
-                 backend/mock-backend-sessions (atom {})
+       (binding [backend/mock-backend-sessions (atom {})
                  bankid/bankid-auth            backend/api-auth
                  bankid/bankid-collect         (collect-logger collect-counts max-collects)
                  bankid/bankid-cancel          backend/api-cancel
@@ -118,6 +94,7 @@
                  bankid/get-collected-info     (if (= :manual collect-method)
                                                  get-collected-info-mock
                                                  bankid/get-collected-info)
+                 bankid/set-session-status!    (wrap-set-session-status! collect-counts bankid/set-session-status!)
                  backend/*delay-collect*       http-request?]
          (apply f args))
        collect-counts))))
@@ -163,7 +140,7 @@
                              "[" (apply str (interpose ", " (quarts %))) "]")
         logs           (vals @res)
         no             (count logs)
-        complete       (map #(not (bankid/session-active? (:last-status %))) logs)
+        complete       (map #(not (bankid/session-active? (:last-info %))) logs)
         collect-counts (map :count logs)
         startup-times  (map #(to-msec (- (:start-time %) (:global-start-time %))) logs)
         end-times      (map #(to-msec (- (:last-time %) (:global-start-time %))) logs)
