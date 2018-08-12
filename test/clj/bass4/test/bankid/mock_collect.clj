@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.services.bankid :as bankid]
-            [bass4.test.bankid.mock-backend :as backend])
+            [bass4.test.bankid.mock-backend :as backend]
+            [clojure.math.numeric-tower :as math])
   (:import (java.util UUID)))
 
 
@@ -58,9 +59,41 @@
             (swap! collect-counts update-count-fn info false)
             info))))))
 
+(defn collect-logger
+  [collect-log max-collects]
+  #_(reset! collect-log {})
+  (let [global-start-time (. System (nanoTime))]
+    (fn [order-ref _]
+      (let [update-count-fn (fn [all-counts info inc-count?]
+                              (let [current-status (get all-counts order-ref {:start-time        (. System (nanoTime))
+                                                                              :global-start-time global-start-time
+                                                                              :count             0})]
+                                (assoc
+                                  all-counts
+                                  order-ref
+                                  (merge
+                                    current-status
+                                    {:last-time   (. System (nanoTime))
+                                     :last-status info}
+                                    (when inc-count?
+                                      {:count (inc (:count current-status))})))))
+            current-count   (get-in @collect-log [order-ref :count] 0)]
+        (when-not (get @collect-log order-ref)
+          (log/debug "Started collect for" order-ref))
+        (let [info (if (or (nil? max-collects) (> max-collects current-count))
+                     (let [info (backend/api-collect order-ref nil)]
+                       (swap! collect-log update-count-fn info true)
+                       info)
+                     (let [info {:order-ref order-ref :status :failed :hint-code :user-cancel}]
+                       (swap! collect-log update-count-fn info false)
+                       info))]
+          (when-not (bankid/session-active? info)
+            (log/debug "Collect finished for " order-ref))
+          info)))))
 
 
-(defn wrap-mock
+
+#_(defn wrap-mock
   ([] (wrap-mock :immediate nil))
   ([collect-method] (wrap-mock collect-method nil))
   ([collect-method max-collects] (wrap-mock collect-method max-collects false))
@@ -88,6 +121,59 @@
                  backend/*delay-collect*       http-request?]
          (apply f args))
        collect-counts))))
+
+(defn mean
+  ([vs] (mean (reduce + vs) (count vs)))
+  ([sm sz] (/ sm sz)))
+
+(defn sd
+  ([vs]
+   (sd vs (count vs) (mean vs)))
+  ([vs sz u]
+   (Math/sqrt (/ (reduce + (map #(Math/pow (- % u) 2) vs))
+                 sz))))
+
+(defn quantile
+  ([p vs]
+   (let [svs (sort vs)]
+     (quantile p (count vs) svs (first svs) (last svs))))
+  ([p c svs mn mx]
+   (let [pic (* p (inc c))
+         k   (int pic)
+         d   (- pic k)
+         ndk (if (zero? k) mn (nth svs (dec k)))]
+     (cond
+       (zero? k) mn
+       (= c (dec k)) mx
+       (= c k) mx
+       :else (+ ndk (* d (- (nth svs k) ndk)))))))
+
+(defn round-to
+  [v p]
+  (let [x (* (math/expt 10 p) v)
+        r (math/round x)]
+    (double (/ r (math/expt 10 p)))))
+
+(defn analyze-mock-log
+  [res]
+  (let [to-msec        #(double (/ % 1000000.0))
+        quarts         (fn [vs] (map #(round-to (quantile % vs) 2) [0.25 0.5 0.75]))
+        m-sd-q         #(str (round-to (mean %) 2)
+                             " (" (round-to (sd %) 2) ")"
+                             "[" (apply str (interpose ", " (quarts %))) "]")
+        logs           (vals @res)
+        no             (count logs)
+        complete       (map #(not (bankid/session-active? (:last-status %))) logs)
+        collect-counts (map :count logs)
+        startup-times  (map #(to-msec (- (:start-time %) (:global-start-time %))) logs)
+        end-times      (map #(to-msec (- (:last-time %) (:global-start-time %))) logs)
+        run-times      (map #(to-msec (- (:last-time %) (:start-time %))) logs)]
+    (println (str "Count: " no))
+    (println (str "Complete: " (count (filter identity complete))))
+    (println (str "Collect cycles: " (m-sd-q collect-counts)))
+    (println (str "Startup time: " (m-sd-q startup-times)))
+    (println (str "End times: " (m-sd-q end-times)))
+    (println (str "Run times: " (m-sd-q run-times)))))
 
 (defn stress-1
   [x]

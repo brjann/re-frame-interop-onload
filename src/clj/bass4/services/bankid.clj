@@ -79,7 +79,7 @@
 ;;   BANKID SESSION
 ;; -------------------
 
-(def ^:dynamic session-statuses (atom {}))
+(def session-statuses (atom {}))
 
 (defn session-active?
   [info]
@@ -226,7 +226,7 @@
          #_(log/debug "Inside go block - starting collect loop")
          (while (and (session-active? (get-session-info uid))
                      (not @timed-out?))
-           (log/debug "Collect cycle")
+           #_(log/debug "Collect cycle")
            (if-not (session-not-timed-out? {:start-time start-time} 300)
              (do
                #_(log/debug "Session timed out")

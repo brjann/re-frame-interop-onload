@@ -70,7 +70,7 @@
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
-  (reset! bankid/session-statuses {})
+  #_(reset! bankid/session-statuses {})
   (binding [mw-debug/*mail-reroute*          :header
             mw-debug/*sms-reroute*           :header
             clojure.test/*stack-trace-depth* 10

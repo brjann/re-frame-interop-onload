@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [clojure.core.async :refer [>! >!! <!! go chan timeout alts!! dropping-buffer go-loop]]
+            [clojure.core.async :refer [<! >! >!! <!! thread go chan timeout alts!! dropping-buffer go-loop]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
@@ -281,7 +281,13 @@
                            ;; <!! can lead to total block if there are too
                            ;; many of them active at the same time.
                            ;; Don't do it man.
-                           (future (f p))
+                           ;;
+                           ;; This works! Maybe (thread (f p)) works as well.
+                           #_(go (thread (f p)))
+                           ;; It does - are there any performance differences??
+                           (thread (f p))
+                           #_(future (f p))
                            (recur (rest f-p))))))
-         test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
+         test-fn   #((mock-collect/wrap-mock :manual nil false) executor)]
      (test-fixtures test-fn))))
+
