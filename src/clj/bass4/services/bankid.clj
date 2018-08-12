@@ -180,7 +180,7 @@
 ;; (<! (timeout 1500)) itself.
 (def ^:dynamic collect-waiter nil)
 
-(defn log-bankid-event!
+(defn ^:dynamic log-bankid-event!
   [response]
   (let [response (merge
                    (dissoc response :completion-data)

@@ -86,6 +86,7 @@
 
                                                  :wait
                                                  bankid/collect-waiter)
+                 bankid/log-bankid-event!      (constantly nil)
                  bankid/get-collected-info     (if (= :manual collect-method)
                                                  get-collected-info-mock
                                                  bankid/get-collected-info)
