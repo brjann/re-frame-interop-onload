@@ -243,7 +243,8 @@
 
 (defn massive-reqs-test
   ([] (massive-reqs-test 10))
-  ([n]
+  ([n] (massive-reqs-test n false))
+  ([n go?]
    (let [test-fns  [test-bankid-auth
                     test-bankid-cancels
                     test-bankid-clicks-cancel
@@ -252,38 +253,54 @@
          start-pnr 190000000000
          pnrs      (mapv str (range start-pnr (+ start-pnr (* (count test-fns) n))))
          f-p       (map #(vector %1 %2) leaved pnrs)
-         executor  (fn []
-                     #_(assert (empty @bankid/session-statuses))
+         f-p-exec  (fn [f p]
+                     (let [fn-chan (chan)]
+                       (go
+                         (>! fn-chan (f p)))
+                       fn-chan))
+         ;; (go (f p)) did absolutely not work
+         ;; PROBABLY because of the trouble with
+         ;; sync response to the test and the
+         ;; async collect loop.
+         ;;
+         ;; So future will instead run the tests
+         ;; in separate threads. Which is not test
+         ;; of super-concurrency but nevertheless
+         ;; a few simultaneous processes.
+         ;;
+         ;; Running to many requests seems to lead to
+         ;; trouble with non-existent uids. Maybe because
+         ;; of timeout?
+         ;;
+         ;; What have I learned regarding go-blocks?
+         ;; <!! can lead to total block if there are too
+         ;; many of them active at the same time.
+         ;; Don't do it man.
+         executor  #_(if go?
+                       (fn []
+                         (loop [f-p f-p]
+                           (when (seq f-p)
+                             (let [[f p] (first f-p)]
+                               (println "Running loop test on " p)
+                               (let [fn-chan (f-p-exec f p)]
+                                 (go (<! fn-chan)))
+                               (recur (rest f-p))))))
+                       #_(fn []
+                           (go-loop [f-p f-p]
+                             (when (seq f-p)
+                               (let [[f p] (first f-p)]
+                                 (println "Running loop test on " p)
+                                 (let [fn-chan (f-p-exec f p)]
+                                   (<! fn-chan))
+                                 (recur (rest f-p)))))))
+                   (fn []
                      (loop [f-p f-p]
                        (when (seq f-p)
                          (let [[f p] (first f-p)]
                            (println "Running loop test on " p)
-                           ;; (go (f p)) did absolutely not work
-                           ;; PROBABLY because of the trouble with
-                           ;; sync response to the test and the
-                           ;; async collect loop.
-                           ;;
-                           ;; So future will instead run the tests
-                           ;; in separate threads. Which is not test
-                           ;; of super-concurrency but nevertheless
-                           ;; a few simultaneous processes.
-                           ;;
-                           ;; Running to many requests seems to lead to
-                           ;; trouble with non-existent uids. Maybe because
-                           ;; of timeout?
-                           ;;
-                           ;; What have I learned regarding go-blocks?
-                           ;; <!! can lead to total block if there are too
-                           ;; many of them active at the same time.
-                           ;; Don't do it man.
-                           ;;
-                           ;; This works! Maybe (thread (f p)) works as well.
-                           #_(go (thread (f p)))
-                           ;; It does - are there any performance differences??
                            (thread (f p))
-                           #_(future (f p))
                            (recur (rest f-p))))))
-         test-fn   #((mock-collect/wrap-mock :manual nil false) executor)]
+         test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
      (test-fixtures test-fn))))
 
 
