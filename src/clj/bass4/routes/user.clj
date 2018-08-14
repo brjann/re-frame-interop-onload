@@ -134,3 +134,13 @@
         (if (:assessments-pending? (:session request))
           (assessment-routes user request)
           (treatment-routes user request))))))
+
+(defroutes privacy-consent-routes
+  (context "/user" [:as request]
+    (let [user (get-in request [:session :user])]
+      (GET "/privacy-consent" []
+        (do
+          (log/debug "fuck")
+          (user-response/privacy-consent-page user)))
+      (POST "/privacy-consent" [i-consent :as request]
+        (user-response/handle-privacy-consent user i-consent)))))

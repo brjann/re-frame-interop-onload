@@ -1,7 +1,9 @@
 (ns bass4.services.user
   (:require [bass4.db.core :as db]
             [buddy.hashers :as hashers]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.time :as b-time]
+            [clj-time.core :as t]))
 
 (defn get-user
   [user-id]
@@ -54,3 +56,9 @@
        (update-user-properties! user-id properties))
      user-id)))
 
+(defn set-user-privacy-consent!
+  [user-id privacy-notice now]
+  (update-user-properties!
+    user-id
+    {:PrivacyNotice            (:privacy-notice privacy-notice)
+     :PrivacyNoticeConsentTime (b-time/to-unix now)}))

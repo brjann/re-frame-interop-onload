@@ -2,7 +2,11 @@
   (:require [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]
             [bass4.services.privacy :as privacy-service]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.layout :as layout]
+            [bass4.services.user :as user-service]
+            [clj-time.core :as t]))
 
 
 (defn user-page-map
@@ -12,15 +16,47 @@
           :new-messages? (:new-messages? treatment)}))
 
 
-(defn- must-consent?
+(defn- consent-redirect?
   [request]
-  (when (= :get (:request-method request))
-    (when-let [user (get-in request [:session :user])]
-      (if-not (:privacy-notice-consent-time user)
-        (privacy-service/user-must-consent? (:project-id user))))))
+  (let [user (get-in request [:session :user])]
+    (cond
+      (= "/user/privacy-consent" (:uri request))
+      false
 
-(defn privacy-notice-mw
+      (not= :get (:request-method request))
+      false
+
+      (:privacy-notice-consent-time user)
+      false
+
+      :else
+      (privacy-service/user-must-consent? (:project-id user)))))
+
+(defn privacy-consent-mw
   [handler request]
-  (if (must-consent? request)
-    (http-response/found "https://www.dn.se")
+  (if (consent-redirect? request)
+    (do
+      (log/debug "redirecting")
+      (http-response/found "/user/privacy-consent"))
     (handler request)))
+
+
+(def-api privacy-consent-page
+  [user :- map?]
+  (let [project-id     (:project-id user)
+        privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (layout/render "privacy-consent.html"
+                   {:privacy-notice privacy-notice})))
+
+(def-api handle-privacy-consent
+  [user :- map? i-consent :- api/str+!]
+  (let [project-id     (:project-id user)
+        privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (if-not (and privacy-notice (= "i-consent" i-consent))
+      (layout/error-400-page)
+      (do
+        (user-service/set-user-privacy-consent!
+          (:user-id user)
+          privacy-notice
+          (t/now))
+        (http-response/found "/user")))))

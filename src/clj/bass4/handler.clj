@@ -3,7 +3,7 @@
             [bass4.layout :refer [error-page] :as layout]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.responses.auth :as auth-res]
-            [bass4.routes.user :refer [user-routes]]
+            [bass4.routes.user :as user-routes]
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
@@ -35,8 +35,14 @@
         (wrap-access-rules {:rules    lost-password/rules
                             :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
-    (-> #'user-routes
-        (wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-notice-mw))
+    #_(-> #'user-routes/privacy-consent-routes
+          (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
+          (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
+          (wrap-routes middleware/wrap-csrf)
+          (wrap-routes middleware/wrap-formats)
+          (wrap-routes wrap-restricted))
+    (-> #'user-routes/user-routes
+        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)

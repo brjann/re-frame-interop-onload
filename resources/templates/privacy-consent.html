@@ -1,0 +1,32 @@
+{% extends "simple.html" %}
+
+{% block content %}
+<div>
+    {% if privacy-notice %}
+    <form method="post">
+        <div class="alert alert-primary lead" role="alert">
+            {%tr registration/privacy-notice-consent %}
+        </div>
+        <div class="markdown">
+            {{privacy-notice|markdown}}
+        </div>
+        <input type="hidden" value="i-consent" name="i-consent">
+        <div class="text-center">
+            <p>
+                <button class="btn btn-primary">{%tr i-consent %}</button>
+            </p>
+            <p>
+                <button class="btn btn-warning" onclick="document.location = '/'; return false;">
+                    {%tr registration/cancel %}
+                </button>
+            </p>
+        </div>
+    </form>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+        This database or project has no privacy notice.<br>
+        User cannot proceed
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
