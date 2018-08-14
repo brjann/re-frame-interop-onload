@@ -15,7 +15,7 @@
 ;; ----------------
 
 (defn save-log!
-  [req-state request time method status]
+  [req-state request time method status response-size]
   (db/save-pageload! {:db-name         (:name req-state),
                       :remote-ip       (:session-cookie req-state),
                       :sql-time        (when (:sql-times req-state)
@@ -25,7 +25,7 @@
                       :sql-ops         (count (:sql-times req-state))
                       :user-id         (:user-id req-state),
                       :render-time     (/ time 1000),
-                      :response-size   (count (:body val)),
+                      :response-size   response-size,
                       :clojure-version (str "Clojure " (clojure-version)),
                       :error-count     (:error-count req-state)
                       :error-messages  (:error-messages req-state)
@@ -49,7 +49,7 @@
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (and (:name req-state) (not config/test-mode?))
-        (save-log! req-state request time method status))
+        (save-log! req-state request time method status (count (:body val))))
       ;;val
       (if (:debug-headers req-state)
         (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
