@@ -10,16 +10,39 @@
     (when-not (empty? privacy-notice)
       privacy-notice)))
 
-(defn get-project-privacy-notice
+(defn- get-project-privacy-notice
   [project-id]
   (trim-sql-notice (db/get-project-privacy-notice {:project-id project-id})))
 
-(defn get-db-privacy-notice
+(defn- get-db-privacy-notice
   []
   (trim-sql-notice (db/get-db-privacy-notice)))
 
 (defn get-privacy-notice
-  ([] (get-privacy-notice nil))
+  ([] (get-db-privacy-notice))
   ([project-id]
    (or (get-project-privacy-notice project-id)
        (get-db-privacy-notice))))
+
+(defn project-user-must-consent?
+  [project-id]
+  (some-> (db/bool-cols
+            db/project-privacy-user-must-consent?
+            {:project-id project-id}
+            [:must-consent?])
+          (first)
+          (val)))
+
+(defn db-user-must-consent?
+  []
+  (some-> (db/bool-cols
+            db/db-privacy-user-must-consent?
+            [:must-consent?])
+          (first)
+          (val)))
+
+(defn user-must-consent?
+  ([] (db-user-must-consent?))
+  ([project-id]
+   (or (db-user-must-consent?)
+       (project-user-must-consent? project-id))))

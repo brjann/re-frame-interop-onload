@@ -1,18 +1,9 @@
 -- :name get-user-by-user-id :? :1
 -- :doc retrieve a user given the id.
 SELECT
-  ObjectId,
-  ObjectId AS `user-id`,
-  FirstName AS `first-name`,
-  LastName AS `last-name`,
-  UserName,
-  Email,
-  SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both?',
-  ParentInterface AS `project-id`,
-  from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`,
-  `OldPassword` AS `old-password`
+  /*~
+  bass4.db.core/sql-user-fields
+  ~*/
 FROM c_participant
 WHERE ObjectId = :user-id;
 
@@ -20,36 +11,18 @@ WHERE ObjectId = :user-id;
 -- :name get-user-by-username :? :1
 -- :doc retrieve a user given the username.
 SELECT
-  ObjectId,
-  ObjectId AS `user-id`,
-  FirstName AS `first-name`,
-  LastName AS `last-name`,
-  UserName,
-  Email,
-  SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both?',
-  ParentInterface AS `project-id`,
-  from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`,
-  `OldPassword` AS `old-password`
+  /*~
+  bass4.db.core/sql-user-fields
+  ~*/
 FROM c_participant
 WHERE UserName = :username;
 
 -- :name get-user-by-participant-id :? :*
 -- :doc retrieve a user given the id.
 SELECT
-  ObjectId,
-  ObjectId AS `user-id`,
-  FirstName AS `first-name`,
-  LastName AS `last-name`,
-  UserName,
-  Email,
-  SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both?',
-  ParentInterface AS `project-id`,
-  from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`,
-  `OldPassword` AS `old-password`
+  /*~
+  bass4.db.core/sql-user-fields
+  ~*/
 FROM c_participant
 WHERE ParticipantId = :participant-id;
 
@@ -90,18 +63,9 @@ WHERE ObjectId=:user-id;
 -- :name get-user-by-quick-login-id :? :*
 -- :doc
 SELECT
-  ObjectId,
-  ObjectId AS `user-id`,
-  FirstName AS `first-name`,
-  LastName AS `last-name`,
-  UserName,
-  Email,
-  SMSNumber AS `sms-number`,
-  DoubleAuthUseBoth AS 'double-auth-use-both?',
-  ParentInterface AS `project-id`,
-  from_unixtime(LastLogin) AS `last-login-time`,
-  `Password`,
-  `OldPassword` AS `old-password`,
+  /*~
+  bass4.db.core/sql-user-fields
+  ~*/,
   from_unixtime(QuickLoginTimestamp) AS `quick-login-timestamp`
 FROM c_participant
 WHERE QuickLoginPassword = :quick-login-id;

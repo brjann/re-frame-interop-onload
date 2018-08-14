@@ -21,6 +21,25 @@
 ; SETUP DB STATE
 ;----------------
 
+(def sql-user-fields
+  "ObjectId,
+  ObjectId AS `user-id`,
+  FirstName AS `first-name`,
+  LastName AS `last-name`,
+  UserName,
+  Email,
+  SMSNumber AS `sms-number`,
+  DoubleAuthUseBoth AS 'double-auth-use-both?',
+  ParentInterface AS `project-id`,
+  from_unixtime(LastLogin) AS `last-login-time`,
+  `Password`,
+  `OldPassword` AS `old-password`,
+  CASE
+    WHEN (PrivacyNoticeConsentTime IS NULL OR PrivacyNoticeConsentTime = 0)
+      THEN NULL
+    ELSE from_unixtime(PrivacyNoticeConsentTime)
+  END AS `privacy-notice-consent-time`")
+
 (defn- build-db-url
   [host port name user password]
   (str "jdbc:mysql://" host
