@@ -118,12 +118,13 @@
   [user request]
   (routes
     (GET "/assessments" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
-    (POST "/assessments" [& params] (assessments-response/post-instrument-answers
-                           (:user-id user)
-                           (:session request)
-                           (str->int (:instrument-id params))
-                           (:items params)
-                           (:specifications params)))))
+    (POST "/assessments" [instrument-id items specifications]
+      (assessments-response/post-instrument-answers
+        (:user-id user)
+        (:session request)
+        instrument-id
+        items
+        specifications))))
 
 (def user-routes
   (context "/user" [:as request]
