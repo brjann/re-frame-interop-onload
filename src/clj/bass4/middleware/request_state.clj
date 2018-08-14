@@ -5,7 +5,8 @@
             [bass4.request-state :as request-state]
             [clojure.string :as string]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.config :as config]))
 
 
 
@@ -47,7 +48,7 @@
           status    (:status val)
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
-      (when (:name req-state)
+      (when (and (:name req-state) (not config/test-mode?))
         (save-log! req-state request time method status))
       ;;val
       (if (:debug-headers req-state)

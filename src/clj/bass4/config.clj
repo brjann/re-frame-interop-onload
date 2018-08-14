@@ -10,6 +10,8 @@
 ;; which will hold production settings. If it exists, we include it in the load
 ;; config
 
+(def ^:dynamic test-mode? false)
+
 (defn merge-args
   []
   (let [config [(args)

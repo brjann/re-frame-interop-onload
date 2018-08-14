@@ -15,7 +15,8 @@
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
             [bass4.api-coercion :as api :refer [def-api]]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.config :as config]))
 
 
 ;; ------------
@@ -24,12 +25,14 @@
 
 (defn logged-response
   [s]
-  (log/info (:db-name db-config/*local-config*) s)
+  (when-not config/test-mode?
+    (log/info (:db-name db-config/*local-config*) s))
   (layout/text-response s))
 
 (defn- match-request-ip
   [request ips-str]
-  (log/info "Request from " (h-utils/get-ip request))
+  (when-not config/test-mode?
+    (log/info "Request from " (h-utils/get-ip request)))
   (let [remote-ip   (h-utils/get-ip request)
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
@@ -85,7 +88,8 @@
 
 (def-api check-pending
   [participant-id :- api/str+! request]
-  (log/info "Check pending for" participant-id)
+  (when-not config/test-mode?
+    (log/info "Check pending for" participant-id))
   (let [user-id (check-participant-id participant-id)]
     (if (string? user-id)
       (logged-response (str "0 " user-id))

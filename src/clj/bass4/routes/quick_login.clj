@@ -14,20 +14,25 @@
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
             [ring.util.http-response :as http-response]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.config :as config]))
 
+(defmacro log-msg
+  [& msgs]
+  `(when-not config/test-mode?
+     (log/debug ~@msgs)))
 
 (defn- quick-login-check-length
   [quick-login-id]
   (when (< 15 (count quick-login-id))
-    (log/info "Quick login was too long" (count quick-login-id))
+    (log-msg "Quick login was too long" (count quick-login-id))
     (throw (Exception. "Quick login too long"))))
 
 (defn- quick-login-settings
   []
   (let [{:keys [expiration-days allowed?]} (db/bool-cols db/get-quick-login-settings [:allowed?])]
     (when (not allowed?)
-      (log/info "Quick login not allowed")
+      (log-msg "Quick login not allowed")
       (throw (Exception. "Quick login is not allowed")))
     expiration-days))
 
@@ -35,14 +40,14 @@
   [quick-login-id]
   (let [users (db/get-user-by-quick-login-id {:quick-login-id quick-login-id})]
     (if-not (= 1 (count users))
-      (log/info "Incorrect number of matches" (count users))
+      (log-msg "Incorrect number of matches" (count users))
       (first users))))
 
 (defn quick-login-expired?
   [user expiration-days]
   (let [days-since (b-time/days-since-tz (:quick-login-timestamp user))]
     (when (<= expiration-days days-since)
-      (log/info "Quick login expired")
+      (log-msg "Quick login expired")
       true)))
 
 (defn expired-response
@@ -66,7 +71,7 @@
   [quick-login-id :- api/str+!]
   (try
     (quick-login-check-length quick-login-id)
-    (log/info "Checking quick-login ID" quick-login-id)
+    (log-msg "Checking quick-login ID" quick-login-id)
     (let [expiration-days (quick-login-settings)
           user            (quick-login-user quick-login-id)]
       (if (nil? user)

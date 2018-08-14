@@ -15,7 +15,8 @@
             [clj-time.core :as t]
             [bass4.services.bankid :as bankid]
             [bass4.db-config :as db-config]
-            [bass4.middleware.debug :as mw-debug]))
+            [bass4.middleware.debug :as mw-debug]
+            [bass4.config :as config]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -75,6 +76,7 @@
             mw-debug/*sms-reroute*           :header
             clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
+            config/test-mode?                true
             *s*                              @s]
     (f)))
 

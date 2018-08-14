@@ -10,7 +10,8 @@
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [bass4.request-state :as request-state]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [bass4.config :as config]))
 
 (def ^:const const-fails-until-ip-block 10)
 (def ^:const const-fails-until-global-block 100)            ;; Should be factor of 10 for test to work
@@ -191,7 +192,8 @@
   (if-let [check-fns (route-success-fn request)]
     (if-let [delay (get-delay-time request)]
       (do
-        (log/info "Possible attack detected - delaying response")
+        (when-not config/test-mode?
+          (log/info "Possible attack detected - delaying response"))
         ((:delay-response check-fns) delay))
       (let [response (handler request)]
         (cond
