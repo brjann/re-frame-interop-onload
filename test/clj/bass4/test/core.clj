@@ -130,10 +130,20 @@
    (log/debug y)
    x))
 
+(defn log-headers
+  ([x]
+   (log/debug (get-in x [:response :headers]))
+   x))
+
 (defn log-body
   ([x]
    (log/debug (get-in x [:response :body]))
    x))
+
+(defn log-session
+  ([s]
+   (log-body (visit s "/debug/session"))
+   s))
 
 (defmacro ->! [a & forms]
   `(if-not (and (symbol? '~a)

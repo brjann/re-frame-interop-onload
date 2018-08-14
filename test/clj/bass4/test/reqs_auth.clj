@@ -79,6 +79,7 @@
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
         (follow-redirect)
+        (follow-redirect)
         (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
@@ -100,6 +101,7 @@
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
+      (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
@@ -110,12 +112,14 @@
 (deftest request-double-authentication-no-re-auth
   (-> *s*
       (modify-session {:identity 536975 :double-auth-code "666-666-666" :external-login? true})
+      (visit "/user")
       (visit "/user/messages")
       (has (status? 200))))
 
 (deftest request-no-double-authentication
   (-> *s*
       (modify-session {:identity 536821})
+      (visit "/user/")
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
@@ -143,6 +147,7 @@
 (deftest request-re-auth
   (-> *s*
       (modify-session {:identity 536975 :double-authed? true})
+      (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth true})
@@ -154,6 +159,7 @@
 (deftest request-re-auth-ext-login
   (-> *s*
       (modify-session {:identity 536975 :double-authed? true})
+      (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth true :external-login? true})
@@ -219,6 +225,7 @@
 (deftest request-re-auth-last-request-time
   (let [x (-> *s*
               (modify-session {:identity 536975 :double-authed? true})
+              (visit "/user")
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
@@ -238,6 +245,8 @@
 (deftest request-re-auth-last-request-time-no-re-auth
   (let [x (-> *s*
               (modify-session {:identity 536975 :double-authed? true :external-login? true})
+              (visit "/user")
+              (follow-redirect)
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
@@ -259,6 +268,7 @@
         (visit "/user/messages")
         (visit "/re-auth" :request-method :post :params {:password 536975})
         (has (status? 302))
+        (visit "/user")
         (visit "/user/messages")
         (has (status? 200)))))
 
@@ -276,5 +286,6 @@
               (visit "/debug/session")
               (has (some-text? "1985-10-26T01:20:00.000Z"))))
         (visit "/re-auth" :request-method :post :params {:password 536975})
+        (visit "/user")
         (visit "/user/messages")
         (has (status? 200)))))

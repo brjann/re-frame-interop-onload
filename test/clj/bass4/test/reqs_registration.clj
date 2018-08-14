@@ -87,6 +87,8 @@
         (has (status? 302))
         ;; Redirect to finish
         (follow-redirect)
+        ;; Session created
+        (follow-redirect)
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -159,6 +161,8 @@
         (has (status? 302))
         ;; Redirect to finish
         (follow-redirect)
+        ;; Session created
+        (follow-redirect)
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -189,6 +193,8 @@
         (visit "/registration/564610/validate-sms" :request-method :post :params {::code-sms "METALLICA"})
         (has (status? 302))
         ;; Redirect to finish
+        (follow-redirect)
+        ;; Session created
         (follow-redirect)
         ;; Redirect to pending assessments
         (follow-redirect)

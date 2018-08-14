@@ -168,6 +168,40 @@
   (layout/render
     "auth/login.html"))
 
+(defn- assessments-pending?
+  [request]
+  (let [user-id (:identity request)]
+    (cond
+      (nil? user-id)
+      false
+
+      :else
+      (< 0 (administrations/create-assessment-round-entries! user-id)))))
+
+(defn check-assessments-mw
+  [handler request]
+  (let [session (:session request)]
+    (if-not (:assessments-checked? session)
+      (if (assessments-pending? request)
+        (do
+          (log/debug "Assessments pending!")
+          (-> (http-response/found "/user")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked?   true
+                        :assessments-pending?   true
+                        :assessments-performed? true}))))
+        (do
+          (log/debug "No assessments pending!")
+          (-> (http-response/found "/user")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked? true
+                        :assessments-pending? false})))))
+      (handler request))))
+
 
 (defn- assessments-map
   [user]
@@ -176,7 +210,7 @@
      :assessments-performed? true}))
 
 (defn create-new-session
-  [user additional check-assessments?]
+  [user additional]
   (auth-service/register-user-login! (:user-id user))
   (merge
     {:identity          (:user-id user)
@@ -184,9 +218,7 @@
      :last-login-time   (:last-login-time user)
      :last-request-time (t/now)
      :session-start     (t/now)}
-    additional
-    (when check-assessments?
-      (assessments-map user))))
+    additional))
 
 (def-api handle-login
   [username :- api/str+! password :- api/str+!]
@@ -195,7 +227,7 @@
       (if error
         (layout/error-422 error)
         (-> (http-response/found redirect)
-            (assoc :session (create-new-session user session true)))))
+            (assoc :session (create-new-session user session)))))
     (layout/error-422 "error")))
 
 
@@ -243,8 +275,8 @@
   [session :- api/?map? password :- api/str+! return-url :- api/?str!]
   (handle-re-auth session password
                   (http-response/found (if (nil? return-url)
-                                    "/user/"
-                                    return-url))))
+                                         "/user/"
+                                         return-url))))
 
 (def-api check-re-auth-ajax
   [session :- api/?map? password :- api/str+!]

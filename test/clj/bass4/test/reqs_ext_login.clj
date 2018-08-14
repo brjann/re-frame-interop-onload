@@ -63,6 +63,7 @@
                          (visit (str uri "&returnURL=http:/www.dn.se"))
                          (has (status? 400))
                          (visit (str uri "&returnURL=http://www.dn.se"))
+                         (visit "/user")
                          (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
                          (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
                          (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})

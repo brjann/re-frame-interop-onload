@@ -83,6 +83,8 @@
           (has (status? 302))
           ;; Redirect to finish
           (follow-redirect)
+          ;; Session created
+          (follow-redirect)
           ;; Redirect to pending assessments
           (follow-redirect)
           (has (some-text? "Welcome"))

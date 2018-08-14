@@ -43,6 +43,7 @@
           (wrap-routes wrap-restricted))
     (-> #'user-routes/user-routes
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/check-assessments-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)

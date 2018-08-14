@@ -29,6 +29,7 @@
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
         (follow-redirect)
+        (follow-redirect)
         (has (some-text? "Welcome top-priority")))))
 
 
@@ -38,6 +39,7 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
+        (follow-redirect)
         (follow-redirect)
         (has (some-text? "Welcome"))
         (has (some-text? "top top welcome"))
@@ -74,11 +76,16 @@
       (-> s1
           (has (status? 302))
           (follow-redirect)
+          (follow-redirect)
           (has (some-text? "Welcome"))
           (has (some-text? "top top welcome")))
       (-> s2
           (has (status? 302))
           (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (has (some-text? "top top welcome"))
+          (visit "/user/")
           (has (some-text? "HAD")))
       (-> s1
           (visit "/user/")
@@ -106,6 +113,7 @@
         (-> s3
             (has (status? 302))
             (follow-redirect)
+            (follow-redirect)
             (has (some-text? "Welcome top"))
             (visit "/user/")
             (has (some-text? "AAQ")))
@@ -132,6 +140,7 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
+        (follow-redirect)
         (follow-redirect)
         (has (some-text? "welcome 0"))
         (has (some-text? "welcome 2"))

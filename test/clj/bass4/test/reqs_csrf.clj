@@ -25,6 +25,7 @@
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (has (status? 302))
           (follow-redirect)
+          (follow-redirect)
           (has (some-text? "Welcome"))
           (has (some-text? "top top welcome"))
           (visit "/user/")

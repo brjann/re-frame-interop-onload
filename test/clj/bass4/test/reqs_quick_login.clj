@@ -38,6 +38,9 @@
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
+          ;; Session created
+          (follow-redirect)
+          ;; Assessments checked
           (follow-redirect)
           (has (some-text? "Welcome"))
           (has (some-text? "top top welcome"))
