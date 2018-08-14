@@ -5,7 +5,14 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures
+                                     not-text?
+                                     log-return
+                                     log-body
+                                     log-headers
+                                     log-status
+                                     disable-attack-detector
+                                     *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.db.core :as db]
@@ -43,21 +50,21 @@
         (follow-redirect)
         (has (some-text? "Welcome"))
         (has (some-text? "top top welcome"))
-        (visit "/user/")
+        (visit "/user/assessments")
         (has (some-text? "HAD"))
-        (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "tjosan" :specifications "tjosan"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "tjosan" :specifications "tjosan"})
         (has (status? 400))
-        (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "Agoraphobic"))
-        (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
         ;; Posting answers to instrument not shown yet - advanced stuff!
-        (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "AAQ"))
-        (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "top top top thanks"))
@@ -85,28 +92,28 @@
           (follow-redirect)
           (has (some-text? "Welcome"))
           (has (some-text? "top top welcome"))
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "HAD")))
       (-> s1
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "HAD")))
       (-> s2
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "HAD"))
           ;; Posting answers to wrong instrument. Silently fails but "Something went wrong" is recorded
           ;; in request log.
-          (visit "/user/" :request-method :post :params {:instrument-id 6371 :items "{}" :specifications "{}"})
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 6371 :items "{}" :specifications "{}"})
           (has (status? 302)))
       (-> s2
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "HAD"))
-          (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"}))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"}))
       (-> s1
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "Agoraphobic"))
-          (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"}))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"}))
       (-> s2
-          (visit "/user/")
+          (visit "/user/assessments")
           (has (some-text? "AAQ")))
       (let [s3 (-> *s*
                    (visit "/login" :request-method :post :params {:username user-id :password user-id}))]
@@ -115,18 +122,18 @@
             (follow-redirect)
             (follow-redirect)
             (has (some-text? "Welcome top"))
-            (visit "/user/")
+            (visit "/user/assessments")
             (has (some-text? "AAQ")))
         (-> s1
-            (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"}))
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"}))
         (-> s3
-            (visit "/user/")
+            (visit "/user/assessments")
             (has (some-text? "PHQ"))
-            (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"}))
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"}))
         (-> s2
-            (visit "/user/")
+            (visit "/user/assessments")
             (has (some-text? "Thanks top"))
-            (visit "/user/")
+            (visit "/user/assessments")
             ;; The assessment is now marked as completed and user is redirected...
             (follow-redirect)
             ;; ...to the user page, which redirects to the login because user is not in treatment
@@ -145,9 +152,9 @@
         (has (some-text? "welcome 0"))
         (has (some-text? "welcome 2"))
         (not-text? "welcome 1")
-        (visit "/user/" :request-method :post :params {:instrument-id 535693 :items "{}" :specifications "{}"})
-        (visit "/user/" :request-method :post :params {:instrument-id 547380 :items "{}" :specifications "{}"})
-        (visit "/user/" :request-method :post :params {:instrument-id 547374 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 535693 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 547380 :items "{}" :specifications "{}"})
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 547374 :items "{}" :specifications "{}"})
         (has (status? 302))
         (follow-redirect)
         (has (some-text? "thanks 0"))

@@ -117,8 +117,8 @@
 (defn assessment-routes
   [user request]
   (routes
-    (GET "*" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
-    (POST "*" [& params] (assessments-response/post-instrument-answers
+    (GET "/assessments" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
+    (POST "/assessments" [& params] (assessments-response/post-instrument-answers
                            (:user-id user)
                            (:session request)
                            (str->int (:instrument-id params))

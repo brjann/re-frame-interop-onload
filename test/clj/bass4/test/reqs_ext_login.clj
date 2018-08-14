@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures not-text? log-return log-body log-headers disable-attack-detector *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.db.core :as db]
             [bass4.services.user :as user]
@@ -64,13 +64,14 @@
                          (has (status? 400))
                          (visit (str uri "&returnURL=http://www.dn.se"))
                          (visit "/user")
-                         (visit "/user/" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-                         (visit "/user/" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
-                         (visit "/user/" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
                          (follow-redirect)
-                         (visit "/user/" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
                          (follow-redirect)
-                         (visit "/user")
+                         (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                         (follow-redirect)
+                         (visit "/user/assessments")
                          (follow-redirect)
                          (has (status? 302))
                          (get-in [:response :headers "Location"]))]

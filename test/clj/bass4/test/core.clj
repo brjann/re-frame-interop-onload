@@ -130,6 +130,11 @@
    (log/debug y)
    x))
 
+(defn log-status
+  ([x]
+   (log/debug (get-in x [:response :status]))
+   x))
+
 (defn log-headers
   ([x]
    (log/debug (get-in x [:response :headers]))

@@ -54,7 +54,7 @@
     (if-not (or (empty? administration-ids) (nil? answers-map))
       (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
           (assessments-service/check-completed-administrations! user-id round instrument-id)
-          (-> (http-response/found "/user")))
+          (-> (http-response/found "/user/assessments")))
       (do
         (request-state/record-error! "Something went wrong")
         (http-response/found "/user")))))
