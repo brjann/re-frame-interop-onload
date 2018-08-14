@@ -44,7 +44,7 @@
 (defn bankid-request
   [endpoint form-params config-key]
   #_(log/debug "XXXXXXX XXXXXX running request")
-  (try (let [bankid-config (get-in env [:bankid config-key])
+  (try (let [bankid-config (bass4.db-config/db-setting [:bankid :configs config-key])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
              response      (http/post (str url endpoint)
@@ -107,7 +107,7 @@
       session-statuses
       #(filter-map session-not-timed-out? %))
     #_(if (< old-count (count @session-statuses))
-      (log/debug "Deleted circa " (- old-count (count @session-statuses)) " sessions."))))
+        (log/debug "Deleted circa " (- old-count (count @session-statuses)) " sessions."))))
 
 (defn get-session-info
   [uid]

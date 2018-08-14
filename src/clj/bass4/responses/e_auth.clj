@@ -56,7 +56,9 @@
     (throw (ex-info "Personnummer not in right format" {:personnummer personnummer}))))
 
 (defn launch-bankid
-  ([request personnummer redirect-success redirect-fail] (launch-bankid request personnummer redirect-success redirect-fail :prod))
+  ([request personnummer redirect-success redirect-fail]
+   (let [config-key (bass4.db-config/db-setting [:bankid :config-key])]
+     (launch-bankid request personnummer redirect-success redirect-fail config-key)))
   ([request personnummer redirect-success redirect-fail config-key]
    (let [session (:session request)
          user-ip (h-utils/get-ip request)]

@@ -35,13 +35,19 @@
   (:name *local-config*))
 
 (defn db-setting
-  [setting-key]
-  (let [db-name (keyword (db-name))]
-    (get-in config/env [:db-settings db-name setting-key] (get config/env setting-key))))
+  ([setting-keys] (db-setting setting-keys nil))
+  ([setting-keys default]
+   (let [db-name (keyword (db-name))
+         setting (or (get-in config/env [:db-settings (cons db-name setting-keys)])
+                     (get-in config/env setting-keys)
+                     default)]
+     (when (nil? setting)
+       (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
+     setting)))
 
 (defn debug-mode?
   []
-  (or (db-setting :debug-mode) (config/env :dev)))
+  (or (db-setting [:debug-mode] (config/env :dev))))
 
 (defn- check-keys
   [local-config]
