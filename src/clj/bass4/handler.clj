@@ -16,7 +16,8 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware]
-            [bass4.responses.auth :refer [wrap-restricted]]))
+            [bass4.responses.auth :refer [wrap-restricted]]
+            [bass4.responses.user :as user-response]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -35,7 +36,7 @@
                             :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes
-        ;; (wrap-routes middleware/wrap-auth-re-auth)
+        (wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-notice-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
