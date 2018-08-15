@@ -29,6 +29,7 @@
 
 (def app-routes
   (routes
+    #'user-routes/testr
     (-> #'auth-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'lost-password-routes
@@ -42,6 +43,14 @@
           (wrap-routes middleware/wrap-formats)
           (wrap-routes wrap-restricted))
     (-> #'user-routes/user-routes
+        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
+        (wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
+        (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
+        (wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-formats)
+        (wrap-routes wrap-restricted))
+    (-> #'user-routes/treatment-routes-x
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))

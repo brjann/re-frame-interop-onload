@@ -34,43 +34,43 @@
 ;    (codec/url-encode string)))
 
 #_(defn module-routes
-  [treatment-access render-map module]
-  (routes
-    (GET "/" [] (modules-response/main-text treatment-access render-map module))
-    (POST "/" [content-data]
-      (modules-response/save-main-text-data treatment-access content-data))
-    (GET "/homework" []
-      (modules-response/homework treatment-access render-map module))
-    (POST "/homework" [content-data submit?]
-      (modules-response/save-homework treatment-access module content-data submit?))
-    (POST "/retract-homework" []
-      (modules-response/retract-homework treatment-access module))
-    (GET "/worksheet/:worksheet-id" [worksheet-id]
-      (modules-response/worksheet
-        treatment-access
-        render-map
-        module
-        worksheet-id))
-    (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
-      (modules-response/worksheet-example module worksheet-id return-path))))
+    [treatment-access render-map module]
+    (routes
+      (GET "/" [] (modules-response/main-text treatment-access render-map module))
+      (POST "/" [content-data]
+        (modules-response/save-main-text-data treatment-access content-data))
+      (GET "/homework" []
+        (modules-response/homework treatment-access render-map module))
+      (POST "/homework" [content-data submit?]
+        (modules-response/save-homework treatment-access module content-data submit?))
+      (POST "/retract-homework" []
+        (modules-response/retract-homework treatment-access module))
+      (GET "/worksheet/:worksheet-id" [worksheet-id]
+        (modules-response/worksheet
+          treatment-access
+          render-map
+          module
+          worksheet-id))
+      (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
+        (modules-response/worksheet-example module worksheet-id return-path))))
 
 #_(defn- messages-routes
-  [user treatment render-map]
-  (routes
-    (GET "/messages" []
-      (if (get-in treatment [:user-components :messaging])
-        (messages-response/messages-page render-map user)
-        (layout/error-404-page)))
-    (POST "/messages" [& params]
-      (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-message (:user-id user) (:text params))
-        (layout/error-404-page)))
-    (POST "/message-save-draft" [& params]
-      (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-draft (:user-id user) (:text params))
-        (layout/error-404-page)))
-    (POST "/message-read" [& params]
-      (messages-response/message-read (:user-id user) (:message-id params)))))
+    [user treatment render-map]
+    (routes
+      (GET "/messages" []
+        (if (get-in treatment [:user-components :messaging])
+          (messages-response/messages-page render-map user)
+          (layout/error-404-page)))
+      (POST "/messages" [& params]
+        (if (get-in treatment [:user-components :send-messages])
+          (messages-response/save-message (:user-id user) (:text params))
+          (layout/error-404-page)))
+      (POST "/message-save-draft" [& params]
+        (if (get-in treatment [:user-components :send-messages])
+          (messages-response/save-draft (:user-id user) (:text params))
+          (layout/error-404-page)))
+      (POST "/message-read" [& params]
+        (messages-response/message-read (:user-id user) (:message-id params)))))
 
 
 (defn no-treatment-response
@@ -83,10 +83,10 @@
       (http-response/found "/no-activities")
       (assoc :session {}))))
 
-(defn- treatment-routes
+#_(defn- treatment-routes
   [user request]
-  (if-let [treatment (get-in request [:db :treatment])]
-    (let [render-map       (get-in request [:db :render-map])
+    (if-let [treatment (:db-treatment request)]
+      (let [render-map     (:db-render-map request)
           treatment-access (:treatment-access treatment)]
       (routes
         (GET "/" []
@@ -144,10 +144,29 @@
       ;; TODO: What should be shown if not in treatment?
       (ANY "*" [] (no-treatment-response (:session request))))))
 
-
-(defn assessment-routes
-  [user request]
-  (routes
+(defroutes treatment-routes-x
+  (context "/user" [:as
+                    {{:keys [render-map treatment]}          :db
+                     {:keys [user]}                          :session
+                     {{:keys [treatment-access]} :treatment} :db
+                     :as                                     request}]
+    (GET "/" []
+      (dashboard/dashboard user (:session request) render-map treatment))
+    ;; MESSAGES
+    (GET "/messages" []
+      (if (get-in treatment [:user-components :messaging])
+        (messages-response/messages-page render-map user)
+        (layout/error-404-page)))
+    (POST "/messages" [& params]
+      (if (get-in treatment [:user-components :send-messages])
+        (messages-response/save-message (:user-id user) (:text params))
+        (layout/error-404-page)))
+    (POST "/message-save-draft" [& params]
+      (if (get-in treatment [:user-components :send-messages])
+        (messages-response/save-draft (:user-id user) (:text params))
+        (layout/error-404-page)))
+    (POST "/message-read" [& params]
+      (messages-response/message-read (:user-id user) (:message-id params)))
     (GET "/assessments" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
     (POST "/assessments" [instrument-id items specifications]
       (assessments-response/post-instrument-answers
@@ -155,7 +174,45 @@
         (:session request)
         instrument-id
         items
-        specifications))))
+        specifications))
+    ;; MODULES
+    (GET "/modules" []
+      (modules-response/modules-list
+        render-map
+        (:modules (:user-components treatment))
+        (get-in treatment [:treatment-access :treatment-access-id])))
+    (context "/module/:module-id" [module-id]
+      (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
+                           (some #(and (:active %) %)))]
+        (routes
+          (GET "/" [] (modules-response/main-text treatment-access render-map module))
+          (POST "/" [content-data]
+            (modules-response/save-main-text-data treatment-access content-data))
+          (GET "/homework" []
+            (modules-response/homework treatment-access render-map module))
+          (POST "/homework" [content-data submit?]
+            (modules-response/save-homework treatment-access module content-data submit?))
+          (POST "/retract-homework" []
+            (modules-response/retract-homework treatment-access module))
+          (GET "/worksheet/:worksheet-id" [worksheet-id]
+            (modules-response/worksheet
+              treatment-access
+              render-map
+              module
+              worksheet-id))
+          (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
+            (modules-response/worksheet-example module worksheet-id return-path)))
+        ;; Module not found
+        (layout/error-404-page (i18n/tr [:modules/no-module]))))
+    (POST "/content-data" [content-data]
+      (modules-response/save-worksheet-data
+        (get-in treatment [:treatment-access :treatment-access-id])
+        content-data))))
+
+
+(defn assessment-routes
+  [user request]
+  )
 
 (def user-routes
   (context "/user" [:as request]
@@ -163,9 +220,12 @@
       (if (auth-response/need-double-auth? (:session request))
         (routes
           (ANY "*" [] (http-response/found "/double-auth")))
-        (if (:assessments-pending? (:session request))
-          (assessment-routes user request)
-          (treatment-routes user request))))))
+        (GET "/hejsan" [] (layout/text-response "hejsan"))
+        #_(if (:assessments-pending? (:session request))
+            (assessment-routes user request)
+            (routes
+              (GET "/hejsan" [] (layout/text-response "hejsan")))
+            #_(treatment-routes user request))))))
 
 (defroutes privacy-consent-routes
   (context "/user" [:as request]
@@ -174,3 +234,18 @@
         (user-response/privacy-consent-page user))
       (POST "/privacy-consent" [i-consent :as request]
         (user-response/handle-privacy-consent user i-consent)))))
+
+(defroutes testr
+  (context "/" []
+    (context "/xxx" [:as
+                     {{:keys [render-map treatment]}          :db
+                      {:keys [user]}                          :session
+                      {{:keys [treatment-access]} :treatment} :db
+                      :as                                     request}]
+      (GET "/yyy" []
+        (do (log/debug request)
+            (log/debug treatment)
+            (log/debug user)
+            (layout/text-response treatment-access)))
+      (GET "/xxx" []
+        (layout/text-response render-map)))))
