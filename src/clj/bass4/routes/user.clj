@@ -33,7 +33,7 @@
 ;    string
 ;    (codec/url-encode string)))
 
-(defn module-routes
+#_(defn module-routes
   [treatment-access render-map module]
   (routes
     (GET "/" [] (modules-response/main-text treatment-access render-map module))
@@ -54,7 +54,7 @@
     (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
       (modules-response/worksheet-example module worksheet-id return-path))))
 
-(defn- messages-routes
+#_(defn- messages-routes
   [user treatment render-map]
   (routes
     (GET "/messages" []
@@ -83,16 +83,29 @@
       (http-response/found "/no-activities")
       (assoc :session {}))))
 
-#_(user-response/user-page-map treatment (:uri request))
 (defn- treatment-routes
   [user request]
   (if-let [treatment (get-in request [:db :treatment])]
-    (let [render-map (get-in request [:db :render-map])]
+    (let [render-map       (get-in request [:db :render-map])
+          treatment-access (:treatment-access treatment)]
       (routes
         (GET "/" []
           (dashboard/dashboard user (:session request) render-map treatment))
         ;; MESSAGES
-        (messages-routes user treatment render-map)
+        (GET "/messages" []
+          (if (get-in treatment [:user-components :messaging])
+            (messages-response/messages-page render-map user)
+            (layout/error-404-page)))
+        (POST "/messages" [& params]
+          (if (get-in treatment [:user-components :send-messages])
+            (messages-response/save-message (:user-id user) (:text params))
+            (layout/error-404-page)))
+        (POST "/message-save-draft" [& params]
+          (if (get-in treatment [:user-components :send-messages])
+            (messages-response/save-draft (:user-id user) (:text params))
+            (layout/error-404-page)))
+        (POST "/message-read" [& params]
+          (messages-response/message-read (:user-id user) (:message-id params)))
 
         ;; MODULES
         (GET "/modules" []
@@ -103,7 +116,24 @@
         (context "/module/:module-id" [module-id]
           (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
                                (some #(and (:active %) %)))]
-            (module-routes (:treatment-access treatment) render-map module)
+            (routes
+              (GET "/" [] (modules-response/main-text treatment-access render-map module))
+              (POST "/" [content-data]
+                (modules-response/save-main-text-data treatment-access content-data))
+              (GET "/homework" []
+                (modules-response/homework treatment-access render-map module))
+              (POST "/homework" [content-data submit?]
+                (modules-response/save-homework treatment-access module content-data submit?))
+              (POST "/retract-homework" []
+                (modules-response/retract-homework treatment-access module))
+              (GET "/worksheet/:worksheet-id" [worksheet-id]
+                (modules-response/worksheet
+                  treatment-access
+                  render-map
+                  module
+                  worksheet-id))
+              (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
+                (modules-response/worksheet-example module worksheet-id return-path)))
             ;; Module not found
             (layout/error-404-page (i18n/tr [:modules/no-module]))))
         (POST "/content-data" [content-data]
