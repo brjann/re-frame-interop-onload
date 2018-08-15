@@ -179,7 +179,10 @@
       ;wrap-auth-re-auth
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
+      ;; TODO: Remove from here
       (wrap-mw-fn #'user-response/treatment-mw)
+      ;; TODO: Remove from here
+      (wrap-mw-fn #'user-response/check-assessments-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)

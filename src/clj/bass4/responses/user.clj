@@ -36,25 +36,27 @@
 (defn check-assessments-mw
   [handler request]
   (let [session (:session request)]
-    (if-not (:assessments-checked? session)
-      (if (assessments-pending? request)
-        (do
-          (log/debug "Assessments pending!")
-          (-> (http-response/found "/user/assessments")
-              (assoc :session
-                     (merge
-                       session
-                       {:assessments-checked?   true
-                        :assessments-pending?   true
-                        :assessments-performed? true}))))
-        (do
-          (log/debug "No assessments pending!")
-          (-> (http-response/found "/user")
-              (assoc :session
-                     (merge
-                       session
-                       {:assessments-checked? true
-                        :assessments-pending? false})))))
+    (if (:identity request)
+      (if-not (:assessments-checked? session)
+        (if (assessments-pending? request)
+          (do
+            (log/debug "Assessments pending!")
+            (-> (http-response/found "/user/assessments")
+                (assoc :session
+                       (merge
+                         session
+                         {:assessments-checked?   true
+                          :assessments-pending?   true
+                          :assessments-performed? true}))))
+          (do
+            (log/debug "No assessments pending!")
+            (-> (http-response/found "/user")
+                (assoc :session
+                       (merge
+                         session
+                         {:assessments-checked? true
+                          :assessments-pending? false})))))
+        (handler request))
       (handler request))))
 
 (defn user-page-map

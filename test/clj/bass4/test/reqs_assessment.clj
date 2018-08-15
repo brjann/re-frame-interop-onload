@@ -32,6 +32,9 @@
         (visit "/login" :request-method :post :params {:username "one-assessment" :password "one-assessment"})
         (has (status? 302))
         (follow-redirect)
+        ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
+        (follow-redirect)
+        (follow-redirect)
         (has (some-text? "666777"))
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
