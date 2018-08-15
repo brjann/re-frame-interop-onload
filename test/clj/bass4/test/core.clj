@@ -135,6 +135,11 @@
    (log/debug (get-in x [:response :status]))
    x))
 
+(defn log-response
+  ([x]
+   (log/debug (:response x))
+   x))
+
 (defn log-headers
   ([x]
    (log/debug (get-in x [:response :headers]))
