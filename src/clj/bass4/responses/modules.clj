@@ -189,6 +189,6 @@
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
     (do
       (when (not (:ok? submitted))
-        (treatment-service/retract-homework! submitted module))
+        (treatment-service/retract-homework! treatment-access module))
       (http-response/found "reload"))
     (layout/throw-400!)))

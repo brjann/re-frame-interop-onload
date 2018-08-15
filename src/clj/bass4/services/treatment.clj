@@ -201,8 +201,9 @@
                         :module-id           (:module-id module)}))
 
 (defn retract-homework!
-  [submitted module]
-  (db/retract-homework! {:submit-id (:submit-id submitted)}))
+  [treatment-access module]
+  (db/retract-homework! {:treatment-access-id (:treatment-access-id treatment-access)
+                         :module-id           (:module-id module)}))
 
 
 (defn register-content-access!

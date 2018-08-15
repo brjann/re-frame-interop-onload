@@ -129,7 +129,9 @@ WHERE Id IN
 
 -- :name retract-homework! :! :1
 -- :doc
-DELETE FROM content_data_homework WHERE Id = :submit-id;
+DELETE FROM content_data_homework
+WHERE TreatmentAccessID = :treatment-access-id
+  AND ModuleId = :module-id;
 
 
 -- :name register-content-access! :! :n
