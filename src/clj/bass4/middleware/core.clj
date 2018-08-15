@@ -25,7 +25,8 @@
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
             [bass4.responses.auth :as auth]
-            [bass4.responses.e-auth :as e-auth]))
+            [bass4.responses.e-auth :as e-auth]
+            [bass4.responses.user :as user-response]))
 
 
 (defn wrap-formats [handler]
@@ -178,6 +179,7 @@
       ;wrap-auth-re-auth
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
+      (wrap-mw-fn #'user-response/treatment-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)
