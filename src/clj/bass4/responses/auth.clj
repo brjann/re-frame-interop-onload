@@ -168,47 +168,6 @@
   (layout/render
     "auth/login.html"))
 
-(defn- assessments-pending?
-  [request]
-  (let [user-id (:identity request)]
-    (cond
-      (nil? user-id)
-      false
-
-      :else
-      (< 0 (administrations/create-assessment-round-entries! user-id)))))
-
-(defn check-assessments-mw
-  [handler request]
-  (let [session (:session request)]
-    (if-not (:assessments-checked? session)
-      (if (assessments-pending? request)
-        (do
-          (log/debug "Assessments pending!")
-          (-> (http-response/found "/user/assessments")
-              (assoc :session
-                     (merge
-                       session
-                       {:assessments-checked?   true
-                        :assessments-pending?   true
-                        :assessments-performed? true}))))
-        (do
-          (log/debug "No assessments pending!")
-          (-> (http-response/found "/user")
-              (assoc :session
-                     (merge
-                       session
-                       {:assessments-checked? true
-                        :assessments-pending? false})))))
-      (handler request))))
-
-
-(defn- assessments-map
-  [user]
-  (when (< 0 (administrations/create-assessment-round-entries! (:user-id user)))
-    {:assessments-pending?   true
-     :assessments-performed? true}))
-
 (defn create-new-session
   [user additional]
   (auth-service/register-user-login! (:user-id user))

@@ -6,8 +6,42 @@
             [bass4.api-coercion :as api :refer [def-api]]
             [bass4.layout :as layout]
             [bass4.services.user :as user-service]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.services.assessments :as administrations]))
 
+(defn- assessments-pending?
+  [request]
+  (let [user-id (:identity request)]
+    (cond
+      (nil? user-id)
+      false
+
+      :else
+      (< 0 (administrations/create-assessment-round-entries! user-id)))))
+
+(defn check-assessments-mw
+  [handler request]
+  (let [session (:session request)]
+    (if-not (:assessments-checked? session)
+      (if (assessments-pending? request)
+        (do
+          (log/debug "Assessments pending!")
+          (-> (http-response/found "/user/assessments")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked?   true
+                        :assessments-pending?   true
+                        :assessments-performed? true}))))
+        (do
+          (log/debug "No assessments pending!")
+          (-> (http-response/found "/user")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked? true
+                        :assessments-pending? false})))))
+      (handler request))))
 
 (defn user-page-map
   [treatment path]
