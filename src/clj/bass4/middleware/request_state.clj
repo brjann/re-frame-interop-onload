@@ -49,7 +49,11 @@
           req-state (request-state/get-state)]
       ;; Only save if request is tied to specific database
       (when (and (:name req-state) (not config/test-mode?))
-        (save-log! req-state request time method status (count (:body val))))
+        (let [body      (:body val)
+              body-size (if (string? body)
+                          (count body)
+                          0)]
+          (save-log! req-state request time method status body-size)))
       ;;val
       (if (:debug-headers req-state)
         (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
