@@ -83,11 +83,11 @@
       (http-response/found "/no-activities")
       (assoc :session {}))))
 
-#_(treatment-service/user-treatment (:user-id user))
+#_(user-response/user-page-map treatment (:uri request))
 (defn- treatment-routes
   [user request]
   (if-let [treatment (get-in request [:db :treatment])]
-    (let [render-map (user-response/user-page-map treatment (:uri request))]
+    (let [render-map (get-in request [:db :render-map])]
       (routes
         (GET "/" []
           (dashboard/dashboard user (:session request) render-map treatment))

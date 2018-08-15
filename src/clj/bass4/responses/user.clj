@@ -10,11 +10,14 @@
             [bass4.services.assessments :as administrations]
             [bass4.services.treatment :as treatment-service]))
 
+(declare user-page-map)
 (defn treatment-mw
   [handler request]
   (if-let [treatment (when-let [user (get-in request [:session :user])]
                        (treatment-service/user-treatment (:user-id user)))]
-    (handler (assoc-in request [:db :treatment] treatment))
+    (handler (-> request
+                 (assoc-in [:db :treatment] treatment)
+                 (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
     (handler request)))
 
 (defn- assessments-pending?
