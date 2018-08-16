@@ -112,7 +112,6 @@
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
-      (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
@@ -131,10 +130,6 @@
   (-> *s*
       (modify-session {:identity 536821})
       (visit "/user/")
-      (follow-redirect)
-      (log-body)
-      (visit "/user/messages")
-      (has (status? 404))
       (follow-redirect)
       (has (some-text? "activities"))))
 
@@ -259,6 +254,7 @@
   (let [x (-> *s*
               (modify-session {:identity 536975 :double-authed? true :external-login? true})
               (visit "/user")
+              (log-body)
               (follow-redirect)
               (visit "/user/messages")
               (has (status? 200))

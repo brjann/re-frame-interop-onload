@@ -203,8 +203,8 @@
     :handler (fn [request] (eval-rules request
                                        [double-auth? "/double-auth" :ok]
                                        [assessments-pending? "/user/assessments" :ok]
-                                       [no-treatment-no-assessments? "/login" :ok]
-                                       [no-treatment-but-assessments? "/no-activities" :ok]))}])
+                                       [no-treatment-no-assessments? "/no-activities" :ok]
+                                       [no-treatment-but-assessments? "/login" :ok]))}])
 
 (defroutes treatment-routes-x
   (context "/user" [:as
