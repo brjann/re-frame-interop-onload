@@ -4,7 +4,14 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures not-text? log-return log-body log-headers disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures
+                                     not-text?
+                                     log-return
+                                     log-body
+                                     log-headers
+                                     log-session
+                                     disable-attack-detector
+                                     *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.db.core :as db]
             [bass4.services.user :as user]
@@ -70,10 +77,25 @@
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
                          (follow-redirect)
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                         (log-return "111111111111111111111111111111111111111111111111111111111111")
+                         (log-headers)
+                         (log-session)
                          (follow-redirect)
+                         (log-headers)
+                         (log-session)
                          (visit "/user/assessments")
+                         (log-return "222222222222222222222222222222222222222222222222222222222222")
+                         (log-headers)
+                         (log-session)
                          (follow-redirect)
+                         (log-headers)
+                         (log-session)
+                         (log-return "333333333333333333333333333333333333333333333333333333333333")
                          (has (status? 302))
+                         (follow-redirect)
+                         (log-headers)
+                         (log-session)
+                         (log-return "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
                          (get-in [:response :headers "Location"]))]
         (is (= "http://www.dn.se" redirect))
         (-> session

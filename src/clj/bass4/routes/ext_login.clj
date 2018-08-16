@@ -54,11 +54,14 @@
 (defn return-url-mw
   [handler request]
   (let [session (:session request)]
+    (log/debug (select-keys session [:return-url :assessments-checked? :assessments-pending? :assessments-performed?]))
     (if (and (:return-url session)
              (:assessments-checked? session)
              (not (:assessments-pending? session)))
-      (-> (http-response/found (:return-url session))
-          (assoc :session {}))
+      (do
+        (log/debug "Redirecting to" (:return-url session))
+        (-> (http-response/found (:return-url session))
+            (assoc :session {})))
       (handler request))))
 
 

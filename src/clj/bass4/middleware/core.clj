@@ -26,7 +26,8 @@
             [bass4.services.attack-detector :as a-d]
             [bass4.responses.auth :as auth]
             [bass4.responses.e-auth :as e-auth]
-            [bass4.responses.user :as user-response]))
+            [bass4.responses.user :as user-response]
+            [bass4.routes.ext-login :as ext-login]))
 
 
 (defn wrap-formats [handler]
@@ -183,6 +184,8 @@
       (wrap-mw-fn #'user-response/treatment-mw)
       ;; TODO: Remove from here
       (wrap-mw-fn #'user-response/check-assessments-mw)
+      ;; TODO: Remove from here?
+      (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)

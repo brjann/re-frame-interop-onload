@@ -158,7 +158,7 @@
                         res (if (pred session treatment)
                               pred-true
                               pred-false)]
-                    (log/debug (:uri request "predicate returned") res)
+                    #_(log/debug (:uri request "predicate returned") res)
                     (if (= :ok res)
                       (recur (rest rules))
                       res))))]
@@ -179,7 +179,6 @@
 
 (defn- assessments-pending?
   [session _]
-  (log/debug (:assessments-pending? session))
   (:assessments-pending? session))
 
 (defn no-treatment-no-assessments?

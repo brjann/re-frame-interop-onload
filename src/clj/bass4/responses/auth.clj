@@ -144,7 +144,6 @@
                                (:sms? settings)
                                (:email? settings)
                                (and (:double-auth-use-both? user) (:allow-both? settings)))]
-      (log/debug send-res)
       (case send-res
         :success
         {:redirect "/double-auth"
