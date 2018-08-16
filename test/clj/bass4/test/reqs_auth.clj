@@ -254,8 +254,6 @@
   (let [x (-> *s*
               (modify-session {:identity 536975 :double-authed? true :external-login? true})
               (visit "/user")
-              (log-body)
-              (follow-redirect)
               (visit "/user/messages")
               (has (status? 200))
               (visit "/debug/session"))]
