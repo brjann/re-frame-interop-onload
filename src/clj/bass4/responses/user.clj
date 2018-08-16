@@ -40,7 +40,7 @@
       (if-not (:assessments-checked? session)
         (if (assessments-pending? request)
           (do
-            (log/debug "Assessments pending!")
+            #_(log/debug "Assessments pending!")
             (-> (http-response/found "/user/assessments")
                 (assoc :session
                        (merge
@@ -49,7 +49,7 @@
                           :assessments-pending?   true
                           :assessments-performed? true}))))
           (do
-            (log/debug "No assessments pending!")
+            #_(log/debug "No assessments pending!")
             (-> (http-response/found "/user")
                 (assoc :session
                        (merge

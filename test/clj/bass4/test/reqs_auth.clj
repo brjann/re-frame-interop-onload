@@ -90,7 +90,6 @@
         (follow-redirect)
         (follow-redirect)
         (follow-redirect)
-        (log-body)
         (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority

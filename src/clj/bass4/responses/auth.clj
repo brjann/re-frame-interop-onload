@@ -293,7 +293,7 @@
 ;;  RESTRICTED MIDDLEWARE
 ;; -----------------------
 
-(defn wrap-restricted [handler request]
+#_(defn wrap-restricted [handler request]
   (log/debug "Checking restricted")
   (if (:identity request)
     (handler request)

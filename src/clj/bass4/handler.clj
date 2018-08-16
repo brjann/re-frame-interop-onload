@@ -12,12 +12,9 @@
             [bass4.routes.e-auth :refer [e-auth-routes]]
             [bass4.routes.lost-password :refer [lost-password-routes] :as lost-password]
             [buddy.auth.accessrules :refer [wrap-access-rules]]
-            [compojure.route :as route]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
-            [bass4.middleware.core :as middleware]
-            [bass4.responses.auth :refer [wrap-restricted]]
-            [bass4.responses.user :as user-response]))
+            [bass4.middleware.core :as middleware]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -59,7 +56,7 @@
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats)
-        (wrap-routes #(middleware/wrap-mw-fn % wrap-restricted)))
+        #_(wrap-routes #(middleware/wrap-mw-fn % wrap-restricted)))
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))

@@ -142,7 +142,6 @@
               (get-in treatment [:treatment-access :treatment-access-id])
               content-data))))
       (routes
-        ;; TODO: What should be shown if not in treatment?
         (ANY "*" [] (no-treatment-response (:session request))))))
 
 
@@ -158,7 +157,7 @@
                         res (if (pred session treatment)
                               pred-true
                               pred-false)]
-                    (log/debug (:uri request) "predicate returned" res)
+                    #_(log/debug (:uri request) "predicate returned" res)
                     (if (= :ok res)
                       (recur (rest rules))
                       res))))]
@@ -205,6 +204,7 @@
   [session _]
   (:identity session))
 
+;; TODO: What should be shown if not in treatment?
 (def route-rules
   [{:pattern #"^/user/assessments"
     :handler (fn [request] (eval-rules request

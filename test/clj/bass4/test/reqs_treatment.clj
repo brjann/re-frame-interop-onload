@@ -66,8 +66,6 @@
         (visit "/user/module/3961/homework")
         (has (some-text? "Retract"))
         (visit "/user/module/3961/retract-homework" :request-method :post)
-        (log-headers)
-        (log-headers)
         (visit "/user/module/3961/homework")
         (not-text? "Retract")
         (visit "/user/module/3961/worksheet/4001")
