@@ -158,7 +158,7 @@
                         res (if (pred session treatment)
                               pred-true
                               pred-false)]
-                    #_(log/debug (:uri request "predicate returned") res)
+                    (log/debug (:uri request) "predicate returned" res)
                     (if (= :ok res)
                       (recur (rest rules))
                       res))))]
@@ -174,8 +174,16 @@
         (= 404 res)
         (buddy-rules/error (layout/error-404-page))
 
+        (= 403 res)
+        (buddy-rules/error (layout/error-403-page))
+
         :else
         (throw (Exception. "Rule did not return 404, true or string"))))))
+
+
+;; ------------------------
+;;          RULES
+;; ------------------------
 
 (defn- assessments-pending?
   [session _]
@@ -193,20 +201,34 @@
   [session _]
   (auth-response/need-double-auth? session))
 
+(defn logged-in?
+  [session _]
+  (:identity session))
+
 (def route-rules
   [{:pattern #"^/user/assessments"
     :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
                                        [assessments-pending? :ok "/user"]))}
 
    {:pattern #"^/user[/]?"
     :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
+                                       [double-auth? "/double-auth" :ok]
+                                       [assessments-pending? "/user/assessments" :ok]
+                                       [no-treatment-no-assessments? "/no-activities" :ok]
+                                       [no-treatment-but-assessments? "/login" :ok]))}
+
+   {:pattern #"^/user/.+"
+    :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
                                        [assessments-pending? "/user/assessments" :ok]
                                        [no-treatment-no-assessments? "/no-activities" :ok]
                                        [no-treatment-but-assessments? "/login" :ok]))}])
 
-(defroutes treatment-routes-x
+(defroutes user-routes
   (context "/user" [:as
                     {{:keys [render-map treatment]}          :db
                      {:keys [user]}                          :session
@@ -272,11 +294,7 @@
         content-data))))
 
 
-(defn assessment-routes
-  [user request]
-  )
-
-(def user-routes
+#_(def user-routes
   (context "/user" [:as request]
     (let [user (get-in request [:session :user])]
       (if (auth-response/need-double-auth? (:session request))
@@ -289,7 +307,7 @@
               (GET "/hejsan" [] (layout/text-response "hejsan")))
             #_(treatment-routes user request))))))
 
-(defroutes privacy-consent-routes
+#_(defroutes privacy-consent-routes
   (context "/user" [:as request]
     (let [user (get-in request [:session :user])]
       (GET "/privacy-consent" []
@@ -297,7 +315,7 @@
       (POST "/privacy-consent" [i-consent :as request]
         (user-response/handle-privacy-consent user i-consent)))))
 
-(defroutes testr
+#_(defroutes testr
   (context "/" []
     (context "/xxx" [:as
                      {{:keys [render-map treatment]}          :db
