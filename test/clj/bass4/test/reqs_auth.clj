@@ -4,7 +4,14 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* modify-session]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     log-body
+                                     log-status
+                                     disable-attack-detector
+                                     *s*
+                                     modify-session]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
@@ -24,6 +31,9 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username 536975 :password 536975})
         (has (status? 302))
+        (follow-redirect)
+        ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
+        (follow-redirect)
         (follow-redirect)
         (has (some-text? "666777")))))
 
@@ -80,6 +90,7 @@
         (follow-redirect)
         (follow-redirect)
         (follow-redirect)
+        (log-body)
         (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
@@ -120,8 +131,10 @@
   (-> *s*
       (modify-session {:identity 536821})
       (visit "/user/")
+      (follow-redirect)
+      (log-body)
       (visit "/user/messages")
-      (has (status? 302))
+      (has (status? 404))
       (follow-redirect)
       (has (some-text? "activities"))))
 

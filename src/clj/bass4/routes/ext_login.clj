@@ -59,7 +59,10 @@
              (:assessments-checked? session)
              (not (:assessments-pending? session)))
       (do
+        (log/debug "-------------------------------------------------------")
         (log/debug "Redirecting to" (:return-url session))
+        (log/debug (:uri request))
+        (log/debug "-------------------------------------------------------")
         (-> (http-response/found (:return-url session))
             (assoc :session {})))
       (handler request))))

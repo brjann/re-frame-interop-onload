@@ -185,7 +185,7 @@
       ;; TODO: Remove from here
       (wrap-mw-fn #'user-response/check-assessments-mw)
       ;; TODO: Remove from here?
-      (wrap-mw-fn #'ext-login/return-url-mw)
+      #_(wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'user-identity)
