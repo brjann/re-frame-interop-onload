@@ -53,20 +53,40 @@
 
 (defn return-url-mw
   [handler request]
-  (let [session (:session request)]
-    #_(log/debug (select-keys session [:return-url :assessments-checked? :assessments-pending? :assessments-performed?]))
-    (if (and (:return-url session)
-             (:assessments-checked? session)
-             (not (:assessments-pending? session)))
+  (let [session-in  (:session request)
+        out         (handler request)
+        session-out (:session out)]
+    #_(log/debug (select-keys session-in [:return-url :assessments-checked? :assessments-pending? :assessments-performed?]))
+    #_(log/debug (select-keys session-out [:return-url :assessments-checked? :assessments-pending? :assessments-performed?]))
+    (if (and (:return-url session-in)
+             (:assessments-pending? session-in)
+             (not (:assessments-pending? session-out)))
       (do
         #_(do
+            (log/debug "-------------------------------------------------------")
+            (log/debug "Redirecting to" (:return-url session-in))
+            (log/debug (:uri request))
+            (log/debug "-------------------------------------------------------"))
+        (-> (http-response/found (:return-url session-in))
+            (assoc :session {})))
+      out)))
+
+#_(defn return-url-mw
+    [handler request]
+    (let [session (:session request)]
+      (log/debug (select-keys session [:return-url :assessments-checked? :assessments-pending? :assessments-performed?]))
+      (if (and (:return-url session)
+               (:assessments-checked? session)
+               (not (:assessments-pending? session)))
+        (do
+          (do
             (log/debug "-------------------------------------------------------")
             (log/debug "Redirecting to" (:return-url session))
             (log/debug (:uri request))
             (log/debug "-------------------------------------------------------"))
-        (-> (http-response/found (:return-url session))
-            (assoc :session {})))
-      (handler request))))
+          (-> (http-response/found (:return-url session))
+              (assoc :session {})))
+        (handler request))))
 
 
 ;; ------------

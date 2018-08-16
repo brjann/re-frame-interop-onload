@@ -77,26 +77,14 @@
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
                          (follow-redirect)
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-                         #_(log-return "111111111111111111111111111111111111111111111111111111111111")
-                         #_(log-headers)
-                         #_(log-session)
                          (follow-redirect)
-                         (log-headers)
-                         (log-session)
+                         (has (some-text? "Thanks top-priority"))
+                         ;; Assessments pending becomes false in the next request.
+                         ;; At users first request after thank-you-text has been shown
                          (visit "/user/assessments")
-                         (log-return "222222222222222222222222222222222222222222222222222222222222")
-                         (log-headers)
-                         (log-session)
-                         (log-return "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-                         (follow-redirect)
-                         (log-body)
-                         (log-headers)
-                         (log-session)
-                         (log-return "333333333333333333333333333333333333333333333333333333333333")
+                         ;; ext-login middleware catches the change in assessments-pending?
+                         ;; status and redirects user
                          (has (status? 302))
-                         (follow-redirect)
-                         (log-headers)
-                         (log-session)
                          (get-in [:response :headers "Location"]))]
         (is (= "http://www.dn.se" redirect))
         (-> session
