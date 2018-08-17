@@ -138,9 +138,12 @@
       (modules-response/modules-list
         render-map
         (:modules (:user-components treatment))
-        (get-in treatment [:treatment-access :treatment-access-id])))
+        (:treatment-access-id treatment-access)))
     (context "/module/:module-id" [module-id]
-      (if-let [module (->> (filter #(= (str->int module-id) (:module-id %)) (:modules (:user-components treatment)))
+      ;; This is maybe a bit dirty,
+      ;; but it's nothing compared to the previous chaos.
+      (if-let [module (->> (get-in treatment [:user-components :modules])
+                           (filter #(= (str->int module-id) (:module-id %)))
                            (some #(and (:active %) %)))]
         (routes
           (GET "/" [] (modules-response/main-text treatment-access render-map module))
