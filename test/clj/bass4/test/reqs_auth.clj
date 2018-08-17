@@ -9,6 +9,8 @@
                                      log-return
                                      log-body
                                      log-status
+                                     log-headers
+                                     log-session
                                      disable-attack-detector
                                      *s*
                                      modify-session]]
@@ -33,8 +35,6 @@
         (has (status? 302))
         (follow-redirect)
         ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
-        (follow-redirect)
-        (follow-redirect)
         (has (some-text? "666777")))))
 
 (deftest double-auth-required
@@ -111,6 +111,7 @@
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
+      (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
@@ -129,6 +130,7 @@
   (-> *s*
       (modify-session {:identity 536821})
       (visit "/user/")
+      (follow-redirect)
       (follow-redirect)
       (has (some-text? "activities"))))
 
@@ -263,20 +265,32 @@
         (visit "/user/messages")
         (has (status? 200)))))
 
+(deftest request-re-auth-last-request-time-external-login
+  (-> *s*
+      (modify-session {:identity 536975 :double-authed? true :external-login? true})
+      (visit "/user")
+      (visit "/user/messages")
+      (has (status? 200))
+      (visit "/debug/session")
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/user/messages")
+      (has (status? 200))))
+
 (deftest request-re-auth-last-request-time2
-  (let [x (-> *s*
-              (modify-session {:identity 536975 :double-authed? true}))]
-    ;; TODO: Rewrite session modification as macro
-    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
-          (-> x
-              (visit "/debug/session")
-              (has (some-text? "1985-10-26T01:20:00.000Z"))))
-        (visit "/user/messages")
-        (visit "/re-auth" :request-method :post :params {:password 536975})
-        (has (status? 302))
-        (visit "/user")
-        (visit "/user/messages")
-        (has (status? 200)))))
+  (-> *s*
+      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/user/messages")
+      (follow-redirect)
+      (visit "/re-auth" :request-method :post :params {:password 536975})
+      (has (status? 302))
+      (visit "/user")
+      (visit "/user/messages")
+      (has (status? 200))))
 
 
 (deftest request-re-auth-last-request-time3
@@ -291,7 +305,13 @@
           (-> y
               (visit "/debug/session")
               (has (some-text? "1985-10-26T01:20:00.000Z"))))
+        ;; TODO: Before route rewrite this request to become logged out was not necessary
+        (visit "/user")
+        (log-session)
         (visit "/re-auth" :request-method :post :params {:password 536975})
+        (follow-redirect)
+        (log-headers)
+        (log-session)
         (visit "/user")
         (visit "/user/messages")
         (has (status? 200)))))

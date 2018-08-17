@@ -44,7 +44,7 @@
                       res  (if (pred request (:params rule))
                              pred-true
                              pred-false)]
-                  (log/debug (:uri request) "predicate" (:name (meta pred)) res)
+                  #_(log/debug (:uri request) "predicate" (:name (meta pred)) res)
                   (if (= :ok res)
                     (recur (rest rules))
                     res))))]
@@ -78,15 +78,3 @@
         (if (true? res)
           (handler request)
           res)))))
-
-(defn wrap-rules2
-  [rules]
-  (fn [handler request]
-    (let [res (->> (match-rules request rules)
-                   (flatten-matching-rules)
-                   (eval-rules request))]
-      #_(log/debug res)
-      #_(handler request)
-      (if (true? res)
-        (handler request)
-        res))))

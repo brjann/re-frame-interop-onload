@@ -22,13 +22,9 @@
   #_(log/debug "Running treatment mw")
   (if-let [treatment (when-let [user (get-in request [:session :user])]
                        (treatment-service/user-treatment (:user-id user)))]
-    (do (log/debug (when treatment "Treatment!"))
-        #_(handler (assoc request
-                     :db-treatment treatment
-                     :db-render-map (user-page-map treatment (:uri request))))
-        (handler (-> request
-                     (assoc-in [:db :treatment] treatment)
-                     (assoc-in [:db :render-map] (user-page-map treatment (:uri request))))))
+    (handler (-> request
+                 (assoc-in [:db :treatment] treatment)
+                 (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
     (handler request)))
 
 (defn treatment-mw2
@@ -49,7 +45,6 @@
 
 (defn check-assessments-mw
   [handler request]
-  (log/debug "Running assessment middleware")
   (let [session (:session request)]
     (if (:identity request)
       (if-not (:assessments-checked? session)

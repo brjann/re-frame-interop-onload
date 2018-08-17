@@ -42,7 +42,6 @@
 
 (defn router-middleware
   [handler request]
-  (log/debug "I'm reloaded AGAIN!!!!")
   ((-> handler
        (wrap-route-mw ["/user*"]
                       (route-rules/wrap-rules user-routes/user-route-rules)

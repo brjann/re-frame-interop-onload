@@ -261,11 +261,19 @@
 (defn- should-re-auth?
   [session now last-request-time re-auth-time-limit]
   (cond
-    (:external-login? session) false
-    (:auth-re-auth session) true
-    (nil? last-request-time) nil
+    (:external-login? session)
+    false
+
+    (:auth-re-auth session)
+    true
+
+    (nil? last-request-time)
+    nil
+
     (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-      (>= time-elapsed re-auth-time-limit)) true
+      (>= time-elapsed re-auth-time-limit))
+    true
+
     :else nil))
 
 (defn auth-re-auth-wrapper
@@ -274,6 +282,7 @@
         now               (t/now)
         last-request-time (:last-request-time session)
         re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
+        _                 (log/debug "Re-auth" re-auth?)
         response          (if re-auth?
                             (if (= (:request-method request) :get)
                               (http-response/found (str "/re-auth?return-url=" (request-string request)))
@@ -294,10 +303,10 @@
 ;; -----------------------
 
 #_(defn wrap-restricted [handler request]
-  (log/debug "Checking restricted")
-  (if (:identity request)
-    (handler request)
-    (layout/error-403-page)))
+    (log/debug "Checking restricted")
+    (if (:identity request)
+      (handler request)
+      (layout/error-403-page)))
 
 (defn identity-mw [handler request]
   (if-let [id (get-in request [:session :identity])]
