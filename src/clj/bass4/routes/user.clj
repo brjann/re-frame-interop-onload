@@ -74,8 +74,7 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'logged-in? :ok 403]
-            [#'double-auth? "/double-auth" :ok]
+    :rules [[#'double-auth? "/double-auth" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
@@ -90,16 +89,12 @@
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'logged-in? :ok 403]
-            [#'double-auth? "/double-auth" :ok]
+    :rules [[#'double-auth? "/double-auth" :ok]
             [#'assessments-pending? :ok "/user"]]}])
 
 (defroutes assessment-routes
-  (context "/assessments" [:as
-                           {{:keys [render-map treatment]}          :db
-                            {:keys [user]}                          :session
-                            {{:keys [treatment-access]} :treatment} :db
-                            :as                                     request}]
+  (context "/assessments" [:as {{:keys [user]} :session
+                                :as            request}]
     (GET "/" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
     (POST "/" [instrument-id items specifications]
       (assessments-response/post-instrument-answers

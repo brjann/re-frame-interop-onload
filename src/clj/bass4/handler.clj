@@ -30,7 +30,7 @@
 
 (def compiled-route-middlewares (atom {}))
 
-(defn- compose-routes
+(defn- compile-middleware
   [handler route-mws]
   (loop [v handler route-mws route-mws]
     (if (empty? route-mws)
@@ -43,7 +43,7 @@
     (if (some #(clout-cache/route-matches % request) uri)
       (let [comp-mw (if (contains? @compiled-route-middlewares uri)
                       (get @compiled-route-middlewares uri)
-                      (let [comp-mw (compose-routes handler route-mws)]
+                      (let [comp-mw (compile-middleware handler route-mws)]
                         (swap! compiled-route-middlewares assoc uri comp-mw)
                         comp-mw))]
         (comp-mw request))
@@ -57,12 +57,14 @@
                       #'user-response/treatment-mw
                       #'user-response/check-assessments-mw
                       #'auth-response/auth-re-auth-mw
-                      #'middleware/wrap-csrf)
+                      #'middleware/wrap-csrf
+                      #'auth-response/restricted-mw)
        (wrap-route-mw ["/assessments*"]
                       (route-rules/wrap-rules user-routes/assessment-route-rules)
                       #'user-response/check-assessments-mw
                       #'auth-response/auth-re-auth-mw
-                      #'middleware/wrap-csrf))
+                      #'middleware/wrap-csrf
+                      #'auth-response/restricted-mw))
     request))
 
 (defn route-middlewares-wrapper

@@ -301,11 +301,12 @@
 ;;  RESTRICTED MIDDLEWARE
 ;; -----------------------
 
-#_(defn wrap-restricted [handler request]
-    (log/debug "Checking restricted")
+(defn restricted-mw [handler]
+  (fn [request]
     (if (:identity request)
       (handler request)
-      (layout/error-403-page)))
+      (layout/error-403-page))))
+
 
 (defn identity-mw [handler request]
   (if-let [id (get-in request [:session :identity])]
