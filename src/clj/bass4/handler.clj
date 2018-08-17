@@ -60,51 +60,33 @@
 
 
 (def app-routes
+  ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
-    (-> #'auth-routes
-        #_(wrap-routes middleware/wrap-formats))
+    #'auth-routes
     (-> #'lost-password-routes
         (wrap-access-rules {:rules    lost-password/rules
                             :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes/assessment-routes
-        ;; TODO: Move back here
-        #_(wrap-routes (route-rules/wrap-rules user-routes/assessment-route-rules))
-        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
-        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
         #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
-        (wrap-routes middleware/wrap-csrf)
-        #_(wrap-routes middleware/wrap-formats))
+        (wrap-routes middleware/wrap-csrf))
     (-> #'user-routes/user-routes
-        #_(wrap-routes (fn [& x] (fn [& x] (/ 0 0))))
-        ;; TODO: Move back here
-        #_(wrap-routes (route-rules/wrap-rules user-routes/user-route-rules))
-        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/treatment-mw))
-        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
-        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
         #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
-        (wrap-routes middleware/wrap-csrf)
-        #_(wrap-routes middleware/wrap-formats))
+        (wrap-routes middleware/wrap-csrf))
     (-> #'e-auth-routes
-        (wrap-routes middleware/wrap-csrf)
-        #_(wrap-routes middleware/wrap-formats))
+        (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes
         ;; TODO: Bring back wrap-csrf
-        #_(wrap-routes middleware/wrap-csrf)
-        #_(wrap-routes middleware/wrap-formats))
-    (-> #'debug-routes
-        #_(wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-csrf))
+    #'debug-routes
     (-> #'registration-routes
         (wrap-access-rules {:rules reg-routes/route-rules})
-        (wrap-routes middleware/wrap-csrf)
-        #_(wrap-routes middleware/wrap-formats))
+        (wrap-routes middleware/wrap-csrf))
     (-> #'ext-login-routes
-        (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
-        #_(wrap-routes middleware/wrap-formats))
-    (-> #'quick-login-routes
-        #_(wrap-routes middleware/wrap-formats))
+        (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw)))
+    #'quick-login-routes
     ;; Replacement for route/not-found
     (layout/route-not-found)))
 
