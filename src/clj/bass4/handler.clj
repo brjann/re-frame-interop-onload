@@ -17,7 +17,8 @@
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
             [bass4.responses.user :as user-response]
-            [bass4.clout-cache :as clout-cache]))
+            [bass4.clout-cache :as clout-cache]
+            [clojure.tools.logging :as log]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -34,33 +35,32 @@
       (route-mw handler request)
       (handler request))))
 
-(defn route-middlewares
+
+(defn router-middleware
+  [handler request]
+  (log/debug "I'm reloaded AGAIN!!!!")
+  ((-> handler
+       (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
+       (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
+       (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
+       (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
+       (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw))
+    request))
+
+(defn route-middlewares-wrapper
   [handler]
-  (-> handler
-      (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
-      (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
-      (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
-      (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
-      (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw)))
+  (fn [request]
+    (router-middleware handler request)))
+
 
 (def app-routes
   (routes
-    #_(->
-        (wrap-routes (fn [handler]
-                       (fn [request]
-                         (handler (assoc request :fuck :me))))))
     (-> #'auth-routes
         (wrap-routes middleware/wrap-formats))
     (-> #'lost-password-routes
         (wrap-access-rules {:rules    lost-password/rules
                             :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
-    #_(-> #'user-routes/privacy-consent-routes
-          (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
-          (wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
-          (wrap-routes middleware/wrap-csrf)
-          (wrap-routes middleware/wrap-formats)
-          (wrap-routes wrap-restricted))
     (-> #'user-routes/assessment-routes
         ;; TODO: Move back here
         #_(wrap-routes (route-rules/wrap-rules user-routes/assessment-route-rules))
@@ -71,6 +71,7 @@
         (wrap-routes middleware/wrap-csrf)
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes/user-routes
+        #_(wrap-routes (fn [& x] (fn [& x] (/ 0 0))))
         ;; TODO: Move back here
         #_(wrap-routes (route-rules/wrap-rules user-routes/user-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/treatment-mw))
@@ -101,5 +102,6 @@
     ;; Replacement for route/not-found
     (layout/route-not-found)))
 
-(defn app [] (middleware/wrap-base (-> #'app-routes
-                                       route-middlewares)))
+
+(defn app [] (middleware/wrap-base (route-middlewares-wrapper #'app-routes)))
+#_(defn app [] (middleware/wrap-base route-middlewares-xx))
