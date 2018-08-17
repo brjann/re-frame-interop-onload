@@ -36,14 +36,6 @@
         (visit "/user/messages")
         (has (some-text? "New message")))))
 
-(deftest browse-treatment-x
-  (let [random-message (str (UUID/randomUUID))]
-    (-> *s*
-        (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "Your treatment started")))))
-
 (deftest browse-treatment
   (let [random-message (str (UUID/randomUUID))]
     (-> *s*

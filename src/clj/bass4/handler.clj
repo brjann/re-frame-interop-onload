@@ -28,23 +28,46 @@
   [_ _]
   (layout/error-403-page))
 
+#_(defn wrap-route-mw
+    [handler routes route-mw]
+    (fn [request]
+      (if (some #(clout-cache/route-matches % request) routes)
+        (route-mw handler request)
+        (handler request))))
+
+#_(defn router-middleware
+    [handler request]
+    (log/debug "I'm reloaded AGAIN!!!!")
+    ((-> handler
+         (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
+         (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
+         (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
+         (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
+         (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw))
+      request))
+
 (defn wrap-route-mw
-  [handler routes route-mw]
+  [handler routes & route-mws]
   (fn [request]
     (if (some #(clout-cache/route-matches % request) routes)
-      (route-mw handler request)
+      (let [comp-mw (loop [v handler route-mws route-mws]
+                      (if (empty? route-mws)
+                        v
+                        (recur ((first route-mws) v) (rest route-mws))))]
+        (comp-mw request))
       (handler request))))
-
 
 (defn router-middleware
   [handler request]
   (log/debug "I'm reloaded AGAIN!!!!")
   ((-> handler
-       (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
-       (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
-       (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
-       (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
-       (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw))
+       (wrap-route-mw ["/user*"]
+                      (route-rules/wrap-rules user-routes/user-route-rules)
+                      #'user-response/treatment-mw2
+                      #'user-response/check-assessments-mw2)
+       (wrap-route-mw ["/assessments*"]
+                      (route-rules/wrap-rules user-routes/assessment-route-rules)
+                      #'user-response/check-assessments-mw2))
     request))
 
 (defn route-middlewares-wrapper
@@ -104,4 +127,3 @@
 
 
 (defn app [] (middleware/wrap-base (route-middlewares-wrapper #'app-routes)))
-#_(defn app [] (middleware/wrap-base route-middlewares-xx))

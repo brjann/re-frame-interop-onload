@@ -16,6 +16,7 @@
          {:path          path
           :new-messages? (:new-messages? treatment)}))
 
+
 (defn treatment-mw
   [handler request]
   #_(log/debug "Running treatment mw")
@@ -29,6 +30,11 @@
                      (assoc-in [:db :treatment] treatment)
                      (assoc-in [:db :render-map] (user-page-map treatment (:uri request))))))
     (handler request)))
+
+(defn treatment-mw2
+  [handler]
+  (fn [request]
+    (treatment-mw handler request)))
 
 
 (defn- assessments-pending?
@@ -67,6 +73,12 @@
                           :assessments-pending? false})))))
         (handler request))
       (handler request))))
+
+
+(defn check-assessments-mw2
+  [handler]
+  (fn [request]
+    (check-assessments-mw handler request)))
 
 
 (defn- consent-redirect?
