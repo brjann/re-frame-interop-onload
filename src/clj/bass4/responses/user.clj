@@ -10,18 +10,39 @@
             [bass4.services.assessments :as administrations]
             [bass4.services.treatment :as treatment-service]))
 
-(declare user-page-map)
-(defn treatment-mw
+(defn user-page-map
+  [treatment path]
+  (merge (:user-components treatment)
+         {:path          path
+          :new-messages? (:new-messages? treatment)}))
+
+#_(defn treatment-mw
   [handler request]
+    (log/debug "Running treatment mw")
   (if-let [treatment (when-let [user (get-in request [:session :user])]
                        (treatment-service/user-treatment (:user-id user)))]
-    #_(handler (assoc request
-                 :db-treatment treatment
-                 :db-render-map (user-page-map treatment (:uri request))))
-    (handler (-> request
-                 (assoc-in [:db :treatment] treatment)
-                 (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
+    (do (log/debug (when treatment "Treatment!"))
+        #_(handler (assoc request
+                     :db-treatment treatment
+                     :db-render-map (user-page-map treatment (:uri request))))
+        (handler (-> request
+                     (assoc-in [:db :treatment] treatment)
+                     (assoc-in [:db :render-map] (user-page-map treatment (:uri request))))))
     (handler request)))
+
+(defn treatment-request
+  [request]
+  (log/debug "Running treatment mw")
+  (if-let [treatment (when-let [user (get-in request [:session :user])]
+                       (treatment-service/user-treatment (:user-id user)))]
+    (do (log/debug (when treatment "Treatment!"))
+        #_(handler (assoc request
+                     :db-treatment treatment
+                     :db-render-map (user-page-map treatment (:uri request))))
+        (-> request
+            (assoc-in [:db :treatment] treatment)
+            (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
+    request))
 
 (defn- assessments-pending?
   [request]
@@ -32,6 +53,32 @@
 
       :else
       (< 0 (administrations/create-assessment-round-entries! user-id)))))
+
+#_(defn check-assessments-mw
+    [handler request]
+    (let [session (:session request)]
+      (if (:identity request)
+        (if-not (:assessments-checked? session)
+          (if (assessments-pending? request)
+            (do
+              #_(log/debug "Assessments pending!")
+              (-> (http-response/found "/assessments")
+                  (assoc :session
+                         (merge
+                           session
+                           {:assessments-checked?   true
+                            :assessments-pending?   true
+                            :assessments-performed? true}))))
+            (do
+              #_(log/debug "No assessments pending!")
+              (-> (http-response/found "/user")
+                  (assoc :session
+                         (merge
+                           session
+                           {:assessments-checked? true
+                            :assessments-pending? false})))))
+          (handler request))
+        (handler request))))
 
 (defn check-assessments-mw
   [handler request]
@@ -58,12 +105,6 @@
                           :assessments-pending? false})))))
         (handler request))
       (handler request))))
-
-(defn user-page-map
-  [treatment path]
-  (merge (:user-components treatment)
-         {:path          path
-          :new-messages? (:new-messages? treatment)}))
 
 
 (defn- consent-redirect?

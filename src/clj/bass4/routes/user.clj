@@ -116,7 +116,10 @@
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
     (GET "/" []
-      (dashboard/dashboard user (:session request) render-map treatment))
+      (do
+        (when-not treatment
+          (log/debug "NOT treatment!"))
+        (dashboard/dashboard user (:session request) render-map treatment)))
     ;; MESSAGES
     (GET "/messages" []
       (if (get-in treatment [:user-components :messaging])
@@ -166,6 +169,10 @@
         (get-in treatment [:treatment-access :treatment-access-id])
         content-data))))
 
+(defroutes test
+  (context "/x" request
+    (GET "/xxxx" request
+      (layout/text-response request))))
 
 #_(defroutes privacy-consent-routes
     (context "/user" [:as request]

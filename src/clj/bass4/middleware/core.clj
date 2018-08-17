@@ -27,7 +27,8 @@
             [bass4.responses.auth :as auth]
             [bass4.responses.e-auth :as e-auth]
             [bass4.responses.user :as user-response]
-            [bass4.routes.ext-login :as ext-login]))
+            [bass4.routes.ext-login :as ext-login]
+            [bass4.clout-cache :as clout-cache]))
 
 
 (defn wrap-formats [handler]
@@ -156,6 +157,14 @@
   (handler request))
 
 
+(defn modify-route-request
+  [handler request-modifier & routes]
+  (fn [request]
+    (if (some #(clout-cache/route-matches % request) routes)
+      (handler (request-modifier request))
+      (handler request))))
+
+
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -181,7 +190,8 @@
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
       ;; TODO: Remove from here
-      (wrap-mw-fn #'user-response/treatment-mw)
+      #_(wrap-mw-fn #'user-response/treatment-mw)
+      (modify-route-request user-response/treatment-request "/user*")
       ;; TODO: Remove from here
       (wrap-mw-fn #'user-response/check-assessments-mw)
       ;; TODO: Remove from here?

@@ -1,13 +1,13 @@
 (ns bass4.route-rules
   (:require [bass4.layout :as layout]
             [ring.util.http-response :as http-response]
-            [clout.core :as clout]))
+            [clout.core :as clout]
+            [clojure.tools.logging :as log]))
 
 
 ;; ------------------------
 ;;     RULES HANDLER
 ;; ------------------------
-
 
 (defn match-rules
   "Rules are in format [{:uri clout-uri :rules [[pred val-true val-false]*}*]
@@ -33,7 +33,7 @@
               (:rules rule))))
     (flatten)))
 
-(defn eval-rules-x
+(defn eval-rules
   "Rules are in format {:rule [pred val-true val-false] :params uri-params}"
   [request rules]
   (let [res (loop [rules rules]
@@ -44,7 +44,7 @@
                       res  (if (pred request (:params rule))
                              pred-true
                              pred-false)]
-                  #_(log/debug (:uri request) "predicate" (:name (meta pred)) res)
+                  (log/debug (:uri request) "predicate" (:name (meta pred)) res)
                   (if (= :ok res)
                     (recur (rest rules))
                     res))))]
@@ -72,7 +72,7 @@
     (fn [request]
       (let [res (->> (match-rules request rules)
                      (flatten-matching-rules)
-                     (eval-rules-x request))]
+                     (eval-rules request))]
         #_(log/debug res)
         #_(handler request)
         (if (true? res)
