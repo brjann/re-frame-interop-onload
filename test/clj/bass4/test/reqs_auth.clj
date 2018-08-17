@@ -223,47 +223,31 @@
       (has (status? 302))))
 
 (deftest modify-session-test
-  (let [x *s*]
-    (-> (binding [debug/*session-modification* {:test888 "hejsan"}]
-          (-> x
-              (visit "/debug/session")
-              (has (some-text? ":test888"))))
-        (visit "/debug/session")
-        (has (some-text? ":test888")))))
+  (-> *s*
+      (modify-session {:test888 "hejsan"})
+      (visit "/debug/session")
+      (has (some-text? ":test888"))))
+
 
 (deftest request-re-auth-last-request-time
-  (let [x (-> *s*
-              (modify-session {:identity 536975 :double-authed? true})
-              (visit "/user")
-              (visit "/user/messages")
-              (has (status? 200))
-              (visit "/debug/session"))]
-    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
-          (-> x
-              (visit "/debug/session")
-              (has (some-text? "1985-10-26T01:20:00.000Z"))))
-        (visit "/user/messages")
-        (has (status? 302))
-        (visit "/user/messages")
-        (has (status? 302))
-        (visit "/re-auth" :request-method :post :params {:password 536975})
-        (has (status? 302))
-        (visit "/user/messages")
-        (has (status? 200)))))
+  (-> *s*
+      (modify-session {:identity 536975 :double-authed? true})
+      (visit "/user")
+      (visit "/user/messages")
+      (has (status? 200))
+      (visit "/debug/session")
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/user/messages")
+      (has (status? 302))
+      (visit "/user/messages")
+      (has (status? 302))
+      (visit "/re-auth" :request-method :post :params {:password 536975})
+      (has (status? 302))
+      (visit "/user/messages")
+      (has (status? 200))))
 
-(deftest request-re-auth-last-request-time-no-re-auth
-  (let [x (-> *s*
-              (modify-session {:identity 536975 :double-authed? true :external-login? true})
-              (visit "/user")
-              (visit "/user/messages")
-              (has (status? 200))
-              (visit "/debug/session"))]
-    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
-          (-> x
-              (visit "/debug/session")
-              (has (some-text? "1985-10-26T01:20:00.000Z"))))
-        (visit "/user/messages")
-        (has (status? 200)))))
 
 (deftest request-re-auth-last-request-time-external-login
   (-> *s*
@@ -294,24 +278,34 @@
 
 
 (deftest request-re-auth-last-request-time3
-  (let [x (-> *s*
-              (modify-session {:identity 536975 :double-authed? true}))
-        y (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
-                (-> x
-                    (visit "/debug/session")
-                    (has (some-text? "1985-10-26T01:20:00.000Z"))))
-              (visit "/user/messages"))]
-    (-> (binding [debug/*session-modification* {:last-request-time (t/date-time 1985 10 26 1 20 0 0)}]
-          (-> y
-              (visit "/debug/session")
-              (has (some-text? "1985-10-26T01:20:00.000Z"))))
-        ;; TODO: Before route rewrite this request to become logged out was not necessary
-        (visit "/user")
-        (log-session)
-        (visit "/re-auth" :request-method :post :params {:password 536975})
-        (follow-redirect)
-        (log-headers)
-        (log-session)
-        (visit "/user")
-        (visit "/user/messages")
-        (has (status? 200)))))
+  (-> *s*
+      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/user/messages")
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      ;; TODO: Before route rewrite this request to become logged out was not necessary
+      (visit "/user")
+      (visit "/re-auth" :request-method :post :params {:password 536975})
+      (follow-redirect)
+      (visit "/user")
+      (visit "/user/messages")
+      (has (status? 200))))
+
+;; This test checks if the new behavior in time3 stays
+(deftest request-re-auth-last-request-time3
+  (-> *s*
+      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/user/messages")
+      (visit "/debug/session")
+      (has (some-text? "1985-10-26T01:20:00.000Z"))
+      (visit "/re-auth" :request-method :post :params {:password 536975})
+      (follow-redirect)
+      (visit "/user")
+      (visit "/user/messages")
+      (has (status? 302))))
