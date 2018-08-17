@@ -157,11 +157,11 @@
   (handler request))
 
 
-(defn modify-route-request
-  [handler request-modifier & routes]
+(defn wrap-route-mw
+  [handler route-mw & routes]
   (fn [request]
     (if (some #(clout-cache/route-matches % request) routes)
-      (handler (request-modifier request))
+      (route-mw handler request)
       (handler request))))
 
 
@@ -190,8 +190,7 @@
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
       ;; TODO: Remove from here
-      #_(wrap-mw-fn #'user-response/treatment-mw)
-      (modify-route-request user-response/treatment-request "/user*")
+      (wrap-route-mw user-response/treatment-mw "/user*")
       ;; TODO: Remove from here
       (wrap-mw-fn #'user-response/check-assessments-mw)
       ;; TODO: Remove from here?
