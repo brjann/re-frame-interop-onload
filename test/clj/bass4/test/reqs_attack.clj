@@ -90,9 +90,6 @@
                     (visit "/login" :request-method :post :params {:username 536975 :password 536975})
                     (has (status? 302))
                     (follow-redirect)
-                    ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
-                    (follow-redirect)
-                    (follow-redirect)
                     (has (some-text? "666777")))]
       (attack-uri
         state
@@ -146,9 +143,6 @@
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
         (follow-redirect)
-        ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
-        (follow-redirect)
-        (follow-redirect)
         (has (some-text? "666777"))
         (attack-uri
           "/double-auth"
@@ -187,9 +181,6 @@
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
         (follow-redirect)
-        ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
-        (follow-redirect)
-        (follow-redirect)
         (has (some-text? "666777"))
         (attack-uri
           "/double-auth"
@@ -216,9 +207,6 @@
           [[0 422]])
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
-        (follow-redirect)
-        ;; 2 redirects because assessments middleware redirects to assessments even though double auth should be done
-        (follow-redirect)
         (follow-redirect)
         (has (some-text? "666777"))
         (attack-uri
