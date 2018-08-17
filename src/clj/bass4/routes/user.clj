@@ -206,7 +206,7 @@
 
 ;; TODO: What should be shown if not in treatment?
 (def route-rules
-  [{:pattern #"^/user/assessments"
+  [{:pattern #"^/assessments"
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
@@ -216,7 +216,7 @@
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
-                                       [assessments-pending? "/user/assessments" :ok]
+                                       [assessments-pending? "/assessments" :ok]
                                        [no-treatment-no-assessments? "/no-activities" :ok]
                                        [no-treatment-but-assessments? "/login" :ok]))}
 
@@ -224,9 +224,24 @@
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
-                                       [assessments-pending? "/user/assessments" :ok]
+                                       [assessments-pending? "/assessments" :ok]
                                        [no-treatment-no-assessments? "/no-activities" :ok]
                                        [no-treatment-but-assessments? "/login" :ok]))}])
+
+(defroutes assessment-routes
+  (context "/assessments" [:as
+                           {{:keys [render-map treatment]}          :db
+                            {:keys [user]}                          :session
+                            {{:keys [treatment-access]} :treatment} :db
+                            :as                                     request}]
+    (GET "/" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
+    (POST "/" [instrument-id items specifications]
+      (assessments-response/post-instrument-answers
+        (:user-id user)
+        (:session request)
+        instrument-id
+        items
+        specifications))))
 
 (defroutes user-routes
   (context "/user" [:as
@@ -251,14 +266,6 @@
         (layout/error-404-page)))
     (POST "/message-read" [& params]
       (messages-response/message-read (:user-id user) (:message-id params)))
-    (GET "/assessments" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
-    (POST "/assessments" [instrument-id items specifications]
-      (assessments-response/post-instrument-answers
-        (:user-id user)
-        (:session request)
-        instrument-id
-        items
-        specifications))
     ;; MODULES
     (GET "/modules" []
       (modules-response/modules-list
@@ -295,37 +302,37 @@
 
 
 #_(def user-routes
-  (context "/user" [:as request]
-    (let [user (get-in request [:session :user])]
-      (if (auth-response/need-double-auth? (:session request))
-        (routes
-          (ANY "*" [] (http-response/found "/double-auth")))
-        (GET "/hejsan" [] (layout/text-response "hejsan"))
-        #_(if (:assessments-pending? (:session request))
-            (assessment-routes user request)
-            (routes
-              (GET "/hejsan" [] (layout/text-response "hejsan")))
-            #_(treatment-routes user request))))))
+    (context "/user" [:as request]
+      (let [user (get-in request [:session :user])]
+        (if (auth-response/need-double-auth? (:session request))
+          (routes
+            (ANY "*" [] (http-response/found "/double-auth")))
+          (GET "/hejsan" [] (layout/text-response "hejsan"))
+          #_(if (:assessments-pending? (:session request))
+              (assessment-routes user request)
+              (routes
+                (GET "/hejsan" [] (layout/text-response "hejsan")))
+              #_(treatment-routes user request))))))
 
 #_(defroutes privacy-consent-routes
-  (context "/user" [:as request]
-    (let [user (get-in request [:session :user])]
-      (GET "/privacy-consent" []
-        (user-response/privacy-consent-page user))
-      (POST "/privacy-consent" [i-consent :as request]
-        (user-response/handle-privacy-consent user i-consent)))))
+    (context "/user" [:as request]
+      (let [user (get-in request [:session :user])]
+        (GET "/privacy-consent" []
+          (user-response/privacy-consent-page user))
+        (POST "/privacy-consent" [i-consent :as request]
+          (user-response/handle-privacy-consent user i-consent)))))
 
 #_(defroutes testr
-  (context "/" []
-    (context "/xxx" [:as
-                     {{:keys [render-map treatment]}          :db
-                      {:keys [user]}                          :session
-                      {{:keys [treatment-access]} :treatment} :db
-                      :as                                     request}]
-      (GET "/yyy" []
-        (do (log/debug request)
-            (log/debug treatment)
-            (log/debug user)
-            (layout/text-response treatment-access)))
-      (GET "/xxx" []
-        (layout/text-response render-map)))))
+    (context "/" []
+      (context "/xxx" [:as
+                       {{:keys [render-map treatment]}          :db
+                        {:keys [user]}                          :session
+                        {{:keys [treatment-access]} :treatment} :db
+                        :as                                     request}]
+        (GET "/yyy" []
+          (do (log/debug request)
+              (log/debug treatment)
+              (log/debug user)
+              (layout/text-response treatment-access)))
+        (GET "/xxx" []
+          (layout/text-response render-map)))))

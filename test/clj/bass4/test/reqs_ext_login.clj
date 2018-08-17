@@ -72,16 +72,16 @@
                          (visit (str uri "&returnURL=http://www.dn.se"))
                          (visit "/user")
                          (follow-redirect)
-                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
-                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+                         (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+                         (visit "/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+                         (visit "/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
                          (follow-redirect)
-                         (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                         (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
                          (follow-redirect)
                          (has (some-text? "Thanks top-priority"))
                          ;; Assessments pending becomes false in the next request.
                          ;; At users first request after thank-you-text has been shown
-                         (visit "/user/assessments")
+                         (visit "/assessments")
                          ;; ext-login middleware catches the change in assessments-pending?
                          ;; status and redirects user
                          (has (status? 302))

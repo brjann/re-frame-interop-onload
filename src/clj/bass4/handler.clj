@@ -47,6 +47,16 @@
           (wrap-routes middleware/wrap-csrf)
           (wrap-routes middleware/wrap-formats)
           (wrap-routes wrap-restricted))
+    (-> #'user-routes/assessment-routes
+        ;; TODO: Move back here
+        (wrap-access-rules {:rules user-routes/route-rules})
+        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
+        #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
+        #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
+        (wrap-routes middleware/wrap-csrf)
+        (wrap-routes middleware/wrap-formats)
+        #_(wrap-routes #(middleware/wrap-mw-fn % wrap-restricted)))
     (-> #'user-routes/user-routes
         ;; TODO: Move back here
         (wrap-access-rules {:rules user-routes/route-rules})

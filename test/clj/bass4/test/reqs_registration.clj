@@ -92,12 +92,12 @@
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
-        (visit "/user/assessments")
+        (visit "/assessments")
         (has (some-text? "AAQ"))
-        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+        (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
         (follow-redirect)
         (has (some-text? "Thanks"))
-        (visit "/user/assessments")
+        (visit "/assessments")
         ;; Assessments completed
         (follow-redirect)
         ;; Redirect to finish screen
@@ -166,7 +166,7 @@
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
-        (visit "/user/assessments")
+        (visit "/assessments")
         (has (some-text? "AAQ")))))
 
 ;; This was a test of the old Always show finish screen property.
@@ -199,12 +199,12 @@
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
-        (visit "/user/assessments")
+        (visit "/assessments")
         (has (some-text? "AAQ"))
-        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+        (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
         (follow-redirect)
         (has (some-text? "Thanks"))
-        (visit "/user/assessments")
+        (visit "/assessments")
         ;; Assessments completed
         (follow-redirect)
         ;; Redirect to login screen
