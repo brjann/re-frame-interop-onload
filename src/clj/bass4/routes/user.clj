@@ -204,8 +204,30 @@
   [session _]
   (:identity session))
 
-;; TODO: What should be shown if not in treatment?
-(def route-rules
+(def assessment-route-rules
+  [{:pattern #"^/assessments"
+    :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
+                                       [double-auth? "/double-auth" :ok]
+                                       [assessments-pending? :ok "/user"]))}
+
+   {:pattern #"^/user[/]?"
+    :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
+                                       [double-auth? "/double-auth" :ok]
+                                       [assessments-pending? "/assessments" :ok]
+                                       [no-treatment-no-assessments? "/no-activities" :ok]
+                                       [no-treatment-but-assessments? "/login" :ok]))}
+
+   {:pattern #"^/user/.+"
+    :handler (fn [request] (eval-rules request
+                                       [logged-in? :ok 403]
+                                       [double-auth? "/double-auth" :ok]
+                                       [assessments-pending? "/assessments" :ok]
+                                       [no-treatment-no-assessments? "/no-activities" :ok]
+                                       [no-treatment-but-assessments? "/login" :ok]))}])
+
+(def user-route-rules
   [{:pattern #"^/assessments"
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
