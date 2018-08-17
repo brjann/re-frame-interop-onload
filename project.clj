@@ -23,6 +23,7 @@
                  [metosin/ring-http-response "0.9.0"]       ; https://github.com/metosin/ring-http-response
                  [prismatic/schema "1.1.9"]                 ; https://github.com/plumatic/schema
                  [buddy/buddy-auth "2.1.0"]                 ; https://github.com/funcool/buddy-auth
+                 [clout "2.2.1"]                            ; https://github.com/weavejester/clout
 
                  ; Database and state management libraries
                  [conman "0.8.2"]                           ; https://github.com/luminus-framework/conman
