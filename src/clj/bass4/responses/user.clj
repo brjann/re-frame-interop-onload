@@ -18,19 +18,14 @@
 
 
 (defn treatment-mw
-  [handler request]
-  #_(log/debug "Running treatment mw")
-  (if-let [treatment (when-let [user (get-in request [:session :user])]
-                       (treatment-service/user-treatment (:user-id user)))]
-    (handler (-> request
-                 (assoc-in [:db :treatment] treatment)
-                 (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
-    (handler request)))
-
-(defn treatment-mw2
   [handler]
   (fn [request]
-    (treatment-mw handler request)))
+    (if-let [treatment (when-let [user (get-in request [:session :user])]
+                         (treatment-service/user-treatment (:user-id user)))]
+      (handler (-> request
+                   (assoc-in [:db :treatment] treatment)
+                   (assoc-in [:db :render-map] (user-page-map treatment (:uri request)))))
+      (handler request))))
 
 
 (defn- assessments-pending?
@@ -43,37 +38,33 @@
       :else
       (< 0 (administrations/create-assessment-round-entries! user-id)))))
 
+
 (defn check-assessments-mw
-  [handler request]
-  (let [session (:session request)]
-    (if (:identity request)
-      (if-not (:assessments-checked? session)
-        (if (assessments-pending? request)
-          (do
-            #_(log/debug "Assessments pending!")
-            (-> (http-response/found "/assessments")
-                (assoc :session
-                       (merge
-                         session
-                         {:assessments-checked?   true
-                          :assessments-pending?   true
-                          :assessments-performed? true}))))
-          (do
-            #_(log/debug "No assessments pending!")
-            (-> (http-response/found "/user")
-                (assoc :session
-                       (merge
-                         session
-                         {:assessments-checked? true
-                          :assessments-pending? false})))))
-        (handler request))
-      (handler request))))
-
-
-(defn check-assessments-mw2
   [handler]
   (fn [request]
-    (check-assessments-mw handler request)))
+    (let [session (:session request)]
+      (if (:identity request)
+        (if-not (:assessments-checked? session)
+          (if (assessments-pending? request)
+            (do
+              #_(log/debug "Assessments pending!")
+              (-> (http-response/found "/assessments")
+                  (assoc :session
+                         (merge
+                           session
+                           {:assessments-checked?   true
+                            :assessments-pending?   true
+                            :assessments-performed? true}))))
+            (do
+              #_(log/debug "No assessments pending!")
+              (-> (http-response/found "/user")
+                  (assoc :session
+                         (merge
+                           session
+                           {:assessments-checked? true
+                            :assessments-pending? false})))))
+          (handler request))
+        (handler request)))))
 
 
 (defn- consent-redirect?

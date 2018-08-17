@@ -157,13 +157,6 @@
   (handler request))
 
 
-(defn wrap-route-mw
-  [handler route-mw & routes]
-  (fn [request]
-    (if (some #(clout-cache/route-matches % request) routes)
-      (route-mw handler request)
-      (handler request))))
-
 
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/

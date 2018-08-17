@@ -15,7 +15,7 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.route-rules :as route-rules]
-            [bass4.middleware.core :as middleware]
+            [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
             [bass4.responses.user :as user-response]
             [bass4.clout-cache :as clout-cache]
             [clojure.tools.logging :as log]))
@@ -45,11 +45,11 @@
   ((-> handler
        (wrap-route-mw ["/user*"]
                       (route-rules/wrap-rules user-routes/user-route-rules)
-                      #'user-response/treatment-mw2
-                      #'user-response/check-assessments-mw2)
+                      #'user-response/treatment-mw
+                      #'user-response/check-assessments-mw)
        (wrap-route-mw ["/assessments*"]
                       (route-rules/wrap-rules user-routes/assessment-route-rules)
-                      #'user-response/check-assessments-mw2))
+                      #'user-response/check-assessments-mw))
     request))
 
 (defn route-middlewares-wrapper
