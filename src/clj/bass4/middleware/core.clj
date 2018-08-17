@@ -187,16 +187,7 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
-      ;; Must quote the names of the functions.
-      ;; Else the actual functions are passed as arguments
-      ;; TODO: Remove from here
-      #_(wrap-route-mw #'user-response/treatment-mw "/user*")
-      ;; TODO: Remove from here
-      #_(wrap-route-mw
-          #'user-response/check-assessments-mw
-          "/user*"
-          "/assessment*")
-      ;; TODO: Remove from here?
+      wrap-formats
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)

@@ -28,23 +28,6 @@
   [_ _]
   (layout/error-403-page))
 
-#_(defn wrap-route-mw
-    [handler routes route-mw]
-    (fn [request]
-      (if (some #(clout-cache/route-matches % request) routes)
-        (route-mw handler request)
-        (handler request))))
-
-#_(defn router-middleware
-    [handler request]
-    (log/debug "I'm reloaded AGAIN!!!!")
-    ((-> handler
-         (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
-         (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
-         (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
-         (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
-         (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw))
-      request))
 
 (defn wrap-route-mw
   [handler routes & route-mws]
@@ -76,10 +59,11 @@
     (router-middleware handler request)))
 
 
+
 (def app-routes
   (routes
     (-> #'auth-routes
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'lost-password-routes
         (wrap-access-rules {:rules    lost-password/rules
                             :on-error auth-error})
@@ -92,7 +76,7 @@
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
         #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'user-routes/user-routes
         #_(wrap-routes (fn [& x] (fn [& x] (/ 0 0))))
         ;; TODO: Move back here
@@ -103,25 +87,25 @@
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
         #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
         (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'embedded-routes
         ;; TODO: Bring back wrap-csrf
         #_(wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'debug-routes
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'registration-routes
         (wrap-access-rules {:rules reg-routes/route-rules})
         (wrap-routes middleware/wrap-csrf)
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw))
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     (-> #'quick-login-routes
-        (wrap-routes middleware/wrap-formats))
+        #_(wrap-routes middleware/wrap-formats))
     ;; Replacement for route/not-found
     (layout/route-not-found)))
 
