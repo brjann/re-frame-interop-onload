@@ -1,7 +1,7 @@
 (ns bass4.route-rules
   (:require [bass4.layout :as layout]
             [ring.util.http-response :as http-response]
-            [clout.core :as clout]
+            [bass4.clout-cache :as clout-cache]
             [clojure.tools.logging :as log]))
 
 
@@ -14,10 +14,9 @@
    Returns with matched uri params from clout, {} if match but no params"
   [request rules]
   (let [matched (mapv (fn [rule]
-                        (let [route (clout/route-compile (:uri rule))]
-                          (assoc rule
-                            :params
-                            (clout/route-matches route (dissoc request :path-info))))) rules)]
+                        (assoc rule
+                          :params
+                          (clout-cache/route-matches (:uri rule) (dissoc request :path-info)))) rules)]
     (filterv :params matched)))
 
 (defn flatten-matching-rules
