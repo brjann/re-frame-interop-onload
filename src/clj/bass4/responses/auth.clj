@@ -282,7 +282,6 @@
         now               (t/now)
         last-request-time (:last-request-time session)
         re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
-        _                 (log/debug "Re-auth" re-auth?)
         response          (if re-auth?
                             (if (= (:request-method request) :get)
                               (http-response/found (str "/re-auth?return-url=" (request-string request)))
