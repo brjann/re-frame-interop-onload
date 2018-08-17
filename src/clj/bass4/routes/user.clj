@@ -205,14 +205,14 @@
   [session _]
   (:identity session))
 
-(def assessment-route-rules
+(def assessment-route-rules-x
   [{:pattern #"^/assessments"
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
                                        [double-auth? "/double-auth" :ok]
                                        [assessments-pending? :ok "/user"]))}])
 
-(def user-route-rules
+(def user-route-rules-x
   [{:pattern #"^/user[/]?"
     :handler (fn [request] (eval-rules request
                                        [logged-in? :ok 403]
@@ -266,12 +266,11 @@
               (if (empty? rules)
                 true
                 (let [rule (first rules)
-                      _    (log/debug (:rule rule))
                       [pred pred-true pred-false] (:rule rule)
                       res  (if (pred request (:params rule))
                              pred-true
                              pred-false)]
-                  (log/debug (:uri request) "predicate returned" res)
+                  (log/debug (:uri request) "predicate" (:name (meta pred)) res)
                   (if (= :ok res)
                     (recur (rest rules))
                     res))))]
@@ -300,6 +299,8 @@
       (let [res (->> (match-rules request rules)
                      (flatten-matching-rules)
                      (eval-rules-x request))]
+        #_(log/debug res)
+        #_(handler request)
         (if (true? res)
           (handler request)
           res)))))
@@ -313,6 +314,7 @@
 
 (defn- assessments-pending-x?
   [{:keys [session]} _]
+  (log/debug "Assessments pending" (:assessments-pending? session))
   (:assessments-pending? session))
 
 (defn no-treatment-no-assessments-x?
@@ -331,21 +333,25 @@
   [{:keys [session]} _]
   (:identity session))
 
-(def route-rules-x
+(def user-route-rules
   [{:uri   "/user*"
-    :rules [[logged-in-x? :ok 403]
-            [double-auth-x? "/double-auth" :ok]]}
-
-   {:uri   "/user/assessments"
-    :rules [[assessments-pending? :ok "/user"]]}
+    :rules [[#'logged-in-x? :ok 403]
+            [#'double-auth-x? "/double-auth" :ok]
+            [#'assessments-pending? "/assessments" :ok]]}
 
    {:uri   "/user/module*"
-    :rules [[no-treatment-no-assessments-x? "/no-activities" :ok]
-            [no-treatment-but-assessments-x? "/login" :ok]]}
+    :rules [[#'no-treatment-no-assessments-x? "/no-activities" :ok]
+            [#'no-treatment-but-assessments-x? "/login" :ok]]}
 
    {:uri   "/user/message*"
-    :rules [[no-treatment-no-assessments-x? "/no-activities" :ok]
-            [no-treatment-but-assessments-x? "/login" :ok]]}])
+    :rules [[#'no-treatment-no-assessments-x? "/no-activities" :ok]
+            [#'no-treatment-but-assessments-x? "/login" :ok]]}])
+
+(def assessment-route-rules
+  [{:uri   "/assessments*"
+    :rules [[#'logged-in-x? :ok 403]
+            [#'double-auth-x? "/double-auth" :ok]
+            [#'assessments-pending-x? :ok "/user"]]}])
 
 (defroutes assessment-routes
   (context "/assessments" [:as

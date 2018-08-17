@@ -49,7 +49,8 @@
           (wrap-routes wrap-restricted))
     (-> #'user-routes/assessment-routes
         ;; TODO: Move back here
-        (wrap-access-rules {:rules user-routes/assessment-route-rules})
+        #_(wrap-access-rules {:rules user-routes/assessment-route-rules-x})
+        (wrap-routes (user-routes/wrap-rules user-routes/assessment-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
@@ -59,7 +60,8 @@
         #_(wrap-routes #(middleware/wrap-mw-fn % wrap-restricted)))
     (-> #'user-routes/user-routes
         ;; TODO: Move back here
-        (wrap-access-rules {:rules user-routes/user-route-rules})
+        #_(wrap-access-rules {:rules user-routes/user-route-rules-x})
+        (wrap-routes (user-routes/wrap-rules user-routes/user-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
