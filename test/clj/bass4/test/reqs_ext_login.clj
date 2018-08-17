@@ -88,7 +88,7 @@
                          (get-in [:response :headers "Location"]))]
         (is (= "http://www.dn.se" redirect))
         (-> session
-            (visit "/user/message")
+            (visit "/user/messages")
             (has (status? 403)))))))
 
 
@@ -104,5 +104,5 @@
                          (get-in [:response :headers "Location"]))]
         (is (= "http://www.dn.se" redirect))
         (-> session
-            (visit "/user/message")
+            (visit "/user/messages")
             (has (status? 403)))))))

@@ -44,6 +44,8 @@
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "Your treatment started"))
+        (visit "/user/xxx")
+        (has (status? 404))
         (visit "/user/messages")
         (has (some-text? "New message"))
         (visit "/user/messages" :request-method :post :params {:text random-message})

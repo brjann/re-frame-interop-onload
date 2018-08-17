@@ -87,7 +87,7 @@
                       res  (if (pred request (:params rule))
                              pred-true
                              pred-false)]
-                  (log/debug (:uri request) "predicate" (:name (meta pred)) res)
+                  #_(log/debug (:uri request) "predicate" (:name (meta pred)) res)
                   (if (= :ok res)
                     (recur (rest rules))
                     res))))]
@@ -131,7 +131,6 @@
 
 (defn- assessments-pending-x?
   [{:keys [session]} _]
-  (log/debug "Assessments pending" (:assessments-pending? session))
   (:assessments-pending? session))
 
 (defn no-treatment-no-assessments-x?
@@ -154,7 +153,9 @@
   [{:uri   "/user*"
     :rules [[#'logged-in-x? :ok 403]
             [#'double-auth-x? "/double-auth" :ok]
-            [#'assessments-pending? "/assessments" :ok]]}
+            [#'assessments-pending-x? "/assessments" :ok]
+            [#'no-treatment-no-assessments-x? "/no-activities" :ok]
+            [#'no-treatment-but-assessments-x? "/login" :ok]]}
 
    {:uri   "/user/module*"
     :rules [[#'no-treatment-no-assessments-x? "/no-activities" :ok]
