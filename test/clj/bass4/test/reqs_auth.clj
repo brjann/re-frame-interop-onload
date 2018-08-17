@@ -284,28 +284,12 @@
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
       (visit "/user/messages")
+      (has (status? 302))
+      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
-      ;; TODO: Before route rewrite this request to become logged out was not necessary
-      (visit "/user")
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (follow-redirect)
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))))
-
-;; This test checks if the new behavior in time3 stays
-(deftest request-re-auth-last-request-time3
-  (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/messages")
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (follow-redirect)
-      (visit "/user")
-      (visit "/user/messages")
-      (has (status? 302))))

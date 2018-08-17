@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [bass4.layout :refer [error-page] :as layout]
             [bass4.routes.auth :refer [auth-routes]]
-            [bass4.responses.auth :as auth-res]
+            [bass4.responses.auth :as auth-response]
             [bass4.routes.user :as user-routes]
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
@@ -28,7 +28,7 @@
   [_ _]
   (layout/error-403-page))
 
-(def cached-route-middlewares (atom {}))
+(def compiled-route-middlewares (atom {}))
 
 (defn- compose-routes
   [handler route-mws]
@@ -41,10 +41,10 @@
   [handler uri & route-mws]
   (fn [request]
     (if (some #(clout-cache/route-matches % request) uri)
-      (let [comp-mw (if (contains? @cached-route-middlewares uri)
-                      (get @cached-route-middlewares uri)
+      (let [comp-mw (if (contains? @compiled-route-middlewares uri)
+                      (get @compiled-route-middlewares uri)
                       (let [comp-mw (compose-routes handler route-mws)]
-                        (swap! cached-route-middlewares assoc uri comp-mw)
+                        (swap! compiled-route-middlewares assoc uri comp-mw)
                         comp-mw))]
         (comp-mw request))
       (handler request))))
@@ -56,10 +56,12 @@
                       (route-rules/wrap-rules user-routes/user-route-rules)
                       #'user-response/treatment-mw
                       #'user-response/check-assessments-mw
+                      #'auth-response/auth-re-auth-mw
                       #'middleware/wrap-csrf)
        (wrap-route-mw ["/assessments*"]
                       (route-rules/wrap-rules user-routes/assessment-route-rules)
                       #'user-response/check-assessments-mw
+                      #'auth-response/auth-re-auth-mw
                       #'middleware/wrap-csrf))
     request))
 
@@ -76,12 +78,9 @@
     #'auth-routes
     (-> #'lost-password-routes
         (wrap-access-rules {:rules    lost-password/rules
-                            :on-error auth-error})
-        (wrap-routes middleware/wrap-formats))
-    (-> #'user-routes/assessment-routes
-        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper)))
-    (-> #'user-routes/user-routes
-        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper)))
+                            :on-error auth-error}))
+    #'user-routes/assessment-routes
+    #'user-routes/user-routes
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes

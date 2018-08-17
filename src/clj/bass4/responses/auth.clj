@@ -276,26 +276,26 @@
 
     :else nil))
 
-(defn auth-re-auth-wrapper
-  [handler request]
-  (let [session           (:session request)
-        now               (t/now)
-        last-request-time (:last-request-time session)
-        re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
-        response          (if re-auth?
-                            (if (= (:request-method request) :get)
-                              (http-response/found (str "/re-auth?return-url=" (request-string request)))
-                              (re-auth-440))
-                            (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
-        session-map       {:last-request-time now
-                           :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                (:auth-re-auth (:session response))
-                                                re-auth?)}]
+(defn auth-re-auth-mw
+  [handler]
+  (fn [request]
+    (let [session           (:session request)
+          now               (t/now)
+          last-request-time (:last-request-time session)
+          re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
+          response          (if re-auth?
+                              (if (= (:request-method request) :get)
+                                (http-response/found (str "/re-auth?return-url=" (request-string request)))
+                                (re-auth-440))
+                              (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
+          session-map       {:last-request-time now
+                             :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
+                                                  (:auth-re-auth (:session response))
+                                                  re-auth?)}]
 
-    (assoc response :session (if (nil? (:session response))
-                               (merge session session-map)
-                               (merge (:session response) session-map)))))
-
+      (assoc response :session (if (nil? (:session response))
+                                 (merge session session-map)
+                                 (merge (:session response) session-map))))))
 
 ;; -----------------------
 ;;  RESTRICTED MIDDLEWARE
