@@ -29,7 +29,11 @@
         (modify-session {:identity 549821 :double-authed? true})
         (visit "/user")
         (visit "/user/messages")
-        (not-text? "New message"))
+        (not-text? "New message")
+        (visit "/user/messages" :request-method :post :params {:message "xxx"})
+        (has (status? 404))
+        (visit "/user/messages-save-draft" :request-method :post :params {:message "xxx"})
+        (has (status? 404)))
     (-> *s*
         (modify-session {:identity 543021 :double-authed? true})
         (visit "/user")

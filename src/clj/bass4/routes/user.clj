@@ -72,6 +72,16 @@
   [{:keys [session]} _]
   (:identity session))
 
+(defn messages?
+  [{{:keys [treatment]} :db} _]
+  (get-in treatment [:user-components :messaging]))
+
+(defn send-messages?
+  [{{:keys [treatment]} :db :as request} _]
+  (if (= :post (:request-method request))
+    (get-in treatment [:user-components :send-messages])
+    true))
+
 (def user-route-rules
   [{:uri   "/user*"
     :rules [[#'double-auth? "/double-auth" :ok]
@@ -85,7 +95,9 @@
 
    {:uri   "/user/message*"
     :rules [[#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]]}])
+            [#'no-treatment-but-assessments? "/login" :ok]
+            [#'messages? :ok 404]
+            [#'send-messages? :ok 404]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
@@ -111,25 +123,16 @@
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
     (GET "/" []
-      (do
-        (when-not treatment
-          (log/debug "NOT treatment!"))
-        (dashboard/dashboard user (:session request) render-map treatment)))
+      (dashboard/dashboard user (:session request) render-map treatment))
     ;; MESSAGES
     (GET "/messages" []
-      (if (get-in treatment [:user-components :messaging])
-        (messages-response/messages-page render-map user)
-        (layout/error-404-page)))
-    (POST "/messages" [& params]
-      (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-message (:user-id user) (:text params))
-        (layout/error-404-page)))
-    (POST "/message-save-draft" [& params]
-      (if (get-in treatment [:user-components :send-messages])
-        (messages-response/save-draft (:user-id user) (:text params))
-        (layout/error-404-page)))
-    (POST "/message-read" [& params]
-      (messages-response/message-read (:user-id user) (:message-id params)))
+      (messages-response/messages-page render-map user))
+    (POST "/messages" [text]
+      (messages-response/save-message (:user-id user) text))
+    (POST "/message-save-draft" [text]
+      (messages-response/save-draft (:user-id user) text))
+    (POST "/message-read" [message-id]
+      (messages-response/message-read (:user-id user) message-id))
     ;; MODULES
     (GET "/modules" []
       (modules-response/modules-list
