@@ -16,7 +16,8 @@
             [mount.core :as mount]
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
-            [bass4.responses.user :as user-response]))
+            [bass4.responses.user :as user-response]
+            [bass4.clout-cache :as clout-cache]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -26,9 +27,24 @@
   [_ _]
   (layout/error-403-page))
 
+(defn wrap-route-mw
+  [handler routes route-mw]
+  (fn [request]
+    (if (some #(clout-cache/route-matches % request) routes)
+      (route-mw handler request)
+      (handler request))))
+
+(defn route-middlewares
+  [handler]
+  (-> handler
+      (wrap-route-mw ["/user*"] (route-rules/wrap-rules2 user-routes/user-route-rules))
+      (wrap-route-mw ["/user*"] #'user-response/treatment-mw)
+      (wrap-route-mw ["/user*"] #'user-response/check-assessments-mw)
+      (wrap-route-mw ["/assessments*"] (route-rules/wrap-rules2 user-routes/assessment-route-rules))
+      (wrap-route-mw ["/assessments*"] #'user-response/check-assessments-mw)))
+
 (def app-routes
   (routes
-    #'user-routes/test
     #_(->
         (wrap-routes (fn [handler]
                        (fn [request]
@@ -47,7 +63,7 @@
           (wrap-routes wrap-restricted))
     (-> #'user-routes/assessment-routes
         ;; TODO: Move back here
-        (wrap-routes (route-rules/wrap-rules user-routes/assessment-route-rules))
+        #_(wrap-routes (route-rules/wrap-rules user-routes/assessment-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
@@ -56,7 +72,7 @@
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes/user-routes
         ;; TODO: Move back here
-        (wrap-routes (route-rules/wrap-rules user-routes/user-route-rules))
+        #_(wrap-routes (route-rules/wrap-rules user-routes/user-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/treatment-mw))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
@@ -85,4 +101,5 @@
     ;; Replacement for route/not-found
     (layout/route-not-found)))
 
-(defn app [] (middleware/wrap-base #'app-routes))
+(defn app [] (middleware/wrap-base (-> #'app-routes
+                                       route-middlewares)))

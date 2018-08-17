@@ -169,11 +169,6 @@
         (get-in treatment [:treatment-access :treatment-access-id])
         content-data))))
 
-(defroutes test
-  (context "/x" request
-    (GET "/xxxx" request
-      (layout/text-response request))))
-
 #_(defroutes privacy-consent-routes
     (context "/user" [:as request]
       (let [user (get-in request [:session :user])]

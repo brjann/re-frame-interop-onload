@@ -78,3 +78,15 @@
         (if (true? res)
           (handler request)
           res)))))
+
+(defn wrap-rules2
+  [rules]
+  (fn [handler request]
+    (let [res (->> (match-rules request rules)
+                   (flatten-matching-rules)
+                   (eval-rules request))]
+      #_(log/debug res)
+      #_(handler request)
+      (if (true? res)
+        (handler request)
+        res))))

@@ -190,9 +190,12 @@
       ;; Must quote the names of the functions.
       ;; Else the actual functions are passed as arguments
       ;; TODO: Remove from here
-      (wrap-route-mw user-response/treatment-mw "/user*")
+      #_(wrap-route-mw #'user-response/treatment-mw "/user*")
       ;; TODO: Remove from here
-      (wrap-mw-fn #'user-response/check-assessments-mw)
+      #_(wrap-route-mw
+          #'user-response/check-assessments-mw
+          "/user*"
+          "/assessment*")
       ;; TODO: Remove from here?
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
