@@ -14,6 +14,7 @@
             [buddy.auth.accessrules :refer [wrap-access-rules]]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
+            [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]))
 
 (mount/defstate init-app
@@ -40,7 +41,7 @@
           (wrap-routes wrap-restricted))
     (-> #'user-routes/assessment-routes
         ;; TODO: Move back here
-        (wrap-routes (user-routes/wrap-rules user-routes/assessment-route-rules))
+        (wrap-routes (route-rules/wrap-rules user-routes/assessment-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))
@@ -49,7 +50,7 @@
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes/user-routes
         ;; TODO: Move back here
-        (wrap-routes (user-routes/wrap-rules user-routes/user-route-rules))
+        (wrap-routes (route-rules/wrap-rules user-routes/user-route-rules))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/privacy-consent-mw))
         (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
         #_(wrap-routes #(middleware/wrap-mw-fn % user-response/check-assessments-mw))

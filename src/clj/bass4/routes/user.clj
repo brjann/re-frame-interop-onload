@@ -48,128 +48,51 @@
 
 
 ;; ------------------------
-;;     RULES HANDLER
-;; ------------------------
-
-
-(defn match-rules
-  "Rules are in format [{:uri clout-uri :rules [[pred val-true val-false]*}*]
-   Returns with matched uri params from clout, {} if match but no params"
-  [request rules]
-  (let [matched (mapv (fn [rule]
-                        (let [route (clout/route-compile (:uri rule))]
-                          (assoc rule
-                            :params
-                            (clout/route-matches route (dissoc request :path-info))))) rules)]
-    (filterv :params matched)))
-
-(defn flatten-matching-rules
-  "Rules are in format [{:uri clout-uri :rules [[pred val-true val-false]* :params uri-params}*]
-   Returns vector every rule associated with their params
-   [{:rule [pred val-true val-false] :params uri-params}]*"
-  [rules]
-  (->>
-    rules
-    (mapv
-      (fn [rule]
-        (mapv #(hash-map :rule % :params (:params rule))
-              (:rules rule))))
-    (flatten)))
-
-(defn eval-rules-x
-  "Rules are in format {:rule [pred val-true val-false] :params uri-params}"
-  [request rules]
-  (let [res (loop [rules rules]
-              (if (empty? rules)
-                true
-                (let [rule (first rules)
-                      [pred pred-true pred-false] (:rule rule)
-                      res  (if (pred request (:params rule))
-                             pred-true
-                             pred-false)]
-                  #_(log/debug (:uri request) "predicate" (:name (meta pred)) res)
-                  (if (= :ok res)
-                    (recur (rest rules))
-                    res))))]
-    (cond
-      (true? res)
-      true
-
-      (string? res)
-      (if (= :get (:request-method request))
-        (http-response/found res)
-        (layout/error-400-page))
-
-      (= 404 res)
-      (layout/error-404-page)
-
-      (= 403 res)
-      (layout/error-403-page)
-
-      :else
-      (throw (Exception. (str "Rule returned illegal value " res))))))
-
-(defn wrap-rules
-  [rules]
-  (fn [handler]
-    (fn [request]
-      (let [res (->> (match-rules request rules)
-                     (flatten-matching-rules)
-                     (eval-rules-x request))]
-        #_(log/debug res)
-        #_(handler request)
-        (if (true? res)
-          (handler request)
-          res)))))
-
-
-
-;; ------------------------
 ;;        NEW RULES
 ;; ------------------------
 
 
-(defn- assessments-pending-x?
+(defn- assessments-pending?
   [{:keys [session]} _]
   (:assessments-pending? session))
 
-(defn no-treatment-no-assessments-x?
+(defn no-treatment-no-assessments?
   [{:keys [session] {:keys [treatment]} :db} _]
   (and (not treatment) (not (:assessments-performed? session))))
 
-(defn no-treatment-but-assessments-x?
+(defn no-treatment-but-assessments?
   [{:keys [session] {:keys [treatment]} :db} _]
   (and (not treatment) (:assessments-performed? session)))
 
-(defn double-auth-x?
+(defn double-auth?
   [{:keys [session]} _]
   (auth-response/need-double-auth? session))
 
-(defn logged-in-x?
+(defn logged-in?
   [{:keys [session]} _]
   (:identity session))
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'logged-in-x? :ok 403]
-            [#'double-auth-x? "/double-auth" :ok]
-            [#'assessments-pending-x? "/assessments" :ok]
-            [#'no-treatment-no-assessments-x? "/no-activities" :ok]
-            [#'no-treatment-but-assessments-x? "/login" :ok]]}
+    :rules [[#'logged-in? :ok 403]
+            [#'double-auth? "/double-auth" :ok]
+            [#'assessments-pending? "/assessments" :ok]
+            [#'no-treatment-no-assessments? "/no-activities" :ok]
+            [#'no-treatment-but-assessments? "/login" :ok]]}
 
    {:uri   "/user/module*"
-    :rules [[#'no-treatment-no-assessments-x? "/no-activities" :ok]
-            [#'no-treatment-but-assessments-x? "/login" :ok]]}
+    :rules [[#'no-treatment-no-assessments? "/no-activities" :ok]
+            [#'no-treatment-but-assessments? "/login" :ok]]}
 
    {:uri   "/user/message*"
-    :rules [[#'no-treatment-no-assessments-x? "/no-activities" :ok]
-            [#'no-treatment-but-assessments-x? "/login" :ok]]}])
+    :rules [[#'no-treatment-no-assessments? "/no-activities" :ok]
+            [#'no-treatment-but-assessments? "/login" :ok]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'logged-in-x? :ok 403]
-            [#'double-auth-x? "/double-auth" :ok]
-            [#'assessments-pending-x? :ok "/user"]]}])
+    :rules [[#'logged-in? :ok 403]
+            [#'double-auth? "/double-auth" :ok]
+            [#'assessments-pending? :ok "/user"]]}])
 
 (defroutes assessment-routes
   (context "/assessments" [:as
