@@ -180,7 +180,7 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
-      wrap-formats
+      wrap-formats                                          ; This used to be in def-routes.
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
       (wrap-mw-fn #'e-auth/bankid-middleware)
