@@ -28,15 +28,24 @@
   [_ _]
   (layout/error-403-page))
 
+(def cached-route-middlewares (atom {}))
+
+(defn- compose-routes
+  [handler route-mws]
+  (loop [v handler route-mws route-mws]
+    (if (empty? route-mws)
+      v
+      (recur ((first route-mws) v) (rest route-mws)))))
 
 (defn wrap-route-mw
-  [handler routes & route-mws]
+  [handler uri & route-mws]
   (fn [request]
-    (if (some #(clout-cache/route-matches % request) routes)
-      (let [comp-mw (loop [v handler route-mws route-mws]
-                      (if (empty? route-mws)
-                        v
-                        (recur ((first route-mws) v) (rest route-mws))))]
+    (if (some #(clout-cache/route-matches % request) uri)
+      (let [comp-mw (if (contains? @cached-route-middlewares uri)
+                      (get @cached-route-middlewares uri)
+                      (let [comp-mw (compose-routes handler route-mws)]
+                        (swap! cached-route-middlewares assoc uri comp-mw)
+                        comp-mw))]
         (comp-mw request))
       (handler request))))
 
@@ -46,10 +55,12 @@
        (wrap-route-mw ["/user*"]
                       (route-rules/wrap-rules user-routes/user-route-rules)
                       #'user-response/treatment-mw
-                      #'user-response/check-assessments-mw)
+                      #'user-response/check-assessments-mw
+                      #'middleware/wrap-csrf)
        (wrap-route-mw ["/assessments*"]
                       (route-rules/wrap-rules user-routes/assessment-route-rules)
-                      #'user-response/check-assessments-mw))
+                      #'user-response/check-assessments-mw
+                      #'middleware/wrap-csrf))
     request))
 
 (defn route-middlewares-wrapper
@@ -68,13 +79,9 @@
                             :on-error auth-error})
         (wrap-routes middleware/wrap-formats))
     (-> #'user-routes/assessment-routes
-        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
-        #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
-        (wrap-routes middleware/wrap-csrf))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper)))
     (-> #'user-routes/user-routes
-        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper))
-        #_(wrap-routes #(middleware/wrap-mw-fn % ext-login/return-url-mw))
-        (wrap-routes middleware/wrap-csrf))
+        (wrap-routes #(middleware/wrap-mw-fn % auth-res/auth-re-auth-wrapper)))
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes
