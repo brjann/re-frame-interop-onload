@@ -113,7 +113,7 @@
                                                     (get-in request [:cookies "ring-session" :value])))
   (let [assessments-pending-pre?  (get-in request [:session :assessments-pending?])
         res                       (handler (if-let [user (user/get-user (:identity request))]
-                                             (assoc-in request [:session :user] user)
+                                             (assoc-in request [:db :user] user)
                                              (merge request {:identity nil :session (dissoc (:session request) :identity)})))
         assessments-pending-post? (when (contains? res :session)
                                     (true? (get-in res [:session :assessments-pending?])))]

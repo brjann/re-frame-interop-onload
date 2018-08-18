@@ -105,7 +105,7 @@
             [#'assessments-pending? :ok "/user"]]}])
 
 (defroutes assessment-routes
-  (context "/assessments" [:as {{:keys [user]} :session
+  (context "/assessments" [:as {{:keys [user]} :db
                                 :as            request}]
     (GET "/" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
     (POST "/" [instrument-id items specifications]
@@ -118,8 +118,7 @@
 
 (defroutes user-routes
   (context "/user" [:as
-                    {{:keys [render-map treatment]}          :db
-                     {:keys [user]}                          :session
+                    {{:keys [render-map treatment user]}     :db
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
     (GET "/" []
@@ -172,7 +171,7 @@
 
 #_(defroutes privacy-consent-routes
     (context "/user" [:as request]
-      (let [user (get-in request [:session :user])]
+      (let [user (get-in request [:db :user])]
         (GET "/privacy-consent" []
           (user-response/privacy-consent-page user))
         (POST "/privacy-consent" [i-consent :as request]

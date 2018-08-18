@@ -20,7 +20,7 @@
 (defn treatment-mw
   [handler]
   (fn [request]
-    (if-let [treatment (when-let [user (get-in request [:session :user])]
+    (if-let [treatment (when-let [user (get-in request [:db :user])]
                          (treatment-service/user-treatment (:user-id user)))]
       (handler (-> request
                    (assoc-in [:db :treatment] treatment)
@@ -69,7 +69,7 @@
 
 (defn- consent-redirect?
   [request]
-  (let [user (get-in request [:session :user])]
+  (let [user (get-in request [:db :user])]
     (cond
       (= "/user/privacy-consent" (:uri request))
       false

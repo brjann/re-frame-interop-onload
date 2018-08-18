@@ -53,7 +53,7 @@
 (deftest wrap-identity-exists
   (-> *s*
       (modify-session {:identity 536834})
-      (visit "/debug/session")
+      (visit "/debug/request")
       (has (some-text? "identity"))
       (has (some-text? "skipper@gmail.com"))))
 
