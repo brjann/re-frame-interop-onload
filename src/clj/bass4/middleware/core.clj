@@ -7,7 +7,6 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
-            [ring.middleware.flash :refer [wrap-flash]]
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
@@ -195,7 +194,7 @@
       #_wrap-auth
       wrap-reload-headers
       wrap-webjars
-      wrap-flash
+      ; flash middleware was removed from here
       (wrap-mw-fn #'request-state-session-info)
       wrap-session-modification
       ;; Default absolute time-out to 2 hours
