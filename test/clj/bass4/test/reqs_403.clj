@@ -32,7 +32,7 @@
 
 (deftest request-403-get-logged-in
   (-> *s*
-      (modify-session {:identity 535771 :double-authed? true})
+      (modify-session {:user-id 535771 :double-authed? true})
       (visit "/debug/403")
       (has (status? 403))
       (has (some-text? "go to"))))
@@ -55,7 +55,7 @@
 
 (deftest request-403-ajax-with-identity
   (-> *s*
-      (modify-session {:identity 535771 :double-authed? true})
+      (modify-session {:user-id 535771 :double-authed? true})
       (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
       (has (status? 403))
       (has (text? "reload"))

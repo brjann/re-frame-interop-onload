@@ -70,7 +70,7 @@
 
 (defn logged-in?
   [{:keys [session]} _]
-  (:identity session))
+  (:user-id session))
 
 (defn messages?
   [{{:keys [treatment]} :db} _]

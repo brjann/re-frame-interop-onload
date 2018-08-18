@@ -10,7 +10,7 @@
     (auth-response/logout))
 
   (GET "/" [:as request]
-    (if (get-in request [:session :identity])
+    (if (get-in request [:session :user-id])
       (http-response/found "/user")
       (http-response/found "/login")))
 

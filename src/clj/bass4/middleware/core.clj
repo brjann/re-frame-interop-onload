@@ -107,14 +107,14 @@
   [handler request]
   "Check if user in identity exists
     yes: add user map to session
-    no: remove :identity key from from session
+    no: remove :user-id key from from session
     Also adds some request state info"
   (request-state/set-state! :session-cookie (get-in request [:cookies "JSESSIONID" :value]
                                                     (get-in request [:cookies "ring-session" :value])))
   (let [assessments-pending-pre?  (get-in request [:session :assessments-pending?])
-        res                       (handler (if-let [user (user/get-user (:identity request))]
+        res                       (handler (if-let [user (user/get-user (:user-id request))]
                                              (assoc-in request [:db :user] user)
-                                             (merge request {:identity nil :session (dissoc (:session request) :identity)})))
+                                             (merge request {:user-id nil :session (dissoc (:session request) :user-id)})))
         assessments-pending-post? (when (contains? res :session)
                                     (true? (get-in res [:session :assessments-pending?])))]
     (cond
@@ -145,14 +145,14 @@
 ;
 ; Failing test using kerodon
 ;(get-in (-> (session (app))
-;            (modify-session {:identity 549821 :double-authed? true})
+;            (modify-session {:user-id 549821 :double-authed? true})
 ;            (visit "/debug/session")) [:response :body])
 
 ;; So extra wrapper instead
 (defn request-state-session-info
   [handler request]
   (let [session (:session request)]
-    (request-state/set-state! :user-id (:identity session))
+    (request-state/set-state! :user-id (:user-id session))
     (request-state/set-state! :session-start (:session-start session)))
   (handler request))
 

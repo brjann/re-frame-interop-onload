@@ -34,7 +34,7 @@
   [request response]
   (request-state/record-error!
     (str "403 error when posting to " (:uri request)
-         "\nUser " (get-in request [:session :identity])))
+         "\nUser " (get-in request [:session :user-id])))
   (merge response {:status  403
                    :headers {}
                    :body    "reload"}))
@@ -60,7 +60,7 @@
       ;; Save this as an error
       (and ajax-post?
            (= (:status response) 403)
-           (not= nil (get-in request [:session :identity])))
+           (not= nil (get-in request [:session :user-id])))
       (ajax-403-logged-in request response)
 
       (and ajax-post? (= (:status response) 403))

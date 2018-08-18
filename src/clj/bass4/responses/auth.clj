@@ -39,7 +39,7 @@
 
 
 (defn not-authenticated? [session]
-  (nil? (:identity session)))
+  (nil? (:user-id session)))
 
 (defn double-auth-no-code [session]
   (nil? (:double-auth-code session)))
@@ -56,7 +56,7 @@
 (defn- double-auth-redirect [session]
   (cond
     (not-authenticated? session) "/login"
-    (not (auth-service/double-auth-required? (:identity session))) "/user/"
+    (not (auth-service/double-auth-required? (:user-id session))) "/user/"
     (double-auth-done? session) "/user/"
     (double-auth-no-code session) "/login"))
 
@@ -69,7 +69,7 @@
     false
 
     :else
-    (auth-service/double-auth-required? (:identity session))))
+    (auth-service/double-auth-required? (:user-id session))))
 
 (def-api double-auth
   [session :- api/?map?]
@@ -172,7 +172,7 @@
   [user additional]
   (auth-service/register-user-login! (:user-id user))
   (merge
-    {:identity          (:user-id user)
+    {:user-id           (:user-id user)
      :auth-re-auth      nil
      :last-login-time   (:last-login-time user)
      :last-request-time (t/now)
@@ -211,13 +211,13 @@
   [session :- api/?map? return-url :- api/?str!]
   (if (:auth-re-auth session)
     (re-auth-page return-url)
-    (if (:identity session)
+    (if (:user-id session)
       (http-response/found "/user/")
       (http-response/found "/login"))))
 
 (defn handle-re-auth
   [session password response]
-  (if-let [user-id (:identity session)]
+  (if-let [user-id (:user-id session)]
     (if (:auth-re-auth session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
@@ -303,12 +303,12 @@
 
 (defn restricted-mw [handler]
   (fn [request]
-    (if (:identity request)
+    (if (:user-id request)
       (handler request)
       (layout/error-403-page))))
 
 
 (defn identity-mw [handler request]
-  (if-let [id (get-in request [:session :identity])]
-    (handler (assoc request :identity id))
+  (if-let [id (get-in request [:session :user-id])]
+    (handler (assoc request :user-id id))
     (handler request)))

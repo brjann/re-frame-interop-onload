@@ -100,7 +100,7 @@
 (deftest attack-re-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
     (let [state (-> *s*
-                    (modify-session {:identity 536975 :double-authed? true})
+                    (modify-session {:user-id 536975 :double-authed? true})
                     (visit "/user")
                     (visit "/user/messages")
                     (has (status? 200))
@@ -118,7 +118,7 @@
 (deftest attack-re-auth-ajax
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
     (let [state (-> *s*
-                    (modify-session {:identity 536975 :double-authed? true})
+                    (modify-session {:user-id 536975 :double-authed? true})
                     (visit "/user")
                     (visit "/user/messages")
                     (has (status? 200))

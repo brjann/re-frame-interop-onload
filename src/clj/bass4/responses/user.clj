@@ -30,7 +30,7 @@
 
 (defn- assessments-pending?
   [request]
-  (let [user-id (:identity request)]
+  (let [user-id (:user-id request)]
     (cond
       (nil? user-id)
       false
@@ -43,7 +43,7 @@
   [handler]
   (fn [request]
     (let [session (:session request)]
-      (if (:identity request)
+      (if (:user-id request)
         (if-not (:assessments-checked? session)
           (if (assessments-pending? request)
             (do

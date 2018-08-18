@@ -52,17 +52,17 @@
 
 (deftest wrap-identity-exists
   (-> *s*
-      (modify-session {:identity 536834})
+      (modify-session {:user-id 536834})
       (visit "/debug/request")
-      (has (some-text? "identity"))
+      (has (some-text? ":user-id"))
       (has (some-text? "skipper@gmail.com"))))
 
 (deftest wrap-identity-not-exists
   (is (= false (-> *s*
-                   (modify-session {:identity 666})
+                   (modify-session {:user-id 666})
                    (visit "/debug/session")
                    (get-in [:response :body])
-                   (.contains ":identity")))))
+                   (.contains ":user-id")))))
 
 (deftest double-auth-sms-sent
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
@@ -107,7 +107,7 @@
 
 (deftest request-double-authentication
   (-> *s*
-      (modify-session {:identity 536975 :double-auth-code "666-666-666"})
+      (modify-session {:user-id 536975 :double-auth-code "666-666-666"})
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
@@ -121,14 +121,14 @@
 
 (deftest request-double-authentication-no-re-auth
   (-> *s*
-      (modify-session {:identity 536975 :double-auth-code "666-666-666" :external-login? true})
+      (modify-session {:user-id 536975 :double-auth-code "666-666-666" :external-login? true})
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))))
 
 (deftest request-no-double-authentication
   (-> *s*
-      (modify-session {:identity 536821})
+      (modify-session {:user-id 536821})
       (visit "/user/")
       (follow-redirect)
       (follow-redirect)
@@ -136,14 +136,14 @@
 
 (deftest request-no-double-authentication-visit
   (is (= true (-> *s*
-                  (modify-session {:identity 536821})
+                  (modify-session {:user-id 536821})
                   (visit "/double-auth")
                   (get-in [:response :headers "Location"])
                   (.contains "/user/")))))
 
 (deftest request-not-user-double-authentication-visit
   (is (= true (-> *s*
-                  (modify-session {:identity 666})
+                  (modify-session {:user-id 666})
                   (visit "/double-auth")
                   (get-in [:response :headers "Location"])
                   (.contains "/login")))))
@@ -155,7 +155,7 @@
 
 (deftest request-re-auth
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
@@ -167,7 +167,7 @@
 
 (deftest request-re-auth-ext-login
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
@@ -177,7 +177,7 @@
 
 (deftest request-re-auth-pwd
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
+      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
       (visit "/re-auth" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth" :request-method :post :params {:password 536975})
@@ -185,14 +185,14 @@
 
 (deftest request-re-auth-pwd-redirect
   (is (= true (-> *s*
-                  (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
+                  (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
                   (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/messages"})
                   (get-in [:response :headers "Location"])
                   (.contains "/user/messages")))))
 
 (deftest request-re-auth-pwd-ajax
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true :auth-re-auth true})
+      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
       (visit "/re-auth-ajax" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth-ajax" :request-method :post :params {:password 536975})
@@ -211,14 +211,14 @@
 (deftest request-re-auth-pwd-unnecessary-wrong
   "User is not timed out and it should not matter what password is sent"
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (visit "/re-auth" :request-method :post :params {:password 23254})
       (has (status? 302))))
 
 (deftest request-re-auth-pwd-unnecessary-right
   "User is not timed out and it should not matter what password is sent"
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))))
 
@@ -231,7 +231,7 @@
 
 (deftest request-re-auth-last-request-time
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
@@ -251,7 +251,7 @@
 
 (deftest request-re-auth-last-request-time-external-login
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true :external-login? true})
+      (modify-session {:user-id 536975 :double-authed? true :external-login? true})
       (visit "/user")
       (visit "/user/messages")
       (has (status? 200))
@@ -264,7 +264,7 @@
 
 (deftest request-re-auth-last-request-time2
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
@@ -279,7 +279,7 @@
 
 (deftest request-re-auth-last-request-time3
   (-> *s*
-      (modify-session {:identity 536975 :double-authed? true})
+      (modify-session {:user-id 536975 :double-authed? true})
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))

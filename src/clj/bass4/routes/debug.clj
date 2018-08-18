@@ -97,7 +97,7 @@
           (layout/error-page {:status 403
                               :body   "Sorry!"}))
         (GET "/403" [& params :as request]
-          (layout/error-403-page (get-in request [:session :identity])))
+          (layout/error-403-page (get-in request [:session :user-id])))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
 

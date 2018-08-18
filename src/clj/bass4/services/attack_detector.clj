@@ -143,8 +143,8 @@
         attack-routes  [{:method         :post
                          :route          #"/login"
                          :success        (fn [in out]
-                                           (and (:identity out)
-                                                (not= (:identity in) (:identity out))))
+                                           (and (:user-id out)
+                                                (not= (:user-id in) (:user-id out))))
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :post
@@ -178,9 +178,9 @@
                         {:method         :get
                          :route          #"/q/[a-zA-Z0-9]+"
                          :success        (fn [in out]
-                                           (contains? out :identity))
+                                           (contains? out :user-id))
                          :fail           (fn [response]
-                                           (not (contains? (:session response) :identity)))
+                                           (not (contains? (:session response) :user-id)))
                          :delay-response (constantly (layout/error-page {:status 429 :message "Too many requests"}))}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))

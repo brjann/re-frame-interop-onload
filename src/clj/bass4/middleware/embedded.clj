@@ -10,7 +10,7 @@
   [handler request uid]
   (if-let [{:keys [user-id path]} (bass/read-session-file uid)]
     (-> (http-response/found path)
-        (assoc :session {:identity user-id :embedded-path path}))
+        (assoc :session {:user-id user-id :embedded-path path}))
     (layout/print-var-response "Wrong uid.")))
 
 (defn legal-character
@@ -44,7 +44,7 @@
   (let [session-map (when uid
                       (let [{:keys [user-id path]}
                             (bass/read-session-file uid)]
-                        {:identity user-id :embedded-path path}))]
+                        {:user-id user-id :embedded-path path}))]
     (check-embedded-path handler (update request :session #(merge % session-map)))))
 
 (defn handle-embedded

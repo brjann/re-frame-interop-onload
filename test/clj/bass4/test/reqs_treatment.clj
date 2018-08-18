@@ -26,7 +26,7 @@
 (deftest request-messages
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
     (-> *s*
-        (modify-session {:identity 549821 :double-authed? true})
+        (modify-session {:user-id 549821 :double-authed? true})
         (visit "/user")
         (visit "/user/messages")
         (not-text? "New message")
@@ -35,7 +35,7 @@
         (visit "/user/messages-save-draft" :request-method :post :params {:message "xxx"})
         (has (status? 404)))
     (-> *s*
-        (modify-session {:identity 543021 :double-authed? true})
+        (modify-session {:user-id 543021 :double-authed? true})
         (visit "/user")
         (visit "/user/messages")
         (has (some-text? "New message")))))
