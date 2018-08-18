@@ -103,7 +103,7 @@
 
 
 
-(defn user-identity
+(defn request-db-user-mw
   [handler request]
   "Check if user in identity exists
     yes: add user map to session
@@ -181,17 +181,17 @@
       ;wrap-exceptions
       ;wrap-auth-re-auth
       wrap-formats                                          ; This used to be in def-routes.
-      (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'errors/wrap-api-error)
+      (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
-      (wrap-mw-fn #'user-identity)
+      (wrap-mw-fn #'request-db-user-mw)
       wrap-debug-exceptions
       (wrap-mw-fn #'embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
-      (wrap-mw-fn #'auth/identity-mw)
+      (wrap-mw-fn #'auth/session-user-id-mw)
       #_wrap-auth
       wrap-reload-headers
       wrap-webjars

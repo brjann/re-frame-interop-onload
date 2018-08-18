@@ -308,7 +308,7 @@
       (layout/error-403-page))))
 
 
-(defn identity-mw [handler request]
+(defn session-user-id-mw [handler request]
   (if-let [id (get-in request [:session :user-id])]
     (handler (assoc request :user-id id))
     (handler request)))
