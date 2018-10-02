@@ -14,10 +14,7 @@
             [buddy.auth.accessrules :refer [wrap-access-rules]]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
-            [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
-            [bass4.responses.user :as user-response]
-            [bass4.clout-cache :as clout-cache]
             [clojure.tools.logging :as log]))
 
 (mount/defstate init-app
@@ -28,45 +25,11 @@
   [_ _]
   (layout/error-403-page))
 
-(def compiled-route-middlewares (atom {}))
-
-(defn- compile-middleware
-  [handler route-mws]
-  (loop [v handler route-mws route-mws]
-    (if (empty? route-mws)
-      v
-      (recur ((first route-mws) v) (rest route-mws)))))
-
-(defn wrap-route-mw
-  [handler uri & route-mws]
-  (fn [request]
-    (if (some #(clout-cache/route-matches % request) uri)
-      (let [comp-mw (if (contains? @compiled-route-middlewares uri)
-                      (get @compiled-route-middlewares uri)
-                      (let [comp-mw (compile-middleware handler route-mws)]
-                        (swap! compiled-route-middlewares assoc uri comp-mw)
-                        comp-mw))]
-        (comp-mw request))
-      (handler request))))
-
 (defn router-middleware
   [handler request]
   ((-> handler
-       (wrap-route-mw ["/user*"]
-                      (route-rules/wrap-rules user-routes/user-route-rules)
-                      #'user-response/treatment-mw
-                      #'user-response/check-assessments-mw
-                      #'auth-response/auth-re-auth-mw
-                      #'middleware/wrap-csrf
-                      #'auth-response/double-auth-mw
-                      #'auth-response/restricted-mw)
-       (wrap-route-mw ["/assessments*"]
-                      (route-rules/wrap-rules user-routes/assessment-route-rules)
-                      #'user-response/check-assessments-mw
-                      #'auth-response/auth-re-auth-mw
-                      #'middleware/wrap-csrf
-                      #'auth-response/double-auth-mw
-                      #'auth-response/restricted-mw))
+       user-routes/user-routes-wrappers
+       user-routes/assessment-routes-wrappers)
     request))
 
 (defn route-middlewares-wrapper

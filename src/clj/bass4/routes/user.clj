@@ -14,7 +14,9 @@
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
             [buddy.auth.accessrules :as buddy-rules]
-            [clout.core :as clout]))
+            [clout.core :as clout]
+            [bass4.route-rules :as route-rules]
+            [bass4.middleware.core :as middleware]))
 
 (defn request-string
   "Return the request part of the request."
@@ -103,6 +105,31 @@
   [{:uri   "/assessments*"
     :rules [#_[#'double-auth? "/double-auth" :ok]
             [#'assessments-pending? :ok "/user"]]}])
+
+(defn user-routes-wrappers
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user*"]
+    (route-rules/wrap-rules user-route-rules)
+    #'user-response/treatment-mw                            ; Adds treatment info to request
+    #'user-response/check-assessments-mw
+    #'auth-response/auth-re-auth-mw
+    #'middleware/wrap-csrf
+    #'auth-response/double-auth-mw
+    #'auth-response/restricted-mw))
+
+(defn assessment-routes-wrappers
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/assessments*"]
+    (route-rules/wrap-rules assessment-route-rules)
+    #'user-response/check-assessments-mw
+    #'auth-response/auth-re-auth-mw
+    #'middleware/wrap-csrf
+    #'auth-response/double-auth-mw
+    #'auth-response/restricted-mw))
 
 (defroutes assessment-routes
   (context "/assessments" [:as {{:keys [user]} :db

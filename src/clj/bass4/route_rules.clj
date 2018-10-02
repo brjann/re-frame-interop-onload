@@ -77,3 +77,26 @@
         (if (true? res)
           (handler request)
           res)))))
+
+
+(def compiled-route-middlewares (atom {}))
+
+(defn- compile-middleware
+  [handler route-mws]
+  (loop [v handler route-mws route-mws]
+    (if (empty? route-mws)
+      v
+      (recur ((first route-mws) v) (rest route-mws)))))
+
+
+(defn wrap-route-mw
+  [handler uri & route-mws]
+  (fn [request]
+    (if (some #(clout-cache/route-matches % request) uri)
+      (let [comp-mw (if (contains? @compiled-route-middlewares uri)
+                      (get @compiled-route-middlewares uri)
+                      (let [comp-mw (compile-middleware handler route-mws)]
+                        (swap! compiled-route-middlewares assoc uri comp-mw)
+                        comp-mw))]
+        (comp-mw request))
+      (handler request))))
