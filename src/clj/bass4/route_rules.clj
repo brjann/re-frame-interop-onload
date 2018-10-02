@@ -2,7 +2,8 @@
   (:require [bass4.layout :as layout]
             [ring.util.http-response :as http-response]
             [bass4.clout-cache :as clout-cache]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.config :as config]))
 
 
 ;; ------------------------
@@ -93,7 +94,8 @@
   [handler uri & route-mws]
   (fn [request]
     (if (some #(clout-cache/route-matches % request) uri)
-      (let [comp-mw (if (contains? @compiled-route-middlewares uri)
+      (let [dev?    (config/env :dev)
+            comp-mw (if (and (not dev?) (contains? @compiled-route-middlewares uri))
                       (get @compiled-route-middlewares uri)
                       (let [comp-mw (compile-middleware handler route-mws)]
                         (swap! compiled-route-middlewares assoc uri comp-mw)
