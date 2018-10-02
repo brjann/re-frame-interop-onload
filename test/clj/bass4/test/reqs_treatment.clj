@@ -45,7 +45,6 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
         (follow-redirect)
-        (follow-redirect)
         (has (some-text? "Your treatment started"))
         (visit "/user/xxx")
         (has (status? 404))

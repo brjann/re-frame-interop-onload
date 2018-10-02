@@ -89,7 +89,7 @@
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
         (follow-redirect)
-        (follow-redirect)
+        #_(follow-redirect)
         (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
@@ -111,12 +111,12 @@
       (visit "/user/messages")
       (has (status? 302))
       (follow-redirect)
-      (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
       (modify-session {:double-authed? true})
       (visit "/user/messages")
+      (log-headers)
       (has (status? 200))))
 
 (deftest request-double-authentication-no-re-auth
@@ -131,7 +131,7 @@
       (modify-session {:user-id 536821})
       (visit "/user/")
       (follow-redirect)
-      (follow-redirect)
+      #_(follow-redirect)
       (has (some-text? "activities"))))
 
 (deftest request-no-double-authentication-visit

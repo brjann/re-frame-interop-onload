@@ -84,7 +84,7 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'double-auth? "/double-auth" :ok]
+    :rules [#_[#'double-auth? "/double-auth" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
@@ -101,7 +101,7 @@
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'double-auth? "/double-auth" :ok]
+    :rules [#_[#'double-auth? "/double-auth" :ok]
             [#'assessments-pending? :ok "/user"]]}])
 
 (defroutes assessment-routes

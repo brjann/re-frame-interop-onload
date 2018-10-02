@@ -297,6 +297,13 @@
                                  (merge session session-map)
                                  (merge (:session response) session-map))))))
 
+(defn double-auth-mw
+  [handler]
+  (fn [request]
+    (if (need-double-auth? (:session request))
+      (http-response/found "/double-auth")
+      (handler request))))
+
 ;; -----------------------
 ;;  RESTRICTED MIDDLEWARE
 ;; -----------------------

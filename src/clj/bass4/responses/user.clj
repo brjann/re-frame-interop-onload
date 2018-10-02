@@ -39,7 +39,7 @@
       (< 0 (administrations/create-assessment-round-entries! user-id)))))
 
 
-(defn check-assessments-mw
+#_(defn check-assessments-mw
   [handler]
   (fn [request]
     (let [session (:session request)]
@@ -65,6 +65,36 @@
                             :assessments-pending? false})))))
           (handler request))
         (handler request)))))
+
+(defn check-assessments-mw
+  [handler]
+  (fn [request]
+    (let [session (:session request)]
+      (cond
+        (:assessments-checked? session)
+        (handler request)
+
+        (assessments-pending? request)
+        (do
+          #_(log/debug "Assessments pending!")
+          (-> (http-response/found "/assessments")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked?   true
+                        :assessments-pending?   true
+                        :assessments-performed? true}))))
+
+        :else
+        (let [out-response (handler request)
+              out-session  (or (:session out-response)
+                               session)]
+          (assoc out-response
+            :session
+            (merge
+              out-session
+              {:assessments-checked? true
+               :assessments-pending? false})))))))
 
 
 (defn- consent-redirect?

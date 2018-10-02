@@ -58,12 +58,14 @@
                       #'user-response/check-assessments-mw
                       #'auth-response/auth-re-auth-mw
                       #'middleware/wrap-csrf
+                      #'auth-response/double-auth-mw
                       #'auth-response/restricted-mw)
        (wrap-route-mw ["/assessments*"]
                       (route-rules/wrap-rules user-routes/assessment-route-rules)
                       #'user-response/check-assessments-mw
                       #'auth-response/auth-re-auth-mw
                       #'middleware/wrap-csrf
+                      #'auth-response/double-auth-mw
                       #'auth-response/restricted-mw))
     request))
 
