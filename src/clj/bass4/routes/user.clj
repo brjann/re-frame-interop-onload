@@ -86,25 +86,16 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [#_[#'double-auth? "/double-auth" :ok]
-            [#'assessments-pending? "/assessments" :ok]
+    :rules [[#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
-
-   {:uri   "/user/module*"
-    :rules [[#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]]}
-
    {:uri   "/user/message*"
-    :rules [[#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]
-            [#'messages? :ok 404]
+    :rules [[#'messages? :ok 404]
             [#'send-messages? :ok 404]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [#_[#'double-auth? "/double-auth" :ok]
-            [#'assessments-pending? :ok "/user"]]}])
+    :rules [[#'assessments-pending? :ok "/user"]]}])
 
 (defn user-routes-wrappers
   [handler]
