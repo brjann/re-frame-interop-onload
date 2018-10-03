@@ -11,7 +11,6 @@
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
             [bass4.routes.lost-password :refer [lost-password-routes] :as lost-password]
-            [buddy.auth.accessrules :refer [wrap-access-rules]]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
@@ -45,9 +44,7 @@
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
     #'auth-routes
-    (-> #'lost-password-routes
-        #_(wrap-access-rules {:rules  lost-password/rules
-                            :on-error auth-error}))
+    #'lost-password-routes
     #'user-routes/assessment-routes
     #'user-routes/user-routes
     (-> #'e-auth-routes

@@ -3,7 +3,6 @@
             [bass4.responses.messages :as messages-response]
             [bass4.responses.dashboard :as dashboard]
             [bass4.responses.user :as user-response]
-            [bass4.services.treatment :as treatment-service]
             [bass4.responses.modules :as modules-response]
             [bass4.config :refer [env]]
             [bass4.utils :refer [str->int json-safe]]
@@ -13,8 +12,6 @@
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
-            [buddy.auth.accessrules :as buddy-rules]
-            [clout.core :as clout]
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]))
 
