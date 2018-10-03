@@ -29,7 +29,8 @@
   [handler request]
   ((-> handler
        user-routes/user-routes-wrappers
-       user-routes/assessment-routes-wrappers)
+       user-routes/assessment-routes-wrappers
+       reg-routes/registration-routes-wrappers)
     request))
 
 (defn route-middlewares-wrapper
@@ -54,7 +55,8 @@
         ;; TODO: Bring back wrap-csrf
         #_(wrap-routes middleware/wrap-csrf))
     #'debug-routes
-    (-> #'registration-routes
+    #'registration-routes
+    #_(-> #'registration-routes
         (wrap-access-rules {:rules reg-routes/route-rules})
         (wrap-routes middleware/wrap-csrf))
     (-> #'ext-login-routes

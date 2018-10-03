@@ -41,11 +41,12 @@
                 true
                 (let [rule (first rules)
                       [pred pred-true pred-false] (:rule rule)
+                      _    (log/debug "Calling predicate" (:name (meta pred)))
                       res  (if (pred request (:params rule))
                              pred-true
                              pred-false)]
-                  #_(log/debug (:uri request) "predicate" (:name (meta pred)) res)
-                  (if (= :ok res)
+                  (log/debug (:uri request) "predicate" (:name (meta pred)) res)
+                  (if (or (true? res) (= :ok res))
                     (recur (rest rules))
                     res))))]
     (cond
@@ -91,14 +92,16 @@
 
 
 (defn wrap-route-mw
-  [handler uri & route-mws]
+  [handler uri-pattern & route-mws]
   (fn [request]
-    (if (some #(clout-cache/route-matches % request) uri)
-      (let [dev?    (config/env :dev)
-            comp-mw (if (and (not dev?) (contains? @compiled-route-middlewares uri))
-                      (get @compiled-route-middlewares uri)
-                      (let [comp-mw (compile-middleware handler route-mws)]
-                        (swap! compiled-route-middlewares assoc uri comp-mw)
-                        comp-mw))]
-        (comp-mw request))
+    (if (some #(clout-cache/route-matches % request) uri-pattern)
+      (do (log/debug "Applying route middleware for" (:uri request))
+          (let [dev?    (config/env :dev)
+                comp-mw (if (and (not dev?) (contains? @compiled-route-middlewares uri-pattern))
+                          (get @compiled-route-middlewares uri-pattern)
+                          (let [comp-mw (compile-middleware handler route-mws)]
+                            (swap! compiled-route-middlewares assoc uri-pattern comp-mw)
+                            comp-mw))]
+            #_(log/debug "Matched request to" uri-pattern)
+            (comp-mw request)))
       (handler request))))
