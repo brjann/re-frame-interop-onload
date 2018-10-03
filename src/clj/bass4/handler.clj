@@ -28,9 +28,9 @@
 (defn router-middleware
   [handler request]
   ((-> handler
-       user-routes/user-routes-wrappers
-       user-routes/assessment-routes-wrappers
-       reg-routes/registration-routes-wrappers)
+       user-routes/user-routes-mw
+       user-routes/assessment-routes-mw
+       reg-routes/registration-routes-mw)
     request))
 
 (defn route-middlewares-wrapper
@@ -56,9 +56,6 @@
         #_(wrap-routes middleware/wrap-csrf))
     #'debug-routes
     #'registration-routes
-    #_(-> #'registration-routes
-        (wrap-access-rules {:rules reg-routes/route-rules})
-        (wrap-routes middleware/wrap-csrf))
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw)))
     #'quick-login-routes

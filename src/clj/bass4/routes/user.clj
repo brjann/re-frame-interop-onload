@@ -97,7 +97,7 @@
   [{:uri   "/assessments*"
     :rules [[#'assessments-pending? :ok "/user"]]}])
 
-(defn user-routes-wrappers
+(defn user-routes-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
@@ -110,7 +110,7 @@
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
 
-(defn assessment-routes-wrappers
+(defn assessment-routes-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
