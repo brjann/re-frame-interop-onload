@@ -10,7 +10,7 @@
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]))
 
-(defn registration-params
+#_(defn registration-params
   [request]
   (let [[_ project-id-str _] (re-matches #"/registration/([0-9]+)(.*)" (:uri request))]
     (let [project-id (str->int project-id-str)]
@@ -30,7 +30,7 @@
               (handler (assoc-in request [:db :reg-params] reg-params))
               (layout/text-response "Registration not allowed"))))))))
 
-(defn- eval-rules
+#_(defn- eval-rules
   [request & rules]
   (let [[project-id reg-params] (registration-params request)]
     (if project-id
@@ -58,33 +58,33 @@
           (throw (Exception. "Rule did not return true or string"))))
       (buddy-rules/error (layout/text-response "Registration not allowed")))))
 
-(defn spam-check-done?
+#_(defn spam-check-done?
   [reg-params reg-session]
   (let [captcha-ok?  (:captcha-ok? reg-session)
         bankid?      (:bankid? reg-params)
         bankid-done? (:bankid-done? reg-session)]
     (or captcha-ok? (and bankid? bankid-done?))))
 
-(defn use-bankid?
+#_(defn use-bankid?
   [reg-params _]
   (:bankid? reg-params))
 
-(defn needs-validation?
+#_(defn needs-validation?
   [_ reg-session]
   (let [codes (:validation-codes reg-session)]
     (or (contains? codes :code-sms) (contains? codes :code-email))))
 
-(defn all-fields-present?
+#_(defn all-fields-present?
   [reg-params reg-session]
   (let [field-values (:field-values reg-session)]
     (reg-response/all-fields? (:fields reg-params) field-values)))
 
-(defn privacy-consent?
+#_(defn privacy-consent?
   [_ reg-session]
   (let [consent (:privacy-consent reg-session)]
     (every? #(contains? consent %) [:privacy-notice :time])))
 
-(def route-rules
+#_(def route-rules
   [{:pattern #"^/registration/[0-9]+/info"
     :handler (fn [request] (eval-rules request))}
 
