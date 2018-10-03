@@ -4,13 +4,28 @@
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
-            [bass4.services.lost-password :as lpw-service]))
+            [bass4.services.lost-password :as lpw-service]
+            [bass4.route-rules :as route-rules]))
 
 (def rules
   [{:pattern #"^/lost-password/request-email.*"
     :handler (fn [_] (= :request-email (lpw-service/lost-password-method)))}
    {:pattern #"^/lost-password/report.*"
     :handler (fn [_] (= :report (lpw-service/lost-password-method)))}])
+
+
+(def lpw-rules
+  [{:uri   "/lost-password/request-email*"
+    :rules [[(fn [_ _] (= :request-email (lpw-service/lost-password-method))) :ok 403]]}
+   {:uri   "/lost-password/report*"
+    :rules [[(fn [_ _] (= :report (lpw-service/lost-password-method))) :ok 403]]}])
+
+(defn lpw-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/lost-password/*"]
+    (route-rules/wrap-rules lpw-rules)))
 
 (defn- re-router
   []

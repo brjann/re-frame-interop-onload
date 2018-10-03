@@ -30,7 +30,8 @@
   ((-> handler
        user-routes/user-routes-mw
        user-routes/assessment-routes-mw
-       reg-routes/registration-routes-mw)
+       reg-routes/registration-routes-mw
+       lost-password/lpw-routes-mw)
     request))
 
 (defn route-middlewares-wrapper
@@ -45,7 +46,7 @@
   (routes
     #'auth-routes
     (-> #'lost-password-routes
-        (wrap-access-rules {:rules    lost-password/rules
+        #_(wrap-access-rules {:rules  lost-password/rules
                             :on-error auth-error}))
     #'user-routes/assessment-routes
     #'user-routes/user-routes
