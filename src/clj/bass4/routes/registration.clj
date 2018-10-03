@@ -13,12 +13,13 @@
   [handler]
   (fn [request]
     (let [[_ project-id-str _] (re-matches #"/registration/([0-9]+)(.*)" (:uri request))]
-      (let [project-id (str->int project-id-str)]
-        (when project-id
-          (let [reg-params (reg-service/registration-params project-id)]
-            (if (:allowed? reg-params)
-              (handler (assoc-in request [:db :reg-params] reg-params))
-              (layout/text-response "Registration not allowed"))))))))
+      (if-let [project-id (str->int project-id-str)]
+        (if-let [reg-params (reg-service/registration-params project-id)]
+          (if (:allowed? reg-params)
+            (handler (assoc-in request [:db :reg-params] reg-params))
+            (layout/text-response "Registration not allowed"))
+          (layout/error-404-page))
+        (layout/error-404-page)))))
 
 (defn spam-check-done?
   [{{:keys [registration]} :session {:keys [reg-params]} :db} _]

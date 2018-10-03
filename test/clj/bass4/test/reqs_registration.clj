@@ -26,8 +26,12 @@
 
 (deftest registration-not-allowed
   (-> *s*
-      (visit "/registration/564612/info")
-      (has (some-text? "Registration not allowed"))))
+      (visit "/registration/564613/info")
+      (has (some-text? "Registration not allowed"))
+      (visit "/registration/metallica/info")
+      (has (status? 404))
+      (visit "/registration/666/info")
+      (has (status? 404))))
 
 (deftest registration-flow2
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
