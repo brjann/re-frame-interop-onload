@@ -60,5 +60,5 @@
   [user-id privacy-notice now]
   (update-user-properties!
     user-id
-    {:PrivacyNotice            (:privacy-notice privacy-notice)
+    {:PrivacyNoticeId          100                          ;          (:privacy-notice privacy-notice)
      :PrivacyNoticeConsentTime (b-time/to-unix now)}))

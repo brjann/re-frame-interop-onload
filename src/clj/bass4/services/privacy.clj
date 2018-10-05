@@ -5,7 +5,7 @@
 (defn- trim-sql-notice
   [privacy-notice]
   (let [privacy-notice (some-> privacy-notice
-                               (:privacy-notice)
+                               (:notice-text)
                                (s/trim))]
     (when-not (empty? privacy-notice)
       privacy-notice)))

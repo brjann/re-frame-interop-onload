@@ -2,7 +2,8 @@
 -- :doc
 
 SELECT
-    `notice` as `privacy-notice`
+    `notice` as `notice-text`,
+    `id` as `id`
 FROM privacy_notices
 WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = :project-id);
 
@@ -10,7 +11,8 @@ WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = :project-id);
 -- :name get-db-privacy-notice :? :1
 -- :doc
 SELECT
-    `notice` as `privacy-notice`
+    `notice` as `notice-text`,
+    `id` as `id`
 FROM privacy_notices
 WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = 100);
 

@@ -33,31 +33,6 @@
       (visit "/registration/666/info")
       (has (status? 404))))
 
-(deftest registration-flow2
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
-        (has (status? 422))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (has (status? 302))
-        (visit "/registration/564610/captcha")
-        (has (status? 302))
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "Who is collecting the data")))))
-
 (deftest registration-flow
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                 reg-service/registration-params (constantly {:allowed?               true
