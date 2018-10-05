@@ -45,7 +45,7 @@
 (defn privacy-consent?
   [{{:keys [registration]} :session} _]
   (let [consent (:privacy-consent registration)]
-    (every? #(contains? consent %) [:privacy-notice :time])))
+    (every? #(contains? consent %) [:notice-id :time])))
 
 (def route-rules
   [{:uri   "/registration/:project/captcha"

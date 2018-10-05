@@ -8,7 +8,7 @@
                             (:notice-text)
                             (s/trim))]
     (when-not (empty? notice-text)
-      {:id          (:id notice-text)
+      {:notice-id   (:id privacy-notice)
        :notice-text notice-text})))
 
 (defn- get-project-privacy-notice

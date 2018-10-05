@@ -178,6 +178,7 @@
 
 (defn- complete-registration
   [project-id field-values privacy-consent reg-params session]
+  (log/debug privacy-consent)
   (if (duplicate-conflict? field-values reg-params)
     (-> (http-response/found (str "/registration/" project-id "/duplicate"))
         (reset-reg-session session))
@@ -564,8 +565,8 @@
       (layout/error-400-page)
       (->
         (http-response/found (str "/registration/" project-id "/form"))
-        (assoc-reg-session session {:privacy-consent {:privacy-notice privacy-notice
-                                                      :time           (t/now)}})))))
+        (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
+                                                      :time      (t/now)}})))))
 
 ;; --------------
 ;;     CANCEL

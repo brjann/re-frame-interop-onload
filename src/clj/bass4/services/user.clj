@@ -56,7 +56,7 @@
        (update-user-properties! user-id properties))
      user-id)))
 
-(defn set-user-privacy-consent!
+#_(defn set-user-privacy-consent!
   [user-id privacy-notice now]
   (update-user-properties!
     user-id
