@@ -1,17 +1,18 @@
 -- :name get-project-privacy-notice :? :1
 -- :doc
+
 SELECT
-    PrivacyNotice as `privacy-notice`
-FROM c_treatmentinterface
-WHERE ObjectId = :project-id;
+    `notice` as `privacy-notice`
+FROM privacy_notices
+WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = :project-id);
 
 
 -- :name get-db-privacy-notice :? :1
 -- :doc
 SELECT
-    PrivacyNotice as `privacy-notice`
-FROM c_project
-WHERE ObjectId = 100;
+    `notice` as `privacy-notice`
+FROM privacy_notices
+WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = 100);
 
 
 -- :name db-privacy-user-must-consent? :? :1
