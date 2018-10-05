@@ -555,12 +555,12 @@
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
     (layout/render "registration-privacy-notice.html"
                    {:project-id     project-id
-                    :privacy-notice privacy-notice})))
+                    :privacy-notice (:notice-text privacy-notice)})))
 
 (def-api handle-privacy-consent
   [project-id :- api/int! i-consent :- api/str+! session :- api/?map?]
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
-    (if-not (and privacy-notice (= "i-consent" i-consent))
+    (if-not (and (:notice-text privacy-notice) (= "i-consent" i-consent))
       (layout/error-400-page)
       (->
         (http-response/found (str "/registration/" project-id "/form"))

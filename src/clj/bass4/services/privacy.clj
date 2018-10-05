@@ -4,11 +4,12 @@
 
 (defn- trim-sql-notice
   [privacy-notice]
-  (let [privacy-notice (some-> privacy-notice
-                               (:notice-text)
-                               (s/trim))]
-    (when-not (empty? privacy-notice)
-      privacy-notice)))
+  (let [notice-text (some-> privacy-notice
+                            (:notice-text)
+                            (s/trim))]
+    (when-not (empty? notice-text)
+      {:id          (:id notice-text)
+       :notice-text notice-text})))
 
 (defn- get-project-privacy-notice
   [project-id]

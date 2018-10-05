@@ -39,33 +39,6 @@
       (< 0 (administrations/create-assessment-round-entries! user-id)))))
 
 
-#_(defn check-assessments-mw
-  [handler]
-  (fn [request]
-    (let [session (:session request)]
-      (if (:user-id request)
-        (if-not (:assessments-checked? session)
-          (if (assessments-pending? request)
-            (do
-              #_(log/debug "Assessments pending!")
-              (-> (http-response/found "/assessments")
-                  (assoc :session
-                         (merge
-                           session
-                           {:assessments-checked?   true
-                            :assessments-pending?   true
-                            :assessments-performed? true}))))
-            (do
-              #_(log/debug "No assessments pending!")
-              (-> (http-response/found "/user")
-                  (assoc :session
-                         (merge
-                           session
-                           {:assessments-checked? true
-                            :assessments-pending? false})))))
-          (handler request))
-        (handler request)))))
-
 (defn check-assessments-mw
   [handler]
   (fn [request]
@@ -97,7 +70,7 @@
                :assessments-pending? false})))))))
 
 
-(defn- consent-redirect?
+#_(defn- consent-redirect?
   [request]
   (let [user (get-in request [:db :user])]
     (cond
@@ -113,7 +86,7 @@
       :else
       (privacy-service/user-must-consent? (:project-id user)))))
 
-(defn privacy-consent-mw
+#_(defn privacy-consent-mw
   [handler request]
   (if (consent-redirect? request)
     (do
@@ -122,14 +95,14 @@
     (handler request)))
 
 
-(def-api privacy-consent-page
+#_(def-api privacy-consent-page
   [user :- map?]
   (let [project-id     (:project-id user)
         privacy-notice (privacy-service/get-privacy-notice project-id)]
     (layout/render "privacy-consent.html"
                    {:privacy-notice privacy-notice})))
 
-(def-api handle-privacy-consent
+#_(def-api handle-privacy-consent
   [user :- map? i-consent :- api/str+!]
   (let [project-id     (:project-id user)
         privacy-notice (privacy-service/get-privacy-notice project-id)]
