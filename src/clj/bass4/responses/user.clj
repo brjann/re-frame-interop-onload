@@ -8,7 +8,8 @@
             [bass4.services.user :as user-service]
             [clj-time.core :as t]
             [bass4.services.assessments :as administrations]
-            [bass4.services.treatment :as treatment-service]))
+            [bass4.services.treatment :as treatment-service]
+            [bass4.services.bass :as bass]))
 
 (defn user-page-map
   [treatment path]
@@ -69,38 +70,14 @@
               {:assessments-checked? true
                :assessments-pending? false})))))))
 
-
-#_(defn- consent-redirect?
-    [request]
-    (let [user (get-in request [:db :user])]
-      (cond
-        (= "/user/privacy-consent" (:uri request))
-        false
-
-        (not= :get (:request-method request))
-        false
-
-        (:privacy-notice-consent-time user)
-        false
-
-        :else
-        (privacy-service/user-must-consent? (:project-id user)))))
-
-#_(defn privacy-consent-mw
-    [handler request]
-    (if (consent-redirect? request)
-      (do
-        (log/debug "redirecting")
-        (http-response/found "/user/privacy-consent"))
-      (handler request)))
-
-
 (def-api privacy-consent-page
   [user :- map?]
   (let [project-id  (:project-id user)
-        notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
+        notice-text (:notice-text (privacy-service/get-privacy-notice project-id))
+        email       (:email (bass/db-contact-info project-id))]
     (layout/render "privacy-consent.html"
-                   {:privacy-notice notice-text})))
+                   {:privacy-notice notice-text
+                    :email          email})))
 
 (def-api handle-privacy-consent
   [user :- map? i-consent :- api/str+!]

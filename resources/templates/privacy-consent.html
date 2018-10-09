@@ -2,31 +2,43 @@
 
 {% block content %}
 <div>
-    {% if privacy-notice %}
-    <form method="post">
+    <form method="post" id="consent-form">
         <div class="alert alert-primary lead" role="alert">
-            {%tr registration/privacy-notice-consent %}
+            {%tr privacy-notice/consent-title %}
         </div>
         <div class="markdown">
             {{privacy-notice|markdown}}
         </div>
-        <input type="hidden" value="i-consent" name="i-consent">
+        <input type="hidden" name="i-consent" id="i-consent">
         <div class="text-center">
             <p>
-                <button class="btn btn-primary">{%tr i-consent %}</button>
+                <button type="button" class="btn btn-primary" onclick="i_consent();">{%tr i-consent %}</button>
             </p>
             <p>
-                <button class="btn btn-warning" onclick="document.location = '/'; return false;">
-                    {%tr registration/cancel %}
+                <button type="button" class="btn btn-warning" name="no-consent"
+                        value="{%tr privacy-notice/no-consent %}" onclick="no_consent();">
+                    {%tr privacy-notice/no-consent %}
                 </button>
             </p>
         </div>
     </form>
-    {% else %}
-    <div class="alert alert-danger" role="alert">
-        This database or project has no privacy notice.<br>
-        User cannot proceed
-    </div>
-    {% endif %}
 </div>
+<script type="text/javascript">
+   var text_no_consent_info = "{%tr privacy-notice/no-consent-info %}";
+   var email = "{{email}}";
+
+   function no_consent() {
+      if (confirm(text_no_consent_info + ' ' + email + '.')) {
+         $('#i-consent').val('no-consent');
+         $('#consent-form').submit();
+      }
+      else {
+      }
+   }
+
+   function i_consent() {
+      $('#i-consent').val('i-consent');
+      $('#consent-form').submit();
+   }
+</script>
 {% endblock %}

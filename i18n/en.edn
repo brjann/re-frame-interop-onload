@@ -177,6 +177,9 @@
                    :8  "eight"
                    :9  "nine"
                    :10 "ten"}
+ :privacy-notice  {:consent-title   "To continue to use the web site you must consent to this Privacy Notice"
+                   :no-consent      "I do not consent"
+                   :no-consent-info "If you do not consent to the Privacy Notice, you will be logged out of the web site. You can log in again if you change your mind and want to consent with the Privacy Notice. If you have any questions, contact project manager at"}
  :bankid          {:title             "BankID verification"
                    :ongoing-title     "Ongoing BankID verification"
                    :ongoing-text      "You have an ongoing BankID verification process. Would you like to return to BankID?"
