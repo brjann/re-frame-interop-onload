@@ -56,9 +56,9 @@
        (update-user-properties! user-id properties))
      user-id)))
 
-#_(defn set-user-privacy-consent!
-  [user-id privacy-notice now]
+(defn set-user-privacy-consent!
+  [user-id privacy-notice-id now]
   (update-user-properties!
     user-id
-    {:PrivacyNoticeId          100                          ;          (:privacy-notice privacy-notice)
+    {:PrivacyNoticeId          privacy-notice-id
      :PrivacyNoticeConsentTime (b-time/to-unix now)}))

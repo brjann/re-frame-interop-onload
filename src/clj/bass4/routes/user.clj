@@ -13,7 +13,8 @@
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
             [bass4.route-rules :as route-rules]
-            [bass4.middleware.core :as middleware]))
+            [bass4.middleware.core :as middleware]
+            [bass4.services.privacy :as privacy-service]))
 
 (defn request-string
   "Return the request part of the request."
@@ -50,6 +51,19 @@
 ;;        NEW RULES
 ;; ------------------------
 
+(defn- consent-redirect?
+  [request _]
+  (let [user (get-in request [:db :user])]
+    (cond
+      (= "/user/privacy-consent" (:uri request))
+      false
+
+      (:privacy-notice-consent-time user)
+      false
+
+      :else
+      (privacy-service/user-must-consent? (:project-id user)))))
+
 
 (defn- assessments-pending?
   [{:keys [session]} _]
@@ -83,7 +97,8 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'assessments-pending? "/assessments" :ok]
+    :rules [[#'consent-redirect? "/user/privacy-consent" :ok]
+            [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
@@ -184,7 +199,7 @@
         (get-in treatment [:treatment-access :treatment-access-id])
         content-data))))
 
-#_(defroutes privacy-consent-routes
+(defroutes privacy-consent-routes
     (context "/user" [:as request]
       (let [user (get-in request [:db :user])]
         (GET "/privacy-consent" []

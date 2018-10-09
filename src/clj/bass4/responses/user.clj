@@ -71,46 +71,46 @@
 
 
 #_(defn- consent-redirect?
-  [request]
-  (let [user (get-in request [:db :user])]
-    (cond
-      (= "/user/privacy-consent" (:uri request))
-      false
+    [request]
+    (let [user (get-in request [:db :user])]
+      (cond
+        (= "/user/privacy-consent" (:uri request))
+        false
 
-      (not= :get (:request-method request))
-      false
+        (not= :get (:request-method request))
+        false
 
-      (:privacy-notice-consent-time user)
-      false
+        (:privacy-notice-consent-time user)
+        false
 
-      :else
-      (privacy-service/user-must-consent? (:project-id user)))))
+        :else
+        (privacy-service/user-must-consent? (:project-id user)))))
 
 #_(defn privacy-consent-mw
-  [handler request]
-  (if (consent-redirect? request)
-    (do
-      (log/debug "redirecting")
-      (http-response/found "/user/privacy-consent"))
-    (handler request)))
+    [handler request]
+    (if (consent-redirect? request)
+      (do
+        (log/debug "redirecting")
+        (http-response/found "/user/privacy-consent"))
+      (handler request)))
 
 
-#_(def-api privacy-consent-page
+(def-api privacy-consent-page
   [user :- map?]
-  (let [project-id     (:project-id user)
-        privacy-notice (privacy-service/get-privacy-notice project-id)]
+  (let [project-id  (:project-id user)
+        notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
     (layout/render "privacy-consent.html"
-                   {:privacy-notice privacy-notice})))
+                   {:privacy-notice notice-text})))
 
-#_(def-api handle-privacy-consent
+(def-api handle-privacy-consent
   [user :- map? i-consent :- api/str+!]
-  (let [project-id     (:project-id user)
-        privacy-notice (privacy-service/get-privacy-notice project-id)]
-    (if-not (and privacy-notice (= "i-consent" i-consent))
+  (let [project-id (:project-id user)
+        notice-id  (:notice-id (privacy-service/get-privacy-notice project-id))]
+    (if-not (and notice-id (= "i-consent" i-consent))
       (layout/error-400-page)
       (do
         (user-service/set-user-privacy-consent!
           (:user-id user)
-          privacy-notice
+          notice-id
           (t/now))
         (http-response/found "/user")))))
