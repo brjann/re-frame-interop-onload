@@ -41,3 +41,13 @@ SELECT
   END AS `must-consent?`
 FROM c_treatmentinterface
 WHERE ObjectId = :project-id;
+
+
+-- :name get-no-consent-flags :? :*
+-- :doc
+SELECT
+  ObjectId as `flag-id`
+FROM c_flag
+WHERE `Issuer` = 'no-consent'
+  AND (ClosedAt = 0 OR ClosedAt IS NULL)
+  AND `ParentId` = :user-id;

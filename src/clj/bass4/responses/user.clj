@@ -79,15 +79,33 @@
                    {:privacy-notice notice-text
                     :email          email})))
 
+(defn consent-response
+  [user notice-id]
+  (user-service/set-user-privacy-consent!
+    (:user-id user)
+    notice-id
+    (t/now))
+  (user-service/close-no-consent-flag! (:user-id user) (t/now))
+  (http-response/found "/user"))
+
+(defn no-consent-response
+  [user]
+  (user-service/create-no-consent-flag! (:user-id user))
+  (http-response/found "/logout"))
+
 (def-api handle-privacy-consent
   [user :- map? i-consent :- api/str+!]
   (let [project-id (:project-id user)
         notice-id  (:notice-id (privacy-service/get-privacy-notice project-id))]
-    (if-not (and notice-id (= "i-consent" i-consent))
-      (layout/error-400-page)
-      (do
-        (user-service/set-user-privacy-consent!
-          (:user-id user)
-          notice-id
-          (t/now))
-        (http-response/found "/user")))))
+    (cond
+      (not notice-id)
+      (throw (Error. "No ID for privacy notice in project" project-id))
+
+      (= "i-consent" i-consent)
+      (consent-response user notice-id)
+
+      (= "no-consent" i-consent)
+      (no-consent-response user)
+
+      :else
+      (layout/error-400-page))))

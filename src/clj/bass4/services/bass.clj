@@ -8,7 +8,8 @@
             [clojure.string :as s]
             [clojure.java.io :as io]
             [clojure.string :as string]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [bass4.utils :as utils])
   (:import (java.util UUID)
            (java.io File)))
 
@@ -36,16 +37,17 @@
     (range (inc (- last-object-id count)) (inc last-object-id))))
 
 (defn create-flag!
-  [user-id issuer flag-text flag-icon]
-  (let [flag-id (:objectid (db/create-bass-object! {:class-name    "cFlag"
-                                                    :parent-id     user-id
-                                                    :property-name "Flags"}))]
-    (db/update-object-properties! {:table-name "c_flag"
-                                   :object-id  flag-id
-                                   :updates    {:FlagText   flag-text
-                                                :CustomIcon flag-icon
-                                                :Open       1
-                                                :Issuer     issuer}})))
+  ([user-id issuer flag-text] (create-flag! user-id issuer flag-text ""))
+  ([user-id issuer flag-text flag-icon]
+   (let [flag-id (:objectid (db/create-bass-object! {:class-name    "cFlag"
+                                                     :parent-id     user-id
+                                                     :property-name "Flags"}))]
+     (db/update-object-properties! {:table-name "c_flag"
+                                    :object-id  flag-id
+                                    :updates    {:FlagText   flag-text
+                                                 :CustomIcon flag-icon
+                                                 :Open       1
+                                                 :Issuer     issuer}}))))
 
 (defn time-zone
   []

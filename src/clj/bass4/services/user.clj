@@ -3,7 +3,7 @@
             [buddy.hashers :as hashers]
             [bass4.config :as config]
             [bass4.time :as b-time]
-            [clj-time.core :as t]))
+            [bass4.services.bass :as bass-service]))
 
 (defn get-user
   [user-id]
@@ -62,3 +62,29 @@
     user-id
     {:PrivacyNoticeId          privacy-notice-id
      :PrivacyNoticeConsentTime (b-time/to-unix now)}))
+
+;; ---------------------
+;;  NO CONSENT FLAGGING
+;; ---------------------
+(defn close-no-consent-flag!
+  [user-id now]
+  (let [close-fn (fn [flag-id]
+                   (let [comment-id (:objectid (db/create-bass-object! {:class-name    "cComment"
+                                                                        :parent-id     flag-id
+                                                                        :property-name "Comments"}))]
+                     (db/update-object-properties! {:table-name "c_comment"
+                                                    :object-id  comment-id
+                                                    :updates    {:Text "User consented"}})
+                     (db/update-object-properties! {:table-name "c_flag"
+                                                    :object-id  flag-id
+                                                    :updates    {:ClosedAt (b-time/to-unix now)}})))
+        flag-ids (db/get-no-consent-flags {:user-id user-id})]
+    (mapv #(close-fn (:flag-id %)) flag-ids)))
+
+(defn create-no-consent-flag!
+  [user-id]
+  (bass-service/create-flag!
+    user-id
+    "no-consent"
+    (str "User did not consent to Privacy Notice")
+    "flag-high"))
