@@ -55,7 +55,7 @@
   [request _]
   (let [user (get-in request [:db :user])]
     (cond
-      (= "/user/privacy-consent" (:uri request))
+      (= "/user/privacy-notice" (:uri request))
       false
 
       (:privacy-notice-consent-time user)
@@ -97,7 +97,7 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'consent-redirect? "/user/privacy-consent" :ok]
+    :rules [[#'consent-redirect? "/user/privacy-notice" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
@@ -151,6 +151,10 @@
                     {{:keys [render-map treatment user]}     :db
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
+    (GET "/privacy-notice" []
+      (user-response/privacy-consent-page user))
+    (POST "/privacy-notice" [i-consent :as request]
+      (user-response/handle-privacy-consent user i-consent))
     (GET "/" []
       (dashboard/dashboard user (:session request) render-map treatment))
     ;; MESSAGES
@@ -198,11 +202,3 @@
       (modules-response/save-worksheet-data
         (get-in treatment [:treatment-access :treatment-access-id])
         content-data))))
-
-(defroutes privacy-consent-routes
-    (context "/user" [:as request]
-      (let [user (get-in request [:db :user])]
-        (GET "/privacy-consent" []
-          (user-response/privacy-consent-page user))
-        (POST "/privacy-consent" [i-consent :as request]
-          (user-response/handle-privacy-consent user i-consent)))))
