@@ -24,10 +24,10 @@
     </form>
 </div>
 <script type="text/javascript">
-   var text_no_consent_info = "{%tr privacy-notice/no-consent-info %}";
-   var email = "{{email}}";
-
    function no_consent() {
+      var text_no_consent_info = "{%tr privacy-notice/no-consent-info %}";
+      var email = "{{email}}";
+
       if (confirm(text_no_consent_info + ' ' + email + '.')) {
          $('#i-consent').val('no-consent');
          $('#consent-form').submit();
