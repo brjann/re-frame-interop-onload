@@ -66,7 +66,7 @@
                    :entered-password           "The password that you chose"
                    :login-address              "The address to the login page is"
                    :credentials-noted          "Click here when you have noted your credentials."}
- :dashboard       {:start           "Start"
+ :dashboard       {:start           "Start page"
                    :welcome         "Welcome!"
                    :new-modules     "You have access to new modules"
                    :go-to-modules   "Go to modules"
@@ -179,7 +179,8 @@
                    :10 "ten"}
  :privacy-notice  {:consent-title   "To continue to use the web site you must consent to this Privacy Notice"
                    :no-consent      "I do not consent"
-                   :no-consent-info "If you do not consent to the Privacy Notice, you will be logged out of the web site. You can log in again if you change your mind and want to consent with the Privacy Notice. If you have any questions, contact project manager at"}
+                   :no-consent-info "If you do not consent to the Privacy Notice, you will be logged out of the web site. You can log in again if you change your mind and want to consent with the Privacy Notice. If you have any questions, contact project manager at"
+                   :notice-title    "Privacy Notice"}
  :bankid          {:title             "BankID verification"
                    :ongoing-title     "Ongoing BankID verification"
                    :ongoing-text      "You have an ongoing BankID verification process. Would you like to return to BankID?"

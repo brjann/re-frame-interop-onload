@@ -4,7 +4,8 @@
             [bass4.layout :as layout]
             [bass4.time :as b-time]
             [clojure.tools.logging :as log]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.i18n :as i18n]))
 
 
 (defn- new-modules
@@ -30,8 +31,7 @@
     (layout/render "dashboard.html"
                    (merge render-map
                           {:user           user
-                           :title          "Dashboard"
-                           :page-title     "Dashboard"
+                           :page-title     (i18n/tr [:dashboard/start])
                            :new-modules    new-modules
                            :start-date     start-date
                            :end-date       end-date

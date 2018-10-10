@@ -9,7 +9,8 @@
             [clj-time.core :as t]
             [bass4.services.assessments :as administrations]
             [bass4.services.treatment :as treatment-service]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [bass4.i18n :as i18n]))
 
 (defn user-page-map
   [treatment path]
@@ -78,6 +79,16 @@
     (layout/render "privacy-consent.html"
                    {:privacy-notice notice-text
                     :email          email})))
+
+(def-api privacy-notice-page
+  [user :- map? render-map]
+  (let [project-id  (:project-id user)
+        notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
+    (layout/render "privacy-notice.html"
+                   (merge render-map
+                          {:user           user
+                           :page-title     (i18n/tr [:privacy-notice/notice-title])
+                           :privacy-notice notice-text}))))
 
 (defn consent-response
   [user notice-id]

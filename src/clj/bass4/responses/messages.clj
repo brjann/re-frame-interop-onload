@@ -4,7 +4,8 @@
             [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.layout :as layout]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.i18n :as i18n]))
 
 (def-api messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
@@ -14,8 +15,7 @@
     (layout/render "messages.html"
                    (merge render-map
                           {:user       user
-                           :title      "Messages"
-                           :page-title "Messages"
+                           :page-title (i18n/tr [:messages/messages])
                            :messages   messages
                            :draft      draft}))))
 

@@ -66,7 +66,7 @@
   (cond
     (= "/user/privacy-consent" (:uri request))
     false
-    
+
     :else
     (consent-needed? request _)))
 
@@ -161,8 +161,10 @@
                      :as                                     request}]
     (GET "/privacy-consent" []
       (user-response/privacy-consent-page user))
-    (POST "/privacy-consent" [i-consent :as request]
+    (POST "/privacy-consent" [i-consent]
       (user-response/handle-privacy-consent user i-consent))
+    (GET "/privacy-notice" []
+      (user-response/privacy-notice-page user render-map))
     (GET "/" []
       (dashboard/dashboard user (:session request) render-map treatment))
     ;; MESSAGES
