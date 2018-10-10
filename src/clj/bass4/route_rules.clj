@@ -52,6 +52,10 @@
       (true? res)
       true
 
+      ;; If redirect to present uri - return true avoid infinite redirects
+      (and (string? res) (= (:uri request) res))
+      true
+
       (string? res)
       (if (= :get (:request-method request))
         (http-response/found res)

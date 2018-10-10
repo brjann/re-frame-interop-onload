@@ -61,16 +61,6 @@
       :else
       (privacy-service/user-must-consent? (:project-id user)))))
 
-(defn- consent-redirect?
-  [request _]
-  (cond
-    (= "/user/privacy-consent" (:uri request))
-    false
-
-    :else
-    (consent-needed? request _)))
-
-
 (defn- assessments-pending?
   [{:keys [session]} _]
   (:assessments-pending? session))
@@ -103,19 +93,19 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'consent-redirect? "/user/privacy-consent" :ok]
+    :rules [#_[#'consent-needed? "/user/privacy-consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
             [#'send-messages? :ok 404]]}
-   {:uri   "/user/privacy-consent"
+   #_{:uri "/user/privacy-consent"
     :rules [[#'consent-needed? :ok "/user"]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'consent-redirect? :ok "/user"]]}])
+    :rules [[#'consent-needed? "/user/privacy-consent" :ok]]}])
 
 (defn user-routes-mw
   [handler]
@@ -135,7 +125,7 @@
   (route-rules/wrap-route-mw
     handler
     ["/assessments*"]
-    (route-rules/wrap-rules assessment-route-rules)
+    #_(route-rules/wrap-rules assessment-route-rules)
     #'user-response/check-assessments-mw
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
