@@ -3,10 +3,48 @@
 <!-- TODO: Place confirm_logout button properly -->
 <div class="position-relative">
     <div class="d-flex justify-content-end">
+        <a onclick="show_privacy_notice();" href="#" class='nav-link'>
+            {%tr privacy-notice/notice-title %}
+        </a>
         <button class="btn" onclick="confirm_logout();">
             <span class="fa fa-power-off"></span></button>
     </div>
 </div>
+
+<div class="modal" tabindex="-1" role="dialog" id="privacy-notice-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{%tr privacy-notice/notice-title %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="privacy-notice">
+                <p class="text-center"><span class="fa fa-spinner fa-spin fa-3x"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">{%tr close %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+   var notice_loaded = false;
+
+   function show_privacy_notice() {
+      var load_notice = function () {
+         $('#privacy-notice').text('Here is the privacy consent');
+      };
+      $('#privacy-notice-modal').modal();
+      if (!notice_loaded) {
+         setTimeout(load_notice, 1000);
+      }
+      notice_loaded = true;
+      return false;
+   }
+</script>
 {% block assessment-content %}
 {% endblock %}
 
