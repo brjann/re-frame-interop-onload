@@ -53,15 +53,22 @@
                         {% endif %}
                         {% for item in context-menu.items %}
                         <a href="{{item.link}}"
-                           class='nav-link{% ifequal path item.link %} active{%endifequal%}'>{{item.name}}</a>
+                           class="nav-link{% ifequal path item.link %} active{%endifequal%}">{{item.name}}</a>
                         {% endfor %}
                         {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="/user/privacy-notice"
+                           class='nav-link{% ifequal path "/user/privacy-notice" %} active{%endifequal%}'>Your privacy
+                        </a>
                         <div class="dropdown-divider"></div>
                         <a onclick="confirm_logout();" class='nav-link'>
                             <span class="fa fa-power-off"></span> {%tr logout %}
                         </a>
                     </div>
                 </div>
+            </div>
+            <div class="d-none d-md-block navbar-nav">
+                <a href="/user/privacy-notice" class='nav-link'>Your privacy</a>
             </div>
             <div class="d-none d-md-block navbar-nav">
                 <a onclick="confirm_logout();" class='nav-link'>

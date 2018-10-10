@@ -51,18 +51,24 @@
 ;;        NEW RULES
 ;; ------------------------
 
-(defn- consent-redirect?
+(defn- consent-needed?
   [request _]
   (let [user (get-in request [:db :user])]
     (cond
-      (= "/user/privacy-notice" (:uri request))
-      false
-
       (:privacy-notice-consent-time user)
       false
 
       :else
       (privacy-service/user-must-consent? (:project-id user)))))
+
+(defn- consent-redirect?
+  [request _]
+  (cond
+    (= "/user/privacy-consent" (:uri request))
+    false
+    
+    :else
+    (consent-needed? request _)))
 
 
 (defn- assessments-pending?
@@ -97,17 +103,19 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'consent-redirect? "/user/privacy-notice" :ok]
+    :rules [[#'consent-redirect? "/user/privacy-consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
-            [#'send-messages? :ok 404]]}])
+            [#'send-messages? :ok 404]]}
+   {:uri   "/user/privacy-consent"
+    :rules [[#'consent-needed? :ok "/user"]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'assessments-pending? :ok "/user"]]}])
+    :rules [[#'consent-redirect? :ok "/user"]]}])
 
 (defn user-routes-mw
   [handler]
@@ -151,9 +159,9 @@
                     {{:keys [render-map treatment user]}     :db
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
-    (GET "/privacy-notice" []
+    (GET "/privacy-consent" []
       (user-response/privacy-consent-page user))
-    (POST "/privacy-notice" [i-consent :as request]
+    (POST "/privacy-consent" [i-consent :as request]
       (user-response/handle-privacy-consent user i-consent))
     (GET "/" []
       (dashboard/dashboard user (:session request) render-map treatment))
