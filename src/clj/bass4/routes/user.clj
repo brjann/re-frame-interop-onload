@@ -93,14 +93,14 @@
 
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [#_[#'consent-needed? "/user/privacy-consent" :ok]
+    :rules [[#'consent-needed? "/user/privacy-consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
             [#'send-messages? :ok 404]]}
-   #_{:uri "/user/privacy-consent"
+   {:uri   "/user/privacy-consent"
     :rules [[#'consent-needed? :ok "/user"]]}])
 
 (def assessment-route-rules
@@ -120,12 +120,23 @@
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
 
+(defn ajax-user-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/ajax-user/*"]
+    #'user-response/check-assessments-mw
+    #_#'auth-response/auth-re-auth-mw
+    #'middleware/wrap-csrf
+    #_#'auth-response/double-auth-mw
+    #'auth-response/restricted-mw))
+
 (defn assessment-routes-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
     ["/assessments*"]
-    #_(route-rules/wrap-rules assessment-route-rules)
+    (route-rules/wrap-rules assessment-route-rules)
     #'user-response/check-assessments-mw
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
@@ -143,6 +154,13 @@
         instrument-id
         items
         specifications))))
+
+(defroutes ajax-user-routes
+  (context "/ajax-user" [:as
+                         {{:keys [user]} :db
+                          :as            request}]
+    (GET "/privacy-notice" []
+      (user-response/privacy-notice-bare user))))
 
 (defroutes user-routes
   (context "/user" [:as

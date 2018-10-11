@@ -31,18 +31,28 @@
 </div>
 
 <script type="text/javascript">
-   var notice_loaded = false;
 
+   var notice_loaded = false;
    function show_privacy_notice() {
       var load_notice = function () {
-         $('#privacy-notice').text('Here is the privacy consent');
+         if (notice_loaded) return;
+         notice_loaded = true;
+         $.ajax(
+            '/ajax-user/privacy-notice',
+            {
+               method: 'get',
+               success: function (data) {
+                  $('#privacy-notice').html(data);
+               },
+               error: function () {
+                  alert('Something went wrong;')
+               }
+            }
+         )
       };
       $('#privacy-notice-modal').modal();
-      if (!notice_loaded) {
-         setTimeout(load_notice, 1000);
-      }
-      notice_loaded = true;
-      return false;
+      load_notice();
+      event.preventDefault();
    }
 </script>
 {% block assessment-content %}

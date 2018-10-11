@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [bass4.services.privacy :as privacy-service]
             [ring.util.http-response :as http-response]
+            [markdown.core :as md]
             [bass4.api-coercion :as api :refer [def-api]]
             [bass4.layout :as layout]
             [bass4.services.user :as user-service]
@@ -70,6 +71,12 @@
               out-session
               {:assessments-checked? true
                :assessments-pending? false})))))))
+
+(def-api privacy-notice-bare
+  [user :- map?]
+  (let [project-id  (:project-id user)
+        notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
+    (layout/text-response (md/md-to-html-string notice-text))))
 
 (def-api privacy-consent-page
   [user :- map?]

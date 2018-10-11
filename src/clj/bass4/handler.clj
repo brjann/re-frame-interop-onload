@@ -29,6 +29,7 @@
   ((-> handler
        user-routes/user-routes-mw
        user-routes/assessment-routes-mw
+       user-routes/ajax-user-routes-mw
        reg-routes/registration-routes-mw
        lost-password/lpw-routes-mw)
     request))
@@ -47,6 +48,7 @@
     #'lost-password-routes
     #'user-routes/assessment-routes
     #'user-routes/user-routes
+    #'user-routes/ajax-user-routes
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes
