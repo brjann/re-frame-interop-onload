@@ -91,21 +91,26 @@
     (get-in treatment [:user-components :send-messages])
     true))
 
+
 (def user-route-rules
   [{:uri   "/user*"
-    :rules [[#'consent-needed? "/user/privacy-consent" :ok]
+    :rules [[#'consent-needed? "/privacy/consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
             [#'send-messages? :ok 404]]}
-   {:uri   "/user/privacy-consent"
+   {:uri   "/privacy/consent"
+    :rules [[#'consent-needed? :ok "/user"]]}])
+
+(def privacy-consent-rules
+  [{:uri   "/privacy/consent"
     :rules [[#'consent-needed? :ok "/user"]]}])
 
 (def assessment-route-rules
   [{:uri   "/assessments*"
-    :rules [[#'consent-needed? "/user/privacy-consent" :ok]]}])
+    :rules [[#'consent-needed? "/privacy/consent" :ok]]}])
 
 (defn user-routes-mw
   [handler]
@@ -115,6 +120,17 @@
     (route-rules/wrap-rules user-route-rules)
     #'user-response/treatment-mw                            ; Adds treatment info to request
     #'user-response/check-assessments-mw
+    #'auth-response/auth-re-auth-mw
+    #'middleware/wrap-csrf
+    #'auth-response/double-auth-mw
+    #'auth-response/restricted-mw))
+
+(defn privacy-consent-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/privacy/*"]
+    (route-rules/wrap-rules privacy-consent-rules)
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
     #'auth-response/double-auth-mw
@@ -162,15 +178,21 @@
     (GET "/privacy-notice" []
       (user-response/privacy-notice-bare user))))
 
+(defroutes privacy-consent-routes
+  (context "/privacy" [:as
+                       {{:keys [user]}                          :db
+                        {{:keys [treatment-access]} :treatment} :db
+                        :as                                     request}]
+    (GET "/consent" []
+      (user-response/privacy-consent-page user))
+    (POST "/consent" [i-consent]
+      (user-response/handle-privacy-consent user i-consent))))
+
 (defroutes user-routes
   (context "/user" [:as
                     {{:keys [render-map treatment user]}     :db
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
-    (GET "/privacy-consent" []
-      (user-response/privacy-consent-page user))
-    (POST "/privacy-consent" [i-consent]
-      (user-response/handle-privacy-consent user i-consent))
     (GET "/privacy-notice" []
       (user-response/privacy-notice-page user render-map))
     (GET "/" []

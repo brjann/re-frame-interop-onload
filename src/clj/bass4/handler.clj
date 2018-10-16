@@ -31,6 +31,7 @@
        user-routes/assessment-routes-mw
        user-routes/ajax-user-routes-mw
        reg-routes/registration-routes-mw
+       user-routes/privacy-consent-mw
        lost-password/lpw-routes-mw)
     request))
 
@@ -48,6 +49,7 @@
     #'lost-password-routes
     #'user-routes/assessment-routes
     #'user-routes/user-routes
+    #'user-routes/privacy-consent-routes
     #'user-routes/ajax-user-routes
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
