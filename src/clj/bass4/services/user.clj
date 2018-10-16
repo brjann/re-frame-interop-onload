@@ -66,6 +66,8 @@
 ;; ---------------------
 ;;  NO CONSENT FLAGGING
 ;; ---------------------
+
+;; TODO: Move to privacy service
 (defn close-no-consent-flag!
   [user-id now]
   (let [close-fn (fn [flag-id]

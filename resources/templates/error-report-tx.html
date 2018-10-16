@@ -1,8 +1,15 @@
 {% extends "nav.html" %}
 {% block user-content %}
 
-<h1>Report your errors man</h1>
-
+<h1>{%tr error-report/experiencing-problems? %}</h1>
+<p>{%tr error-report/report-info %}</p>
+<form method="post">
+    <div class="form-group">
+        <textarea class="form-control" placeholder="{%tr error-report/description-here %}"
+                  name="error-description" rows="10" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-fill btn-primary">{%tr submit %}</button>
+</form>
 {% endblock %}
 
 {% block page-scripts %}

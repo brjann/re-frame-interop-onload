@@ -125,8 +125,11 @@
                    :submitted-ok-text       "You have submitted your homework and it has been reviewed by your therapist."
                    :submitted-waiting-title "Submitted!"
                    :submitted-waiting-text  "You submitted your homework %1 and it is waiting to be reviewed by your therapist."}
- :error-report    {:problems?    "Problems?"
-                   :report-title "Report errors"}
+ :error-report    {:problems?              "Problems?"
+                   :page-title             "Report errors"
+                   :experiencing-problems? "Are you experiencing problems the website?"
+                   :report-info            "If something seems to be wrong with the website, you can report your problems here. Please write as much as you can about the difficulties you are experiencing and we will contact you as soon as possible."
+                   :description-here       "Write your description of the problem here"}
  :login           {:login                   "Login"
                    :must-username           "Please provide your username"
                    :must-password           "Please provide your password"
@@ -181,7 +184,7 @@
                    :8  "eight"
                    :9  "nine"
                    :10 "ten"}
- :privacy-notice  {:consent-title   "To continue to use the web site you must consent to this Privacy Notice"
+ :privacy-notice  {:consent-title   "To continue to use the website you must consent to this Privacy Notice"
                    :no-consent      "I do not consent"
                    :no-consent-info "If you do not consent to the Privacy Notice, you will be logged out of the web site. You can log in again if you change your mind and want to consent with the Privacy Notice. If you have any questions, contact project manager at"
                    :notice-title    "Privacy Notice"}

@@ -1,7 +1,7 @@
 (ns bass4.responses.error-report
-  (:require [bass4.services.messages :as messages-service]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [ring.util.http-response :as http-response]
+            [bass4.services.error-report :as error-report-service]
             [schema.core :as s]
             [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [def-api]]
@@ -12,4 +12,9 @@
     (layout/render "error-report-tx.html"
                    (merge render-map
                           {:user       user
-                           :page-title (i18n/tr [:error-report/report-title])}))))
+                           :page-title (i18n/tr [:error-report/page-title])}))))
+
+(def-api handle-error-report [user :- map? error-description :- api/str+!]
+  (let [user-id (:user-id user)]
+    (error-report-service/create-error-report-flag! user-id error-description)
+    (http-response/ok)))

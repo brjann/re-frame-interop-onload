@@ -203,8 +203,11 @@
     (GET "/privacy-notice" []
       (user-response/privacy-notice-page user render-map))
 
+    ;; ERROR REPORT
     (GET "/error-report" []
       (error-report-response/error-report-page render-map user))
+    (POST "/error-report" [error-description]
+      (error-report-response/handle-error-report user error-description))
 
     ;; MESSAGES
     (GET "/messages" []
