@@ -7,10 +7,13 @@
             [bass4.test.core :refer [test-fixtures
                                      not-text?
                                      log-return
+                                     log-headers
+                                     log-body
                                      disable-attack-detector
                                      *s*
                                      fix-time
                                      advance-time-d!
+                                     modify-session
                                      advance-time-s!]]
             [bass4.db.core :as db]
             [bass4.services.user :as user]
@@ -111,3 +114,56 @@
           (advance-time-s! (re-auth-timeout))
           (visit "/assessments")
           (has (status? 200))))))
+
+
+(deftest quick-login-escalation-re-auth
+  []
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+    (let [user-id             (user/create-user! 536103 {:Group "537404" :firstname "quick-login-escalation"})
+          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                  :parent-id     user-id
+                                                                  :property-name "TreatmentAccesses"}))
+          q-id                (str user-id "XXXX")]
+      (db/create-bass-link! {:linker-id     treatment-access-id
+                             :linkee-id     551356
+                             :link-property "Treatment"
+                             :linker-class  "cTreatmentAccess"
+                             :linkee-class  "cTreatment"})
+      (user/update-user-properties! user-id {:username            user-id
+                                             :password            user-id
+                                             :QuickLoginPassword  q-id
+                                             :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (has (status? 302))
+          ;; Session created
+          (follow-redirect)
+          ;; Assessments checked
+          (follow-redirect)
+          (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (visit "/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+          (visit "/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+          (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+          (follow-redirect)
+          (has (some-text? "top top top thanks"))
+          (visit "/assessments")
+          (follow-redirect)
+          (visit "/user")
+          (follow-redirect)
+          (has (some-text? "Password needed"))
+          (visit "/escalate" :request-method :post :params {:password "xxx"})
+          (has (status? 422))
+          (visit "/escalate" :request-method :post :params {:password user-id})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "Start page"))
+          (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
+          (visit "/user/")
+          (follow-redirect)
+          (has (some-text? "Authenticate again"))
+          (visit "/re-auth" :request-method :post :params {:password "xxx"})
+          (has (status? 422))
+          (visit "/re-auth" :request-method :post :params {:password user-id})
+          (has (status? 302))
+          (visit "/user/")
+          (has (some-text? "Start page"))))))
