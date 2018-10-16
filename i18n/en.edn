@@ -125,6 +125,8 @@
                    :submitted-ok-text       "You have submitted your homework and it has been reviewed by your therapist."
                    :submitted-waiting-title "Submitted!"
                    :submitted-waiting-text  "You submitted your homework %1 and it is waiting to be reviewed by your therapist."}
+ :error-report    {:problems?    "Problems?"
+                   :report-title "Report errors"}
  :login           {:login                   "Login"
                    :must-username           "Please provide your username"
                    :must-password           "Please provide your password"

@@ -14,7 +14,8 @@
             [clojure.tools.logging :as log]
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
-            [bass4.services.privacy :as privacy-service]))
+            [bass4.services.privacy :as privacy-service]
+            [bass4.responses.error-report :as error-report-response]))
 
 (defn request-string
   "Return the request part of the request."
@@ -196,10 +197,15 @@
                     {{:keys [render-map treatment user]}     :db
                      {{:keys [treatment-access]} :treatment} :db
                      :as                                     request}]
-    (GET "/privacy-notice" []
-      (user-response/privacy-notice-page user render-map))
     (GET "/" []
       (dashboard/dashboard user (:session request) render-map treatment))
+
+    (GET "/privacy-notice" []
+      (user-response/privacy-notice-page user render-map))
+
+    (GET "/error-report" []
+      (error-report-response/error-report-page render-map user))
+
     ;; MESSAGES
     (GET "/messages" []
       (messages-response/messages-page render-map user))
@@ -209,6 +215,7 @@
       (messages-response/save-draft (:user-id user) text))
     (POST "/message-read" [message-id]
       (messages-response/message-read (:user-id user) message-id))
+
     ;; MODULES
     (GET "/modules" []
       (modules-response/modules-list

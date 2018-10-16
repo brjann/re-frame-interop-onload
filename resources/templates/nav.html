@@ -57,9 +57,13 @@
                         {% endfor %}
                         {% endif %}
                         <div class="dropdown-divider"></div>
+                        <a href="/user/error-report"
+                           class='nav-link{% ifequal path "/user/error-report" %} active{%endifequal%}'>
+                            {%tr error-report/problems? %}
+                        </a>
                         <a href="/user/privacy-notice"
-                           class='nav-link{% ifequal path "/user/privacy-notice" %} active{%endifequal%}'>{%tr
-                            privacy-notice/notice-title %}
+                           class='nav-link{% ifequal path "/user/privacy-notice" %} active{%endifequal%}'>
+                            {%tr privacy-notice/notice-title %}
                         </a>
                         <div class="dropdown-divider"></div>
                         <a onclick="confirm_logout();" class='nav-link'>
@@ -67,6 +71,11 @@
                         </a>
                     </div>
                 </div>
+            </div>
+            <div class="d-none d-md-block navbar-nav">
+                <a href="/user/error-report"
+                   class='nav-link {% ifequal path "/user/error-report" %} active{%endifequal%}'>
+                    {%tr error-report/problems? %}</a>
             </div>
             <div class="d-none d-md-block navbar-nav">
                 <a href="/user/privacy-notice"
