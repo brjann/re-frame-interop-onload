@@ -27,13 +27,12 @@
   disable-attack-detector)
 
 
-(deftest privacy-consent-no-consent-then-consent
+(deftest privacy-consent-no-consent-then-consent-logout-complete-assessments
   (with-redefs [privacy-service/user-must-consent? (constantly true)]
     (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "privacy-test"})]
       (user/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
-          (has (status? 302))
           (follow-redirect)
           (follow-redirect)
           (follow-redirect)
@@ -50,6 +49,8 @@
           (follow-redirect)
           (follow-redirect)
           (has (some-text? "To continue to use"))
+          (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (has (status? 400))
           (visit "/privacy/consent" :request-method :post :params {:i-consent "i-consent"})
           (log-headers)
           (follow-redirect)
@@ -57,9 +58,46 @@
           (follow-redirect)
           (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
           (visit "/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+          (visit "/logout")
+          (visit "/user")
+          (has (status? 403))
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome top-priority"))
           (visit "/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
           (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-          (has (status? 302))
           (follow-redirect)
-          (has (some-text? "top top top thanks"))
           (has (some-text? "Thanks top"))))))
+
+(deftest privacy-consent-consent-before-treatment
+  (with-redefs [privacy-service/user-must-consent? (constantly true)]
+    (let [user-id             (user/create-user! 543018 {:firstname "privacy-tx-test"})
+          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                  :parent-id     user-id
+                                                                  :property-name "TreatmentAccesses"}))
+          q-id                (str user-id "XXXX")]
+      (db/create-bass-link! {:linker-id     treatment-access-id
+                             :linkee-id     551356
+                             :link-property "Treatment"
+                             :linker-class  "cTreatmentAccess"
+                             :linkee-class  "cTreatment"})
+      (user/update-user-properties! user-id {:username user-id
+                                             :password user-id})
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "To continue to use"))
+          (visit "/user/messages")
+          (has (status? 302))
+          (visit "/privacy/consent")
+          (has (status? 200))
+          (visit "/privacy/consent" :request-method :post :params {:i-consent "i-consent"})
+          (follow-redirect)
+          (visit "/user")
+          (has (some-text? "Start page"))
+          (visit "/user/messages")
+          (has (status? 200))
+          (visit "/privacy/consent")
+          (has (status? 302))))))
