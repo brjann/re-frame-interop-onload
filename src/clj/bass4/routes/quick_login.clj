@@ -65,7 +65,7 @@
 (defn do-login
   [user]
   (-> (http-response/found "/user/")
-      (assoc :session (auth-response/create-new-session user {:external-login? true}))))
+      (assoc :session (auth-response/create-new-session user {:external-login? true :limited-access? true}))))
 
 (def-api quick-login
   [quick-login-id :- api/str+!]

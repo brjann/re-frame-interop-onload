@@ -91,18 +91,21 @@
     (get-in treatment [:user-components :send-messages])
     true))
 
+(defn limited-access?
+  [{:keys [session]} _]
+  (:limited-access? session))
+
 
 (def user-route-rules
   [{:uri   "/user*"
     :rules [[#'consent-needed? "/privacy/consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
+            [#'limited-access? "/escalate" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
             [#'no-treatment-but-assessments? "/login" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
-            [#'send-messages? :ok 404]]}
-   {:uri   "/privacy/consent"
-    :rules [[#'consent-needed? :ok "/user"]]}])
+            [#'send-messages? :ok 404]]}])
 
 (def privacy-consent-rules
   [{:uri   "/privacy/consent"
