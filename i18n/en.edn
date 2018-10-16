@@ -15,6 +15,8 @@
  :tab             "Tab"
  :i-consent       "I consent"
  :contact-support "You contact support at "
+ :characters-left "Characters left"
+ :too-long!       "too long!"
  :quick-login     {:expired-title           "Login expired"
                    :expired-text            "Your login code has expired."
                    :invalid-title           "Invalid login code"
@@ -126,10 +128,11 @@
                    :submitted-waiting-title "Submitted!"
                    :submitted-waiting-text  "You submitted your homework %1 and it is waiting to be reviewed by your therapist."}
  :error-report    {:problems?              "Problems?"
-                   :page-title             "Report errors"
+                   :page-title             "Problems with website"
                    :experiencing-problems? "Are you experiencing problems the website?"
-                   :report-info            "If something seems to be wrong with the website, you can report your problems here. Please write as much as you can about the difficulties you are experiencing and we will contact you as soon as possible."
-                   :description-here       "Write your description of the problem here"}
+                   :report-info            "If something seems to be wrong with the website, you can report your problems here. Please write a detailed description about the issues that you are experiencing."
+                   :description-here       "Write your description of the problem here"
+                   :thank-you              "Thank you for your report. It has been received and we will contact you as soon as possible."}
  :login           {:login                   "Login"
                    :must-username           "Please provide your username"
                    :must-password           "Please provide your password"

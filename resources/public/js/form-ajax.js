@@ -32,6 +32,7 @@ function post_success(form, complete_fn) {
 		if (complete_fn !== undefined) {
 			complete_fn();
 		}
+      // Note that response needs to return "ok" - not just 200
       if ($(form).data("on-success") !== undefined) {
 			var on_success = eval($(form).data("on-success"));
 			on_success.call(form, data, textStatus, jqXHR);

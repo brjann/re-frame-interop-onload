@@ -3,14 +3,40 @@
 
 <h1>{%tr error-report/experiencing-problems? %}</h1>
 <p>{%tr error-report/report-info %}</p>
-<form method="post">
+<form method="post" data-on-success="error_report_success">
     <div class="form-group">
         <textarea class="form-control" placeholder="{%tr error-report/description-here %}"
-                  name="error-description" rows="10" required></textarea>
+                  name="error-description" rows="10" id="error-description"
+                  onkeyup="update_character_count();" onchange="update_character_count();"
+                  maxlength="{{max-chars}}" required></textarea>
+        <small class="form-text">{%tr characters-left %} <span id="error-description-chars">{{max-chars}}</span></small>
     </div>
     <button type="submit" class="btn btn-fill btn-primary">{%tr submit %}</button>
 </form>
 {% endblock %}
 
 {% block page-scripts %}
+<script type="text/javascript">
+   function error_report_success() {
+      var text_thank_you = "{%tr error-report/thank-you %}";
+      $('#error-description').val('');
+      update_character_count();
+      alert(text_thank_you);
+   }
+
+   function update_character_count() {
+      var text_too_long = "{%tr too-long! %}";
+      var $error_description = $('#error-description');
+      var max_length = $error_description.prop('maxlength');
+      var text_length = $error_description.val().length;
+      var $chars_left = $('#error-description-chars');
+      if (text_length <= max_length) {
+         $chars_left.text(max_length - text_length);
+      }
+      else {
+         $chars_left.text(text_too_long);
+      }
+   }
+
+</script>
 {% endblock %}
