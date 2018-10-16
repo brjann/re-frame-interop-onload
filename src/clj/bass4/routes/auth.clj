@@ -34,4 +34,9 @@
   (POST "/re-auth-ajax" [password :as request]
     (auth-response/check-re-auth-ajax (:session request) password))
   (GET "/no-activities" []
-    (auth-response/no-activities-page)))
+    (auth-response/no-activities-page))
+
+  (GET "/escalate" []
+    (auth-response/escalate-login-page))
+  (POST "/escalate" [password :as request]
+    (auth-response/handle-escalation (:session request) password)))

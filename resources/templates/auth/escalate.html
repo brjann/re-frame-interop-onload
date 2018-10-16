@@ -1,0 +1,22 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>{%tr login/password-needed %}</h1>
+<p>{%tr login/please-re-auth %}</p>
+<form method="post">
+    <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+        {%tr login/password-error %}
+    </div>
+    <div class="form-group row">
+        <label for="password" class="col-sm-2 col-form-label">{%tr password %}</label>
+        <div class="col-sm-10">
+            <input type="password" class="form-control" data-clear-on="error" id="password" name="password"
+                   placeholder="{%tr password %}" required autofocus>
+        </div>
+        <input type="hidden" name="return-url" value="{{return-url}}">
+    </div>
+    <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
+    <a href="/logout" class="btn btn-warning">{%tr logout %}</a>
+</form>
+
+{% endblock %}

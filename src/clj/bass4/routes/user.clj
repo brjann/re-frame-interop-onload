@@ -100,9 +100,9 @@
   [{:uri   "/user*"
     :rules [[#'consent-needed? "/privacy/consent" :ok]
             [#'assessments-pending? "/assessments" :ok]
-            [#'limited-access? "/escalate" :ok]
             [#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]]}
+            [#'no-treatment-but-assessments? "/login" :ok]
+            [#'limited-access? "/escalate" :ok]]}
    {:uri   "/user/message*"
     :rules [[#'messages? :ok 404]
             [#'send-messages? :ok 404]]}])

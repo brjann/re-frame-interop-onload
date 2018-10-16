@@ -162,6 +162,13 @@
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :post
+                         :route          #"/escalate"
+                         :success        (fn [in out]
+                                           (and (:limited-access? in)
+                                                (nil? (:limited-access? out))))
+                         :fail           fail-fn
+                         :delay-response delay-response}
+                        {:method         :post
                          :route          #"/re-auth-ajax"
                          :success        (fn [in out]
                                            (and (:auth-re-auth in)

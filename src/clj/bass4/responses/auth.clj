@@ -242,6 +242,40 @@
   (handle-re-auth session password (http-response/ok "ok")))
 
 
+
+;; --------------------
+;;    ESCALATE USER
+;; --------------------
+
+(def-api escalate-login-page
+  []
+  (layout/render "auth/escalate.html"))
+
+(defn handle-escalation*
+  [session password]
+  (let [user-id (:user-id session)]
+    (cond
+      (nil? user-id)
+      (http-response/forbidden)
+
+      (not (:limited-access? session))
+      (http-response/found "/user")
+
+      (auth-service/authenticate-by-user-id user-id password)
+      (-> (http-response/found "/user")
+          (assoc :session (merge session {:external-login?   nil
+                                          :limited-access?   nil
+                                          :last-request-time (t/now)})))
+
+      :else
+      (layout/error-422 "error"))))
+
+(def-api handle-escalation
+  [session :- api/?map? password :- api/str+!]
+  (handle-escalation* session password))
+
+
+
 ;; --------------------
 ;;  RE-AUTH MIDDLEWARE
 ;; --------------------
