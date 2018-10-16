@@ -116,7 +116,6 @@
       (has (some-text? "666-666-666"))
       (modify-session {:double-authed? true})
       (visit "/user/messages")
-      (log-headers)
       (has (status? 200))))
 
 (deftest request-double-authentication-no-re-auth
@@ -131,7 +130,6 @@
       (modify-session {:user-id 536821})
       (visit "/user/")
       (follow-redirect)
-      #_(follow-redirect)
       (has (some-text? "activities"))))
 
 (deftest request-no-double-authentication-visit

@@ -25,7 +25,8 @@
             [bass4.responses.e-auth :as e-auth-response]
             [ring.util.http-response :as http-response]
             [clj-time.coerce :as tc]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [clojure.string :as s]))
 
 (defn states-page
   []

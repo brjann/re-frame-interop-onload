@@ -8,7 +8,8 @@
             [clojure.string :as s]
             [flatland.ordered.map :refer [ordered-map]]
             [mount.core :refer [defstate]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import (java.io BufferedInputStream)))
 
 (defn ls [d]
   (remove #(.isDirectory %) (.listFiles d)))
@@ -77,7 +78,7 @@
               (recur (conj acc c) s)))))))
 
 (defn- i18n-map-to-list*
-  [s]
+  [^BufferedInputStream s]
   (loop [acc [] s s]
     (if (zero? (.available s))
       acc
@@ -111,7 +112,7 @@
                  key-sub-map (str key " " sub-map)]
              (recur (conj acc key-sub-map) (nthrest i18n-list 2)))
            (let [value     (get-in new-map (conj keys key))
-                 key-value (str key " \"" (s/escape value {\" "\\\""}) "\"")]
+                 key-value (str key " \"" (s/escape value {\" "\\\"" \newline "\\n"}) "\"")]
              (recur (conj acc key-value) (nthrest i18n-list 2)))))))))
 
 (defn merge-i18n
