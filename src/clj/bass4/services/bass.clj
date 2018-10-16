@@ -47,7 +47,8 @@
                                     :updates    {:FlagText   flag-text
                                                  :CustomIcon flag-icon
                                                  :Open       1
-                                                 :Issuer     issuer}}))))
+                                                 :Issuer     issuer
+                                                 :ClosedAt   0}}))))
 
 (defn time-zone
   []
