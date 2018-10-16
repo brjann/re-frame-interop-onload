@@ -265,7 +265,8 @@
       (-> (http-response/found "/user")
           (assoc :session (merge session {:external-login?   nil
                                           :limited-access?   nil
-                                          :last-request-time (t/now)})))
+                                          :last-request-time (t/now)
+                                          :double-authed?    true})))
 
       :else
       (layout/error-422 "error"))))
