@@ -15,7 +15,8 @@
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user]
             [clj-time.core :as t]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [bass4.responses.error-report :as error-report-response])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -77,4 +78,12 @@
         (visit "/user/module/3961/worksheet/4000")
         (has (status? 404))
         (visit "/user/module/3974/worksheet/4000")
+        (has (status? 200))
+        (visit "/user/error-report")
+        (has (some-text? "Problems with website"))
+        (visit "/user/error-report" :request-method :post :params {:hello "xxx"})
+        (has (status? 400))
+        (visit "/user/error-report" :request-method :post :params {:error-description (apply str (repeat (* 2 error-report-response/max-chars) "x"))})
+        (has (status? 400))
+        (visit "/user/error-report" :request-method :post :params {:error-description (apply str (repeat error-report-response/max-chars "x"))})
         (has (status? 200)))))
