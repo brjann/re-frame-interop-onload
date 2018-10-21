@@ -15,7 +15,6 @@
             [bass4.config :refer [env]]
             [bass4.mailer :refer [mail!]]
             [bass4.request-state :as request-state]
-            [bass4.services.user :as user]
             [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [request-state]]
             [bass4.middleware.ajax-post :refer [ajax-post]]
@@ -27,7 +26,9 @@
             [bass4.responses.e-auth :as e-auth]
             [bass4.responses.user :as user-response]
             [bass4.routes.ext-login :as ext-login]
-            [bass4.clout-cache :as clout-cache]))
+            [bass4.clout-cache :as clout-cache]
+            [bass4.responses.auth :as auth-response]
+            [bass4.services.user :as user-service]))
 
 
 (defn wrap-formats [handler]
@@ -111,7 +112,7 @@
   (request-state/set-state! :session-cookie (get-in request [:cookies "JSESSIONID" :value]
                                                     (get-in request [:cookies "ring-session" :value])))
   (let [assessments-pending-pre?  (get-in request [:session :assessments-pending?])
-        res                       (handler (if-let [user (user/get-user (:user-id request))]
+        res                       (handler (if-let [user (user-service/get-user (:user-id request))]
                                              (assoc-in request [:db :user] user)
                                              (merge request {:user-id nil :session (dissoc (:session request) :user-id)})))
         assessments-pending-post? (when (contains? res :session)
@@ -181,6 +182,7 @@
       ;wrap-auth-re-auth
       wrap-formats                                          ; This used to be in def-routes.
       (wrap-mw-fn #'errors/wrap-api-error)
+      (wrap-mw-fn #'auth-response/privacy-notice-error-mw)
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)

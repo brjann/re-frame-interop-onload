@@ -14,7 +14,7 @@
                                      disable-attack-detector
                                      *s*]]
             [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [bass4.services.privacy :as privacy-service]
             [bass4.db.core :as db]
             [clj-time.core :as t]
@@ -29,8 +29,8 @@
 
 (deftest privacy-consent-no-consent-then-consent-logout-complete-assessments
   (with-redefs [privacy-service/user-must-consent? (constantly true)]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "privacy-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "privacy-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (follow-redirect)
@@ -70,7 +70,7 @@
 
 (deftest privacy-consent-consent-before-treatment
   (with-redefs [privacy-service/user-must-consent? (constantly true)]
-    (let [user-id             (user/create-user! 543018 {:firstname "privacy-tx-test"})
+    (let [user-id             (user-service/create-user! 543018 {:firstname "privacy-tx-test"})
           treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                   :parent-id     user-id
                                                                   :property-name "TreatmentAccesses"}))
@@ -80,8 +80,8 @@
                              :link-property "Treatment"
                              :linker-class  "cTreatmentAccess"
                              :linkee-class  "cTreatment"})
-      (user/update-user-properties! user-id {:username user-id
-                                             :password user-id})
+      (user-service/update-user-properties! user-id {:username user-id
+                                                     :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (follow-redirect)

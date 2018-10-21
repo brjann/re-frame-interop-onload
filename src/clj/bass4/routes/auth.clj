@@ -33,8 +33,12 @@
     (auth-response/check-re-auth (:session request) password return-url))
   (POST "/re-auth-ajax" [password :as request]
     (auth-response/check-re-auth-ajax (:session request) password))
+
   (GET "/no-activities" []
     (auth-response/no-activities-page))
+
+  (GET "/missing-privacy-notice" []
+    (layout/text-response "There is no privacy notice in DB or this user's project. Add a privacy notice in admin interface!"))
 
   (GET "/escalate" []
     (auth-response/escalate-login-page))

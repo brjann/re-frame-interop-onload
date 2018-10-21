@@ -16,11 +16,11 @@
                                      modify-session
                                      advance-time-s!]]
             [bass4.db.core :as db]
-            [bass4.services.user :as user]
             [bass4.responses.auth :refer [re-auth-timeout]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.services.user :as user-service]))
 
 (use-fixtures
   :once
@@ -35,9 +35,9 @@
 
 (deftest quick-login-assessments
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -67,9 +67,9 @@
 
 (deftest quick-login-expired
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
       (advance-time-d! 11)
       (-> *s*
           (visit (str "/q/" q-id))
@@ -85,9 +85,9 @@
 
 (deftest quick-login-not-allowed
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 200))
@@ -102,9 +102,9 @@
 
 (deftest quick-login-no-timeout
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -119,7 +119,7 @@
 (deftest quick-login-escalation-re-auth
   []
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id             (user/create-user! 536103 {:Group "537404" :firstname "quick-login-escalation"})
+    (let [user-id             (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-escalation"})
           treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                   :parent-id     user-id
                                                                   :property-name "TreatmentAccesses"}))
@@ -129,7 +129,7 @@
                              :link-property "Treatment"
                              :linker-class  "cTreatmentAccess"
                              :linkee-class  "cTreatment"})
-      (user/update-user-properties! user-id {:username            user-id
+      (user-service/update-user-properties! user-id {:username    user-id
                                              :password            user-id
                                              :QuickLoginPassword  q-id
                                              :QuickLoginTimestamp (b-time/to-unix (t/now))})

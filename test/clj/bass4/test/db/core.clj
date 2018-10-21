@@ -29,7 +29,7 @@
 #_(defn get-redefs-1
   []
   (with-redefs [db/get-user-by-user-id (constantly {:objectid 9})]
-    (user/get-user 3443)))
+    (user-service/get-user 3443)))
 
 #_(deftest redefs-1
   (is (= (get-redefs-1) {:objectid 9, :user-id 9})))

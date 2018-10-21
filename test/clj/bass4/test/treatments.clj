@@ -6,7 +6,7 @@
             [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]
             [clojure.tools.logging :as log]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [clj-time.coerce :as tc]))
 
@@ -31,7 +31,7 @@
 
 
 (deftest auto-modules-test
-  (let [user-id             (user/create-user! 543018 {:Group "537404" :firstname "autotest-module"})
+  (let [user-id             (user-service/create-user! 543018 {:Group "537404" :firstname "autotest-module"})
         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
                                                                 :property-name "TreatmentAccesses"}))]

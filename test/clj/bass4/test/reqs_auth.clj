@@ -15,11 +15,11 @@
                                      *s*
                                      modify-session]]
             [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [bass4.services.user :as user-service]))
 
 
 (use-fixtures
@@ -45,10 +45,10 @@
   (is (auth-service/double-auth-required? 536835)))
 
 (deftest user-exists
-  (is (not= nil (user/get-user 536834))))
+  (is (not= nil (user-service/get-user 536834))))
 
 (deftest user-not-exists
-  (is (nil? (user/get-user 666))))
+  (is (nil? (user-service/get-user 666))))
 
 (deftest wrap-identity-exists
   (-> *s*

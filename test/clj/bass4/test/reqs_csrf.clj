@@ -6,7 +6,7 @@
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
             [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [bass4.db.core :as db]))
 
 (use-fixtures
@@ -19,8 +19,8 @@
 
 (deftest test-csrf
   (binding [mw/*skip-csrf* false]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "csrf-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "csrf-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (has (status? 302))

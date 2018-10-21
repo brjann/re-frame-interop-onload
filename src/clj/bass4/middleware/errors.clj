@@ -8,7 +8,8 @@
             [bass4.layout :refer [error-page error-400-page]]
             [bass4.request-state :as request-state]
             [clojure.string :as string]
-            [bass4.db-config :as db-config])
+            [bass4.db-config :as db-config]
+            [ring.util.http-response :as http-response])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn mail-error!
@@ -55,6 +56,7 @@
             (request-state/record-error! msg))
           (error-400-page (when (db-config/debug-mode?) (.getMessage e))))
         (throw e)))))
+
 
 (defn wrap-schema-error [handler]
   (fn [req]

@@ -51,3 +51,20 @@ FROM c_flag
 WHERE `Issuer` = 'no-consent'
   AND (ClosedAt = 0 OR ClosedAt IS NULL)
   AND `ParentId` = :user-id;
+
+
+
+-- :name privacy-notice-exists? :? :1
+-- :doc
+SELECT
+  CASE
+  WHEN (count(*) > 0)
+    THEN 1
+  ELSE
+    0
+  END AS `exists?`
+FROM privacy_notices
+WHERE
+  (id = (SELECT max(id) FROM privacy_notices WHERE parent_id = 100))
+  OR
+  (id = (SELECT max(id) FROM privacy_notices WHERE parent_id = :project-id))

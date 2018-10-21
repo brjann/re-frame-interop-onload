@@ -14,7 +14,7 @@
                                      disable-attack-detector
                                      *s*]]
             [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
@@ -41,8 +41,8 @@
 
 
 (deftest group-assessment
-  (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test"})]
-    (user/update-user-properties! user-id {:username user-id :password user-id})
+  (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "group-test"})]
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
@@ -74,8 +74,8 @@
     (is (= #{536112 536113} (set (map :assessment-id (db/get-assessments-with-date {:user-id user-id})))))))
 
 (deftest group-assessment-concurrent
-  (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "group-test-concurrent"})]
-    (user/update-user-properties! user-id {:username user-id :password user-id})
+  (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "group-test-concurrent"})]
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
     (let [s1 (-> *s*
                  (visit "/login" :request-method :post :params {:username user-id :password user-id}))
           s2 (-> *s*
@@ -142,8 +142,8 @@
 
 
 (deftest swallow-texts
-  (let [user-id (user/create-user! 547369 {:Group "547387" :firstname "swallow-test"})]
-    (user/update-user-properties! user-id {:username user-id :password user-id})
+  (let [user-id (user-service/create-user! 547369 {:Group "547387" :firstname "swallow-test"})]
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))
@@ -162,8 +162,8 @@
         (not-text? "thanks 1"))))
 
 (deftest empty-assessment
-  (let [user-id (user/create-user! 572594 {:Group "572598" :firstname "group-test"})]
-    (user/update-user-properties! user-id {:username user-id :password user-id})
+  (let [user-id (user-service/create-user! 572594 {:Group "572598" :firstname "group-test"})]
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302)))))

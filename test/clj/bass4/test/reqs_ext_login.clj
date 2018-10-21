@@ -14,7 +14,7 @@
                                      *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.db.core :as db]
-            [bass4.services.user :as user]
+            [bass4.services.user :as user-service]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [clojure.string :as string]))
@@ -56,8 +56,8 @@
 
 (deftest request-ext-login-assessment-pending
   (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
       (let [session  *s*
             uri      (-> session
                         (visit (str "/ext-login/check-pending/" user-id))
@@ -95,8 +95,8 @@
 
 (deftest request-ext-login-error-uid
   (with-redefs [db/ext-login-settings (constantly {:allowed true :ips "localhost"})]
-    (let [user-id (user/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
-      (user/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
       (let [session  *s*
             redirect (-> session
                          (visit "/ext-login/do-login?uid=666&returnURL=http://www.dn.se")

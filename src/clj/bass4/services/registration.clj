@@ -1,14 +1,14 @@
 (ns bass4.services.registration
   (:require [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
-            [bass4.services.user :as user]
             [bass4.utils :refer [filter-map map-map in? subs+]]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
             [clojure.string :as string]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.services.user :as user-service]))
 
 (defn registration-allowed?
   [project-id]
@@ -109,12 +109,12 @@
 (defn create-user!
   [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
-    (user/create-user! project-id (merge insert-values
-                                         {:PrivacyNoticeId          (:notice-id privacy-consent)
+    (user-service/create-user! project-id (merge insert-values
+                                                 {:PrivacyNoticeId  (:notice-id privacy-consent)
                                           :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))}
-                                         (when username {:username username})
-                                         (when participant-id {:participantid participant-id})
-                                         (when group {:group group})))))
+                                                 (when username {:username username})
+                                                 (when participant-id {:participantid participant-id})
+                                                 (when group {:group group})))))
 
 (defn duplicate-info?
   [{:keys [email sms-number]}]

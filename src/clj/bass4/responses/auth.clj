@@ -14,7 +14,9 @@
             [bass4.i18n :as i18n]
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [def-api]]
-            [bass4.services.bass :as bass-service]))
+            [bass4.services.bass :as bass-service]
+            [bass4.services.privacy :as privacy-service])
+  (:import (clojure.lang ExceptionInfo)))
 
 
 ;; -------------------
@@ -171,6 +173,8 @@
 (defn create-new-session
   [user additional]
   (auth-service/register-user-login! (:user-id user))
+  (if-not (privacy-service/privacy-notice-exists? (:project-id user))
+    (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
   (merge
     {:user-id           (:user-id user)
      :auth-re-auth      nil
@@ -354,3 +358,15 @@
   (if-let [id (get-in request [:session :user-id])]
     (handler (assoc request :user-id id))
     (handler request)))
+
+;; ---------------------------
+;;  PRIVACY NOTICE MIDDLEWARE
+;; ---------------------------
+
+(defn privacy-notice-error-mw [handler request]
+  (try
+    (handler request)
+    (catch ExceptionInfo e
+      (if (= (:type (.data e)) :bass4.responses.auth/no-privacy-notice)
+        (http-response/found "/missing-privacy-notice")
+        (throw e)))))

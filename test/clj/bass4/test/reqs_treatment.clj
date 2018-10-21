@@ -12,8 +12,6 @@
                                      log-body
                                      log-headers
                                      log-response]]
-            [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
             [clj-time.core :as t]
             [clojure.data.json :as json]
             [bass4.responses.error-report :as error-report-response])

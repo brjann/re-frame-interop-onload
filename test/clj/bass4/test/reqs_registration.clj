@@ -8,8 +8,6 @@
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
-            [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]

@@ -1,6 +1,7 @@
 (ns bass4.services.privacy
   (:require [bass4.db.core :as db]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [bass4.utils :as utils]))
 
 (defn- trim-sql-notice
   [privacy-notice]
@@ -47,3 +48,9 @@
   ([project-id]
    (or (db-user-must-consent?)
        (project-user-must-consent? project-id))))
+
+(defn privacy-notice-exists?
+  [project-id]
+  (-> (db/privacy-notice-exists? {:project-id project-id})
+      (:exists?)
+      (utils/val-to-bool)))

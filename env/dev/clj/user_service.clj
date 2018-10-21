@@ -1,4 +1,4 @@
-(ns user
+(ns user-service
   (:require [mount.core :as mount]
             bass4.core))
 

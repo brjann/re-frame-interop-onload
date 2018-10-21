@@ -1,6 +1,5 @@
 (ns bass4.responses.modules
-  (:require [bass4.services.user :as user]
-            [ring.util.http-response :as http-response]
+  (:require [ring.util.http-response :as http-response]
             [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
             [bass4.api-coercion :as api :refer [def-api]]
