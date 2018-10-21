@@ -15,7 +15,8 @@
             [bass4.time :as b-time]
             [ring.util.http-response :as http-response]
             [bass4.api-coercion :as api :refer [def-api]]
-            [bass4.config :as config]))
+            [bass4.config :as config])
+  (:import (clojure.lang ExceptionInfo)))
 
 (defmacro log-msg
   [& msgs]
@@ -26,14 +27,14 @@
   [quick-login-id]
   (when (< 15 (count quick-login-id))
     (log-msg "Quick login was too long" (count quick-login-id))
-    (throw (Exception. "Quick login too long"))))
+    (throw (ex-info "Quick login too long" {:type ::quick-login-error}))))
 
 (defn- quick-login-settings
   []
   (let [{:keys [expiration-days allowed?]} (db/bool-cols db/get-quick-login-settings [:allowed?])]
     (when (not allowed?)
       (log-msg "Quick login not allowed")
-      (throw (Exception. "Quick login is not allowed")))
+      (throw (ex-info "Quick login is not allowed" {:type ::quick-login-error})))
     expiration-days))
 
 (defn- quick-login-user
@@ -79,9 +80,10 @@
         (if (quick-login-expired? user expiration-days)
           (expired-response user)
           (do-login user))))
-    ;; TODO: Why is Exception forwarded to user?
-    (catch Exception e
-      (layout/text-response (:cause (Throwable->map e))))))
+    (catch ExceptionInfo e
+      (if (= ::quick-login-error (:type (.data e)))
+        (layout/text-response (.getMessage e))
+        (throw e)))))
 
 (defroutes quick-login-routes
   (GET "/q/:quick-login-id" [quick-login-id]
