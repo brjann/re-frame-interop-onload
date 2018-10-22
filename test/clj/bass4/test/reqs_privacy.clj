@@ -19,7 +19,7 @@
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.time :as b-time]))
 
 (use-fixtures
   :once
@@ -99,3 +99,30 @@
           (has (status? 200))
           (visit "/privacy/consent")
           (has (status? 302))))))
+
+(deftest login-no-privacy-notice
+  (with-redefs [privacy-service/privacy-notice-exists? (constantly false)]
+    (-> *s*
+        (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
+        (follow-redirect)
+        (has (some-text? "User cannot login")))))
+
+(deftest quick-login-no-privacy-notice
+  (with-redefs [db/get-quick-login-settings            (constantly {:allowed? true :expiration-days 11})
+                privacy-service/privacy-notice-exists? (constantly false)]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (follow-redirect)
+          (has (some-text? "User cannot login"))))))
+
+(deftest request-ext-login-no-privacy-notice
+  (with-redefs [db/ext-login-settings                  (constantly {:allowed true :ips "localhost"})
+                privacy-service/privacy-notice-exists? (constantly false)]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (-> *s*
+          (visit (str "/ext-login/check-pending/" user-id))
+          (has (some-text? "0 Privacy notice missing in DB"))))))

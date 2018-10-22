@@ -15,8 +15,8 @@
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
             [bass4.api-coercion :as api :refer [def-api]]
-            [bass4.time :as b-time]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.services.privacy :as privacy-service]))
 
 
 ;; ------------
@@ -106,7 +106,7 @@
       "More than 1 matching user"
 
       :else
-      (:user-id user))))
+      user)))
 
 (defn- uid-url
   [user-id request]
@@ -119,15 +119,19 @@
   [participant-id :- api/str+! request]
   (when-not config/test-mode?
     (log/info "Check pending for" participant-id))
-  (let [user-id (check-participant-id participant-id)]
-    (if (string? user-id)
-      (logged-response (str "0 " user-id))
+  (let [user (check-participant-id participant-id)]
+    ;; If error, then user is a string with error message
+    (if (string? user)
+      (logged-response (str "0 " user))
       (cond
-        (zero? (count (assessments/get-pending-assessments user-id)))
+        (not (privacy-service/privacy-notice-exists? (:project-id user)))
+        (logged-response "0 Privacy notice missing in DB")
+
+        (zero? (count (assessments/get-pending-assessments (:user-id user))))
         (logged-response "0 No pending administrations")
 
         :else
-        (logged-response (uid-url user-id request))))))
+        (logged-response (uid-url (:user-id user) request))))))
 
 (def-api do-login
   [uid :- api/str+! return-url :- api/URL?]

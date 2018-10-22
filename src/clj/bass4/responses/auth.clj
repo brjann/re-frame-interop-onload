@@ -174,7 +174,7 @@
   [user additional]
   (auth-service/register-user-login! (:user-id user))
   (if-not (privacy-service/privacy-notice-exists? (:project-id user))
-    (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
+    (throw (ex-info "No privacy noticeXXX" {:type ::no-privacy-notice})))
   (merge
     {:user-id           (:user-id user)
      :auth-re-auth      nil
@@ -367,6 +367,6 @@
   (try
     (handler request)
     (catch ExceptionInfo e
-      (if (= (:type (.data e)) :bass4.responses.auth/no-privacy-notice)
+      (if (= (:type (.data e)) ::no-privacy-notice)
         (http-response/found "/missing-privacy-notice")
         (throw e)))))
