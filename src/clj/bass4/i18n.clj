@@ -9,9 +9,10 @@
             [flatland.ordered.map :refer [ordered-map]]
             [mount.core :refer [defstate]]
             [clojure.tools.logging :as log])
-  (:import (java.io BufferedInputStream)))
+  (:import (java.io BufferedInputStream File)
+           (mount.core DerefableState)))
 
-(defn ls [d]
+(defn ls [^File d]
   (remove #(.isDirectory %) (.listFiles d)))
 
 (defn load-langs
@@ -34,6 +35,8 @@
 (defn tr
   ([resource-ids] (tr resource-ids []))
   ([resource-ids resource-args]
+   (when (= DerefableState (class i18n-map))
+     (throw (Exception. "i18n accessed before started by mount.")))
    (tempura/tr
      {:dict i18n-map
       :missing-resource-fn
