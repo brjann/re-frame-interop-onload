@@ -7,7 +7,7 @@
                  ; Clojure libraries
                  [org.clojure/clojure "1.9.0"]              ; https://github.com/clojure/clojure
                  [org.clojure/core.async "0.4.474"]         ; https://github.com/clojure/core.async
-                 [org.clojure/tools.cli "0.3.7"]            ; https://github.com/clojure/tools.cli
+                 [org.clojure/tools.cli "0.4.1"]            ; https://github.com/clojure/tools.cli
                  [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging
                  [org.clojure/math.numeric-tower "0.0.4"]   ; https://github.com/clojure/math.numeric-tower
                  [org.clojure/data.json "0.2.6"]            ; https://github.com/clojure/data.json
@@ -17,7 +17,7 @@
                  [compojure "1.6.1"]                        ; https://github.com/weavejester/compojure
                  [ring-middleware-format "0.7.2"]           ; https://github.com/ngrunwald/ring-middleware-format
                  [ring-webjars "0.2.0"]                     ; https://github.com/weavejester/ring-webjars
-                 [ring/ring-core "1.7.0-RC1"]               ; https://github.com/ring-clojure/ring
+                 [ring/ring-core "1.7.0"]                   ; https://github.com/ring-clojure/ring
                  [ring/ring-defaults "0.3.2"]               ; https://github.com/ring-clojure/ring-defaults
                  [prone "1.6.0"]                            ; https://github.com/magnars/prone
                  [metosin/ring-http-response "0.9.0"]       ; https://github.com/metosin/ring-http-response
@@ -40,7 +40,7 @@
                  [buddy/buddy-hashers "1.3.0"]              ; https://github.com/funcool/buddy-hashers
                  [clj-http "3.9.0"]                         ; https://github.com/dakrone/clj-http
                  [org.flatland/ordered "1.5.6"]             ; https://github.com/amalloy/ordered
-                 [clj-time "0.14.4"]                        ; https://github.com/clj-time/clj-time
+                 [clj-time "0.15.0"]                        ; https://github.com/clj-time/clj-time
                  [camel-snake-kebab "0.4.0"]                ; https://github.com/qerub/camel-snake-kebab
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
 
@@ -82,7 +82,7 @@
    :project/dev   {:dependencies   [[ring/ring-devel "1.7.0-RC1"] ; Used for reloading namespaces before web requests
                                     [peridot "0.5.1"]       ; https://github.com/xeqi/peridot
                                     [kerodon "0.9.0"]       ; https://github.com/xeqi/kerodon
-                                    [philoskim/debux "0.4.8"]] ; https://github.com/philoskim/debux
+                                    [philoskim/debux "0.5.0"]] ; https://github.com/philoskim/debux
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]]
 
                    :source-paths   ["env/dev/clj"]
