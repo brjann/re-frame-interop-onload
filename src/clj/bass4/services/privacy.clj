@@ -28,18 +28,13 @@
 
 (defn project-user-must-consent?
   [project-id]
-  (some-> (db/bool-cols
-            db/project-privacy-user-must-consent?
-            {:project-id project-id}
-            [:must-consent?])
+  (some-> (db/project-privacy-user-must-consent? {:project-id project-id})
           (first)
           (val)))
 
 (defn db-user-must-consent?
   []
-  (some-> (db/bool-cols
-            db/db-privacy-user-must-consent?
-            [:must-consent?])
+  (some-> (db/db-privacy-user-must-consent?)
           (first)
           (val)))
 

@@ -8,7 +8,7 @@
 (defn get-user
   [user-id]
   (when user-id
-    (if-let [user (db/bool-cols db/get-user-by-user-id {:user-id user-id} [:double-auth-use-both?])]
+    (if-let [user (db/get-user-by-user-id {:user-id user-id})]
       (assoc user :user-id (:objectid user)))))
 
 (defn get-user-by-username [username]
@@ -16,7 +16,7 @@
 
 (defn get-users-by-participant-id
   [participant-id]
-  (when-let [users (db/bool-cols db/get-user-by-participant-id {:participant-id participant-id} [:double-auth-use-both?])]
+  (when-let [users (db/get-user-by-participant-id {:participant-id participant-id})]
     (mapv #(assoc % :user-id (:objectid %)) users)))
 
 (defn password-hasher

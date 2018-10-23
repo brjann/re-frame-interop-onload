@@ -15,10 +15,7 @@
 
 (defn- submitted-homeworks
   [treatment-access]
-  (->> (db/bool-cols
-         db/get-submitted-homeworks
-         {:treatment-access-id (:treatment-access-id treatment-access)}
-         [:ok?])
+  (->> (db/get-submitted-homeworks {:treatment-access-id (:treatment-access-id treatment-access)})
        (group-by :module-id)
        (map-map first)
        #_(map-map #(assoc % :ok (= 1 (:ok %))))))
@@ -71,7 +68,7 @@
 
 (defn get-module-contents*
   [module-ids]
-  (->> (db/bool-cols db/get-module-contents {:module-ids module-ids} [:has-text?])
+  (->> (db/get-module-contents {:module-ids module-ids})
        (map check-file)
        (filter #(or (:has-text? %) (:file-path %)))))
 

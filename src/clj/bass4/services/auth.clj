@@ -10,10 +10,7 @@
   (passwords/letters-digits 3))
 
 (defn double-auth-required? [user-id]
-  (if-let [settings (db/bool-cols
-                      db/get-double-auth-settings
-                      {:user-id user-id}
-                      [:sms? :email? :user-skip? :allow-skip? :allow-both?])]
+  (if-let [settings (db/get-double-auth-settings {:user-id user-id})]
     (let [{:keys [sms? email? user-skip? allow-skip?]} settings]
       (cond
         (and (not sms?) (not email?)) false

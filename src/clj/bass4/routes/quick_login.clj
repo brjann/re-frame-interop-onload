@@ -31,7 +31,7 @@
 
 (defn- quick-login-settings
   []
-  (let [{:keys [expiration-days allowed?]} (db/bool-cols db/get-quick-login-settings [:allowed?])]
+  (let [{:keys [expiration-days allowed?]} (db/get-quick-login-settings)]
     (when (not allowed?)
       (log-msg "Quick login not allowed")
       (throw (ex-info "Quick login is not allowed" {:type ::quick-login-error})))

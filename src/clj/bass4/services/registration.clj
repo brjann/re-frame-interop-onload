@@ -16,11 +16,11 @@
 
 (defn captcha-content
   [project-id]
-  (db/bool-cols db/captcha-content {:project-id project-id} [:markdown?]))
+  (db/captcha-content {:project-id project-id}))
 
 (defn finished-content
   [project-id]
-  (db/bool-cols db/finished-content {:project-id project-id} [:markdown?]))
+  (db/finished-content {:project-id project-id}))
 
 (def field-translation
   {:FirstName    :first-name
@@ -74,16 +74,7 @@
 
 (defn registration-params
   [project-id]
-  (if-let [params (db/bool-cols
-                    db/registration-params
-                    {:project-id project-id}
-                    [:allowed?
-                     :allow-duplicate-email?
-                     :allow-duplicate-sms?
-                     :auto-id?
-                     :auto-password?
-                     :bankid?
-                     :bankid-change-names?])]
+  (if-let [params (db/registration-params {:project-id project-id})]
     (let [params        (consolidate-params params)
           sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
       (merge
@@ -93,12 +84,7 @@
 
 (defn registration-content
   [project-id]
-  (let [params        (db/bool-cols
-                        db/registration-content
-                        {:project-id project-id}
-                        [:allowed?
-                         :bankid?
-                         :bankid-change-names?])
+  (let [params        (db/registration-content {:project-id project-id})
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
         sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
