@@ -79,7 +79,7 @@
     #'middleware/wrap-csrf))
 
 (defroutes registration-routes
-  (context "/registration/:project-id" [project-id]
+  (context "/registration/:project-id" [project-id :as {{:keys [reg-params]} :db}]
     (GET "/" []
       (http-response/found (str "/registration/" project-id "/info")))
 
@@ -91,7 +91,7 @@
     (POST "/bankid" [personnummer :as request]
       (reg-response/bankid-poster project-id personnummer request))
     (GET "/bankid-finished" [:as request]
-      (reg-response/bankid-finished project-id (:session request)))
+      (reg-response/bankid-finished project-id (:session request) reg-params))
 
     (GET "/privacy" []
       (reg-response/privacy-page project-id))
@@ -106,14 +106,14 @@
     (GET "/form" [:as request]
       (reg-response/registration-page project-id (:session request)))
     (POST "/form" [& fields :as request]
-      (reg-response/handle-registration project-id fields (:session request)))
+      (reg-response/handle-registration project-id fields (:session request) reg-params))
 
     (GET "/validate" [:as request]
       (reg-response/validation-page project-id (:session request)))
     (POST "/validate-email" [code-email :as request]
-      (reg-response/validate-email project-id code-email (:session request)))
+      (reg-response/validate-email project-id code-email (:session request) reg-params))
     (POST "/validate-sms" [code-sms :as request]
-      (reg-response/validate-sms project-id code-sms (:session request)))
+      (reg-response/validate-sms project-id code-sms (:session request) reg-params))
 
     (GET "/duplicate" [:as request]
       (reg-response/duplicate-page project-id))

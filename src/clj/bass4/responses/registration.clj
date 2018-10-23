@@ -360,12 +360,11 @@
   (= (get @validated-codes uid) (set/difference (set (keys validation-codes)) #{:uid})))
 
 (defn validate-code
-  [project-id code-key posted-code session]
+  [project-id code-key posted-code session reg-params]
   (let [reg-session      (:registration session)
         field-values     (:field-values reg-session)
         validation-codes (:validation-codes reg-session)
-        uid              (:uid validation-codes)
-        reg-params       (reg-service/registration-params project-id)]
+        uid              (:uid validation-codes)]
     (let [correct? (and (string? posted-code) (code-correct?! uid code-key validation-codes posted-code))]
       ;; Are all outstanding codes validated?
       ;; Already validated codes are not present in map
@@ -385,12 +384,12 @@
           (layout/error-422 "error"))))))
 
 (def-api validate-email
-  [project-id :- api/int! posted-code :- api/str+! session :- api/?map?]
-  (validate-code project-id :code-email posted-code session))
+  [project-id :- api/int! posted-code :- api/str+! session :- api/?map? reg-params :- map?]
+  (validate-code project-id :code-email posted-code session reg-params))
 
 (def-api validate-sms
-  [project-id :- api/int! posted-code :- api/str+! session :- api/?map?]
-  (validate-code project-id :code-sms posted-code session))
+  [project-id :- api/int! posted-code :- api/str+! session :- api/?map? reg-params :- map?]
+  (validate-code project-id :code-sms posted-code session reg-params))
 
 
 ;; --------------
@@ -403,11 +402,11 @@
 
 (def-api bankid-page
   [project-id :- api/int!]
-  (let [params (reg-service/registration-content project-id)]
+  (let [reg-content (reg-service/registration-content project-id)]
     (layout/render
       "registration-bankid.html"
       (merge
-        params
+        reg-content
         {:project-id project-id}))))
 
 (defn get-bankid-fields
@@ -423,14 +422,13 @@
                          #{:first-name :last-name}))})))
 
 (def-api bankid-finished
-  [project-id :- api/int! session :- api/?map?]
+  [project-id :- api/int! session :- api/?map? reg-params :- map?]
   (if (bankid-done? session)
-    (let [params (reg-service/registration-params project-id)]
-      (->
-        (http-response/found (str "/registration/" project-id "/privacy"))
-        (assoc-reg-session session (merge (get-bankid-fields session params)
-                                          {:bankid-done? true}))
-        (assoc-in [:session :e-auth] nil)))
+    (->
+      (http-response/found (str "/registration/" project-id "/privacy"))
+      (assoc-reg-session session (merge (get-bankid-fields session reg-params)
+                                        {:bankid-done? true}))
+      (assoc-in [:session :e-auth] nil))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
 (def-api bankid-poster
@@ -457,28 +455,28 @@
 
 (def-api registration-page
   [project-id :- api/int! session :- api/?map?]
-  (let [params        (reg-service/registration-content project-id)
+  (let [reg-content   (reg-service/registration-content project-id)
         reg-session   (:registration session)
-        fields        (:fields params)
+        fields        (:fields reg-content)
         fields-map    (zipmap fields (repeat (count fields) true))
         fields-map    (merge-fields-with-field-vals
                         fields-map
                         (:field-values reg-session)
                         (:fixed-fields reg-session))
-        sms-countries (str "[\"" (string/join "\",\"" (:sms-countries params)) "\"]")]
+        sms-countries (str "[\"" (string/join "\",\"" (:sms-countries reg-content)) "\"]")]
     ;; TODO: Show country for fixed sms number
     (layout/render "registration-form.html"
                    (merge
-                     params
+                     reg-content
                      fields-map
                      {:project-id     project-id
                       :sms-countries  sms-countries
                       :sms?           (or (contains? fields-map :sms-number)
                                           (contains? fields-map :sms-number-value))
                       :password-regex password-regex
-                      :pid-name       (if (:bankid? params)
+                      :pid-name       (if (:bankid? reg-content)
                                         (i18n/tr [:registration/personnummer])
-                                        (:pid-name params))}))))
+                                        (:pid-name reg-content))}))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
@@ -509,9 +507,8 @@
     true))
 
 (def-api handle-registration
-  [project-id :- api/int! posted-fields :- map? session :- api/?map?]
-  (let [params       (reg-service/registration-params project-id)
-        fields       (:fields params)
+  [project-id :- api/int! posted-fields :- map? session :- api/?map? reg-params :- map?]
+  (let [fields       (:fields reg-params)
         reg-session  (:registration session)
         fixed-fields (:fixed-fields reg-session)
         field-values (merge (select-keys posted-fields fields)
@@ -530,7 +527,7 @@
       (layout/error-400-page)
 
       ;; Only sms number from legal countries
-      (not (check-sms (:sms-number field-values) (:sms-countries params)))
+      (not (check-sms (:sms-number field-values) (:sms-countries reg-params)))
       (layout/error-422 "sms-country-error")
 
       ;; If field values include email or sms - these should be validated
@@ -543,7 +540,7 @@
         project-id
         field-values
         (:privacy-consent reg-session)
-        params
+        reg-params
         session))))
 
 
@@ -582,11 +579,11 @@
 ;; --------------
 (def-api info-page
   [project-id :- api/int!]
-  (let [params (reg-service/registration-content project-id)]
+  (let [reg-params (reg-service/registration-content project-id)]
     (layout/render "registration-info.html"
                    (merge
                      {:project-id project-id}
-                     params))))
+                     reg-params))))
 
 ;; TODO: Max number of sms
 ;; TODO: Clear session before registration
