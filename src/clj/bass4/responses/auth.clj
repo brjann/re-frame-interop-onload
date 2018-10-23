@@ -173,8 +173,8 @@
 (defn create-new-session
   [user additional]
   (auth-service/register-user-login! (:user-id user))
-  (if-not (privacy-service/privacy-notice-exists? (:project-id user))
-    (throw (ex-info "No privacy noticeXXX" {:type ::no-privacy-notice})))
+  (when-not (privacy-service/privacy-notice-exists? (:project-id user))
+    (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
   (merge
     {:user-id           (:user-id user)
      :auth-re-auth      nil

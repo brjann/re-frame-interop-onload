@@ -76,6 +76,8 @@
   [user :- map?]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
+    (when (nil? notice-text)
+      (throw (Exception. "Missing privacy notice when showing bare. Guards have failed.")))
     (layout/text-response (md/md-to-html-string notice-text))))
 
 (def-api privacy-consent-page
@@ -83,6 +85,8 @@
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))
         email       (:email (bass/db-contact-info project-id))]
+    (when (nil? notice-text)
+      (throw (Exception. "Missing privacy notice when requesting consent. Guards have failed.")))
     (layout/render "privacy-consent.html"
                    {:privacy-notice notice-text
                     :email          email})))
@@ -91,6 +95,8 @@
   [user :- map? render-map]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
+    (when (nil? notice-text)
+      (throw (Exception. "Missing privacy notice when showing. Guards have failed.")))
     (layout/render "privacy-notice.html"
                    (merge render-map
                           {:user           user
@@ -117,7 +123,7 @@
         notice-id  (:notice-id (privacy-service/get-privacy-notice project-id))]
     (cond
       (not notice-id)
-      (throw (Error. "No ID for privacy notice in project" project-id))
+      (throw (Error. (str "No ID for privacy notice in project" project-id ". Guards missing")))
 
       (= "i-consent" i-consent)
       (consent-response user notice-id)
