@@ -123,9 +123,40 @@
 ;---------------
 (def ^:dynamic *log-queries* false)
 
+(defn- bool-cols-row-fn
+  []
+  (let [bool-keys      (atom nil)
+        find-bool-keys (fn [a row]
+                         (if (nil? a)
+                           (do
+                             #_(log/info "Finding bool cols")
+                             (->> row
+                                  (keys)
+                                  (mapv name)
+                                  (filter #(re-matches #".*\?$" %))
+                                  (mapv keyword)))
+                           a))]
+    (fn [row]
+      (if (map? row)
+        (do
+          (when (nil? @bool-keys)
+            (swap! bool-keys find-bool-keys row))
+          #_(log/info @bool-keys)
+          (if @bool-keys
+            (merge row (map-map val-to-bool (select-keys row @bool-keys)))
+            row))
+        row))))
+
 (defn sql-wrapper
   [f this db sqlvec options]
-  (let [{:keys [val time]} (time+ (apply f [this db sqlvec options]))]
+  (let [command-options (first (:command-options options))
+        row-fn          (if-let [row-fn (:row-fn command-options)]
+                          (comp row-fn (bool-cols-row-fn))
+                          (bool-cols-row-fn))
+        options         (merge options {:command-options
+                                        (list (merge command-options
+                                                     {:row-fn row-fn}))})
+        {:keys [val time]} (time+ (apply f [this db sqlvec options]))]
     (request-state/swap-state! :sql-count inc 0)
     (request-state/swap-state! :sql-times #(conj % time) [])
     (when *log-queries*
@@ -140,6 +171,8 @@
 (defn sql-wrapper-execute
   [this db sqlvec options]
   (sql-wrapper hugsql.adapter/execute this db sqlvec options))
+
+
 
 (defmethod hugsql.core/hugsql-command-fn :! [sym] 'bass4.db.core/sql-wrapper-execute)
 (defmethod hugsql.core/hugsql-command-fn :execute [sym] 'bass4.db.core/sql-wrapper-execute)
