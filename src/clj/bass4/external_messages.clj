@@ -1,10 +1,11 @@
 (ns bass4.external-messages
-  (:require [clojure.core.async :refer [thread go chan dropping-buffer <! >!! <!!]]
+  (:require [clojure.core.async :refer [thread go chan dropping-buffer <! >!! <!! alts!]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.utils :as utils]
             [mount.core :refer [defstate]])
-  (:import (clojure.lang PersistentQueue)))
+  (:import (clojure.lang PersistentQueue)
+           (java.util UUID)))
 
 
 
@@ -81,7 +82,7 @@
 (def message-notification (chan (dropping-buffer 1)))
 
 (defn- start-thread-manager
-  []
+  [stop-chan]
   (swap! thread-manager-running? (constantly true))
   (swap! manager-count inc)
   (go
@@ -90,29 +91,31 @@
 
       ;; Wait for a signal that message has been added
       ;; to queue.
-      (<! message-notification)
-      (log/debug @thread-manager-running?)
-      (when @thread-manager-running?
-        (log/debug "Got signal - message has been queued")
+      (let [[notification _] (alts! [message-notification stop-chan])]
+        (log/debug "Notification" notification)
+        (when (= :stop notification)
+          (swap! thread-manager-running? (constantly false)))
+        (log/debug @thread-manager-running?)
+        (when @thread-manager-running?
+          (log/debug "Got signal - message has been queued")
 
-        ;; Wait while queue completes current cycle
-        (await sender-thread-running?)
-        (log/debug "Message cycle has been completed")
+          ;; Wait while queue completes current cycle
+          (await sender-thread-running?)
+          (log/debug "Message cycle has been completed")
 
-        ;; If @queue-running? is true, we know that at least
-        ;; one more cycle will be completed. Since the message
-        ;; is in the queue (or has already been sent),
-        ;; it is bound to be sent by the current running thread
+          ;; If @queue-running? is true, we know that at least
+          ;; one more cycle will be completed. Since the message
+          ;; is in the queue (or has already been sent),
+          ;; it is bound to be sent by the current running thread
 
-        ;; If @queue-agent is false, the thread will not
-        ;; run anymore cycles. However, the message may already
-        ;; have been sent. Therefore check the queue before
-        ;; creating a new thread.
-        (when (and (not @sender-thread-running?) (not-empty @message-queue))
-          (send sender-thread-running? (constantly true))
-          (log/debug "Starting send thread")
-          (start-sender-thread!))))
-    (/ 0 0)
+          ;; If @queue-agent is false, the thread will not
+          ;; run anymore cycles. However, the message may already
+          ;; have been sent. Therefore check the queue before
+          ;; creating a new thread.
+          (when (and (not @sender-thread-running?) (not-empty @message-queue))
+            (send sender-thread-running? (constantly true))
+            (log/debug "Starting send thread")
+            (start-sender-thread!)))))
     (swap! manager-count dec)
     (log/debug "Exiting manager")))
 
@@ -127,21 +130,22 @@
   (>!! message-notification true))
 
 (defstate external-messages-queue
-  :start (do
+  :start (let [c (chan (dropping-buffer 1))]
            (log/debug "Starting!")
-           (start-thread-manager))
+           (start-thread-manager c)
+           c)
   :stop (do
-          (log/debug "Stopping!")
-          (swap! thread-manager-running? (constantly false))
-          (log/debug "Running?" @thread-manager-running?)
-          (>!! message-notification true)))
+          (log/debug "Stopping!" external-messages-queue)
+          (>!! external-messages-queue :stop)
+          #_(swap! thread-manager-running? (constantly false))
+          #_(log/debug "Running?" @thread-manager-running?)
+          #_(>!! message-notification true)))
 
 (def x 8)
 
 ;; Usage
 #_(comment
     (do
-      (start-thread-manager)
       (queue-message! :one)
       (queue-message! :two)
       (Thread/sleep 4000)
