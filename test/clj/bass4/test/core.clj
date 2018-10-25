@@ -67,8 +67,7 @@
     #'db-config/common-config
     #'bass4.db.core/db-connections
     #'bass4.db.core/db-common
-    #'bass4.i18n/i18n-map
-    #'bass4.external-messages/external-messages-queue)
+    #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
