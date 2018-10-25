@@ -14,8 +14,6 @@
 ;; -----------------
 ;;  DEBUG VARIABLES
 ;; -----------------
-;; To stop go loop from REPL
-(def thread-manager-running? (atom true))
 ;; To keep track of manager instances
 (def manager-count (atom 0))
 ;; To keep track of thread instances
@@ -78,46 +76,43 @@
 
 ;; Channel used to communicate to thread manager that a
 ;; message has been added to queue
-(log/debug "NEW CHANNEL!")
 (def message-notification (chan (dropping-buffer 1)))
 
 (defn- start-thread-manager
   [stop-chan]
-  (swap! thread-manager-running? (constantly true))
-  (swap! manager-count inc)
-  (go
-    (log/debug "Starting manager")
-    (while @thread-manager-running?
+  (let [stop? (atom false)]
+    (swap! manager-count inc)
+    (go
+      (log/debug "Starting manager")
+      (while (not @stop?)
 
-      ;; Wait for a signal that message has been added
-      ;; to queue.
-      (let [[notification _] (alts! [message-notification stop-chan])]
-        (log/debug "Notification" notification)
-        (when (= :stop notification)
-          (swap! thread-manager-running? (constantly false)))
-        (log/debug @thread-manager-running?)
-        (when @thread-manager-running?
-          (log/debug "Got signal - message has been queued")
+        ;; Wait for a signal that message has been added
+        ;; to queue.
+        (let [[notification _] (alts! [message-notification stop-chan])]
+          (when (= :stop notification)
+            (swap! stop? (constantly true)))
+          (when-not @stop?
+            (log/debug "Got signal - message has been queued")
 
-          ;; Wait while queue completes current cycle
-          (await sender-thread-running?)
-          (log/debug "Message cycle has been completed")
+            ;; Wait while queue completes current cycle
+            (await sender-thread-running?)
+            (log/debug "Message cycle has been completed")
 
-          ;; If @queue-running? is true, we know that at least
-          ;; one more cycle will be completed. Since the message
-          ;; is in the queue (or has already been sent),
-          ;; it is bound to be sent by the current running thread
+            ;; If @queue-running? is true, we know that at least
+            ;; one more cycle will be completed. Since the message
+            ;; is in the queue (or has already been sent),
+            ;; it is bound to be sent by the current running thread
 
-          ;; If @queue-agent is false, the thread will not
-          ;; run anymore cycles. However, the message may already
-          ;; have been sent. Therefore check the queue before
-          ;; creating a new thread.
-          (when (and (not @sender-thread-running?) (not-empty @message-queue))
-            (send sender-thread-running? (constantly true))
-            (log/debug "Starting send thread")
-            (start-sender-thread!)))))
-    (swap! manager-count dec)
-    (log/debug "Exiting manager")))
+            ;; If @queue-agent is false, the thread will not
+            ;; run anymore cycles. However, the message may already
+            ;; have been sent. Therefore check the queue before
+            ;; creating a new thread.
+            (when (and (not @sender-thread-running?) (not-empty @message-queue))
+              (send sender-thread-running? (constantly true))
+              (log/debug "Starting send thread")
+              (start-sender-thread!)))))
+      (swap! manager-count dec)
+      (log/debug "Exiting manager"))))
 
 (defn queue-message!
   [message]
@@ -130,18 +125,10 @@
   (>!! message-notification true))
 
 (defstate external-messages-queue
-  :start (let [c (chan (dropping-buffer 1))]
-           (log/debug "Starting!")
-           (start-thread-manager c)
-           c)
-  :stop (do
-          (log/debug "Stopping!" external-messages-queue)
-          (>!! external-messages-queue :stop)
-          #_(swap! thread-manager-running? (constantly false))
-          #_(log/debug "Running?" @thread-manager-running?)
-          #_(>!! message-notification true)))
-
-(def x 8)
+  :start (let [stop-chan (chan (dropping-buffer 1))]
+           (start-thread-manager stop-chan)
+           stop-chan)
+  :stop (>!! external-messages-queue :stop))
 
 ;; Usage
 #_(comment
