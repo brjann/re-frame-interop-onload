@@ -14,7 +14,8 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.external-messages]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))

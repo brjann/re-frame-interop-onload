@@ -195,3 +195,21 @@
   (let [x (* (math/expt 10 p) v)
         r (math/round x)]
     (double (/ r (math/expt 10 p)))))
+
+;; ---------
+;;   QUEUE
+;; ---------
+; https://stackoverflow.com/questions/8938330/clojure-swap-atom-dequeuing
+(defn queue-pop!
+  [queue]
+  (loop []
+    (let [q     @queue
+          value (peek q)
+          nq    (pop q)]
+      (if (compare-and-set! queue q nq)
+        value
+        (recur)))))
+
+(defn queue-add!
+  [queue item]
+  (swap! queue #(conj % item)))
