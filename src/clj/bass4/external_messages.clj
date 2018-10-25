@@ -5,17 +5,17 @@
             [bass4.mailer :as mail])
   (:import (java.util.concurrent Executors Executor)))
 
-(defn send-email
+(defn- send-email
   [{:keys [to subject message]}]
   (mail/mail! to subject message))
 
-(defn send-debug-message
+(defn- send-debug-message
   [message])
 
 (def ^Executor executor
   (Executors/newFixedThreadPool 32))
 
-(defn java-queue
+(defn- dispatch-external-message
   [message]
   (.execute executor
             (fn []
@@ -36,16 +36,16 @@
   [message]
   (log/debug "Received message" message)
   ;; Queue message
-  (java-queue {:type :debug :message message}))
+  (dispatch-external-message {:type :debug :message message}))
 
 (defn queue-email!
   [to subject message]
   (log/debug "Received message" message)
   ;; Queue message
-  (java-queue {:type    :email
-               :to      to
-               :subject subject
-               :message message}))
+  (dispatch-external-message {:type    :email
+                              :to      to
+                              :subject subject
+                              :message message}))
 
 (defn queue-counted-debug-message!
   [total-count]
@@ -61,8 +61,8 @@
                            (log/debug "Sent" current-count "super messages in" (/ (double (- (. System (nanoTime)) @start)) 1000000.0))))]
     (dotimes [_ total-count]
       (let [channel (chan)]
-        (java-queue {:type    :debug
-                     :channel channel})
+        (dispatch-external-message {:type    :debug
+                                    :channel channel})
         (go
           (<! channel)
           (keep-track))))))
