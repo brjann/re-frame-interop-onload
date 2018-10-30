@@ -6,7 +6,7 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
             [bass4.services.lost-password :as lpw-service]
-            [bass4.mailer :as mailer]
+            [bass4.email :as mailer]
             [bass4.i18n :as i18n]
             [bass4.http-utils :as h-utils]))
 
@@ -33,7 +33,7 @@
             url     (str (h-utils/get-host-address request) "/lpw-uid/" uid)
             mail    (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
             header  (i18n/tr [:lost-password/request-email-header])
-            mail-fn #(mailer/mail! (:email user) header mail)]
+            mail-fn #(mailer/send-email! (:email user) header mail)]
         ;; TODO: Use future someway to prevent sniffing of existing accounts
         ;; Cannot be done now because it breaks tests
         (if *async-email?*

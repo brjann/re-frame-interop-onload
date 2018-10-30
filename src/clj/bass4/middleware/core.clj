@@ -13,7 +13,7 @@
             [clj-time.core :as t]
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
-            [bass4.mailer :refer [mail!]]
+            [bass4.email :refer [send-mail!]]
             [bass4.request-state :as request-state]
             [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [request-state]]

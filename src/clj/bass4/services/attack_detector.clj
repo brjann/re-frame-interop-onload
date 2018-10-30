@@ -1,5 +1,5 @@
 (ns bass4.services.attack-detector
-  (:require [bass4.mailer :refer [mail!]]
+  (:require [bass4.email :refer [send-email!]]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]

@@ -1,7 +1,7 @@
 (ns bass4.sms-sender
   (:require [clojure.java.io :as io]
             [bass4.config :refer [env]]
-            [bass4.mailer :refer [mail!]]
+            [bass4.email :refer [send-email!]]
             [clj-http.client :as http]
             [ring.util.codec :as codec]
             [bass4.db.core :as db]

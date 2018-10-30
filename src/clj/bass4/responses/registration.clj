@@ -11,7 +11,7 @@
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
             [bass4.sms-sender :as sms]
-            [bass4.mailer :as mail]
+            [bass4.email :as mail]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [bass4.services.bass :as bass]
@@ -276,7 +276,7 @@
 
 (defn send-email!
   [email code]
-  (mail/mail! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
+  (mail/send-email! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- send-sms!
   [sms-number code]

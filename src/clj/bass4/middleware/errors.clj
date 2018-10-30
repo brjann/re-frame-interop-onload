@@ -3,7 +3,7 @@
             [bass4.config :refer [env]]
             [bass4.utils :refer [nil-zero?]]
             [clojure.string :as string]
-            [bass4.mailer :refer [mail!]]
+            [bass4.email :refer [send-email!]]
             [clojure.tools.logging :as log]
             [bass4.layout :refer [error-page error-400-page]]
             [bass4.request-state :as request-state]
@@ -15,7 +15,7 @@
 (defn mail-error!
   [req-state]
   (try
-    (mail!
+    (send-email!
       (env :error-email)
       "Error in BASS4"
       (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))

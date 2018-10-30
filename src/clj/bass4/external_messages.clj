@@ -49,8 +49,8 @@
 
 (def ^:dynamic *debug-chan* nil)
 
-(defn queue-message
-  ([message] (queue-message message nil))
+(defn queue-message!
+  ([message] (queue-message! message nil))
   ([message channel]
    (let [channels (if channel
                     (conj (:channels message) channel)

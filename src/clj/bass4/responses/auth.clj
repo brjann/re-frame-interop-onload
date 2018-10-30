@@ -10,7 +10,7 @@
             [clj-time.core :as t]
             [bass4.layout :as layout]
             [bass4.sms-sender :as sms]
-            [bass4.mailer :as mail]
+            [bass4.email :as mail]
             [bass4.i18n :as i18n]
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [def-api]]
@@ -117,7 +117,7 @@
         (sms/send-db-sms! user-sms code))
     true
     (when (:email send-methods)
-      (mail/mail! user-email (i18n/tr [:login/code]) code))))
+      (mail/send-email! user-email (i18n/tr [:login/code]) code))))
 
 (defn- send-code!
   [code user-sms user-email by-sms? by-email? allow-both?]

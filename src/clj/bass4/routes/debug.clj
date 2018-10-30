@@ -17,7 +17,7 @@
             [clojure.pprint]
             [bass4.request-state :as request-state]
             [ring.util.codec :as codec]
-            [bass4.mailer :as mail]
+            [bass4.email :as mail]
             [clj-http.client :as http]
             [bass4.http-utils :as h-utils]
             [bass4.i18n :as i18n]
@@ -105,10 +105,10 @@
         ;; sms and email test functions
         (GET "/mail-debug" [& params :as request]
           (let [email (env :error-email "brjann@gmail.com")]
-            (layout/text-response (mail/mail-debug! email "Test email" "This is the test message"))))
+            (layout/text-response (mail/send-email*! email "Test email" "This is the test message" nil true))))
         (GET "/mail" [& params :as request]
           (let [email (or (:mail params) (env :error-email "brjann@gmail.com"))]
-            (layout/text-response (mail/mail! email "Test email" "This is the test message"))))
+            (layout/text-response (mail/send-email! email "Test email" "This is the test message"))))
         (GET "/sms" [& params :as request]
           (let [sms-number (or (:sms params) (env :error-sms "+46707176562"))]
             (layout/text-response (sms/send-db-sms! sms-number "This is the test sms"))))
