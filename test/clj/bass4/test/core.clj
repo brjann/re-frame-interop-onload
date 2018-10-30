@@ -17,7 +17,8 @@
             [bass4.services.bankid :as bankid]
             [bass4.db-config :as db-config]
             [bass4.middleware.debug :as mw-debug]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [clojure.string :as str]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -122,7 +123,18 @@
 (defn poll-message-chan
   ([c] (poll-message-chan c 1))
   ([c n]
-   (log/debug "yep!")
+   (log/debug 1)
+   (for [i (range n)]
+     (let [[res _] (alts!! [c (timeout 1000)])]
+       (when (nil? res)
+         (throw (Exception. (str "Channel " i " timed out"))))
+       (-> res
+           :message
+           (select-keys [:type :message]))))))
+
+(defn poll-message-chan2
+  ([c] (poll-message-chan c 1))
+  ([c n]
    (let [messages (for [i (range n)]
                     (let [[res _] (alts!! [c (timeout 1000)])]
                       (when (nil? res)
@@ -134,6 +146,27 @@
                            :message
                            (select-keys [:type :message])))
                     messages)))))
+
+(defn any-match?
+  [msg-pred messages]
+  (let [match? (fn [msg-pred message]
+                 (when (and (= (:type msg-pred) (:type message))
+                            (str/includes? (:message message) (:message msg-pred)))
+                   msg-pred))]
+    (some #(match? msg-pred %1) messages)))
+
+(defmacro messages-are?
+  [msg-preds messages]
+  `(let [msg-preds# ~msg-preds
+         messages#  ~messages
+         res#       (into #{} (map #(any-match? %1 messages#) msg-preds#))]
+     (doseq [msg-pred# msg-preds#]
+       (clojure.test/do-report {:actual   messages#
+                                :type     (if (contains? res# msg-pred#)
+                                            :pass
+                                            :fail)
+                                :message  "Message not found"
+                                :expected msg-preds#}))))
 
 (defmacro pass-by
   [prev form]
@@ -180,3 +213,4 @@
      (throw (Exception. "Arg a must be an atom and symbol"))
      (let [new-a# (-> @~a ~@forms)]
        (reset! ~a new-a#))))
+

@@ -13,7 +13,8 @@
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
-            [bass4.external-messages :as external-messages]))
+            [bass4.external-messages :as external-messages]
+            [bass4.api-coercion :as api]))
 
 (defn smsteknik-url
   [id user password]
@@ -40,15 +41,7 @@
     (request-state/record-error! error)
     error))
 
-;; TODO: Increase db sms counter
-(defn sms-success!
-  [db-connection]
-  (when db-connection
-    (let [midnight (-> (bass/local-midnight)
-                       (b-time/to-unix))]
-      (db/increase-sms-count!
-        db-connection
-        {:day midnight}))))
+
 
 (defn send-sms*!
   [recipient message]
@@ -82,11 +75,24 @@
                  to
                  message
                  sender
-                 (:smsteknik-status-return-url config))
-        res    (:body (http/post url {:body xml}))]
-    (if (= "0" (subs res 0 1))
-      (throw (Exception. (sms-error to message res)))
-      true)))
+                 (:smsteknik-status-return-url config))]
+    (try
+      (let [res     (:body (http/post url {:body xml}))
+            res-int (api/int! res)]
+        (if (zero? res-int)
+          (throw (Exception. "SMS service returned zero"))
+          true))
+      (catch Exception e
+        (throw (ex-info "SMS sending error" {:exception e}))))))
+
+(defn sms-success!
+  [db-connection]
+  (when db-connection
+    (let [midnight (-> (bass/local-midnight)
+                       (b-time/to-unix))]
+      (db/increase-sms-count!
+        db-connection
+        {:day midnight}))))
 
 ;; Overwritten by other function when in debug mode
 (defn ^:dynamic send-db-sms!
@@ -102,16 +108,6 @@
 (defmethod external-messages/send-external-message :sms
   [{:keys [to message sender]}]
   (send-sms! to message sender))
-
-(defn queue-email!
-  ([to subject message]
-   (queue-email! to subject message nil))
-  ([to subject message reply-to]
-   (external-messages/queue-message! {:type     :email
-                                      :to       to
-                                      :subject  subject
-                                      :message  message
-                                      :reply-to reply-to})))
 
 (defn queue-sms!
   [to message]

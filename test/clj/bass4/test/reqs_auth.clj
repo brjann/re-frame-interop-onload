@@ -15,6 +15,7 @@
                                      *s*
                                      modify-session
                                      poll-message-chan
+                                     messages-are?
                                      pass-by]]
             [bass4.services.auth :as auth-service]
             [bass4.middleware.debug :as debug]
@@ -79,6 +80,12 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username 536975 :password 536975})
         (pass-by (is (= #{{:type :sms :message "666777"}} (poll-message-chan *debug-chan*)))))))
+
+(deftest double-auth-sms-sent2
+  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+    (-> *s*
+        (visit "/login" :request-method :post :params {:username 536975 :password 536975})
+        (pass-by (messages-are? [{:type :sms :message "666777"}] (poll-message-chan *debug-chan*))))))
 
 (deftest double-auth-to-email
   (with-redefs [auth-service/double-auth-code (constantly "777666")]

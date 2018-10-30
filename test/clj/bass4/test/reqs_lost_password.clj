@@ -4,6 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
+            [clojure.core.async :refer [chan]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return log-body *s* fix-time advance-time-s! disable-attack-detector pass-by]]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
@@ -11,7 +12,8 @@
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
             [bass4.services.lost-password :as lpw-service]
-            [bass4.responses.lost-password :as lpw-response]))
+            [bass4.responses.lost-password :as lpw-response]
+            [bass4.external-messages :as external-messages]))
 
 
 (use-fixtures
@@ -23,7 +25,7 @@
   :each
   (fn [f]
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")
-    (binding [lpw-response/*async-email?* false]
+    (binding [external-messages/*debug-chan* (chan)]
       (fix-time
         (f)))
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")))
