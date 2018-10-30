@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.core.async :refer [go <! chan]]
             [bass4.config :refer [env]]
-            [bass4.email :refer [send-email!]]
             [clj-http.client :as http]
             [ring.util.codec :as codec]
             [bass4.db.core :as db]

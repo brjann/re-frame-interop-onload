@@ -111,7 +111,7 @@
             (layout/text-response (mail/send-email! email "Test email" "This is the test message"))))
         (GET "/sms" [& params :as request]
           (let [sms-number (or (:sms params) (env :error-sms "+46707176562"))]
-            (layout/text-response (sms/send-db-sms! sms-number "This is the test sms"))))
+            (layout/text-response (sms/queue-sms! sms-number "This is the test sms"))))
         (POST "/found" []
           (-> (http-response/found "/login")))
         (POST "/params" [& params]
