@@ -122,6 +122,7 @@
 (defn poll-message-chan
   ([c] (poll-message-chan c 1))
   ([c n]
+   (log/debug "yep!")
    (let [messages (for [i (range n)]
                     (let [[res _] (alts!! [c (timeout 1000)])]
                       (when (nil? res)
@@ -135,8 +136,10 @@
                     messages)))))
 
 (defmacro pass-by
-  [x form]
-  `((fn [] ~form ~x)))
+  [prev form]
+  `((fn [] (let [x# ~prev]
+             ~form
+             x#))))
 
 (defn log-return
   ([x]
