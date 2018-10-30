@@ -189,7 +189,7 @@ FROM c_instrument AS ci
   links_c_assessment AS lca
     ON ci.ObjectId = lca.LinkeeId AND lca.PropertyName = "Instruments"
 WHERE
-  lca.LinkerId IN(:v*:assessment-ids) AND ci.ClinicianAssessed = 0
+  lca.LinkerId IN(:v*:assessment-ids) AND (ci.ClinicianAssessed = 0 OR ci.ClinicianAssessed IS NULL)
 ORDER BY
   lca.SortOrder;
 
@@ -204,7 +204,7 @@ FROM links_c_participantadministration AS lcp
     ON linkeeid = objectid
 WHERE linkerid IN(:v*:administration-ids)
       AND propertyname = "AdditionalInstruments"
-      AND ClinicianAssessed = 0
+      AND (ci.ClinicianAssessed = 0 OR ci.ClinicianAssessed IS NULL)
 ORDER BY lcp.SortOrder;
 
 
