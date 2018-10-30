@@ -25,18 +25,19 @@
         (throw (ex-info "Unhandled message error" error))))
     (.execute message-thread-pool
               (fn []
-                (let [res      (merge {:message (dissoc message :channels)}
-                                      (try
-                                        {:result (send-external-message message)}
-                                        (catch Exception e
-                                          {:result    :error
-                                           :exception e})))
-                      channels (cond
+                (let [channels (cond
                                  (sequential? (:channels message))
                                  (:channels message)
 
                                  (some? (:channels message))
-                                 [(:channels message)])]
+                                 [(:channels message)])
+                      message  (dissoc message :channels)
+                      res      (merge {:message message}
+                                      (try
+                                        {:result (send-external-message message)}
+                                        (catch Exception e
+                                          {:result    :error
+                                           :exception e})))]
                   (if channels
                     (doseq [c channels]
                       (let [result (alt!! (timeout 1000) :timeout
@@ -59,22 +60,6 @@
                     (conj channels *debug-chan*)
                     channels)]
      (dispatch-external-message (merge message {:channels channels})))))
-
-
-(defn queue-debug-message!
-  [message]
-  (log/debug "Received message" message)
-  ;; Queue message
-  (dispatch-external-message {:type :debug :message message}))
-
-(defn queue-email!
-  [to subject message]
-  (log/debug "Received message" message)
-  ;; Queue message
-  (dispatch-external-message {:type    :email
-                              :to      to
-                              :subject subject
-                              :message message}))
 
 (defn queue-counted-debug-message!
   [total-count]
