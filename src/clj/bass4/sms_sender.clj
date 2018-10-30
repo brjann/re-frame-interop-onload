@@ -41,46 +41,7 @@
         {:day midnight}))))
 
 
-
-;; ---------
-;;  OLD API
-;; ---------
-
-(defn ^String sms-error
-  [recipient message res]
-  (let [error (str "Could not send sms."
-                   "\nRecipient " recipient
-                   "\nMessage: " message
-                   "\nError: " res)]
-    (request-state/record-error! error)
-    error))
-
 (defn send-sms*!
-  [recipient message]
-  (when (env :dev)
-    (log/info (str "Sent sms to " recipient)))
-  (let [config db-config/common-config
-        url    (smsteknik-url
-                 (:smsteknik-id config)
-                 (:smsteknik-user config)
-                 (:smsteknik-password config))
-        xml    (smsteknik-xml
-                 recipient
-                 message
-                 (bass-service/db-sms-sender)
-                 (:smsteknik-status-return-url config))
-        res    (:body (http/post url {:body xml}))]
-    (if (= "0" (subs res 0 1))
-      (throw (Exception. (sms-error recipient message res)))
-      true)))
-
-
-;; ---------
-;;  NEW API
-;; ---------
-
-
-(defn new-send-sms*!
   [to message sender]
   (let [config db-config/common-config
         url    (smsteknik-url
@@ -102,17 +63,17 @@
         (throw (ex-info "SMS sending error" {:exception e}))))))
 
 ;; Overwritten by other function when in debug mode
-(defn ^:dynamic new-send-sms!
+(defn ^:dynamic send-sms!
   [to message sender]
   (when (env :dev)
     (log/info (str "Sent sms to " to)))
-  (new-send-sms*! to message sender))
+  (send-sms*! to message sender))
 
 (defmethod external-messages/external-message-sender :sms
   [{:keys [to message sender]}]
   ;; Bind the function to local var and close over it,
   ;; to respect dynamic bindings.
-  (let [sms-sender new-send-sms!]
+  (let [sms-sender send-sms!]
     ;; This function is executed in another thread
     (fn [] (sms-sender to message sender))))
 

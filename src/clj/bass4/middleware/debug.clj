@@ -14,19 +14,18 @@
 ;;  NEW SMS REDEFS
 ;; ----------------
 
-(defn- new-sms-reroute-wrapper
+(defn- sms-reroute-wrapper
   [reroute-sms]
   (fn [recipient message sender]
-    (sms/new-send-sms*! reroute-sms (str message "\n" "To: " recipient) sender)))
+    (sms/send-sms*! reroute-sms (str message "\n" "To: " recipient) sender)))
 
-(defn- new-sms-reroute-to-mail-wrapper
+(defn- sms-reroute-to-mail-wrapper
   [reroute-email]
   (fn [recipient message sender]
     (send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)))
 
-(defn- new-sms-in-log!
+(defn- sms-do-nothing!
   [recipient message sender]
-  (log/debug "SMS TO" recipient "MESSAGE:" message)
   true)
 
 
@@ -58,13 +57,13 @@
       ;; - reroute-sms= :header
       (or (env :dev-test)
           (= :header sms-reroute))
-      {#'sms/new-send-sms! new-sms-in-log!}
+      {#'sms/send-sms! sms-do-nothing!}
 
       (is-email? sms-reroute)
-      {#'sms/new-send-sms! (new-sms-reroute-to-mail-wrapper sms-reroute)}
+      {#'sms/send-sms! (sms-reroute-to-mail-wrapper sms-reroute)}
 
       (string? sms-reroute)
-      {#'sms/new-send-sms! (new-sms-reroute-wrapper sms-reroute)}
+      {#'sms/send-sms! (sms-reroute-wrapper sms-reroute)}
 
       ;; Production environment
       :else
