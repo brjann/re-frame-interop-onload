@@ -11,27 +11,6 @@
 
 
 ;; ----------------
-;;  OLD SMS REDEFS
-;; ----------------
-
-(defn- sms-reroute-wrapper
-  [reroute-sms]
-  (fn [recipient message]
-    (when (sms/send-sms*! reroute-sms (str message "\n" "To: " recipient))
-      (sms/sms-success! db/*db*))))
-
-(defn- sms-reroute-to-mail-wrapper
-  [reroute-email]
-  (fn [recipient message]
-    (when (send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)
-      (sms/sms-success! db/*db*))))
-
-(defn- sms-in-header!
-  [recipient message]
-  (request-state/swap-state! :debug-headers #(conj %1 (str "SMS to " recipient "\n" message)) [])
-  true)
-
-;; ----------------
 ;;  NEW SMS REDEFS
 ;; ----------------
 
@@ -79,16 +58,13 @@
       ;; - reroute-sms= :header
       (or (env :dev-test)
           (= :header sms-reroute))
-      {#'sms/send-db-sms!  sms-in-header!
-       #'sms/new-send-sms! new-sms-in-log!}
+      {#'sms/new-send-sms! new-sms-in-log!}
 
       (is-email? sms-reroute)
-      {#'sms/send-db-sms!  (sms-reroute-to-mail-wrapper sms-reroute)
-       #'sms/new-send-sms! (new-sms-reroute-to-mail-wrapper sms-reroute)}
+      {#'sms/new-send-sms! (new-sms-reroute-to-mail-wrapper sms-reroute)}
 
       (string? sms-reroute)
-      {#'sms/send-db-sms!  (sms-reroute-wrapper sms-reroute)
-       #'sms/new-send-sms! (new-sms-reroute-wrapper sms-reroute)}
+      {#'sms/new-send-sms! (new-sms-reroute-wrapper sms-reroute)}
 
       ;; Production environment
       :else

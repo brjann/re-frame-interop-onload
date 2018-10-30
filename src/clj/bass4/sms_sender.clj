@@ -75,16 +75,6 @@
       true)))
 
 
-;; Overwritten by other function when in debug mode
-(defn ^:dynamic send-db-sms!
-  [recipient message]
-  (let [db-connection db/*db*]
-    (try
-      (when (send-sms*! recipient message)
-        (sms-success! db-connection)
-        true)
-      (catch Exception e false))))
-
 ;; ---------
 ;;  NEW API
 ;; ---------

@@ -94,8 +94,8 @@
       (has (some-text? "message"))))
 
 #_(deftest double-auth-send-fail
-  (with-redefs [debug/sms-in-header!  (constantly false)
-                debug/mail-in-header! (constantly false)]
+    (with-redefs [debug/new-sms-in-header!  (constantly false)
+                  debug/new-mail-in-header! (constantly false)]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
         (follow-redirect)
@@ -110,7 +110,7 @@
         (pass-by (messages-are? [[:sms "777666"]] (poll-message-chan *debug-chan*))))))
 
 #_(deftest double-auth-mail-fallback
-    (with-redefs [debug/sms-in-header!          (constantly false)
+    (with-redefs [debug/new-sms-in-header!    (constantly false)
                 auth-service/double-auth-code (constantly "777666")]
       (-> *s*
           (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
