@@ -1,10 +1,20 @@
 (ns bass4.test.reqs-registration
   (:require [bass4.i18n]
             [clojure.test :refer :all]
+            [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return log-headers log-body disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     log-headers
+                                     log-body
+                                     disable-attack-detector
+                                     *s*
+                                     pass-by
+                                     messages-are?
+                                     poll-message-chan]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -13,6 +23,7 @@
             [clj-time.core :as t]
             [clojure.string :as string]
             [bass4.services.registration :as reg-service]
+            [bass4.external-messages :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
             [bass4.services.attack-detector :as a-d]))
 
@@ -21,6 +32,12 @@
   :once
   test-fixtures
   disable-attack-detector)
+
+(use-fixtures
+  :each
+  (fn [f]
+    (binding [*debug-chan* (chan 2)]
+      (f))))
 
 (deftest registration-not-allowed
   (-> *s*
@@ -77,7 +94,10 @@
         (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (has (status? 302))
-        (debug-headers-text? "MAIL" "SMS" "METALLICA")
+        (pass-by (messages-are?
+                   [[:email "METALLICA"]
+                    [:sms "METALLICA"]]
+                   (poll-message-chan *debug-chan* 2)))
         (follow-redirect)
         (has (some-text? "Validate"))
         (visit "/registration/564610/form")
@@ -139,7 +159,10 @@
         (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
         (has (status? 302))
-        (debug-headers-text? "MAIL" "SMS" "code-0")
+        (pass-by (messages-are?
+                   [[:email "code-0"]
+                    [:sms "code-0"]]
+                   (poll-message-chan *debug-chan* 2)))
         (follow-redirect)
         (has (some-text? "Validate"))
         (visit "/registration/564610/form")
@@ -156,7 +179,9 @@
         (has (status? 400))
         (visit "/registration/564610/form" :request-method :post :params {:sms-number "+460707000000"})
         (has (status? 302))
-        (debug-headers-text? "SMS" "code-1")
+        (pass-by (messages-are?
+                   [[:sms "code-1"]]
+                   (poll-message-chan *debug-chan* 1)))
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-0"})
         (has (status? 422))
         (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-1"})

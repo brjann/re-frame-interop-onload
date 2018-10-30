@@ -276,11 +276,11 @@
 
 (defn send-email!
   [email code]
-  (mail/send-email! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
+  (mail/queue-email! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- send-sms!
   [sms-number code]
-  (sms/send-db-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code)))
+  (sms/queue-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- code-map
   [code-key field-key send-fn! field-values fixed-fields validation-codes]

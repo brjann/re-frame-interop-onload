@@ -5,7 +5,17 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [clojure.core.async :refer [chan]]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return log-body *s* fix-time advance-time-s! disable-attack-detector pass-by]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     log-body
+                                     *s*
+                                     fix-time
+                                     advance-time-s!
+                                     disable-attack-detector
+                                     pass-by
+                                     poll-message-chan
+                                     messages-are?]]
             [bass4.middleware.debug :as debug]
             [clojure.tools.logging :as log]
             [clojure.string :as s]
@@ -13,7 +23,7 @@
             [bass4.db.core :as db]
             [bass4.services.lost-password :as lpw-service]
             [bass4.responses.lost-password :as lpw-response]
-            [bass4.external-messages :as external-messages]))
+            [bass4.external-messages :refer [*debug-chan*]]))
 
 
 (use-fixtures
@@ -25,7 +35,7 @@
   :each
   (fn [f]
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")
-    (binding [external-messages/*debug-chan* (chan)]
+    (binding [*debug-chan* (chan)]
       (fix-time
         (f)))
     (jdbc/execute! db/*db* "DELETE FROM c_flag WHERE ParentId = 605191")))
@@ -38,15 +48,14 @@
     (not (zero? (val (ffirst res))))))
 
 (defn set-uid!
-  [s]
-  (let [headers (get-in s [:response :headers])
-        mail    (get headers "X-Debug-Headers")
+  [messages]
+  (let [mail    (:message (first messages))
         url     (second (re-matches #"[\s\S]*?(http.*)[\s\S]*" mail))
         uid*    (subs url (inc (s/last-index-of url "/")))]
     (when-not uid*
-      (throw (Exception. "No UID found in " headers)))
+      (throw (Exception. "No UID found in " messages)))
     (swap! uid (constantly uid*)))
-  s)
+  messages)
 
 (deftest lost-password-router
   (with-redefs [lpw-service/lost-password-method (constantly :report)]
@@ -66,8 +75,11 @@
         (follow-redirect)
         (has (status? 200))
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
-        (debug-headers-text? "can only be used once")
-        (set-uid!)
+        (pass-by (let [messages (poll-message-chan *debug-chan*)]
+                   (messages-are?
+                     [[:email "can only be used once"]]
+                     messages)
+                   (set-uid! messages)))
         (follow-redirect)
         (has (some-text? "sent"))
         ;; Shortcut
@@ -83,7 +95,7 @@
   (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
     (-> *s*
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost@password.com"})
-        (set-uid!)
+        (pass-by (set-uid! (poll-message-chan *debug-chan*)))
         (follow-redirect)
         (visit (str "/lost-password/request-email/uid/" @uid))
         (follow-redirect)
@@ -94,7 +106,7 @@
   (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
     (-> *s*
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
-        (set-uid!)
+        (pass-by (set-uid! (poll-message-chan *debug-chan*)))
         (visit (str "/lost-password/request-email/uid/xxx"))
         (follow-redirect)
         (has (some-text? "Invalid")))
@@ -104,7 +116,7 @@
   (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
     (-> *s*
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
-        (set-uid!)
+        (pass-by (set-uid! (poll-message-chan *debug-chan*)))
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
         (visit (str "/lost-password/request-email/uid/" @uid))
         (follow-redirect)
@@ -115,7 +127,7 @@
   (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
     (-> *s*
         (visit "/lost-password/request-email" :request-method :post :params {:username "lost-password"})
-        (set-uid!)
+        (pass-by (set-uid! (poll-message-chan *debug-chan*)))
         (advance-time-s! (inc lpw-service/uid-time-limit))
         (visit (str "/lost-password/request-email/uid/" @uid))
         (follow-redirect)
