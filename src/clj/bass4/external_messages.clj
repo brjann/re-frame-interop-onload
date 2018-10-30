@@ -1,35 +1,64 @@
 (ns bass4.external-messages
-  (:require [clojure.core.async :refer [go chan <! alt!! timeout]]
+  (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout]]
             [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]
-            [bass4.mailer :as mail])
+            [clj-http.client :as http])
   (:import (java.util.concurrent Executors Executor)))
 
-(defn- send-email
-  [{:keys [to subject message]}]
-  (mail/mail! to subject message))
 
-(defn- send-debug-message
-  [message])
+(defmulti send-external-message :type)
 
-(def ^Executor executor
+(defmethod send-external-message :debug
+  [message]
+  #_(http/get "https://httpbin.org/delay/0.1"))
+
+(def ^Executor message-thread-pool
   (Executors/newFixedThreadPool 32))
 
 (defn- dispatch-external-message
   [message]
-  (.execute executor
-            (fn []
-              (case (:type message)
-                :email
-                (send-email message)
+  (let [err-chan (chan)]
+    ;; This go block will be GC'd when the
+    ;; https://stackoverflow.com/questions/29879996/how-do-clojure-core-async-channels-get-cleaned-up
+    (go
+      (let [error (<! err-chan)]
+        (throw (ex-info "Unhandled message error" error))))
+    (.execute message-thread-pool
+              (fn []
+                (let [res      (merge {:message (dissoc message :channels)}
+                                      (try
+                                        {:result (send-external-message message)}
+                                        (catch Exception e
+                                          {:result    :error
+                                           :exception e})))
+                      channels (cond
+                                 (sequential? (:channels message))
+                                 (:channels message)
 
-                :debug
-                (send-debug-message message))
-              (when-let [channel (:channel message)]
-                (let [result (alt!! (timeout 1000) :timeout
-                                    [[channel :success]] :chan)]
-                  (when (= :timeout result)
-                    (log/debug "Channel timed out")))))))
+                                 (some? (:channels message))
+                                 [(:channels message)])]
+                  (if channels
+                    (doseq [c channels]
+                      (let [result (alt!! (timeout 1000) :timeout
+                                          [[c res]] :chan)]
+                        (when (= :timeout result)
+                          (log/debug "Channel timed out"))))
+                    (when (= :error (:result res))
+                      (>!! err-chan res))))))))
+
+
+(def ^:dynamic *debug-chan* nil)
+
+(defn queue-message
+  ([message] (queue-message message nil))
+  ([message channel]
+   (let [channels (if channel
+                    (conj (:channels message) channel)
+                    (:channels message))
+         channels (if *debug-chan*
+                    (conj channels *debug-chan*)
+                    channels)]
+     (dispatch-external-message (merge message {:channels channels})))))
 
 
 (defn queue-debug-message!
@@ -61,8 +90,8 @@
                            (log/debug "Sent" current-count "super messages in" (/ (double (- (. System (nanoTime)) @start)) 1000000.0))))]
     (dotimes [_ total-count]
       (let [channel (chan)]
-        (dispatch-external-message {:type    :debug
-                                    :channel channel})
+        (dispatch-external-message {:type     :debug
+                                    :channels channel})
         (go
           (<! channel)
           (keep-track))))))

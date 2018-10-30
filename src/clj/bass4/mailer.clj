@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [bass4.php_clj.core :refer [clj->php]]
             [clojure.java.shell :as shell]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.external-messages :as external-messages]))
 
 (defn mail*!
   ([to subject message reply-to debug?]
@@ -46,3 +47,7 @@
   [input]
   (when (string? input)
     (match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
+
+(defmethod external-messages/send-external-message :email
+  [{:keys [to subject message]}]
+  (mail! to subject message))
