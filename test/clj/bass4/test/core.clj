@@ -123,7 +123,6 @@
 (defn poll-message-chan
   ([c] (poll-message-chan c 1))
   ([c n]
-   (log/debug 1)
    (for [i (range n)]
      (let [[res _] (alts!! [c (timeout 1000)])]
        (when (nil? res)

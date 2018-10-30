@@ -6,38 +6,49 @@
   (:import (java.util.concurrent Executors Executor)))
 
 
-(defmulti send-external-message :type)
+(defmulti external-message-sender :type)
 
-(defmethod send-external-message :debug
+(defmethod external-message-sender :debug
   [message]
-  #_(http/get "https://httpbin.org/delay/0.1"))
+  (fn []
+    #_(http/get "https://httpbin.org/delay/0.1")))
 
 (def ^Executor message-thread-pool
   (Executors/newFixedThreadPool 32))
 
 (defn- dispatch-external-message
   [message]
-  (let [err-chan (chan)]
+  (let [err-chan  (chan)
+        channels  (cond
+                    (sequential? (:channels message))
+                    (:channels message)
+
+                    (some? (:channels message))
+                    [(:channels message)])
+        message   (dissoc message :channels)
+        sender-fn (external-message-sender message)]
     ;; This go block will be GC'd when the
     ;; https://stackoverflow.com/questions/29879996/how-do-clojure-core-async-channels-get-cleaned-up
     (go
       (let [error (<! err-chan)]
         (throw (ex-info "Unhandled message error" error))))
+    ;;
+    ;; NOTE
+    ;; Dynamic rebindings are not visible inside the thread pool
+    ;; - since it is created outside the calling context.
+    ;; Therefore, the send function cannot rely on dynamic
+    ;; variables.
+    ;; To respect rebinding of send functions, the send function
+    ;; is bound above - check out the syntax of the
+    ;; external-messages-sender email and sms defmethods
     (.execute message-thread-pool
               (fn []
-                (let [channels (cond
-                                 (sequential? (:channels message))
-                                 (:channels message)
-
-                                 (some? (:channels message))
-                                 [(:channels message)])
-                      message  (dissoc message :channels)
-                      res      (merge {:message message}
-                                      (try
-                                        {:result (send-external-message message)}
-                                        (catch Exception e
-                                          {:result    :error
-                                           :exception e})))]
+                (let [res (merge {:message message}
+                                 (try
+                                   {:result (sender-fn)}
+                                   (catch Exception e
+                                     {:result    :error
+                                      :exception e})))]
                   (if channels
                     (doseq [c channels]
                       (let [result (alt!! (timeout 1000) :timeout

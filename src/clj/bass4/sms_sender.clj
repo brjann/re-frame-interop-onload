@@ -32,6 +32,21 @@
      :message                 message
      :recipient               recipient}))
 
+(defn sms-success!
+  [db-connection]
+  (when db-connection
+    (let [midnight (-> (bass/local-midnight)
+                       (b-time/to-unix))]
+      (db/increase-sms-count!
+        db-connection
+        {:day midnight}))))
+
+
+
+;; ---------
+;;  OLD API
+;; ---------
+
 (defn ^String sms-error
   [recipient message res]
   (let [error (str "Could not send sms."
@@ -40,8 +55,6 @@
                    "\nError: " res)]
     (request-state/record-error! error)
     error))
-
-
 
 (defn send-sms*!
   [recipient message]
@@ -62,10 +75,24 @@
       (throw (Exception. (sms-error recipient message res)))
       true)))
 
-(defn send-sms!
+
+;; Overwritten by other function when in debug mode
+(defn ^:dynamic send-db-sms!
+  [recipient message]
+  (let [db-connection db/*db*]
+    (try
+      (when (send-sms*! recipient message)
+        (sms-success! db-connection)
+        true)
+      (catch Exception e false))))
+
+;; ---------
+;;  NEW API
+;; ---------
+
+
+(defn new-send-sms*!
   [to message sender]
-  (when (env :dev)
-    (log/info (str "Sent sms to " to)))
   (let [config db-config/common-config
         url    (smsteknik-url
                  (:smsteknik-id config)
@@ -85,29 +112,20 @@
       (catch Exception e
         (throw (ex-info "SMS sending error" {:exception e}))))))
 
-(defn sms-success!
-  [db-connection]
-  (when db-connection
-    (let [midnight (-> (bass/local-midnight)
-                       (b-time/to-unix))]
-      (db/increase-sms-count!
-        db-connection
-        {:day midnight}))))
-
 ;; Overwritten by other function when in debug mode
-(defn ^:dynamic send-db-sms!
-  [recipient message]
-  (let [db-connection db/*db*]
-    (try
-      (when (send-sms*! recipient message)
-        (sms-success! db-connection)
-        true)
-      (catch Exception e false))))
+(defn ^:dynamic new-send-sms!
+  [to message sender]
+  (when (env :dev)
+    (log/info (str "Sent sms to " to)))
+  (new-send-sms*! to message sender))
 
-
-(defmethod external-messages/send-external-message :sms
+(defmethod external-messages/external-message-sender :sms
   [{:keys [to message sender]}]
-  (send-sms! to message sender))
+  ;; Bind the function to local var and close over it,
+  ;; to respect dynamic bindings.
+  (let [sms-sender new-send-sms!]
+    ;; This function is executed in another thread
+    (fn [] (sms-sender to message sender))))
 
 (defn queue-sms!
   [to message]
@@ -120,6 +138,4 @@
       (let [res (<! c)]
         (if (= :error (:result res))
           (throw (ex-info "SMS send failed" res))
-          (do
-            (sms-success! db/*db*)
-            (log/debug "Increasing SMS-count")))))))
+          (sms-success! db/*db*))))))

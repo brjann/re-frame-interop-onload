@@ -43,9 +43,13 @@
   (when (string? input)
     (match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
 
-(defmethod external-messages/send-external-message :email
+(defmethod external-messages/external-message-sender :email
   [{:keys [to subject message reply-to]}]
-  (send-email! to subject message reply-to))
+  ;; Bind the function to local var and close over it,
+  ;; to respect dynamic bindings.
+  (let [email-sender send-email!]
+    ;; This function is executed in another thread
+    (fn [] (email-sender to subject message reply-to))))
 
 (defn queue-email!
   ([to subject message]
