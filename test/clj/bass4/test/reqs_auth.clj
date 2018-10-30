@@ -79,13 +79,13 @@
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
     (-> *s*
         (visit "/login" :request-method :post :params {:username 536975 :password 536975})
-        (pass-by (messages-are? [{:type :sms :message "666777"}] (poll-message-chan *debug-chan*))))))
+        (pass-by (messages-are? [[:sms "666777"]] (poll-message-chan *debug-chan*))))))
 
 (deftest double-auth-to-email
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "to-email" :password "to-email"})
-        (pass-by (messages-are? [{:type :email :message "777666"}] (poll-message-chan *debug-chan*))))))
+        (pass-by (messages-are? [[:email "777666"]] (poll-message-chan *debug-chan*))))))
 
 (deftest double-auth-no-method
   (-> *s*
@@ -107,7 +107,7 @@
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
-        (pass-by (messages-are? [{:type :sms :message "777666"}] (poll-message-chan *debug-chan*))))))
+        (pass-by (messages-are? [[:sms "777666"]] (poll-message-chan *debug-chan*))))))
 
 #_(deftest double-auth-mail-fallback
     (with-redefs [debug/sms-in-header!          (constantly false)

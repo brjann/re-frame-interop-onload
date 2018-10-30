@@ -149,8 +149,9 @@
 (defn any-match?
   [msg-pred messages]
   (let [match? (fn [msg-pred message]
-                 (when (and (= (:type msg-pred) (:type message))
-                            (str/includes? (:message message) (:message msg-pred)))
+                 (log/debug msg-pred)
+                 (when (and (= (first msg-pred) (:type message))
+                            (str/includes? (:message message) (second msg-pred)))
                    msg-pred))]
     (some #(match? msg-pred %1) messages)))
 
