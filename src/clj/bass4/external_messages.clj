@@ -45,21 +45,26 @@
                         (when (= :timeout result)
                           (log/debug "Channel timed out"))))
                     (when (= :error (:result res))
-                      (>!! err-chan res))))))))
+                      (>!! err-chan res))))))
+    nil))
 
 
 (def ^:dynamic *debug-chan* nil)
 
 (defn queue-message!
-  ([message] (queue-message! message nil))
-  ([message channel]
-   (let [channels (if channel
-                    (conj (:channels message) channel)
-                    (:channels message))
-         channels (if *debug-chan*
-                    (conj channels *debug-chan*)
-                    channels)]
-     (dispatch-external-message (merge message {:channels channels})))))
+  [message]
+  (let [channels (if *debug-chan*
+                   (conj (:channels message) *debug-chan*)
+                   (:channels message))]
+    (dispatch-external-message (merge message {:channels channels}))))
+
+(defn queue-message-c!
+  [message]
+  (let [c (chan)]
+    (queue-message! (merge
+                      message
+                      {:channels (conj (:channels message) c)}))
+    c))
 
 (defn queue-counted-debug-message!
   [total-count]

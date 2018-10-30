@@ -13,19 +13,28 @@
                                      log-session
                                      disable-attack-detector
                                      *s*
-                                     modify-session]]
+                                     modify-session
+                                     poll-message-chan]]
             [bass4.services.auth :as auth-service]
             [bass4.middleware.debug :as debug]
+            [clojure.core.async :refer [chan]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.services.attack-detector :as a-d]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.external-messages :as external-messages :refer [*debug-chan*]]))
 
 
 (use-fixtures
   :once
   test-fixtures
   disable-attack-detector)
+
+(use-fixtures
+  :each
+  (fn [f]
+    (binding [*debug-chan* (chan 2)]
+      (f))))
 
 (deftest double-auth-generator
   []
@@ -70,11 +79,13 @@
         (visit "/login" :request-method :post :params {:username 536975 :password 536975})
         (debug-headers-text? "SMS" "666777"))))
 
+
+
 (deftest double-auth-to-email
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "to-email" :password "to-email"})
-        (debug-headers-text? "MAIL" "777666"))))
+        (is (= #{:type :sms :message "777666"} (poll-message-chan *debug-chan*))))))
 
 (deftest double-auth-no-method
   (-> *s*

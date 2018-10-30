@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [mount.core :as mount]
+            [clojure.core.async :refer [alts!! timeout]]
             [bass4.db.core]
             [bass4.utils :refer [map-map]]
             [kerodon.core :refer :all]
@@ -117,6 +118,21 @@
                              :message  ""
                              :expected (str "does not have " text)}))
   response)
+
+(defn poll-message-chan
+  ([c] (poll-message-chan c 1))
+  ([c n]
+   (let [messages (for [i (range n)]
+                    (let [[res _] (alts!! [c (timeout 1000)])]
+                      (when (nil? res)
+                        (throw (Exception. (str "Channel " i " timed out"))))
+                      res))]
+     (into #{} (map #(if (= :error (:result %))
+                       (throw (ex-info "Exception in message" %))
+                       (-> %
+                           :message
+                           (select-keys [:type :message])))
+                    messages)))))
 
 (defmacro pass-by
   [x form]

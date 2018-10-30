@@ -1,5 +1,6 @@
 (ns bass4.sms-sender
   (:require [clojure.java.io :as io]
+            [clojure.core.async :refer [go <! chan]]
             [bass4.config :refer [env]]
             [bass4.email :refer [send-email!]]
             [clj-http.client :as http]
@@ -11,7 +12,8 @@
             [bass4.db-config :as db-config]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.external-messages :as external-messages]))
 
 (defn smsteknik-url
   [id user password]
@@ -41,11 +43,12 @@
 ;; TODO: Increase db sms counter
 (defn sms-success!
   [db-connection]
-  (let [midnight (-> (bass/local-midnight)
-                     (b-time/to-unix))]
-    (db/increase-sms-count!
-      db-connection
-      {:day midnight})))
+  (when db-connection
+    (let [midnight (-> (bass/local-midnight)
+                       (b-time/to-unix))]
+      (db/increase-sms-count!
+        db-connection
+        {:day midnight}))))
 
 (defn send-sms*!
   [recipient message]
@@ -66,13 +69,61 @@
       (throw (Exception. (sms-error recipient message res)))
       true)))
 
+(defn send-sms!
+  [to message sender]
+  (when (env :dev)
+    (log/info (str "Sent sms to " to)))
+  (let [config db-config/common-config
+        url    (smsteknik-url
+                 (:smsteknik-id config)
+                 (:smsteknik-user config)
+                 (:smsteknik-password config))
+        xml    (smsteknik-xml
+                 to
+                 message
+                 sender
+                 (:smsteknik-status-return-url config))
+        res    (:body (http/post url {:body xml}))]
+    (if (= "0" (subs res 0 1))
+      (throw (Exception. (sms-error to message res)))
+      true)))
+
 ;; Overwritten by other function when in debug mode
 (defn ^:dynamic send-db-sms!
   [recipient message]
-  (let [db-name       (:name db-config/*local-config*)
-        db-connection db/*db*]
+  (let [db-connection db/*db*]
     (try
       (when (send-sms*! recipient message)
         (sms-success! db-connection)
         true)
       (catch Exception e false))))
+
+
+(defmethod external-messages/send-external-message :sms
+  [{:keys [to message sender]}]
+  (send-sms! to message sender))
+
+(defn queue-email!
+  ([to subject message]
+   (queue-email! to subject message nil))
+  ([to subject message reply-to]
+   (external-messages/queue-message! {:type     :email
+                                      :to       to
+                                      :subject  subject
+                                      :message  message
+                                      :reply-to reply-to})))
+
+(defn queue-sms!
+  [to message]
+  (let [sender (bass-service/db-sms-sender)
+        c      (external-messages/queue-message-c! {:type    :sms
+                                                    :to      to
+                                                    :message message
+                                                    :sender  sender})]
+    (go
+      (let [res (<! c)]
+        (if (= :error (:result res))
+          (throw (ex-info "SMS send failed" res))
+          (do
+            (sms-success! db/*db*)
+            (log/debug "Increasing SMS-count")))))))

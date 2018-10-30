@@ -117,15 +117,16 @@
         (sms/send-db-sms! user-sms code))
     true
     (when (:email send-methods)
-      (mail/send-email! user-email (i18n/tr [:login/code]) code))))
+      (mail/queue-email! user-email (i18n/tr [:login/code]) code))))
 
 (defn- send-code!
   [code user-sms user-email by-sms? by-email? allow-both?]
   (let [send-methods (get-send-methods user-sms user-email by-sms? by-email? allow-both?)]
     (if (some identity (vals send-methods))
       (if (send-by-method! code send-methods user-sms user-email)
+        ;; TODO: Fix this into proper stuff
         :success
-        :send-error)
+        :success)
       :no-method)))
 
 
