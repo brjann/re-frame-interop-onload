@@ -1,5 +1,5 @@
 (ns bass4.external-messages
-  (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout]]
+  (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout dropping-buffer]]
             [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]
             [clj-http.client :as http])
@@ -115,8 +115,9 @@
                            (log/debug "Sent" current-count "super messages in" (/ (double (- (. System (nanoTime)) @start)) 1000000.0))))]
     (dotimes [_ total-count]
       (let [channel (chan)]
-        (dispatch-external-message {:type     :debug
-                                    :channels channel})
+        (dispatch-external-message {:type       :debug
+                                    :channels   channel
+                                    :error-chan (chan (dropping-buffer 0))})
         (go
           (<! channel)
           (keep-track))))))
