@@ -5,7 +5,8 @@
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
             [bass4.external-messages :as external-messages]
-            [clojure.core.async :refer [chan go <!]]))
+            [clojure.core.async :refer [chan go <!]]
+            [bass4.db-config :as db-config]))
 
 (defn send-email*!
   ([to subject message reply-to debug?]
@@ -49,12 +50,21 @@
   (let [email-sender send-email!]
     (fn [] (email-sender to subject message reply-to))))
 
+(defn error-sender
+  [subject message]
+  (send-email!
+    (env :error-email)
+    subject
+    message))
+
 (defn queue-email!
   ([to subject message]
    (queue-email! to subject message nil))
   ([to subject message reply-to]
-   (external-messages/queue-message! {:type     :email
-                                      :to       to
-                                      :subject  subject
-                                      :message  message
-                                      :reply-to reply-to})))
+   (let [error-chan (external-messages/async-error-chan error-sender (db-config/db-name))]
+     (external-messages/queue-message! {:type       :email
+                                        :to         to
+                                        :subject    subject
+                                        :message    message
+                                        :reply-to   reply-to
+                                        :error-chan error-chan}))))

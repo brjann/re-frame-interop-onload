@@ -1,8 +1,6 @@
 (ns bass4.php-clj.safe
   (:require [bass4.php_clj.reader :as r]
             [bass4.php_clj.core :as php_clj]
-            [bass4.email :as mail]
-            [bass4.config :refer [env]]
             [clojure.tools.logging :as log]))
 
 (defn php->clj
@@ -16,7 +14,7 @@
   [php]
   (try
     (php_clj/php->clj php true)
-    (catch Exception e
+    #_(catch Exception e
       (mail/queue-email!
         (env :error-email)
         "Unserialize error in BASS4"

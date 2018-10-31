@@ -13,7 +13,8 @@
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
             [bass4.external-messages :as external-messages]
-            [bass4.api-coercion :as api]))
+            [bass4.api-coercion :as api]
+            [bass4.email :as email]))
 
 (defn smsteknik-url
   [id user password]
@@ -79,11 +80,13 @@
 
 (defn queue-sms!
   [to message]
-  (let [sender (bass-service/db-sms-sender)
-        c      (external-messages/queue-message-c! {:type    :sms
-                                                    :to      to
-                                                    :message message
-                                                    :sender  sender})]
+  (let [sender     (bass-service/db-sms-sender)
+        error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
+        c          (external-messages/queue-message-c! {:type       :sms
+                                                        :to         to
+                                                        :message    message
+                                                        :sender     sender
+                                                        :error-chan error-chan})]
     (go
       (let [res (<! c)]
         (if (= :error (:result res))

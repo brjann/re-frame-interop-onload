@@ -16,9 +16,38 @@
 (def ^Executor message-thread-pool
   (Executors/newFixedThreadPool 32))
 
+(defn async-error-handler
+  [send-fn db-name res]
+  (let [exception (:exception res)
+        send-res  (try
+                    (send-fn
+                      "Async error in BASS4"
+                      (str "Async error in BASS4: " (.getMessage exception)
+                           "\nSee log for details."
+                           "\nSent by " db-name))
+                    true
+                    (catch Exception e
+                      e))]
+    (log/error "ASYNC ERROR")
+    (log/error exception)
+    (when-not (true? send-res)
+      (log/error "Could not send error email" send-res))))
+
+(defn async-error-chan
+  [send-fn db-name]
+  (let [err-chan (chan)]
+    ;; This go block will be GC'd when there is no reference to the message
+    ;; https://stackoverflow.com/questions/29879996/how-do-clojure-core-async-channels-get-cleaned-up
+    (go
+      (let [res (<! err-chan)]
+        (async-error-handler send-fn db-name res)))
+    err-chan))
+
 (defn- dispatch-external-message
   [message]
-  (let [err-chan  (chan)
+  (when-not (:error-chan message)
+    (throw (ex-info "Sender must provide an error chan" message)))
+  (let [err-chan  (:error-chan message)
         channels  (cond
                     (sequential? (:channels message))
                     (:channels message)
@@ -27,11 +56,6 @@
                     [(:channels message)])
         message   (dissoc message :channels)
         sender-fn (external-message-sender message)]
-    ;; This go block will be GC'd when the
-    ;; https://stackoverflow.com/questions/29879996/how-do-clojure-core-async-channels-get-cleaned-up
-    (go
-      (let [error (<! err-chan)]
-        (throw (ex-info "Unhandled message error" error))))
     ;;
     ;; NOTE
     ;; Dynamic rebindings are not visible inside the thread pool
