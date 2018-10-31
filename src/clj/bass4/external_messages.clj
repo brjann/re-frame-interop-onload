@@ -49,14 +49,14 @@
                                    (catch Exception e
                                      {:result    :error
                                       :exception e})))]
-                  (if channels
+                  (when channels
                     (doseq [c channels]
                       (let [result (alt!! (timeout 1000) :timeout
                                           [[c res]] :chan)]
                         (when (= :timeout result)
-                          (log/debug "Channel timed out"))))
-                    (when (= :error (:result res))
-                      (>!! err-chan res))))))
+                          (log/debug "Channel timed out")))))
+                  (when (= :error (:result res))
+                    (>!! err-chan res)))))
     nil))
 
 
