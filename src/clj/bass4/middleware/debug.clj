@@ -28,7 +28,9 @@
   [recipient message sender]
   true)
 
-
+(defn- external-message-out-str
+  [& args]
+  (println (apply str (interpose "\n" args))))
 
 ;; ----------------
 ;;   EMAIL REDEFS
@@ -43,58 +45,64 @@
   [to subject message & args]
   true)
 
+(defn external-message-out-str
+  [& args]
+  (println (apply str (interpose "\n" args))))
+
 (def ^:dynamic *sms-reroute* nil)
 
-(defn- sms-redefs
-  []
-  (let [sms-reroute (or *sms-reroute*
-                        (env :dev-reroute-sms))]
-    (cond
-      ;; Put sms in void when
-      ;; - in test environment, or
-      ;; - reroute-sms= :void
-      (or (env :dev-test)
-          (= :void sms-reroute))
-      {#'sms/send-sms! sms-void}
+(defn sms-redefs
+  [sms-reroute]
+  (cond
+    ;; Put sms in void when
+    ;; - in test environment, or
+    ;; - reroute-sms= :void
+    (or (env :dev-test)
+        (= :void sms-reroute))
+    {#'sms/send-sms! sms-void}
 
-      (is-email? sms-reroute)
-      {#'sms/send-sms! (sms-reroute-to-mail-wrapper sms-reroute)}
+    (is-email? sms-reroute)
+    {#'sms/send-sms! (sms-reroute-to-mail-wrapper sms-reroute)}
 
-      (string? sms-reroute)
-      {#'sms/send-sms! (sms-reroute-wrapper sms-reroute)}
+    (string? sms-reroute)
+    {#'sms/send-sms! (sms-reroute-wrapper sms-reroute)}
 
-      ;; Production environment
-      :else
-      {})))
+    (= :out sms-reroute)
+    {#'sms/send-sms! external-message-out-str}
+
+    ;; Production environment
+    :else
+    {}))
 
 (def ^:dynamic *mail-reroute* nil)
 
-(defn- mail-redefs
-  []
-  (let [mail-reroute (or *mail-reroute*
-                         (env :dev-reroute-email))]
-    (cond
-      ;; Put mail in void when
-      ;; - in test environment, or
-      ;; - reroute-email = :void
-      (or (env :dev-test)
-          (= :void mail-reroute))
-      {#'send-email! mail-void}
+(defn mail-redefs
+  [mail-reroute]
+  (cond
+    ;; Put mail in void when
+    ;; - in test environment, or
+    ;; - reroute-email = :void
+    (or (env :dev-test)
+        (= :void mail-reroute))
+    {#'send-email! mail-void}
 
-      (is-email? mail-reroute)
-      {#'send-email! (mail-reroute-wrapper mail-reroute)}
+    (is-email? mail-reroute)
+    {#'send-email! (mail-reroute-wrapper mail-reroute)}
 
-      ;; Production environment
-      :else
-      {})))
+    (= :out mail-reroute)
+    {#'send-email! external-message-out-str}
+
+    ;; Production environment
+    :else
+    {}))
 
 (defn debug-redefs
   [handler request]
   ;; Test environment, dev-test and dev are true
   ;; Dev environment, dev-test is false and dev is true
   (let [redefs (merge
-                 (mail-redefs)
-                 (sms-redefs))]
+                 (mail-redefs (or *mail-reroute* (env :dev-reroute-email)))
+                 (sms-redefs (or *sms-reroute* (env :dev-reroute-sms))))]
     (if redefs
       (with-bindings redefs
         (handler request))
