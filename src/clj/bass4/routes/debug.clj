@@ -28,19 +28,6 @@
             [bass4.time :as b-time]
             [clojure.string :as s]))
 
-(defn states-page
-  []
-  (layout/render "states.html" {:states (mapv #(subs % 2) (mount/find-all-states))}))
-
-(defn reset-state
-  [state-name]
-  (let [states     (mount/find-all-states)
-        state-name (str "#'" state-name)]
-    (when (some #{state-name} states)
-      (mount.core/stop state-name)
-      (mount.core/start state-name))
-    (http-response/found "/debug/states")))
-
 (defn check-pending-http
   [participant-id request]
   (let [host-address (h-utils/get-host-address request)]
@@ -134,10 +121,6 @@
           (throw (Exception. "Your exception as requested.")))
         (GET "/ext-login/:participant-id" [participant-id]
           (check-pending-http participant-id request))
-        (GET "/states" []
-          (states-page))
-        (POST "/states" [& params]
-          (reset-state (:state-name params)))
         (GET "/i18n-merge/:lang" [lang]
           (layout/text-response (i18n/merge-i18n lang)))
         (GET "/server-time-zone" []
