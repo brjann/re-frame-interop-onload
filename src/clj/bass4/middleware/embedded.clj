@@ -4,13 +4,18 @@
             [bass4.services.bass :as bass]
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass-service]
+            [clj-time.core :as t]
+            [bass4.time :as b-time]))
 
 (defn embedded-session
   [handler request uid]
-  (if-let [{:keys [user-id path]} (bass/read-session-file uid)]
+  (if-let [{:keys [user-id path session-id]} (bass/read-session-file uid)]
     (-> (http-response/found path)
-        (assoc :session {:user-id user-id :embedded-path path}))
+        (assoc :session {:user-id        user-id
+                         :embedded-path  path
+                         :php-session-id session-id}))
     (layout/print-var-response "Wrong uid.")))
 
 (defn legal-character
@@ -30,10 +35,27 @@
             (legal-character (subs current embedded-length (inc embedded-length))))
         true))))
 
+(defn check-php-session
+  [{:keys [user-id php-session-id]}]
+  (let [php-session        (bass-service/get-php-session php-session-id)
+        ;; TODO: If session doesn't exist
+        last-activity      (:last-activity php-session)
+        php-user-id        (:user-id php-session)
+        now-unix           (b-time/to-unix (t/now))
+        time-diff-activity (- now-unix last-activity)
+        timeouts           (bass-service/get-staff-timeouts)
+        re-auth-timeout    (:re-auth-timeout timeouts)
+        absolute-timeout   (:absolute-timeout timeouts)]
+    (log/debug "user-id:" user-id "php user-id:" php-user-id)
+    (log/debug "current time:" now-unix "last session activity:" last-activity "diff" time-diff-activity)
+    (log/debug "re-auth timeout:" re-auth-timeout "secs left" (- re-auth-timeout time-diff-activity))
+    (log/debug "absolute timeout:" absolute-timeout "secs left" (- absolute-timeout time-diff-activity))))
+
 (defn check-embedded-path
   [handler request]
   (let [current-path  (:uri request)
         embedded-path (get-in request [:session :embedded-path])]
+    (check-php-session (:session request))
     (if (and embedded-path (matches-embedded current-path (str "/embedded/" embedded-path)))
       (handler request)
       (layout/error-page
@@ -42,9 +64,9 @@
 
 (defn embedded-request [handler request uid]
   (let [session-map (when uid
-                      (let [{:keys [user-id path]}
+                      (let [{:keys [user-id path php-session-id]}
                             (bass/read-session-file uid)]
-                        {:user-id user-id :embedded-path path}))]
+                        {:user-id user-id :embedded-path path :php-session-id php-session-id}))]
     (check-embedded-path handler (update request :session #(merge % session-map)))))
 
 (defn handle-embedded

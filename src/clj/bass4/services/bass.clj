@@ -64,6 +64,14 @@
   ([date-time]
    (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
 
+(defn get-php-session
+  [php-session-id]
+  (db/get-php-session {:php-session-id php-session-id}))
+
+(defn get-staff-timeouts
+  []
+  (db/get-staff-timeouts))
+
 (defn get-sub-path
   "Makes sure that the combination of
   base-path and sub-path is within base-path"

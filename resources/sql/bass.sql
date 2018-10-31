@@ -106,6 +106,15 @@ SELECT
 FROM c_project
 WHERE ObjectId = 100;
 
+
+-- :name get-staff-timeouts :? :1
+-- :doc
+SELECT
+  TherapistTimeout AS `re-auth-timeout`,
+  AbsoluteTimeout AS `absolute-timeout`
+FROM c_project
+WHERE ObjectId = 100;
+
 -- :name log-bankid! :! :1
 -- :doc
 INSERT INTO
