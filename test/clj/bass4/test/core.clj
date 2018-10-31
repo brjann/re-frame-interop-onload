@@ -74,8 +74,8 @@
     (swap! s (constantly (session (app)))))
   (bass4.db.core/init-repl :bass4_test)
   #_(reset! bankid/session-statuses {})
-  (binding [mw-debug/*mail-reroute*          :header
-            mw-debug/*sms-reroute*           :header
+  (binding [mw-debug/*mail-reroute*          :void
+            mw-debug/*sms-reroute*           :void
             clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
             config/test-mode?                true
@@ -131,21 +131,6 @@
            :message
            (select-keys [:type :message]))))))
 
-(defn poll-message-chan2
-  ([c] (poll-message-chan c 1))
-  ([c n]
-   (let [messages (for [i (range n)]
-                    (let [[res _] (alts!! [c (timeout 1000)])]
-                      (when (nil? res)
-                        (throw (Exception. (str "Channel " i " timed out"))))
-                      res))]
-     (into #{} (map #(if (= :error (:result %))
-                       (throw (ex-info "Exception in message" %))
-                       (-> %
-                           :message
-                           (select-keys [:type :message])))
-                    messages)))))
-
 (defn any-match?
   [msg-pred messages]
   (let [match? (fn [msg-pred message]
@@ -165,7 +150,7 @@
                                             :pass
                                             :fail)
                                 :message  "Message not found"
-                                :expected msg-preds#}))))
+                                :expected msg-pred#}))))
 
 (defmacro pass-by
   [prev form]

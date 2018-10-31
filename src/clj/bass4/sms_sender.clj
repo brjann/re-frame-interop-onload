@@ -69,12 +69,12 @@
     (log/info (str "Sent sms to " to)))
   (send-sms*! to message sender))
 
+;; Bind the function to local var and close over it,
+;; to respect dynamic bindings.
+;; Since the send function is executed in another thread
 (defmethod external-messages/external-message-sender :sms
   [{:keys [to message sender]}]
-  ;; Bind the function to local var and close over it,
-  ;; to respect dynamic bindings.
   (let [sms-sender send-sms!]
-    ;; This function is executed in another thread
     (fn [] (sms-sender to message sender))))
 
 (defn queue-sms!

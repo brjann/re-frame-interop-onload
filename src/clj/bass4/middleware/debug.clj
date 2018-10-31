@@ -24,7 +24,7 @@
   (fn [recipient message sender]
     (send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)))
 
-(defn- sms-do-nothing!
+(defn- sms-void
   [recipient message sender]
   true)
 
@@ -39,10 +39,8 @@
   (fn [to subject message & reply-to]
     (send-email*! reroute-email subject (str "To: " to "\n" message) (first reply-to) false)))
 
-(defn- mail-in-header!
+(defn- mail-void
   [to subject message & args]
-  (request-state/swap-state! :debug-headers #(conj %1 (str "MAIL to " to "\n" subject "\n" message)) [])
-  (log/debug "MAIL TO" to "SUBJECT" subject "MESSAGE" message)
   true)
 
 (def ^:dynamic *sms-reroute* nil)
@@ -52,12 +50,12 @@
   (let [sms-reroute (or *sms-reroute*
                         (env :dev-reroute-sms))]
     (cond
-      ;; Put sms in header when
+      ;; Put sms in void when
       ;; - in test environment, or
-      ;; - reroute-sms= :header
+      ;; - reroute-sms= :void
       (or (env :dev-test)
-          (= :header sms-reroute))
-      {#'sms/send-sms! sms-do-nothing!}
+          (= :void sms-reroute))
+      {#'sms/send-sms! sms-void}
 
       (is-email? sms-reroute)
       {#'sms/send-sms! (sms-reroute-to-mail-wrapper sms-reroute)}
@@ -76,12 +74,12 @@
   (let [mail-reroute (or *mail-reroute*
                          (env :dev-reroute-email))]
     (cond
-      ;; Put mail in header when
+      ;; Put mail in void when
       ;; - in test environment, or
-      ;; - reroute-email = :header
+      ;; - reroute-email = :void
       (or (env :dev-test)
-          (= :header mail-reroute))
-      {#'send-email! mail-in-header!}
+          (= :void mail-reroute))
+      {#'send-email! mail-void}
 
       (is-email? mail-reroute)
       {#'send-email! (mail-reroute-wrapper mail-reroute)}

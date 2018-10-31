@@ -1,9 +1,17 @@
 (ns bass4.test.reqs-403
   (:require [bass4.i18n]
             [clojure.test :refer :all]
+            [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? *s* modify-session]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     *s*
+                                     modify-session
+                                     pass-by
+                                     messages-are?
+                                     poll-message-chan]]
+            [bass4.external-messages :refer [*debug-chan*]]
             [kerodon.test :refer :all]
             [bass4.middleware.debug :as mw-debug]
             [bass4.test.core :refer [get-edn test-fixtures]]
@@ -54,9 +62,10 @@
       (has (text? "login"))))
 
 (deftest request-403-ajax-with-identity
-  (-> *s*
-      (modify-session {:user-id 535771 :double-authed? true})
-      (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
-      (has (status? 403))
-      (has (text? "reload"))
-      (debug-headers-text? "MAIL" "403" "/debug")))
+  (binding [*debug-chan* (chan)]
+    (-> *s*
+        (modify-session {:user-id 535771 :double-authed? true})
+        (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
+        (has (status? 403))
+        (has (text? "reload"))
+        (pass-by (messages-are? [[:email "403"] [:email "/debug"]] (poll-message-chan *debug-chan*))))))

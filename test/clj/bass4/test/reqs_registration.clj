@@ -1,7 +1,7 @@
 (ns bass4.test.reqs-registration
   (:require [bass4.i18n]
             [clojure.test :refer :all]
-            [clojure.core.async :refer [chan]]
+            [clojure.core.async :refer [chan dropping-buffer]]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
@@ -73,6 +73,9 @@
         (follow-redirect)
         (has (some-text? "Who is collecting the data"))
         (visit "/registration/564610/privacy" :request-method :post :params {})
+        (pass-by (messages-are?
+                   [[:email "API"]]
+                   (poll-message-chan *debug-chan*)))
         (has (status? 400))
         (visit "/registration/564610/form")
         (has (status? 302))

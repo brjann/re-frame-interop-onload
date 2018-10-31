@@ -1,17 +1,31 @@
 (ns bass4.test.reqs-instrument-embedded
   (:require [clojure.test :refer :all]
+            [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     disable-attack-detector
+                                     *s*
+                                     pass-by
+                                     messages-are?
+                                     poll-message-chan]]
             [clojure.string :as string]
             [bass4.services.bass :as bass]
+            [bass4.external-messages :refer [*debug-chan*]]
             [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
   test-fixtures
   disable-attack-detector)
+
+(use-fixtures
+  :each
+  (fn [f]
+    (binding [*debug-chan* (chan)]
+      (f))))
 
 (deftest request-post-answers
   (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647"})]
@@ -21,9 +35,9 @@
         (has (status? 200))
         (visit "/embedded/instrument/1647" :request-method :post :params {})
         (has (status? 400))
-        (debug-headers-text? "MAIL" "JSON")
+        (pass-by (messages-are? [[:email "JSON"]] (poll-message-chan *debug-chan*)))
         (visit "/embedded/instrument/1647" :request-method :post :params {:items "x" :specifications "y"})
-        (debug-headers-text? "MAIL" "JSON")
+        (pass-by (messages-are? [[:email "JSON"]] (poll-message-chan *debug-chan*)))
         (has (status? 400))
         (visit "/embedded/instrument/1647" :request-method :post :params {:items "{}" :specifications "{}"})
         (has (status? 302))
