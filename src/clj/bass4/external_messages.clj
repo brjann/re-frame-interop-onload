@@ -47,29 +47,19 @@
   [message]
   (when-not (:error-chan message)
     (throw (ex-info "Sender must provide an error chan" message)))
-  (let [err-chan  (:error-chan message)
-        channels  (cond
+  (let [err-chan (:error-chan message)
+        channels (cond
                     (sequential? (:channels message))
                     (:channels message)
 
                     (some? (:channels message))
                     [(:channels message)])
-        message   (dissoc message :channels)
-        sender-fn (external-message-sender message)]
-    ;;
-    ;; NOTE
-    ;; Dynamic rebindings are not visible inside the thread pool
-    ;; - since it is created outside the calling context.
-    ;; Therefore, the send function cannot rely on dynamic
-    ;; variables.
-    ;; To respect rebinding of send functions, the send function
-    ;; is bound above - check out the syntax of the
-    ;; external-messages-sender email and sms defmethods
+        message  (dissoc message :channels)]
     (.execute message-thread-pool
               (fn []
                 (let [res (merge {:message message}
                                  (try
-                                   {:result (sender-fn)}
+                                   {:result (bound-fn [] (external-message-sender message))}
                                    (catch Exception e
                                      {:result    :error
                                       :exception e})))]
