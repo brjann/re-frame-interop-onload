@@ -7,11 +7,18 @@
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass-service]
             [clj-time.core :as t]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.utils :as utils]
+            [clojure.string :as str]))
+
+(defn get-session-file
+  [uid]
+  (let [info (bass/read-session-file uid)]
+    (assoc info :user-id (utils/str->int (:user-id info)))))
 
 (defn embedded-session
   [handler request uid]
-  (if-let [{:keys [user-id path session-id]} (bass/read-session-file uid)]
+  (if-let [{:keys [user-id path session-id]} (get-session-file uid)]
     (-> (http-response/found path)
         (assoc :session {:user-id        user-id
                          :embedded-path  path
@@ -35,37 +42,65 @@
             (legal-character (subs current embedded-length (inc embedded-length))))
         true))))
 
-#_(defn check-php-session
+(defn check-php-session
   [{:keys [user-id php-session-id]}]
-  (let [php-session        (bass-service/get-php-session php-session-id)
-        ;; TODO: If session doesn't exist
-        last-activity      (:last-activity php-session)
-        php-user-id        (:user-id php-session)
-        now-unix           (b-time/to-unix (t/now))
-        time-diff-activity (- now-unix last-activity)
-        timeouts           (bass-service/get-staff-timeouts)
-        re-auth-timeout    (:re-auth-timeout timeouts)
-        absolute-timeout   (:absolute-timeout timeouts)]
-    (log/debug "user-id:" user-id "php user-id:" php-user-id)
-    (log/debug "current time:" now-unix "last session activity:" last-activity "diff" time-diff-activity)
-    (log/debug "re-auth timeout:" re-auth-timeout "secs left" (- re-auth-timeout time-diff-activity))
-    (log/debug "absolute timeout:" absolute-timeout "secs left" (- absolute-timeout time-diff-activity))))
+  (if-let [php-session (bass-service/get-php-session php-session-id)]
+    (let [last-activity      (:last-activity php-session)
+          php-user-id        (:user-id php-session)
+          now-unix           (b-time/to-unix (t/now))
+          time-diff-activity (- now-unix last-activity)
+          timeouts           (bass-service/get-staff-timeouts)
+          re-auth-timeout    (:re-auth-timeout timeouts)
+          absolute-timeout   (:absolute-timeout timeouts)]
+      #_(log/debug "php-session-id:" php-session-id)
+      #_(log/debug "user-id:" user-id "php user-id:" php-user-id)
+      #_(log/debug "current time:" now-unix "last session activity:" last-activity "diff" time-diff-activity)
+      #_(log/debug "re-auth timeout:" re-auth-timeout "secs left" (- re-auth-timeout time-diff-activity))
+      #_(log/debug "absolute timeout:" absolute-timeout "secs left" (- absolute-timeout time-diff-activity))
+      (cond
+        (not= user-id php-user-id)
+        ::user-mismatch
+
+        (> time-diff-activity absolute-timeout)
+        ::absolute-timeout
+
+        (> time-diff-activity re-auth-timeout)
+        ::re-auth-timeout
+
+        :else
+        ::ok))
+    ::no-session))
 
 (defn check-embedded-path
   [handler request]
-  (let [current-path  (:uri request)
-        embedded-path (get-in request [:session :embedded-path])]
-    #_(check-php-session (:session request))
-    (if (and embedded-path (matches-embedded current-path (str "/embedded/" embedded-path)))
+  (let [current-path   (:uri request)
+        session        (:session request)
+        embedded-path  (:embedded-path session)
+        php-session-id (:php-session-id session)]
+    (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
-      (layout/error-page
-        {:status 403
-         :title  "No embedded access"}))))
+      (if (and embedded-path (matches-embedded current-path (str "/embedded/" embedded-path)))
+        (case (check-php-session (:session request))
+          (::user-mismatch ::no-session ::absolute-timeout)
+          (->
+            (http-response/found "/embedded/error/no-session")
+            (assoc :session {}))
+
+          ::re-auth-timeout
+          (http-response/found "/embedded/error/re-auth")
+
+          ::ok
+          (do
+            (bass-service/update-php-session-last-activity! php-session-id (b-time/to-unix (t/now)))
+            (handler request)))
+        (layout/error-page
+          {:status 403
+           :title  "No embedded access"})))))
 
 (defn embedded-request [handler request uid]
   (let [session-map (when uid
                       (let [{:keys [user-id path php-session-id]}
-                            (bass/read-session-file uid)]
+                            (get-session-file uid)]
                         {:user-id user-id :embedded-path path :php-session-id php-session-id}))]
     (check-embedded-path handler (update request :session #(merge % session-map)))))
 

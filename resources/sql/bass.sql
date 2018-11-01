@@ -106,6 +106,20 @@ SELECT
 FROM c_project
 WHERE ObjectId = 100;
 
+-- :name get-php-session :? :1
+-- :doc
+SELECT
+  LastActivity AS `last-activity`,
+  UserId AS `user-id`
+FROM sessions
+WHERE SessId = :php-session-id;
+
+
+-- :name update-php-session-last-activity! :! :1
+-- :doc
+UPDATE sessions
+  SET LastActivity = :now
+WHERE SessId = :php-session-id;
 
 -- :name get-staff-timeouts :? :1
 -- :doc

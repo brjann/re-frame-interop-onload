@@ -7,6 +7,7 @@
             [bass4.test.core :refer [test-fixtures
                                      debug-headers-text?
                                      disable-attack-detector
+                                     log-headers
                                      *s*
                                      pass-by
                                      messages-are?
@@ -14,7 +15,9 @@
             [clojure.string :as string]
             [bass4.services.bass :as bass]
             [bass4.external-messages :refer [*debug-chan*]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.time :as b-time]
+            [clj-time.core :as t]))
 
 (use-fixtures
   :once
@@ -28,7 +31,8 @@
       (f))))
 
 (deftest request-post-answers
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id "xxx"})
+                bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/1647")
@@ -46,7 +50,8 @@
 
 
 (deftest request-wrong-instrument
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/" :php-session-id "xxx"})
+                bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
@@ -60,7 +65,8 @@
       (has (status? 403))))
 
 (deftest embedded-render
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "render"})]
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "render" :php-session-id "xxx"})
+                bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/render")
         (has (status? 403))

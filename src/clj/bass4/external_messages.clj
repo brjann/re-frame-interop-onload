@@ -36,9 +36,10 @@
 (defn async-error-chan
   [send-fn db-name]
   (let [err-chan (chan)]
-    ;; This go block will be GC'd when there is no reference to the message
+    ;; The go block and err-chan will be GC'd when there is no reference to the message
     ;; https://stackoverflow.com/questions/29879996/how-do-clojure-core-async-channels-get-cleaned-up
-    ;; I've confirmed this by storing the err-chans in WeakReferences
+    ;; I've confirmed this by storing the err-chan and go in WeakReferences and triggered garbage
+    ;; collect. The references disappear.
     (go
       (let [res (<! err-chan)]
         (async-error-handler send-fn db-name res)))

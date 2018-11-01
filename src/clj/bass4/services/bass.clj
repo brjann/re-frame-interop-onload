@@ -66,7 +66,11 @@
 
 (defn get-php-session
   [php-session-id]
-  #_(db/get-php-session {:php-session-id php-session-id}))
+  (db/get-php-session {:php-session-id php-session-id}))
+
+(defn update-php-session-last-activity!
+  [php-session-id now]
+  (db/update-php-session-last-activity! {:php-session-id php-session-id :now now}))
 
 (defn get-staff-timeouts
   []
@@ -105,7 +109,6 @@
      (when-let [file (db-dir "sessiondata" filename)]
        (when (and (.exists file) (check-file-age file max-age-sec))
          (let [info (json-safe (slurp file) keyword)]
-           ;; TODO: Check if session is ongoing in BASS
            (when delete?
              (io/delete-file file))
            info))))))

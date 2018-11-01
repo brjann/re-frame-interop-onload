@@ -30,6 +30,14 @@
                        {:text     text
                         :markdown markdown}))
 
+      (context "/error" []
+        (routes
+          (GET "/re-auth" []
+            (layout/text-response "Timeout. You need to re-authenticate in the staff interface."))
+
+          (GET "/no-session" []
+            (layout/text-response "No session. You do not have an active staff session. Maybe you have been logged out? Please login again in the staff interface."))))
+
       (context "/admin" []
         (routes
           (GET "/" []
