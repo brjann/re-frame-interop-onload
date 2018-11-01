@@ -66,7 +66,7 @@
 
 (defn get-php-session
   [php-session-id]
-  (db/get-php-session {:php-session-id php-session-id}))
+  #_(db/get-php-session {:php-session-id php-session-id}))
 
 (defn get-staff-timeouts
   []

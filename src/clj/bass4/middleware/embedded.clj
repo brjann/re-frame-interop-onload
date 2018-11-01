@@ -35,7 +35,7 @@
             (legal-character (subs current embedded-length (inc embedded-length))))
         true))))
 
-(defn check-php-session
+#_(defn check-php-session
   [{:keys [user-id php-session-id]}]
   (let [php-session        (bass-service/get-php-session php-session-id)
         ;; TODO: If session doesn't exist
@@ -55,7 +55,7 @@
   [handler request]
   (let [current-path  (:uri request)
         embedded-path (get-in request [:session :embedded-path])]
-    (check-php-session (:session request))
+    #_(check-php-session (:session request))
     (if (and embedded-path (matches-embedded current-path (str "/embedded/" embedded-path)))
       (handler request)
       (layout/error-page
