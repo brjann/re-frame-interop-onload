@@ -10,8 +10,7 @@
 
 (defmethod external-message-sender :debug
   [message]
-  (fn []
-    #_(http/get "https://httpbin.org/delay/0.1")))
+  #_(http/get "https://httpbin.org/delay/0.1"))
 
 (def ^Executor message-thread-pool
   (Executors/newFixedThreadPool 32))
@@ -51,17 +50,17 @@
     (throw (ex-info "Sender must provide an error chan" message)))
   (let [err-chan (:error-chan message)
         channels (cond
-                    (sequential? (:channels message))
-                    (:channels message)
+                   (sequential? (:channels message))
+                   (:channels message)
 
-                    (some? (:channels message))
-                    [(:channels message)])
+                   (some? (:channels message))
+                   [(:channels message)])
         message  (dissoc message :channels)]
     (.execute message-thread-pool
-              (fn []
+              (bound-fn []
                 (let [res (merge {:message message}
                                  (try
-                                   {:result (bound-fn [] (external-message-sender message))}
+                                   {:result (external-message-sender message)}
                                    (catch Exception e
                                      {:result    :error
                                       :exception e})))]
