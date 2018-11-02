@@ -101,7 +101,7 @@
   ;; Test environment, dev-test and dev are true
   ;; Dev environment, dev-test is false and dev is true
   (let [redefs (merge
-                 (mail-redefs (or *mail-reroute* (env :dev-reroute-email)))
+                 #_(mail-redefs (or *mail-reroute* (env :dev-reroute-email)))
                  (sms-redefs (or *sms-reroute* (env :dev-reroute-sms))))]
     (if redefs
       (with-bindings redefs

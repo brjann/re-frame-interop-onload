@@ -25,8 +25,32 @@
        (str (:out res))
        true))))
 
-;; Overwritten by other function when in debug/test mode
-(defn ^:dynamic send-email!
+(def ^:dynamic *mail-reroute* nil)
+
+(defmulti send-email! (fn [& more]
+                        (let [re-route (or *mail-reroute* (env :dev-reroute-email) :default)]
+                          (log/debug re-route)
+                          (if (string? re-route)
+                            :redirect
+                            re-route))))
+
+(defmethod send-email! :redirect
+  [to subject message & reply-to]
+  (log/debug "re-routing")
+  (let [reroute-email (or *mail-reroute* (env :dev-reroute-email))]
+    (send-email*! reroute-email subject (str "To: " to "\n" message) (first reply-to) false)))
+
+(defmethod send-email! :void
+  [to subject message & args]
+  (log/debug "void")
+  true)
+
+(defmethod send-email! :out
+  [& args]
+  (log/debug "out")
+  (println (apply str (interpose "\n" args))))
+
+(defmethod send-email! :default
   ([to subject message]
    (send-email*! to subject message nil false))
   ([to subject message reply-to]
