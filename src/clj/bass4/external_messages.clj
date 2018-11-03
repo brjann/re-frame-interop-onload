@@ -58,7 +58,6 @@
         message  (dissoc message :channels)]
     (.execute message-thread-pool
               (bound-fn []
-                (log/debug "sending" message)
                 (let [res (merge {:message message}
                                  (try
                                    {:result (external-message-sender message)}
@@ -70,7 +69,7 @@
                       (let [result (alt!! (timeout 1000) :timeout
                                           [[c res]] :chan)]
                         (when (= :timeout result)
-                          (log/debug "Channel timed out")))))
+                          (log/info "Channel timed out")))))
                   (when (= :error (:result res))
                     (>!! err-chan res)))))
     nil))
@@ -104,7 +103,7 @@
                            (reset! start (. System (nanoTime)))
 
                            (= total-count current-count)
-                           (log/debug "Sent" current-count "super messages in" (/ (double (- (. System (nanoTime)) @start)) 1000000.0))))]
+                           (log/info "Sent" current-count "super messages in" (/ (double (- (. System (nanoTime)) @start)) 1000000.0))))]
     (dotimes [_ total-count]
       (let [channel (chan)]
         (dispatch-external-message {:type       :debug
