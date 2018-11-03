@@ -29,6 +29,12 @@
        (str (:out res))
        true))))
 
+
+;; ---------------------
+;;    EMAIL REROUTING
+;; ---------------------
+
+
 (def ^:dynamic *mail-reroute* nil)
 
 (defmulti send-email! (fn [& more]
@@ -57,18 +63,14 @@
    (send-email*! to subject message reply-to false)))
 
 
-;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
-(defn is-email?
-  "Check if input is a valid email address"
-  [input]
-  (let [match-regex? (fn [v regex]
-                       (boolean (re-matches regex v)))]
-    (when (string? input)
-      (match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"))))
-
 (defmethod external-messages/external-message-sender :email
   [{:keys [to subject message reply-to]}]
   (send-email! to subject message reply-to))
+
+
+;; ---------------------
+;;    ERROR EMAIL
+;; ---------------------
 
 (defn error-sender
   [subject message]
@@ -76,6 +78,10 @@
     (env :error-email)
     subject
     message))
+
+;; ---------------------
+;;     EMAIL QUEUE
+;; ---------------------
 
 (defn queue-email!
   ([to subject message]
@@ -88,3 +94,18 @@
                                         :message    message
                                         :reply-to   reply-to
                                         :error-chan error-chan}))))
+
+
+;; ---------------------
+;;    EMAIL VALIDATOR
+;; ---------------------
+
+;; Move to utils?
+;; https://github.com/lamuria/email-validator/blob/master/src/email_validator/core.clj
+(defn is-email?
+  "Check if input is a valid email address"
+  [input]
+  (let [match-regex? (fn [v regex]
+                       (boolean (re-matches regex v)))]
+    (when (string? input)
+      (match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"))))

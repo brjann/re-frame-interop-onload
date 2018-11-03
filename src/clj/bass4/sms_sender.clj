@@ -1,21 +1,19 @@
 (ns bass4.sms-sender
-  (:require [clojure.java.io :as io]
-            [clojure.core.async :refer [go <! chan]]
+  (:require [clojure.core.async :refer [go <! chan]]
             [bass4.config :refer [env]]
             [clj-http.client :as http]
             [ring.util.codec :as codec]
             [bass4.db.core :as db]
             [bass4.services.bass :as bass-service]
             [selmer.parser :as parser]
-            [bass4.request-state :as request-state]
             [bass4.db-config :as db-config]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
             [bass4.external-messages :as external-messages]
-            [bass4.api-coercion :as api]
             [bass4.email :as email]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.utils :as utils]))
 
 
 ;; ---------------------
@@ -41,7 +39,7 @@
 
 
 ;; ---------------------
-;;  ACTUAL EMAIL SENDER
+;;   ACTUAL SMS SENDER
 ;; ---------------------
 
 (defn send-sms*!
@@ -60,12 +58,17 @@
                  (:smsteknik-status-return-url config))]
     (try
       (let [res     (:body (http/post url {:body xml}))
-            res-int (api/int! res)]
+            res-int (utils/str->int (subs res 0 1))]
         (if (zero? res-int)
           (throw (ex-info "SMS service returned zero" {:res res}))
           true))
       (catch Exception e
         (throw (ex-info "SMS sending error" {:exception e}))))))
+
+
+;; ----------------------
+;;  SMS SENDER REROUTING
+;; ----------------------
 
 (def ^:dynamic *sms-reroute* nil)
 
@@ -105,6 +108,10 @@
   [{:keys [to message sender]}]
   (send-sms! to message sender))
 
+;; ----------------------
+;;      SMS COUNTER
+;; ----------------------
+
 (defn sms-success!
   [db-connection]
   (when db-connection
@@ -113,6 +120,10 @@
       (db/increase-sms-count!
         db-connection
         {:day midnight}))))
+
+;; ----------------------
+;;       SMS QUEUE
+;; ----------------------
 
 (defn queue-sms!
   [to message]
