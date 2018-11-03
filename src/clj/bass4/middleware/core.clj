@@ -14,7 +14,7 @@
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.request-state :as request-state]
-            [bass4.middleware.debug :refer [debug-redefs wrap-debug-exceptions wrap-session-modification]]
+            [bass4.middleware.debug :refer [wrap-debug-exceptions wrap-session-modification]]
             [bass4.middleware.request-state :refer [request-state]]
             [bass4.middleware.ajax-post :refer [ajax-post]]
             [bass4.middleware.embedded :refer [embedded-mw embedded-iframe]]
@@ -214,5 +214,4 @@
       ;; wrap-reload-headers
       (wrap-mw-fn #'embedded-iframe)                        ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'internal-error-mw)
-      (wrap-mw-fn #'request-state)
-      (wrap-mw-fn #'debug-redefs)))
+      (wrap-mw-fn #'request-state)))
