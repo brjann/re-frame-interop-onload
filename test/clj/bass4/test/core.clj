@@ -19,7 +19,8 @@
             [bass4.middleware.debug :as mw-debug]
             [bass4.config :as config]
             [clojure.string :as str]
-            [bass4.email :as email]))
+            [bass4.email :as email]
+            [bass4.sms-sender :as sms]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -76,7 +77,7 @@
   (bass4.db.core/init-repl :bass4_test)
   #_(reset! bankid/session-statuses {})
   (binding [email/*mail-reroute*             :void
-            mw-debug/*sms-reroute*           :void
+            sms/*sms-reroute*                :void
             clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
             config/test-mode?                true

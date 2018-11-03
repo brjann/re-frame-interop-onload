@@ -51,7 +51,7 @@
 
 (def ^:dynamic *sms-reroute* nil)
 
-(defn sms-redefs
+#_(defn sms-redefs
   [sms-reroute]
   (cond
     ;; Put sms in void when
@@ -76,7 +76,7 @@
 
 (def ^:dynamic *mail-reroute* nil)
 
-(defn mail-redefs
+#_(defn mail-redefs
   [mail-reroute]
   (cond
     ;; Put mail in void when
@@ -102,7 +102,7 @@
   ;; Dev environment, dev-test is false and dev is true
   (let [redefs (merge
                  #_(mail-redefs (or *mail-reroute* (env :dev-reroute-email)))
-                 (sms-redefs (or *sms-reroute* (env :dev-reroute-sms))))]
+                 #_(sms-redefs (or *sms-reroute* (env :dev-reroute-sms))))]
     (if redefs
       (with-bindings redefs
         (handler request))

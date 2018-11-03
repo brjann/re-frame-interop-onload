@@ -14,7 +14,8 @@
             [bass4.time :as b-time]
             [bass4.external-messages :as external-messages]
             [bass4.api-coercion :as api]
-            [bass4.email :as email]))
+            [bass4.email :as email]
+            [clojure.string :as str]))
 
 (defn smsteknik-url
   [id user password]
@@ -63,8 +64,44 @@
       (catch Exception e
         (throw (ex-info "SMS sending error" {:exception e}))))))
 
+(def ^:dynamic *sms-reroute* nil)
+
+(defmulti send-sms! (fn [& more]
+                      (let [re-route (or *sms-reroute* (env :dev-reroute-sms) :default)]
+                        (log/debug "SMS re-route" re-route)
+                        (if (string? re-route)
+                          (if (str/includes? re-route "@")
+                            :redirect-sms
+                            :redirect-email)
+                          re-route))))
+
+
+(defmethod send-sms! :redirect-sms
+  [recipient message sender]
+  (log/debug "Reroute-sms")
+  (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms) :default)]
+    (send-sms*! reroute-sms (str message "\n" "To: " recipient) sender)))
+
+
+(defmethod send-sms! :redirect-email
+  [recipient message sender]
+  (log/debug "Reroute-email")
+  (let [reroute-email (or *sms-reroute* (env :dev-reroute-sms) :default)]
+    (email/send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)))
+
+(defmethod send-sms! :void
+  [recipient message sender]
+  (log/debug "SMS void")
+  true)
+
+(defmethod send-sms! :out
+  [& args]
+  (log/debug "SMS out")
+  (println (apply str (interpose "\n" (conj args "SMS")))))
+
+
 ;; Overwritten by other function when in debug mode
-(defn ^:dynamic send-sms!
+(defmethod send-sms! :default
   [to message sender]
   (when (env :dev)
     (log/info (str "Sent sms to " to)))
@@ -72,8 +109,10 @@
 
 (defmethod external-messages/external-message-sender :sms
   [{:keys [to message sender]}]
-  (fn [] (send-sms! to message sender)))
+  (log/debug "SMS!!!")
+  (send-sms! to message sender))
 
+;; TODO: The sms-success should not be here...
 (defn queue-sms!
   [to message]
   (let [sender     (bass-service/db-sms-sender)

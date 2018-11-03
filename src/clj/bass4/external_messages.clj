@@ -58,6 +58,7 @@
         message  (dissoc message :channels)]
     (.execute message-thread-pool
               (bound-fn []
+                (log/debug "sending" message)
                 (let [res (merge {:message message}
                                  (try
                                    {:result (external-message-sender message)}

@@ -48,7 +48,7 @@
 (defmethod send-email! :out
   [& args]
   (log/debug "out")
-  (println (apply str (interpose "\n" args))))
+  (println (apply str (interpose "\n" (conj args "email")))))
 
 (defmethod send-email! :default
   ([to subject message]
