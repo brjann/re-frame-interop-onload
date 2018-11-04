@@ -1,5 +1,5 @@
 (ns bass4.external-messages
-  (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout dropping-buffer]]
+  (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout dropping-buffer put!]]
             [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]
             [clj-http.client :as http])
@@ -66,7 +66,8 @@
                                       :exception e})))]
                   (when channels
                     (doseq [c channels]
-                      (let [result (alt!! (timeout 1000) :timeout
+                      (put! c res)
+                      #_(let [result (alt!! (timeout 1000) :timeout
                                           [[c res]] :chan)]
                         (when (= :timeout result)
                           (log/info "Channel timed out")))))
