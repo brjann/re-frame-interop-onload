@@ -51,6 +51,26 @@
                                                  :ClosedAt   0}})
      flag-id)))
 
+(declare local-midnight)
+
+(defn- inc-external-message-count!
+  [db-connection type]
+  (when db-connection
+    (let [midnight (-> (local-midnight)
+                       (utils/to-unix))]
+      (db/inc-external-message-count!
+        db-connection
+        {:type type
+         :day  midnight}))))
+
+(defn inc-sms-count!
+  [db-connection]
+  (inc-external-message-count! db-connection "sms"))
+
+(defn inc-email-count!
+  [db-connection]
+  (inc-external-message-count! db-connection "email"))
+
 (defn time-zone
   []
   (try

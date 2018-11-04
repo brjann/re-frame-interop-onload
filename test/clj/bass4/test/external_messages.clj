@@ -13,7 +13,7 @@
   test-fixtures)
 
 (deftest async-send-email-out
-  (let [res (with-out-str (binding [email/*mail-reroute*           :out
+  (let [res (with-out-str (binding [email/*email-reroute*          :out
                                     external-messages/*debug-chan* (chan)]
                             (email/queue-email! "brjann@gmail.com" "XXX" "YYY")
                             (<!! external-messages/*debug-chan*)))]

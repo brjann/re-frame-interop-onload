@@ -53,7 +53,8 @@
 
       ;; if ajax and response is 302, then send
       ;; the special found location response instead
-      (and ajax-post? (= (:status response) 302)) (ajax-found response)
+      (and ajax-post? (= (:status response) 302))
+      (ajax-found response)
 
       ;; The user is trying to post to
       ;; forbidden but is not logged out.
@@ -63,7 +64,8 @@
            (not= nil (get-in request [:session :user-id])))
       (ajax-403-logged-in request response)
 
-      (and ajax-post? (= (:status response) 403))
+      (and ajax-post?
+           (= (:status response) 403))
       (ajax-403-not-logged-in response)
 
       :else

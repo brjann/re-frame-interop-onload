@@ -4,7 +4,8 @@
             [clojure.string :as s]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [clojure.math.numeric-tower :as math]))
+            [clojure.math.numeric-tower :as math]
+            [clj-time.coerce :as tc]))
 
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
@@ -195,6 +196,21 @@
   (let [x (* (math/expt 10 p) v)
         r (math/round x)]
     (double (/ r (math/expt 10 p)))))
+
+(defn match-regex? [v regex]
+  (boolean (re-matches regex v)))
+
+;; ------------------
+;;   TIME FUNCTIONS
+;; ------------------
+
+;; Also present in b-time...
+(defn to-unix
+  [now]
+  (-> now
+      (tc/to-long)
+      (/ 1000)
+      (int)))
 
 ;; ---------
 ;;   QUEUE

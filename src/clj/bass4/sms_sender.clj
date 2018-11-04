@@ -1,19 +1,20 @@
 (ns bass4.sms-sender
-  (:require [clojure.core.async :refer [go <! chan]]
-            [bass4.config :refer [env]]
-            [clj-http.client :as http]
-            [ring.util.codec :as codec]
-            [bass4.db.core :as db]
-            [bass4.services.bass :as bass-service]
-            [selmer.parser :as parser]
-            [bass4.db-config :as db-config]
-            [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]
-            [bass4.time :as b-time]
-            [bass4.external-messages :as external-messages]
-            [bass4.email :as email]
-            [clojure.string :as str]
-            [bass4.utils :as utils]))
+  (:require
+    [clojure.core.async :refer [go <! chan]]
+    [bass4.config :refer [env]]
+    [clj-http.client :as http]
+    [ring.util.codec :as codec]
+    [bass4.db.core :as db]
+    [bass4.services.bass :as bass-service]
+    [selmer.parser :as parser]
+    [bass4.db-config :as db-config]
+    [clojure.tools.logging :as log]
+    [bass4.services.bass :as bass]
+    [bass4.time :as b-time]
+    [bass4.external-messages :as external-messages]
+    [bass4.email :as email]
+    [clojure.string :as str]
+    [bass4.utils :as utils]))
 
 
 ;; ---------------------
@@ -86,15 +87,13 @@
   (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms) :default)]
     (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender)))
 
-
 (defmethod send-sms! :redirect-email
   [recipient message _]
   (let [reroute-email (or *sms-reroute* (env :dev-reroute-sms) :default)]
     (email/send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)))
 
 (defmethod send-sms! :void
-  [& _]
-  true)
+  [& _])
 
 (defmethod send-sms! :out
   [& more]
@@ -104,43 +103,57 @@
   [to message sender]
   (send-sms*! to message sender))
 
+;; -------------------------------------
+;;    EXTERNAL MESSAGE METHOD FOR SMS
+;; -------------------------------------
+
 (defmethod external-messages/external-message-sender :sms
   [{:keys [to message sender]}]
   (send-sms! to message sender))
 
-;; ----------------------
-;;      SMS COUNTER
-;; ----------------------
-
-(defn sms-success!
-  [db-connection]
-  (when db-connection
-    (let [midnight (-> (bass/local-midnight)
-                       (b-time/to-unix))]
-      (db/increase-sms-count!
-        db-connection
-        {:day midnight}))))
 
 ;; ----------------------
-;;       SMS QUEUE
+;;        SMS API
 ;; ----------------------
+
+(defn is-sms-number?
+  [number]
+  (re-matches #"^\+{0,1}[0-9()./\- ]*$" number))
+
+(defn get-sender []
+  (if db/*db*
+    (bass-service/db-sms-sender)
+    "BASS4"))
+
+(defn send-sms-now!
+  [to message]
+  (when (is-sms-number? to)
+    (let [sender (get-sender)]
+      (send-sms! to message sender)
+      (if db/*db*
+        (bass/inc-sms-count! db/*db*)
+        (log/info "No DB selected for SMS count update."))
+      true)))
 
 (defn queue-sms!
   [to message]
-  (let [sender     (try
-                     (bass-service/db-sms-sender)
-                     (catch Exception _
-                       "BASS4"))
-        error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
-        c          (external-messages/queue-message-c! {:type       :sms
-                                                        :to         to
-                                                        :message    message
-                                                        :sender     sender
-                                                        :error-chan error-chan})]
-    (if db/*db*
+  (when (is-sms-number? to)
+    (let [sender     (get-sender)
+          error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
+          c          (external-messages/queue-message-c! {:type       :sms
+                                                          :to         to
+                                                          :message    message
+                                                          :sender     sender
+                                                          :error-chan error-chan})]
       (go
         (let [res (<! c)]
-          (if (= :error (:result res))
+          (cond
+            (= :error (:result res))
             (throw (ex-info "SMS send failed" res))
-            (sms-success! db/*db*))))
-      (log/info "No DB selected for SMS count update."))))
+
+            db/*db*
+            (bass/inc-sms-count! db/*db*)
+
+            :else
+            (log/info "No DB selected for SMS count update."))))
+      true)))
