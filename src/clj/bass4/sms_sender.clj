@@ -127,33 +127,32 @@
 
 (defn send-sms-now!
   [to message]
-  (when (is-sms-number? to)
-    (let [sender (get-sender)]
-      (send-sms! to message sender)
-      (if db/*db*
-        (bass/inc-sms-count! db/*db*)
-        (log/info "No DB selected for SMS count update."))
-      true)))
+  (when-not (is-sms-number? to)
+    (throw (throw (Exception. (str "Not valid sms number: " to)))))
+  (let [sender (get-sender)]
+    (send-sms! to message sender)
+    (if db/*db*
+      (bass/inc-sms-count! db/*db*)
+      (log/info "No DB selected for SMS count update."))
+    true))
 
 (defn queue-sms!
   [to message]
-  (when (is-sms-number? to)
-    (let [sender     (get-sender)
-          error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
-          c          (external-messages/queue-message-c! {:type       :sms
-                                                          :to         to
-                                                          :message    message
-                                                          :sender     sender
-                                                          :error-chan error-chan})]
+  (when-not (is-sms-number? to)
+    (throw (throw (Exception. (str "Not valid sms number: " to)))))
+  (let [sender      (get-sender)
+        error-chan  (external-messages/async-error-chan email/error-sender (db-config/db-name))
+        inc-chan    (when db/*db* (chan))
+        return-chan (external-messages/queue-message-c! {:type       :sms
+                                                         :to         to
+                                                         :message    message
+                                                         :sender     sender
+                                                         :channels   (when inc-chan [inc-chan])
+                                                         :error-chan error-chan})]
+    (if-not inc-chan
+      (log/info "No DB selected for SMS count update.")
       (go
-        (let [res (<! c)]
-          (cond
-            (= :error (:result res))
-            (throw (ex-info "SMS send failed" res))
-
-            db/*db*
-            (bass/inc-sms-count! db/*db*)
-
-            :else
-            (log/info "No DB selected for SMS count update."))))
-      true)))
+        (let [res (<! inc-chan)]
+          (when-not (= :error (:result res))
+            (bass/inc-sms-count! db/*db*)))))
+    return-chan))

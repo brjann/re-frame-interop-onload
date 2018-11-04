@@ -98,34 +98,33 @@
   ([to subject message]
    (send-email-now! to subject message nil))
   ([to subject message reply-to]
-   (when (is-email? to)
-     (send-email! to subject message reply-to)
-     (if db/*db*
-       (bass/inc-email-count! db/*db*)
-       (log/info "No DB selected for email count update."))
-     true)))
+   (when-not (is-email? to)
+     (throw (Exception. (str "Not valid email address: " to))))
+   (send-email! to subject message reply-to)
+   (if db/*db*
+     (bass/inc-email-count! db/*db*)
+     (log/info "No DB selected for email count update."))
+   true))
 
 (defn queue-email!
   ([to subject message]
    (queue-email! to subject message nil))
   ([to subject message reply-to]
-   (when (is-email? to)
-     (let [error-chan (external-messages/async-error-chan error-sender (db-config/db-name))
-           c          (external-messages/queue-message-c! {:type       :email
-                                                           :to         to
-                                                           :subject    subject
-                                                           :message    message
-                                                           :reply-to   reply-to
-                                                           :error-chan error-chan})]
+   (when-not (is-email? to)
+     (throw (Exception. (str "Not valid email address: " to))))
+   (let [error-chan  (external-messages/async-error-chan error-sender (db-config/db-name))
+         inc-chan    (when db/*db* (chan))
+         return-chan (external-messages/queue-message-c! {:type       :email
+                                                          :to         to
+                                                          :subject    subject
+                                                          :message    message
+                                                          :reply-to   reply-to
+                                                          :channels   (when inc-chan [inc-chan])
+                                                          :error-chan error-chan})]
+     (if-not inc-chan
+       (log/info "No DB selected for email count update.")
        (go
-         (let [res (<! c)]
-           (cond
-             (= :error (:result res))
-             (throw (ex-info "Email send failed" res))
-
-             db/*db*
-             (bass/inc-email-count! db/*db*)
-
-             :else
-             (log/info "No DB selected for email count update.")))))
-     true)))
+         (let [res (<! inc-chan)]
+           (when-not (= :error (:result res))
+             (bass/inc-email-count! db/*db*)))))
+     return-chan)))

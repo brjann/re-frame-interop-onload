@@ -55,7 +55,7 @@
 
                    (some? (:channels message))
                    [(:channels message)])
-        message  (dissoc message :channels)]
+        message  (dissoc message :channels :error-chan)]
     (.execute message-thread-pool
               (bound-fn []
                 (let [res (merge {:message message}

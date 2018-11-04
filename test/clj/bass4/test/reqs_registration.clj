@@ -326,7 +326,7 @@
 
 (deftest registration-auto-id-email-username-own-password-no-assessments
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
-        email          (apply str (take 20 (repeatedly #(char (+ (rand 26) 65)))))]
+        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number :password}
