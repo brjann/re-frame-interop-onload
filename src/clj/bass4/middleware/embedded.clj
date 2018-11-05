@@ -59,19 +59,14 @@
           timeouts           (bass-service/get-staff-timeouts)
           re-auth-timeout    (:re-auth-timeout timeouts)
           absolute-timeout   (:absolute-timeout timeouts)]
-      #_(log/debug "php-session-id:" php-session-id)
-      #_(log/debug "user-id:" user-id "php user-id:" php-user-id)
-      #_(log/debug "current time:" now-unix "last session activity:" last-activity "diff" time-diff-activity)
-      #_(log/debug "re-auth timeout:" re-auth-timeout "secs left" (- re-auth-timeout time-diff-activity))
-      #_(log/debug "absolute timeout:" absolute-timeout "secs left" (- absolute-timeout time-diff-activity))
       (cond
         (not= user-id php-user-id)
         ::user-mismatch
 
-        (> time-diff-activity absolute-timeout)
+        (>= time-diff-activity absolute-timeout)
         ::absolute-timeout
 
-        (> time-diff-activity re-auth-timeout)
+        (>= time-diff-activity re-auth-timeout)
         ::re-auth-timeout
 
         :else
