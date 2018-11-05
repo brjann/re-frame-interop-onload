@@ -137,22 +137,24 @@
     true))
 
 (defn queue-sms!
+  "Throws if to is not valid mobile phone number.
+  Returns channel on which send result will be put.
+  Guarantees that update of external message count is done before putting result"
   [to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
-  (let [sender      (get-sender)
-        error-chan  (external-messages/async-error-chan email/error-sender (db-config/db-name))
-        inc-chan    (when db/*db* (chan))
-        return-chan (external-messages/queue-message-c! {:type       :sms
-                                                         :to         to
-                                                         :message    message
-                                                         :sender     sender
-                                                         :channels   (when inc-chan [inc-chan])
-                                                         :error-chan error-chan})]
-    (if-not inc-chan
-      (log/info "No DB selected for SMS count update.")
-      (go
-        (let [res (<! inc-chan)]
-          (when-not (= :error (:result res))
-            (bass/inc-sms-count! db/*db*)))))
-    return-chan))
+  (let [sender     (get-sender)
+        error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
+        own-chan   (external-messages/queue-message! {:type       :sms
+                                                      :to         to
+                                                      :message    message
+                                                      :sender     sender
+                                                      :error-chan error-chan})]
+    (go
+      (let [res (<! own-chan)]
+        (when-not (= :error (:result res))
+          (if db/*db*
+            (bass/inc-sms-count! db/*db*)
+            (log/info "No DB selected for SMS count update.")))
+        ;; Res is result of go block
+        res))))

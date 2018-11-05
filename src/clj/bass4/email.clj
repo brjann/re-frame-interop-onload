@@ -107,24 +107,26 @@
    true))
 
 (defn queue-email!
+  "Throws if to is not valid email address.
+  Returns channel on which send result will be put.
+  Guarantees that update of external message count is done before putting result"
   ([to subject message]
    (queue-email! to subject message nil))
   ([to subject message reply-to]
    (when-not (is-email? to)
      (throw (Exception. (str "Not valid email address: " to))))
-   (let [error-chan  (external-messages/async-error-chan error-sender (db-config/db-name))
-         inc-chan    (when db/*db* (chan))
-         return-chan (external-messages/queue-message-c! {:type       :email
-                                                          :to         to
-                                                          :subject    subject
-                                                          :message    message
-                                                          :reply-to   reply-to
-                                                          :channels   (when inc-chan [inc-chan])
-                                                          :error-chan error-chan})]
-     (if-not inc-chan
-       (log/info "No DB selected for email count update.")
-       (go
-         (let [res (<! inc-chan)]
-           (when-not (= :error (:result res))
-             (bass/inc-email-count! db/*db*)))))
-     return-chan)))
+   (let [error-chan (external-messages/async-error-chan error-sender (db-config/db-name))
+         own-chan   (external-messages/queue-message! {:type       :email
+                                                       :to         to
+                                                       :subject    subject
+                                                       :message    message
+                                                       :reply-to   reply-to
+                                                       :error-chan error-chan})]
+     (go
+       (let [res (<! own-chan)]
+         (when-not (= :error (:result res))
+           (if db/*db*
+             (bass/inc-email-count! db/*db*)
+             (log/info "No DB selected for email count update.")))
+         ;; Res is result of go block
+         res)))))

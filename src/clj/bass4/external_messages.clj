@@ -68,9 +68,9 @@
                     (doseq [c channels]
                       (put! c res)
                       #_(let [result (alt!! (timeout 1000) :timeout
-                                          [[c res]] :chan)]
-                        (when (= :timeout result)
-                          (log/info "Channel timed out")))))
+                                            [[c res]] :chan)]
+                          (when (= :timeout result)
+                            (log/info "Channel timed out")))))
                   (when (= :error (:result res))
                     (>!! err-chan res)))))
     nil))
@@ -80,18 +80,13 @@
 
 (defn queue-message!
   [message]
-  (let [channels (if *debug-chan*
-                   (conj (:channels message) *debug-chan*)
-                   (:channels message))]
-    (dispatch-external-message (merge message {:channels channels}))))
-
-(defn queue-message-c!
-  [message]
-  (let [c (chan)]
-    (queue-message! (merge
-                      message
-                      {:channels (conj (:channels message) c)}))
-    c))
+  (let [out-chan (chan)
+        channels (conj (:channels message) out-chan)
+        channels (if *debug-chan*
+                   (conj channels *debug-chan*)
+                   channels)]
+    (dispatch-external-message (merge message {:channels channels}))
+    out-chan))
 
 (defn queue-counted-debug-message!
   [total-count]
