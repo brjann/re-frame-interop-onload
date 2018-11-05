@@ -18,18 +18,18 @@
 
 (defn create-session
   [handler request uid]
-  (if-let [{:keys [user-id path session-id]} (get-session-file uid)]
+  (if-let [{:keys [user-id path php-session-id]} (get-session-file uid)]
     (let [session             (:session request)
           prev-embedded-paths (if (and (:embedded-paths session)
                                        (= (:user-id session) user-id)
-                                       (= (:php-session-id session) session-id))
+                                       (= (:php-session-id session) php-session-id))
                                 (:embedded-paths session)
                                 #{})
           embedded-paths      (conj prev-embedded-paths path)]
       (-> (http-response/found path)
           (assoc :session {:user-id        user-id
                            :embedded-paths embedded-paths
-                           :php-session-id session-id})))
+                           :php-session-id php-session-id})))
     (layout/print-var-response "Wrong uid.")))
 
 (defn legal-character
@@ -109,9 +109,9 @@
   ;; - user is thrown out because only the uid file's embedded info
   ;; is included.
   (let [url-uid-session (when uid
-                          (let [{:keys [user-id path session-id]}
+                          (let [{:keys [user-id path php-session-id]}
                                 (get-session-file uid)]
-                            {:user-id user-id :embedded-paths #{path} :php-session-id session-id}))]
+                            {:user-id user-id :embedded-paths #{path} :php-session-id php-session-id}))]
     (check-embedded-path handler (update request :session #(merge % url-uid-session)))))
 
 (defn handle-embedded
