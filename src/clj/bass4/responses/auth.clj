@@ -113,25 +113,24 @@
 
 (defn- send-by-method!
   [code send-methods user-sms user-email]
-  (if (when (:sms send-methods)
-        (sms/queue-sms! user-sms code))
-    true
-    (when (:email send-methods)
-      (mail/queue-email! user-email (i18n/tr [:login/code]) code))))
+  (cond
+    (:sms send-methods)
+    (sms/queue-sms! user-sms code)
+
+    (:email send-methods)
+    (mail/queue-email! user-email (i18n/tr [:login/code]) code)
+
+    :else
+    (throw (Exception. "No sending method"))))
 
 (defn- send-code!
   [code user-sms user-email by-sms? by-email? allow-both?]
   (let [send-methods (get-send-methods user-sms user-email by-sms? by-email? allow-both?)]
     (if (some identity (vals send-methods))
-      (if (send-by-method! code send-methods user-sms user-email)
-        ;; TODO: Now sending cannot fail since we're using async send.
-        ;; Would need to implement some sort of client-side polling of send status
-        :success
-        :success)
+      (do (send-by-method! code send-methods user-sms user-email)
+          :success)
       :no-method)))
 
-
-;; TODO: What if no email?
 ;; TODO: This is not perfect - wrong password and then no-method looks weird
 (defn- no-method-message
   [user]
