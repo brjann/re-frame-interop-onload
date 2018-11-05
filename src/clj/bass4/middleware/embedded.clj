@@ -16,13 +16,20 @@
   (let [info (bass/read-session-file uid)]
     (assoc info :user-id (utils/str->int (:user-id info)))))
 
-(defn embedded-session
+(defn create-session
   [handler request uid]
   (if-let [{:keys [user-id path session-id]} (get-session-file uid)]
-    (-> (http-response/found path)
-        (assoc :session {:user-id        user-id
-                         :embedded-path  path
-                         :php-session-id session-id}))
+    (let [session             (:session request)
+          prev-embedded-paths (if (and (:embedded-paths session)
+                                       (= (:user-id session) user-id)
+                                       (= (:php-session-id session) session-id))
+                                (:embedded-paths session)
+                                #{})
+          embedded-paths      (conj prev-embedded-paths path)]
+      (-> (http-response/found path)
+          (assoc :session {:user-id        user-id
+                           :embedded-paths embedded-paths
+                           :php-session-id session-id})))
     (layout/print-var-response "Wrong uid.")))
 
 (defn legal-character
@@ -75,11 +82,11 @@
   [handler request]
   (let [current-path   (:uri request)
         session        (:session request)
-        embedded-path  (:embedded-path session)
+        embedded-paths (:embedded-paths session)
         php-session-id (:php-session-id session)]
     (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
-      (if (and embedded-path (matches-embedded current-path (str "/embedded/" embedded-path)))
+      (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
         (case (check-php-session (:session request))
           (::user-mismatch ::no-session ::absolute-timeout)
           (->
@@ -98,18 +105,21 @@
            :title  "No embedded access"})))))
 
 (defn embedded-request [handler request uid]
-  (let [session-map (when uid
-                      (let [{:keys [user-id path php-session-id]}
-                            (get-session-file uid)]
-                        {:user-id user-id :embedded-path path :php-session-id php-session-id}))]
-    (check-embedded-path handler (update request :session #(merge % session-map)))))
+  ;; Note that if url uid is attached to already legal embedded path
+  ;; - user is thrown out because only the uid file's embedded info
+  ;; is included.
+  (let [url-uid-session (when uid
+                          (let [{:keys [user-id path session-id]}
+                                (get-session-file uid)]
+                            {:user-id user-id :embedded-paths #{path} :php-session-id session-id}))]
+    (check-embedded-path handler (update request :session #(merge % url-uid-session)))))
 
 (defn handle-embedded
   [handler request]
   (let [path (:uri request)
         uid  (get-in request [:params :uid])]
     (if (string/starts-with? path "/embedded/create-session")
-      (embedded-session handler request uid)
+      (create-session handler request uid)
       (embedded-request handler request uid))))
 
 (defn embedded-mw
