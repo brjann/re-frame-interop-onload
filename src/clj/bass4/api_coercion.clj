@@ -43,6 +43,14 @@
     (let [x (int! x)]
       (not (zero? x)))))
 
+(defn url?
+  [s]
+  (let [test-url (try (URL. s)
+                      (catch Exception _
+                        (URL. try-url s)))]
+    (when-not (empty? (.getHost test-url))
+      s)))
+
 (defn JSON-map!
   [s]
   (let [m (json/read-str s)]
