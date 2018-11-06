@@ -23,6 +23,7 @@
                  [metosin/ring-http-response "0.9.0"]       ; https://github.com/metosin/ring-http-response
                  [prismatic/schema "1.1.9"]                 ; https://github.com/plumatic/schema
                  [clout "2.2.1"]                            ; https://github.com/weavejester/clout
+                 [funcool/struct "1.3.0"]                   ; https://github.com/funcool/struct
 
                  ; Database and state management libraries
                  [conman "0.8.2"]                           ; https://github.com/luminus-framework/conman

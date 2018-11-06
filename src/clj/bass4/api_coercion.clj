@@ -1,7 +1,9 @@
 (ns bass4.api-coercion
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [struct.core :as st]
+            [bass4.utils :as utils :refer [map-map]])
   (:import (clojure.lang Symbol)
            (java.net URL)))
 
@@ -131,3 +133,129 @@
               `(let [~@let-vector#]
                  ~@body#)
               `(do ~@body#))))))
+
+(defn parse-scheme
+  [scheme]
+  (if (utils/in? scheme :?)
+    (filterv #(not= :? %) scheme)
+    (into ['st/required] scheme)))
+
+(defn eval-spec2
+  [api-name spec v]
+  (let [spec (if (vector? spec)
+               spec
+               [spec])
+        [nil-ok? spec] (if (utils/in? spec :?)
+                         [true (filterv #(not= :? %) spec)]
+                         [false spec])]
+    (if (nil? v)
+      (when-not (nil-ok?)
+        (throw "nil not OK"))
+      (log/debug spec))))
+
+(defmacro defapi
+  [api-name & more]
+  (when-not (instance? Symbol api-name)
+    (throw (IllegalArgumentException. "First argument to def-api must be a symbol")))
+  (let [[doc-string#
+         arg-spec#
+         body#] (destruct-api more)
+        ns#               (ns-name *ns*)
+        arg-list#         (extract-args arg-spec#)
+        speced-args#      (filter #(= 2 (count %)) arg-list#)
+        #_spec-map#         #_(into {} (map #(into [] %) speced-args#))
+        parse-spec        (fn [spec]
+                            (let [spec-name (name (if (vector? spec)
+                                                    (first spec)
+                                                    spec))
+                                  normalize (fn [s] (if (vector? s)
+                                                      s
+                                                      [s]))]
+                              (cond
+                                (= \? (last spec-name))
+                                [:validate (normalize spec)]
+
+                                (= \! (last spec-name))
+                                [:coerce (normalize spec)]
+
+                                :else
+                                (throw (Exception. (str "Spec functions must end with ! (coercion) or ? (validation). \""
+                                                        spec-name "\" did not."))))))
+        specs-normalized# (mapv (fn [[arg specs]]
+                                  (let [specs (if (vector? specs) specs [specs])
+                                        specs (if (utils/in? specs :?)
+                                                (filterv #(not= :? %) specs)
+                                                (into ['some?] specs))]
+                                    [arg (mapv parse-spec specs)]))
+                                speced-args#)
+        spec-fns#         (mapv (fn [[arg specs]]
+                                  [arg (mapv (fn [spec]
+                                               (let [spec-vec (second spec)
+                                                     spec-fn  `(fn [v#]
+                                                                 (~(first spec-vec) v# ~@(rest spec-vec)))]
+                                                 [(first spec) spec-fn]))
+                                             specs)])
+                                specs-normalized#)
+        ]
+    spec-fns#
+    #_(concat
+        `(defn ~api-name)
+        (when doc-string#
+          (list doc-string#))
+        (list (into [] (map first arg-list#)))
+        (list (if (seq speced-args#)
+                `(let [~@let-vector#]
+                   ~@body#)
+                `(do ~@body#))))))
+
+#_(defmacro let-api
+    [api-name arg-spec]
+    (let [arg-list#    (extract-args arg-spec)
+          speced-args# (filter #(= 2 (count %)) arg-list#)
+          scheme#      (into {} (map #(vector
+                                        (keyword (first %))
+                                        (parse-scheme (second %)))
+                                     speced-args#))]
+      scheme#))
+
+#_(comment (let-api ff [x :- [:? st/string] y :- [st/number]]))
+
+#_(defmacro defapi
+    [api-name & more]
+    (when-not (instance? Symbol api-name)
+      (throw (IllegalArgumentException. "First argument to def-api must be a symbol")))
+    (let [[doc-string# arg-spec# body#] (destruct-api more)
+          arg-list#    (extract-args arg-spec#)
+          ns#          (ns-name *ns*)
+          speced-args# (filter #(= 2 (count %)) arg-list#)
+          scheme#      (into {} (map #(vector
+                                        (keyword (first %))
+                                        (parse-scheme (second %)))
+                                     speced-args#))
+          test-map#    (into {} (map #(vector
+                                        (keyword (first %))
+                                        (first %))
+                                     speced-args#))
+          #_let-vector#  #_(reduce #(concat %1 (list (first %2) `(eval-spec
+                                                                   ~(str ns# "/" api-name)
+                                                                   ~(second %2)
+                                                                   ~(first %2)
+                                                                   ~(name (second %2))
+                                                                   ~(name (first %2)))))
+                                   nil
+                                   speced-args#)]
+      [scheme# test-map#]
+      (concat
+        `(fn)
+        (list (into [] (map first arg-list#)))
+        (list `(let [res# (st/validate ~test-map# ~scheme#)]
+                 res#)))
+      #_(concat
+          `(defn ~api-name)
+          (when doc-string#
+            (list doc-string#))
+          (list (into [] (map first arg-list#)))
+          (list (if (seq speced-args#)
+                  `(let [~@let-vector#]
+                     ~@body#)
+                  `(do ~@body#))))))
