@@ -4,7 +4,7 @@
             [bass4.layout :as layout]
             [bass4.time :as b-time]
             [clojure.tools.logging :as log]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]))
 
 
@@ -24,8 +24,8 @@
      (inc (- (b-time/days-since-tz
                (get-in treatment [:treatment-access :end-date]))))]))
 
-(def-api dashboard
-  [user :- map? session :- api/?map? render-map :- map? treatment :- map?]
+(defapi dashboard
+  [user :- map? session :- [:? map?] render-map :- map? treatment :- map?]
   (let [new-modules (new-modules (:modules (:user-components treatment)) (:last-login-time session))
         [start-date end-date days-remaining] (treatment-dates treatment)]
     (layout/render "dashboard.html"

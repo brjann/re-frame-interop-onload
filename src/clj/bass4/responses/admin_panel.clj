@@ -4,15 +4,15 @@
             [bass4.layout :as layout]
             [bass4.time :as b-time]
             [clojure.tools.logging :as log]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]
             [mount.core :as mount]
             [ring.util.http-response :as http-response]))
 
 
 
-(def-api reset-state
-  [state-name :- api/str+!]
+(defapi reset-state
+  [state-name :- [[api/str? 1 100]]]
   (let [states     (mount/find-all-states)
         state-name (str "#'" state-name)]
     (if (some #{state-name} states)
@@ -23,5 +23,5 @@
       (layout/text-response (str "Couldn't find state " state-name \newline states)))
     #_(http-response/found "states")))
 
-(def-api states-page []
+(defapi states-page []
   (layout/render "states.html" {:states (mapv #(subs % 2) (mount/find-all-states))}))

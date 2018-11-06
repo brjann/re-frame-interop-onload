@@ -4,9 +4,9 @@
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [defapi]]))
 
-(def-api edit-example
+(defapi edit-example
   [content-id :- api/int!]
   (when-let [content (treatment-service/get-content content-id)]
     (let [data-name    (:data-name content)

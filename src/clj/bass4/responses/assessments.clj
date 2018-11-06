@@ -5,7 +5,7 @@
             [clojure.tools.logging :as log]
             [bass4.services.instrument :as instruments]
             [bass4.request-state :as request-state]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [defapi]]))
 
 (defn- text-page
   [step]
@@ -59,15 +59,15 @@
         (request-state/record-error! "Something went wrong")
         (http-response/found "/user")))))
 
-(def-api handle-assessments
-  [user-id :- integer? session :- api/?map?]
+(defapi handle-assessments
+  [user-id :- integer? session :- [:? map?]]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       (assessment-page round))))
 
-(def-api post-instrument-answers
-  [user-id :- integer? session :- api/?map? instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
+(defapi post-instrument-answers
+  [user-id :- integer? session :- [:? map?] instrument-id :- api/int! items :- [api/json! map?] specifications :- [api/json! map?]]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)

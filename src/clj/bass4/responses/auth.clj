@@ -13,7 +13,7 @@
             [bass4.email :as mail]
             [bass4.i18n :as i18n]
             [bass4.db-config :as db-config]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service])
   (:import (clojure.lang ExceptionInfo)))
@@ -23,7 +23,7 @@
 ;;    NO ACTIVITIES
 ;; -------------------
 
-(def-api no-activities-page []
+(defapi no-activities-page []
   (layout/render
     "auth/no-activities.html"))
 
@@ -31,7 +31,7 @@
 ;;    LOGOUT
 ;; -------------
 
-(def-api logout []
+(defapi logout []
   (-> (http-response/found "/login")
       (assoc :session {})))
 
@@ -73,14 +73,14 @@
     :else
     (auth-service/double-auth-required? (:user-id session))))
 
-(def-api double-auth
-  [session :- api/?map?]
+(defapi double-auth
+  [session :- [:? map?]]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (double-auth-page (:double-auth-code session))))
 
-(def-api double-auth-check
-  [session :- api/?map? code :- api/str+!]
+(defapi double-auth-check
+  [session :- [:? map?] code :- [[api/str? 1 20]]]
   (if-let [redirect (double-auth-redirect session)]
     (http-response/found redirect)
     (if (= code (:double-auth-code session))
@@ -167,7 +167,7 @@
 ;;    LOGIN
 ;; ------------
 
-(def-api login-page []
+(defapi login-page []
   (layout/render
     "auth/login.html"))
 
@@ -184,8 +184,8 @@
      :session-start     (t/now)}
     additional))
 
-(def-api handle-login
-  [username :- api/str+! password :- api/str+!]
+(defapi handle-login
+  [username :- [[api/str? 1 100]] password :- [[api/str? 1 100]]]
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
       (if error
@@ -212,8 +212,8 @@
     :headers {}
     :body    body}))
 
-(def-api re-auth
-  [session :- api/?map? return-url :- api/?str!]
+(defapi re-auth
+  [session :- [:? map?] return-url :- [:? [api/str? 1 2000]]]
   (if (:auth-re-auth session)
     (re-auth-page return-url)
     (if (:user-id session)
@@ -235,15 +235,15 @@
 ;; TODO: Validate URL
 ;; [commons-validator "1.5.1"]
 ;; https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/UrlValidator.html
-(def-api check-re-auth
-  [session :- api/?map? password :- api/str+! return-url :- api/?str!]
+(defapi check-re-auth
+  [session :- [:? map?] password :- [[api/str? 1 100]] return-url :- [:? [api/str? 1 2000]]]
   (handle-re-auth session password
                   (http-response/found (if (nil? return-url)
                                          "/user/"
                                          return-url))))
 
-(def-api check-re-auth-ajax
-  [session :- api/?map? password :- api/str+!]
+(defapi check-re-auth-ajax
+  [session :- [:? map?] password :- [[api/str? 1 100]]]
   (handle-re-auth session password (http-response/ok "ok")))
 
 
@@ -252,7 +252,7 @@
 ;;    ESCALATE USER
 ;; --------------------
 
-(def-api escalate-login-page
+(defapi escalate-login-page
   []
   (layout/render "auth/escalate.html"))
 
@@ -276,8 +276,8 @@
       :else
       (layout/error-422 "error"))))
 
-(def-api handle-escalation
-  [session :- api/?map? password :- api/str+!]
+(defapi handle-escalation
+  [session :- [:? map?] password :- [[api/str? 1 100]]]
   (handle-escalation* session password))
 
 

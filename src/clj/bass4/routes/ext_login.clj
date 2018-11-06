@@ -14,7 +14,7 @@
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config]
             [bass4.services.privacy :as privacy-service]))
 
@@ -90,8 +90,8 @@
         filename (bass/write-session-file user-id "extlogin")]
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
-(def-api check-pending
-  [participant-id :- api/str+! request]
+(defapi check-pending
+  [participant-id :- [[api/str? 1 100]] request]
   (when-not config/test-mode?
     (log/info "Check pending for" participant-id))
   (let [user (check-participant-id participant-id)]
@@ -108,8 +108,8 @@
         :else
         (logged-response (uid-url (:user-id user) request))))))
 
-(def-api do-login
-  [uid :- api/str+! return-url :- api/URL?]
+(defapi do-login
+  [uid :- [[api/str? 1 100]] return-url :- [api/url? [api/str? 1 2000]]]
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user")

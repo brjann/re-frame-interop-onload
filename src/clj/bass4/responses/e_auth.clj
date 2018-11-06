@@ -11,7 +11,7 @@
             [bass4.i18n :as i18n]
             [clojure.string :as string]
             [clojure.data.json :as json]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [defapi]]))
 
 
 
@@ -71,8 +71,8 @@
 ;;           STATUS PAGE
 ;; --------------------------------
 
-(def-api bankid-status-page
-  [session :- api/?map?]
+(defapi bankid-status-page
+  [session :- [:? map?]]
   (let [uid              (get-in session [:e-auth :uid])
         bankid?          (= :bankid (get-in session [:e-auth :type]))
         redirect-success (get-in session [:e-auth :redirect-success])
@@ -185,8 +185,8 @@
     :else
     (throw (ex-info (str "Unknown BankID status " status) info))))
 
-(def-api bankid-collect
-  [session :- api/?map?]
+(defapi bankid-collect
+  [session :- [:? map?]]
   (let [uid              (get-in session [:e-auth :uid])
         info             (bankid/get-collected-info uid)
         status           (:status info)
@@ -213,6 +213,7 @@
 ;;   TESTING - CALLED FROM DEBUG
 ;; --------------------------------
 
+;; TODO: Why is s/defn used here?
 (s/defn
   ^:always-validate
   launch-bankid-test
@@ -231,10 +232,10 @@
 ;; --------------------------------
 ;;   CANCELLING AND ABORTING REQS
 ;; --------------------------------
-(def-api bankid-reset
+(defapi bankid-reset
   "Resets the e-auth map in session and redirects to redirect-failure
   This is the response to the user clicking Cancel in the status page"
-  [session :- api/?map?]
+  [session :- [:? map?]]
   (let [uid           (get-in session [:e-auth :uid])
         bankid?       (= :bankid (get-in session [:e-auth :type]))
         redirect-fail (get-in session [:e-auth :redirect-fail])]
@@ -247,12 +248,12 @@
         response
         (http-response/found "/e-auth/bankid/no-session")))))
 
-(def-api bankid-cancel
+(defapi bankid-cancel
   "Cancels a bankid request and resets e-auth map in session.
   This function is called from the ongoing screen if the user
   chooses to cancel (if the authentication is still pending)
   Also called by test function to cancel request."
-  [session :- api/?map? return-url :- api/?URL?]
+  [session :- [:? map?] return-url :- [:? api/url?]]
   (let [uid (get-in session [:e-auth :uid])]
     (bankid/cancel-bankid! uid)
     (if return-url
@@ -264,8 +265,8 @@
 ;; --------------------------------
 ;;   ONGOING SESSION RETURN PAGE
 ;; --------------------------------
-(def-api bankid-ongoing
-  [session :- api/?map? return-url :- api/URL?]
+(defapi bankid-ongoing
+  [session :- [:? map?] return-url :- api/url?]
   (if (bankid-active? session)
     (layout/render "bankid-ongoing.html"
                    {:return-url return-url})
@@ -290,6 +291,6 @@
 ;;      NO SESSION INFO PAGE
 ;; --------------------------------
 
-(def-api bankid-no-session
+(defapi bankid-no-session
   []
   (layout/render "bankid-no-session.html"))
