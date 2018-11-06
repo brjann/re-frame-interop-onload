@@ -1,5 +1,5 @@
 (ns bass4.responses.lost-password
-  (:require [bass4.api-coercion :as api :refer [def-api]]
+  (:require [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass-service]
             [bass4.services.user :as user-service]
@@ -15,14 +15,14 @@
 ;;    NO ACTIVITIES
 ;; -------------------
 
-(def-api request-page []
+(defapi request-page []
   (let [email (:email (bass-service/db-contact-info))]
     (layout/render
       "lpw-request-email.html"
       {:email email})))
 
-(def-api handle-request
-  [username :- api/str+! request :- map?]
+(defapi handle-request
+  [username :- [[api/str? 1 100]] request :- map?]
   (if-let [user (lpw-service/get-user-by-username-or-email username)]
     (if (mailer/is-email? (:email user))
       (let [uid    (lpw-service/create-request-uid! user)
@@ -34,39 +34,39 @@
       (lpw-service/create-flag! user)))
   (http-response/found "/lost-password/request-email/sent"))
 
-(def-api request-sent
+(defapi request-sent
   []
   (layout/render "lpw-request-email-sent.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
-(def-api handle-request-uid
-  [uid :- api/str+!]
+(defapi handle-request-uid
+  [uid :- [[api/str? 1 100]]]
   (if-let [user (lpw-service/get-user-by-request-uid uid)]
     (do (lpw-service/create-flag! user)
         (http-response/found "/lost-password/request-email/received"))
     (http-response/found "/lost-password/request-email/not-found")))
 
-(def-api request-received
+(defapi request-received
   []
   (layout/render "lpw-request-email-received.html"))
 
-(def-api request-not-found
+(defapi request-not-found
   []
   (layout/render "lpw-request-email-not-found.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
-(def-api report-page
+(defapi report-page
   []
   (layout/render "lpw-report.html"
                  {:email (:email (bass-service/db-contact-info))}))
 
-(def-api handle-report
-  [username :- api/str+!]
+(defapi handle-report
+  [username :- [[api/str? 1 100]]]
   (if-let [user (lpw-service/get-user-by-username-or-email username)]
     (lpw-service/create-flag! user))
   (http-response/found "/lost-password/report/received"))
 
-(def-api report-received
+(defapi report-received
   []
   (layout/render "lpw-report-received.html"
                  {:email (:email (bass-service/db-contact-info))}))

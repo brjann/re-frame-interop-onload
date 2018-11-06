@@ -2,14 +2,13 @@
   (:require [ring.util.http-response :as http-response]
             [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.services.content-data :as content-data-service]))
 
 (defn- context-menu
   [module module-contents]
@@ -73,7 +72,7 @@
               :page-title   (:content-name content)}
              params))))
 
-(def-api main-text
+(defapi main-text
   [treatment-access :- map? render-map :- map? module :- map?]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))
         module-text-id  (:content-id (:main-text module-contents))]
@@ -87,7 +86,7 @@
       {:module-id  module-text-id
        :page-title (:module-name module)})))
 
-(def-api homework
+(defapi homework
   [treatment-access :- map? render-map :- map? module :- map?]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if-let [homework-id (:content-id (:homework module-contents))]
@@ -102,7 +101,7 @@
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
-(def-api worksheet
+(defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/int!]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
@@ -115,8 +114,8 @@
         worksheet-id)
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(def-api worksheet-example
-  [module :- map? worksheet-id :- api/int! return-path :- api/URL?]
+(defapi worksheet-example
+  [module :- map? worksheet-id :- api/int! return-path :- [[api/str? 1 2000] api/url?]]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
@@ -134,7 +133,8 @@
                         :content-data example-data}))
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
-(def-api modules-list [render-map :- map? modules :- seq? treatment-access-id :- integer?]
+(defapi modules-list
+  [render-map :- map? modules :- seq? treatment-access-id :- integer?]
   (let [module-contents      (treatment-service/get-module-contents-with-update-time
                                (mapv :module-id modules)
                                treatment-access-id)
@@ -161,29 +161,29 @@
       true)
     (layout/throw-400!)))
 
-(def-api save-worksheet-example-data
-  [content-id :- api/int! content-data :- api/JSON-map!]
+(defapi save-worksheet-example-data
+  [content-id :- api/int! content-data :- [api/json! map?]]
   (when (handle-content-data content-data content-id)
     (http-response/found "reload")))
 
-(def-api save-worksheet-data
-  [treatment-access-id :- integer? content-data :- api/JSON-map!]
+(defapi save-worksheet-data
+  [treatment-access-id :- integer? content-data :- [api/json! map?]]
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 
-(def-api save-main-text-data
-  [treatment-access :- map? content-data :- api/JSON-map!]
+(defapi save-main-text-data
+  [treatment-access :- map? content-data :- [api/json! map?]]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (http-response/ok {})))
 
-(def-api save-homework
-  [treatment-access :- map? module :- map? content-data :- api/JSON-map! submit? :- api/bool!]
+(defapi save-homework
+  [treatment-access :- map? module :- map? content-data :- [api/json! map?] submit? :- api/bool!]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (when submit?
       (treatment-service/submit-homework! treatment-access module))
     (http-response/found "reload")))
 
-(def-api retract-homework
+(defapi retract-homework
   [treatment-access :- map? module :- map?]
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
     (do
