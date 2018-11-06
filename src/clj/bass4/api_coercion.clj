@@ -209,7 +209,9 @@
                                       `(when-not (nil? ~arg)
                                          ~spec-thread)
                                       `(if (nil? ~arg)
-                                         (throw (Exception. "Nil error"))
+                                         (throw (ex-info
+                                                  (str "nil error. param: " ~(str arg))
+                                                  {:type ::api-exception}))
                                          ~spec-thread))]))
                            speced-args#)]
     (concat
