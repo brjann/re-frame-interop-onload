@@ -109,7 +109,7 @@
         (logged-response (uid-url (:user-id user) request))))))
 
 (defapi do-login
-  [uid :- [[api/str? 1 100]] return-url :- [api/url? [api/str? 1 2000]]]
+  [uid :- [[api/str? 1 100]] return-url :- [[api/str? 1 2000] api/url?]]
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user")
