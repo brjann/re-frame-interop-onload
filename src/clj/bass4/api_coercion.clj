@@ -160,51 +160,61 @@
   (let [[doc-string#
          arg-spec#
          body#] (destruct-api more)
-        ns#               (ns-name *ns*)
-        arg-list#         (extract-args arg-spec#)
-        speced-args#      (filter #(= 2 (count %)) arg-list#)
-        #_spec-map#         #_(into {} (map #(into [] %) speced-args#))
-        parse-spec        (fn [spec]
-                            (let [spec-name (name (if (vector? spec)
-                                                    (first spec)
-                                                    spec))
-                                  normalize (fn [s] (if (vector? s)
-                                                      s
-                                                      [s]))]
-                              (cond
-                                (= \? (last spec-name))
-                                [:validate (normalize spec)]
+        ns#          (ns-name *ns*)
+        arg-list#    (extract-args arg-spec#)
+        speced-args# (filter #(= 2 (count %)) arg-list#)
+        spec-fn#     (fn [spec-type spec]
+                       (let [s (if (vector? spec) spec [spec])]
+                         `(fn [v#]
+                            (let [res# (~(first s) v# ~@(rest s))]
+                              ~(case spec-type
+                                 :validate
+                                 `(if res#
+                                    v#
+                                    (throw (Exception. "Validation error")))
 
-                                (= \! (last spec-name))
-                                [:coerce (normalize spec)]
+                                 :coerce
+                                 `(if (nil? res#)
+                                    (throw (Exception. "Coerce returned nil"))
+                                    res#)))
+                            )))
+        parse-spec#  (fn [spec]
+                       ;; This THROWS if spec is not symbol
+                       (let [spec-name (name (if (vector? spec)
+                                               (first spec)
+                                               spec))]
+                         (cond
+                           (= \? (last spec-name))
+                           (list (spec-fn# :validate spec))
 
-                                :else
-                                (throw (Exception. (str "Spec functions must end with ! (coercion) or ? (validation). \""
-                                                        spec-name "\" did not."))))))
-        specs-normalized# (mapv (fn [[arg specs]]
-                                  (let [specs (if (vector? specs) specs [specs])
-                                        specs (if (utils/in? specs :?)
-                                                (filterv #(not= :? %) specs)
-                                                (into ['some?] specs))]
-                                    [arg (mapv parse-spec specs)]))
-                                speced-args#)
-        spec-fns#         (mapv (fn [[arg specs]]
-                                  [arg (mapv (fn [spec]
-                                               (let [spec-vec (second spec)
-                                                     spec-fn  `(fn [v#]
-                                                                 (~(first spec-vec) v# ~@(rest spec-vec)))]
-                                                 [(first spec) spec-fn]))
-                                             specs)])
-                                specs-normalized#)
-        ]
-    spec-fns#
-    #_(concat
-        `(defn ~api-name)
-        (when doc-string#
+                           (= \! (last spec-name))
+                           (list (spec-fn# :coerce spec))
+
+                           :else
+                           (throw (Exception. (str "Spec functions must end with ! (coercion) or ? (validation). \""
+                                                   spec-name "\" did not."))))))
+        let-vec      (mapv (fn [[arg specs]]
+                             (let [specs       (if (vector? specs) specs [specs])
+                                   [nil-ok? specs] (if (utils/in? specs :?)
+                                                     [true (filterv #(not= :? %) specs)]
+                                                     [false specs])
+                                   spec-fns    (mapv #(parse-spec# %) specs)
+                                   spec-thread `(-> ~arg
+                                                    ~@spec-fns)]
+                               [arg (if nil-ok?
+                                      `(when-not (nil? ~arg)
+                                         ~spec-thread)
+                                      `(if (nil? ~arg)
+                                         (throw (Exception. "Nil error"))
+                                         ~spec-thread))]))
+                           speced-args#)]
+    (concat
+      `(defn ~api-name)
+      (when doc-string#
           (list doc-string#))
-        (list (into [] (map first arg-list#)))
-        (list (if (seq speced-args#)
-                `(let [~@let-vector#]
+      (list (into [] (map first arg-list#)))
+      (list (if (seq let-vec)
+              `(let [~@(reduce concat let-vec)]
                    ~@body#)
                 `(do ~@body#))))))
 
