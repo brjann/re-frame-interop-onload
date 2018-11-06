@@ -6,16 +6,16 @@
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
             [bass4.request-state :as request-state]
-            [bass4.api-coercion :as api :refer [def-api]]))
+            [bass4.api-coercion :as api :refer [defapi]]))
 
-(def-api instrument-page
+(defapi instrument-page
   [instrument-id :- api/int!]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (layout/render "instrument-preview.html" {:instrument instrument :instrument-id instrument-id})
     (layout/error-404-page)))
 
-(def-api post-answers
-  [instrument-id :- api/int! items :- api/JSON-map! specifications :- api/JSON-map!]
+(defapi post-answers
+  [instrument-id :- api/int! items :- [api/json! map?] specifications :- [api/json! map?]]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (let [answers-map {:items          items
                        :specifications specifications
@@ -69,7 +69,7 @@
                                                         (str (:item-id item) "_" value)))})))
             items))))))
 
-(def-api summary-page
+(defapi summary-page
   [instrument-id :- api/int!]
   (let [answers (get-test-answers instrument-id)]
     (when (:items answers)
