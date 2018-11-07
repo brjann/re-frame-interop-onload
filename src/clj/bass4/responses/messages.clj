@@ -4,10 +4,10 @@
             [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.layout :as layout]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]))
 
-(def-api messages-page [render-map :- map? user :- map?]
+(defapi messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
         messages (->> (messages-service/get-all-messages user-id)
                       (map #(assoc % :text (string/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
@@ -19,17 +19,17 @@
                            :messages   messages
                            :draft      draft}))))
 
-(def-api save-message
-  [user-id :- integer? text :- api/str+!]
+(defapi save-message
+  [user-id :- integer? text :- [[api/str? 1 5000]]]
   (messages-service/save-message! user-id text)
   (http-response/found "/user/messages"))
 
-(def-api save-draft
-  [user-id :- integer? text :- api/str+!]
+(defapi save-draft
+  [user-id :- integer? text :- [[api/str? 1 5000]]]
   (messages-service/save-draft! user-id text)
   (http-response/ok "ok"))
 
-(def-api message-read
+(defapi message-read
   [user-id :- integer? message-id :- api/int!]
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))

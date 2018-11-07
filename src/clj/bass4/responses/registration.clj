@@ -20,7 +20,7 @@
             [bass4.responses.e-auth :as e-auth]
             [clojure.set :as set]
             [bass4.db-config :as db-config]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service])
   (:import (java.util UUID)))
 
@@ -60,8 +60,8 @@
                       {:user-id user-id}
                       {:external-login? true}))))
 
-(def-api finished-router
-  [project-id :- api/int! session :- api/?map? request]
+(defapi finished-router
+  [project-id :- api/int! session :- [:? map?] request]
   (if-let [user-id (get-in session [:registration :credentials :user-id])]
     (if (zero? (count (assessments/get-pending-assessments user-id)))
       (to-finished-page project-id session)
@@ -79,8 +79,8 @@
           scheme (name (:scheme request))]
       (str scheme "://" host)))
 
-(def-api credentials-page
-  [project-id :- api/int! session :- api/?map? request]
+(defapi credentials-page
+  [project-id :- api/int! session :- [:? map?] request]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
       (layout/render "registration-credentials.html"
@@ -95,7 +95,7 @@
 ;;   DUPLICATE
 ;; -------------
 
-(def-api duplicate-page
+(defapi duplicate-page
   [project-id :- api/int!]
   (let [emails (bass/db-contact-info project-id)]
     (layout/render "registration-duplicate.html"
@@ -230,8 +230,8 @@
       {:filename filename
        :digits   digits})))
 
-(def-api captcha
-  [project-id :- api/int! session :- api/?map?]
+(defapi captcha
+  [project-id :- api/int! session :- [:? map?]]
   (if (get-in session [:registration :captcha-ok?])
     (http-response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
@@ -257,8 +257,8 @@
     (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc :session new-session))))
 
-(def-api validate-captcha
-  [project-id :- api/int! captcha :- api/str+! session :- api/?map?]
+(defapi validate-captcha
+  [project-id :- api/int! captcha :- [[api/str? 1 10]] session :- [:? map?]]
   (if-let [digits (captcha-digits session)]
     (if (= digits captcha)
       ;; TODO: Remove captcha values
@@ -328,8 +328,8 @@
                    (when (db-config/debug-mode?)
                      codes))))
 
-(def-api validation-page
-  [project-id :- api/int! session :- api/?map?]
+(defapi validation-page
+  [project-id :- api/int! session :- [:? map?]]
   (let [reg-session  (:registration session)
         field-values (:field-values reg-session)
         fixed-fields (:fixed-fields reg-session)
@@ -383,12 +383,12 @@
                 (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
           (layout/error-422 "error"))))))
 
-(def-api validate-email
-  [project-id :- api/int! posted-code :- api/str+! session :- api/?map? reg-params :- map?]
+(defapi validate-email
+  [project-id :- api/int! posted-code :- [[api/str? 1 10]] session :- [:? map?] reg-params :- map?]
   (validate-code project-id :code-email posted-code session reg-params))
 
-(def-api validate-sms
-  [project-id :- api/int! posted-code :- api/str+! session :- api/?map? reg-params :- map?]
+(defapi validate-sms
+  [project-id :- api/int! posted-code :- [[api/str? 1 10]] session :- [:? map?] reg-params :- map?]
   (validate-code project-id :code-sms posted-code session reg-params))
 
 
@@ -400,7 +400,7 @@
   (let [e-auth (:e-auth session)]
     (and e-auth (every? e-auth [:personnummer :first-name :last-name]))))
 
-(def-api bankid-page
+(defapi bankid-page
   [project-id :- api/int!]
   (let [reg-content (reg-service/registration-content project-id)]
     (layout/render
@@ -421,8 +421,8 @@
                        (when-not (:bankid-change-names? params)
                          #{:first-name :last-name}))})))
 
-(def-api bankid-finished
-  [project-id :- api/int! session :- api/?map? reg-params :- map?]
+(defapi bankid-finished
+  [project-id :- api/int! session :- [:? map?] reg-params :- map?]
   (if (bankid-done? session)
     (->
       (http-response/found (str "/registration/" project-id "/privacy"))
@@ -431,8 +431,8 @@
       (assoc-in [:session :e-auth] nil))
     (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
 
-(def-api bankid-poster
-  [project-id :- api/int! personnummer :- api/str+! request]
+(defapi bankid-poster
+  [project-id :- api/int! personnummer :- [[api/str? 1 30]] request]
   (if (e-auth/personnummer-valid? personnummer)
     (e-auth/launch-bankid
       request
@@ -453,8 +453,8 @@
          (zipmap (mapv #(keyword (str (name %) "-value")) (keys field-values))
                  (vals field-values))))
 
-(def-api registration-page
-  [project-id :- api/int! session :- api/?map?]
+(defapi registration-page
+  [project-id :- api/int! session :- [:? map?]]
   (let [reg-content   (reg-service/registration-content project-id)
         reg-session   (:registration session)
         fields        (:fields reg-content)
@@ -506,8 +506,8 @@
     (re-matches password-regex (:password field-values))
     true))
 
-(def-api handle-registration
-  [project-id :- api/int! posted-fields :- map? session :- api/?map? reg-params :- map?]
+(defapi handle-registration
+  [project-id :- api/int! posted-fields :- map? session :- [:? map?] reg-params :- map?]
   (let [fields       (:fields reg-params)
         reg-session  (:registration session)
         fixed-fields (:fixed-fields reg-session)
@@ -547,15 +547,15 @@
 ;; --------------
 ;;    PRIVACY
 ;; --------------
-(def-api privacy-page
+(defapi privacy-page
   [project-id :- api/int!]
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
     (layout/render "registration-privacy-notice.html"
                    {:project-id     project-id
                     :privacy-notice (:notice-text privacy-notice)})))
 
-(def-api handle-privacy-consent
-  [project-id :- api/int! i-consent :- api/str+! session :- api/?map?]
+(defapi handle-privacy-consent
+  [project-id :- api/int! i-consent :- [[api/str? 1 20]] session :- [:? map?]]
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
     (if-not (and (:notice-text privacy-notice) (= "i-consent" i-consent))
       (layout/error-400-page)
@@ -568,8 +568,8 @@
 ;;     CANCEL
 ;; --------------
 
-(def-api cancel-registration
-  [project-id :- api/int! session :- api/?map?]
+(defapi cancel-registration
+  [project-id :- api/int! session :- [:? map?]]
   (-> (http-response/found (str "/registration/" project-id))
       (reset-reg-session session)))
 
@@ -577,7 +577,7 @@
 ;; --------------
 ;;   INFO PAGE
 ;; --------------
-(def-api info-page
+(defapi info-page
   [project-id :- api/int!]
   (let [reg-params (reg-service/registration-content project-id)]
     (layout/render "registration-info.html"

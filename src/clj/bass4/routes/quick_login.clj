@@ -14,7 +14,7 @@
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
             [ring.util.http-response :as http-response]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config])
   (:import (clojure.lang ExceptionInfo)))
 
@@ -68,8 +68,8 @@
   (-> (http-response/found "/user/")
       (assoc :session (auth-response/create-new-session user {:external-login? true :limited-access? true}))))
 
-(def-api quick-login
-  [quick-login-id :- api/str+!]
+(defapi quick-login
+  [quick-login-id :- [[api/str? 1 20]]]
   (try
     (quick-login-check-length quick-login-id)
     (log-msg "Checking quick-login ID" quick-login-id)

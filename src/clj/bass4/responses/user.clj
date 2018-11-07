@@ -4,7 +4,7 @@
             [bass4.services.privacy :as privacy-service]
             [ring.util.http-response :as http-response]
             [markdown.core :as md]
-            [bass4.api-coercion :as api :refer [def-api]]
+            [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
             [bass4.services.user :as user-service]
             [clj-time.core :as t]
@@ -72,7 +72,7 @@
               {:assessments-checked? true
                :assessments-pending? false})))))))
 
-(def-api privacy-notice-bare
+(defapi privacy-notice-bare
   [user :- map?]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
@@ -80,7 +80,7 @@
       (throw (Exception. "Missing privacy notice when showing bare. Guards have failed.")))
     (layout/text-response (md/md-to-html-string notice-text))))
 
-(def-api privacy-consent-page
+(defapi privacy-consent-page
   [user :- map?]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))
@@ -91,8 +91,8 @@
                    {:privacy-notice notice-text
                     :email          email})))
 
-(def-api privacy-notice-page
-  [user :- map? render-map]
+(defapi privacy-notice-page
+  [user :- map? render-map :- map?]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
     (when (nil? notice-text)
@@ -117,8 +117,8 @@
   (user-service/create-no-consent-flag! (:user-id user))
   (http-response/found "/logout"))
 
-(def-api handle-privacy-consent
-  [user :- map? i-consent :- api/str+!]
+(defapi handle-privacy-consent
+  [user :- map? i-consent :- [[api/str? 1 20]]]
   (let [project-id (:project-id user)
         notice-id  (:notice-id (privacy-service/get-privacy-notice project-id))]
     (cond

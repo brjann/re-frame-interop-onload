@@ -192,12 +192,12 @@
                                 :validate
                                 `(if ~res
                                    ~v
-                                   (throw (api-exception "Validation failed. " ~(str s) ~(str arg) ~v))
+                                   (throw (api-exception "API validation failed. " ~(str s) ~(str arg) ~v))
                                    #_(throw (Exception. (str "Validation " ~(str s) " of parameter " ~(str arg) " with value \"" ~v "\" failed"))))
 
                                 :coerce
                                 `(if (nil? ~res)
-                                   (throw (api-exception "Coercion failed. " ~(str s) ~(str arg) ~v))
+                                   (throw (api-exception "API coercion failed. " ~(str s) ~(str arg) ~v))
                                    ~res))))))
         parse-spec  (fn [arg spec]
                       ;; This THROWS if spec is not symbol
@@ -227,7 +227,7 @@
                                         ~spec-thread)
                                      `(if (nil? ~arg)
                                         (throw (ex-info
-                                                 (str "nil error. param: " ~(str arg))
+                                                 (str "API validation failed. nil error. param: " ~(str arg))
                                                  {:type ::api-exception}))
                                         ~spec-thread))]))
                           speced-args)]
