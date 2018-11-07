@@ -67,7 +67,7 @@
       (assessment-page round))))
 
 (defapi post-instrument-answers
-  [user-id :- integer? session :- [:? map?] instrument-id :- api/int! items :- [api/json! map?] specifications :- [api/json! map?]]
+  [user-id :- integer? session :- [:? map?] instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
   (let [round (assessments-service/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)

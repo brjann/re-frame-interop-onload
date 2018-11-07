@@ -30,6 +30,6 @@
   (http-response/ok "ok"))
 
 (defapi message-read
-  [user-id :- integer? message-id :- api/int!]
+  [user-id :- integer? message-id :- api/->int]
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))

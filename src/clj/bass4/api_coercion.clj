@@ -14,11 +14,10 @@
 ;; -----------------------------
 
 
-(def try-url (URL. "http://example.com"))
-
 (defn url?
   [s]
-  (let [test-url (try (URL. s)
+  (let [try-url  (URL. "http://example.com")
+        test-url (try (URL. s)
                       (catch Exception _
                         (try
                           (URL. try-url s)
@@ -28,7 +27,13 @@
         s)
       (catch Exception _))))
 
-(defn int!
+(defn str?
+  [s min max]
+  (when (string? s)
+    (let [l (count s)]
+      (and (<= min l) (>= max l)))))
+
+(defn ->int
   [i]
   (let [x (cond
             (integer? i)
@@ -41,23 +46,17 @@
             nil)]
     x))
 
-(defn bool!
+(defn ->bool
   [x]
   (if (boolean? x)
     x
-    (let [x (int! x)]
+    (let [x (->int x)]
       (not (zero? x)))))
 
-(defn json!
+(defn ->json
   [s]
   (try (json/read-str s)
        (catch Exception _)))
-
-(defn str?
-  [s min max]
-  (when (string? s)
-    (let [l (count s)]
-      (and (<= min l) (>= max l)))))
 
 
 ;; -------------------
@@ -129,7 +128,7 @@
                           (= \? (last spec-name))
                           (list (spec-fn arg :validate spec))
 
-                          (= \! (last spec-name))
+                          (= "->" (subs spec-name 0 2))
                           (list (spec-fn arg :coerce spec))
 
                           :else

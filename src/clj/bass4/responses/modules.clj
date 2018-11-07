@@ -102,7 +102,7 @@
       (layout/error-404-page (i18n/tr [:modules/no-homework])))))
 
 (defapi worksheet
-  [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/int!]
+  [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
@@ -115,7 +115,7 @@
       (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
 
 (defapi worksheet-example
-  [module :- map? worksheet-id :- api/int! return-path :- [[api/str? 1 2000] api/url?]]
+  [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
   (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
@@ -162,22 +162,22 @@
     (layout/throw-400!)))
 
 (defapi save-worksheet-example-data
-  [content-id :- api/int! content-data :- [api/json! map?]]
+  [content-id :- api/->int content-data :- [api/->json map?]]
   (when (handle-content-data content-data content-id)
     (http-response/found "reload")))
 
 (defapi save-worksheet-data
-  [treatment-access-id :- integer? content-data :- [api/json! map?]]
+  [treatment-access-id :- integer? content-data :- [api/->json map?]]
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 
 (defapi save-main-text-data
-  [treatment-access :- map? content-data :- [api/json! map?]]
+  [treatment-access :- map? content-data :- [api/->json map?]]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (http-response/ok {})))
 
 (defapi save-homework
-  [treatment-access :- map? module :- map? content-data :- [api/json! map?] submit? :- api/bool!]
+  [treatment-access :- map? module :- map? content-data :- [api/->json map?] submit? :- api/->bool]
   (when (handle-content-data content-data (:treatment-access-id treatment-access))
     (when submit?
       (treatment-service/submit-homework! treatment-access module))

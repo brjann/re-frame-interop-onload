@@ -13,11 +13,11 @@
   a)
 
 (defapi api-int!
-  [a :- api/int!]
+  [a :- api/->int]
   a)
 
 (defapi api-?int!
-  [a :- [:? api/int!]]
+  [a :- [:? api/->int]]
   a)
 
 
@@ -49,11 +49,11 @@
   a)
 
 (defapi api-bool!
-  [a :- api/bool!]
+  [a :- api/->bool]
   a)
 
 (defapi api-?bool!
-  [a :- [:? api/bool!]]
+  [a :- [:? api/->bool]]
   a)
 
 (deftest test-api-bool
@@ -107,7 +107,7 @@
   (is (= "4444" (api-?str "4444"))))
 
 (defapi api-?int!+str
-  [a :- [:? api/int!] b :- [[api/str? 2 4]]]
+  [a :- [:? api/->int] b :- [[api/str? 2 4]]]
   [a b])
 
 (deftest test-api-int+str
@@ -122,19 +122,19 @@
   )
 
 (defapi api-json!
-  [a :- [api/json!]]
+  [a :- [api/->json]]
   a)
 
 (defapi api-json!-map
-  [a :- [api/json! map?]]
+  [a :- [api/->json map?]]
   a)
 
 (defapi api-?json!-map
-  [a :- [:? api/json! map?]]
+  [a :- [:? api/->json map?]]
   a)
 
 (defapi api-json!-vec
-  [a :- [api/json! vector?]]
+  [a :- [api/->json vector?]]
   a)
 
 (deftest test-api-json
@@ -167,7 +167,7 @@
     (is (= j-vec (api-json!-vec j-vecs)))))
 
 (defapi api-json!-map+?str
-  [a :- [api/json! map?] b :- [:? [api/str? 2 4]]]
+  [a :- [api/->json map?] b :- [:? [api/str? 2 4]]]
   [a b])
 
 (deftest test-api-json-map+str
