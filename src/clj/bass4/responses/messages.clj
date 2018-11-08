@@ -25,7 +25,7 @@
   (http-response/found "/user/messages"))
 
 (defapi save-draft
-  [user-id :- integer? text :- [[api/str? 1 5000]]]
+  [user-id :- integer? text :- [[api/str? 0 5000]]]
   (messages-service/save-draft! user-id text)
   (http-response/ok "ok"))
 

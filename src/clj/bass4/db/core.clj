@@ -15,7 +15,6 @@
     [bass4.http-utils :as h-utils]
     [metrics.core :as metrics]
     [metrics.reporters.csv :as csv]
-    [metrics.reporters.console :as console]
     [bass4.config :as config])
   (:import [java.sql
             BatchUpdateException
@@ -63,15 +62,14 @@
     (:db-password local-config)))
 
 
-#_(defstate metrics-reg
-    :start (let [metrics-reg (metrics/new-registry)
-                 CR          (csv/reporter
-                               metrics-reg
-                               (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
-                 CR          (console/reporter metrics-reg {})]
-             (csv/start CR 10)
-             metrics-reg)
-    :stop (do))
+(defstate metrics-reg
+  :start (let [metrics-reg (metrics/new-registry)
+               CR          (csv/reporter
+                             metrics-reg
+                             (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})]
+           (csv/start CR 10)
+           metrics-reg)
+  :stop (do))
 
 
 (defn db-connect!
@@ -81,7 +79,7 @@
       (log/info (str "Attaching " (:name local-config)))
       (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false")
                                    :pool-name         (:name local-config)
-                                   ;:metric-registry   metrics-reg
+                                   :metric-registry   metrics-reg
                                    :maximum-pool-size 5})]
         (log/info (str (:name local-config) " attached"))
         (jdbc/execute! conn "SET time_zone = '+00:00';")
