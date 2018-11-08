@@ -44,6 +44,7 @@
                  [clj-time "0.15.0"]                        ; https://github.com/clj-time/clj-time
                  [camel-snake-kebab "0.4.0"]                ; https://github.com/qerub/camel-snake-kebab
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
+                 [metrics-clojure "2.10.0"]                 ; https://github.com/metrics-clojure/metrics-clojure
 
                  ; Webjars
                  [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap
@@ -64,6 +65,8 @@
   :target-path "target/%s/"
   :main bass4.core
 
+  :bat-test {:test-matcher #"bass4.test.*"}
+
   ;; Difference between plugins and dependencies:
   ;; https://www.quora.com/In-Clojure-whats-the-difference-between-plugins-dependencies-require-use-import-etc
   :plugins [[lein-cprop "1.0.3"]
@@ -83,8 +86,11 @@
    :project/dev   {:dependencies   [[ring/ring-devel "1.7.0-RC1"] ; Used for reloading namespaces before web requests
                                     [peridot "0.5.1"]       ; https://github.com/xeqi/peridot
                                     [kerodon "0.9.0"]       ; https://github.com/xeqi/kerodon
-                                    [philoskim/debux "0.5.0"]] ; https://github.com/philoskim/debux
-                   :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]]
+                                    [philoskim/debux "0.5.0"] ; https://github.com/philoskim/debux
+                                    [org.clojure/tools.namespace "0.3.0-alpha4"]]
+
+                   :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]
+                                    [metosin/bat-test "0.4.0"]]
 
                    :source-paths   ["env/dev/clj"]
                    :resource-paths ["env/dev/resources"]

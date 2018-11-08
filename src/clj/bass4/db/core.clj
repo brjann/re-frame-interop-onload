@@ -12,10 +12,15 @@
     [bass4.request-state :as request-state]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
-    [bass4.http-utils :as h-utils])
+    [bass4.http-utils :as h-utils]
+    [metrics.core :as metrics]
+    [metrics.reporters.csv :as csv]
+    [metrics.reporters.console :as console]
+    [bass4.config :as config])
   (:import [java.sql
             BatchUpdateException
-            PreparedStatement]))
+            PreparedStatement]
+           (java.util Locale)))
 
 ;----------------
 ; SETUP DB STATE
@@ -57,12 +62,26 @@
     (:db-user local-config)
     (:db-password local-config)))
 
+
+#_(defstate metrics-reg
+    :start (let [metrics-reg (metrics/new-registry)
+                 CR          (csv/reporter
+                               metrics-reg
+                               (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
+                 CR          (console/reporter metrics-reg {})]
+             (csv/start CR 10)
+             metrics-reg)
+    :stop (do))
+
+
 (defn db-connect!
   [local-config]
   (let [url (db-url local-config (env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
       (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false")
+                                   :pool-name         (:name local-config)
+                                   ;:metric-registry   metrics-reg
                                    :maximum-pool-size 5})]
         (log/info (str (:name local-config) " attached"))
         (jdbc/execute! conn "SET time_zone = '+00:00';")
