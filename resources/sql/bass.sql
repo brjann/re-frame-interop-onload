@@ -123,8 +123,16 @@ WHERE SessId = :php-session-id;
 -- :name get-staff-timeouts :? :1
 -- :doc
 SELECT
-  TherapistTimeout AS `re-auth-timeout`,
-  AbsoluteTimeout AS `absolute-timeout`
+  (CASE
+     WHEN TherapistTimeout IS NULL
+         THEN 1800
+     ELSE TherapistTimeout
+     END ) AS `re-auth-timeout`,
+  (CASE
+     WHEN AbsoluteTimeout IS NULL
+         THEN 28800
+     ELSE AbsoluteTimeout
+     END ) AS `absolute-timeout`
 FROM c_project
 WHERE ObjectId = 100;
 
