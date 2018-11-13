@@ -1,6 +1,6 @@
 (ns bass4.test.answers-validation
   (:require [clojure.test :refer :all]
-            [bass4.services.instrument :refer :all]
+            [bass4.instruments.validation :refer :all]
             [bass4.utils :as utils]
             [clojure.tools.logging :as log]))
 
