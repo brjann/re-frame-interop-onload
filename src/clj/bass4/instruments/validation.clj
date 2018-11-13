@@ -9,6 +9,14 @@
             [clojure.set :as set]))
 
 
+(defn- checkbox-id
+  [item-id value]
+  (str item-id "_" value))
+
+;; ------------------------
+;;         ITEM MAP
+;; ------------------------
+
 (defn- get-items-map
   [instrument]
   (let [merge-jumps (fn [item]
@@ -48,9 +56,24 @@
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 
-(defn- checkbox-id
-  [item-id value]
-  (str item-id "_" value))
+(defn- merge-answers
+  [items-map item-answers]
+  (utils/map-map-keys
+    (fn [item item-id]
+      (let [answer-map (if (= "CB" (:response-type item))
+                         (select-keys item-answers (map #(checkbox-id item-id %) (keys (:options item))))
+                         {(str item-id) (get item-answers (str item-id))})]
+        (assoc
+          item
+          :answer
+          (into {} (filter second answer-map))
+          )))
+    items-map))
+
+;; ------------------------
+;;          JUMPS
+;; ------------------------
+
 
 (defn- get-jump-map
   [items]
@@ -95,6 +118,10 @@
     (when (seq overlap)
       {:jumps overlap})))
 
+;; ------------------------
+;;      MISSING ITEMS
+;; ------------------------
+
 (defn- missing-items
   [items+answers jumped-items]
   (let [items-with-answers (->> items+answers
@@ -113,19 +140,46 @@
     (when (seq missing)
       {:missing missing})))
 
-(defn- merge-answers
-  [items-map item-answers]
-  (utils/map-map-keys
-    (fn [item item-id]
-      (let [answer-map (if (= "CB" (:response-type item))
-                         (select-keys item-answers (map #(checkbox-id item-id %) (keys (:options item))))
-                         {(str item-id) (get item-answers (str item-id))})]
-        (assoc
-          item
-          :answer
-          (into {} (filter second answer-map))
-          )))
-    items-map))
+
+;; ------------------------
+;;       CONSTRAINTS
+;; ------------------------
+
+(defmulti check-constraints (fn [[item-id item]] (keyword (str *ns*) (:response-type item))))
+(derive ::ST ::text)
+(derive ::TX ::text)
+
+(defmethod check-constraints ::text
+  [item+answer])
+
+(defmethod check-constraints ::CB
+  [[item-id item+answer]]
+  (let [option-keys  (->> (:options item+answer)
+                          (keys)
+                          (map #(checkbox-id item-id %))
+                          (into #{}))
+        present-keys (->>
+                       (:answer item+answer)
+                       (keys)
+                       (into #{}))
+        missing-keys (set/difference option-keys present-keys)
+        not-binary   (filter (fn [[_ answer]]
+                               (not (contains? #{"0" "1"} answer)))
+                             (vals (:answer item+answer)))]
+    (merge
+      (when missing-keys
+        {:missing-checkboxes missing-keys})
+      (when not-binary
+        {:not-binary-checkbox not-binary}))))
+
+(defn check-item-constraints
+  [items+answers]
+  (let []))
+
+(defmethod check-constraints :default
+  [item+answer])
+
+;; TODO: Superfluous?
 
 (defn validate-answers*
   [items-map item-answers specifications]
@@ -135,7 +189,8 @@
                            (merge-answers items-map))]
     (merge
       (skipped-jumps jumped-items items+answers)
-      (missing-items items+answers jumped-items))))
+      (missing-items items+answers jumped-items)
+      ())))
 
 
 (defn validate-answers
