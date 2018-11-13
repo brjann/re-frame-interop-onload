@@ -247,36 +247,57 @@
     jumped-items))
 
 (defn skipped-jumps
-  [jumped-items items-with-answers]
-  (let [overlap (set/intersection jumped-items items-with-answers)]
+  [jumped-items items+answers]
+  (let [items-with-answers (->> items+answers
+                                (keep (fn [[item-id item+answer]]
+                                        (log/debug item+answer)
+                                        (and (not-empty (:answer item+answer)) item-id)))
+                                (into #{}))
+        overlap            (set/intersection jumped-items items-with-answers)]
     (when (seq overlap)
       {:jumps overlap})))
 
 (defn missing-items
-  [items-map jumped-items items-with-answers]
-  (let [mandatory (->> items-map
-                       (filter (fn [[_ item]] (not (:optional? item))))
-                       (keys)
-                       (into #{}))
-        missing   (set/difference mandatory items-with-answers jumped-items)]
+  [items+answers jumped-items]
+  (let [items-with-answers (->> items+answers
+                                (keep (fn [[item-id item+answer]]
+                                        (if (= "CB" (:response-type item+answer))
+                                          (when (some #(= "1" %) (vals (:answer item+answer)))
+                                            item-id)
+                                          (when (seq (:answer item+answer))
+                                            item-id))))
+                                (into #{}))
+        mandatory          (->> items+answers
+                                (filter (fn [[_ item]] (not (:optional? item))))
+                                (keys)
+                                (into #{}))
+        missing            (set/difference mandatory items-with-answers jumped-items)]
     (when (seq missing)
       {:missing missing})))
 
+(defn merge-answers
+  [items-map item-answers]
+  (utils/map-map-keys
+    (fn [item item-id]
+      (let [answer-map (if (= "CB" (:response-type item))
+                         (select-keys item-answers (map #(checkbox-id item-id %) (keys (:options item))))
+                         {(str item-id) (get item-answers (str item-id))})]
+        (assoc
+          item
+          :answer
+          (into {} (filter second answer-map))
+          )))
+    items-map))
+
 (defn validate-answers*
   [items-map item-answers specifications]
-  (let [items-with-answers (->> item-answers
-                                (keep (fn [[answer-id answer]]
-                                        (and (not-empty answer) answer-id)))
-                                (map (fn [answer-id]
-                                       (-> answer-id
-                                           (str/split #"_")
-                                           (first)
-                                           (utils/str->int))))
-                                (into #{}))
-        jumped-items       (get-jumped-items items-map item-answers)]
+  (let [jumped-items  (get-jumped-items items-map item-answers)
+        items+answers (->> item-answers
+                           (utils/filter-map #(not (empty? %)))
+                           (merge-answers items-map))]
     (merge
-      (skipped-jumps jumped-items items-with-answers)
-      (missing-items items-map jumped-items items-with-answers))))
+      (skipped-jumps jumped-items items+answers)
+      (missing-items items+answers jumped-items))))
 
 
 (defn validate-answers

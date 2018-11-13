@@ -31,7 +31,6 @@
                    (utils/map-map #(utils/filter-map identity %)))]
     items))
 
-
 (deftest jumps
   (let [items {1 {:response-type "RD"
                   :name          "1"
@@ -41,9 +40,9 @@
                3 {:response-type "TX"
                   :name          "3"}}]
     (is (= {:jumps #{2}} (validate-answers* items {"1" "1", "2" "x", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1" "0", "2" "x", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1" "1", "2" "", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1" "1", "3" "x"} {}))))
+    (is (nil? (validate-answers* items {"1" "0", "2" "x", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "1", "2" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "1", "3" "x"} {}))))
   (let [items {1 {:response-type "RD"
                   :name          "1"
                   :options       {"1" {:jump [2 3]} "0" {}}}
@@ -54,8 +53,8 @@
                4 {:response-type "TX"
                   :name          "4"}}]
     (is (= {:jumps #{2 3}} (validate-answers* items {"1" "1", "2" "x", "3" "x", "4" "x"} {})))
-    (is (= nil (validate-answers* items {"1" "1", "2" "", "3" "", "4" "x"} {})))
-    (is (= nil (validate-answers* items {"1" "1", "4" "x"} {}))))
+    (is (nil? (validate-answers* items {"1" "1", "2" "", "3" "", "4" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "1", "4" "x"} {}))))
   (let [items {1 {:response-type "CB"
                   :name          "1"
                   :options       {"X" {:jump [2]} "Y" {}}}
@@ -66,9 +65,9 @@
                   :name          "3"}}]
     (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "0", "2_Z" "1", "2_W" "", "3" "x"} {})))
     (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "1", "2_W" "", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1_X" "0", "1_Y" "1", "2_Z" "1", "2_W" "", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "", "2_W" "", "3" "x"} {})))
-    (is (= nil (validate-answers* items {"1_X" "1", "1_Y" "1", "3" "x"} {})))))
+    (is (nil? (validate-answers* items {"1_X" "0", "1_Y" "1", "2_Z" "1", "2_W" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "", "2_W" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1_X" "1", "1_Y" "1", "3" "x"} {})))))
 
 (deftest missing
   (let [items {1 {:response-type "RD"
@@ -95,7 +94,21 @@
                   :options       {"Z" {} "W" {}}}}]
     (is (= {:missing #{2}} (validate-answers* items {} {})))
     (is (= {:missing #{2}} (validate-answers* items {"1" "", "2_Z" "", "2_W" "", "3_Z" "1"} {})))
-    (is (= {:missing #{2}} (validate-answers* items {"1" "1", "2" "", "3_Z" "1"} {})))))
+    (is (= {:missing #{2}} (validate-answers* items {"1" "1", "2" "", "3_Z" "1"} {}))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :optional?     true
+                  :options       {"1" {:jump [2]} "0" {}}}
+               2 {:response-type "CB"
+                  :name          "2"
+                  :options       {"Z" {} "W" {}}}
+               3 {:response-type "CB"
+                  :name          "2"
+                  :optional?     true
+                  :options       {"Z" {} "W" {}}}}]
+    (is (= {:missing #{2}} (validate-answers* items {} {})))
+    (is (nil? (validate-answers* items {"1" "1", "3_Z" "1"} {})))
+    (is (= {:missing #{2}} (validate-answers* items {"1" "0", "2" "", "3_Z" "1"} {})))))
 
 (deftest demo-questionnaire
   (let [items {1581 {:response-type "RD",
