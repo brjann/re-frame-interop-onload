@@ -1,7 +1,7 @@
 (ns bass4.routes.embedded
   (:require [bass4.layout :as layout]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
-            [bass4.responses.instrument :as instruments]
+            [bass4.responses.instrument-preview :as instruments]
             [bass4.responses.content-example :as content-example]
             [bass4.responses.modules :as modules]
             [bass4.utils :refer [str->int json-safe]]

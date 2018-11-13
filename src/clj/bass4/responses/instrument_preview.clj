@@ -1,4 +1,4 @@
-(ns bass4.responses.instrument
+(ns bass4.responses.instrument-preview
   (:require [bass4.services.instrument :as instruments]
             [ring.util.http-response :as http-response]
             [clojure.tools.logging :as log]
@@ -16,6 +16,8 @@
 
 (defapi post-answers
   [instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
+  (log/debug (pr-str items))
+  (log/debug (pr-str specifications))
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (let [answers-map {:items          items
                        :specifications specifications
