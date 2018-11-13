@@ -9,7 +9,7 @@
             [clojure.set :as set]))
 
 
-(defn get-items-map
+(defn- get-items-map
   [instrument]
   (let [merge-jumps (fn [item]
                       (if (contains? #{"RD" "CB"} (:response-type item))
@@ -48,7 +48,7 @@
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 
-(defn checkbox-id
+(defn- checkbox-id
   [item-id value]
   (str item-id "_" value))
 
@@ -74,7 +74,7 @@
                ())
        (into {})))
 
-(defn get-jumped-items
+(defn- get-jumped-items
   [items-map item-answers]
   (let [jump-map     (get-jump-map items-map)
         jumped-items (->> item-answers
@@ -84,7 +84,7 @@
                           (into #{}))]
     jumped-items))
 
-(defn skipped-jumps
+(defn- skipped-jumps
   [jumped-items items+answers]
   (let [items-with-answers (->> items+answers
                                 (keep (fn [[item-id item+answer]]
@@ -95,7 +95,7 @@
     (when (seq overlap)
       {:jumps overlap})))
 
-(defn missing-items
+(defn- missing-items
   [items+answers jumped-items]
   (let [items-with-answers (->> items+answers
                                 (keep (fn [[item-id item+answer]]
@@ -113,7 +113,7 @@
     (when (seq missing)
       {:missing missing})))
 
-(defn merge-answers
+(defn- merge-answers
   [items-map item-answers]
   (utils/map-map-keys
     (fn [item item-id]
