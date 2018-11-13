@@ -66,8 +66,9 @@
   :start (let [metrics-reg (metrics/new-registry)
                CR          (csv/reporter
                              metrics-reg
-                             (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})]
-           (csv/start CR 10)
+                             (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
+               report-freq (env :metrics-report-freq 60)]
+           (csv/start CR report-freq)
            metrics-reg)
   :stop (do))
 
