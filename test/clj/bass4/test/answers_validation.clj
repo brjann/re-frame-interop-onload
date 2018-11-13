@@ -80,6 +80,7 @@
                   :name          "3"}}]
     (is (= {:missing #{1 2 3}} (validate-answers* items {} {})))
     (is (= {:missing #{1 2 3}} (validate-answers* items {"1" "", "2_Z" "", "2_W" "", "3" ""} {})))
+    (is (= {:missing #{1 2 3}} (validate-answers* items {"1" "", "2_Z" "0", "2_W" "0", "3" ""} {})))
     (is (= {:missing #{3}} (validate-answers* items {"1" "1", "2_Z" "1", "2_W" "", "3" ""} {}))))
   (let [items {1 {:response-type "RD"
                   :name          "1"
