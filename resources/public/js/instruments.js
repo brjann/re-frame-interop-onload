@@ -98,7 +98,7 @@ $(document).ready(function(){
 					if(element["item-id"] != undefined){
 						response_html = parse_response(element, response);
 						row_div.data('response-type', response['response-type']);
-						row_div.data('optional', element['optional']);
+                  row_div.data('optional?', element['optional?']);
 					}
 					else response_html = "";
 
@@ -349,15 +349,13 @@ function parse_response(element, response){
 
 			// Radio button
          if (response_type === "RD") {
-				str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s' data-has-specification = '%s'>", name, escape_html(option.value), jumps, option.specification);
+            str = sprintf("<input type = 'radio' name = '%s' value = '%s' data-jumps = '%s' data-has-specification = '%s'>", name, escape_html(option.value), jumps, option['specification?']);
 			}
 
 			// Checkbox
 			else{
 				var cb_name = name + "_" + escape_html(option.value);
-				//str = sprintf("<input type = 'hidden' name = '%s' value='0'>\n" +
-				//	"<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, cb_name, jumps, option.specification);
-				str = sprintf("<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, jumps, option.specification)
+            str = sprintf("<input type = 'checkbox' name = '%s' value = '1' data-jumps = '%s' data-has-specification = '%s'>", cb_name, jumps, option['specification?'])
 			}
 
 			// Trailing option label
@@ -367,12 +365,12 @@ function parse_response(element, response){
 			}
 
 			// Add specification
-			if(option.specification){
+         if (option['specification?']) {
 				var spec_name = [name, escape_html(option.value), "spec"].join("_");
 				str += "<br>" + option["specification-text"];
 
 				// Big specification
-				if(option["specification-big"]){
+            if (option["specification-big?"]) {
 					str += sprintf("<br><textarea class='spec' cols='22' rows='3' name='%s'></textarea>", spec_name);
 				}
 
@@ -548,7 +546,7 @@ function validate_text(item_div) {
 	if (val.length == 0) {
 
 		// Optional items can have empty value
-		if (item_div.data('optional')) {
+      if (item_div.data('optional?')) {
 			return;
 		}
 
@@ -593,7 +591,7 @@ function validate_checker(item_div) {
 	if(checked.length == 0){
 
 		// Optional items can have nothing selected
-		if (item_div.data('optional')) {
+      if (item_div.data('optional?')) {
 			return;
 		}
 
@@ -658,7 +656,7 @@ function validate_vas(item_div){
 	var input = item_div.find(':input');
 	var val = input.val();
 	if(val.length == 0 || val == -1){
-		if (item_div.data('optional')) {
+      if (item_div.data('optional?')) {
 			return;
 		}
 

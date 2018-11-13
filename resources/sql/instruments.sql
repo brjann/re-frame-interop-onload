@@ -89,7 +89,7 @@ SELECT
   ObjectId AS `item-id`,
   name,
   text,
-  optional,
+  optional AS `optional?`,
 
   -- LAYOUT --
   CASE

@@ -6,7 +6,11 @@
             [bass4.infix-parser :as infix]
             [bass4.services.instrument-answers :as instrument-answers]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.utils :as utils]
+            [clojure.string :as str]
+            [clojure.set :as set]
+            [clojure.walk :as walk]))
 
 
 ;; ------------------------
@@ -48,7 +52,7 @@
                              :layout-id
                              :option-jumps
                              :page-break
-                             :optional])
+                             :optional?])
                :option-jumps
                (fn [m] (map-map
                          (jumper-fn item-ids current-id)
@@ -60,9 +64,9 @@
   (let [specification? (not (empty? specification-text))]
     {:value              value
      :label              label
-     :specification      specification?
+     :specification?     specification?
      :specification-text (if specification? specification-text nil)
-     :specification-big  (if specification? specification-big? nil)}))
+     :specification-big? (if specification? specification-big? nil)}))
 
 (defn- php->clj-vec
   [s]
@@ -143,9 +147,149 @@
 (defn get-instrument-test-answers [instrument-id]
   (instrument-answers/get-answers instrument-id instrument-id))
 
+
 ;; ------------------------
-;;     SCORING PARSER
+;;    ANSWERS VALIDATION
 ;; ------------------------
+
+
+#_(defn- expand-checkboxes
+    "Makes checkbox items into one item per checkbox option."
+    [items]
+    (reduce (fn [coll item]
+              (let [res (if (= "CB" (:response-type item))
+                          (map (fn [option]
+                                 (let [check-box-id (str (:item-id item) "_" (:value option))]
+                                   [check-box-id {:item-id       (:item-id item)
+                                                  :response-type "CB"
+                                                  :name          (str (:name item) "_" (:value option))
+                                                  :options       (list {:value "1" :jump (:jump option)}
+                                                                       {:value "0"})}]))
+                               (:options item))
+                          (list [(str (:item-id item)) item]))]
+                (concat coll res)))
+            ()
+            items))
+
+(defn get-items-map
+  [instrument]
+  (let [merge-jumps (fn [item]
+                      (if (contains? #{"RD" "CB"} (:response-type item))
+                        (assoc
+                          item
+                          :options
+                          (map-indexed
+                            (fn [index option]
+                              (assoc option :jump (get (:option-jumps item) index)))
+                            (:options item)))
+                        item))
+        map-options (fn [item]
+                      (if (contains? #{"RD" "CB"} (:response-type item))
+                        (assoc
+                          item
+                          :options
+                          (into {} (map #(vector (:value %) %) (:options item))))
+                        item))
+        items       (->> instrument
+                         (:elements)
+                         (filter :item-id)
+                         (map (fn [item]
+                                (let [response-def (get (:responses instrument)
+                                                        (:response-id item))
+                                      layout-def   (get-in (:layouts instrument)
+                                                           [(:layout-id item) :layout])]
+                                  (when (or (nil? response-def) (nil? layout-def))
+                                    (throw (ex-info "Item does not have response or layout def" item)))
+                                  (let [item (->> item
+                                                  (merge response-def {:layout layout-def})
+                                                  (merge-jumps)
+                                                  (map-options))]
+                                    item)))))]
+    (->> items
+         (filter #(s/includes? (:layout %) "[X]"))
+         (map (fn [item] [(:item-id item) item]))
+         (into {}))))
+
+(defn checkbox-id
+  [item-id value]
+  (str item-id "_" value))
+
+(defn- get-jump-map
+  [items]
+  (->> items
+       (reduce (fn [coll [item-id item]]
+                 (let [res (case (:response-type item)
+                             "CB"
+                             (map (fn [[value option]]
+                                    [(checkbox-id item-id value)
+                                     {"1" (:jump option)}])
+                                  (:options item))
+
+                             "RD"
+                             (list [(str item-id)
+                                    (into {} (map (fn [[value option]]
+                                                    [value (:jump option)])
+                                                  (:options item)))])
+
+                             nil)]
+                   (concat coll res)))
+               ())
+       (into {})))
+
+(defn get-jumped-items
+  [items-map item-answers]
+  (let [jump-map     (get-jump-map items-map)
+        jumped-items (->> item-answers
+                          (keep (fn [[item-id answer]]
+                                  (get-in jump-map [item-id answer])))
+                          (flatten)
+                          (into #{}))]
+    jumped-items))
+
+(defn skipped-jumps
+  [jumped-items items-with-answers]
+  (let [overlap (set/intersection jumped-items items-with-answers)]
+    (when (seq overlap)
+      {:jumps overlap})))
+
+(defn missing-items
+  [items-map jumped-items items-with-answers]
+  (let [mandatory (->> items-map
+                       (filter (fn [[_ item]] (not (:optional? item))))
+                       (keys)
+                       (into #{}))
+        missing   (set/difference mandatory items-with-answers jumped-items)]
+    (when (seq missing)
+      {:missing missing})))
+
+(defn validate-answers*
+  [items-map item-answers specifications]
+  (let [items-with-answers (->> item-answers
+                                (keep (fn [[answer-id answer]]
+                                        (and (not-empty answer) answer-id)))
+                                (map (fn [answer-id]
+                                       (-> answer-id
+                                           (str/split #"_")
+                                           (first)
+                                           (utils/str->int))))
+                                (into #{}))
+        jumped-items       (get-jumped-items items-map item-answers)]
+    (merge
+      (skipped-jumps jumped-items items-with-answers)
+      (missing-items items-map jumped-items items-with-answers))))
+
+
+(defn validate-answers
+  [instrument-id item-answers specifications]
+  (if-let [instrument (get-instrument instrument-id)]
+    (validate-answers* (get-items-map instrument) item-answers specifications)
+    :error))
+
+
+;; ------------------------
+;;     ANSWERS SCORING
+;; ------------------------
+
 
 (defn- scoring-exports
   [lines]
@@ -188,10 +332,6 @@
     (when (> (count scoring-string) 0)
       (assoc (parse-scoring scoring-string) :default-value (or default-value 0)))))
 
-
-;; ------------------------
-;;     ANSWERS SCORING
-;; ------------------------
 
 
 ;; Returns 0 in case of exception or nil result
