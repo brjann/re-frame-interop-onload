@@ -161,12 +161,30 @@
                   :options       {"Z" {} "W" {}}}}]
     (is (= {:constraints {1 {:missing-checkboxes #{"W"}}
                           2 {:missing-checkboxes  #{"W"}
-                             :not-binary-checkbox #{"Z"}}}} (validate-answers* items {"1_Z" "1", "2_Z" "2"} {})))
+                             :not-binary-checkbox #{"Z"}}}}
+           (validate-answers* items {"1_Z" "1", "2_Z" "2"} {})))
     (is (= {:constraints
             {1 {:missing-checkboxes #{"Z"}}
-             2 {:missing-checkboxes #{"W"}}}} (validate-answers* items {"1_W" "1", "2_Z" "1"} {})))
+             2 {:missing-checkboxes #{"W"}}}}
+           (validate-answers* items {"1_W" "1", "2_Z" "1"} {})))
     (is (= {:constraints {1 {:not-binary-checkbox #{"W"}}
-                          2 {:missing-checkboxes #{"W"}}}} (validate-answers* items {"1_W" "2", "1_Z" "1", "2_Z" "1"} {})))))
+                          2 {:missing-checkboxes #{"W"}}}}
+           (validate-answers* items {"1_W" "2", "1_Z" "1", "2_Z" "1"} {})))
+    (is (= {:constraints {2 {:missing-checkboxes #{"W"}}}
+            :missing     #{1}}
+           (validate-answers* items {"1_W" "0", "1_Z" "", "2_Z" "1"} {}))))
+  (let [items {1 {:response-type "CB"
+                  :name          "1"
+                  :options       {"Z" {:jump [2]} "W" {}}}
+               2 {:response-type "CB"
+                  :name          "2"
+                  :options       {"Z" {} "W" {}}}
+               3 {:response-type "RD"
+                  :name          "3"
+                  :options       {"Z" {} "W" {}}}}]
+    (is (= {:constraints {1 {:missing-checkboxes #{"W"}}}
+            :jumps       #{2}}
+           (validate-answers* items {"1_Z" "1", "1_W" "", "2_Z" "1", "2_W" "1", "3" "Z"} {})))))
 
 
 ;; ------------------------
