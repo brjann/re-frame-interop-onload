@@ -63,9 +63,9 @@
                   :options       {"Z" {} "W" {}}}
                3 {:response-type "TX"
                   :name          "3"}}]
-    (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "0", "2_Z" "1", "2_W" "", "3" "x"} {})))
-    (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "1", "2_W" "", "3" "x"} {})))
-    (is (nil? (validate-answers* items {"1_X" "0", "1_Y" "1", "2_Z" "1", "2_W" "", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "0", "2_Z" "1", "2_W" "0", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "1", "2_W" "0", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1_X" "0", "1_Y" "1", "2_Z" "1", "2_W" "0", "3" "x"} {})))
     (is (nil? (validate-answers* items {"1_X" "1", "1_Y" "1", "2_Z" "", "2_W" "", "3" "x"} {})))
     (is (nil? (validate-answers* items {"1_X" "1", "1_Y" "1", "3" "x"} {})))))
 
