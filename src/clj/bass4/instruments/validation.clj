@@ -79,7 +79,7 @@
   (->> items+answers
        (keep (fn [[item-id item+answer]]
                (if (= "CB" (:response-type item+answer))
-                 (when (some #(= "1" %) (vals (:answer item+answer)))
+                 (when (not (every? #(contains? #{"" "0"} %) (vals (:answer item+answer))))
                    item-id)
                  (when (seq (:answer item+answer))
                    item-id))))
@@ -123,26 +123,11 @@
                           (into #{}))]
     jumped-items))
 
-(defn- get-skipped-jumps
-  [jumped-items items+answers]
-  (let [items-with-answers (->> items+answers
-                                (keep (fn [[item-id item+answer]]
-                                        (and (not-empty (:answer item+answer)) item-id)))
-                                (into #{}))]
-    (set/intersection jumped-items items-with-answers)))
 
 ;; ------------------------
 ;;      MISSING ITEMS
 ;; ------------------------
 
-
-(defn- get-missing-items
-  [items+answers jumped-items items-with-answers]
-  (let [mandatory (->> items+answers
-                       (filter (fn [[_ item]] (not (:optional? item))))
-                       (keys)
-                       (into #{}))]
-    (set/difference mandatory items-with-answers jumped-items)))
 
 (defn- get-mandatory-items
   [items-map]
@@ -155,12 +140,15 @@
 ;;       CONSTRAINTS
 ;; ------------------------
 
-(defmulti check-constraints (fn [[item-id item]] (keyword (str *ns*) (:response-type item))))
+(let [ns* (str *ns*)]
+  ;; Must fix ns* because dispatch gets called in current namespace or something
+  (defmulti check-constraints (fn [[item-id item]] (keyword ns* (:response-type item)))))
 (derive ::ST ::text)
 (derive ::TX ::text)
 
 (defmethod check-constraints ::text
-  [item+answer])
+  [item+answer]
+  (log/debug "xxx"))
 
 (defmethod check-constraints ::CB
   [[item-id item+answer]]
@@ -172,11 +160,12 @@
                        (keys)
                        (into #{}))
         missing-keys (set/difference option-keys present-keys)
-        not-binary   (keep (fn [[answer-id answer]]
-                             (when
-                               (not (contains? #{"0" "1"} answer))
-                               answer-id))
-                           (:answer item+answer))]
+        not-binary   (->> (:answer item+answer)
+                          (keep (fn [[answer-id answer]]
+                                  (when
+                                    (not (contains? #{"0" "1"} answer))
+                                    answer-id)))
+                          (into #{}))]
     (when (or (seq missing-keys)
               (seq not-binary))
       [item-id (merge
@@ -186,7 +175,8 @@
                    {:not-binary-checkbox not-binary}))])))
 
 (defmethod check-constraints :default
-  [item+answer])
+  [item+answer]
+  (log/debug (pr-str item+answer)))
 
 
 ;; TODO: Superfluous?
