@@ -82,7 +82,7 @@
   (cond
     (integer? s) s
     (nil? s) nil
-    (re-find #"^\d+$" (s/trim s)) (read-string s)))
+    (re-find #"^-?\d+$" (s/trim s)) (read-string s)))
 
 (defn val-to-bool
   [x]
