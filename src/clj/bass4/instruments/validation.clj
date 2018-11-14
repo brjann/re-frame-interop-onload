@@ -6,7 +6,8 @@
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.string :as str]))
 
 
 (defn- checkbox-id
@@ -56,18 +57,34 @@
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 
-(defn- merge-answers
+(defn merge-answers
   [items-map item-answers]
   (utils/map-map-keys
     (fn [item item-id]
-      (let [answer-map (if (= "CB" (:response-type item))
-                         (select-keys item-answers (map #(checkbox-id item-id %) (keys (:options item))))
-                         {(str item-id) (get item-answers (str item-id))})]
+      (let [non-empty  (utils/filter-map #(not (empty? %)) item-answers)
+            answer-map (if (= "CB" (:response-type item))
+                         (->> (keys (:options item))
+                              (map #(checkbox-id item-id %))
+                              (map #(get non-empty %))
+                              (zipmap (keys (:options item))))
+                         {item-id (get non-empty (str item-id))})]
         (assoc
           item
           :answer
           (into {} (filter second answer-map)))))
     items-map))
+
+(defn get-items-with-answers
+  [items+answers]
+  (->> items+answers
+       (keep (fn [[item-id item+answer]]
+               (if (= "CB" (:response-type item+answer))
+                 (when (some #(= "1" %) (vals (:answer item+answer)))
+                   item-id)
+                 (when (seq (:answer item+answer))
+                   item-id))))
+       (into #{})))
+
 
 ;; ------------------------
 ;;          JUMPS
@@ -118,22 +135,21 @@
 ;;      MISSING ITEMS
 ;; ------------------------
 
+
 (defn- get-missing-items
-  [items+answers jumped-items]
-  (let [items-with-answers (->> items+answers
-                                (keep (fn [[item-id item+answer]]
-                                        (if (= "CB" (:response-type item+answer))
-                                          (when (some #(= "1" %) (vals (:answer item+answer)))
-                                            item-id)
-                                          (when (seq (:answer item+answer))
-                                            item-id))))
-                                (into #{}))
-        mandatory          (->> items+answers
-                                (filter (fn [[_ item]] (not (:optional? item))))
-                                (keys)
-                                (into #{}))]
+  [items+answers jumped-items items-with-answers]
+  (let [mandatory (->> items+answers
+                       (filter (fn [[_ item]] (not (:optional? item))))
+                       (keys)
+                       (into #{}))]
     (set/difference mandatory items-with-answers jumped-items)))
 
+(defn- get-mandatory-items
+  [items-map]
+  (->> items-map
+       (filter (fn [[_ item]] (not (:optional? item))))
+       (keys)
+       (into #{})))
 
 ;; ------------------------
 ;;       CONSTRAINTS
@@ -150,7 +166,6 @@
   [[item-id item+answer]]
   (let [option-keys  (->> (:options item+answer)
                           (keys)
-                          (map #(checkbox-id item-id %))
                           (into #{}))
         present-keys (->>
                        (:answer item+answer)
@@ -178,14 +193,17 @@
 
 (defn validate-answers*
   [items-map item-answers specifications]
-  (let [jumped-items  (get-jumped-items items-map item-answers)
-        items+answers (->> item-answers
-                           (utils/filter-map #(not (empty? %)))
-                           (merge-answers items-map))
-        skipped-jumps (get-skipped-jumps jumped-items items+answers)
-        missing-items (get-missing-items items+answers jumped-items)
-        items+answers (apply dissoc items+answers (set/union jumped-items missing-items))
-        constraints   (keep check-constraints items+answers)]
+  (let [jumped-items       (get-jumped-items items-map item-answers)
+        mandatory-items    (get-mandatory-items items-map)
+        items+answers      (merge-answers items-map item-answers)
+        items-with-answers (get-items-with-answers items+answers)
+        skipped-jumps      (set/intersection jumped-items items-with-answers)
+        missing-items      (set/difference mandatory-items items-with-answers jumped-items)
+        _                  (log/debug missing-items)
+        _                  (log/debug items+answers)
+        items+answers      (apply dissoc items+answers (set/union jumped-items missing-items))
+        _                  (log/debug items+answers)
+        constraints        (keep check-constraints items+answers)]
     (merge
       (when (seq skipped-jumps)
         {:jumps skipped-jumps})
