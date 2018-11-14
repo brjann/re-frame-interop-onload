@@ -123,7 +123,7 @@
                   :options       {"Z" {} "W" {}}}}]
     (is (= {:missing #{2}} (validate-answers* items {} {})))
     (is (= {:missing #{2}} (validate-answers* items {"1" "", "2_Z" "", "2_W" "0", "3_Z" "0"} {})))
-    (is (= {:missing #{2}} (validate-answers* items {"1" "1", "2" "", "3_Z" "1"} {}))))
+    (is (= {:missing #{2}} (validate-answers* items {"1" "1", "2" "", "3_Z" "1" "3_W" "0"} {}))))
   (let [items {1 {:response-type "RD"
                   :name          "1"
                   :optional?     true
@@ -136,8 +136,8 @@
                   :optional?     true
                   :options       {"Z" {} "W" {}}}}]
     (is (= {:missing #{2}} (validate-answers* items {} {})))
-    (is (nil? (validate-answers* items {"1" "1", "3_Z" "1"} {})))
-    (is (= {:missing #{2}} (validate-answers* items {"1" "0", "2" "", "3_Z" "1"} {})))))
+    (is (nil? (validate-answers* items {"1" "1", "3_Z" "1", "3_W" "0"} {})))
+    (is (= {:missing #{2}} (validate-answers* items {"1" "0", "2" "", "3_Z" "1", "3_W" "0"} {})))))
 
 (deftest demo-questionnaire
   (let [items {1581 {:response-type "RD",

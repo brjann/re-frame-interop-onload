@@ -193,17 +193,16 @@
 
 (defn validate-answers*
   [items-map item-answers specifications]
-  (let [jumped-items       (get-jumped-items items-map item-answers)
-        mandatory-items    (get-mandatory-items items-map)
+  (let [mandatory-items    (get-mandatory-items items-map)
+
         items+answers      (merge-answers items-map item-answers)
         items-with-answers (get-items-with-answers items+answers)
+        jumped-items       (get-jumped-items items-map item-answers)
+
         skipped-jumps      (set/intersection jumped-items items-with-answers)
         missing-items      (set/difference mandatory-items items-with-answers jumped-items)
-        _                  (log/debug missing-items)
-        _                  (log/debug items+answers)
-        items+answers      (apply dissoc items+answers (set/union jumped-items missing-items))
-        _                  (log/debug items+answers)
-        constraints        (keep check-constraints items+answers)]
+        constrain-items    (select-keys items+answers (set/difference items-with-answers jumped-items missing-items))
+        constraints        (keep check-constraints constrain-items)]
     (merge
       (when (seq skipped-jumps)
         {:jumps skipped-jumps})
