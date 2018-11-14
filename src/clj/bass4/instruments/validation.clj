@@ -170,9 +170,15 @@
               (seq not-binary))
       [item-id (merge
                  (when (seq missing-keys)
-                   {:missing-checkboxes missing-keys})
+                   {:checkboxes-missing missing-keys})
                  (when (seq not-binary)
-                   {:not-binary-checkbox not-binary}))])))
+                   {:checkbox-not-binary not-binary}))])))
+
+(defmethod check-constraints ::RD
+  [[item-id item+answer]]
+  (let [answer (first (vals (:answer item+answer)))]
+    (when-not (contains? (:options item+answer) answer)
+      [item-id {:radio-invalid-value answer}])))
 
 (defmethod check-constraints :default
   [item+answer]
