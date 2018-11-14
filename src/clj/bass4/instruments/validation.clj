@@ -106,21 +106,19 @@
                           (into #{}))]
     jumped-items))
 
-(defn- skipped-jumps
+(defn- get-skipped-jumps
   [jumped-items items+answers]
   (let [items-with-answers (->> items+answers
                                 (keep (fn [[item-id item+answer]]
                                         (and (not-empty (:answer item+answer)) item-id)))
-                                (into #{}))
-        overlap            (set/intersection jumped-items items-with-answers)]
-    (when (seq overlap)
-      {:jumps overlap})))
+                                (into #{}))]
+    (set/intersection jumped-items items-with-answers)))
 
 ;; ------------------------
 ;;      MISSING ITEMS
 ;; ------------------------
 
-(defn- missing-items
+(defn- get-missing-items
   [items+answers jumped-items]
   (let [items-with-answers (->> items+answers
                                 (keep (fn [[item-id item+answer]]
@@ -133,10 +131,8 @@
         mandatory          (->> items+answers
                                 (filter (fn [[_ item]] (not (:optional? item))))
                                 (keys)
-                                (into #{}))
-        missing            (set/difference mandatory items-with-answers jumped-items)]
-    (when (seq missing)
-      {:missing missing})))
+                                (into #{}))]
+    (set/difference mandatory items-with-answers jumped-items)))
 
 
 ;; ------------------------
@@ -168,22 +164,14 @@
                            (:answer item+answer))]
     (when (or (seq missing-keys)
               (seq not-binary))
-      {item-id (merge
+      [item-id (merge
                  (when (seq missing-keys)
                    {:missing-checkboxes missing-keys})
                  (when (seq not-binary)
-                   {:not-binary-checkbox not-binary}))})))
+                   {:not-binary-checkbox not-binary}))])))
 
 (defmethod check-constraints :default
   [item+answer])
-
-
-(defn check-item-constraints
-  [items+answers jumped-items]
-  (let [items+answers (apply dissoc items+answers jumped-items)
-        constraints   (keep check-constraints items+answers)]
-    (when (seq constraints)
-      {:constraints constraints})))
 
 
 ;; TODO: Superfluous?
@@ -193,11 +181,18 @@
   (let [jumped-items  (get-jumped-items items-map item-answers)
         items+answers (->> item-answers
                            (utils/filter-map #(not (empty? %)))
-                           (merge-answers items-map))]
+                           (merge-answers items-map))
+        skipped-jumps (get-skipped-jumps jumped-items items+answers)
+        missing-items (get-missing-items items+answers jumped-items)
+        items+answers (apply dissoc items+answers (set/union jumped-items missing-items))
+        constraints   (keep check-constraints items+answers)]
     (merge
-      (skipped-jumps jumped-items items+answers)
-      (missing-items items+answers jumped-items)
-      (check-item-constraints items+answers jumped-items))))
+      (when (seq skipped-jumps)
+        {:jumps skipped-jumps})
+      (when (seq missing-items)
+        {:missing missing-items})
+      (when (seq constraints)
+        {:constraints (into {} constraints)}))))
 
 
 (defn validate-answers
