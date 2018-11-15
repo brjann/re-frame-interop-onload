@@ -579,10 +579,14 @@ function validate_text(item_div) {
 	}
 
    if (regex != undefined) {
-      var pattern = new RegExp(regex);
-		if(!pattern.test(val)){
-			return error_text || text_pattern_error;
-		}
+      try {
+         var pattern = new RegExp(regex);
+         if (!pattern.test(val)) {
+            return error_text || text_pattern_error;
+         }
+      }
+      catch (e) {
+      }
 	}
 }
 
