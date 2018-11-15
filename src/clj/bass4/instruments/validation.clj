@@ -147,8 +147,29 @@
 (derive ::TX ::text)
 
 (defmethod check-constraints ::text
-  [item+answer]
-  nil)
+  [[item-id item+answer]]
+  (let [answer       (-> (:answer item+answer)
+                         (vals)
+                         (first))
+        range-error? (when (or (:range-max item-id) (:range-min item-id))
+                       (let [answer-int (utils/str->int answer)]
+                         (cond
+                           (nil? answer-int)
+                           true
+
+                           (and (:range-min item-id) (:range-max item-id))
+                           (when-not (and (<= (:range-min item-id) answer-int)
+                                          (>= (:range-max item-id) answer-int))
+                             true)
+
+                           (:range-min item-id)
+                           (when-not (<= (:range-min item-id) answer-int)
+                             true)
+
+                           (:range-max item-id)
+                           (when-not (>= (:range-max item-id) answer-int)
+                             true))))
+        regex-error? (when (:regexp item+answer))]))
 
 (defmethod check-constraints ::CB
   [[item-id item+answer]]
@@ -176,7 +197,9 @@
 
 (defmethod check-constraints ::RD
   [[item-id item+answer]]
-  (let [answer (first (vals (:answer item+answer)))]
+  (let [answer (-> (:answer item+answer)
+                   (vals)
+                   (first))]
     (when-not (contains? (:options item+answer) answer)
       [item-id {:radio-invalid-value answer}])))
 
