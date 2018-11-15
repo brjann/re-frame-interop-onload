@@ -345,6 +345,22 @@
            (validate-answers* items {"1" "0" "2" "-3"} {})))
     (is (nil? (validate-answers* items {"1" "0" "2" ""} {})))))
 
+;; ------------------------
+;;     SPECIFICATIONS
+;; ------------------------
+
+(deftest specifications
+  #_(let [items {1 {:response-type "RD"
+                    :name          "1"
+                    :options       {"X" {:jump [2] :specification? true} "Y" {}}}
+                 2 {:response-type "RD"
+                    :name          "2"
+                    :optional?     true
+                    :options       {"1" {} "2" {:specification? true}}}
+                 3 {:response-type "CB"
+                    :name          "3"
+                    :options       {"Z" {:specification? true} "W" {}}}}]
+      (is (= {:constraints {1 {:regex-error "x"}}} (validate-answers* items {"1" "X", "2" "2", "3_Z" "1", "3_W" "0"} {})))))
 
 ;; ------------------------
 ;;    DEMO QUESTIONNAIRE
@@ -389,11 +405,17 @@
                1568 {:response-type "RD",
                      :name          "1",
                      :options       {"1" {:specification? true, :jump nil}, "0" {:specification? false, :jump nil}}}}]
-    (is (= nil (validate-answers*
-                 items
-                 {"1570_gs" "0", "1576" "dsf", "1582" "3", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1574" "", "1575" "Ja", "1570_u" "0", "1577" "0", "1569_e" "1", "1583" "hejsan", "1572" "0", "1568" "1", "1570_phd" "0", "1570_fs" "1", "1569_mb" "1", "1724" "Hoppsan", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "1", "1569_xx" "0"}
-                 {"1568_1" "x", "1569_mb" "4", "1570_annan" "df"})))
-    (is (= nil (validate-answers*
-                 items
-                 {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
-                 {"1569_mb" "d", "1569_xx" "d"})))))
+    (is (nil? (validate-answers*
+                items
+                {"1570_gs" "0", "1576" "dsf", "1582" "3", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1574" "", "1575" "Ja", "1570_u" "0", "1577" "0", "1569_e" "1", "1583" "hejsan", "1572" "0", "1568" "1", "1570_phd" "0", "1570_fs" "1", "1569_mb" "1", "1724" "Hoppsan", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "1", "1569_xx" "0"}
+                {"1568_1" "x", "1569_mb" "4", "1570_annan" "df"})))
+    (is (nil? (validate-answers*
+                items
+                {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
+                {"1569_mb" "d", "1569_xx" "d"})))
+    #_(is (= {:missing-specs #{"1569_mb"
+                               "1569_xx"}}
+             (validate-answers*
+               items
+               {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
+               {"1569_mb" ""})))))
