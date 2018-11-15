@@ -100,11 +100,19 @@
 
 (defn response-def
   [bass-element]
-  (-> bass-element
-      ;; TODO: Only select relevant keys depending on response-type
-      (select-keys [:response-type :option-separator :vas-min-label :vas-max-label :range-min :range-max :check-error-text :regex])
-      (assoc :options (options bass-element))
-      (assoc :response-id (:item-id bass-element))))
+  (let [element (-> bass-element
+                    ;; TODO: Only select relevant keys depending on response-type
+                    (select-keys [:response-type :option-separator :vas-min-label :vas-max-label :range-min :range-max :check-error-text :regex])
+                    (assoc :options (options bass-element))
+                    (assoc :response-id (:item-id bass-element)))]
+    (assoc element
+      :regex
+      (when-not (empty? (:regex element))
+        (try
+          (re-pattern (:regex element))
+          (:regex element)
+          (catch Exception _))))
+    element))
 
 (defn layout-def
   [bass-element]
