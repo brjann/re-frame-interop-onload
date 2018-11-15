@@ -210,6 +210,26 @@
     (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {})))))
 
 ;; ------------------------
+;;     VAS CONSTRAINTS
+;; ------------------------
+
+(deftest vas-contraints
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"X" {:jump [2]} "Y" {}}}
+               2 {:response-type "VS"
+                  :name          "2"
+                  :options       {"1" {} "2" {}}}
+               3 {:response-type "TX"
+                  :name          "3"}}]
+    (is (= {:constraints {2 {:vas-invalid "x"}}} (validate-answers* items {"1" "Y", "2" "x", "3" "x"} {})))
+    (is (= {:constraints {2 {:vas-invalid "401"}}} (validate-answers* items {"1" "Y", "2" "401", "3" "x"} {})))
+    (is (= {:constraints {2 {:vas-invalid "-1"}}} (validate-answers* items {"1" "Y", "2" "-1", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "X", "3" "x"} {})))
+    (is (= {:missing #{2}} (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {})))))
+
+;; ------------------------
 ;;    DEMO QUESTIONNAIRE
 ;; ------------------------
 

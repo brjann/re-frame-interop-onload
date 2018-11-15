@@ -180,6 +180,15 @@
     (when-not (contains? (:options item+answer) answer)
       [item-id {:radio-invalid-value answer}])))
 
+(defmethod check-constraints ::VS
+  [[item-id item+answer]]
+  (let [answer     (-> (:answer item+answer)
+                       (vals)
+                       (first))
+        answer-int (utils/str->int answer)]
+    (when (or (nil? answer-int) (not (and (<= 0 answer-int) (>= 400 answer-int))))
+      [item-id {:vas-invalid answer}])))
+
 (defmethod check-constraints :default
   [item+answer]
   (log/debug (pr-str item+answer)))
