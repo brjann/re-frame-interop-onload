@@ -185,14 +185,34 @@
                   :options       {"Z" {} "W" {}}}}]
     (is (= {:constraints {1 {:checkboxes-missing #{"W"}}}
             :jumps       #{2}}
-           (validate-answers* items {"1_Z" "1", "1_W" "", "2_Z" "1", "2_W" "1", "3" "Z"} {})))))
+           (validate-answers* items {"1_Z" "1", "1_W" "", "2_Z" "1", "2_W" "1", "3" "Z"} {}))))
+  (let [items {1 {:response-type "CB"
+                  :name          "1"
+                  :options       {"Z" {} "W" {}}
+                  :optional?     true}
+               2 {:response-type "CB"
+                  :name          "2"
+                  :options       {"Z" {} "W" {}}}}]
+    (is (= {:constraints {1 {:checkboxes-missing #{"W"}}
+                          2 {:checkboxes-missing  #{"W"}
+                             :checkbox-not-binary #{"Z"}}}}
+           (validate-answers* items {"1_Z" "1", "2_Z" "2"} {})))
+    (is (= {:constraints
+            {1 {:checkboxes-missing #{"Z"}}
+             2 {:checkboxes-missing #{"W"}}}}
+           (validate-answers* items {"1_W" "1", "2_Z" "1"} {})))
+    (is (= {:constraints {1 {:checkbox-not-binary #{"W"}}
+                          2 {:checkboxes-missing #{"W"}}}}
+           (validate-answers* items {"1_W" "2", "1_Z" "1", "2_Z" "1"} {})))
+    (is (= {:constraints {2 {:checkboxes-missing #{"W"}}}}
+           (validate-answers* items {"1_W" "0", "1_Z" "", "2_Z" "1"} {})))))
 
 
 ;; ------------------------
 ;;  RADIOBUTTON CONSTRAINTS
 ;; ------------------------
 
-(deftest checkbox-contraints
+(deftest radiobutton-contraints
   (let [items {1 {:response-type "RD"
                   :name          "1"
                   :options       {"X" {:jump [2]} "Y" {}}}
@@ -207,6 +227,22 @@
     (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "1", "3" "x"} {})))
     (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "X", "3" "x"} {})))
     (is (= {:missing #{2}} (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {}))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"X" {:jump [2]} "Y" {}}}
+               2 {:response-type "RD"
+                  :name          "2"
+                  :optional?     true
+                  :options       {"1" {} "2" {}}}
+               3 {:response-type "TX"
+                  :name          "3"}}]
+    (is (= {:constraints {1 {:radio-invalid-value "1"}
+                          2 {:radio-invalid-value "x"}}}
+           (validate-answers* items {"1" "1", "2" "x", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "1", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "X", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
     (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {})))))
 
 ;; ------------------------
@@ -218,8 +254,7 @@
                   :name          "1"
                   :options       {"X" {:jump [2]} "Y" {}}}
                2 {:response-type "VS"
-                  :name          "2"
-                  :options       {"1" {} "2" {}}}
+                  :name          "2"}
                3 {:response-type "TX"
                   :name          "3"}}]
     (is (= {:constraints {2 {:vas-invalid "x"}}} (validate-answers* items {"1" "Y", "2" "x", "3" "x"} {})))
@@ -227,6 +262,20 @@
     (is (= {:constraints {2 {:vas-invalid "-1"}}} (validate-answers* items {"1" "Y", "2" "-1", "3" "x"} {})))
     (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "X", "3" "x"} {})))
     (is (= {:missing #{2}} (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {}))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"X" {:jump [2]} "Y" {}}}
+               2 {:response-type "VS"
+                  :name          "2"
+                  :optional?     true}
+               3 {:response-type "TX"
+                  :name          "3"}}]
+    (is (= {:constraints {2 {:vas-invalid "x"}}} (validate-answers* items {"1" "Y", "2" "x", "3" "x"} {})))
+    (is (= {:constraints {2 {:vas-invalid "401"}}} (validate-answers* items {"1" "Y", "2" "401", "3" "x"} {})))
+    (is (= {:constraints {2 {:vas-invalid "-1"}}} (validate-answers* items {"1" "Y", "2" "-1", "3" "x"} {})))
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "X", "2" "X", "3" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
     (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {})))))
 
 ;; ------------------------

@@ -148,7 +148,7 @@
 
 (defmethod check-constraints ::text
   [item+answer]
-  (log/debug "xxx"))
+  nil)
 
 (defmethod check-constraints ::CB
   [[item-id item+answer]]
