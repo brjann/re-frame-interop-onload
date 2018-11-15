@@ -9,7 +9,7 @@
 		- When data input into specification, select corresponding radiobutton/checkbox
 	   - Non-responsive instrument
 		- Min-max
-	 	- Regexp
+	 	- Regex
 	 	- Optional items
 	   - Validation
 		- Scroll to top error item
@@ -395,9 +395,9 @@ function parse_response(element, response){
 			check = sprintf("data-range-min = '%d' data-range-max = '%d'", response["range-min"], response["range-max"]);
 		}
 
-		// Regexp check
-		else if(response.regexp != ""){
-			check = sprintf("data-regexp = '%s'", escape_html(response.regexp));
+      // Regex check
+      else if (response.regex != "") {
+         check = sprintf("data-regex = '%s'", escape_html(response.regex));
 		}
 
 		// Check failed text
@@ -555,7 +555,7 @@ function validate_text(item_div) {
 
 	var min = input.data('range-min');
 	var max = input.data('range-max');
-	var regexp = input.data('regexp');
+   var regex = input.data('regex');
 	var error_text = input.data('error-text');
 
 	if(min != undefined || max != undefined){
@@ -578,8 +578,8 @@ function validate_text(item_div) {
 		}
 	}
 
-	if(regexp != undefined){
-		var pattern = new RegExp(regexp);
+   if (regex != undefined) {
+      var pattern = new RegExp(regex);
 		if(!pattern.test(val)){
 			return error_text || text_pattern_error;
 		}

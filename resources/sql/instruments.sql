@@ -206,7 +206,7 @@ SELECT
     THEN `RegExp`
   ELSE NULL
   END
-    AS `regexp`,
+    AS `regex`,
 
 
   -- VAS SCALE --

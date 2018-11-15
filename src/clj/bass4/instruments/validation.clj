@@ -169,7 +169,7 @@
                            (:range-max item-id)
                            (when-not (>= (:range-max item-id) answer-int)
                              true))))
-        regex-error? (when (:regexp item+answer))]))
+        regex-error? (when (:regex item+answer))]))
 
 (defmethod check-constraints ::CB
   [[item-id item+answer]]
