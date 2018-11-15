@@ -7,7 +7,8 @@
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [clojure.set :as set]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.pprint :as pprint]))
 
 
 (defn- checkbox-id
@@ -91,59 +92,137 @@
 ;; ------------------------
 
 
-(defn- get-jump-spec-map
-  [items option-key]
-  (->> items
-       (reduce (fn [coll [item-id item]]
-                 (let [res (case (:response-type item)
-                             "CB"
-                             (map (fn [[value option]]
-                                    [(checkbox-id item-id value)
-                                     {"1" (get option option-key)}])
-                                  (:options item))
+#_(defn- get-jump-spec-map
+    [items option-key]
+    (->> items
+         (reduce (fn [coll [item-id item]]
+                   (let [res (case (:response-type item)
+                               "CB"
+                               (map (fn [[value option]]
+                                      [(checkbox-id item-id value)
+                                       {"1" (get option option-key)}])
+                                    (:options item))
 
-                             "RD"
-                             (list [(str item-id)
-                                    (into {} (map (fn [[value option]]
-                                                    [value (get option option-key)])
-                                                  (:options item)))])
+                               "RD"
+                               (list [(str item-id)
+                                      (into {} (map (fn [[value option]]
+                                                      [value (get option option-key)])
+                                                    (:options item)))])
 
-                             nil)]
-                   (concat coll res)))
-               ())
-       (into {})))
+                               nil)]
+                     (concat coll res)))
+                 ())
+         (into {})))
 
-(defn- get-jumped-items
-  [items-map item-answers]
-  (let [jump-map     (get-jump-spec-map items-map :jump)
-        jumped-items (->> item-answers
-                          (keep (fn [[item-id answer]]
-                                  (get-in jump-map [item-id answer])))
-                          (flatten)
-                          (into #{}))]
-    jumped-items))
+#_(defn- get-jump-spec-map
+    [items option-key]
+    (->> items
+         (reduce (fn [coll [item-id item]]
+                   (let [res (case (:response-type item)
+                               "CB"
+                               (map (fn [[value option]]
+                                      [[[item-id :answer value] "1"]
+                                       (get option option-key)])
+                                    (:options item))
 
+                               "RD"
+                               (list [(str item-id)
+                                      (into {} (map (fn [[value option]]
+                                                      [[[item-id :answer item-id] value]
+                                                       (get option option-key)])
+                                                    (:options item)))])
+
+                               nil)]
+                     (concat coll res)))
+                 ())
+         (into {})
+         (utils/filter-map identity)))
+
+#_(defn- get-jumped-items
+    [items-map item-answers]
+    (let [jump-map     (get-jump-spec-map items-map :jump)
+          jumped-items (->> item-answers
+                            (keep (fn [[item-id answer]]
+                                    (get-in jump-map [item-id answer])))
+                            (flatten)
+                            (into #{}))]
+      jumped-items))
+
+#_(defn- get-jumped-items
+    [item+answers]
+    (let [jump-map     (get-jump-spec-map items+map :jump)
+          jumped-items (->> item-answers
+                            (keep (fn [[item-id answer]]
+                                    (get-in jump-map [item-id answer])))
+                            (flatten)
+                            (into #{}))]
+      jumped-items))
+
+(defn- get-expected-jumps
+  [items+answers]
+  (->> items+answers
+       (keep (fn [[item-id item]]
+               (case (:response-type item)
+                 "CB"
+                 (keep (fn [[value answer]]
+                         (when (= "1" answer)
+                           (get-in (:options item) [value :jump])))
+                       (:answer item))
+
+                 "RD"
+                 (get-in (:options item) [(first (vals (:answer item))) :jump])
+
+                 nil)))
+       (flatten)
+       (into #{})))
 
 ;; ------------------------
 ;;     SPECIFICATIONS
 ;; ------------------------
 
-(defn- get-answers-missing-spec
-  [items-map item-answers specifications]
-  (let [spec-map     (get-jump-spec-map items-map :specification?)
-        spec-items   (keep (fn [[item-id answer]]
-                             (when (get-in spec-map [item-id answer])
-                               (if (str/includes? item-id "_")
-                                 item-id
-                                 (str item-id "_" answer))))
-                           item-answers)
-        spec-missing (->> spec-items
-                          (filter (fn [item]
-                                    (try (log/debug (empty? (get specifications item)))
-                                         (catch Exception _ (log/debug "CRASH!")))
-                                    (empty? (get specifications item))))
-                          (into #{}))]
-    spec-missing))
+#_(defn- get-answers-missing-spec
+    [items-map item-answers specifications]
+    (let [spec-map     (get-jump-spec-map items-map :specification?)
+          spec-items   (keep (fn [[item-id answer]]
+                               (when (get-in spec-map [item-id answer])
+                                 (if (str/includes? item-id "_")
+                                   item-id
+                                   (str item-id "_" answer))))
+                             item-answers)
+          spec-missing (->> spec-items
+                            (filter (fn [item]
+                                      (empty? (get specifications item))))
+                            (into #{}))]
+      spec-missing))
+
+(defn- get-expected-specs
+  [items+answers]
+  (->> items+answers
+       (keep (fn [[item-id item]]
+               (case (:response-type item)
+                 "CB"
+                 (keep (fn [[value answer]]
+                         (when (and (= "1" answer)
+                                    (get-in (:options item) [value :specification?]))
+                           (checkbox-id item-id value)))
+                       (:answer item))
+
+                 "RD"
+                 (let [answer (first (vals (:answer item)))]
+                   (when (get-in (:options item) [answer :specification?])
+                     (str item-id "_" answer)))
+
+                 nil)))
+       (flatten)
+       (into #{})))
+
+(defn- get-specs-with-answers
+  [specifications]
+  (->> specifications
+       (keep (fn [[spec-id answer]]
+               (when-not (empty? answer)
+                 spec-id)))
+       (into #{})))
 
 ;; ------------------------
 ;;      MISSING ITEMS
@@ -257,15 +336,15 @@
 
         items+answers      (merge-answers items-map item-answers)
         items-with-answers (get-items-with-answers items+answers)
-        jumped-items       (get-jumped-items items-map item-answers)
+        specs-with-answers (get-specs-with-answers specifications)
+        jumped-items       (get-expected-jumps items+answers)
 
         skipped-jumps      (set/intersection jumped-items items-with-answers)
         missing-items      (set/difference mandatory-items items-with-answers jumped-items)
         constrain-items    (select-keys items+answers (set/difference items-with-answers jumped-items missing-items))
-        constraints        (keep check-constraints constrain-items)
-        ;missing-specs      (get-answers-missing-spec items-map (apply dissoc item-answers jumped-items) specifications)
-        ]
-    (log/debug (apply dissoc item-answers jumped-items))
+        expected-specs     (get-expected-specs constrain-items)
+        missing-specs      (set/difference expected-specs specs-with-answers)
+        constraints        (keep check-constraints constrain-items)]
     (merge
       (when (seq skipped-jumps)
         {:jumps skipped-jumps})
@@ -273,8 +352,8 @@
         {:missing missing-items})
       (when (seq constraints)
         {:constraints (into {} constraints)})
-      #_(when (seq missing-specs)
-          {:missing-specs missing-specs}))))
+      (when (seq missing-specs)
+        {:missing-specs missing-specs}))))
 
 
 (defn validate-answers

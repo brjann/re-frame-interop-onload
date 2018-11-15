@@ -350,17 +350,43 @@
 ;; ------------------------
 
 (deftest specifications
-  #_(let [items {1 {:response-type "RD"
-                    :name          "1"
-                    :options       {"X" {:jump [2] :specification? true} "Y" {}}}
-                 2 {:response-type "RD"
-                    :name          "2"
-                    :optional?     true
-                    :options       {"1" {} "2" {:specification? true}}}
-                 3 {:response-type "CB"
-                    :name          "3"
-                    :options       {"Z" {:specification? true} "W" {}}}}]
-      (is (= {:constraints {1 {:regex-error "x"}}} (validate-answers* items {"1" "X", "2" "2", "3_Z" "1", "3_W" "0"} {})))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"X" {:jump [2] :specification? true} "Y" {}}}
+               2 {:response-type "RD"
+                  :name          "2"
+                  :optional?     true
+                  :options       {"1" {} "2" {:specification? true}}}
+               3 {:response-type "CB"
+                  :name          "3"
+                  :options       {"Z" {:specification? true} "W" {}}}}]
+    (is (= {:missing-specs #{"3_Z"
+                             "2_2"}}
+           (validate-answers* items {"1" "Y", "2" "2", "3_Z" "1", "3_W" "0"} {})))
+    (is (= {:missing-specs #{"1_X"
+                             "3_Z"}}
+           (validate-answers* items {"1" "X", "2" "", "3_Z" "1", "3_W" "0"} {})))
+    (is (= {:jumps         #{2}
+            :missing-specs #{"1_X"
+                             "3_Z"}}
+           (validate-answers* items {"1" "X", "2" "2", "3_Z" "1", "3_W" "0"} {})))
+    (is (= {:jumps         #{2}
+            :missing-specs #{"1_X"
+                             "3_Z"}}
+           (validate-answers*
+             items
+             {"1" "X", "2" "2", "3_Z" "1", "3_W" "0"}
+             {"1_X" ""})))
+    (is (= {:missing-specs #{"2_2"
+                             "3_Z"}}
+           (validate-answers*
+             items
+             {"1" "Y", "2" "2", "3_Z" "1", "3_W" "0"}
+             {"1_X" "X"})))
+    (is (nil? (validate-answers*
+                items
+                {"1" "Y", "2" "2", "3_Z" "1", "3_W" "0"}
+                {"1_X" "X", "2_2" "X", "3_Z" "X"})))))
 
 ;; ------------------------
 ;;    DEMO QUESTIONNAIRE
@@ -413,9 +439,9 @@
                 items
                 {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
                 {"1569_mb" "d", "1569_xx" "d"})))
-    #_(is (= {:missing-specs #{"1569_mb"
-                               "1569_xx"}}
-             (validate-answers*
-               items
-               {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
-               {"1569_mb" ""})))))
+    (is (= {:missing-specs #{"1569_mb"
+                             "1569_xx"}}
+           (validate-answers*
+             items
+             {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
+             {"1569_mb" ""})))))
