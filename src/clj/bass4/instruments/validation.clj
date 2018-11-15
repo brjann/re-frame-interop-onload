@@ -148,28 +148,46 @@
 
 (defmethod check-constraints ::text
   [[item-id item+answer]]
+  (log/debug "TEXT!")
   (let [answer       (-> (:answer item+answer)
                          (vals)
                          (first))
-        range-error? (when (or (:range-max item-id) (:range-min item-id))
-                       (let [answer-int (utils/str->int answer)]
+        range-error? (when (or (:range-max item+answer) (:range-min item+answer))
+                       (log/debug "Checking range")
+                       (let [answer-int (utils/str->int answer)
+                             range-max  (:range-max item+answer)
+                             range-min  (:range-min item+answer)]
                          (cond
                            (nil? answer-int)
                            true
 
-                           (and (:range-min item-id) (:range-max item-id))
-                           (when-not (and (<= (:range-min item-id) answer-int)
-                                          (>= (:range-max item-id) answer-int))
+                           (and range-min range-max)
+                           (when-not (and (<= range-min answer-int)
+                                          (>= range-max answer-int))
                              true)
 
-                           (:range-min item-id)
-                           (when-not (<= (:range-min item-id) answer-int)
+                           range-min
+                           (when-not (<= range-min answer-int)
                              true)
 
-                           (:range-max item-id)
-                           (when-not (>= (:range-max item-id) answer-int)
+                           range-max
+                           (when-not (>= range-max answer-int)
                              true))))
-        regex-error? (when (:regex item+answer))]))
+        regex-error? (when-not (empty? (:regex item+answer))
+                       (try
+                         (let [regex (re-pattern (:regex item+answer))]
+                           (log/debug "Regex OK" (:regex item+answer))
+                           (when-not (re-matches regex answer)
+                             true))
+                         (catch Exception _
+                           (log/debug "Regex fail" (:regex item+answer)))))]
+    (when (or range-error?
+              regex-error?)
+      [item-id (merge
+                 (when range-error?
+                   {:range-error answer})
+                 (when regex-error?
+                   {:regex-error answer}))])))
 
 (defmethod check-constraints ::CB
   [[item-id item+answer]]

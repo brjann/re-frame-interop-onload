@@ -278,6 +278,74 @@
     (is (nil? (validate-answers* items {"1" "Y", "2" "", "3" "x"} {})))
     (is (nil? (validate-answers* items {"1" "Y", "2" "1", "3" "x"} {})))))
 
+
+;; ------------------------
+;;  TEXT CONSTRAINTS RANGE
+;; ------------------------
+(deftest text-contraints-range
+  (let [items {1 {:response-type "TX"
+                  :name          "1"
+                  :range-max     10
+                  :range-min     -2}}]
+    (is (= {:constraints {1 {:range-error "x"}}} (validate-answers* items {"1" "x"} {})))
+    (is (= {:constraints {1 {:range-error "-3"}}} (validate-answers* items {"1" "-3"} {})))
+    (is (= {:constraints {1 {:range-error "11"}}} (validate-answers* items {"1" "11"} {})))
+    (is (= {:missing #{1}} (validate-answers* items {"1" ""} {})))
+    (is (nil? (validate-answers* items {"1" "-2"} {})))
+    (is (nil? (validate-answers* items {"1" "10"} {}))))
+  (let [items {1 {:response-type "TX"
+                  :name          "1"
+                  :range-max     10}}]
+    (is (= {:constraints {1 {:range-error "x"}}} (validate-answers* items {"1" "x"} {})))
+    (is (= {:constraints {1 {:range-error "11"}}} (validate-answers* items {"1" "11"} {})))
+    (is (= {:missing #{1}} (validate-answers* items {"1" ""} {})))
+    (is (nil? (validate-answers* items {"1" "-2"} {})))
+    (is (nil? (validate-answers* items {"1" "10"} {}))))
+  (let [items {1 {:response-type "TX"
+                  :name          "1"
+                  :range-min     -10}}]
+    (is (= {:constraints {1 {:range-error "x"}}} (validate-answers* items {"1" "x"} {})))
+    (is (= {:constraints {1 {:range-error "-11"}}} (validate-answers* items {"1" "-11"} {})))
+    (is (= {:missing #{1}} (validate-answers* items {"1" ""} {})))
+    (is (nil? (validate-answers* items {"1" "-2"} {})))
+    (is (nil? (validate-answers* items {"1" "10"} {}))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"1" {:jump [2]} "0" {}}}
+               2 {:response-type "TX"
+                  :name          "2"
+                  :range-max     10
+                  :range-min     -2
+                  :optional?     true}}]
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "1" "2" "-3"} {})))
+    (is (= {:constraints {2 {:range-error "-3"}}}
+           (validate-answers* items {"1" "0" "2" "-3"} {})))
+    (is (nil? (validate-answers* items {"1" "0" "2" ""} {})))))
+
+;; ------------------------
+;;  TEXT CONSTRAINTS REGEX
+;; ------------------------
+
+(deftest text-contraints-regex
+  (let [items {1 {:response-type "TX"
+                  :name          "1"
+                  :regex         "^[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))$"}}]
+    (is (= {:constraints {1 {:regex-error "x"}}} (validate-answers* items {"1" "x"} {})))
+    (is (= {:missing #{1}} (validate-answers* items {"1" ""} {})))
+    (is (nil? (validate-answers* items {"1" "1985-01-01"} {}))))
+  (let [items {1 {:response-type "RD"
+                  :name          "1"
+                  :options       {"1" {:jump [2]} "0" {}}}
+               2 {:response-type "TX"
+                  :name          "2"
+                  :regex         "^[0-9]{4}-(((0[13578]|(10|12))-(0[1-9]|[1-2][0-9]|3[0-1]))|(02-(0[1-9]|[1-2][0-9]))|((0[469]|11)-(0[1-9]|[1-2][0-9]|30)))$"
+                  :optional?     true}}]
+    (is (= {:jumps #{2}} (validate-answers* items {"1" "1" "2" "-3"} {})))
+    (is (= {:constraints {2 {:regex-error "-3"}}}
+           (validate-answers* items {"1" "0" "2" "-3"} {})))
+    (is (nil? (validate-answers* items {"1" "0" "2" ""} {})))))
+
+
 ;; ------------------------
 ;;    DEMO QUESTIONNAIRE
 ;; ------------------------
