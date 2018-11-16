@@ -6,7 +6,8 @@
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
             [bass4.request-state :as request-state]
-            [bass4.api-coercion :as api :refer [defapi]]))
+            [bass4.api-coercion :as api :refer [defapi]]
+            [bass4.instruments.validation :as validation]))
 
 (defapi instrument-page
   [instrument-id :- api/->int]
@@ -17,12 +18,13 @@
 (defapi post-answers
   [instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
   (if-let [instrument (instruments/get-instrument instrument-id)]
-    (let [answers-map {:items          items
-                       :specifications specifications
-                       :sums           (instruments/score-items items (instruments/get-scoring instrument-id))}]
-
-      (instruments/save-test-answers! instrument-id answers-map)
-      (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
+    (do
+      (validation/validate-answers instrument items specifications)
+      (let [answers-map {:items          items
+                         :specifications specifications
+                         :sums           (instruments/score-items items (instruments/get-scoring instrument-id))}]
+        (instruments/save-test-answers! instrument-id answers-map)
+        (http-response/found (str "/embedded/instrument/" instrument-id "/summary"))))
     (do
       (request-state/record-error! (str "Instrument " instrument-id " does not exist"))
       (layout/error-400-page))))

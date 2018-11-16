@@ -20,7 +20,8 @@
             [bass4.config :as config]
             [clojure.string :as str]
             [bass4.email :as email]
-            [bass4.sms-sender :as sms]))
+            [bass4.sms-sender :as sms]
+            [bass4.instruments.validation :as i-validation]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -82,7 +83,8 @@
             clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
             config/test-mode?                true
-            *s*                              @s]
+            *s*                              @s
+            i-validation/*validate-answers?  false]
     (f)))
 
 (defn disable-attack-detector [f]

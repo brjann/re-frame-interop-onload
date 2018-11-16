@@ -6,7 +6,8 @@
             [clojure.string :as s]
             [bass4.utils :as utils]
             [clojure.set :as set]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.api-coercion :as api]))
 
 
 (defn- checkbox-id
@@ -287,9 +288,11 @@
       (when (seq missing-specs)
         {:missing-specs missing-specs}))))
 
-
+(def ^:dynamic *validate-answers? true)
 (defn validate-answers
+  "Throws api exception if answers are not valid"
   [instrument item-answers specifications]
-  (let [res (validate-answers* (get-items-map instrument) item-answers specifications)]
-    (when (map? res)
-      (throw (ex-info "Instrument answers validation failed" res)))))
+  (when *validate-answers?
+    (let [res (validate-answers* (get-items-map instrument) item-answers specifications)]
+      (when (map? res)
+        (throw (api/api-exception "Instrument answers validation failed" res))))))
