@@ -4,11 +4,9 @@
             [bass4.services.instrument :as instruments-service]
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [clojure.set :as set]
-            [clojure.string :as str]
-            [clojure.pprint :as pprint]))
+            [clojure.string :as str]))
 
 
 (defn- checkbox-id
@@ -254,9 +252,6 @@
         answer-int (utils/str->int answer)]
     (when (or (nil? answer-int) (not (and (<= 0 answer-int) (>= 400 answer-int))))
       [item-id {:vas-invalid answer}])))
-
-
-;; TODO: Superfluous?
 
 (defn stringify-keys
   [m]
