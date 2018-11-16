@@ -2,13 +2,18 @@
   (:require [clojure.test :refer :all]
             [bass4.instruments.validation :refer :all]
             [bass4.utils :as utils]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.java.jdbc :as jdbc]
+            [bass4.db.core :as db]
+            [bass4.php-clj.safe :refer [php->clj]]
+            [bass4.services.instrument :as instruments-service]
+            [clojure.walk :as walk]))
 
 
 
 (defn get-purified-items
-  [instrument]
-  (let [items (->> (get-items-map instrument)
+  [items]
+  (let [items (->> items
                    (utils/map-map #(dissoc %
                                            :page-break
                                            :option-separator
@@ -450,3 +455,61 @@
              {"1570_gs" "1", "1582" "4", "1570_ys" "0", "1569_sm" "0", "1581" "1", "1570_rs" "0", "1570_u" "0", "1569_e" "0", "1583" "dfsfd", "1568" "0", "1570_phd" "0", "1570_fs" "0", "1579" "2", "1569_mb" "1", "1724" "sdfsdf", "1570_gk" "0", "1570_fhs" "0", "1570_annan" "0", "1569_xx" "1"}
              {"1569_mb" ""})))))
 
+
+;; ------------------------
+;;  TEST ALL DB FUNCTIONS
+;; ------------------------
+
+#_(comment
+    (defn test-all-answers
+      []
+      (let [item-maps   (atom {})
+            all-answers (jdbc/query db/*db* "SELECT * FROM c_instrumentanswers WHERE datecompleted > 0 AND parentproperty <> 'TestAnswers' ")]
+        (println (str "Processing " (count all-answers)))
+        (filter identity
+                (for [answers-row all-answers]
+                  (try
+                    (let [item-answers   (php->clj (:items answers-row))
+                          specifications (php->clj (:specifications answers-row))
+                          instrument-id  (:instrument answers-row)]
+                      (if-let [items-map (if (contains? @item-maps instrument-id)
+                                           (get @item-maps instrument-id)
+                                           (let [items-map (get-items-map (instruments-service/get-instrument instrument-id))]
+                                             (utils/set-key! item-maps instrument-id items-map)
+                                             items-map))]
+                        (let [res (validate-answers* items-map item-answers specifications)]
+                          (when res
+                            {:answersid         (:objectid answers-row)
+                             :instrument-id     instrument-id
+                             :administration-id (:parentid answers-row)
+                             :errors            res}))))
+                    (catch Throwable _
+                      #_{:answersid         (:objectid answers-row)
+                         :instrument-id     (:instrument answers-row)
+                         :administration-id (:parentid answers-row)
+                         :items             (:items answers-row)
+                         :specs             (:specifications answers-row)}))))))
+
+
+    (defn x [answers-id]
+      (let [item-maps   (atom {})
+            all-answers (jdbc/query db/*db* (str "SELECT * FROM c_instrumentanswers WHERE objectid = " answers-id))]
+        (println (str "Processing " (count all-answers)))
+        (filter identity
+                (for [answers-row all-answers]
+                  (let [item-answers   (walk/stringify-keys (into {} (php->clj (:items answers-row))))
+                        specifications (walk/stringify-keys (into {} (php->clj (:specifications answers-row))))
+                        instrument-id  (:instrument answers-row)]
+                    (if-let [items-map (if (contains? @item-maps instrument-id)
+                                         (get @item-maps instrument-id)
+                                         (let [items-map (get-items-map (instruments-service/get-instrument instrument-id))]
+                                           (utils/set-key! item-maps instrument-id items-map)
+                                           items-map))]
+                      (let [res (validate-answers* items-map item-answers specifications)]
+                        (when res
+                          {:instrument-id     instrument-id
+                           :administration-id (:parentid answers-row)
+                           :errors            res
+                           ;:items-map         (get-purified-items items-map)
+                           :item-answers      item-answers
+                           :specifications    specifications})))))))))
