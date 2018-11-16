@@ -56,7 +56,7 @@
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 
-(defn- merge-answers
+(defn merge-answers
   [items-map item-answers]
   (utils/map-map-keys
     (fn [item item-id]
@@ -290,4 +290,6 @@
 
 (defn validate-answers
   [instrument item-answers specifications]
-  (validate-answers* (get-items-map instrument) item-answers specifications))
+  (let [res (validate-answers* (get-items-map instrument) item-answers specifications)]
+    (when (map? res)
+      (throw (ex-info "Instrument answers validation failed" res)))))

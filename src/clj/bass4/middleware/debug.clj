@@ -3,17 +3,21 @@
             [bass4.config :refer [env]]
             [bass4.email :refer [send-email! send-email*! is-email?]]
             [bass4.request-state :as request-state]
-            [prone.middleware :refer [wrap-exceptions]]
+            [prone.middleware :as prone]
+            [bass4.middleware.ajax-post :as ajax-post]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
             [bass4.db-config :as db-config]))
 
 
 (defn wrap-debug-exceptions
+  "Catches request exceptions and returns prone page.
+  Exceptions in ajax post requests are not caught."
   [handler]
   (fn [request]
-    (if (db-config/debug-mode?)
-      ((wrap-exceptions handler) request)
+    (if (and (db-config/debug-mode?)
+             (not (ajax-post/is-ajax-post? request)))
+      ((prone/wrap-exceptions handler) request)
       (handler request))))
 
 (def ^:dynamic *session-modification* nil)

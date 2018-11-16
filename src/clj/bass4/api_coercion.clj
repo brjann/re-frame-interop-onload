@@ -80,18 +80,24 @@
         [arg-spec body] [(first more) (rest more)]]
     [doc-string arg-spec body]))
 
-
 (defn api-exception
+  [message info]
+  (throw (ex-info
+           message
+           (merge
+             {:type ::api-exception}
+             info))))
+
+(defn api-spec-exception
   [message spec arg-name v]
   (let [v (if (and (string? v) (< 20 (count v)))
             (str (subs v 0 20) "... " (- (count v) 20) " more chars")
             v)]
-    (throw (ex-info
-             (str message "spec: " spec ", parameter: " arg-name ", value: " (subs (str (class v)) 6) "(" v ")")
-             {:type  ::api-exception
-              :spec  spec
-              :param arg-name
-              :value v}))))
+    (api-exception
+      (str message "spec: " spec ", parameter: " arg-name ", value: " (subs (str (class v)) 6) "(" v ")")
+      {:spec  spec
+       :param arg-name
+       :value v})))
 
 (defmacro defapi
   [api-name & more]
@@ -112,12 +118,12 @@
                                 :validate
                                 `(if ~res
                                    ~v
-                                   (throw (api-exception "API validation failed. " ~(str s) ~(str arg) ~v))
+                                   (throw (api-spec-exception "API validation failed. " ~(str s) ~(str arg) ~v))
                                    #_(throw (Exception. (str "Validation " ~(str s) " of parameter " ~(str arg) " with value \"" ~v "\" failed"))))
 
                                 :coerce
                                 `(if (nil? ~res)
-                                   (throw (api-exception "API coercion failed. " ~(str s) ~(str arg) ~v))
+                                   (throw (api-spec-exception "API coercion failed. " ~(str s) ~(str arg) ~v))
                                    ~res))))))
         parse-spec  (fn [arg spec]
                       ;; This THROWS if spec is not symbol

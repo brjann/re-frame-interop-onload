@@ -15,12 +15,12 @@
 ;; "200 found url" responses - for ajax posts.
 ;; If page should just be reloaded, then the url returned should simply be "reload".
 
-(defn- is-ajax-post?
+(defn is-ajax-post?
   [request]
   (let [requested-with (get (:headers request) "x-requested-with" "")
         request-method (:request-method request)]
-    (and (= (string/lower-case requested-with) "xmlhttprequest")
-         (= request-method :post))))
+    (and (= "xmlhttprequest" (string/lower-case requested-with))
+         (= :post request-method))))
 
 (defn- ajax-found
   [response]
