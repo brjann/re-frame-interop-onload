@@ -1,24 +1,25 @@
 (ns bass4.responses.registration
   (:require [ring.util.http-response :as http-response]
+            [clj-time.core :as t]
+            [clojure.core.cache :as cache]
+            [clojure.tools.logging :as log]
+            [clojure.string :as string]
+            [clojure.java.io :as io]
+            [clojure.set :as set]
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [bass4.passwords :as passwords]
             [bass4.services.registration :as reg-service]
             [bass4.responses.auth :as res-auth]
-            [clj-time.core :as t]
             [bass4.utils :refer [filter-map fnil+ in? json-safe]]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]
             [bass4.sms-sender :as sms]
             [bass4.email :as mail]
-            [clojure.string :as string]
-            [clojure.java.io :as io]
             [bass4.services.bass :as bass]
             [bass4.services.assessments :as assessments]
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
-            [clojure.set :as set]
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service])
@@ -285,7 +286,7 @@
 (defn- code-map
   [code-key field-key send-fn! field-values fixed-fields validation-codes]
   (when-not (contains? fixed-fields field-key)
-    (if-let [address (get field-values field-key)]
+    (when-let [address (get field-values field-key)]
       ;; Only send new code if code hasn't already been sent to email/sms
       (if (= (get-in validation-codes [code-key :address]) address)
         (select-keys validation-codes [code-key])
@@ -336,7 +337,7 @@
         codes        (:validation-codes reg-session)]
     (render-validation-page project-id codes fixed-fields field-values)))
 
-(def validated-codes (atom {}))
+(def validated-codes (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 60 24))))
 
 ;; TODO: Evict old code uids
 (defn- code-validated!

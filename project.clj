@@ -11,6 +11,7 @@
                  [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging
                  [org.clojure/math.numeric-tower "0.0.4"]   ; https://github.com/clojure/math.numeric-tower
                  [org.clojure/data.json "0.2.6"]            ; https://github.com/clojure/data.json
+                 [org.clojure/core.cache "0.7.1"]
 
                  ; Web server libraries
                  [luminus-immutant "0.2.4"]                 ; https://github.com/luminus-framework/luminus-immutant
