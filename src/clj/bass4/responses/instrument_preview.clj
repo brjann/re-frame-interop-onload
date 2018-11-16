@@ -16,12 +16,11 @@
 
 (defapi post-answers
   [instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
-  (log/debug (pr-str items))
-  (log/debug (pr-str specifications))
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (let [answers-map {:items          items
                        :specifications specifications
                        :sums           (instruments/score-items items (instruments/get-scoring instrument-id))}]
+
       (instruments/save-test-answers! instrument-id answers-map)
       (http-response/found (str "/embedded/instrument/" instrument-id "/summary")))
     (do

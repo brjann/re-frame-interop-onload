@@ -56,7 +56,7 @@
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 
-(defn merge-answers
+(defn- merge-answers
   [items-map item-answers]
   (utils/map-map-keys
     (fn [item item-id]
@@ -73,7 +73,7 @@
           (into {} (filter second answer-map)))))
     items-map))
 
-(defn get-items-with-answers
+(defn- get-items-with-answers
   [items+answers]
   (->> items+answers
        (keep (fn [[item-id item+answer]]
@@ -253,7 +253,7 @@
     (when (or (nil? answer-int) (not (and (<= 0 answer-int) (>= 400 answer-int))))
       [item-id {:vas-invalid answer}])))
 
-(defn stringify-keys
+(defn- stringify-keys
   [m]
   (->> m
        (map (fn [[k v]] [(str k) v]))
@@ -289,7 +289,5 @@
 
 
 (defn validate-answers
-  [instrument-id item-answers specifications]
-  (if-let [instrument (instruments-service/get-instrument instrument-id)]
-    (validate-answers* (get-items-map instrument) item-answers specifications)
-    :error))
+  [instrument item-answers specifications]
+  (validate-answers* (get-items-map instrument) item-answers specifications))
