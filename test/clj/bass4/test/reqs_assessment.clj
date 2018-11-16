@@ -43,7 +43,6 @@
 (deftest answers-validation-fail
   (binding [i-validation/*validate-answers? true]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "validation-test"})]
-      (log/debug i-validation/*validate-answers?)
       (user-service/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})

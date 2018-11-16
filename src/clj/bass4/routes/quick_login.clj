@@ -21,7 +21,7 @@
 (defmacro log-msg
   [& msgs]
   `(when-not config/test-mode?
-     (log/debug ~@msgs)))
+     (log/info ~@msgs)))
 
 (defn- quick-login-check-length
   [quick-login-id]
