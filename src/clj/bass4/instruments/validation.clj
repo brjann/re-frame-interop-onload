@@ -258,11 +258,17 @@
 
 ;; TODO: Superfluous?
 
+(defn stringify-keys
+  [m]
+  (->> m
+       (map (fn [[k v]] [(str k) v]))
+       (into {})))
+
 (defn validate-answers*
   [items-map item-answers specifications]
-  (let [items+answers      (merge-answers items-map item-answers)
+  (let [items+answers      (merge-answers items-map (stringify-keys item-answers))
         items-with-answers (get-items-with-answers items+answers)
-        specs-with-answers (get-specs-with-answers specifications)
+        specs-with-answers (get-specs-with-answers (stringify-keys specifications))
         jumped-items       (get-expected-jumps items+answers)
 
         skipped-jumps      (set/intersection jumped-items
