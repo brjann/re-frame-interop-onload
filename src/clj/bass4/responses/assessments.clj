@@ -5,7 +5,8 @@
             [clojure.tools.logging :as log]
             [bass4.services.instrument :as instruments]
             [bass4.request-state :as request-state]
-            [bass4.api-coercion :as api :refer [defapi]]))
+            [bass4.api-coercion :as api :refer [defapi]]
+            [bass4.instruments.validation :as validation]))
 
 (defn- text-page
   [step]
@@ -49,15 +50,20 @@
 
 (defn- instrument-completed
   [user-id round instrument-id items specifications]
-  (let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))
-        answers-map        (instruments/score-instrument instrument-id items specifications)]
-    (if-not (or (empty? administration-ids) (nil? answers-map))
-      (do (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
-          (assessments-service/check-completed-administrations! user-id round instrument-id)
-          (-> (http-response/found "/assessments")))
+  (if-let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))]
+    (if-let [instrument (instruments/get-instrument instrument-id)]
       (do
-        (request-state/record-error! "Something went wrong")
-        (http-response/found "/user")))))
+        (validation/validate-answers instrument items specifications)
+        (let [answers-map (instruments/score-instrument instrument-id items specifications)]
+          (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
+          (assessments-service/check-completed-administrations! user-id round instrument-id)
+          (-> (http-response/found "/assessments"))))
+      (do
+        (request-state/record-error! (str "Instrument " instrument-id " does not exist."))
+        (http-response/found "/user")))
+    (do
+      (request-state/record-error! (str "Instrument " instrument-id " not in ongoing assessments."))
+      (http-response/found "/user"))))
 
 (defapi handle-assessments
   [user-id :- integer? session :- [:? map?]]

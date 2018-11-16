@@ -18,7 +18,8 @@
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [bass4.instruments.validation :as i-validation]))
 
 (use-fixtures
   :once
@@ -38,6 +39,25 @@
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "Welcome top-priority")))))
+
+(deftest answers-validation-fail
+  (binding [i-validation/*validate-answers? true]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "validation-test"})]
+      (log/debug i-validation/*validate-answers?)
+      (user-service/update-user-properties! user-id {:username user-id :password user-id})
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 302))
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (has (some-text? "top top welcome"))
+          (visit "/assessments")
+          (has (some-text? "HAD"))
+          (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "tjosan" :specifications "tjosan"})
+          (has (status? 400))
+          (visit "/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (has (status? 400))))))
 
 
 (deftest group-assessment
