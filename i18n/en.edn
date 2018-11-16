@@ -129,7 +129,7 @@
                    :submitted-waiting-text  "You submitted your homework %1 and it is waiting to be reviewed by your therapist."}
  :error-report    {:problems?              "Problems?"
                    :page-title             "Problems with website"
-                   :experiencing-problems? "Are you experiencing problems the website?"
+                   :experiencing-problems? "Are you experiencing problems with the website?"
                    :report-info            "If something seems to be wrong with the website, you can report your problems here. Please write a detailed description about the issues that you are experiencing."
                    :description-here       "Write your description of the problem here"
                    :thank-you              "Thank you for your report. It has been received and we will contact you as soon as possible."}
