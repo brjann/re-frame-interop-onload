@@ -12,14 +12,12 @@
     [bass4.request-state :as request-state]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
+    [bass4.db.sql-wrapper]
     [bass4.http-utils :as h-utils]
     [metrics.core :as metrics]
     [metrics.reporters.csv :as csv]
     [bass4.config :as config])
-  (:import [java.sql
-            BatchUpdateException
-            PreparedStatement]
-           (java.util Locale)))
+  (:import (java.util Locale)))
 
 ;----------------
 ; SETUP DB STATE
@@ -135,72 +133,6 @@
                   (merge row
                          (map-map val-to-bool (select-keys row cols))))]
      (db-fn *db* params nil {:row-fn row-fn}))))
-
-;---------------
-; SQL WRAPPER
-;---------------
-(def ^:dynamic *log-queries* false)
-
-(defn- bool-cols-row-fn
-  []
-  (let [bool-keys      (atom nil)
-        find-bool-keys (fn [a row]
-                         (if (nil? a)
-                           (do
-                             #_(log/info "Finding bool cols")
-                             (->> row
-                                  (keys)
-                                  (mapv name)
-                                  (filter #(re-matches #".*\?$" %))
-                                  (mapv keyword)))
-                           a))]
-    (fn [row]
-      (if (map? row)
-        (do
-          (when (nil? @bool-keys)
-            (swap! bool-keys find-bool-keys row))
-          #_(log/info @bool-keys)
-          (if @bool-keys
-            (merge row (map-map val-to-bool (select-keys row @bool-keys)))
-            row))
-        row))))
-
-(defn sql-wrapper
-  [f this db sqlvec options]
-  (let [command-options (first (:command-options options))
-        row-fn          (if-let [row-fn (:row-fn command-options)]
-                          (comp row-fn (bool-cols-row-fn))
-                          (bool-cols-row-fn))
-        options         (merge options {:command-options
-                                        (list (merge command-options
-                                                     {:row-fn row-fn}))})
-        {:keys [val time]} (time+ (apply f [this db sqlvec options]))]
-    (request-state/swap-state! :sql-count inc 0)
-    (request-state/swap-state! :sql-times #(conj % time) [])
-    (when *log-queries*
-      (log/info sqlvec)
-      (log/info (pr-str val)))
-    val))
-
-(defn sql-wrapper-query
-  [this db sqlvec options]
-  (sql-wrapper hugsql.adapter/query this db sqlvec options))
-
-(defn sql-wrapper-execute
-  [this db sqlvec options]
-  (sql-wrapper hugsql.adapter/execute this db sqlvec options))
-
-
-
-(defmethod hugsql.core/hugsql-command-fn :! [sym] 'bass4.db.core/sql-wrapper-execute)
-(defmethod hugsql.core/hugsql-command-fn :execute [sym] 'bass4.db.core/sql-wrapper-execute)
-(defmethod hugsql.core/hugsql-command-fn :i! [sym] 'bass4.db.core/sql-wrapper-execute)
-(defmethod hugsql.core/hugsql-command-fn :insert [sym] 'bass4.db.core/sql-wrapper-execute)
-(defmethod hugsql.core/hugsql-command-fn :<! [sym] 'bass4.db.core/sql-wrapper-query)
-(defmethod hugsql.core/hugsql-command-fn :returning-execute [sym] 'bass4.db.core/sql-wrapper-query)
-(defmethod hugsql.core/hugsql-command-fn :? [sym] 'bass4.db.core/sql-wrapper-query)
-(defmethod hugsql.core/hugsql-command-fn :query [sym] 'bass4.db.core/sql-wrapper-query)
-(defmethod hugsql.core/hugsql-command-fn :default [sym] 'bass4.db.core/sql-wrapper-query)
 
 ;;-------------------------
 ;; DB RESOLVING MIDDLEWARE
