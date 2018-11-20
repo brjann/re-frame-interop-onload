@@ -10,10 +10,6 @@
             [bass4.time :as b-time]
             [bass4.services.user :as user-service]))
 
-(defn registration-allowed?
-  [project-id]
-  (:allowed (db/bool-cols db/registration-allowed? {:project-id project-id} [:allowed])))
-
 (defn captcha-content
   [project-id]
   (db/captcha-content {:project-id project-id}))
