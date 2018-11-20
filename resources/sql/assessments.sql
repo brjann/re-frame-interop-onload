@@ -47,11 +47,11 @@ SELECT
          THEN 7
      ELSE CustomRepetitionInterval
      END) AS `repetition-interval`,
-    IsRecord AS `is-record`,
-    ClinicianAssessment AS `clinician-rated`,
+    IsRecord AS `is-record?`,
+    ClinicianAssessment AS `clinician-rated?`,
     CompetingAssessmentsPriority AS `priority`,
-    CompetingAssessmentsAllowSwallow AS `allow-swallow`,
-    CompetingAssessmentsShowTextsIfSwallowed AS `show-texts-if-swallowed`,
+    CompetingAssessmentsAllowSwallow AS `allow-swallow?`,
+    CompetingAssessmentsShowTextsIfSwallowed AS `show-texts-if-swallowed?`,
     WelcomeText AS `welcome-text`,
     ThankYouText AS `thank-you-text`,
    ShuffleInstruments AS `shuffle-instruments`

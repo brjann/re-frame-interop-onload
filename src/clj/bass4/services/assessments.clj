@@ -94,9 +94,7 @@
   [user-id]
   (let [group-id             (:group-id (db/get-user-group {:user-id user-id}))
         assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-        assessments          (db/bool-cols db/get-user-assessments
-                                           {:assessment-series-id assessment-series-id :user-id user-id}
-                                           [:allow-swallow :is-record :clinician-rated :show-texts-if-swallowed])
+        assessments          (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})
         administrations      (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
     {:administrations (group-by #(:assessment-id %) administrations) :assessments (key-map-list assessments :assessment-id)}))
 
@@ -122,9 +120,9 @@
 (defn- get-administration-status [administration next-administration-status assessment]
   {:assessment-id    (:assessment-id assessment)
    :assessment-index (:assessment-index administration)
-   :is-record        (:is-record assessment)
+   :is-record?       (:is-record? assessment)
    :assessment-name  (:assessment-name assessment)
-   :clinician-rated  (:clinician-rated assessment)
+   :clinician-rated? (:clinician-rated? assessment)
    :status           (cond
                        (= (:participant-administration-id administration) (:group-administration-id administration) nil) "AS_ALL_MISSING"
                        (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration))) "AS_OWN_MISSING"
@@ -158,8 +156,8 @@
 (defn- filter-pending-assessments [assessment-statuses]
   (filter #(and
              (= (:status %) "AS_PENDING")
-             (not (:is-record %))
-             (not (:clinician-rated %)))
+             (not (:is-record? %))
+             (not (:clinician-rated? %)))
           assessment-statuses))
 
 (defn- matching-administration
@@ -276,7 +274,7 @@
 
 (defn- merge-batches
   [coll val]
-  (if (and (seq coll) (:allow-swallow val))
+  (if (and (seq coll) (:allow-swallow? val))
     (concat (butlast coll) (list (concat (last coll) (list val))))
     (concat coll (list (list val)))))
 
@@ -287,7 +285,7 @@
       (let [texts (remove
                     #(some (partial = %) [nil ""])
                     (map-indexed
-                      (fn [idx assessment] (when (or (zero? idx) (:show-texts-if-swallowed assessment)) (get assessment text-name)))
+                      (fn [idx assessment] (when (or (zero? idx) (:show-texts-if-swallowed? assessment)) (get assessment text-name)))
                       batch))]
         (when (seq texts)
           ;; Since these are saved to a table, they are converted to text representation
