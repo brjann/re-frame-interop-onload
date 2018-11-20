@@ -27,8 +27,8 @@
 
       (POST "/render" [text markdown]
         (layout/render "render.html"
-                       {:text     text
-                        :markdown markdown}))
+                       {:text      text
+                        :markdown? markdown}))
 
       (context "/error" []
         (routes

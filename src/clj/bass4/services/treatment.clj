@@ -52,10 +52,9 @@
 
 (defn get-content
   [content-id]
-  (-> (db/bool-cols
-        db/get-content
+  (-> (db/get-content
         {:content-id content-id}
-        [:markdown :tabbed :show-example])
+        #_[:markdown :tabbed :show-example])
       (check-file)
       (check-content)
       (unserialize-key :data-imports)

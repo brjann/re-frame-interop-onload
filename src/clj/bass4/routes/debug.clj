@@ -127,8 +127,8 @@
           (layout/text-response (:time-zone (db/get-time-zone))))
         (GET "/markdown-list" [& params]
           (layout/render "render.html"
-                         {:text     "1. Foo\n2. Bar\n3. Baz"
-                          :markdown true}))
+                         {:text      "1. Foo\n2. Bar\n3. Baz"
+                          :markdown? true}))
         (GET "/bankid-test" []
           (layout/render "bankid-test.html"))
         (POST "/bankid-launch" [& params :as request]

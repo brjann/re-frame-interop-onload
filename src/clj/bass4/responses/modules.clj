@@ -60,16 +60,16 @@
     (layout/render
       template
       (merge render-map
-             {:text         (:text content)
-              :file-path    (:file-path content)
-              :markdown     (:markdown content)
-              :tabbed       (:tabbed content)
-              :show-example (:show-example content)
-              :content-id   content-id
-              :data-name    data-name
-              :content-data content-data
-              :context-menu (context-menu module module-contents)
-              :page-title   (:content-name content)}
+             {:text          (:text content)
+              :file-path     (:file-path content)
+              :markdown?     (:markdown? content)
+              :tabbed?       (:tabbed? content)
+              :show-example? (:show-example? content)
+              :content-id    content-id
+              :data-name     data-name
+              :content-data  content-data
+              :context-menu  (context-menu module module-contents)
+              :page-title    (:content-name content)}
              params))))
 
 (defapi main-text
@@ -126,8 +126,8 @@
         (layout/render "module-worksheet-example.html"
                        {:return-path  return-path
                         :text         (:text content)
-                        :markdown     (:markdown content)
-                        :tabbed       (:tabbed content)
+                        :markdown?    (:markdown? content)
+                        :tabbed?      (:tabbed? content)
                         :content-id   worksheet-id
                         :data-name    data-name
                         :content-data example-data}))

@@ -68,9 +68,9 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 -- :doc
 SELECT
   Text,
-  IsMarkDown  AS `markdown`,
-  ShowExample AS `show-example`,
-  Tabbed      AS `tabbed`,
+  IsMarkDown  AS `markdown?`,
+  ShowExample AS `show-example?`,
+  Tabbed      AS `tabbed?`,
   DataName    AS `data-name`,
   `Name`      AS `content-name`,
   ImportData  AS `data-imports`,

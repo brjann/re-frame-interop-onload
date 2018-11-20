@@ -16,8 +16,8 @@
                          #_(conj (:data-imports content) data-name))]
       (layout/render "content-example.html"
                      {:text         (:text content)
-                      :markdown     (:markdown content)
-                      :tabbed       (:tabbed content)
+                      :markdown?    (:markdown? content)
+                      :tabbed?      (:tabbed? content)
                       :content-id   content-id
                       :data-name    data-name
                       :content-data example-data}))))
