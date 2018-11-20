@@ -35,7 +35,7 @@ FROM c_project AS cp LEFT JOIN c_treatmentinterface AS ct ON ct.ObjectId = :proj
 WHERE cp.ObjectId=100;
 
 -- :name ext-login-settings :? :1
-SELECT ExternalLoginAllowed AS allowed,
+SELECT ExternalLoginAllowed AS `allowed?`,
   ExternalLoginIps AS ips
 FROM c_project
 WHERE ObjectId=100;
