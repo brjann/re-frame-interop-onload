@@ -30,7 +30,7 @@
   (db/get-message-draft {:user-id user-id}))
 
 (defn get-all-messages [user-id]
-  (db/bool-cols db/get-all-messages {:user-id user-id} [:unread]))
+  (db/get-all-messages {:user-id user-id}))
 
 (defn mark-message-as-read! [user-id message-id]
   (when (< 0 (db/mark-message-as-read! {:user-id user-id :message-id message-id}))

@@ -14,7 +14,7 @@ SELECT
   WHEN lcm.LinkeeClass IS NULL THEN "*unknown*" ELSE
     CASE WHEN lcm.LinkeeClass = 'cTherapist' THEN ct.`Name` ELSE CONCAT(cp.FirstName, " ", cp.LastName) END
   END AS `sender-name`,
-  (ReadTime = 0 OR ReadTime IS NULL) AS `unread`
+  (ReadTime = 0 OR ReadTime IS NULL) AS `unread?`
 FROM c_message AS cm
   LEFT JOIN links_c_message AS lcm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
