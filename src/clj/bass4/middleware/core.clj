@@ -96,12 +96,6 @@
     (csrf-wrapper handler request)))
 
 
-;; -----------------
-;;  RE-AUTHENTICATE
-;; -----------------
-
-
-
 (defn request-db-user-mw
   [handler request]
   "Check if user in identity exists

@@ -14,12 +14,6 @@
   [["-p" "--port PORT" "Port number"
     :parse-fn #(Integer/parseInt %)]])
 
-(log-config/set-loggers!
-  "httpclient.wire.header" {:level :warn}
-  "httpclient.wire.content" {:level :warn}
-  "org.apache.http" {:level :warn}
-  "io.undertow.request" {:level :info})
-
 (mount/defstate
   ^{:on-reload :noop} http-server
 
@@ -51,6 +45,11 @@
   (shutdown-agents))
 
 (defn start-app [args]
+  (log-config/set-loggers!
+    "httpclient.wire.header" {:level :warn}
+    "httpclient.wire.content" {:level :warn}
+    "org.apache.http" {:level :warn}
+    "io.undertow.request" {:level :info})
   (doseq [component (-> args
                         (cli/parse-opts cli-options)
                         mount/start-with-args
