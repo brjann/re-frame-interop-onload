@@ -119,7 +119,7 @@
           (has (some-text? "User cannot login"))))))
 
 (deftest request-ext-login-no-privacy-notice
-  (with-redefs [db/ext-login-settings                  (constantly {:allowed true :ips "localhost"})
+  (with-redefs [db/ext-login-settings                  (constantly {:allowed? true :ips "localhost"})
                 privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
       (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})

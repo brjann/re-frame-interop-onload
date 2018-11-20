@@ -39,9 +39,7 @@
 
 (defn check-ip-mw
   [handler request]
-  (log/debug (db/ext-login-settings))
   (let [{:keys [allowed? ips]} (db/ext-login-settings)]
-    (log/debug allowed?)
     (cond
       (not allowed?)
       (logged-response "0 External login not allowed")
