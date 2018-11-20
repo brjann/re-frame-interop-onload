@@ -4,7 +4,7 @@
             [markdown.core :refer [md-to-html-string]]
             [markdown.transformers :as md-transformers]
             [markdown.lists :refer :all]
-            [cheshire.core :as json]
+            [clojure.data.json :as json]
             [bass4.config :refer [env]]
             [bass4.time :as b-time]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
@@ -80,7 +80,7 @@
 ;; Remove \u2028 and \u2029 (line endings) to prevent EOF in Javascript on iOS 11
 ;; https://stackoverflow.com/questions/2965293/javascript-parse-error-on-u2028-unicode-character
 (filters/add-filter! :json (fn [x] (-> x
-                                       (json/generate-string)
+                                       (json/write-str)
                                        (string/replace #"[\u2028\u2029]" ""))))
 
 #_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
