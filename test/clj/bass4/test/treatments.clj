@@ -54,33 +54,33 @@
 
 (deftest treatment-active-tests
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (is (= false (treatment-active? {:start-date     (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
-                                     :end-date       (tc/from-date #inst"2017-06-10T23:00:00.000000000-00:00")
-                                     :access-enabled true}
-                                    {:access-time-limited true})))
-    (is (= true (treatment-active? {:start-date     (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
-                                    :end-date       (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
-                                    :access-enabled false}
-                                   {:access-time-limited true})))
-    (is (= true (treatment-active? {:start-date     (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
-                                    :end-date       (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
-                                    :access-enabled false}
-                                   {:access-time-limited      true
-                                    :access-enabling-required true})))
+    (is (= false (treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
+                                     :end-date        (tc/from-date #inst"2017-06-10T23:00:00.000000000-00:00")
+                                     :access-enabled? true}
+                                    {:access-time-limited? true})))
+    (is (= true (treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
+                                    :end-date        (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
+                                    :access-enabled? false}
+                                   {:access-time-limited? true})))
+    (is (= true (treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
+                                    :end-date        (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
+                                    :access-enabled? false}
+                                   {:access-time-limited?      true
+                                    :access-enabling-required? true})))
     (is (= false (treatment-active? {:start-date (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
                                      :end-date   (tc/from-date #inst"2017-10-17T23:00:00.000000000-00:00")}
-                                    {:access-time-limited true})))
+                                    {:access-time-limited? true})))
     (is (= true (treatment-active? {:start-date (tc/from-date #inst"2007-06-17T23:00:00.000000000-00:00")
                                     :end-date   (tc/from-date #inst"2007-10-17T23:00:00.000000000-00:00")}
-                                   {:access-enabling-required false})))
-    (is (= false (treatment-active? {:start-date     (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
-                                     :end-date       (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
-                                     :access-enabled false}
-                                    {:access-enabling-required true})))
-    (is (= true (treatment-active? {:start-date     (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
-                                    :end-date       (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
-                                    :access-enabled true}
-                                   {:access-enabling-required true})))))
+                                   {:access-enabling-required? false})))
+    (is (= false (treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
+                                     :end-date        (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
+                                     :access-enabled? false}
+                                    {:access-enabling-required? true})))
+    (is (= true (treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
+                                    :end-date        (tc/from-date #inst"2017-06-17T23:00:00.000000000-00:00")
+                                    :access-enabled? true}
+                                   {:access-enabling-required? true})))))
 
 (deftest treatment-multiple-active
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]

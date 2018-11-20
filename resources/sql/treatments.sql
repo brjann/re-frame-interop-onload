@@ -5,11 +5,11 @@ SELECT
   ca.ObjectId    AS `treatment-access-id`,
   lca.LinkeeId   AS `treatment-id`,
   ModuleAccesses AS `module-accesses`,
-  AccessEnabled  AS `access-enabled`,
+  AccessEnabled  AS `access-enabled?`,
 	from_unixtime(StartDate)    AS `start-date`,
 	from_unixtime(EndDate)      AS `end-date`,
-	1 - MessagesSendDisallow    AS `messages-send-allowed`,
-  1 - MessagesReceiveDisallow AS `messages-receive-allowed`
+	1 - MessagesSendDisallow    AS `messages-send-allowed?`,
+  1 - MessagesReceiveDisallow AS `messages-receive-allowed?`
 FROM c_treatmentaccess AS ca
   JOIN links_c_treatmentaccess AS lca
     ON ca.ObjectId = lca.LinkerId AND lca.PropertyName = "Treatment"
@@ -20,12 +20,12 @@ WHERE ca.ParentId = :user-id ORDER BY ca.ObjectId;
 SELECT
   ObjectId AS `treatment-id`,
   `Name` AS `name`,
-  `AccessStartAndEndDate` AS `access-time-limited`,
-  `AccessEnablingRequired` AS `access-enabling-required`,
-  `ModulesManualAccess` AS `modules-manual-access`,
+  `AccessStartAndEndDate` AS `access-time-limited?`,
+  `AccessEnablingRequired` AS `access-enabling-required?`,
+  `ModulesManualAccess` AS `modules-manual-access?`,
   `ModuleAutomaticAccess` AS `modules-automatic-access`,
-  `MessagingAllowParticipant` AS `messages-send-allowed`,
-  `MessagingAllowTherapist` AS  `messages-receive-allowed`
+  `MessagingAllowParticipant` AS `messages-send-allowed?`,
+  `MessagingAllowTherapist` AS  `messages-receive-allowed?`
 FROM c_treatment AS ct
 WHERE ct.ObjectId=:treatment-id;
 

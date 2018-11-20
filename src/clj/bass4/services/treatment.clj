@@ -30,12 +30,8 @@
                 (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
-          (db/bool-cols
-            db/get-treatment-accesses
-            {:user-id user-id}
-            [:access-enabled
-             :messages-send-allowed
-             :messages-receive-allowed]))))
+          (db/get-treatment-accesses
+            {:user-id user-id}))))
 
 
 ;; ----------------
@@ -109,15 +105,8 @@
 
 (defn treatment-map
   [treatment-id]
-  (let [info    (-> (db/bool-cols
-                      db/get-treatment-info
-                      {:treatment-id treatment-id}
-                      [:access-time-limited
-                       :access-enabling-required
-                       :modules-manual-access
-                       :module-automatic-access
-                       :messages-send-allowed
-                       :messages-receive-allowed])
+  (let [info    (-> (db/get-treatment-info
+                      {:treatment-id treatment-id})
                     (unserialize-key
                       :modules-automatic-access
                       #(into #{} (keys (filter-map identity (map-map val-to-bool %))))))
@@ -139,21 +128,21 @@
 
 (defn treatment-active?
   [treatment-access treatment]
-  (if (:access-time-limited treatment)
+  (if (:access-time-limited? treatment)
     (treatment-ongoing? treatment-access)
-    (if (:access-enabling-required treatment)
-      (:access-enabled treatment-access)
+    (if (:access-enabling-required? treatment)
+      (:access-enabled? treatment-access)
       true)))
 
 (defn modules-component
   [treatment-access treatment]
-  (let [active-fn          #(or (not (:modules-manual-access treatment))
+  (let [active-fn          #(or (not (:modules-manual-access? treatment))
                                 (contains?
                                   (clojure.set/union
                                     (:modules-active treatment-access)
                                     (:modules-automatic-access treatment))
                                   (:module-id %)))
-        activation-date-fn #(when (and (:modules-manual-access treatment))
+        activation-date-fn #(when (and (:modules-manual-access? treatment))
                               (get-in treatment-access
                                       [:modules-activation-dates (:module-id %)]))
         homework-status-fn #(case (get-in treatment-access
@@ -171,7 +160,7 @@
   [treatment-access treatment]
   {:modules       (modules-component treatment-access treatment)
    :messaging     true
-   :send-messages (true? (and (:messages-send-allowed treatment) (:messages-send-allowed treatment-access)))})
+   :send-messages (true? (and (:messages-send-allowed? treatment) (:messages-send-allowed? treatment-access)))})
 
 
 ;; TODO: BulletinBoard!?

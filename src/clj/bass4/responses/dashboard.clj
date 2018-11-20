@@ -18,7 +18,7 @@
 
 (defn treatment-dates
   [treatment]
-  (when (get-in treatment [:treatment :access-time-limited])
+  (when (get-in treatment [:treatment :access-time-limited?])
     [(get-in treatment [:treatment-access :start-date])
      (get-in treatment [:treatment-access :end-date])
      (inc (- (b-time/days-since-tz
