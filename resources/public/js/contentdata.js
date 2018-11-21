@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-   var dataname_key_splitter = '.';
+   var dataname_key_splitter = '$';
    var tab_splitter = '#';
 
 

@@ -33,7 +33,7 @@
     (reduce merge)))
 
 (defn split-dataname-key-value [[label value]]
-  (let [splitted-list (str/split label #"\.")
+  (let [splitted-list (str/split label #"\$")
         data-name     (first splitted-list)
         key           (str/join "." (rest splitted-list))]
     (when (some empty? [data-name key])
