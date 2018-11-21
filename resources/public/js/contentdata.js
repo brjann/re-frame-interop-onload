@@ -3,12 +3,24 @@ $(document).ready(function () {
    var dataname_key_splitter = '$';
    var tab_splitter = '#';
 
+   /* ----------------------------
+       FIND CONTENT DATA ELEMENTS
+      ---------------------------- */
+
+   var find_statics = function ($container) {
+      return $container.find('.contentdata').not(':input');
+   };
+
+   var find_inputs = function ($container) {
+      return $container.find(':input').not($container.find('form').children());
+   };
+
 
    /* ----------------------------
              TABS CREATION
       ---------------------------- */
 
-   var content_create_tabs = function (content) {
+   var content_create_tabs = function ($content_div) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
          var all_names = tabbed_content.find(':input').not('[type=submit]').map(function () {
@@ -81,7 +93,7 @@ $(document).ready(function () {
       };
 
       var tab_name = text_tab;
-      var content_id = content.prop("id") || 'xxx';
+      var content_id = $content_div.prop("id") || 'xxx';
 
       var tabelizer = function (container_index, container) {
          var tabbed_content_id = content_id + '_' + container_index;
@@ -134,15 +146,15 @@ $(document).ready(function () {
          active_tab.addClass('active');
          active_div.addClass('active');
 
-         if (!content.hasClass('read-only')) {
+         if (!$content_div.hasClass('read-only')) {
             addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
          }
 
          container.prepend(tab_div).prepend(tabs_ul);
       };
 
-      if (content.hasClass('tabbed')) {
-         tabelizer(0, content);
+      if ($content_div.hasClass('tabbed')) {
+         tabelizer(0, $content_div);
       }
       else {
          $('.tabbed')
@@ -199,7 +211,7 @@ $(document).ready(function () {
 
    var content_setup_statics = function ($content_div) {
       var data_name = $content_div.data('data-name');
-      $content_div.find('.contentdata').not(':input').each(function () {
+      find_statics($content_div).each(function () {
          var element = $(this);
          var key = get_content_data_post_key(element.text(), data_name);
          element.data('data-key', key);
@@ -209,7 +221,7 @@ $(document).ready(function () {
    };
 
    var content_fill_statics = function ($content_div) {
-      $content_div.find('.contentdata').not(':input').each(function () {
+      find_statics($content_div).each(function () {
          var element = $(this);
          var key = $(this).data('data-key');
          var value = get_content_data_value(key);
@@ -222,8 +234,7 @@ $(document).ready(function () {
 
    var content_prepend_names = function ($content_div) {
       var data_name = $content_div.data('data-name');
-      $content_div
-         .find(':input').not($content_div.find('form').children())
+      find_inputs($content_div)
          .each(function () {
             var input = this;
             $(input).prop('name', get_content_data_post_key(input.name, data_name));
