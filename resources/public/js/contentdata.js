@@ -3,6 +3,11 @@ $(document).ready(function () {
    var dataname_key_splitter = '.';
    var tab_splitter = '#';
 
+
+   /* ----------------------------
+             TABS CREATION
+      ---------------------------- */
+
    var content_create_tabs = function (content) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
@@ -145,6 +150,10 @@ $(document).ready(function () {
       }
    };
 
+   /* ----------------------------
+            CONTENT DATA API
+      ---------------------------- */
+
    var get_content_data_post_key = function (value_name, data_name) {
       if (value_name.indexOf(dataname_key_splitter) === -1) {
          return data_name + dataname_key_splitter + value_name;
@@ -177,16 +186,20 @@ $(document).ready(function () {
       return undefined;
    };
 
-   var content_readonly = function (content) {
-      content.find(':input')
+   /* ----------------------------
+         SETUP CONTENT DATA DIV
+      ---------------------------- */
+
+   var content_readonly = function ($content_div) {
+      $content_div.find(':input')
          .each(function (index, input) {
             $(input).attr('disabled', 'disabled');
          })
    };
 
-   var content_setup_statics = function (content_div) {
-      var data_name = content_div.data('data-name');
-      content_div.find('.contentdata').not(':input').each(function () {
+   var content_setup_statics = function ($content_div) {
+      var data_name = $content_div.data('data-name');
+      $content_div.find('.contentdata').not(':input').each(function () {
          var element = $(this);
          var key = get_content_data_post_key(element.text(), data_name);
          element.data('data-key', key);
@@ -195,8 +208,8 @@ $(document).ready(function () {
       });
    };
 
-   var content_fill_statics = function (content) {
-      content.find('.contentdata').not(':input').each(function () {
+   var content_fill_statics = function ($content_div) {
+      $content_div.find('.contentdata').not(':input').each(function () {
          var element = $(this);
          var key = $(this).data('data-key');
          var value = get_content_data_value(key);
@@ -207,21 +220,21 @@ $(document).ready(function () {
       });
    };
 
-   var content_prepend_names = function (content_div) {
-      var data_name = content_div.data('data-name');
-      content_div
-         .find(':input').not(content_div.find('form').children())
+   var content_prepend_names = function ($content_div) {
+      var data_name = $content_div.data('data-name');
+      $content_div
+         .find(':input').not($content_div.find('form').children())
          .each(function () {
             var input = this;
             $(input).prop('name', get_content_data_post_key(input.name, data_name));
          });
    };
 
-   var content_fill_values = function (content_div) {
+   var content_fill_values = function ($content_div) {
       //TODO: Does not handle pre-checked checkboxes
-      var data_name = content_div.data('data-name');
-      content_div
-         .find(':input').not(content_div.find('form').children())
+      var data_name = $content_div.data('data-name');
+      $content_div
+         .find(':input').not($content_div.find('form').children())
          .each(function () {
             var input = this;
             var value = get_content_data_value(input.name);
@@ -234,20 +247,21 @@ $(document).ready(function () {
                }
             }
          });
-      content_div.areYouSure();
+      $content_div.areYouSure();
    };
 
    $('.treatment-content').each(function () {
-      content_prepend_names($(this));
-      content_setup_statics($(this));
+      var $content_div = $(this);
+      content_prepend_names($content_div);
+      content_setup_statics($content_div);
       if ($(this).hasClass('tabbed')) {
-         content_create_tabs($(this));
+         content_create_tabs($content_div);
       }
-      content_fill_values($(this));
+      content_fill_values($content_div);
       if ($(this).hasClass('read-only')) {
-         content_readonly($(this));
+         content_readonly($content_div);
       }
-      content_fill_statics($(this));
+      content_fill_statics($content_div);
    });
 
    main_text_ays();
