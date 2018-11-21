@@ -162,12 +162,17 @@
                 :message message}
                "error-back-or-login.html")))
 
+#_(defn throw-400!
+    ([] (throw-400! ""))
+    ([message]
+     (let [sep (if (zero? (count message)) "" " ")]
+       (throw (Exception. (str "400" sep message))))))
+
 (defn throw-400!
   ([] (throw-400! ""))
   ([message]
-   (let [sep (if (zero? (count message)) "" " ")]
-     (throw (Exception. (str "400" sep message))))))
-
+   (throw (ex-info message {:type   :http-error
+                            :status 400}))))
 
 (defn text-response
   [var]

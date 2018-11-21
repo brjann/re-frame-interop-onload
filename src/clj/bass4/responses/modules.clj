@@ -153,13 +153,10 @@
 
 (defn- handle-content-data
   [data-map treatment-access-id]
-  (if (map? data-map)
-    (do
-      (content-data-service/save-content-data!
-        data-map
-        treatment-access-id)
-      true)
-    (layout/throw-400!)))
+  (content-data-service/save-content-data!
+    data-map
+    treatment-access-id)
+  true)
 
 (defapi save-worksheet-example-data
   [content-id :- api/->int content-data :- [api/->json map?]]

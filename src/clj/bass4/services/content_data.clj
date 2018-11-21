@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [schema.core :as schema]
             [clojure.tools.logging :as log]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout])
+  (:import (clojure.lang ExceptionInfo)))
 
 
 ;; ****************************
@@ -25,10 +26,10 @@
 
 
 #_(defn get-content-data [data-owner-id data-names]
-  (reduce merge
-          (map content-data-transform
-               (unflatten-content-data
-                 (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
+    (reduce merge
+            (map content-data-transform
+                 (unflatten-content-data
+                   (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
 
 (defn get-content-data [data-owner-id data-names]
   (->>
@@ -45,7 +46,7 @@
     (when (or
             (some #(or (nil? %) (= "" %)) [data-name key])
             (not (string? value)))
-      (layout/throw-400!))
+      (layout/throw-400! "Split pair failed."))
     [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]
@@ -68,7 +69,7 @@
 (defn save-content-data!
   [data-map treatment-access-id]
   (when (seq data-map)
-    (let [string-map (map split-first (into [] data-map))
+    (let [string-map (mapv split-first (into [] data-map))
           data-names (distinct (map first string-map))
           old-data   (get-content-data treatment-access-id data-names)
           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
