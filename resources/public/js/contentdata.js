@@ -1,5 +1,8 @@
 $(document).ready(function () {
 
+   var dataname_key_splitter = '.';
+   var tab_splitter = '#';
+
    var content_create_tabs = function (content) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
@@ -8,18 +11,19 @@ $(document).ready(function () {
          }).get();
 
          return _.reduce(all_names, function (memoO, input_name) {
-            var data = content_data[input_name.split('.', 2)[0]];
+            var data_name = input_name.split(dataname_key_splitter, 2)[0];
+            var data = content_data[data_name];
             if (data === undefined) {
                return memoO;
             }
-            var data_name = input_name.split('.', 2)[0];
+
             var memoOX = _.reduce(data, function (memoI, value, input_key) {
                if (value === '') {
                   return memoI;
                }
 
-               var a = input_key.split('#', 2);
-               if (data_name + '.' + a[0] != input_name) {
+               var a = input_key.split(tab_splitter, 2);
+               if (data_name + dataname_key_splitter + a[0] !== input_name) {
                   return memoI;
                }
                var memoIX = a[1];
@@ -54,23 +58,21 @@ $(document).ready(function () {
          return tab;
       };
 
+      var setup_static_tabbed_data = function (content, index) {
+         content.find('.contentdata').not('.notab').each(function () {
+            var static_element = $(this);
+            static_element.data('data-key', static_element.data('data-key') + tab_splitter + index);
+         });
+      };
 
       var cloneContent = function (content, i) {
          var tab_content = content.clone(true);
          // tab_content.prop('id', tab_content.prop('id' + i));
          tab_content.find(':input').not('[type=submit]').each(function () {
-            $(this).prop('name', $(this).prop('name') + '#' + i);
+            $(this).prop('name', $(this).prop('name') + tab_splitter + i);
          });
          setup_static_tabbed_data(tab_content, i);
          return tab_content;
-      };
-
-
-      var setup_static_tabbed_data = function (content, index) {
-         content.find('.contentdata').not('.notab').each(function () {
-            var static_element = $(this);
-            static_element.data('data-key', static_element.data('data-key') + '#' + index);
-         });
       };
 
       var tab_name = text_tab;
@@ -91,8 +93,6 @@ $(document).ready(function () {
             var tab = $(e.target);
             if (tab.text() === '+') {
 
-               // TODO: Static data
-               //fillStaticData(tab_content);
                var tab_index = tabs_ul.children().length;
                tab.text(tab_name + ' ' + tab_index);
                var new_content = cloneContent(tabbed_content, tab_index);
@@ -146,31 +146,31 @@ $(document).ready(function () {
    };
 
    var get_content_data_post_key = function (value_name, data_name) {
-      if (value_name.indexOf('.') == -1) {
-         return data_name + '.' + value_name;
+      if (value_name.indexOf(dataname_key_splitter) === -1) {
+         return data_name + dataname_key_splitter + value_name;
       }
       else {
          return value_name;
       }
    };
 
-   var get_content_data_value = function (value_name) {
-      var a = value_name.split('.', 2);
-      var key = a[0];
-      value_name = a[1];
+   var get_content_data_value = function (input_name) {
+      var a = input_name.split(dataname_key_splitter, 2);
+      var data_name = a[0];
+      var value_name = a[1];
 
-      if (content_data[key] != undefined) {
-         if (content_data[key][value_name] != undefined) {
-            return content_data[key][value_name];
+      if (content_data[data_name] !== undefined) {
+         if (content_data[data_name][value_name] !== undefined) {
+            return content_data[data_name][value_name];
          }
          /*
           * If it is not present - check if it's a tabbed and if #page = 1
           * then use non-tabbed as fallback
           */
-         else if (value_name.indexOf('#') !== -1) {
-            var x = value_name.split('#', 2);
-            if (x[1] === 1) {
-               return content_data[key][x[0]];
+         else if (value_name.indexOf(tab_splitter) !== -1) {
+            var x = value_name.split(tab_splitter, 2);
+            if (x[1] === "1") {
+               return content_data[data_name][x[0]];
             }
          }
       }
@@ -210,7 +210,7 @@ $(document).ready(function () {
    var content_prepend_names = function (content_div) {
       var data_name = content_div.data('data-name');
       content_div
-         .find(':input').not(content_div.find('form').children())//.not('[type=submit]')
+         .find(':input').not(content_div.find('form').children())
          .each(function () {
             var input = this;
             $(input).prop('name', get_content_data_post_key(input.name, data_name));
@@ -221,7 +221,7 @@ $(document).ready(function () {
       //TODO: Does not handle pre-checked checkboxes
       var data_name = content_div.data('data-name');
       content_div
-         .find(':input').not(content_div.find('form').children())//.not('[type=submit]')
+         .find(':input').not(content_div.find('form').children())
          .each(function () {
             var input = this;
             var value = get_content_data_value(input.name);
@@ -313,105 +313,3 @@ function content_submit() {
    $(form).find('.content-poster').val(JSON.stringify(all_values));
    return true;
 }
-
-
-
-//
-// function contentAdjustWidth() {
-// 	$(".content.width").each(function () {
-// 		var classes = $(this).attr("class").split(' ');
-// 		var width = _.find(classes, isInt);
-// 		if (width !== undefined) {
-// 			$(this).css('maxWidth', width + 'px');
-// 		}
-// 	});
-// }
-//
-// function contentInsertPageBreaks() {
-// 	$('.content div[style*="page-break-after"]').each(function () {
-// 		if ($(this).css('page-break-after') == 'always') {
-// 			var div = $('<div class = "pagebreak"></div>');
-// 			$(this).replaceWith(div);
-//
-// 			// Move up in DOM until parent is content div
-// 			while (!div.parent().hasClass('content')) {
-// 				div.insertAfter(div.parent());
-// 			}
-// 		}
-// 	});
-//
-// 	$('.content').prepend($('<div class = "pagebreak"></div>'));
-//
-// 	var page_count = 1;
-//
-// 	$('.content div.pagebreak').each(function () {
-// 		$(this).nextUntil('div.pagebreak').wrapAll($('<div class = "contentpage"></div>'));
-// 		var div = $(this).next();
-// 		div.data('page', page_count++);
-// 		$(this).remove();
-// 	});
-// }
-//
-// function contentLayout() {
-// 	$('.content').each(function () {
-// 		var page_count = $(this).find('.contentpage').length;
-// 		if (page_count > 1) {
-// 			var div = $('<div class="navigator"><a href="#" class = "pageprev">&lt;</a><span class = "pagenumbers"></span><a href="#" class = "pagenext">&gt;</a></div>');
-// 			div.append($('<br>' + sprintf(bass_data['page_info'], '<span class = "currentpage"></span>', '<span class = "pagecount"></span>')));
-// 			div.css('width', '100%');
-// 			div.css('text-align', 'center');
-// 			div.find('a').button();
-// 			div.find('.pagecount').text(page_count);
-// 			var content = this;
-//
-// 			cookie_name = $(this).prop('id') + '_page';
-//
-// 			var current_page = parseInt($.cookie(cookie_name), 10);
-//
-// 			div.find('.pageprev').click(function () {
-// 				current_page = contentUpdatePages(content, current_page - 1, page_count);
-// 				$.cookie(cookie_name, current_page);
-// 			});
-//
-// 			div.find('.pagenext').click(function () {
-// 				current_page = contentUpdatePages(content, current_page + 1, page_count);
-// 				$.cookie(cookie_name, current_page);
-// 			});
-//
-// 			$(this).prepend(div.clone(true));
-// 			$(this).append(div.clone(true));
-//
-// 			//var current_page = isInt($.cookie(cookie_name)) ? $.cookie(cookie_name) : 1;
-// 			current_page = contentUpdatePages(this, current_page, page_count);
-// 		}
-// 	});
-// }
-//
-// function contentUpdatePages(content, current_page, page_count) {
-// 	var navigator = $(content).find('.navigator');
-// 	if (current_page <= 1 || !isInt(current_page)) {
-// 		navigator.find('.pageprev').button("option", "disabled", true);
-// 		current_page = 1;
-// 	}
-// 	else {
-// 		navigator.find('.pageprev').button("option", "disabled", false);
-// 		if (current_page >= page_count) {
-// 			navigator.find('.pagenext').button("option", "disabled", true);
-// 			current_page = page_count;
-// 		}
-// 		else {
-// 			navigator.find('.pagenext').button("option", "disabled", false);
-// 		}
-// 	}
-//
-// 	navigator.find('.currentpage').text(current_page);
-// 	$(content).find('.contentpage').each(function (index) {
-// 		if (index == current_page - 1) {
-// 			$(this).show();
-// 		}
-// 		else {
-// 			$(this).hide();
-// 		}
-// 	});
-// 	return current_page;
-// }
