@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [schema.core :as schema]
             [clojure.tools.logging :as log]
-            [bass4.layout :as layout])
+            [bass4.layout :as layout]
+            [clojure.string :as str])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -38,15 +39,12 @@
     (map content-data-transform)
     (reduce merge)))
 
-(defn split-first [pair]
-  (let [splitted-list (clojure.string/split (first pair) #"\.")
+(defn split-dataname-key-value [[label value]]
+  (let [splitted-list (str/split label #"\.")
         data-name     (first splitted-list)
-        key           (clojure.string/join "." (rest splitted-list))
-        value         (second pair)]
-    (when (or
-            (some #(or (nil? %) (= "" %)) [data-name key])
-            (not (string? value)))
-      (layout/throw-400! (str "Split pair " pair " failed")))
+        key           (str/join "." (rest splitted-list))]
+    (when (some empty? [data-name key])
+      (layout/throw-400! (str "Split pair " label "=" value " failed")))
     [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]
@@ -69,7 +67,7 @@
 (defn save-content-data!
   [data-map treatment-access-id]
   (when (seq data-map)
-    (let [string-map (mapv split-first (into [] data-map))
+    (let [string-map (mapv split-dataname-key-value (into [] data-map))
           data-names (distinct (map first string-map))
           old-data   (get-content-data treatment-access-id data-names)
           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
