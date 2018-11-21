@@ -1,3 +1,7 @@
+// Content submitter function
+// - set by content data initializing functions
+var content_submit;
+
 $(document).ready(function () {
 
    var dataname_key_splitter = '$';
@@ -12,7 +16,12 @@ $(document).ready(function () {
    };
 
    var find_inputs = function ($container) {
-      return $container.find(':input').not($container.find('form').children());
+      return $container
+         .find(':input')
+         .not($container.find('form').children())
+         .filter(function () {
+            return this.name !== '' && this.name !== undefined;
+         });
    };
 
 
@@ -23,7 +32,7 @@ $(document).ready(function () {
    var content_create_tabs = function ($content_div) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
-         var all_names = tabbed_content.find(':input').not('[type=submit]').map(function () {
+         var all_names = find_inputs(tabbed_content).map(function () {
             return $(this).prop('name');
          }).get();
 
@@ -85,7 +94,7 @@ $(document).ready(function () {
       var cloneContent = function (content, i) {
          var tab_content = content.clone(true);
          // tab_content.prop('id', tab_content.prop('id' + i));
-         tab_content.find(':input').not('[type=submit]').each(function () {
+         find_inputs(tab_content).each(function () {
             $(this).prop('name', $(this).prop('name') + tab_splitter + i);
          });
          setup_static_tabbed_data(tab_content, i);
@@ -101,7 +110,6 @@ $(document).ready(function () {
          var tabbed_content = container.children().not('form').wrapAll('<div></div>').parent();
          tabbed_content.detach();
          var tab_div = $("<div class='tab-content'></div>");
-         // TODO: Handle id of embedded tabbed forms
          var cookie_name = 'tab-' + tabbed_content_id;
 
          var tabs_ul = $('<ul class="nav nav-tabs" role="tablist"></ul>');
@@ -157,8 +165,7 @@ $(document).ready(function () {
          tabelizer(0, $content_div);
       }
       else {
-         $('.tabbed')
-            .each(tabelizer);
+         $('.tabbed').each(tabelizer);
       }
    };
 
@@ -244,8 +251,7 @@ $(document).ready(function () {
    var content_fill_values = function ($content_div) {
       //TODO: Does not handle pre-checked checkboxes
       var data_name = $content_div.data('data-name');
-      $content_div
-         .find(':input').not($content_div.find('form').children())
+      find_inputs($content_div)
          .each(function () {
             var input = this;
             var value = get_content_data_value(input.name);
@@ -261,13 +267,40 @@ $(document).ready(function () {
       $content_div.areYouSure();
    };
 
+   content_submit = function () {
+      var form = event.target;
+      var content_div = $(form).parent();
+      var all_values = {};
+      find_inputs(content_div)
+         .each(function () {
+            var input = this;
+            if (input.type == 'radio') {
+               if ($(input).prop('checked')) {
+                  all_values[input.name] = $(input).val();
+               }
+            }
+            else if (input.type == 'checkbox') {
+               if ($(input).prop('checked')) {
+                  all_values[input.name] = $(input).val();
+               }
+               else {
+                  all_values[input.name] = '';
+               }
+            }
+            else {
+               all_values[input.name] = $(input).val();
+            }
+         });
+      console.log(all_values);
+      $(form).find('.content-poster').val(JSON.stringify(all_values));
+      return true;
+   };
+
    $('.treatment-content').each(function () {
       var $content_div = $(this);
       content_prepend_names($content_div);
       content_setup_statics($content_div);
-      if ($(this).hasClass('tabbed')) {
-         content_create_tabs($content_div);
-      }
+      content_create_tabs($content_div);
       content_fill_values($content_div);
       if ($(this).hasClass('read-only')) {
          content_readonly($content_div);
@@ -306,35 +339,4 @@ function isInt(value) {
 // Used by form on success.
 function main_text_save_complete() {
    $(this).find('.changes-saver').hide();
-}
-
-
-function content_submit() {
-   // TODO: Don't handle inputs without name
-   var form = event.target;
-   var content_div = $(form).parent();
-   var all_values = {};
-   $(content_div)
-      .find(':input').not($(form).children())
-      .each(function () {
-         var input = this;
-         if (input.type == 'radio') {
-            if ($(input).prop('checked')) {
-               all_values[input.name] = $(input).val();
-            }
-         }
-         else if (input.type == 'checkbox') {
-            if ($(input).prop('checked')) {
-               all_values[input.name] = $(input).val();
-            }
-            else {
-               all_values[input.name] = '';
-            }
-         }
-         else {
-            all_values[input.name] = $(input).val();
-         }
-      });
-   $(form).find('.content-poster').val(JSON.stringify(all_values));
-   return true;
 }

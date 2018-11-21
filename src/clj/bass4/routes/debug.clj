@@ -49,7 +49,7 @@
                                   (str "Ten divided by zero: " (/ 10 0))))
         (GET "/request" [:as req] (layout/print-var-response req))
         (GET "/test" [:as req]
-          (layout/render "test.html"
+          (layout/render "sleep-diary.html"
                          {:url :url}))
         (GET "/sleep1" []
           (do (Thread/sleep 10000)
@@ -58,12 +58,12 @@
           (do (Thread/sleep 20000)
               (layout/text-response "I slept for 20 secs")))
         (GET "/ie-test/:xxx/:yyy" [:as req]
-          (layout/render "ie-error-test.html"
+          (layout/render "ie-error-sleep-diary.html"
                          {:url :url}))
         (POST "/ie-test/:xxx/:yyy" [:as req]
           (layout/text-response "You posted data"))
         (GET "/ie-test/:xxx/:yyy/" [:as req]
-          (layout/render "ie-error-test.html"
+          (layout/render "ie-error-sleep-diary.html"
                          {:url :url}))
         (POST "/ie-test/:xxx/:yyy/" [:as req]
           (layout/text-response "You posted data"))
@@ -130,7 +130,7 @@
                          {:text      "1. Foo\n2. Bar\n3. Baz"
                           :markdown? true}))
         (GET "/bankid-test" []
-          (layout/render "bankid-test.html"))
+          (layout/render "bankid-sleep-diary.html"))
         (POST "/bankid-launch" [& params :as request]
           (e-auth-response/launch-bankid-test
             request

@@ -1,0 +1,349 @@
+<!--
+Jag tog bort alla nätter förutom 1:an för att enklare rensa upp i kod och testa den i plattformen.
+
+Gjorde följande ändringar:
+ - Alla 4 AwakeTimeAtNight-inputs hette AwakeTimeAtNight1_1, jag har ändrat så de heter _1, _2, _3, _4)
+ - Tog bort name-attribut för alla example-inputs.
+
+Lite ytterligare saker som behöver fixas innan du återskapar natt 2-7
+ - Ta bort alla id-attribut (de blir inte unika när det är tabbar)
+ - Flytta data-night-no="X" (X=1...7) till table-element som omsluter en natt.
+   Skriv sedan om javascriptet så att det hämtar data-night-no ifrån närmaste parent table
+   På detta sätt minskar du mängden html-kod och det blir svårare att göra fel
+ - Det står nu samma sak i Tid i sängen, sömntid och sömneffektivitet (kanske mitt fel)
+ - Skapa en funktion som när den triggas gör om calculateNight() för samtliga dagar och flikar.
+   Den kommer behövas sedan när sidan laddats och fälten har fyllts på.
+
+-->
+
+<!-- Error message Modal 1 -->
+<div class="modal fade" id="error1" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body">
+                <p id="error"></p> <!-- EJ UNIKT ID! BEHÖVS DETTA? -->
+                <p>Börja fylla i formuläret ovanifrån tack! </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error message Modal 2 -->
+<div class="modal fade" id="error2" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body">
+                <p id="error"></p> <!-- EJ UNIKT ID! BEHÖVS DETTA? -->
+                <p>Det verkar som att du fyllt i något fel. Dubbelkolla
+                    att du gjort allt rätt. Det vanligaste felet är att du fyller i att du gått upp innan du vaknat, att
+                    du vaknat innan
+                    du somnat eller att du somnat innan du gått och lagt dig. Ändra så det blir korrekt tack! </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error message Modal 3 -->
+<div class="modal fade" id="error3" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body">
+                <p id="error"></p> <!-- EJ UNIKT ID! BEHÖVS DETTA? -->
+                <p>Du försöker skriva att du varit i sängen mer än 22 timmar
+                    eller att du stigit upp innan du vaknat. Dubbelkolla att det stämmer! </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="container-fluid">
+        <div class="titlesection text-center">
+            <h2>Hur har natten varit? Fyll i precis när du klivit upp!</h2>
+            <p>Börja alltid sömndagboken med att på morgonen fylla i hur Natt 1 har varit. Dagboken är färdig när du
+                fyllt i allt till och med Dag 7.</p>
+        </div>
+
+        <div class="tabbed">
+            <div class="sleep-diary">
+                <div class="table-responsive{-sm|-md|-lg|-xl} diarydiv">
+                    <table class="table table-bordered table-hover table-sm safari_only">
+                        <thead class="thead-light">
+                        <tr class="matchStyleComputor">
+                            <th scope="col" class="questionsColumn">Första morgonens datum:</th>
+                            <th scope="col">
+                                <i>Exempel</i>
+                            </th>
+                            <th scope="col">Natt 1</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <th scope="row">Sov du på dagen igår? Om ja, vilken tid och hur länge?
+                            </th>
+
+                            <td>
+                            <textarea rows="3" cols="11" name="" class="example"
+                                      disabled> 20 min, 15:00</textarea>
+                            </td>
+                            <td>
+                            <textarea rows="3" cols="11" data-night-no="1" class="awakeAtDayNight"
+                                      name="awakeAtDayNight1" tabindex="1"></textarea>
+                            </td>
+
+                        </tr>
+                        <tr>
+
+                            <th scope="row">Har du tagit sömn- och/eller annan medicin under natten? Vad? Hur mycket?
+                                När?
+                            </th>
+                            <td>
+                            <textarea rows="3" cols="11"
+                                      class="example" disabled> 1 Sonata,&#13;&#10; 10mg,&#13;&#10; 23:55</textarea>
+                            </td>
+                            <td>
+                            <textarea rows="3" cols="11" data-night-no="1" class="medicineDay" name="medicineDay1"
+                                      tabindex="2"></textarea>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">När gick du och la dig?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example" id="col0xrow2"
+                                       value="22:10"
+                                       disabled>
+                            </td>
+                            <td>
+                                <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control form-control-sm bedTimeDay" data-night-no="1"
+                                       name="bedtimeDay1" tabindex="3" onchange="calculateNight()"
+                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'
+                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">Vad gjorde du innan du somnade?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example"
+                                       name="" value="Läste"
+                                       disabled>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" id="beforeSleepDay1"
+                                       name="beforeSleepDay1" tabindex="4">
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">När började du försöka sova?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example"
+                                       name="" value="23:00"
+                                       disabled>
+                            </td>
+                            <td>
+                                <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control form-control-sm" id="tryToSleepDay1"
+                                       name="tryToSleepDay1" tabindex="5">
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">Ungefär när somnade du?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example" value="00:15"
+                                       disabled>
+                            </td>
+                            <td>
+                                <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control form-control-sm sleepTimeDay" data-night-no="1"
+                                       name="sleepTimeDay1" onchange="calculateNight()"
+                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'
+                                       onkeydown="checkIfBedTimeIsFilled()" tabindex="6">
+                            </td>
+
+                        </tr>
+                        <tr class="awakeTimeAtNight" id="awakeTimeAtNight">
+                            <th scope="row">Om du vaknat under natten: Skriv ungefär hur många timmar och minuter du
+                                var vaken vid varje tillfälle
+                            </th>
+
+                            <td>
+                                <div>
+                                    <input type="text" class="form-control form-control-sm example" value="01:15"
+                                           name="" disabled>
+                                </div>
+                                <div>
+                                    <input type="text" class="form-control form-control-sm example" value="00:35"
+                                           name="" disabled>
+                                </div>
+                            </td>
+                            <td id="night1">
+                                <div class="addInputContainer" data-night-no="1">
+                                    <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                           class="form-control form-control-sm AwakeAtNight" data-night-no="1"
+                                           name="awakeTimeAtNight1_1" tabindex="7" onchange="calculateNight()"
+                                           onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'>
+                                </div>
+                                <div class="addInputContainer" data-night-no="1">
+                                    <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                           class="form-control form-control-sm AwakeAtNight" data-night-no="1"
+                                           name="awakeTimeAtNight1_2" tabindex="7.1" onchange="calculateNight()"
+                                           onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'>
+                                </div>
+                                <div class="addInputContainer" data-night-no="1">
+                                    <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                           class="form-control form-control-sm AwakeAtNight" data-night-no="1"
+                                           name="awakeTimeAtNight1_3" tabindex="7.2" onchange="calculateNight()"
+                                           onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'>
+                                </div>
+                                <div class="addInputContainer" data-night-no="1">
+                                    <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                           class="form-control form-control-sm AwakeAtNight" data-night-no="1"
+                                           name="awakeTimeAtNight1_4" tabindex="7.3" onchange="calculateNight()"
+                                           onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'>
+                                </div>
+                            </td>
+
+
+                        </tr>
+                        <tr>
+                            <th scope="row">När vaknade du på morgonen?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example"
+                                       name="" value="06:15"
+                                       disabled>
+                            </td>
+                            <td>
+
+                                <input type="time" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control form-control-sm wakeTimeDay" data-night-no="1"
+                                       name="wakeTimeDay1" tabindex="8" onchange="calculateNight()"
+                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'
+                                       onkeydown="checkIfSleepTimeIsFilled()">
+                                <div id="errorWakeTimeDay1" class="invalid-feedback errorMessage">
+                                    <!-- Döp om till wakeUpTime-->
+                                    Du försöker skriva att du sovit mer än 22 timmar, att du stigit upp innan du vaknat
+                                    eller att du vaknat innan du somnat.
+                                    Dubbelkolla att det stämmer!
+                                </div>
+
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">När steg du upp på morgonen?</th>
+                            <td>
+                                <input type="text" class="form-control form-control-sm example"
+                                       name="" value="07:00"
+                                       disabled>
+
+                            </td>
+                            <td>
+                                <!--leaveBedTimeDay1 kanske ska döpas om till leaveBedTime-->
+                                <input type="time" pattern="^([01]\d|2[0-3]):?([0-5]\d)$"
+                                       class="form-control form-control-sm leaveBedTimeDay" data-night-no="1"
+                                       name="leaveBedTimeDay1" tabindex="9" onchange="calculateNight()"
+                                       onkeypress='return event.charCode >= 48 && event.charCode <= 57 || event.charCode == 58'
+                                       onkeydown="checkIfWakeTimeIsFilled()">
+                                <!--Döp om till verifyWakeleaveBedTime ish-->
+                                <div id="errorleaveBedTimeDay1" class="invalid-feedback errorMessage">
+                                    Du försöker skriva att du varit i sängen mer än 22 timmar eller att du stigit upp
+                                    innan
+                                    du vaknat. Dubbelkolla att det stämmer!
+                                </div>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">Hur har du sovit?</th>
+                            <td>
+                                <div class="form-group example">
+                                    <select class="form-control form-control-sm example" onchange="" disabled>
+                                        <option>Mycket dåligt</option>
+                                        <option>Ganska dåligt</option>
+                                        <option>Varken bra/dåligt</option>
+                                        <option>Ganska bra</option>
+                                        <option>Mycket bra</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <select class="form-control form-control-sm" id="sleepQualityDay1" tabindex="10"
+                                            name="sleepQualityDay1" onchange="">
+                                        <option>Mycket dåligt</option>
+                                        <option>Ganska dåligt</option>
+                                        <option>Varken bra/dåligt</option>
+                                        <option>Ganska bra</option>
+                                        <option>Mycket bra</option>
+                                    </select>
+                                </div>
+                            </td>
+
+                        </tr>
+                        <div class="form-group">
+                            <tr class="table-info">
+                                <th scope="row">Tid i sängen</th>
+                                <td class="outputStyle">
+                                    <input type="text" name="" class="inputDailySummary example" value=" 8tim 50min"
+                                           disabled>
+                                </td>
+                                <td class="outputStyle">
+                                    <input type="text" name="outputbedtime" data-night-no="1"
+                                           class="inputDailySummary outputbedtimeDay" disabled>
+                                </td>
+
+
+                            </tr>
+                            <tr class="table-info">
+                                <th scope="row">Sömntid</th>
+                                <td class="outputStyle">
+                                    <input type="text" name="" class="inputDailySummary example" value=" 4tim 10min"
+                                           disabled>
+                                </td>
+                                <td class="outputStyle">
+                                    <input type="text" name="outputbedtime" data-night-no="1"
+                                           class="inputDailySummary outputsleeptimeDay" disabled>
+                                </td>
+
+                            </tr>
+                            <tr class="table-info">
+                                <th scope="row">Sömneffektivitet</th>
+                                <td class="outputStyle">
+                                    <input type="text" name="" class="inputDailySummary example" value=" 47%" disabled>
+                                </td>
+                                <td class="outputStyle">
+                                    <input type="text" name="outputbedtime" data-night-no="1"
+                                           class="inputDailySummary outputsleepEfficacyDay" disabled>
+                                </td>
+
+                            </tr>
+                        </div>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div> <!-- sleep-diary end-->
+        </div>
+
+    </div>
+
+</div>
+<script type="text/javascript" src="File.php?uploadedfile=/sleep.js"></script>
+<script type="text/javascript" src="File.php?uploadedfile=/utilityfunctions.js"></script>
