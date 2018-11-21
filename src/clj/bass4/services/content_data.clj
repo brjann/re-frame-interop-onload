@@ -46,7 +46,7 @@
     (when (or
             (some #(or (nil? %) (= "" %)) [data-name key])
             (not (string? value)))
-      (layout/throw-400! "Split pair failed."))
+      (layout/throw-400! (str "Split pair " pair " failed")))
     [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]
