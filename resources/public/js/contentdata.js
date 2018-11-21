@@ -91,13 +91,36 @@ $(document).ready(function () {
          });
       };
 
-      var cloneContent = function (content, i) {
+      var set_tab_title_fn = function (tab_button, $tab_title_el) {
+         var tab_link = tab_button.find('.nav-link');
+         var empty_text = tab_link.text();
+         return function () {
+            if ($tab_title_el.val() === '') {
+               tab_link.text(empty_text);
+            }
+            else {
+               tab_link.text($tab_title_el.val());
+            }
+         };
+      };
+
+      var cloneContent = function (content, i, tab_button) {
          var tab_content = content.clone(true);
          // tab_content.prop('id', tab_content.prop('id' + i));
          find_inputs(tab_content).each(function () {
             $(this).prop('name', $(this).prop('name') + tab_splitter + i);
          });
          setup_static_tabbed_data(tab_content, i);
+
+         var tab_title_el = $(tab_content).find('.tab-title').first();
+         if (tab_title_el !== undefined) {
+            var tab_title_fn = set_tab_title_fn(tab_button, tab_title_el);
+            tab_title_el
+               .on('keyup', tab_title_fn)
+               .on('change', tab_title_fn)
+               .data('on-change', tab_title_fn);
+         }
+
          return tab_content;
       };
 
@@ -120,7 +143,7 @@ $(document).ready(function () {
 
                var tab_index = tabs_ul.children().length;
                tab.text(tab_name + ' ' + tab_index);
-               var new_content = cloneContent(tabbed_content, tab_index);
+               var new_content = cloneContent(tabbed_content, tab_index, tab);
                $(tab.data('target')).append(new_content);
                add_markdown_classes();
 
@@ -133,9 +156,10 @@ $(document).ready(function () {
          for (var i = 1; i <= tab_count; i++) {
             var tab_id = get_tab_id(tabbed_content_id, i);
             var label = tab_name + ' ' + i;
-            tabs_ul.append(ContentTabTab(tab_id, label, on_click));
+            var tab_button = ContentTabTab(tab_id, label, on_click);
+            tabs_ul.append(tab_button);
             var div = $(sprintf("<div class='tab-pane' id='%s'></div>", tab_id));
-            div.append(cloneContent(tabbed_content, i));
+            div.append(cloneContent(tabbed_content, i, tab_button));
             tab_div.append(div);
          }
 
