@@ -118,7 +118,7 @@ $(document).ready(function () {
             tab_title_el
                .on('keyup', tab_title_fn)
                .on('change', tab_title_fn)
-               .data('on-change', tab_title_fn);
+               .data('on-load-value', tab_title_fn);
          }
 
          return tab_content;
@@ -286,6 +286,22 @@ $(document).ready(function () {
                else {
                   $(input).val(value);
                }
+               var on_change = $(input).data('on-load-value');
+               if (on_change !== undefined) {
+                  try {
+                     if (typeof on_change === 'string') {
+                        on_change = eval(on_change);
+                     }
+                     if (typeof on_change === 'function') {
+                        on_change.call(input);
+                     }
+                  }
+                  catch (err) {
+                     console.log('Failed to execute on-load-value');
+                     console.log(err);
+                  }
+               }
+
             }
          });
       $content_div.areYouSure();
@@ -315,7 +331,6 @@ $(document).ready(function () {
                all_values[input.name] = $(input).val();
             }
          });
-      console.log(all_values);
       $(form).find('.content-poster').val(JSON.stringify(all_values));
       return true;
    };
