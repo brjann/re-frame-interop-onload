@@ -151,7 +151,7 @@ $(document).ready(function () {
    };
 
    /* ----------------------------
-            CONTENT DATA API
+         CONTENT DATA RETRIEVAL
       ---------------------------- */
 
    var get_content_data_post_key = function (value_name, data_name) {
