@@ -25,13 +25,6 @@
                            (map #(select-keys % [:valuename :value]))
                            (reduce-content-map {}))})
 
-
-#_(defn get-content-data [data-owner-id data-names]
-    (reduce merge
-            (map content-data-transform
-                 (unflatten-content-data
-                   (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})))))
-
 (defn get-content-data [data-owner-id data-names]
   (->>
     (db/get-content-data {:data-owner-id data-owner-id :data-names data-names})
