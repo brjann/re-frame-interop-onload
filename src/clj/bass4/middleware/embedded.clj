@@ -129,7 +129,9 @@
   [handler request]
   (let [response (handler request)]
     (if-let [path (:uri request)]
-      (if (string/starts-with? path "/embedded/")
-        (update-in response [:headers] #(dissoc % "X-Frame-Options"))
+      (if (string/starts-with? path "/embedded/iframe")
+        (update-in response [:headers] #(-> %
+                                            (dissoc "X-Frame-Options")
+                                            (assoc "X-XSS-Protection" "0")))
         response)
       response)))
