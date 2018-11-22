@@ -118,7 +118,7 @@ $(document).ready(function () {
             tab_title_el
                .on('keyup', tab_title_fn)
                .on('change', tab_title_fn)
-               .data('on-load-value', tab_title_fn);
+               .data('on-data-load-value', tab_title_fn);
          }
 
          return tab_content;
@@ -286,22 +286,7 @@ $(document).ready(function () {
                else {
                   $(input).val(value);
                }
-               var on_change = $(input).data('on-load-value');
-               if (on_change !== undefined) {
-                  try {
-                     if (typeof on_change === 'string') {
-                        on_change = eval(on_change);
-                     }
-                     if (typeof on_change === 'function') {
-                        on_change.call(input);
-                     }
-                  }
-                  catch (err) {
-                     console.log('Failed to execute on-load-value');
-                     console.log(err);
-                  }
-               }
-
+               eval_data_property(input, 'on-data-load-value');
             }
          });
       $content_div.areYouSure();
@@ -337,6 +322,8 @@ $(document).ready(function () {
 
    $('.treatment-content').each(function () {
       var $content_div = $(this);
+      eval_data_property($content_div.children('div').first(),
+         'before-data-load');
       content_prepend_names($content_div);
       content_setup_statics($content_div);
       content_create_tabs($content_div);
@@ -369,6 +356,31 @@ function main_text_ays() {
    );
 }
 
+function eval_data_property(element, data_property) {
+   var val = $(element).data(data_property);
+   if (val !== undefined) {
+      try {
+         if (typeof val === 'string') {
+            val = eval(val);
+         }
+
+         if (typeof val === 'function') {
+            return val.apply(element, arguments);
+         }
+         else {
+            return val;
+         }
+      }
+      catch (err) {
+         console.log('Failed to eval', data_property, "on element", element);
+         console.log(err);
+      }
+   }
+}
+
+function test_me() {
+   alert('hej!');
+}
 
 function isInt(value) {
    return !isNaN(value) &&
