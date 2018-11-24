@@ -75,12 +75,6 @@
   (bankid-request "cancel" {"orderRef" order-ref} config-key))
 
 
-;; -------------------
-;;   BANKID SESSION
-;; -------------------
-
-(def session-statuses (atom {}))
-
 (defn session-active?
   [info]
   ;; TODO: Why does "pending" leak through?
@@ -99,6 +93,81 @@
                        time-limit-secs
                        (t/in-seconds (t/interval start-time now)))]
      (> time-limit-secs age-seconds))))
+
+
+
+;; --------------------------
+;;        BANKID API
+;; --------------------------
+
+
+(defn start-bankid-session
+  [personnummer user-ip config-key]
+  #_(log/debug "Starting bankID session")
+  (let [start-chan (chan)]
+    (go
+      (>! start-chan (or (bankid-auth personnummer user-ip config-key) {})))
+    start-chan))
+
+(defn collect-bankid
+  [order-ref config-key]
+  (let [collect-chan (chan)]
+    (go
+      (>! collect-chan (or (bankid-collect order-ref config-key) {})))
+    collect-chan))
+
+
+;; Originally, the wait was in a separate function.
+;; However, it needed to be a blocked go
+;; (<!! (go (<! (timeout 1500))) to actually wait
+;; and this blocked all threads when multiple loops
+;; were running. Therefore, it's solved like this.
+;; If the collect-waiter is not set by testing
+;; environment, then the loop does the
+;; (<! (timeout 1500)) itself.
+(def ^:dynamic collect-waiter nil)
+
+
+(defn launch-bankid
+  [personnummer user-ip config-key wait-chan res-chan]
+  (let [start-time (bankid-now)]
+    (log/debug "Starting go loop")
+    (go-loop [order-ref nil]
+      (log/debug "Collect cycle")
+      (if-not (session-not-timed-out? {:start-time start-time} 300)
+        (do
+          (log/debug "Session timed out")
+          (>! res-chan {:status     :error
+                        :error-code :loop-timeout}))
+        (let [collect-chan (if-not order-ref
+                             (start-bankid-session personnummer user-ip config-key)
+                             (collect-bankid order-ref config-key))
+              response     (merge
+                             (when-not order-ref
+                               {:status     :started
+                                :config-key config-key})
+                             (<! collect-chan))
+              order-ref    (:order-ref response)]
+          (>! res-chan response)
+
+          ;; Poll once every 1.5 seconds.
+          ;; Should be between 1 and 2 according to BankID spec
+          (if (nil? collect-waiter)
+            (do
+              (log/debug "Waiting 1500 ms")
+              (<! (wait-chan)))
+            (collect-waiter))
+          (if (session-active? response)
+            (recur order-ref)
+            (log/debug "Collect loop completed")))))))
+
+
+;; -------------------
+;;   BANKID SESSION
+;; -------------------
+
+
+(def session-statuses (atom {}))
 
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."
@@ -150,37 +219,6 @@
   #_(let [info (get @session-statuses uid)]
       (print-status uid (str "status of uid =" (:status info)) " number " (:status-no info))))
 
-;; --------------------------
-;;        BANKID API
-;; --------------------------
-
-
-(defn start-bankid-session
-  [personnummer user-ip config-key]
-  #_(log/debug "Starting bankID session")
-  (let [start-chan (chan)]
-    (go
-      (>! start-chan (or (bankid-auth personnummer user-ip config-key) {})))
-    start-chan))
-
-(defn collect-bankid
-  [order-ref config-key]
-  (let [collect-chan (chan)]
-    (go
-      (>! collect-chan (or (bankid-collect order-ref config-key) {})))
-    collect-chan))
-
-
-;; Originally, the wait was in a separate function.
-;; However, it needed to be a blocked go
-;; (<!! (go (<! (timeout 1500))) to actually wait
-;; and this blocked all threads when multiple loops
-;; were running. Therefore, it's solved like this.
-;; If the collect-waiter is not set by testing
-;; environment, then the loop does the
-;; (<! (timeout 1500)) itself.
-(def ^:dynamic collect-waiter nil)
-
 (defn ^:dynamic log-bankid-event!
   [response]
   (let [response (merge
@@ -211,39 +249,6 @@
     (db/log-bankid! (merge empty
                            stringed
                            other))))
-
-(defn launch-bankid
-  [personnummer user-ip config-key wait-chan res-chan]
-  (let [start-time (bankid-now)]
-    (log/debug "Starting go loop")
-    (go-loop [order-ref nil]
-      (log/debug "Collect cycle")
-      (if-not (session-not-timed-out? {:start-time start-time} 300)
-        (do
-          (log/debug "Session timed out")
-          (>! res-chan {:status     :error
-                        :error-code :loop-timeout}))
-        (let [collect-chan (if-not order-ref
-                             (start-bankid-session personnummer user-ip config-key)
-                             (collect-bankid order-ref config-key))
-              response     (merge
-                             (when-not order-ref
-                               {:status     :started
-                                :config-key config-key})
-                             (<! collect-chan))
-              order-ref    (:order-ref response)]
-          (>! res-chan response)
-
-          ;; Poll once every 1.5 seconds.
-          ;; Should be between 1 and 2 according to BankID spec
-          (if (nil? collect-waiter)
-            (do
-              (log/debug "Waiting 1500 ms")
-              (<! (wait-chan)))
-            (collect-waiter))
-          (if (session-active? response)
-            (recur order-ref)
-            (log/debug "Collect loop completed")))))))
 
 (defn launch-user-bankid
   [personnummer user-ip config-key]
