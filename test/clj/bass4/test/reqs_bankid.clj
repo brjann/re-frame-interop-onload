@@ -7,7 +7,7 @@
             [clojure.core.async :refer [<! >! >!! <!! thread go chan timeout alts!! dropping-buffer go-loop]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
             [bass4.services.bankid :as bankid]
-            [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log]]
+            [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log wrap-mock]]
             [bass4.test.bankid.mock-backend :as mock-backend]
             [clojure.data.json :as json]
             [bass4.i18n :as i18n])

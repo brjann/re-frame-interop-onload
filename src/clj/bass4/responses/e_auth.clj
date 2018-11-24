@@ -48,7 +48,7 @@
 (defn bankid-session
   [personnummer user-ip redirect-success redirect-fail config-key]
   (if (personnummer-valid? personnummer)
-    (let [uid (bankid/launch-bankid personnummer user-ip config-key)]
+    (let [uid (bankid/launch-user-bankid personnummer user-ip config-key)]
       {:e-auth {:uid              uid
                 :type             :bankid
                 :redirect-success redirect-success
