@@ -83,7 +83,8 @@
 
 (defn session-active?
   [info]
-  (contains? #{:starting :started :pending} (:status info)))
+  ;; TODO: Why does "pending" leak through?
+  (contains? #{:starting :started :pending "pending"} (:status info)))
 
 (defn session-not-timed-out?
   ([status-map] (session-not-timed-out? status-map 600))
@@ -236,7 +237,6 @@
                              (<! collect-chan))
               order-ref    (:order-ref response)]
           (>! res-chan response)
-          (log-bankid-event! (assoc response :uid uid))
 
           ;; Poll once every 1.5 seconds.
           ;; Should be between 1 and 2 according to BankID spec
@@ -245,7 +245,7 @@
               (log/debug "Waiting 1500 ms")
               (<! (wait-chan)))
             (collect-waiter uid))
-          (if (session-active? (get-session-info uid))
+          (if (session-active? response)
             (recur order-ref)
             (do
               (log-bankid-event! {:uid uid :status :loop-complete})
@@ -266,6 +266,7 @@
                :error-code :collect-returned-nil-status
                :order-ref  order-ref}
               response))
+          (log-bankid-event! (assoc response :uid uid))
           (recur)))
       uid)))
 
