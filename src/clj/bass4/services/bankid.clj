@@ -103,18 +103,13 @@
 
 (defn start-bankid-session
   [personnummer user-ip config-key]
-  #_(log/debug "Starting bankID session")
-  (let [start-chan (chan)]
-    (go
-      (>! start-chan (or (bankid-auth personnummer user-ip config-key) {})))
-    start-chan))
+  (thread
+    (or (bankid-auth personnummer user-ip config-key) {})))
 
 (defn collect-bankid
   [order-ref config-key]
-  (let [collect-chan (chan)]
-    (go
-      (>! collect-chan (or (bankid-collect order-ref config-key) {})))
-    collect-chan))
+  (thread
+    (or (bankid-collect order-ref config-key) {})))
 
 
 ;; Originally, the wait was in a separate function.
