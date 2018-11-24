@@ -80,12 +80,12 @@
       (has (status? 403))))
 
 (deftest embedded-render
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "render" :php-session-id "xxx"})
+  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "iframe/render" :php-session-id "xxx"})
                 bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
-        (visit "/embedded/render")
+        (visit "/embedded/iframe/render")
         (has (status? 403))
-        (visit "/embedded/render?uid=x" :request-method :post :params {:text "Hejsan"})
+        (visit "/embedded/iframe/render?uid=x" :request-method :post :params {:text "Hejsan"})
         (has (status? 200))
         (has (some-text? "Hejsan")))))
 
