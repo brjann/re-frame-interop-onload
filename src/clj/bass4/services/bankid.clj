@@ -142,15 +142,16 @@
                                 :config-key config-key})
                              (<! collect-chan))
               order-ref    (:order-ref response)]
-          (let [chan-res (if-not (alt! (timeout 1000) nil
-                                       [[res-chan response]] true)
+          (let [chan-res (if-not (alt! [[res-chan response]] true
+                                       (timeout 1000) false)
                            (log/info "Res chan timed out")
                            (if-not (if (nil? collect-waiter)
                                      (do
                                        (log/debug "Waiting 1500 ms")
                                        ;; Poll once every 1.5 seconds.
                                        ;; Should be between 1 and 2 according to BankID spec
-                                       (first (alts! [(wait-chan) (timeout 5000)])))
+                                       (alt! (wait-chan) true
+                                             (timeout 5000) false))
                                      (collect-waiter))
                              (log/info "Wait chan timed out")
                              true))]
@@ -253,7 +254,7 @@
         uid      (UUID/randomUUID)]
     (create-session! uid)
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    (launch-bankid personnummer user-ip config-key #(go (<! (timeout 1500)) true) res-chan)
+    (launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
     (go-loop []
       (let [response  (<! res-chan)
             order-ref (:order-ref response)]
