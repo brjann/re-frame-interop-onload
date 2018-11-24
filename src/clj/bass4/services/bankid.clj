@@ -140,8 +140,7 @@
                              (when-not order-ref
                                {:status     :started
                                 :config-key config-key})
-                             (<! collect-chan))
-              order-ref    (:order-ref response)]
+                             (first (alts! [collect-chan (timeout 20000)])))]
           (let [chan-res (if-not (alt! [[res-chan response]] true
                                        (timeout 1000) false)
                            (log/info "Res chan timed out")
@@ -156,7 +155,7 @@
                              (log/info "Wait chan timed out")
                              true))]
             (if (and chan-res (session-active? response))
-              (recur order-ref)
+              (recur (:order-ref response))
               (log/debug "Collect loop completed"))))))))
 
 
