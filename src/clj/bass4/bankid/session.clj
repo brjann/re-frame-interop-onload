@@ -2,7 +2,7 @@
   (:require [clojure.core.async
              :refer [>! <! <!! go chan timeout thread alts! go-loop alt!]]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
-            [bass4.bankid.services :as bankid]
+            [bass4.bankid.services :as bankid-service]
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log])
@@ -16,7 +16,7 @@
   (let [old-count (count @session-statuses)]
     (swap!
       session-statuses
-      #(filter-map bankid/session-not-timed-out? %))
+      #(filter-map bankid-service/session-not-timed-out? %))
     #_(if (< old-count (count @session-statuses))
         (log/debug "Deleted circa " (- old-count (count @session-statuses)) " sessions."))))
 
@@ -33,7 +33,7 @@
 (defn create-session!
   [uid]
   (swap! session-statuses #(assoc % uid {:status     :starting
-                                         :start-time (bankid/bankid-now)
+                                         :start-time (bankid-service/bankid-now)
                                          :status-no  0})))
 
 (defn delete-session!
@@ -50,7 +50,7 @@
                            old-map
                            {:status :started :status-no (inc (or (:status-no old-map) 0))}
                            status-map)]
-             (if (bankid/session-active? old-map)
+             (if (bankid-service/session-active? old-map)
                (assoc
                  all-sessions
                  uid
@@ -97,7 +97,7 @@
         uid      (UUID/randomUUID)]
     (create-session! uid)
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    (bankid/launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
+    (bankid-service/launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
     (go-loop []
       (let [info      (first (alts! [res-chan (timeout 20000)]))
             order-ref (:order-ref info)]
@@ -109,18 +109,18 @@
              :order-ref  order-ref}
             info))
         (log-bankid-event! (assoc info :uid uid))
-        (if (bankid/session-active? info)
+        (if (bankid-service/session-active? info)
           (recur)
           (do
             (log-bankid-event! {:uid uid :status :loop-complete})
-            (bankid/print-status uid "Outer loop completed")))))
+            (bankid-service/print-status uid "Outer loop completed")))))
     uid))
 
 (defn cancel-bankid!
   [uid]
   (let [info (get-collected-info uid)]
-    (when (bankid/session-active? info)
+    (when (bankid-service/session-active? info)
       (set-session-status! uid {:status :failed :hint-code :user-cancel})
       (log-bankid-event! {:uid uid :order-ref (:order-ref info) :status :failed :hint-code :user-cancel})
-      (bankid/bankid-cancel (:order-ref info) (:config-key info))))
+      (bankid-service/bankid-cancel (:order-ref info) (:config-key info))))
   nil)
