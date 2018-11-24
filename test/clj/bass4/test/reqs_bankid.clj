@@ -10,7 +10,8 @@
             [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log wrap-mock]]
             [bass4.test.bankid.mock-backend :as mock-backend]
             [clojure.data.json :as json]
-            [bass4.i18n :as i18n])
+            [bass4.i18n :as i18n]
+            [bass4.bankid.session :as bankid-session])
   (:import (java.util UUID)))
 
 
@@ -310,7 +311,7 @@
     (doall
       (for [pnr pnrs]
         (do
-          (bankid/launch-user-bankid pnr "127.0.0.1" :prod))))))
+          (bankid-session/launch-user-bankid pnr "127.0.0.1" :prod))))))
 
 ; Check that many processes can be launched in infinite loop
 #_((wrap-mock :immediate) stress-1 1000)

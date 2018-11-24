@@ -134,14 +134,19 @@
                              (start-bankid-session personnummer user-ip config-key)
                              (collect-bankid order-ref config-key))
               ;; alt! bindings are not recognized by Cursive
-              info         (alt! collect-chan ([response] (merge
-                                                            response
-                                                            (when-not order-ref
-                                                              {:status     :started
-                                                               :config-key config-key})))
-                                 (timeout 20000) ([_] {:status     :error
-                                                       :error-code :collect-timeout
-                                                       :order-ref  order-ref}))]
+              info         (merge
+                             (when-not order-ref
+                               {:status     :started
+                                :config-key config-key})
+                             (first (alts! [collect-chan (timeout 20000)])))
+              #_(alt! collect-chan ([response] (merge
+                                                 response
+                                                 (when-not order-ref
+                                                   {:status     :started
+                                                    :config-key config-key})))
+                      (timeout 20000) ([_] {:status     :error
+                                            :error-code :collect-timeout
+                                            :order-ref  order-ref}))]
           (let [chan-res (if-not (alt! [[res-chan info]] true
                                        (timeout 5000) false)
                            (log/info "Res chan timed out")
