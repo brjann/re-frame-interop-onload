@@ -224,10 +224,8 @@
       (if-not (session-not-timed-out? {:start-time start-time} 300)
         (do
           (log/debug "Session timed out")
-          (set-session-status!
-            uid
-            {:status     :error
-             :error-code :loop-timeout}))
+          (>! res-chan {:status     :error
+                        :error-code :loop-timeout}))
         (let [collect-chan (if-not order-ref
                              (start-bankid-session personnummer user-ip config-key)
                              (collect-bankid order-ref config-key))
@@ -238,14 +236,6 @@
                              (<! collect-chan))
               order-ref    (:order-ref response)]
           (>! res-chan response)
-
-          #_(set-session-status!
-              uid
-              (if (nil? (:status response))
-                {:status     :error
-                 :error-code :collect-returned-nil-status
-                 :order-ref  order-ref}
-                response))
           (log-bankid-event! (assoc response :uid uid))
 
           ;; Poll once every 1.5 seconds.
