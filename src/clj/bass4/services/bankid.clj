@@ -142,7 +142,7 @@
                                 :config-key config-key})
                              (first (alts! [collect-chan (timeout 20000)])))]
           (let [chan-res (if-not (alt! [[res-chan response]] true
-                                       (timeout 1000) false)
+                                       (timeout 5000) false)
                            (log/info "Res chan timed out")
                            (if-not (if (nil? collect-waiter)
                                      (do
