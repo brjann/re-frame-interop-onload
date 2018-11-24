@@ -121,7 +121,6 @@
 ;; (<! (timeout 1500)) itself.
 (def ^:dynamic collect-waiter nil)
 
-
 (defn launch-bankid
   [personnummer user-ip config-key wait-chan res-chan]
   (let [start-time (bankid-now)]
@@ -136,12 +135,16 @@
         (let [collect-chan (if-not order-ref
                              (start-bankid-session personnummer user-ip config-key)
                              (collect-bankid order-ref config-key))
-              response     (merge
-                             (when-not order-ref
-                               {:status     :started
-                                :config-key config-key})
-                             (first (alts! [collect-chan (timeout 20000)])))]
-          (let [chan-res (if-not (alt! [[res-chan response]] true
+              ;; alt! bindings are not recognized by Cursive
+              info         (alt! collect-chan ([response] (merge
+                                                            response
+                                                            (when-not order-ref
+                                                              {:status     :started
+                                                               :config-key config-key})))
+                                 (timeout 20000) ([_] {:status     :error
+                                                       :error-code :collect-timeout
+                                                       :order-ref  order-ref}))]
+          (let [chan-res (if-not (alt! [[res-chan info]] true
                                        (timeout 5000) false)
                            (log/info "Res chan timed out")
                            (if-not (if (nil? collect-waiter)
@@ -154,8 +157,8 @@
                                      (collect-waiter))
                              (log/info "Wait chan timed out")
                              true))]
-            (if (and chan-res (session-active? response))
-              (recur (:order-ref response))
+            (if (and chan-res (session-active? info))
+              (recur (:order-ref info))
               (log/debug "Collect loop completed"))))))))
 
 
@@ -255,17 +258,17 @@
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
     (launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
     (go-loop []
-      (let [[response _] (alts! [res-chan (timeout 20000)])
-            order-ref (:order-ref response)]
+      (let [info      (first (alts! [res-chan (timeout 20000)]))
+            order-ref (:order-ref info)]
         (set-session-status!
           uid
-          (if (nil? (:status response))
+          (if (nil? (:status info))
             {:status     :error
              :error-code :collect-returned-nil-status
              :order-ref  order-ref}
-            response))
-        (log-bankid-event! (assoc response :uid uid))
-        (if (session-active? response)
+            info))
+        (log-bankid-event! (assoc info :uid uid))
+        (if (session-active? info)
           (recur)
           (do
             (log-bankid-event! {:uid uid :status :loop-complete})
