@@ -70,3 +70,11 @@
         (is (= {:status     :error
                 :error-code :loop-timeout}
                (select-keys info [:status :error-code])))))))
+
+(comment
+  "Timeout guard. Check that collect loop completes after 5 secs"
+  (binding [bankid/collect-waiter nil]
+    (let [res-chan  (chan)
+          wait-chan (chan)]
+      (bankid/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)
+      (is (true? (bankid/session-active? (<!! res-chan)))))))

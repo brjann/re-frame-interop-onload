@@ -82,7 +82,7 @@
                  bankid/bankid-cancel          backend/api-cancel
                  bankid/collect-waiter         (case collect-method
                                                  (:immediate :manual)
-                                                 (constantly nil)
+                                                 (constantly true)
 
                                                  :wait
                                                  bankid/collect-waiter)

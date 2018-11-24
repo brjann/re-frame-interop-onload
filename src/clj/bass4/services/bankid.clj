@@ -146,14 +146,14 @@
 
           ;; Poll once every 1.5 seconds.
           ;; Should be between 1 and 2 according to BankID spec
-          (if (nil? collect-waiter)
-            (do
-              (log/debug "Waiting 1500 ms")
-              (<! (wait-chan)))
-            (collect-waiter))
-          (if (session-active? response)
-            (recur order-ref)
-            (log/debug "Collect loop completed")))))))
+          (let [wait-res (if (nil? collect-waiter)
+                           (do
+                             (log/debug "Waiting 1500 ms")
+                             (first (alts! [(wait-chan) (timeout 5000)])))
+                           (collect-waiter))]
+            (if (and wait-res (session-active? response))
+              (recur order-ref)
+              (log/debug "Collect loop completed"))))))))
 
 
 ;; -------------------
@@ -250,7 +250,7 @@
         uid      (UUID/randomUUID)]
     (create-session! uid)
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    (launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
+    (launch-bankid personnummer user-ip config-key #(go (<! (timeout 1500)) true) res-chan)
     (go-loop []
       (let [response  (<! res-chan)
             order-ref (:order-ref response)]
