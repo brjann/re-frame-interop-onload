@@ -64,7 +64,6 @@
                   {"personalNumber" personnummer
                    "endUserIp"      user-ip}
                   config-key))
-;; "81.232.173.180"
 
 (defn ^:dynamic bankid-collect
   [order-ref config-key]

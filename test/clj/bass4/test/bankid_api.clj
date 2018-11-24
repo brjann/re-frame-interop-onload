@@ -4,7 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [clojure.core.async :refer [<!! timeout]]
+            [clojure.core.async :refer [<!! >!! timeout chan]]
             [bass4.test.core :refer [test-fixtures
                                      debug-headers-text?
                                      debug-headers-not-text?
@@ -53,3 +53,20 @@
       (is (= {:status     :error
               :error-code :loop-timeout}
              (select-keys info [:status :error-code]))))))
+
+(deftest loop-timeout2
+  (binding [bankid/collect-waiter nil]
+    (let [res-chan  (chan)
+          wait-chan (chan)]
+      (bankid/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)
+      (is (true? (bankid/session-active? (<!! res-chan))))
+      (>!! wait-chan :ok)
+      (advance-time-s! 299)
+      (is (true? (bankid/session-active? (<!! res-chan))))
+      (advance-time-s! 300)
+      (>!! wait-chan :ok)
+      (let [info (<!! res-chan)]
+        (is (false? (bankid/session-active? info)))
+        (is (= {:status     :error
+                :error-code :loop-timeout}
+               (select-keys info [:status :error-code])))))))
