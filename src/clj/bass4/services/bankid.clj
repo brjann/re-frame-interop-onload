@@ -142,20 +142,21 @@
                                 :config-key config-key})
                              (<! collect-chan))
               order-ref    (:order-ref response)]
-          (let [send-chan (alt! (timeout 1000) nil
-                                [[res-chan response]] true)]
-            (when-not send-chan
-              (log/debug "Res chan timed out"))
-            ;; Poll once every 1.5 seconds.
-            ;; Should be between 1 and 2 according to BankID spec
-            (let [wait-res (if (nil? collect-waiter)
-                             (do
-                               (log/debug "Waiting 1500 ms")
-                               (first (alts! [(wait-chan) (timeout 5000)])))
-                             (collect-waiter))]
-              (if (and wait-res (session-active? response))
-                (recur order-ref)
-                (log/debug "Collect loop completed")))))))))
+          (let [chan-res (if-not (alt! (timeout 1000) nil
+                                       [[res-chan response]] true)
+                           (log/info "Res chan timed out")
+                           (if-not (if (nil? collect-waiter)
+                                     (do
+                                       (log/debug "Waiting 1500 ms")
+                                       ;; Poll once every 1.5 seconds.
+                                       ;; Should be between 1 and 2 according to BankID spec
+                                       (first (alts! [(wait-chan) (timeout 5000)])))
+                                     (collect-waiter))
+                             (log/info "Wait chan timed out")
+                             true))]
+            (if (and chan-res (session-active? response))
+              (recur order-ref)
+              (log/debug "Collect loop completed"))))))))
 
 
 ;; -------------------
