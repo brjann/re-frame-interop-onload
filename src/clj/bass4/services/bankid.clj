@@ -247,9 +247,7 @@
             (collect-waiter uid))
           (if (session-active? response)
             (recur order-ref)
-            (do
-              (log-bankid-event! {:uid uid :status :loop-complete})
-              (print-status uid "Collect loop completed"))))))
+            (log/debug "Collect loop completed")))))
     uid))
 
 (defn launch-user-bankid
@@ -267,7 +265,11 @@
                :order-ref  order-ref}
               response))
           (log-bankid-event! (assoc response :uid uid))
-          (recur)))
+          (if (session-active? response)
+            (recur)
+            (do
+              (log-bankid-event! {:uid uid :status :loop-complete})
+              (print-status uid "Outer loop completed")))))
       uid)))
 
 (defn cancel-bankid!
