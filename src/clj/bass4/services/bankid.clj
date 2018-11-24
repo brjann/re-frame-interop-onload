@@ -1,6 +1,6 @@
 (ns bass4.services.bankid
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout thread alts! go-loop]]
+             :refer [>! <! <!! go chan timeout thread alts! go-loop alt!]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
             [clojure.walk :as walk]
@@ -142,18 +142,20 @@
                                 :config-key config-key})
                              (<! collect-chan))
               order-ref    (:order-ref response)]
-          (>! res-chan response)
-
-          ;; Poll once every 1.5 seconds.
-          ;; Should be between 1 and 2 according to BankID spec
-          (let [wait-res (if (nil? collect-waiter)
-                           (do
-                             (log/debug "Waiting 1500 ms")
-                             (first (alts! [(wait-chan) (timeout 5000)])))
-                           (collect-waiter))]
-            (if (and wait-res (session-active? response))
-              (recur order-ref)
-              (log/debug "Collect loop completed"))))))))
+          (let [send-chan (alt! (timeout 1000) nil
+                                [[res-chan response]] true)]
+            (when-not send-chan
+              (log/debug "Res chan timed out"))
+            ;; Poll once every 1.5 seconds.
+            ;; Should be between 1 and 2 according to BankID spec
+            (let [wait-res (if (nil? collect-waiter)
+                             (do
+                               (log/debug "Waiting 1500 ms")
+                               (first (alts! [(wait-chan) (timeout 5000)])))
+                             (collect-waiter))]
+              (if (and wait-res (session-active? response))
+                (recur order-ref)
+                (log/debug "Collect loop completed")))))))))
 
 
 ;; -------------------

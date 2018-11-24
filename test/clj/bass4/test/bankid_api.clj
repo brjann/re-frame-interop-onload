@@ -60,11 +60,11 @@
           wait-chan (chan)]
       (bankid/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)
       (is (true? (bankid/session-active? (<!! res-chan))))
-      (>!! wait-chan :ok)
+      (>!! wait-chan true)
       (advance-time-s! 299)
       (is (true? (bankid/session-active? (<!! res-chan))))
       (advance-time-s! 300)
-      (>!! wait-chan :ok)
+      (>!! wait-chan true)
       (let [info (<!! res-chan)]
         (is (false? (bankid/session-active? info)))
         (is (= {:status     :error
@@ -77,4 +77,11 @@
     (let [res-chan  (chan)
           wait-chan (chan)]
       (bankid/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)
-      (is (true? (bankid/session-active? (<!! res-chan)))))))
+      (is (true? (bankid/session-active? (<!! res-chan))))))
+  "Timeout guard. Check that collect loop completes after 5 secs"
+  (binding [bankid/collect-waiter nil]
+    (let [res-chan  (chan)
+          wait-chan (chan)]
+      (bankid/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)
+      (is (true? (bankid/session-active? (<!! res-chan))))
+      (>!! wait-chan true))))
