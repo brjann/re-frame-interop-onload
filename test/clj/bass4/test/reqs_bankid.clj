@@ -310,7 +310,7 @@
     (doall
       (for [pnr pnrs]
         (do
-          (bankid/launch-bankid pnr "127.0.0.1"))))))
+          (bankid/launch-user-bankid pnr "127.0.0.1" :prod))))))
 
 ; Check that many processes can be launched in infinite loop
 #_((wrap-mock :immediate) stress-1 1000)

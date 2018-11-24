@@ -214,11 +214,7 @@
 
 (defn launch-bankid
   [personnummer user-ip config-key wait-chan res-chan]
-  (let [uid        (UUID/randomUUID)
-        start-time (bankid-now)]
-    (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    #_(print-status uid "Creating session for " personnummer)
-    (create-session! uid)
+  (let [start-time (bankid-now)]
     (log/debug "Starting go loop")
     (go-loop [order-ref nil]
       (log/debug "Collect cycle")
@@ -244,33 +240,35 @@
             (do
               (log/debug "Waiting 1500 ms")
               (<! (wait-chan)))
-            (collect-waiter uid))
+            (collect-waiter))
           (if (session-active? response)
             (recur order-ref)
-            (log/debug "Collect loop completed")))))
-    uid))
+            (log/debug "Collect loop completed")))))))
 
 (defn launch-user-bankid
   [personnummer user-ip config-key]
-  (let [res-chan (chan)]
-    (let [uid (launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)]
-      (go-loop []
-        (let [response  (<! res-chan)
-              order-ref (:order-ref response)]
-          (set-session-status!
-            uid
-            (if (nil? (:status response))
-              {:status     :error
-               :error-code :collect-returned-nil-status
-               :order-ref  order-ref}
-              response))
-          (log-bankid-event! (assoc response :uid uid))
-          (if (session-active? response)
-            (recur)
-            (do
-              (log-bankid-event! {:uid uid :status :loop-complete})
-              (print-status uid "Outer loop completed")))))
-      uid)))
+  (let [res-chan (chan)
+        uid      (UUID/randomUUID)]
+    (create-session! uid)
+    (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
+    (launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
+    (go-loop []
+      (let [response  (<! res-chan)
+            order-ref (:order-ref response)]
+        (set-session-status!
+          uid
+          (if (nil? (:status response))
+            {:status     :error
+             :error-code :collect-returned-nil-status
+             :order-ref  order-ref}
+            response))
+        (log-bankid-event! (assoc response :uid uid))
+        (if (session-active? response)
+          (recur)
+          (do
+            (log-bankid-event! {:uid uid :status :loop-complete})
+            (print-status uid "Outer loop completed")))))
+    uid))
 
 (defn cancel-bankid!
   [uid]
