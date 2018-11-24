@@ -2,7 +2,8 @@
   (:require [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.config :refer [env]]
-            [bass4.services.bankid :as bankid]
+            [bass4.bankid.session :as bankid-session]
+            [bass4.bankid.services :as bankid-service]
             [bass4.layout :as layout]
             [bass4.utils :refer [kebab-case-keyword]]
             [bass4.http-utils :as h-utils]
@@ -32,8 +33,8 @@
   [session]
   (let [uid     (get-in session [:e-auth :uid])
         bankid? (= :bankid (get-in session [:e-auth :type]))
-        info    (bankid/get-session-info uid)]
-    (when (and uid bankid? (bankid/session-active? info))
+        info    (bankid-session/get-session-info uid)]
+    (when (and uid bankid? (bankid-service/session-active? info))
       uid)))
 
 
@@ -48,7 +49,7 @@
 (defn bankid-session
   [personnummer user-ip redirect-success redirect-fail config-key]
   (if (personnummer-valid? personnummer)
-    (let [uid (bankid/launch-user-bankid personnummer user-ip config-key)]
+    (let [uid (bankid-session/launch-user-bankid personnummer user-ip config-key)]
       {:e-auth {:uid              uid
                 :type             :bankid
                 :redirect-success redirect-success
@@ -188,11 +189,11 @@
 (defapi bankid-collect
   [session :- [:? map?]]
   (let [uid              (get-in session [:e-auth :uid])
-        info             (bankid/get-collected-info uid)
+        info             (bankid-session/get-collected-info uid)
         status           (:status info)
         redirect-success (get-in session [:e-auth :redirect-success])]
     (when (= :exception status)
-      (bankid/delete-session! uid)
+      (bankid-session/delete-session! uid)
       (throw (ex-info "BankID collect error" info)))
     (if (= :complete status)
       (->
@@ -201,7 +202,7 @@
       (let [response (bankid-collect-response uid status info)
             message  (:message response)]
         (when (= :exception message)
-          (bankid/delete-session! uid)
+          (bankid-session/delete-session! uid)
           (throw (ex-info "BankID message error" response)))
         ;; TODO: If error or failed status - can uid be deleted from session?
         (h-utils/json-response
@@ -240,7 +241,7 @@
         bankid?       (= :bankid (get-in session [:e-auth :type]))
         redirect-fail (get-in session [:e-auth :redirect-fail])]
     (let [response (when (and uid bankid?)
-                     (bankid/cancel-bankid! uid)
+                     (bankid-session/cancel-bankid! uid)
                      (when redirect-fail
                        (-> (http-response/found redirect-fail)
                            (assoc :session (dissoc session :e-auth)))))]
@@ -255,7 +256,7 @@
   Also called by test function to cancel request."
   [session :- [:? map?] return-url :- [:? [api/str? 1 2000] api/url?]]
   (let [uid (get-in session [:e-auth :uid])]
-    (bankid/cancel-bankid! uid)
+    (bankid-session/cancel-bankid! uid)
     (if return-url
       (-> (http-response/found return-url)
           (assoc :session (dissoc session :e-auth)))

@@ -14,7 +14,6 @@
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
             [clj-time.core :as t]
-            [bass4.services.bankid :as bankid]
             [bass4.db-config :as db-config]
             [bass4.middleware.debug :as mw-debug]
             [bass4.config :as config]

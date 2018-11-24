@@ -4,8 +4,7 @@
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [bass4.services.bankid :as bankid])
+            [clj-time.core :as t])
   (:import (java.util UUID)))
 
 (def bankid-message-map
