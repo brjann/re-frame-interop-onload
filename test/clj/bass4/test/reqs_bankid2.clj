@@ -78,8 +78,9 @@
   (alts!! [bankid-session/debug-chan (timeout 5000)])
   state)
 
-(defn test-bankid-auth
-  [pnr]
+(def pnr "191212121212")
+
+(deftest test-bankid-auth
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -106,31 +107,7 @@
       (follow-redirect)
       (has (sub-map? {"personnummer" pnr}))))
 
-
-#_(defn test-bankid-auth
-    [pnr]
-    (-> *s*
-        (visit "/debug/bankid-launch"
-               :request-method
-               :post
-               :params
-               {:personnummer     pnr
-                :redirect-success "/debug/bankid-success"
-                :redirect-fail    "/debug/bankid-test"})
-        (has (status? 302))
-        (follow-redirect)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
-        (user-opens-app! pnr)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (test-response {"status" "pending" "hint-code" "user-sign"})
-        (user-authenticates! pnr)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (follow-redirect)
-        (test-response {"personnummer" pnr})))
-
-(defn test-bankid-cancels
-  [pnr]
+(deftest test-bankid-cancels
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -141,12 +118,15 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (user-cancels! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (has (sub-map? {"status" "failed" "hint-code" "user-cancel"}))
       (visit "/e-auth/bankid/reset")
@@ -162,8 +142,7 @@
       (follow-redirect)
       (has (some-text? "No ongoing"))))
 
-(defn test-bankid-clicks-cancel
-  [pnr]
+(deftest test-bankid-clicks-cancel
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -174,12 +153,15 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (visit "/e-auth/bankid/cancel")
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (has (sub-map? {"status" "error" "hint-code" "No uid in session"}))
       (visit "/e-auth/bankid/status")
@@ -187,9 +169,8 @@
       (follow-redirect)
       (has (some-text? "No ongoing"))))
 
-(defn test-bankid-concurrent
-  [pnr]
-  (let [s1 (atom *s*)
+(deftest test-bankid-concurrent
+  #_(let [s1 (atom *s*)
         s2 (atom *s*)]
     (->! s1
          (visit "/debug/bankid-launch"
@@ -201,9 +182,11 @@
                  :redirect-fail    "/debug/bankid-test"})
          (has (status? 302))
          (follow-redirect)
+         (wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+         (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
          (user-opens-app! pnr)
+         (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "pending" "hint-code" "user-sign"})))
     (->! s2
@@ -216,6 +199,10 @@
                  :redirect-fail    "/debug/bankid-test"})
          (has (status? 302))
          (follow-redirect)
+         (wait)
+         (visit "/e-auth/bankid/collect" :request-method :post)
+         (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+         (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))
          #_(*poll-next*)
@@ -283,7 +270,7 @@
         (follow-redirect)
         (has (some-text? "No ongoing"))))
 
-(deftest bankid-auth
+#_(deftest bankid-auth
   (test-bankid-auth "191212121212"))
 
 #_(deftest bankid-cancels
