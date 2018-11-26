@@ -143,12 +143,13 @@
                                                        :order-ref  order-ref}))]
           (log/debug "Sending info through res-chan" info)
           (put! res-chan info)
-          (when-not (alt! (wait-chan) true
-                          (timeout 5000) false)
-            (throw (ex-info "Wait chan timed out" info)))
-          (log/debug "Send and wait completed")
           (if (session-active? info)
-            (recur (:order-ref info))
+            (if-not (alt! (wait-chan) true
+                          (timeout 5000) false)
+              (throw (ex-info "Wait chan timed out" info))
+              (do
+                (log/debug "Send and wait completed")
+                (recur (:order-ref info))))
             (log/debug "Collect loop completed")))))))
 
 
