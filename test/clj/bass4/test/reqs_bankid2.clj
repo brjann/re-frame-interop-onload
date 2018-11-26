@@ -70,45 +70,49 @@
       (assoc-in [:response :body] (json/write-str {"x" "z" "w" "y"}))
       (has (sub-map? {"x" "z" "w" "y"}))))
 
+(def ^:dynamic collect-chan)
+
+(defn wait
+  [state]
+  (alts!! [bankid-session/debug-chan (timeout 5000)])
+  state)
+
+(defn collect+wait
+  [state]
+  (put! collect-chan true)
+  (alts!! [bankid-session/debug-chan (timeout 5000)])
+  state)
 
 (defn test-bankid-auth
   [pnr]
-  (let [wait-chan          (chan)
-        session-debug-chan (chan)
-        wait               (fn [state]
-                             (alts!! [session-debug-chan (timeout 5000)])
-                             state)
-        collect+wait       (fn [state]
-                             (put! wait-chan true)
-                             (alts!! [session-debug-chan (timeout 5000)])
-                             state)]
-    (binding [bankid-session/wait-fn    (fn [] wait-chan)
-              bankid-session/debug-chan session-debug-chan]
-      (-> *s*
-          (visit "/debug/bankid-launch"
-                 :request-method
-                 :post
-                 :params
-                 {:personnummer     pnr
-                  :redirect-success "/debug/bankid-success"
-                  :redirect-fail    "/debug/bankid-test"})
-          (has (status? 302))
-          (follow-redirect)
-          (wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
-          (user-opens-app! pnr)
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
-          (user-authenticates! pnr)
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (has (sub-map? {"personnummer" pnr}))))))
+  (binding [bankid-session/wait-fn    (fn [] collect-chan)
+            bankid-session/debug-chan (chan)
+            collect-chan              (chan)]
+    (-> *s*
+        (visit "/debug/bankid-launch"
+               :request-method
+               :post
+               :params
+               {:personnummer     pnr
+                :redirect-success "/debug/bankid-success"
+                :redirect-fail    "/debug/bankid-test"})
+        (has (status? 302))
+        (follow-redirect)
+        (wait)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+        (collect+wait)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+        (user-opens-app! pnr)
+        (collect+wait)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
+        (user-authenticates! pnr)
+        (collect+wait)
+        (visit "/e-auth/bankid/collect" :request-method :post)
+        (follow-redirect)
+        (has (sub-map? {"personnummer" pnr})))))
 
 
 #_(defn test-bankid-auth
@@ -288,7 +292,7 @@
         (has (some-text? "No ongoing"))))
 
 (deftest bankid-auth
-    (test-bankid-auth "191212121212"))
+  (test-bankid-auth "191212121212"))
 
 #_(deftest bankid-cancels
     (test-bankid-cancels "191212121212"))
