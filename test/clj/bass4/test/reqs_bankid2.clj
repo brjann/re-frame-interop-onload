@@ -24,9 +24,9 @@
 (use-fixtures
   :each
   (fn [f]
-    (binding [bankid-session/wait-fn    (fn [] collect-chan)
-              bankid-session/debug-chan (chan)
-              collect-chan              (chan)]
+    (binding [collect-chan              (chan)
+              bankid-session/wait-fn    (fn [] collect-chan)
+              bankid-session/debug-chan (chan)]
       ((mock-collect/wrap-mock2 :manual nil false) f))))
 
 (defn user-opens-app!
@@ -170,8 +170,9 @@
       (has (some-text? "No ongoing"))))
 
 (deftest test-bankid-concurrent
-  #_(let [s1 (atom *s*)
-        s2 (atom *s*)]
+  (let [s1            (atom *s*)
+        s2            (atom *s*)
+        collect-chan2 (chan)]
     (->! s1
          (visit "/debug/bankid-launch"
                 :request-method
@@ -189,31 +190,30 @@
          (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "pending" "hint-code" "user-sign"})))
-    (->! s2
-         (visit "/debug/bankid-launch"
-                :request-method
-                :post
-                :params
-                {:personnummer     pnr
-                 :redirect-success "/debug/bankid-success"
-                 :redirect-fail    "/debug/bankid-test"})
-         (has (status? 302))
-         (follow-redirect)
-         (wait)
-         (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
-         (collect+wait)
-         (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))
-         #_(*poll-next*)
-         (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "error" "error-code" "already-in-progress"})))
+    (binding [collect-chan              collect-chan2
+              bankid-session/wait-fn    (fn [] collect-chan)
+              bankid-session/debug-chan (chan)]
+      (->! s2
+           (visit "/debug/bankid-launch"
+                  :request-method
+                  :post
+                  :params
+                  {:personnummer     pnr
+                   :redirect-success "/debug/bankid-success"
+                   :redirect-fail    "/debug/bankid-test"})
+           (has (status? 302))
+           (follow-redirect)
+           (wait)
+           (visit "/e-auth/bankid/collect" :request-method :post)
+           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))
+           (visit "/e-auth/bankid/collect" :request-method :post)
+           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))))
     (->! s1
+         (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "failed" "hint-code" "cancelled"})))))
 
-(defn test-bankid-ongoing
-  [pnr]
+(deftest test-bankid-ongoing
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -230,9 +230,9 @@
       (follow (i18n/tr [:bankid/ongoing-return]))
       (has (some-text? "BankID"))
       (visit "/e-auth/bankid/cancel")
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (has (sub-map? {"status" "error" "hint-code" "No uid in session"})))
-  (<!! (timeout 100))
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -243,19 +243,21 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (visit "/login")
       (follow-redirect)
       (has (some-text? "Ongoing"))
       (follow (i18n/tr [:bankid/ongoing-cancel]))
       (follow-redirect)
+      (collect+wait)
       (has (some-text? "Login"))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
       (follow-redirect)
       (has (some-text? "No ongoing"))))
 
-#_(deftest test-bankid-no-ongoing
+(deftest test-bankid-no-ongoing
     (-> *s*
         (visit "/e-auth/bankid/status")
         (has (status? 302))
@@ -271,7 +273,7 @@
         (has (some-text? "No ongoing"))))
 
 #_(deftest bankid-auth
-  (test-bankid-auth "191212121212"))
+    (test-bankid-auth "191212121212"))
 
 #_(deftest bankid-cancels
     (test-bankid-cancels "191212121212"))

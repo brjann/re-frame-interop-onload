@@ -134,10 +134,10 @@
                              (collect-bankid order-ref config-key))
               ;; alt! bindings are not recognized by Cursive
               info         (alt! collect-chan ([response] (merge
-                                                            response
                                                             (when-not order-ref
                                                               {:status     :started
-                                                               :config-key config-key})))
+                                                               :config-key config-key})
+                                                            response))
                                  (timeout 20000) ([_] {:status     :error
                                                        :error-code :collect-timeout
                                                        :order-ref  order-ref}))]

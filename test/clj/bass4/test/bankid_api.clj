@@ -40,20 +40,6 @@
       ((mock-collect/wrap-mock :immediate) f))))
 
 
-(deftest loop-timeout
-  (let [uid (bankid-session/launch-user-bankid "191212121212" "127.0.0.1" :prod)]
-    (<!! (timeout 10))
-    (is (true? (bankid-service/session-active? (bankid-session/get-session-info uid))))
-    (advance-time-s! 299)
-    (<!! (timeout 10))
-    (is (true? (bankid-service/session-active? (bankid-session/get-session-info uid))))
-    (advance-time-s! 300)
-    (<!! (timeout 10))
-    (let [info (bankid-session/get-session-info uid)]
-      (is (= {:status     :error
-              :error-code :loop-timeout}
-             (select-keys info [:status :error-code]))))))
-
 (deftest loop-timeout2
   (binding [bankid-service/collect-waiter nil]
     (let [res-chan  (chan)
