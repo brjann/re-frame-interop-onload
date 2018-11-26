@@ -6,13 +6,11 @@
             [kerodon.test :refer :all]
             [clojure.core.async :refer [<! >! >!! <!! thread put! go chan timeout alts!! dropping-buffer go-loop]]
             [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
-            [bass4.bankid.services :as bankid]
             [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log wrap-mock]]
             [bass4.test.bankid.mock-backend :as mock-backend]
             [clojure.data.json :as json]
             [bass4.i18n :as i18n]
             [bass4.bankid.session :as bankid-session]
-            [bass4.bankid.services :as bankid-service]
             [clojure.tools.logging :as log])
   (:import (java.util UUID)))
 
@@ -21,9 +19,15 @@
   :once
   test-fixtures)
 
+(def ^:dynamic collect-chan)
+
 (use-fixtures
   :each
-  (mock-collect/wrap-mock2 :manual nil false))
+  (fn [f]
+    (binding [bankid-session/wait-fn    (fn [] collect-chan)
+              bankid-session/debug-chan (chan)
+              collect-chan              (chan)]
+      ((mock-collect/wrap-mock2 :manual nil false) f))))
 
 (defn user-opens-app!
   [x pnr]
@@ -56,21 +60,12 @@
        (is (= ~criterion sub-map#) msg#))
      response#))
 
-#_(defn test-response
-    [response criterion]
-    (let [body         (get-in response [:response :body])
-          response-map (json/read-str body)
-          sub-map      (select-keys response-map (keys criterion))]
-      (is (= criterion sub-map)))
-    response)
 
 (deftest test-some-map?-macro
   (-> {:response {:body (json/write-str {"x" "y" "w" "z"})}}
       (has (sub-map? {"x" "y" "w" "z"}))
       (assoc-in [:response :body] (json/write-str {"x" "z" "w" "y"}))
       (has (sub-map? {"x" "z" "w" "y"}))))
-
-(def ^:dynamic collect-chan)
 
 (defn wait
   [state]
@@ -85,34 +80,31 @@
 
 (defn test-bankid-auth
   [pnr]
-  (binding [bankid-session/wait-fn    (fn [] collect-chan)
-            bankid-session/debug-chan (chan)
-            collect-chan              (chan)]
-    (-> *s*
-        (visit "/debug/bankid-launch"
-               :request-method
-               :post
-               :params
-               {:personnummer     pnr
-                :redirect-success "/debug/bankid-success"
-                :redirect-fail    "/debug/bankid-test"})
-        (has (status? 302))
-        (follow-redirect)
-        (wait)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
-        (collect+wait)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
-        (user-opens-app! pnr)
-        (collect+wait)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
-        (user-authenticates! pnr)
-        (collect+wait)
-        (visit "/e-auth/bankid/collect" :request-method :post)
-        (follow-redirect)
-        (has (sub-map? {"personnummer" pnr})))))
+  (-> *s*
+      (visit "/debug/bankid-launch"
+             :request-method
+             :post
+             :params
+             {:personnummer     pnr
+              :redirect-success "/debug/bankid-success"
+              :redirect-fail    "/debug/bankid-test"})
+      (has (status? 302))
+      (follow-redirect)
+      (wait)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+      (collect+wait)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+      (user-opens-app! pnr)
+      (collect+wait)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
+      (user-authenticates! pnr)
+      (collect+wait)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (follow-redirect)
+      (has (sub-map? {"personnummer" pnr}))))
 
 
 #_(defn test-bankid-auth
