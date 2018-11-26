@@ -1,6 +1,6 @@
 (ns bass4.bankid.services
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout thread alts! go-loop alt!]]
+             :refer [>! <! <!! go chan timeout thread alts! put! go-loop alt!]]
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
             [bass4.config :refer [env]]
@@ -133,35 +133,33 @@
                              (start-bankid-session personnummer user-ip config-key)
                              (collect-bankid order-ref config-key))
               ;; alt! bindings are not recognized by Cursive
-              info         (merge
-                             (when-not order-ref
-                               {:status     :started
-                                :config-key config-key})
-                             (first (alts! [collect-chan (timeout 20000)])))
-              #_(alt! collect-chan ([response] (merge
-                                                 response
-                                                 (when-not order-ref
-                                                   {:status     :started
-                                                    :config-key config-key})))
-                      (timeout 20000) ([_] {:status     :error
-                                            :error-code :collect-timeout
-                                            :order-ref  order-ref}))]
+              info         (alt! collect-chan ([response] (merge
+                                                            response
+                                                            (when-not order-ref
+                                                              {:status     :started
+                                                               :config-key config-key})))
+                                 (timeout 20000) ([_] {:status     :error
+                                                       :error-code :collect-timeout
+                                                       :order-ref  order-ref}))
+              #_(merge
+                  (when-not order-ref
+                    {:status     :started
+                     :config-key config-key})
+                  (first (alts! [collect-chan (timeout 20000)])))]
           (log/debug "Sending info through res-chan" info)
-          (let [chan-res (if-not (alt! [[res-chan info]] true
+          (put! res-chan info)
+          (let [chan-res (if-not (alt! (wait-chan) true
                                        (timeout 5000) false)
-                           (log/info "Res chan timed out")
-                           (if-not (alt! (wait-chan) true
-                                         (timeout 5000) false)
-                             #_(if (nil? collect-waiter)
-                                     (do
-                                       #_(log/debug "Waiting 1500 ms")
-                                       ;; Poll once every 1.5 seconds.
-                                       ;; Should be between 1 and 2 according to BankID spec
-                                       (alt! (wait-chan) true
-                                             (timeout 5000) false))
-                                     (collect-waiter))
-                             (log/info "Wait chan timed out")
-                             true))]
+                           #_(if (nil? collect-waiter)
+                               (do
+                                 #_(log/debug "Waiting 1500 ms")
+                                 ;; Poll once every 1.5 seconds.
+                                 ;; Should be between 1 and 2 according to BankID spec
+                                 (alt! (wait-chan) true
+                                       (timeout 5000) false))
+                               (collect-waiter))
+                           (log/info "Wait chan timed out")
+                           true)]
             (log/debug "Send and wait completed")
             (if (and chan-res (session-active? info))
               (recur (:order-ref info))

@@ -72,17 +72,14 @@
 
 
 (defn test-bankid-auth
-  []
-  (let [pnr                "191212121212"
-        wait-chan          (chan)
+  [pnr]
+  (let [wait-chan          (chan)
         session-debug-chan (chan)
-        service-debug-chan (chan)
         wait               (fn [state]
                              (alts!! [session-debug-chan (timeout 5000)])
                              state)
         collect+wait       (fn [state]
                              (put! wait-chan true)
-                             #_(alts!! [[wait-chan true] (timeout 5000)])
                              (alts!! [session-debug-chan (timeout 5000)])
                              state)]
     (binding [bankid-session/wait-fn    (fn [] wait-chan)
@@ -290,7 +287,7 @@
         (follow-redirect)
         (has (some-text? "No ongoing"))))
 
-#_(deftest bankid-auth
+(deftest bankid-auth
     (test-bankid-auth "191212121212"))
 
 #_(deftest bankid-cancels
