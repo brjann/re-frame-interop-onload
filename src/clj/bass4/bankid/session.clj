@@ -1,6 +1,6 @@
 (ns bass4.bankid.session
   (:require [clojure.core.async
-             :refer [>! <! <!! go chan timeout thread alts! go-loop alt!]]
+             :refer [>! <! <!! go chan timeout thread alts! go-loop alt! put!]]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys map-map]]
             [bass4.bankid.services :as bankid-service]
             [bass4.db.core :as db]
@@ -91,16 +91,23 @@
                            stringed
                            other))))
 
+(defn ^:dynamic wait-fn
+  []
+  (timeout 1500))
+
+(def ^:dynamic debug-chan nil)
+
 (defn launch-user-bankid
   [personnummer user-ip config-key]
   (let [res-chan (chan)
         uid      (UUID/randomUUID)]
     (create-session! uid)
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
-    (bankid-service/launch-bankid personnummer user-ip config-key #(timeout 1500) res-chan)
+    (bankid-service/launch-bankid personnummer user-ip config-key wait-fn res-chan)
     (go-loop []
       (let [info      (first (alts! [res-chan (timeout 20000)]))
             order-ref (:order-ref info)]
+        (log/debug "Got info through chan" info)
         (set-session-status!
           uid
           (if (nil? (:status info))
@@ -108,6 +115,9 @@
              :error-code :collect-returned-nil-status
              :order-ref  order-ref}
             info))
+        (when debug-chan
+          (log/debug "SESSION: Putting on debug chan")
+          (put! debug-chan true))
         (log-bankid-event! (assoc info :uid uid))
         (if (bankid-service/session-active? info)
           (recur)

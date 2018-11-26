@@ -118,11 +118,10 @@
 ;; environment, then the loop does the
 ;; (<! (timeout 1500)) itself.
 (def ^:dynamic collect-waiter nil)
-
 (defn launch-bankid
   [personnummer user-ip config-key wait-chan res-chan]
   (let [start-time (bankid-now)]
-    (log/debug "Starting go loop")
+    (log/debug "Starting go loop for " personnummer)
     (go-loop [order-ref nil]
       (log/debug "Collect cycle")
       (if-not (session-not-timed-out? {:start-time start-time} 300)
@@ -147,12 +146,15 @@
                       (timeout 20000) ([_] {:status     :error
                                             :error-code :collect-timeout
                                             :order-ref  order-ref}))]
+          (log/debug "Sending info through res-chan" info)
           (let [chan-res (if-not (alt! [[res-chan info]] true
                                        (timeout 5000) false)
                            (log/info "Res chan timed out")
-                           (if-not (if (nil? collect-waiter)
+                           (if-not (alt! (wait-chan) true
+                                         (timeout 5000) false)
+                             #_(if (nil? collect-waiter)
                                      (do
-                                       (log/debug "Waiting 1500 ms")
+                                       #_(log/debug "Waiting 1500 ms")
                                        ;; Poll once every 1.5 seconds.
                                        ;; Should be between 1 and 2 according to BankID spec
                                        (alt! (wait-chan) true
@@ -160,6 +162,7 @@
                                      (collect-waiter))
                              (log/info "Wait chan timed out")
                              true))]
+            (log/debug "Send and wait completed")
             (if (and chan-res (session-active? info))
               (recur (:order-ref info))
               (log/debug "Collect loop completed"))))))))
