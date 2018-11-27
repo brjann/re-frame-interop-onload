@@ -13,18 +13,11 @@
                                      advance-time-s!
                                      fix-time
                                      test-now]]
-            [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
-            [bass4.db.core :as db]
-            [bass4.services.auth :as auth-service]
-            [bass4.middleware.core :as mw]
-            [bass4.services.registration :as reg-service]
-            [bass4.services.attack-detector :as a-d]
             [bass4.test.bankid.mock-collect :as mock-collect]
             [clojure.tools.logging :as log]
             [bass4.bankid.services :as bankid-service]
-            [clj-time.core :as t]
-            [bass4.bankid.session :as bankid-session]))
+            [clj-time.core :as t]))
 
 
 (use-fixtures
@@ -40,7 +33,7 @@
       ((mock-collect/wrap-mock :immediate) f))))
 
 
-(deftest loop-timeout2
+(deftest loop-timeout
   (binding [bankid-service/collect-waiter nil]
     (let [res-chan  (chan)
           wait-chan (chan)]

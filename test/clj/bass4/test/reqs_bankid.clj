@@ -1,13 +1,24 @@
-(ns bass4.test.reqs-bankid2
+(ns bass4.test.reqs-bankid
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [clojure.core.async :refer [<! >! >!! <!! thread put! go chan timeout alts!! dropping-buffer go-loop]]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
-            [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log wrap-mock]]
-            [bass4.test.bankid.mock-backend :as mock-backend]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     disable-attack-detector
+                                     *s*
+                                     pass-by
+                                     ->!
+                                     sub-map?]]
+            [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log]]
+            [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer [wait
+                                                                        collect+wait
+                                                                        user-opens-app!
+                                                                        user-authenticates!
+                                                                        user-cancels!]]
             [clojure.data.json :as json]
             [bass4.i18n :as i18n]
             [bass4.bankid.session :as bankid-session]
@@ -19,46 +30,9 @@
   :once
   test-fixtures)
 
-(def ^:dynamic collect-chan)
-
 (use-fixtures
   :each
-  (fn [f]
-    (binding [collect-chan              (chan)
-              bankid-session/wait-fn    (fn [] collect-chan)
-              bankid-session/debug-chan (chan)]
-      ((mock-collect/wrap-mock2 :manual nil false) f))))
-
-(defn user-opens-app!
-  [x pnr]
-  (log/debug pnr)
-  (mock-backend/user-opens-app! pnr)
-  x)
-
-(defn user-cancels!
-  [x pnr]
-  (mock-backend/user-cancels! pnr)
-  x)
-
-(defn user-authenticates!
-  [x pnr]
-  (mock-backend/user-authenticates! pnr)
-  x)
-
-(defn user-advance-time!
-  [x pnr secs]
-  (mock-backend/user-advance-time! pnr secs)
-  x)
-
-
-(defmacro sub-map?
-  [criterion]
-  `(fn [response# msg#]
-     (let [body#         (get-in response# [:response :body])
-           response-map# (json/read-str body#)
-           sub-map#      (select-keys response-map# (keys ~criterion))]
-       (is (= ~criterion sub-map#) msg#))
-     response#))
+  bankid-utils/reqs-fixtures)
 
 
 (deftest test-some-map?-macro
@@ -67,20 +41,9 @@
       (assoc-in [:response :body] (json/write-str {"x" "z" "w" "y"}))
       (has (sub-map? {"x" "z" "w" "y"}))))
 
-(defn wait
-  [state]
-  (alts!! [bankid-session/debug-chan (timeout 5000)])
-  state)
 
-(defn collect+wait
-  [state]
-  (put! collect-chan true)
-  (alts!! [bankid-session/debug-chan (timeout 5000)])
-  state)
-
-(def pnr "191212121212")
-
-(deftest test-bankid-auth
+(defn test-bankid-auth
+  [pnr]
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -107,7 +70,8 @@
       (follow-redirect)
       (has (sub-map? {"personnummer" pnr}))))
 
-(deftest test-bankid-cancels
+(defn test-bankid-cancels
+  [pnr]
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -142,7 +106,8 @@
       (follow-redirect)
       (has (some-text? "No ongoing"))))
 
-(deftest test-bankid-clicks-cancel
+(defn test-bankid-clicks-cancel
+  [pnr]
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -169,7 +134,8 @@
       (follow-redirect)
       (has (some-text? "No ongoing"))))
 
-(deftest test-bankid-concurrent
+(defn test-bankid-concurrent
+  [pnr]
   (let [s1            (atom *s*)
         s2            (atom *s*)
         collect-chan2 (chan)]
@@ -190,8 +156,8 @@
          (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "pending" "hint-code" "user-sign"})))
-    (binding [collect-chan              collect-chan2
-              bankid-session/wait-fn    (fn [] collect-chan)
+    (binding [bankid-utils/collect-chan collect-chan2
+              bankid-session/wait-fn    (fn [] bankid-utils/collect-chan)
               bankid-session/debug-chan (chan)]
       (->! s2
            (visit "/debug/bankid-launch"
@@ -213,7 +179,8 @@
          (visit "/e-auth/bankid/collect" :request-method :post)
          (has (sub-map? {"status" "failed" "hint-code" "cancelled"})))))
 
-(deftest test-bankid-ongoing
+(defn test-bankid-ongoing
+  [pnr]
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -258,34 +225,34 @@
       (has (some-text? "No ongoing"))))
 
 (deftest test-bankid-no-ongoing
-    (-> *s*
-        (visit "/e-auth/bankid/status")
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "No ongoing"))
-        (visit "/e-auth/bankid/cancel")
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "No ongoing"))
-        (visit "/e-auth/bankid/reset")
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "No ongoing"))))
+  (-> *s*
+      (visit "/e-auth/bankid/status")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))
+      (visit "/e-auth/bankid/cancel")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))
+      (visit "/e-auth/bankid/reset")
+      (has (status? 302))
+      (follow-redirect)
+      (has (some-text? "No ongoing"))))
 
-#_(deftest bankid-auth
-    (test-bankid-auth "191212121212"))
+(deftest bankid-auth
+  (test-bankid-auth "191212121212"))
 
-#_(deftest bankid-cancels
-    (test-bankid-cancels "191212121212"))
+(deftest bankid-cancels
+  (test-bankid-cancels "191212121212"))
 
-#_(deftest bankid-clicks-cancel
-    (test-bankid-clicks-cancel "191212121212"))
+(deftest bankid-clicks-cancel
+  (test-bankid-clicks-cancel "191212121212"))
 
-#_(deftest bankid-clicks-concurrent
-    (test-bankid-concurrent "191212121212"))
+(deftest bankid-clicks-concurrent
+  (test-bankid-concurrent "191212121212"))
 
-#_(deftest bankid-clicks-ongoing
-    (test-bankid-ongoing "191212121212"))
+(deftest bankid-clicks-ongoing
+  (test-bankid-ongoing "191212121212"))
 
 (defn massive-reqs-test
   ([] (massive-reqs-test 10))
@@ -322,6 +289,11 @@
          ;; <!! can lead to total block if there are too
          ;; many of them active at the same time.
          ;; Don't do it man.
+         ;;
+         ;; NEW THOUGHTS: The go blocks start synchronous
+         ;; tests that do not park. Thus, there is no room
+         ;; over for the go async blocks. This is probably
+         ;; the problem.
          executor  #_(if go?
                        (fn []
                          (loop [f-p f-p]
@@ -344,12 +316,15 @@
                        (when (seq f-p)
                          (let [[f p] (first f-p)]
                            (println "Running loop test on " p)
-                           (thread (f p))
+                           (binding [bankid-utils/collect-chan (chan)
+                                     bankid-session/wait-fn    (fn [] bankid-utils/collect-chan)
+                                     bankid-session/debug-chan (chan)]
+                             (thread (f p)))
                            (recur (rest f-p))))))
          test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
      (test-fixtures test-fn))))
 
-
+;; THE STRESS TESTS HAVE NOT BEEN REWRITTEN/TESTED FOR THE NEW API
 (defn stress-1
   [x]
   (let [pnrs (repeatedly x #(UUID/randomUUID))]
@@ -361,7 +336,7 @@
 ; Check that many processes can be launched in infinite loop
 #_((wrap-mock :immediate) stress-1 1000)
 
-; Abort infinite loop
+; Abort infinite loop DOESN'T WORK ANYMORE!
 #_(reset! bankid/session-statuses {})
 
 ; Multiple processes with immediate and max 10 faked collects

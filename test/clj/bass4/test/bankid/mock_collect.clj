@@ -69,34 +69,8 @@
             (backend/api-collect order-ref nil))
           {:order-ref order-ref :status :failed :hint-code :user-cancel})))))
 
+
 (defn wrap-mock
-  ([] (wrap-mock :immediate nil))
-  ([collect-method] (wrap-mock collect-method nil))
-  ([collect-method max-collects] (wrap-mock collect-method max-collects false))
-  ([collect-method max-collects http-request?]
-   (assert (contains? #{:immediate :manual :wait} collect-method))
-   (fn [f & args]
-     (let [collect-counts (atom {})]
-       (binding [backend/mock-backend-sessions      (atom {})
-                 bankid-service/bankid-auth         backend/api-auth
-                 bankid-service/bankid-collect      (collect-logger collect-counts max-collects)
-                 bankid-service/bankid-cancel       backend/api-cancel
-                 bankid-service/collect-waiter      (case collect-method
-                                                      (:immediate :manual)
-                                                      (constantly true)
-
-                                                      :wait
-                                                      bankid-service/collect-waiter)
-                 bankid-session/log-bankid-event!   (constantly nil)
-                 bankid-session/get-collected-info  (if (= :manual collect-method)
-                                                      get-collected-info-mock
-                                                      bankid-session/get-collected-info)
-                 bankid-session/set-session-status! (wrap-set-session-status! collect-counts bankid-session/set-session-status!)
-                 backend/*delay-collect*            http-request?]
-         (apply f args))
-       collect-counts))))
-
-(defn wrap-mock2
   ([] (wrap-mock :immediate nil))
   ([collect-method] (wrap-mock collect-method nil))
   ([collect-method max-collects] (wrap-mock collect-method max-collects false))

@@ -9,7 +9,7 @@
             [bass4.handler :refer :all]
             [clj-time.coerce :as tc]
             [clojure.string :as string]
-            [clojure.test]
+            [clojure.test :refer :all]
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
@@ -20,7 +20,8 @@
             [clojure.string :as str]
             [bass4.email :as email]
             [bass4.sms-sender :as sms]
-            [bass4.instruments.validation :as i-validation]))
+            [bass4.instruments.validation :as i-validation]
+            [clojure.data.json :as json]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -155,6 +156,15 @@
                                             :fail)
                                 :message  "Message not found"
                                 :expected msg-pred#}))))
+
+(defmacro sub-map?
+  [criterion]
+  `(fn [response# msg#]
+     (let [body#         (get-in response# [:response :body])
+           response-map# (json/read-str body#)
+           sub-map#      (select-keys response-map# (keys ~criterion))]
+       (is (= ~criterion sub-map#) msg#))
+     response#))
 
 (defmacro pass-by
   [prev form]
