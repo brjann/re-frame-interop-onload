@@ -121,14 +121,10 @@
 (defn launch-bankid
   [personnummer user-ip config-key wait-chan res-chan]
   (let [start-time (bankid-now)]
-    (log/debug "Starting go loop for " personnummer)
     (go-loop [order-ref nil]
-      (log/debug "Collect cycle")
       (if-not (session-not-timed-out? {:start-time start-time} 300)
-        (do
-          (log/debug "Session timed out")
-          (>! res-chan {:status     :error
-                        :error-code :loop-timeout}))
+        (>! res-chan {:status     :error
+                      :error-code :loop-timeout})
         (let [collect-chan (if-not order-ref
                              (start-bankid-session personnummer user-ip config-key)
                              (collect-bankid order-ref config-key))
@@ -141,16 +137,12 @@
                                  (timeout 20000) ([_] {:status     :error
                                                        :error-code :collect-timeout
                                                        :order-ref  order-ref}))]
-          (log/debug "Sending info through res-chan" info)
           (put! res-chan info)
-          (if (session-active? info)
-            (if-not (alt! (wait-chan) true
-                          (timeout 5000) false)
-              (throw (ex-info "Wait chan timed out" info))
-              (do
-                (log/debug "Send and wait completed")
-                (recur (:order-ref info))))
-            (log/debug "Collect loop completed")))))))
+          (when (session-active? info)
+            (when-not (alt! (wait-chan) true
+                            (timeout 5000) false)
+              (throw (ex-info "Wait chan timed out" info)))
+            (recur (:order-ref info))))))))
 
 
 ;; -------------------

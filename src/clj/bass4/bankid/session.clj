@@ -107,7 +107,6 @@
     (go-loop []
       (let [info      (first (alts! [res-chan (timeout 20000)]))
             order-ref (:order-ref info)]
-        (log/debug "Got info through chan" info)
         (set-session-status!
           uid
           (if (nil? (:status info))
@@ -116,14 +115,11 @@
              :order-ref  order-ref}
             info))
         (when debug-chan
-          (log/debug "SESSION: Putting on debug chan")
           (put! debug-chan true))
         (log-bankid-event! (assoc info :uid uid))
         (if (bankid-service/session-active? info)
           (recur)
-          (do
-            (log-bankid-event! {:uid uid :status :loop-complete})
-            (bankid-service/print-status uid "Outer loop completed")))))
+          (log-bankid-event! {:uid uid :status :loop-complete}))))
     uid))
 
 (defn cancel-bankid!
