@@ -453,7 +453,7 @@
                                                              :auto-username          :participant-id
                                                              :auto-password?         true
                                                              :auto-id-prefix         "xxx-"
-                                                             :auto-id-length         8
+                                                             :auto-id-length         4
                                                              :auto-id?               true})
                 passwords/letters-digits        (constantly "METALLICA")]
     (let [x        (-> *s*
@@ -478,9 +478,13 @@
                        :content
                        (first)
                        (string/trim))]
+      (log/debug username password)
       (-> *s*
           (visit "/login" :request-method :post :params {:username username :password password})
-          (has (status? 200))))))
+          (has (status? 302))
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))))))
 
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})

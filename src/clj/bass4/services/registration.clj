@@ -24,7 +24,8 @@
    :Email        :email
    :SMSNumber    :sms-number
    :Personnummer :pid-number
-   :Password     :password})
+   ;; Must be lowercase for password hasher to recognize
+   :password     :password})
 
 (defn- transform-fields
   [fields-str]
@@ -92,8 +93,8 @@
   [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
     (user-service/create-user! project-id (merge insert-values
-                                                 {:PrivacyNoticeId  (:notice-id privacy-consent)
-                                          :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))}
+                                                 {:PrivacyNoticeId          (:notice-id privacy-consent)
+                                                  :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))}
                                                  (when username {:username username})
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))
