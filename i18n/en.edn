@@ -14,7 +14,7 @@
  :unsaved-changes "You have unsaved changes!"
  :tab             "Tab"
  :i-consent       "I consent"
- :contact-support "You contact support at "
+ :contact-support "You can contact support at "
  :characters-left "Characters left"
  :too-long!       "too long!"
  :quick-login     {:expired-title           "Login expired"
