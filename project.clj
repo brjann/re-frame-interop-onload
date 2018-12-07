@@ -88,6 +88,7 @@
                                     [peridot "0.5.1"]       ; https://github.com/xeqi/peridot
                                     [kerodon "0.9.0"]       ; https://github.com/xeqi/kerodon
                                     [philoskim/debux "0.5.0"] ; https://github.com/philoskim/debux
+                                    [enlive "1.1.6"]        ; https://github.com/cgrand/enlive
                                     [org.clojure/tools.namespace "0.3.0-alpha4"]]
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]

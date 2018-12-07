@@ -25,7 +25,8 @@
             [bass4.services.registration :as reg-service]
             [bass4.external-messages :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [net.cgrand.enlive-html :as enlive]))
 
 
 (use-fixtures
@@ -440,6 +441,46 @@
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))
         (is (= password (:password by-username)))))))
+
+(def xx (atom nil))
+
+(deftest registration-auto-password
+  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email}
+                                                             :group                  564616
+                                                             :allow-duplicate-email? true
+                                                             :auto-username          :participant-id
+                                                             :auto-password?         true
+                                                             :auto-id-prefix         "xxx-"
+                                                             :auto-id-length         8
+                                                             :auto-id?               true})
+                passwords/letters-digits        (constantly "METALLICA")]
+    (let [x        (-> *s*
+                       (visit "/registration/564610/captcha")
+                       ;; Captcha session is created
+                       (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+                       (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+                       (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
+                       (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+                       (follow-redirect))
+          username (-> x
+                       :enlive
+                       (enlive/select [[:span :.username]])
+                       (first)
+                       :content
+                       (first)
+                       (string/trim))
+          password (-> x
+                       :enlive
+                       (enlive/select [[:span :.password]])
+                       (first)
+                       :content
+                       (first)
+                       (string/trim))]
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username username :password password})
+          (has (status? 200))))))
 
 (deftest registration-duplicate-info
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
