@@ -4,10 +4,21 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->! log-body]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     disable-attack-detector
+                                     *s*
+                                     pass-by
+                                     ->!
+                                     log-body]]
             [bass4.passwords :as passwords]
             [bass4.test.bankid.mock-collect :as mock-collect]
-            [bass4.test.bankid.mock-backend :as mock-backend]
+            [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer [wait
+                                                                        collect+wait
+                                                                        user-opens-app!
+                                                                        user-authenticates!
+                                                                        user-cancels!]]
             [bass4.services.registration :as reg-service]))
 
 
@@ -16,23 +27,8 @@
   test-fixtures)
 
 (use-fixtures
-  :each
-  (mock-collect/wrap-mock :manual))
-
-(defn user-opens-app!
-  [x pnr]
-  (mock-backend/user-opens-app! pnr)
-  x)
-
-(defn user-cancels!
-  [x pnr]
-  (mock-backend/user-cancels! pnr)
-  x)
-
-(defn user-authenticates!
-  [x pnr]
-  (mock-backend/user-authenticates! pnr)
-  x)
+    :each
+    bankid-utils/reqs-fixtures)
 
 (deftest registration-flow-bankid
   (let [pnr "191212121212"]
@@ -62,6 +58,7 @@
           (follow-redirect)
           (has (some-text? "Contacting"))
           (user-authenticates! pnr)
+          (collect+wait)
           (visit "/e-auth/bankid/collect" :request-method :post)
           (follow-redirect)
           (follow-redirect)
@@ -127,6 +124,7 @@
           (follow-redirect)
           (has (some-text? "Contacting"))
           (user-authenticates! pnr)
+          (collect+wait)
           (visit "/e-auth/bankid/collect" :request-method :post)
           (follow-redirect)
           (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
@@ -188,6 +186,7 @@
           (follow-redirect)
           (has (some-text? "Contacting"))
           (user-authenticates! pnr)
+          (collect+wait)
           (visit "/e-auth/bankid/collect" :request-method :post)
           (follow-redirect)
           (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})

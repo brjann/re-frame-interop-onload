@@ -4,8 +4,7 @@
             [clj-http.client :as http]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [bass4.services.bankid :as bankid])
+            [clj-time.core :as t])
   (:import (java.util UUID)))
 
 (def bankid-message-map
@@ -51,17 +50,13 @@
   #_(log/debug "Creating session map for" personnummer)
   (let [sessions               (:sessions all-sessions)
         by-personnummer        (:by-personnummer all-sessions)
-        collect-force-chans    (:collect-force-chans all-sessions)
-        collect-complete-chans (:collect-complete-chans all-sessions)
         new-session            {:personnummer personnummer
                                 :order-ref    order-ref
                                 :elapsed-time 0
                                 :status       :pending
                                 :hint-code    :outstanding-transaction}]
-    {:sessions               (assoc sessions order-ref new-session)
-     :by-personnummer        (assoc by-personnummer personnummer order-ref)
-     :collect-force-chans    (assoc collect-force-chans order-ref (chan))
-     :collect-complete-chans (assoc collect-complete-chans order-ref (chan))}))
+    {:sessions        (assoc sessions order-ref new-session)
+     :by-personnummer (assoc by-personnummer personnummer order-ref)}))
 
 (defn create-session!
   [personnummer]
@@ -88,10 +83,13 @@
 
 (defn update-session-by-personnummer
   [personnummer session]
+  #_(log/debug mock-backend-sessions)
   (if-let [order-ref (get-in @mock-backend-sessions [:by-personnummer personnummer])]
     (update-session! order-ref session)
-    (throw (ex-info "Order for personnummer does not exist" {:personnummer personnummer
-                                                             :info         session}))))
+    (throw (ex-info
+             (str "Order-ref for personnummer " personnummer " does not exist")
+             {:personnummer personnummer
+              :info         session}))))
 
 (defn delete-session!
   [order-ref]

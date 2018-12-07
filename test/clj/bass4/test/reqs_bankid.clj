@@ -4,13 +4,25 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [clojure.core.async :refer [<! >! >!! <!! thread go chan timeout alts!! dropping-buffer go-loop]]
-            [bass4.test.core :refer [test-fixtures debug-headers-text? log-return disable-attack-detector *s* pass-by ->!]]
-            [bass4.services.bankid :as bankid]
+            [clojure.core.async :refer [<! >! >!! <!! thread put! go chan timeout alts!! dropping-buffer go-loop]]
+            [bass4.test.core :refer [test-fixtures
+                                     debug-headers-text?
+                                     log-return
+                                     disable-attack-detector
+                                     *s*
+                                     pass-by
+                                     ->!
+                                     sub-map?]]
             [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log]]
-            [bass4.test.bankid.mock-backend :as mock-backend]
+            [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer [wait
+                                                                        collect+wait
+                                                                        user-opens-app!
+                                                                        user-authenticates!
+                                                                        user-cancels!]]
             [clojure.data.json :as json]
-            [bass4.i18n :as i18n])
+            [bass4.i18n :as i18n]
+            [bass4.bankid.session :as bankid-session]
+            [clojure.tools.logging :as log])
   (:import (java.util UUID)))
 
 
@@ -20,35 +32,15 @@
 
 (use-fixtures
   :each
-  (mock-collect/wrap-mock :manual nil false))
+  bankid-utils/reqs-fixtures)
 
-(defn user-opens-app!
-  [x pnr]
-  (mock-backend/user-opens-app! pnr)
-  x)
 
-(defn user-cancels!
-  [x pnr]
-  (mock-backend/user-cancels! pnr)
-  x)
+(deftest test-some-map?-macro
+  (-> {:response {:body (json/write-str {"x" "y" "w" "z"})}}
+      (has (sub-map? {"x" "y" "w" "z"}))
+      (assoc-in [:response :body] (json/write-str {"x" "z" "w" "y"}))
+      (has (sub-map? {"x" "z" "w" "y"}))))
 
-(defn user-authenticates!
-  [x pnr]
-  (mock-backend/user-authenticates! pnr)
-  x)
-
-(defn user-advance-time!
-  [x pnr secs]
-  (mock-backend/user-advance-time! pnr secs)
-  x)
-
-(defn test-response
-  [response criterion]
-  (let [body         (get-in response [:response :body])
-        response-map (json/read-str body)
-        sub-map      (select-keys response-map (keys criterion))]
-    (is (= criterion sub-map)))
-  response)
 
 (defn test-bankid-auth
   [pnr]
@@ -62,15 +54,21 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+      (collect+wait)
+      (visit "/e-auth/bankid/collect" :request-method :post)
+      (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
       (user-opens-app! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "user-sign"})
+      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (user-authenticates! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (follow-redirect)
-      (test-response {"personnummer" pnr})))
+      (has (sub-map? {"personnummer" pnr}))))
 
 (defn test-bankid-cancels
   [pnr]
@@ -84,18 +82,21 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "user-sign"})
+      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (user-cancels! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "failed" "hint-code" "user-cancel"})
+      (has (sub-map? {"status" "failed" "hint-code" "user-cancel"}))
       (visit "/e-auth/bankid/reset")
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "error" "hint-code" "No uid in session"})
+      (has (sub-map? {"status" "error" "hint-code" "No uid in session"}))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
       (follow-redirect)
@@ -117,14 +118,17 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "pending" "hint-code" "user-sign"})
+      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (visit "/e-auth/bankid/cancel")
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "error" "hint-code" "No uid in session"})
+      (has (sub-map? {"status" "error" "hint-code" "No uid in session"}))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
       (follow-redirect)
@@ -132,8 +136,9 @@
 
 (defn test-bankid-concurrent
   [pnr]
-  (let [s1 (atom *s*)
-        s2 (atom *s*)]
+  (let [s1            (atom *s*)
+        s2            (atom *s*)
+        collect-chan2 (chan)]
     (->! s1
          (visit "/debug/bankid-launch"
                 :request-method
@@ -144,29 +149,35 @@
                  :redirect-fail    "/debug/bankid-test"})
          (has (status? 302))
          (follow-redirect)
+         (wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "pending" "hint-code" "outstanding-transaction"})
+         (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
          (user-opens-app! pnr)
+         (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "pending" "hint-code" "user-sign"}))
-    (->! s2
-         (visit "/debug/bankid-launch"
-                :request-method
-                :post
-                :params
-                {:personnummer     pnr
-                 :redirect-success "/debug/bankid-success"
-                 :redirect-fail    "/debug/bankid-test"})
-         (has (status? 302))
-         (follow-redirect)
-         (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "error" "error-code" "already-in-progress"})
-         #_(*poll-next*)
-         (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "error" "error-code" "already-in-progress"}))
+         (has (sub-map? {"status" "pending" "hint-code" "user-sign"})))
+    (binding [bankid-utils/collect-chan collect-chan2
+              bankid-session/wait-fn    (fn [] bankid-utils/collect-chan)
+              bankid-session/debug-chan (chan)]
+      (->! s2
+           (visit "/debug/bankid-launch"
+                  :request-method
+                  :post
+                  :params
+                  {:personnummer     pnr
+                   :redirect-success "/debug/bankid-success"
+                   :redirect-fail    "/debug/bankid-test"})
+           (has (status? 302))
+           (follow-redirect)
+           (wait)
+           (visit "/e-auth/bankid/collect" :request-method :post)
+           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))
+           (visit "/e-auth/bankid/collect" :request-method :post)
+           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))))
     (->! s1
+         (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (test-response {"status" "failed" "hint-code" "cancelled"}))))
+         (has (sub-map? {"status" "failed" "hint-code" "cancelled"})))))
 
 (defn test-bankid-ongoing
   [pnr]
@@ -186,9 +197,9 @@
       (follow (i18n/tr [:bankid/ongoing-return]))
       (has (some-text? "BankID"))
       (visit "/e-auth/bankid/cancel")
+      (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (test-response {"status" "error" "hint-code" "No uid in session"}))
-  (<!! (timeout 100))
+      (has (sub-map? {"status" "error" "hint-code" "No uid in session"})))
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
@@ -199,12 +210,14 @@
               :redirect-fail    "/debug/bankid-test"})
       (has (status? 302))
       (follow-redirect)
+      (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (visit "/login")
       (follow-redirect)
       (has (some-text? "Ongoing"))
       (follow (i18n/tr [:bankid/ongoing-cancel]))
       (follow-redirect)
+      (collect+wait)
       (has (some-text? "Login"))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
@@ -276,6 +289,11 @@
          ;; <!! can lead to total block if there are too
          ;; many of them active at the same time.
          ;; Don't do it man.
+         ;;
+         ;; NEW THOUGHTS: The go blocks start synchronous
+         ;; tests that do not park. Thus, there is no room
+         ;; over for the go async blocks. This is probably
+         ;; the problem.
          executor  #_(if go?
                        (fn []
                          (loop [f-p f-p]
@@ -298,24 +316,27 @@
                        (when (seq f-p)
                          (let [[f p] (first f-p)]
                            (println "Running loop test on " p)
-                           (thread (f p))
+                           (binding [bankid-utils/collect-chan (chan)
+                                     bankid-session/wait-fn    (fn [] bankid-utils/collect-chan)
+                                     bankid-session/debug-chan (chan)]
+                             (thread (f p)))
                            (recur (rest f-p))))))
          test-fn   #((mock-collect/wrap-mock :manual nil true) executor)]
      (test-fixtures test-fn))))
 
-
+;; THE STRESS TESTS HAVE NOT BEEN REWRITTEN/TESTED FOR THE NEW API
 (defn stress-1
   [x]
   (let [pnrs (repeatedly x #(UUID/randomUUID))]
     (doall
       (for [pnr pnrs]
         (do
-          (bankid/launch-bankid pnr "127.0.0.1"))))))
+          (bankid-session/launch-user-bankid pnr "127.0.0.1" :prod))))))
 
 ; Check that many processes can be launched in infinite loop
 #_((wrap-mock :immediate) stress-1 1000)
 
-; Abort infinite loop
+; Abort infinite loop DOESN'T WORK ANYMORE!
 #_(reset! bankid/session-statuses {})
 
 ; Multiple processes with immediate and max 10 faked collects

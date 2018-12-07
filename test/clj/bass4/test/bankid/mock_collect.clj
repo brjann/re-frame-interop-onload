@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [bass4.utils :as utils]
-            [bass4.services.bankid :as bankid]
+            [bass4.bankid.services :as bankid-service]
+            [bass4.bankid.session :as bankid-session]
             [bass4.test.bankid.mock-backend :as backend]
             [clojure.math.numeric-tower :as math])
   (:import (java.util UUID)))
@@ -21,21 +22,21 @@
   [uid]
   (if (nil? uid)
     nil
-    (let [info            (bankid/get-session-info uid)
+    (let [info            (bankid-session/get-session-info uid)
           first-status-no (:status-no info)]
       ;; Make sure two collects are performed or session is completed
       ;; before returning
       (loop [info info cycle-count 0]
-        (when (and (bankid/session-active? info)
+        (when (and (bankid-service/session-active? info)
                    (> 2 (- (:status-no info) first-status-no)))
-          (recur (bankid/get-session-info uid) (inc cycle-count))))
-      (bankid/get-session-info uid))))
+          (recur (bankid-session/get-session-info uid) (inc cycle-count))))
+      (bankid-session/get-session-info uid))))
 
 (defn wrap-set-session-status!
   [collect-log set-session-status!]
   (fn [uid status-map]
     (set-session-status! uid status-map)
-    (let [new-status (get @bankid/session-statuses uid)]
+    (let [new-status (get @bankid-session/session-statuses uid)]
       (if-let [order-ref (:order-ref new-status)]
         (swap! collect-log (fn [logs]
                              (if (get logs order-ref)
@@ -68,6 +69,7 @@
             (backend/api-collect order-ref nil))
           {:order-ref order-ref :status :failed :hint-code :user-cancel})))))
 
+
 (defn wrap-mock
   ([] (wrap-mock :immediate nil))
   ([collect-method] (wrap-mock collect-method nil))
@@ -76,22 +78,16 @@
    (assert (contains? #{:immediate :manual :wait} collect-method))
    (fn [f & args]
      (let [collect-counts (atom {})]
-       (binding [backend/mock-backend-sessions (atom {})
-                 bankid/bankid-auth            backend/api-auth
-                 bankid/bankid-collect         (collect-logger collect-counts max-collects)
-                 bankid/bankid-cancel          backend/api-cancel
-                 bankid/collect-waiter         (case collect-method
-                                                 (:immediate :manual)
-                                                 (constantly nil)
-
-                                                 :wait
-                                                 bankid/collect-waiter)
-                 bankid/log-bankid-event!      (constantly nil)
-                 bankid/get-collected-info     (if (= :manual collect-method)
-                                                 get-collected-info-mock
-                                                 bankid/get-collected-info)
-                 bankid/set-session-status!    (wrap-set-session-status! collect-counts bankid/set-session-status!)
-                 backend/*delay-collect*       http-request?]
+       (binding [backend/mock-backend-sessions      (atom {})
+                 bankid-service/bankid-auth         backend/api-auth
+                 bankid-service/bankid-collect      (collect-logger collect-counts max-collects)
+                 bankid-service/bankid-cancel       backend/api-cancel
+                 bankid-session/log-bankid-event!   (constantly nil)
+                 #_bankid-session/get-collected-info  #_(if (= :manual collect-method)
+                                                          get-collected-info-mock
+                                                          bankid-session/get-collected-info)
+                 bankid-session/set-session-status! (wrap-set-session-status! collect-counts bankid-session/set-session-status!)
+                 backend/*delay-collect*            http-request?]
          (apply f args))
        collect-counts))))
 
@@ -104,7 +100,7 @@
                              "[" (apply str (interpose ", " (quarts %))) "]")
         logs           (vals @res)
         no             (count logs)
-        complete       (map #(not (bankid/session-active? (:last-info %))) logs)
+        complete       (map #(not (bankid-service/session-active? (:last-info %))) logs)
         collect-counts (map :count logs)
         startup-times  (map #(to-msec (- (:start-time %) (:global-start-time %))) logs)
         end-times      (map #(to-msec (- (:last-time %) (:global-start-time %))) logs)

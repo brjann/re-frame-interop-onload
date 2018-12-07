@@ -130,7 +130,7 @@
                          {:text      "1. Foo\n2. Bar\n3. Baz"
                           :markdown? true}))
         (GET "/bankid-test" []
-          (layout/render "bankid-sleep-diary.html"))
+          (layout/render "bankid-test.html"))
         (POST "/bankid-launch" [& params :as request]
           (e-auth-response/launch-bankid-test
             request
