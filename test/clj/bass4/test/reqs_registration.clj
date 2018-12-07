@@ -439,8 +439,7 @@
       (let [by-username       (db/get-user-by-username {:username participant-id})
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))
-        (is (= 1 (count by-participant-id)))
-        (is (= password (:password by-username)))))))
+        (is (= 1 (count by-participant-id)))))))
 
 (def xx (atom nil))
 
