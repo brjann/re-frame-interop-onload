@@ -38,7 +38,13 @@ WHERE cm.ParentId = :user-id AND cm.Draft = 1 AND lcm.LinkeeId = :user-id LIMIT 
 -- :name save-message! :! :n
 -- :doc creates a new message record
 UPDATE c_message
-SET MessageText = :text, SendTime = unix_timestamp(now()), Subject = :subject, Changed = unix_timestamp(now()), Draft = 0
+SET
+  MessageText = :text,
+  SendTime = unix_timestamp(now()),
+  Subject = :subject,
+  Changed = unix_timestamp(now()),
+  Draft = 0,
+  ReadTime = 0
 WHERE ObjectId = :message-id;
 
 -- :name save-message-draft! :! :n
