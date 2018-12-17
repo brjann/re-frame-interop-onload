@@ -430,7 +430,7 @@
       (assoc-reg-session session (merge (get-bankid-fields session reg-params)
                                         {:bankid-done? true}))
       (assoc-in [:session :e-auth] nil))
-    (throw (ex-info "BankID returned incomplete complete info" (:e-auth session)))))
+    (throw (ex-info "BankID returned incomplete complete info" {:e-auth session}))))
 
 (defapi bankid-poster
   [project-id :- api/->int personnummer :- [[api/str? 1 30]] request]
