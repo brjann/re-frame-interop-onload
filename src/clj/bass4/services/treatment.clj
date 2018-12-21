@@ -22,12 +22,16 @@
 
 (defn- user-treatment-accesses
   [user-id]
-  (let [active-modules #(into #{} (keys (filter-map identity (map-map val-to-bool %))))]
+  ;; Evidently, the access dates can be strings when 0 and boolean when automatic access
+  ;; Bool true will lead to weird access dates (unix time 1) - which would have to be handled later.
+  (let [active-modules   #(into #{} (keys (filter-map identity (map-map val-to-bool %))))
+        access-date->int (comp str->int #(if (boolean? %) (if % 1 0) %))]
     (mapv (fn [treatment-access]
             (-> treatment-access
-                (unserialize-key :module-accesses #(map-map str->int %))
+                (unserialize-key :module-accesses #(map-map access-date->int %))
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
                 (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
+                (#(do (log/debug (:modules-activation-dates %)) %))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/get-treatment-accesses
