@@ -1,0 +1,25 @@
+{:error-email       ""
+ :error-sms         ""
+ :debug-mode        true                                    ; true in dev mode
+ :no-url-encode     false                                   ; don't change
+ :email-admin       ""
+ :dev-reroute-sms   :out                                    ; nil "+00 000 000 00" "email@example.com" :void :out
+ :dev-reroute-email :out                                    ; nil "email@example.com" :void :out
+ :timeout-soft      6000
+ :db-settings       {}                                      ; client specific overrides for settings
+ :password-hash     {:alg        :pbkdf2+sha1               ; quick password hash for dev mode
+                     :iterations 1}
+ :bankid            {:config-key :prod
+                     :configs    {:prod {:url         ""
+                                         :cert-params {:keystore         "/"
+                                                       :keystore-pass    ""
+                                                       :trust-store      ""
+                                                       :trust-store-pass ""}}
+                                  :test {:url         ""
+                                         :cert-params {:keystore         ""
+                                                       :keystore-pass    ""
+                                                       :trust-store      ""
+                                                       :trust-store-pass ""}}}}
+ :database-port     3306
+ :bass-path         "path-to-BASS4-php-root"
+ :db-mappings       {:test.localhost :test}}                ; mapping between domains and client name in PHP (local_test.php in this case)
