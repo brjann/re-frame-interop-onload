@@ -20,9 +20,11 @@
 (defn jumper-fn
   [item-ids current-id]
   (fn [jump-to]
-    (subvec item-ids
-            (+ 1 (first (keep-indexed #(when (= current-id %2) %1) item-ids)))
-            (first (keep-indexed #(when (= jump-to %2) %1) item-ids)))))
+    (let [start (+ 1 (first (keep-indexed #(when (= current-id %2) %1) item-ids)))
+          end   (first (keep-indexed #(when (= jump-to %2) %1) item-ids))]
+      (if (and start end (< start end))
+        (subvec item-ids start end)
+        []))))
 
 (defn process-item-elements
   [item-elements]
