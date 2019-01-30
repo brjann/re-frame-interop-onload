@@ -40,6 +40,10 @@ div#instrument.desktop > div {
     width: 700px;
 }
 
+div#instrument.mobile > div {
+    width: 300px;
+}
+
 div#instrument.responsive.desktop .col.cell .option-label {
     display: none;
 }
@@ -160,6 +164,21 @@ div#instrument .slider-label-right {
     display: inline-block;
     width: 100px;
 }
+
+div#instrument .slider-label-left-mobile {
+    text-align: left;
+    padding-right: 0;
+    display: inline-block;
+    width: 50%;
+}
+
+div#instrument .slider-label-right-mobile {
+    text-align: right;
+    padding-left: 0;
+    display: inline-block;
+    width: 50%;
+}
+
 
 div#instrument .slider-container {
     margin-top: 5px;

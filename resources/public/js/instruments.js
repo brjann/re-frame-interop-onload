@@ -424,11 +424,14 @@ function parse_response(element, response) {
 
    // VAS
    if (response_type == "VS") {
-      return sprintf("<div class='slider-container'><div class='slider-label-left'>%s</div>" +
-         "<div data-input = '%s' class = 'slider'></div>" +
-         "<div class='slider-label-right'>%s</div>" +
-         "<input type = 'hidden' class = 'vas' name = '%s' value = '-1'></div>",
-         response["vas-min-label"], name, response["vas-max-label"], name);
+      return sprintf("<div class='slider-container'>" +
+         "<div class='slider-label-left-mobile mobile-only'>%1$s</div>" +
+         "<div class='slider-label-right-mobile mobile-only'>%3$s</div>" +
+         "<div class='slider-label-left desktop-only'>%1$s</div>" +
+         "<div data-input = '%2$s' class = 'slider'></div>" +
+         "<div class='slider-label-right desktop-only'>%3$s</div>" +
+         "<input type = 'hidden' class = 'vas' name = '%2$s' value = '-1'></div>",
+         response["vas-min-label"], name, response["vas-max-label"]);
    }
 }
 
@@ -792,7 +795,7 @@ function resize(event) {
 }
 
 function update_size(force_paint) {
-   if (force_paint == undefined) {
+   if (force_paint === undefined) {
       force_paint = false;
    }
    var width = $(window).width();
@@ -812,7 +815,11 @@ function paint_instrument(instrument) {
       $(".col").each(function () {
          $(this).width($(this).data('width'));
          $(this).css('text-align', $(this).data('align'));
-      })
+      });
+      $('.slider').each(function () {
+         // should be - 4 but 2 seems to be added
+         $(this).width('');
+      });
    }
    else if (instrument.hasClass('mobile')) {
       $(".col").each(function () {
@@ -823,7 +830,11 @@ function paint_instrument(instrument) {
          else {
             $(this).width('auto');
          }
-      })
+      });
+      $('.slider').each(function () {
+         // should be - 4 but 2 seems to be added
+         $(this).width($(this).parents('.item-div').first().width() - 6);
+      });
    }
 }
 
