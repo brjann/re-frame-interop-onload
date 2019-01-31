@@ -31,7 +31,6 @@
                 (unserialize-key :module-accesses #(map-map access-date->int %))
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
                 (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
-                (#(do (log/debug (:modules-activation-dates %)) %))
                 (#(assoc % :submitted-homeworks (submitted-homeworks %)))
                 (dissoc :module-accesses)))
           (db/get-treatment-accesses
