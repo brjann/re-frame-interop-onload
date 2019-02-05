@@ -2,7 +2,15 @@
   (:require [bass4.utils :as utils]
             [bass4.request-state :as request-state]
             [clojure.tools.logging :as log]
-            [hugsql.core :as hugsql]))
+            [hugsql.core :as hugsql]
+            [clojure.java.jdbc :as jdbc]
+            [bass4.email :as email]
+            [clj-time.coerce :as tc]
+            [clj-time.core :as t]
+            [bass4.db-config :as db-config]
+            [bass4.config :as config]
+            [bass4.db.core :as db])
+  (:import (java.sql SQLException)))
 
 
 (def ^:dynamic *log-queries* false)
@@ -28,14 +36,50 @@
             row))
         row))))
 
+(defn- try-query
+  ([query n] (try-query query n 1))
+  ([query n try#]
+   (if (= 1 n)
+     (with-meta (query) {:tries try#})
+     (try (with-meta (query) {:tries try#})
+          (catch SQLException _
+            (try-query query (dec n) (inc try#)))))))
+
 (defn sql-wrapper
   [f this db sqlvec options]
-  (let [{:keys [val time]} (utils/time+ (apply f [this db sqlvec options]))]
+  (let [max-tries 3
+        query     #(apply f [this db sqlvec options])
+        {:keys [val time]} (utils/time+ (try
+                                          (try-query query max-tries)
+                                          (catch SQLException e
+                                            e)))
+        error?    (instance? SQLException val)
+        unix      (tc/to-epoch (t/now))
+        tries     (if error? max-tries (:tries (meta val)))]
     (request-state/swap-state! :sql-count inc 0)
     (request-state/swap-state! :sql-times #(conj % time) [])
+    (when-not (or (= db db/db-common) config/test-mode?)
+      (jdbc/execute! db/db-common [(str "INSERT INTO common_log_queries"
+                                        "(`platform`, `db`, `time`, `query`, `duration`, `tries`, `error?`, `error`)"
+                                        "VALUES ('clj', ?, ?, ?, ?, ?, ?, ?)")
+                                   (db-config/db-name)
+                                   unix
+                                   (str (first sqlvec))
+                                   time
+                                   tries
+                                   error?
+                                   (when error? (.getMessage val))]))
     (when *log-queries*
       (log/info sqlvec)
       (log/info (pr-str val)))
+    (when error?
+      (throw val))
+    (when (< 1 tries)
+      (email/queue-email!
+        (config/env :error-email)
+        "SQL required more than 1 try to succeed"
+        (str "DB: " (db-config/db-name) "\n"
+             "Time: " unix)))
     val))
 
 (defn sql-wrapper-query
