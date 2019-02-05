@@ -4,6 +4,7 @@
             [mount.core :as mount]
             [clojure.core.async :refer [alts!! timeout]]
             [bass4.db.core]
+            [bass4.db.sql-wrapper]
             [bass4.utils :refer [map-map]]
             [kerodon.core :refer :all]
             [bass4.handler :refer :all]
