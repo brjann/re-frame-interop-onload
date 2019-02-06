@@ -207,25 +207,10 @@ WHERE linkerid IN(:v*:administration-ids)
       AND (ci.ClinicianAssessed = 0 OR ci.ClinicianAssessed IS NULL)
 ORDER BY lcp.SortOrder;
 
-
--- :name lock-assessment-rounds-table! :! :n
--- :doc Lock the table for writing
-LOCK TABLES assessment_rounds WRITE;
-
--- :name get-new-round-id :? :1
--- :doc Get the max new round id
-SELECT
-  max(RoundId) + 1 AS `round-id`
-FROM assessment_rounds;
-
 -- :name insert-assessment-round! :! :n
 -- :doc insert assessment rounds from tuple param list
 INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Texts, InstrumentId, AdministrationId)
 VALUES :t*:rows;
-
--- :name unlock-tables! :! :n
-UNLOCK TABLES;
-
 
 -- :name get-current-assessment-round :? :*
 -- :doc

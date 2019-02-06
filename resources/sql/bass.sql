@@ -3,7 +3,7 @@
 CALL create_bass_objects(:class-name, :parent-id, :property-name, 1);
 
 -- :name create-bass-objects-without-parent! :? :1
--- :doc Create many new BASS objects and return the latest's ObjectId
+-- :doc Create many new BASS objects and return the last's ObjectId
 CALL create_bass_objects_without_parent(:class-name, :property-name, :count);
 
 -- :name update-objectlist-parent! :! :1
@@ -16,6 +16,10 @@ WHERE ObjectId=:object-id
 -- :doc Update an object with new parent in objectlist
 DELETE FROM objectlist
 WHERE ObjectId=:object-id;
+
+-- :name get-new-round-id! :? :1
+-- :doc C
+CALL new_assessment_round_id();
 
 -- :name get-db-title :? :1
 SELECT title

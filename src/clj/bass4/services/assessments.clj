@@ -326,13 +326,8 @@
 
 (defn- save-round!
   [round]
-  (try
-    ;; Lock table to make sure that round-id is unique
-    (db/lock-assessment-rounds-table!)
-    (let [round-id (or (:round-id (db/get-new-round-id)) 0)]
-      (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))}))
-    (finally
-      (db/unlock-tables!))))
+  (let [{:keys [round-id]} (db/get-new-round-id!)]
+    (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))})))
 
 (defn generate-assessment-round
   [user-id pending-assessments]
