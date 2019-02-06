@@ -21,7 +21,8 @@
             [clojure.java.io :as io]
             [ring.util.http-response :refer [content-type ok] :as http-response]
             [clj-time.coerce :as tc]
-            [selmer.tags :as tags]))
+            [selmer.tags :as tags]
+            [bass4.services.privacy :as privacy-service]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -94,6 +95,7 @@
         template
         (assoc params
           :dev (env :dev)
+          :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
           :page template
           :csrf-token *anti-forgery-token*
           :title (bass-service/db-title))))

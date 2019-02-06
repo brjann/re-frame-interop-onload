@@ -27,7 +27,7 @@
                             :order (:instrument-order step)
                             :count (:instrument-count step)})
       (do
-        ;; Could not find instrument - return error screen and mark step as completed
+        ;; Could not find instrument - record error and mark step as completed
         (assessments-service/step-completed! step)
         (request-state/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
         (http-response/found "/user")))))

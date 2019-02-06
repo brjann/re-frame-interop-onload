@@ -3,14 +3,15 @@
 <!-- TODO: Place confirm_logout button properly -->
 <div class="position-relative">
     <div class="d-flex justify-content-end">
+        {% if not privacy-notice-disabled? %}
         <a onclick="show_privacy_notice();" href="#" class='nav-link'>
             {%tr privacy-notice/notice-title %}
         </a>
+        {% endif %}
         <button class="btn" onclick="confirm_logout();">
             <span class="fa fa-power-off"></span></button>
     </div>
 </div>
-
 <div class="modal" tabindex="-1" role="dialog" id="privacy-notice-modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
