@@ -73,8 +73,7 @@
     (let [user-id             (user-service/create-user! 543018 {:firstname "privacy-tx-test"})
           treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                   :parent-id     user-id
-                                                                  :property-name "TreatmentAccesses"}))
-          q-id                (str user-id "XXXX")]
+                                                                  :property-name "TreatmentAccesses"}))]
       (db/create-bass-link! {:linker-id     treatment-access-id
                              :linkee-id     551356
                              :link-property "Treatment"
@@ -126,3 +125,75 @@
       (-> *s*
           (visit (str "/ext-login/check-pending/" user-id))
           (has (some-text? "0 Privacy notice missing in DB"))))))
+
+;; -----------------------
+;;  NOTICE DISABLED TESTS
+;; -----------------------
+
+(deftest privacy-consent-notice-disabled
+  (with-redefs [privacy-service/user-must-consent?       (constantly true)
+                privacy-service/privacy-notice-disabled? (constantly true)]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "privacy-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id})
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/privacy/consent")
+          (has (status? 302))
+          (visit "/privacy/consent" :request-method :post :params {:i-consent "no-consent"})
+          (has (status? 400))))))
+
+(deftest privacy-consent-consent-before-treatment-notice-disabled
+  (with-redefs [privacy-service/user-must-consent?       (constantly true)
+                privacy-service/privacy-notice-disabled? (constantly true)]
+    (let [user-id             (user-service/create-user! 543018 {:firstname "privacy-tx-test"})
+          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                  :parent-id     user-id
+                                                                  :property-name "TreatmentAccesses"}))]
+      (db/create-bass-link! {:linker-id     treatment-access-id
+                             :linkee-id     551356
+                             :link-property "Treatment"
+                             :linker-class  "cTreatmentAccess"
+                             :linkee-class  "cTreatment"})
+      (user-service/update-user-properties! user-id {:username user-id
+                                                     :password user-id})
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (follow-redirect)
+          (visit "/user")
+          (has (some-text? "Start page"))
+          (visit "/user/messages")
+          (has (status? 200))))))
+
+(deftest login-no-privacy-notice-notice-disabled
+  (with-redefs [privacy-service/privacy-notice-exists?   (constantly false)
+                privacy-service/privacy-notice-disabled? (constantly true)]
+    (-> *s*
+        (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
+        (follow-redirect)
+        (has (some-text? "Your treatment started")))))
+
+(deftest quick-login-no-privacy-notice-notice-disabled
+  (with-redefs [db/get-quick-login-settings              (constantly {:allowed? true :expiration-days 11})
+                privacy-service/privacy-notice-exists?   (constantly false)
+                privacy-service/privacy-notice-disabled? (constantly true)]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+          q-id    (str user-id "XXXX")]
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (-> *s*
+          (visit (str "/q/" q-id))
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))))))
+
+(deftest request-ext-login-no-privacy-notice-notice-disabled
+  (with-redefs [db/ext-login-settings                    (constantly {:allowed? true :ips "localhost"})
+                privacy-service/privacy-notice-exists?   (constantly false)
+                privacy-service/privacy-notice-disabled? (constantly true)]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (-> *s*
+          (visit (str "/ext-login/check-pending/" user-id))
+          (has (some-text? "http://"))))))

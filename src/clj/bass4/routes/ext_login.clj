@@ -99,7 +99,9 @@
     (if (string? user)
       (logged-response (str "0 " user))
       (cond
-        (not (privacy-service/privacy-notice-exists? (:project-id user)))
+        (and
+          (not (privacy-service/privacy-notice-disabled?))
+          (not (privacy-service/privacy-notice-exists? (:project-id user))))
         (logged-response "0 Privacy notice missing in DB")
 
         (zero? (count (assessments/get-pending-assessments (:user-id user))))

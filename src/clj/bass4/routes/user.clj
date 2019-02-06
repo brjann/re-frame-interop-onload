@@ -47,16 +47,14 @@
       (http-response/found "/no-activities")
       (assoc :session {}))))
 
-
-;; ------------------------
-;;        NEW RULES
-;; ------------------------
-
 (defn- consent-needed?
   [request _]
   (let [user (get-in request [:db :user])]
     (cond
       (:privacy-notice-consent-time user)
+      false
+
+      (privacy-service/privacy-notice-disabled?)
       false
 
       :else
