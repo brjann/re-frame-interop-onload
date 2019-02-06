@@ -93,8 +93,9 @@
   [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
     (user-service/create-user! project-id (merge insert-values
-                                                 {:PrivacyNoticeId          (:notice-id privacy-consent)
-                                                  :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))}
+                                                 (when privacy-consent
+                                                   {:PrivacyNoticeId          (:notice-id privacy-consent)
+                                                    :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))})
                                                  (when username {:username username})
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))

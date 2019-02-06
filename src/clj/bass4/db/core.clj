@@ -153,7 +153,7 @@
       (handler request))))
 
 (defn init-repl
-  ([] (init-repl :db1))
+  ([] (init-repl :bass4_test))
   ([db-name]
    (if (not (contains? db-connections db-name))
      (throw (Exception. (str "db " db-name " does not exists")))

@@ -16,6 +16,17 @@ SELECT
 FROM privacy_notices
 WHERE id = (SELECT max(id) FROM privacy_notices WHERE parent_id = 100);
 
+-- :name privacy-notice-disabled? :? :1
+-- :doc
+SELECT
+  CASE
+  WHEN (PrivacyNoticeDisabled IS NULL)
+    THEN 0
+  ELSE
+    PrivacyNoticeDisabled
+  END AS `disabled?`
+FROM c_project
+WHERE ObjectId = 100;
 
 -- :name db-privacy-user-must-consent? :? :1
 -- :doc

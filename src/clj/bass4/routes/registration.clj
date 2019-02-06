@@ -7,7 +7,8 @@
             [ring.util.http-response :as http-response]
             [clojure.tools.logging :as log]
             [bass4.route-rules :as route-rules]
-            [bass4.middleware.core :as middleware]))
+            [bass4.middleware.core :as middleware]
+            [bass4.services.privacy :as privacy-service]))
 
 (defn reg-params-mw
   [handler]
@@ -16,7 +17,9 @@
       (if-let [project-id (str->int project-id-str)]
         (if-let [reg-params (reg-service/registration-params project-id)]
           (if (:allowed? reg-params)
-            (handler (assoc-in request [:db :reg-params] reg-params))
+            (handler (assoc-in request [:db :reg-params]
+                               (merge reg-params
+                                      {:privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)})))
             (layout/text-response "Registration not allowed"))
           (layout/error-404-page))
         (layout/error-404-page)))))
@@ -43,9 +46,14 @@
     (reg-response/all-fields? (:fields reg-params) field-values)))
 
 (defn privacy-consent?
-  [{{:keys [registration]} :session} _]
-  (let [consent (:privacy-consent registration)]
-    (every? #(contains? consent %) [:notice-id :time])))
+  [{{:keys [registration]} :session {:keys [reg-params]} :db} _]
+  (or (:privacy-notice-disabled? reg-params)
+      (let [consent (:privacy-consent registration)]
+        (every? #(contains? consent %) [:notice-id :time]))))
+
+(defn privacy-disabled?
+  [{{:keys [reg-params]} :db} _]
+  (:privacy-notice-disabled? reg-params))
 
 (def route-rules
   [{:uri   "/registration/:project/captcha"
@@ -57,7 +65,8 @@
             [#'use-bankid? :ok "captcha"]]}
 
    {:uri   "/registration/:project/privacy"
-    :rules [[#'spam-check-done? :ok "captcha"]]}
+    :rules [[#'privacy-disabled? "form" :ok]
+            [#'spam-check-done? :ok "captcha"]]}
 
    {:uri   "/registration/:project/form"
     :rules [[#'spam-check-done? :ok "captcha"]

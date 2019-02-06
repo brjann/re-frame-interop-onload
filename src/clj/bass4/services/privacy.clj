@@ -49,3 +49,7 @@
   (-> (db/privacy-notice-exists? {:project-id project-id})
       (:exists?)
       (utils/val-to-bool)))
+
+(defn privacy-notice-disabled?
+  []
+  (-> (:disabled? (db/privacy-notice-disabled?))))

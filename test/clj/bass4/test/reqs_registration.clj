@@ -26,7 +26,8 @@
             [bass4.external-messages :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
             [bass4.services.attack-detector :as a-d]
-            [net.cgrand.enlive-html :as enlive]))
+            [net.cgrand.enlive-html :as enlive]
+            [bass4.services.privacy :as privacy-service]))
 
 
 (use-fixtures
@@ -572,3 +573,56 @@
               ;; Correct captcha, redirected to privacy page.
               (follow-redirect)
               (has (some-text? "Who is collecting"))))))))
+
+(deftest registration-privacy-notice-disabled
+  (with-redefs [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
+                privacy-service/privacy-notice-disabled? (constantly true)
+                reg-service/registration-params          (constantly {:allowed?               true
+                                                                      :fields                 #{:email :sms-number}
+                                                                      :group                  564616
+                                                                      :allow-duplicate-email? true
+                                                                      :allow-duplicate-sms?   true
+                                                                      :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                      :auto-username          :none})
+                passwords/letters-digits                 (constantly "METALLICA")]
+    (-> *s*
+        (visit "/registration/564610/captcha")
+        ;; Captcha session is created
+        (follow-redirect)
+        (has (some-text? "code below"))
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (has (status? 302))
+        (visit "/registration/564610/privacy")
+        (has (status? 302))
+        (visit "/registration/564610/form")
+        (has (status? 200))
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+        (has (status? 302))
+        (pass-by (messages-are?
+                   [[:email "METALLICA"]
+                    [:sms "METALLICA"]]
+                   (poll-message-chan *debug-chan* 2)))
+        (follow-redirect)
+        (has (some-text? "Validate"))
+        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+        (has (status? 302))
+        ;; Redirect to finish
+        (follow-redirect)
+        ;; Session created
+        (follow-redirect)
+        ;; Redirect to pending assessments
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (visit "/assessments")
+        (has (some-text? "AAQ"))
+        (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+        (follow-redirect)
+        (has (some-text? "Thanks"))
+        (visit "/assessments")
+        ;; Assessments completed
+        (follow-redirect)
+        ;; Redirect to finish screen
+        (follow-redirect)
+        (has (some-text? "Login")))))
