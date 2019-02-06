@@ -33,15 +33,19 @@
         - Please note that we strongly suggest that you require consent also from participants who are already in the database.
     - The privacy notice can be viewed by participants during assessments and in the treatment interface.
     - The participant stats screen shows when a participant consented and what privacy notice they consented to.
- - The whole admin interface should now be in English (please report any instances of Swedish that you see).
- - Quick login codes can now be valid for more than 99 days  
- - Assessments can now be sorted by date in the assessments view of a group or a participant.
- - VAS scales now adapt their width in mobile view.
- - Responsive instruments are now marked in the instruments over.
+- The whole admin interface should now be in English (please report any instances of Swedish that you see).
+- Quick login codes can now be valid for more than 99 days  
+- Assessments can now be sorted by date in the assessments view of a group or a participant.
+- VAS scales now adapt their width in mobile view.
+- Responsive instruments are now marked in the instruments over.
 - Limited access if participants logs in using quick login link. 
     - BASS allows for sending quick logn links to participants which gives them immediate logged in access to the platform, without providing login credentials. This is useful for collecting follow-up data but is problematic if they can access sensitive data such as conversations with therapists or homework reports. 
     - Now, if a user has logged in using a direct link , they can complete assessments. 
     - If they are also in treatment, they are now asked for their password after the assessment in order to continue to the treatment interface. Note that two-factor authentication (by SMS or email) is not used in this case since the access to the quick login link implies that the user has access to their email or mobile phone.
+- In registration, the finished screen is no longer shown after an assessment.
+    - Before, if a registration was followed by an assessment, it was possible to show the registration finished screen after the assessment.
+    - This is no longer possible. If a registration is followed by an assessment, the registration finished screen is never shown.
+    - _Therefore, any text that should follow a completed registration assessment must be part of the Thank-you text of the assessment_!  
     
  
  ## Under the hood
