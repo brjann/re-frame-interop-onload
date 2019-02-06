@@ -33,6 +33,7 @@
                    :provide-digits             "Enter the digits in the image to continue with the registration."
                    :captcha-error              "Wrong digits entered."
                    :privacy-notice-consent     "To continue with the registration you must consent to this Privacy Notice"
+                   :study-consent-checkboxes   "You need to check all checkboxes to continue."
                    :form-title                 "Enter your information here"
                    :first-name                 "First name"
                    :last-name                  "Last name"

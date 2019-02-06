@@ -1,0 +1,63 @@
+{% extends "simple.html" %}
+
+{% block content %}
+<div>
+    {% if consent-text %}
+    <form method="post">
+        <div class="markdown study-consent">
+            {{consent-text|markdown}}
+        </div>
+        <input type="hidden" value="i-consent" name="i-consent">
+        <div class="text-center">
+            <p>
+                <button onclick="return check_checkboxes();" class="btn btn-primary">{%tr i-consent %}</button>
+            </p>
+            <p>
+                <button onclick="document.location = '/registration/{{project-id}}/cancel'; return false;"
+                        class="btn btn-warning">
+                    {%tr registration/cancel %}
+                </button>
+            </p>
+        </div>
+    </form>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+        This database or project has no study consent.<br>
+        Registration cannot proceed.
+    </div>
+    {% endif %}
+</div>
+<script type="application/javascript">
+   var text_checkboxes = "{%tr registration/study-consent-checkboxes %}";
+
+   function check_checkboxes() {
+      var ok = true;
+      $('input[type="checkbox"]')
+         .each(function () {
+            var $cb = $(this);
+            if (!$cb.is(':checked')) {
+               $cb.parents('span').css('border-color', 'red');
+               ok = false;
+            }
+         });
+      if (!ok) {
+         alert(text_checkboxes);
+      }
+      return ok;
+   }
+
+   $(document).ready(function () {
+      $('input[type="checkbox"]')
+         .wrap('<span style="border: 1px solid transparent; padding: 4px;"></span>')
+         .change(function () {
+            var $cb = $(this);
+            if ($cb.is(':checked')) {
+               $cb.parents('span').css('border-color', 'transparent');
+            }
+            else {
+               $cb.parents('span').css('border-color', 'red');
+            }
+         });
+   });
+</script>
+{% endblock %}
