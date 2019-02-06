@@ -58,7 +58,8 @@
                                                              :allow-duplicate-email? true
                                                              :allow-duplicate-sms?   true
                                                              :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
+                                                             :auto-username          :none
+                                                             :study-consent?         true})
                 passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
         (visit "/registration/564610/captcha")
@@ -83,6 +84,13 @@
         (has (status? 302))
         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
         (has (status? 302))
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "I want to be in the study"))
+        (visit "/registration/564610/form")
+        (follow-redirect)
+        (has (some-text? "I want to be in the study"))
+        (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
         (follow-redirect)
         (has (some-text? "Enter your"))
         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
@@ -130,6 +138,42 @@
         ;; Redirect to finish screen
         (follow-redirect)
         (has (some-text? "Login")))))
+
+(deftest registration-no-study-consent
+  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
+                                                             :group                  564616
+                                                             :allow-duplicate-email? true
+                                                             :allow-duplicate-sms?   true
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none
+                                                             :study-consent?         false})
+                passwords/letters-digits        (constantly "METALLICA")]
+    (-> *s*
+        (visit "/registration/564610/captcha")
+        ;; Captcha session is created
+        (follow-redirect)
+        (has (some-text? "code below"))
+        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+        (follow-redirect)
+        (has (some-text? "Who is collecting the data"))
+        (visit "/registration/564610/privacy" :request-method :post :params {})
+        (pass-by (messages-are?
+                   [[:email "API"]]
+                   (poll-message-chan *debug-chan*)))
+        (has (status? 400))
+        (visit "/registration/564610/form")
+        (has (status? 302))
+        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+        (has (status? 302))
+        (follow-redirect)
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/study-consent")
+        (follow-redirect)
+        (has (some-text? "Enter your"))
+        (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
+        (has (status? 400)))))
 
 (deftest registration-change-sms
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
