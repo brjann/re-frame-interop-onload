@@ -158,14 +158,15 @@
       (assoc-reg-session session {:credentials {:user-id user-id}}))))
 
 (defn- create-user
-  [project-id field-values privacy-consent reg-params session]
+  [project-id field-values reg-params session]
   (let [participant-id (gen-participant-id project-id reg-params)
         username       (gen-username field-values participant-id reg-params)
         field-values   (gen-password field-values reg-params)
         user-id        (reg-service/create-user!
                          project-id
                          field-values
-                         privacy-consent
+                         (get-in session [:registration :privacy-consent])
+                         (get-in session [:registration :study-consent])
                          username
                          participant-id
                          (:group reg-params))]
@@ -178,11 +179,11 @@
           session))))
 
 (defn- complete-registration
-  [project-id field-values privacy-consent reg-params session]
+  [project-id field-values reg-params session]
   (if (duplicate-conflict? field-values reg-params)
     (-> (http-response/found (str "/registration/" project-id "/duplicate"))
         (reset-reg-session session))
-    (create-user project-id field-values privacy-consent reg-params session)))
+    (create-user project-id field-values reg-params session)))
 
 ;; ---------------
 ;;     CAPTCHA
@@ -373,8 +374,8 @@
         (complete-registration
           project-id
           field-values
-          (:privacy-consent reg-session)
-          reg-params session)
+          reg-params
+          session)
         (if correct?
           (let [fixed-fields (:fixed-fields reg-session)
                 field-name   (if (= :code-email code-key)
@@ -540,7 +541,6 @@
       (complete-registration
         project-id
         field-values
-        (:privacy-consent reg-session)
         reg-params
         session))))
 
@@ -550,20 +550,20 @@
 ;; -----------------
 (defapi study-consent-page
   [project-id :- api/->int]
-  (let [consent-text (reg-service/registration-study-consent-text project-id)]
+  (let [consent-text (:consent-text (reg-service/registration-study-consent project-id))]
     (layout/render "registration-study-consent.html"
                    {:project-id   project-id
                     :consent-text consent-text})))
 
 (defapi handle-study-consent
   [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
-  (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
-    (if-not (and (:notice-text privacy-notice) (= "i-consent" i-consent))
+  (let [consent-text (reg-service/registration-study-consent project-id)]
+    (if-not (and (:consent-text consent-text) (= "i-consent" i-consent))
       (layout/error-400-page)
       (->
         (http-response/found (str "/registration/" project-id "/form"))
-        (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
-                                                      :time      (t/now)}})))))
+        (assoc-reg-session session {:study-consent {:consent-id (:consent-id consent-text)
+                                                    :time       (t/now)}})))))
 
 ;; --------------
 ;;    PRIVACY

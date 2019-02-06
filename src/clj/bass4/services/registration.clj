@@ -89,17 +89,20 @@
       {:fields fields :group group :sms-countries sms-countries}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
 
-(defn registration-study-consent-text
+(defn registration-study-consent
   [project-id]
-  (:consent-text (db/registration-study-consent-text {:project-id project-id})))
+  (db/registration-study-consent {:project-id project-id}))
 
 (defn create-user!
-  [project-id field-values privacy-consent username participant-id group]
+  [project-id field-values privacy-consent study-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
     (user-service/create-user! project-id (merge insert-values
                                                  (when privacy-consent
                                                    {:PrivacyNoticeId          (:notice-id privacy-consent)
                                                     :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))})
+                                                 (when study-consent
+                                                   {:StudyConsentId   (:consent-id study-consent)
+                                                    :StudyConsentTime (b-time/to-unix (:time study-consent))})
                                                  (when username {:username username})
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))

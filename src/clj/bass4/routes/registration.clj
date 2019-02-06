@@ -51,6 +51,12 @@
       (let [consent (:privacy-consent registration)]
         (every? #(contains? consent %) [:notice-id :time]))))
 
+(defn study-consent-required?
+  [{{:keys [registration]} :session {:keys [reg-params]} :db} _]
+  (and (:study-consent? reg-params)
+       (not (let [consent (:study-consent registration)]
+              (every? #(contains? consent %) [:consent-id :time])))))
+
 (defn privacy-disabled?
   [{{:keys [reg-params]} :db} _]
   (:privacy-notice-disabled? reg-params))
@@ -65,16 +71,23 @@
             [#'use-bankid? :ok "captcha"]]}
 
    {:uri   "/registration/:project/privacy"
-    :rules [[#'privacy-disabled? "form" :ok]
-            [#'spam-check-done? :ok "captcha"]]}
+    :rules [[#'spam-check-done? :ok "captcha"]
+            [#'privacy-disabled? "form" :ok]]}
+
+   {:uri   "/registration/:project/study-consent"
+    :rules [[#'spam-check-done? :ok "captcha"]
+            [#'privacy-consent? :ok "privacy"]
+            [#'study-consent-required? :ok "form"]]}
 
    {:uri   "/registration/:project/form"
     :rules [[#'spam-check-done? :ok "captcha"]
-            [#'privacy-consent? :ok "privacy"]]}
+            [#'privacy-consent? :ok "privacy"]
+            [#'study-consent-required? "study-consent" :ok]]}
 
    {:uri   "/registration/:project/validate*"
     :rules [[#'spam-check-done? :ok "captcha"]
             [#'privacy-consent? :ok "privacy"]
+            [#'study-consent-required? "study-consent" :ok]
             [#'all-fields-present? :ok "form"]
             [#'needs-validation? :ok "form"]]}])
 

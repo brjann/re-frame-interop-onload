@@ -442,8 +442,6 @@
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
 
-(def xx (atom nil))
-
 (deftest registration-auto-password
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                 reg-service/registration-params (constantly {:allowed?               true

@@ -32,8 +32,9 @@ SELECT
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
--- :name registration-study-consent-text :? :1
+-- :name registration-study-consent :? :1
 SELECT
+id AS `consent-id`,
 consent_text AS `consent-text`
 FROM study_consent_texts
 WHERE id = (SELECT max(id) FROM study_consent_texts WHERE project_id = :project-id);
