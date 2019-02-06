@@ -565,6 +565,27 @@
         (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
                                                       :time      (t/now)}})))))
 
+
+;; -----------------
+;;   STUDY CONSENT
+;; -----------------
+(defapi study-consent-page
+  [project-id :- api/->int]
+  (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (layout/render "registration-privacy-notice.html"
+                   {:project-id     project-id
+                    :privacy-notice (:notice-text privacy-notice)})))
+
+(defapi handle-study-consent
+  [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
+  (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
+    (if-not (and (:notice-text privacy-notice) (= "i-consent" i-consent))
+      (layout/error-400-page)
+      (->
+        (http-response/found (str "/registration/" project-id "/form"))
+        (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
+                                                      :time      (t/now)}})))))
+
 ;; --------------
 ;;     CANCEL
 ;; --------------

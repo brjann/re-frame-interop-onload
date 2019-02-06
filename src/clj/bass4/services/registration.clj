@@ -89,6 +89,10 @@
       {:fields fields :group group :sms-countries sms-countries}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
 
+(defn registration-study-consent-text
+  [project-id]
+  (:consent-text (db/registration-study-consent-text {:project-id project-id})))
+
 (defn create-user!
   [project-id field-values privacy-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]

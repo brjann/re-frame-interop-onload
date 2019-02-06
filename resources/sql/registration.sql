@@ -29,9 +29,14 @@ SELECT
   RegistrationIsMarkdown AS `markdown?`,
   RegistrationUseBankID AS `bankid?`,
   RegistrationAllowChangeBankIDNames AS `bankid-change-names?`
-
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
+
+-- :name registration-study-consent-text :? :1
+SELECT
+consent_text AS `consent-text`
+FROM study_consent_texts
+WHERE id = (SELECT max(id) FROM study_consent_texts WHERE project_id = :project-id);
 
 -- :name registration-params :? :1
 SELECT
@@ -47,7 +52,8 @@ SELECT
   RegistrationAutoIdLength AS `auto-id-length`,
   RegistrationAutoPassword AS `auto-password?`,
   RegistrationUseBankID AS `bankid?`,
-  RegistrationAllowChangeBankIDNames AS `bankid-change-names?`
+  RegistrationAllowChangeBankIDNames AS `bankid-change-names?`,
+  RegistrationConsentRequired AS `study-consent?`
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 

@@ -97,6 +97,11 @@
     (GET "/info" []
       (reg-response/info-page project-id))
 
+    (GET "/captcha" []
+      (reg-response/captcha project-id session))
+    (POST "/captcha" [captcha]
+      (reg-response/validate-captcha project-id captcha session))
+
     (GET "/bankid" []
       (reg-response/bankid-page project-id))
     (POST "/bankid" [personnummer :as request]
@@ -109,10 +114,10 @@
     (POST "/privacy" [i-consent]
       (reg-response/handle-privacy-consent project-id i-consent session))
 
-    (GET "/captcha" []
-      (reg-response/captcha project-id session))
-    (POST "/captcha" [captcha]
-      (reg-response/validate-captcha project-id captcha session))
+    (GET "/study-consent" []
+      (reg-response/study-consent-page project-id))
+    (POST "/study-consent" [i-consent]
+      (reg-response/handle-study-consent project-id i-consent session))
 
     (GET "/form" []
       (reg-response/registration-page project-id session))
