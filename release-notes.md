@@ -39,7 +39,7 @@
     - New passwords must include at least 8 characters, upper- and lowercase and number.
     - A password can only be seen when it's created. It can then also be sent to the participant via SMS.  
 - Password lost function for participants.
-    - Needs to be enabled under Security settings (we recommend not using the "confirm email address"-option).
+    - Needs to be enabled under Security settings (we recommend **not** using the "confirm email address"-option).
     - If participants have lost their password but know their login or email address, they are flagged.
     - Note: There is no way for a participant to automatically get a new password - they are flagged if they report lost password.
 - Quick login codes can now be valid for more than 99 days  
@@ -68,7 +68,9 @@
      
 ## Under the hood
  - Therapist passwords are now stored with better encryption.
+ - Instrument answers are now validated both client- and server-side.
  - In the participant search, search parameters are saved in session storage instead of local browser storage (i.e., they are deleted when browser is closed).
  - All data posts are validated and coerced.
  - Centralized security components.
- - All emails and SMS in Clojure platform are sent asynchronously to improve user experience.
+ - All emails and SMS in Clojure app are sent asynchronously to improve user experience.
+ - Improved the embedded rendering in Clojure app and added restarting of state components.  
