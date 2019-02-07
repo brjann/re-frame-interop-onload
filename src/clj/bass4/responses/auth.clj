@@ -173,6 +173,8 @@
 
 (defn create-new-session
   [user additional]
+  (when (not (:project-id user))
+    (throw (ex-info "Incomplete user map submitted to create session" user)))
   (auth-service/register-user-login! (:user-id user))
   (when (and (not (privacy-service/privacy-notice-disabled?))
              (not (privacy-service/privacy-notice-exists? (:project-id user))))

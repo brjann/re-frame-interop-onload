@@ -1,4 +1,5 @@
 # Version 4.1
+Version 4.1 will be released on 2019-02-19.
 (Changes marked with **NOTE** may require your action after the upgrade)
 
 ## Registration
@@ -73,4 +74,5 @@
  - All data posts are validated and coerced.
  - Centralized security components.
  - All emails and SMS in Clojure app are sent asynchronously to improve user experience.
- - Improved the embedded rendering in Clojure app and added restarting of state components.  
+ - Improved the embedded rendering in Clojure app. 
+ - Added restarting of state components, meaning that Clojure app won't have to restart on config changes add added databases.  

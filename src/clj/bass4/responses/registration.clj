@@ -22,7 +22,8 @@
             [bass4.responses.e-auth :as e-auth]
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.services.privacy :as privacy-service])
+            [bass4.services.privacy :as privacy-service]
+            [bass4.services.user :as user-service])
   (:import (java.util UUID)))
 
 (def password-regex
@@ -58,7 +59,7 @@
   (->
     (http-response/found "/user")
     (assoc :session (res-auth/create-new-session
-                      {:user-id user-id}
+                      (user-service/get-user user-id)
                       {:external-login? true}))))
 
 (defapi finished-router
