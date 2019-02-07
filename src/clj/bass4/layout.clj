@@ -125,7 +125,7 @@
   ([] (error-422 ""))
   ([body]
    {:status  422
-    :headers {}
+    :headers {"Content-Type" "text/plain; charset=utf-8"}
     :body    body}))
 
 (defn error-429
@@ -137,7 +137,7 @@
   have been made with body equal to number of second until request can be retried"
   [secs]
   {:status  429
-   :headers {}
+   :headers {"Content-Type" "text/plain; charset=utf-8"}
    :body    (str secs)})
 
 (defn error-403-page
