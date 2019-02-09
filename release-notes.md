@@ -34,7 +34,7 @@ Version 4.1 will be released on 2019-02-19.
 ## Participant passwords and login
 - Login now requires that a privacy notice exists (see above)
 - All participant passwords are now encrypted and require complexity.
-    - Old passwords are automatically converted into encrypted passwords.
+    - Old passwords are automatically converted into encrypted passwords. *So, no passwords are lost!*
     - Passwords are no longer shown and cannot be recovered if lost. 
     - If a password is lost, a new password needs to be created.  
     - New passwords must include at least 8 characters, upper- and lowercase and number.
@@ -63,6 +63,10 @@ Version 4.1 will be released on 2019-02-19.
 - VAS scales now adapt their width in mobile view.
 - Responsive instruments are now marked in the instruments overview.
 - BASS4 preview of instruments now only show desktop view for non-responsive instruments 
+
+## Treatment boxes
+- **NOTE** The syntax for importing data from other worksheets has changed. Before it was "dataname.valuename" but now it's "dataname$valuename". 
+- If you have an active treatment that uses the data import function, you must revise accordingly. 
 
 ## Misc
 - The whole admin interface should now be in English (please report any instances of Swedish that you see).
