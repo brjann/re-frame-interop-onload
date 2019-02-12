@@ -5,7 +5,7 @@
 
   :dependencies [
                  ; Clojure libraries
-                 [org.clojure/clojure "1.9.0"]              ; https://github.com/clojure/clojure
+                 [org.clojure/clojure "1.10.0"]             ; https://github.com/clojure/clojure
                  [org.clojure/core.async "0.4.474"]         ; https://github.com/clojure/core.async
                  [org.clojure/tools.cli "0.4.1"]            ; https://github.com/clojure/tools.cli
                  [org.clojure/tools.logging "0.4.1"]        ; https://github.com/clojure/tools.logging

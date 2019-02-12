@@ -159,7 +159,7 @@
      :body    "No such DB"}))
 
 (defn init-repl
-  ([] (init-repl :bass4_test))
+  ([] (init-repl :dev))
   ([db-name]
    (if (not (contains? db-connections db-name))
      (throw (Exception. (str "db " db-name " does not exists")))
