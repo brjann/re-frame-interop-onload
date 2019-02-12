@@ -15,7 +15,7 @@
   (let [file-php        (fn [content]
                           (str "File.php?uploadedfile="
                                (url-escape (:file-path content))))
-        base-path       (str "/user/module/" (:module-id module))
+        base-path       (str "/user/tx/module/" (:module-id module))
         worksheet-links (fn [worksheet]
                           [(when (:has-text? worksheet)
                              {:link (str base-path "/worksheet/" (:content-id worksheet))

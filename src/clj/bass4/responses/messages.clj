@@ -22,7 +22,7 @@
 (defapi save-message
   [user-id :- integer? text :- [[api/str? 1 5000]]]
   (messages-service/save-message! user-id text)
-  (http-response/found "/user/messages"))
+  (http-response/found "messages"))
 
 (defapi save-draft
   [user-id :- integer? text :- [[api/str? 0 5000]]]

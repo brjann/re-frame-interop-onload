@@ -119,21 +119,21 @@
 (deftest request-double-authentication
   (-> *s*
       (modify-session {:user-id 536975 :double-auth-code "666-666-666"})
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 302))
       (follow-redirect)
       (has (some-text? "666-666-666"))
       (visit "/double-auth")
       (has (some-text? "666-666-666"))
       (modify-session {:double-authed? true})
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 (deftest request-double-authentication-no-re-auth
   (-> *s*
       (modify-session {:user-id 536975 :double-auth-code "666-666-666" :external-login? true})
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 (deftest request-no-double-authentication
@@ -159,17 +159,17 @@
 
 (deftest request-403
   (-> *s*
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 403))))
 
 (deftest request-re-auth
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth true})
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 302))
       (follow-redirect)
       (has (some-text? "Authenticate again"))))
@@ -178,10 +178,10 @@
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth true :external-login? true})
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 (deftest request-re-auth-pwd
@@ -195,9 +195,9 @@
 (deftest request-re-auth-pwd-redirect
   (is (= true (-> *s*
                   (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
-                  (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/messages"})
+                  (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/tx/messages"})
                   (get-in [:response :headers "Location"])
-                  (.contains "/user/messages")))))
+                  (.contains "/user/tx/messages")))))
 
 (deftest request-re-auth-pwd-ajax
   (-> *s*
@@ -242,19 +242,19 @@
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true})
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))
       (visit "/debug/session")
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 302))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 302))
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 
@@ -262,13 +262,13 @@
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true :external-login? true})
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))
       (visit "/debug/session")
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 (deftest request-re-auth-last-request-time2
@@ -277,12 +277,12 @@
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (follow-redirect)
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))
 
 
@@ -292,7 +292,7 @@
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
       (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 302))
       (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
       (visit "/debug/session")
@@ -300,5 +300,5 @@
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (follow-redirect)
       (visit "/user")
-      (visit "/user/messages")
+      (visit "/user/tx/messages")
       (has (status? 200))))

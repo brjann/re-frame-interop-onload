@@ -29,6 +29,7 @@
   ((-> handler
        user-routes/user-routes-mw
        user-routes/assessment-routes-mw
+       user-routes/user-re-routes-mw
        user-routes/ajax-user-routes-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw
@@ -48,7 +49,8 @@
     #'auth-routes
     #'lost-password-routes
     #'user-routes/assessment-routes
-    #'user-routes/user-routes
+    #'user-routes/user-reroute
+    #'user-routes/tx-routes
     #'user-routes/privacy-consent-routes
     #'user-routes/ajax-user-routes
     (-> #'e-auth-routes

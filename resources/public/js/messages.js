@@ -16,7 +16,7 @@ $(document).ready(function(){
 				var save_text = text_input.val();
 				var save_subject = subject_input.val();
 				$.ajax(
-					"/user/message-save-draft",
+               "/user/tx/message-save-draft",
 					{
 						method: "post",
 						data: {
@@ -59,7 +59,7 @@ $(document).ready(function(){
             // message.find('.visibility').text(time);
 				if (time >= 5) {
 					$.ajax(
-						'/user/message-read',
+                  '/user/tx/message-read',
 						{
 							method: 'post',
 							data: {'message-id': id.substr(8)},
