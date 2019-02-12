@@ -73,7 +73,7 @@
 
 (defn db-connect!
   [local-config]
-  (let [url (db-url local-config (env :database-port))]
+  (let [url (db-url local-config (config/env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
       (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false&useSSL=false")
@@ -82,7 +82,7 @@
                                    :maximum-pool-size 5})]
         (log/info (str (:name local-config) " attached"))
         (jdbc/execute! conn "SET time_zone = '+00:00';")
-        (when-let [sql-mode (get-in env [:db-settings :sql-mode])]
+        (when-let [sql-mode (get-in config/env [:db-settings :sql-mode])]
           (log/info "Setting SQL mode to " sql-mode)
           (jdbc/execute! conn (str "SET sql_mode = '" sql-mode "';")))
         conn))))
@@ -137,9 +137,9 @@
   (let [db-mappings (env :db-mappings)
         host        (keyword (h-utils/get-server request))
         db-name     (host-db host db-mappings)]
-    (if (contains? db-connections db-name)
+    (when (contains? db-connections db-name)
       [db-name @(get db-connections db-name)]
-      (throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
+      #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
 ;; occur after this file has changed? It seems that mount stops and starts the
@@ -149,11 +149,14 @@
 ;; environment.
 (defn db-middleware
   [handler request]
-  (let [[db-name db-conn] (resolve-db request)]
-    (request-state/set-state! :name (name db-name))
+  (if-let [[db-name db-conn] (resolve-db request)]
     (binding [*db*                     db-conn
               db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
-      (handler request))))
+      (request-state/set-state! :name (name db-name))
+      (handler request))
+    {:status  404
+     :headers {"Content-Type" "text/plain; charset=utf-8"}
+     :body    "No such DB"}))
 
 (defn init-repl
   ([] (init-repl :bass4_test))
