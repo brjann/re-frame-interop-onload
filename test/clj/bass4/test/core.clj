@@ -71,7 +71,7 @@
     #'bass4.config/env
     #'db-config/local-configs
     #'db-config/common-config
-    #'bass4.db.core/metrics-reg
+    ;#'bass4.db.core/metrics-reg
     #'bass4.db.core/db-connections
     #'bass4.db.core/db-common
     #'bass4.i18n/i18n-map)

@@ -60,7 +60,7 @@
     (:db-password local-config)))
 
 
-(defstate metrics-reg
+#_(defstate metrics-reg
   :start (let [metrics-reg (metrics/new-registry)
                CR          (csv/reporter
                              metrics-reg
@@ -76,12 +76,15 @@
   (let [url (db-url local-config (env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
-      (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false")
+      (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false&useSSL=false")
                                    :pool-name         (:name local-config)
-                                   :metric-registry   metrics-reg
+                                   ;:metric-registry   metrics-reg
                                    :maximum-pool-size 5})]
         (log/info (str (:name local-config) " attached"))
         (jdbc/execute! conn "SET time_zone = '+00:00';")
+        (when-let [sql-mode (get-in env [:db-settings :sql-mode])]
+          (log/info "Setting SQL mode to " sql-mode)
+          (jdbc/execute! conn (str "SET sql_mode = '" sql-mode "';")))
         conn))))
 
 (defn db-disconnect!
