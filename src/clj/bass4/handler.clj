@@ -29,7 +29,7 @@
   ((-> handler
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
-       user-routes/user-re-routes-mw
+       user-routes/root-reroute-mw
        user-routes/user-routes-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw

@@ -119,7 +119,7 @@
     (route-rules/wrap-rules [{:uri   "*"
                               :rules [[#'consent-needed? "/user/privacy/consent" :ok]]}])))
 
-(defn user-re-routes-mw
+(defn root-reroute-mw
   "Rerouting when accessing /user/"
   [handler]
   (route-rules/wrap-route-mw
