@@ -12,12 +12,8 @@
     [bass4.request-state :as request-state]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
-    #_[bass4.db.sql-wrapper]
     [bass4.http-utils :as h-utils]
-    [metrics.core :as metrics]
-    [metrics.reporters.csv :as csv]
-    [bass4.config :as config])
-  (:import (java.util Locale)))
+    [bass4.config :as config]))
 
 ;----------------
 ; SETUP DB STATE

@@ -45,7 +45,6 @@
                  [clj-time "0.15.0"]                        ; https://github.com/clj-time/clj-time
                  [camel-snake-kebab "0.4.0"]                ; https://github.com/qerub/camel-snake-kebab
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
-                 [metrics-clojure "2.10.0"]                 ; https://github.com/metrics-clojure/metrics-clojure
 
                  ; Webjars
                  [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap
