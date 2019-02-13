@@ -94,49 +94,63 @@
   [{:keys [session]} _]
   (:limited-access? session))
 
-
-(def user-route-rules
-  [{:uri   "/user/tx*"
-    :rules [[#'consent-needed? "/user/privacy/consent" :ok]
-            [#'assessments-pending? "/user/assessments" :ok]
-            [#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]
-            [#'limited-access? "/escalate" :ok]]}
-   {:uri   "/user/tx/message*"
-    :rules [[#'messages? :ok 404]
-            [#'send-messages? :ok 404]]}])
-
-(def privacy-consent-rules
-  [{:uri   "/user/privacy/consent"
-    :rules [[#'consent-needed? :ok "/user"]]}])
-
-(def assessment-route-rules
-  [{:uri   "/user/assessments*"
-    :rules [[#'consent-needed? "/user/privacy/consent" :ok]]}])
-
 (defn user-routes-mw
+  "Middleware for all /user routes"
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/user/tx*"]
-    (route-rules/wrap-rules user-route-rules)
-    #'user-response/treatment-mw                            ; Adds treatment info to request
+    ["/user/*" "/user"]
     #'user-response/check-assessments-mw
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
 
+(defn user-tx-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user/tx" "/user/tx/*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]
+                                      [#'assessments-pending? "/user/assessments" :ok]
+                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/login" :ok]
+                                      [#'limited-access? "/escalate" :ok]]}
+                             {:uri   "/user/tx/message*"
+                              :rules [[#'messages? :ok 404]
+                                      [#'send-messages? :ok 404]]}])
+    #'user-response/treatment-mw))
+
 (defn privacy-consent-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
     ["/user/privacy/*"]
-    (route-rules/wrap-rules privacy-consent-rules)
-    #'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? :ok "/user"]]}])))
+
+(defn assessment-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user/assessments*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]]}])))
+
+(defn user-re-routes-mw
+  "Rerouting when accessing /user/"
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user" "/user/"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]
+                                      [#'assessments-pending? "/user/assessments" :ok]
+                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/login" :ok]]}])
+    #'user-response/treatment-mw))
+
 
 (defn ajax-user-routes-mw
   [handler]
@@ -147,37 +161,6 @@
     #_#'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
     #_#'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
-
-(defn assessment-routes-mw
-  [handler]
-  (route-rules/wrap-route-mw
-    handler
-    ["/user/assessments*"]
-    (route-rules/wrap-rules assessment-route-rules)
-    #'user-response/check-assessments-mw
-    #'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
-
-(defn user-re-routes-mw
-  [handler]
-  (route-rules/wrap-route-mw
-    handler
-    ["/user" "/user/"]
-    (route-rules/wrap-rules
-      [{:uri   "/user*"
-        :rules [[#'consent-needed? "/user/privacy/consent" :ok]
-                [#'assessments-pending? "/user/assessments" :ok]
-                [#'no-treatment-no-assessments? "/no-activities" :ok]
-                [#'no-treatment-but-assessments? "/login" :ok]
-                #_[#'limited-access? "/escalate" :ok]]}])
-    #'user-response/treatment-mw
-    #'user-response/check-assessments-mw
-    #'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
 
 (defroutes user-reroute

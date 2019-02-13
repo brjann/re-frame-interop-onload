@@ -27,9 +27,10 @@
 (defn router-middleware
   [handler request]
   ((-> handler
-       user-routes/user-routes-mw
+       user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/user-re-routes-mw
+       user-routes/user-routes-mw
        user-routes/ajax-user-routes-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw
