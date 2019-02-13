@@ -77,7 +77,7 @@
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
-  (bass4.db.core/init-repl :bass4_test)
+  (bass4.db.core/init-repl :test)
   #_(reset! bankid/session-statuses {})
   (binding [email/*email-reroute*            :void
             sms/*sms-reroute*                :void

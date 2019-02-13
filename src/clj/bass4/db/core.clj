@@ -61,14 +61,14 @@
 
 
 #_(defstate metrics-reg
-  :start (let [metrics-reg (metrics/new-registry)
-               CR          (csv/reporter
-                             metrics-reg
-                             (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
-               report-freq (env :metrics-report-freq 60)]
-           (csv/start CR report-freq)
-           metrics-reg)
-  :stop (do))
+    :start (let [metrics-reg (metrics/new-registry)
+                 CR          (csv/reporter
+                               metrics-reg
+                               (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
+                 report-freq (env :metrics-report-freq 60)]
+             (csv/start CR report-freq)
+             metrics-reg)
+    :stop (do))
 
 
 (defn db-connect!
@@ -76,10 +76,11 @@
   (let [url (db-url local-config (config/env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
-      (let [conn (conman/connect! {:jdbc-url          (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false&useSSL=false")
-                                   :pool-name         (:name local-config)
-                                   ;:metric-registry   metrics-reg
-                                   :maximum-pool-size 5})]
+      (let [conn (conman/connect! {:jdbc-url            (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false&useSSL=false")
+                                   :pool-name           (:name local-config)
+                                   ;:metric-registry    metrics-reg
+                                   :maximum-pool-size   5
+                                   :connection-init-sql "SET time_zone = '+00:00';"})]
         (log/info (str (:name local-config) " attached"))
         (jdbc/execute! conn "SET time_zone = '+00:00';")
         (when-let [sql-mode (get-in config/env [:db-settings :sql-mode])]
