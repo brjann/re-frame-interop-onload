@@ -17,36 +17,6 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.responses.error-report :as error-report-response]))
 
-(defn request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
-
-;; TODO: Weird stuff going on here. This has been fixed - no?
-;; The request is identified as http by (request/request-url request)
-;; On the server with reverse proxy, some type of rewrite causes the url
-;; to be double encoded. This is a hack until the problem can be solved
-;; in Apache.
-;(defn url-encode-x
-;  "Return the request part of the request."
-;  [string]
-;  (if (env :no-url-encode)
-;    string
-;    (codec/url-encode string)))
-
-
-(defn no-treatment-response
-  [session]
-  (if (:assessments-performed? session)
-    (->
-      (http-response/found "/login")
-      (assoc :session {}))
-    (->
-      (http-response/found "/no-activities")
-      (assoc :session {}))))
-
 
 ; -----------------------
 ;     RULE PREDICATES
