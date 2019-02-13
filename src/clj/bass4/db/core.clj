@@ -97,9 +97,18 @@
     (log/info (str "Detaching db"))
     (conman/disconnect! @db-conn)))
 
+
+;; Bind queries to *db* dynamic variable which is bound
+;; to each clients database before executing queries
+(def ^:dynamic *db* nil)
+
 (defstate db-connections
-  :start (map-map db-connect!
-                  db-config/local-configs)
+  :start (let [x (map-map db-connect!
+                          db-config/local-configs)]
+           (when (config/env :dev)
+             (log/info "Setting *db* to dev database")
+             (def ^:dynamic *db* @(get x (config/env :dev-db))))
+           x)
   :stop (map-map db-disconnect!
                  db-connections))
 
@@ -107,11 +116,6 @@
   :start @(db-connect! db-config/common-config)
   :stop (do (log/info "Detaching common")
             (conman/disconnect! db-common)))
-
-
-;; Bind queries to *db* dynamic variable which is bound
-;; to each clients database before executing queries
-(def ^:dynamic *db* nil)
 
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
@@ -161,14 +165,3 @@
     {:status  404
      :headers {"Content-Type" "text/plain; charset=utf-8"}
      :body    "No such DB"}))
-
-(defn init-repl
-  ([] (init-repl :dev))
-  ([db-name]
-   (if (not (contains? db-connections db-name))
-     (throw (Exception. (str "db " db-name " does not exists")))
-     (do
-       (alter-var-root (var host-db) (constantly (constantly db-name)))
-       (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
-       (alter-var-root (var db-config/*local-config*) (constantly (merge db-config/local-defaults (get db-config/local-configs db-name))))
-       (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))))
