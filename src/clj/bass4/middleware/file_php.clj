@@ -1,7 +1,9 @@
 (ns bass4.middleware.file-php
   (:require [bass4.layout :as layout]
             [bass4.services.bass :as bass]
-            [bass4.file-response :as file]))
+            [bass4.file-response :as file]
+            [ring.util.http-response :as http-response]
+            [clojure.tools.logging :as log]))
 
 
 
@@ -20,13 +22,14 @@
                     (< 8 length)
                     (= "File.php" (subs uri (- length 8))))]
     (if file-php?
-      (let [file (->> (cond
-                        (:uploadedfile params)
-                        (bass/uploaded-file (:uploadedfile params))
+      (let [response (->> (cond
+                            (:uploadedfile params)
+                            (let [upload-dir (str (bass/db-dir "upload"))]
+                              (http-response/file-response (:uploadedfile params) {:root upload-dir}))
 
-                        (:uid params)
-                        (bass/uid-file (:uid params))))]
-        (if file
-          (file/file-response file)
+                            (:uid params)
+                            (bass/uid-file (:uid params))))]
+        (if response
+          (file/file-headers response)
           (layout/error-404-page "File not found")))
       (handler request))))

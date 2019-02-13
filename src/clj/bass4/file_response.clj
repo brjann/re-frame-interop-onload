@@ -692,12 +692,14 @@
                  "zir"         "application/vnd.zul",
                  "zmm"         "application/vnd.handheld-entertainment+xml"})
 
-(defn file-headers
+(defn
+  file-headers
   [response]
-  (let [file (:body response)]
-    (-> response
-        (http-response/header "Content-Disposition" (str "filename= \"" (.getName file) "\""))
-        (http-response/header "Content-Type" (mime-type/ext-mime-type (.getName file) mime-types)))))
+  (when response
+    (let [file (:body response)]
+      (-> response
+          (http-response/header "Content-Disposition" (str "filename= \"" (.getName file) "\""))
+          (http-response/header "Content-Type" (mime-type/ext-mime-type (.getName file) mime-types))))))
 
 (defn file-response
   [file]
