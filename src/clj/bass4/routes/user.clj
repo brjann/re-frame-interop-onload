@@ -47,6 +47,11 @@
       (http-response/found "/no-activities")
       (assoc :session {}))))
 
+
+; -----------------------
+;     RULE PREDICATES
+; -----------------------
+
 (defn- consent-needed?
   [request _]
   (let [user (get-in request [:db :user])]
@@ -93,6 +98,12 @@
 (defn limited-access?
   [{:keys [session]} _]
   (:limited-access? session))
+
+
+; -----------------------
+;    ROUTES MIDDLEWARE
+; -----------------------
+
 
 (defn user-routes-mw
   "Middleware for all /user routes"
@@ -152,18 +163,11 @@
     #'user-response/treatment-mw))
 
 
-(defn ajax-user-routes-mw
-  [handler]
-  (route-rules/wrap-route-mw
-    handler
-    ["/ajax-user/*"]
-    #'user-response/check-assessments-mw
-    #_#'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #_#'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
+; -----------------------
+;          ROUTES
+; -----------------------
 
-(defroutes user-reroute
+(defroutes root-reroute
   (context "/user" []
     (GET "/" [] (http-response/found "/user/tx"))))
 
@@ -179,8 +183,8 @@
         items
         specifications))))
 
-(defroutes ajax-user-routes
-  (context "/ajax-user" [:as {{:keys [user]} :db}]
+(defroutes api-routes
+  (context "/user/api" [:as {{:keys [user]} :db}]
     (GET "/privacy-notice" []
       (user-response/privacy-notice-bare user))))
 
