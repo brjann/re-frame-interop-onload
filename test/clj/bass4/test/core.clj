@@ -22,7 +22,9 @@
             [bass4.email :as email]
             [bass4.sms-sender :as sms]
             [bass4.instruments.validation :as i-validation]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [bass4.request-state :as request-state]
+            [bass4.db.core :as db]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -77,15 +79,15 @@
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
-  (bass4.db.core/init-repl :test)
-  #_(reset! bankid/session-statuses {})
   (binding [email/*email-reroute*            :void
             sms/*sms-reroute*                :void
             clojure.test/*stack-trace-depth* 10
             mw/*skip-csrf*                   true
             config/test-mode?                true
             *s*                              @s
-            i-validation/*validate-answers?  false]
+            i-validation/*validate-answers?  false
+            request-state/*request-host*     (config/env :test-host)
+            db/*db*                          @(get db/db-connections (config/env :test-db))]
     (f)))
 
 (defn disable-attack-detector [f]
