@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>DEV bass4</title>
+
+    <!-- styles -->
+    <link href="/js/jquery-ui-slider/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+
+    <link href="/css/screen.css?1516461967" rel="stylesheet" type="text/css"/>
+    <link href="/css/bass.css?1549374678" rel="stylesheet" type="text/css"/>
+
+
+    <!--<link href="https:/maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />-->
+</head>
+<body>
+<script src="/js/jquery/jquery-3.2.0.min.js" type="text/javascript"></script>
+<div id="main-body">
+
+
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col col-lg-10 offset-lg-1">
+
+
+                <h1>SATAN WANTS YOU</h1>
+                <form method="post" class="">
+
+                    <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+                        Fel användarnamn eller lösenord
+                    </div>
+                    <div class="alert alert-danger hidden ajax-error-message" role="alert">
+                    </div>
+                    <div class="form-group row">
+                        <label for="username" class="col-sm-2 col-form-label">Användarnamn</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="username" data-clear-on="error" name="username"
+                                   placeholder="Användarnamn" required autofocus>
+                            <div class="invalid-feedback">Ange ditt användarnamn</div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="password" class="col-sm-2 col-form-label">Lösenord</label>
+                        <div class="col-sm-10">
+                            <input type="password" class="form-control" data-clear-on="error" id="password"
+                                   name="password"
+                                   placeholder="Lösenord" required>
+                            <div class="invalid-feedback">Ange ditt lösenord</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Logga in</button>
+                </form>
+                <p><a href="/lost-password/">Jag har tappat mitt lösenord</a></p>
+
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+<!-- Re-auth modal box-->
+<div class="container hidden" id="re-auth-box">
+    <h1 class="modal-title" id="myModalLabel">Ange lösenord igen</h1>
+    <form method="post" id="re-auth-modal-form" action="/re-auth-ajax" onsubmit="return re_auth_modal_submit();"
+          data-on-error="re_auth_modal_error" data-on-success="re_auth_modal_success">
+        <div class="alert alert-danger hidden" data-show-on="error" role="alert">
+            Fel lösenord
+        </div>
+        <p>Ditt lösenord krävs innan du kan posta till systemet.</p>
+        <div class="form-group">
+            <input type="password" class="form-control required" id="re-auth-modal-password" data-clear-on="error"
+                   name="password" placeholder="Lösenord" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Logga in</button>
+    </form>
+</div>
+
+<div id="load-spinner" class="modal bd-example-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content" style="width: 48px">
+            <span class="fa fa-spinner fa-spin fa-3x"></span>
+        </div>
+    </div>
+</div>
+
+
+<!-- scripts -->
+<script src="/js/jquery-ui-slider/jquery-ui.min.js" type="text/javascript"></script>
+<script src="/assets/jquery-color/jquery.color.js" type="text/javascript"></script>
+<script src="/assets/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+<script src="/js/layout.js?1549374678" type="text/javascript"></script>
+<script src="/js/underscore-min.js"></script>
+<script src="/js/form-ajax.js?1549374678" type="text/javascript"></script>
+<script src="/js/are-you-sure.js?1503513646" type="text/javascript"></script>
+<script src="/js/js.cookie.js" type="text/javascript"></script>
+<script src="/js/sprintf.min.js" type="text/javascript"></script>
+<script src="/js/instruments.js?1549374678" type="text/javascript"></script>
+
+</body>
+</html>

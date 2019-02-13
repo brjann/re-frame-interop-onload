@@ -186,7 +186,6 @@
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'ajax-post)
       (wrap-mw-fn #'auth/session-user-id-mw)
-      #_wrap-auth
       wrap-reload-headers
       wrap-webjars
       ; flash middleware was removed from here

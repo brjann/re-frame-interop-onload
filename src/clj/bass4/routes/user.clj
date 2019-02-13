@@ -15,7 +15,9 @@
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
             [bass4.services.privacy :as privacy-service]
-            [bass4.responses.error-report :as error-report-response]))
+            [bass4.responses.error-report :as error-report-response]
+            [bass4.config :as config]
+            [bass4.file-response :as file]))
 
 
 ; -----------------------
@@ -136,6 +138,21 @@
 ; -----------------------
 ;          ROUTES
 ; -----------------------
+
+(defroutes pluggable-ui
+  (context "/user/ui" [:as request]
+    (GET "*" [] (let [uri      (:uri request)
+                      path     (subs uri (count "/user/ui"))
+                      ui-path  (config/env :pluggable-ui-path)
+                      _        (when-not ui-path
+                                 (throw (Exception. "No :pluggable-ui-path in config")))
+                      response (http-response/file-response path {:root ui-path})]
+                  (if (= 200 (:status response))
+                    (file/file-headers response)
+                    response)))
+    (POST "*" [] {:status  400
+                  :headers {"Content-Type" "text/plain; charset=utf-8"}
+                  :body    "Cannot post to pluggable ui"})))
 
 (defroutes root-reroute
   (context "/user" []
