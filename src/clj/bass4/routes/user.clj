@@ -134,21 +134,6 @@
                                       [#'no-treatment-but-assessments? "/login" :ok]]}])
     #'user-response/treatment-mw))
 
-(defn api-response-mw
-  "Returns only status code for error responses
-  (i.e., strips body)"
-  [handler]
-  (route-rules/wrap-route-mw
-    handler
-    ["/user/api/*"]
-    (fn [handler]
-      (fn [request]
-        (let [response (handler request)]
-          (if (<= 400 (:status response))
-            {:status (:status response)}
-            response))))))
-
-
 ; -----------------------
 ;          ROUTES
 ; -----------------------
@@ -183,11 +168,6 @@
         instrument-id
         items
         specifications))))
-
-(defroutes api-routes
-  (context "/user/api" [:as {{:keys [user]} :db}]
-    (GET "/privacy-notice" []
-      (user-response/privacy-notice-bare user))))
 
 (defroutes privacy-consent-routes
   (context "/user/privacy" [:as {{:keys [user]} :db}]
