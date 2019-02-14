@@ -1,11 +1,14 @@
 (ns bass4.http-utils
   (:require [ring.util.http-response :as http-response]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.string :as str])
   (:import (java.net URLEncoder)))
 
 (defn get-ip
   [request]
-  (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request)))
+  (-> (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request))
+      (str/split #"[, ]")
+      (first)))
 
 (defn get-host
   [request]
