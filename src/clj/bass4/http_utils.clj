@@ -3,11 +3,17 @@
             [clojure.data.json :as json]
             [clojure.string :as str])
   (:import (java.net URLEncoder)
-           (java.util Formatter$DateTime)
-           (java.io PrintWriter)))
+           (java.io PrintWriter)
+           (org.joda.time DateTime)))
 
-(extend Formatter$DateTime json/JSONWriter {:-write (fn [x ^PrintWriter out]
-                                                      (.print out (str x)))})
+(extend DateTime json/JSONWriter {:-write (fn [x ^PrintWriter out]
+                                            (.print out (str "\"" x "\"")))})
+
+(extend-protocol cheshire.generate/JSONable
+  DateTime
+  (to-json [dt gen]
+    (cheshire.generate/write-string gen (str dt))))
+
 (defn get-ip
   [request]
   (-> (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request))

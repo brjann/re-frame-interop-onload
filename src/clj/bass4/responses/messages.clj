@@ -5,7 +5,9 @@
             [schema.core :as s]
             [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [clojure.tools.logging :as log]
+            [bass4.http-utils :as h-utils]))
 
 (defapi messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
@@ -37,5 +39,8 @@
 
 (defapi api-messages
   [treatment-map :- map? user :- map?]
-  (let [user-id (:user-id user)]
-    (messages-service/get-all-messages user-id)))
+  (let [user-id  (:user-id user)
+        messages (messages-service/get-all-messages user-id)]
+    (->> messages
+         (mapv #(dissoc % :sender-class :sender-id :subject))
+         (h-utils/json-response))))

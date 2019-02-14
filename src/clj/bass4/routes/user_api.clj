@@ -11,7 +11,9 @@
             [bass4.responses.modules :as modules-response]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.db-config :as db-config]
+            [clj-time.core :as t]))
 
 (defn api-tx-routes-mw
   [handler]
@@ -38,9 +40,6 @@
             (<= 400 (:status response))
             {:status (:status response)}
 
-            (map? response)
-            (h-utils/json-response response)
-
             :else
             response))))))
 
@@ -49,10 +48,18 @@
 ;          ROUTES
 ; -----------------------
 
+
 (defroutes api-routes
   (context "/user/api" [:as {{:keys [user]} :db}]
     (GET "/privacy-notice" []
-      (user-response/privacy-notice-bare user)))
+      (user-response/privacy-notice-bare user))
+    (GET "/timezone-name" []
+      (h-utils/json-response (str (db-config/time-zone))))
+    (GET "/timezone-offset" []
+      (h-utils/json-response (-> (db-config/time-zone)
+                                 (t/time-zone-for-id)
+                                 (.getOffset nil)
+                                 (/ (* 60 60 1000))))))
   (context "/user/api/tx" [:as
                            {{:keys [render-map treatment user]}     :db
                             {{:keys [treatment-access]} :treatment} :db
