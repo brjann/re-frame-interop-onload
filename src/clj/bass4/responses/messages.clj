@@ -33,3 +33,9 @@
   [user-id :- integer? message-id :- api/->int]
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))
+
+
+(defapi api-messages
+  [treatment-map :- map? user :- map?]
+  (let [user-id (:user-id user)]
+    (messages-service/get-all-messages user-id)))

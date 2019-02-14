@@ -76,6 +76,16 @@
 ;    ROUTES MIDDLEWARE
 ; -----------------------
 
+(def tx-rules
+  [[#'consent-needed? "/user/privacy/consent" :ok]
+   [#'assessments-pending? "/user/assessments" :ok]
+   [#'no-treatment-no-assessments? "/no-activities" :ok]
+   [#'no-treatment-but-assessments? "/login" :ok]
+   [#'limited-access? "/escalate" :ok]])
+
+(def tx-message-rules
+  [[#'messages? :ok 404]
+   [#'send-messages? :ok 404]])
 
 (defn user-routes-mw
   "Middleware for all /user routes"
@@ -95,14 +105,9 @@
     handler
     ["/user/tx" "/user/tx/*"]
     (route-rules/wrap-rules [{:uri   "*"
-                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]
-                                      [#'assessments-pending? "/user/assessments" :ok]
-                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
-                                      [#'no-treatment-but-assessments? "/login" :ok]
-                                      [#'limited-access? "/escalate" :ok]]}
+                              :rules tx-rules}
                              {:uri   "/user/tx/message*"
-                              :rules [[#'messages? :ok 404]
-                                      [#'send-messages? :ok 404]]}])
+                              :rules tx-message-rules}])
     #'user-response/treatment-mw))
 
 (defn privacy-consent-mw

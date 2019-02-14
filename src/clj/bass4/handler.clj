@@ -30,6 +30,7 @@
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw
+       user-api-routes/api-tx-routes-mw
        user-routes/user-routes-mw
        user-api-routes/api-response-mw
        reg-routes/registration-routes-mw

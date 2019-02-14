@@ -2,8 +2,12 @@
   (:require [ring.util.http-response :as http-response]
             [clojure.data.json :as json]
             [clojure.string :as str])
-  (:import (java.net URLEncoder)))
+  (:import (java.net URLEncoder)
+           (java.util Formatter$DateTime)
+           (java.io PrintWriter)))
 
+(extend Formatter$DateTime json/JSONWriter {:-write (fn [x ^PrintWriter out]
+                                                      (.print out (str x)))})
 (defn get-ip
   [request]
   (-> (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request))
