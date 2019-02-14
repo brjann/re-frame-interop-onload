@@ -134,6 +134,20 @@
                                       [#'no-treatment-but-assessments? "/login" :ok]]}])
     #'user-response/treatment-mw))
 
+(defn api-response-mw
+  "Returns only status code for error responses
+  (i.e., strips body)"
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user/api/*"]
+    (fn [handler]
+      (fn [request]
+        (let [response (handler request)]
+          (if (<= 400 (:status response))
+            {:status (:status response)}
+            response))))))
+
 
 ; -----------------------
 ;          ROUTES

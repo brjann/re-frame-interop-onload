@@ -31,6 +31,7 @@
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw
        user-routes/user-routes-mw
+       user-routes/api-response-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw
        lost-password/lpw-routes-mw)
