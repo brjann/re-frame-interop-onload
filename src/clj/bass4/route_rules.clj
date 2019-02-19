@@ -14,11 +14,15 @@
   "Rules are in format [{:uri clout-uri :rules [[pred val-true val-false]*}*]
    Returns with matched uri params from clout, {} if match but no params"
   [request rules]
-  (let [matched (mapv (fn [rule]
-                        (assoc rule
-                          :params
-                          (clout-cache/route-matches (:uri rule) (dissoc request :path-info)))) rules)]
-    (filterv :params matched)))
+  (let [match-res (mapv (fn [rule]
+                          (assoc rule
+                            :params
+                            (clout-cache/route-matches (:uri rule) (dissoc request :path-info))))
+                        rules)
+        matches   (filterv :params match-res)]
+    #_(when (seq matches)
+        (log/debug "Found rules matching" (:uri request)))
+    matches))
 
 (defn flatten-matching-rules
   "Rules are in format [{:uri clout-uri :rules [[pred val-true val-false]* :params uri-params}*]
@@ -74,7 +78,8 @@
   [rules]
   (fn [handler]
     (fn [request]
-      (let [res (->> (match-rules request rules)
+      (let [res (->> rules
+                     (match-rules request)
                      (flatten-matching-rules)
                      (eval-rules request))]
         #_(log/debug res)

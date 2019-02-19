@@ -23,13 +23,13 @@
                 </span>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
-                    <a href="/user/"
-                       class='nav-link{% ifequal path "/user/" %} active{%endifequal%}'>
+                    <a href="/user/tx/"
+                       class='nav-link{% ifequal path "/user/tx/" %} active{%endifequal%}'>
                         {%tr dashboard/start %}
                     </a>
                     {% if messaging %}
-                    <a href="/user/messages"
-                       class='nav-link{% ifequal path "/user/messages" %} active{%endifequal%}'>
+                    <a href="/user/tx/messages"
+                       class='nav-link{% ifequal path "/user/tx/messages" %} active{%endifequal%}'>
                         {%tr messages/messages %}
                         {% if new-messages? %}
                         <i class="fa fa-envelope" title="{%tr messages/new-message %}" id="new-message-icon"></i>
@@ -37,8 +37,8 @@
                     </a>
                     {% endif %}
                     {% if modules %}
-                    <a href="/user/modules"
-                       class='nav-link{% ifequal path "/user/modules" %} active{%endifequal%}'>
+                    <a href="/user/tx/modules"
+                       class='nav-link{% ifequal path "/user/tx/modules" %} active{%endifequal%}'>
                         {%tr modules/modules %}
                     </a>
                     {% endif %}
@@ -57,13 +57,13 @@
                         {% endfor %}
                         {% endif %}
                         <div class="dropdown-divider"></div>
-                        <a href="/user/error-report"
-                           class='nav-link{% ifequal path "/user/error-report" %} active{%endifequal%}'>
+                        <a href="/user/tx/error-report"
+                           class='nav-link{% ifequal path "/user/tx/error-report" %} active{%endifequal%}'>
                             {%tr error-report/problems? %}
                         </a>
                         {% if not privacy-notice-disabled? %}
-                        <a href="/user/privacy-notice"
-                           class='nav-link{% ifequal path "/user/privacy-notice" %} active{%endifequal%}'>
+                        <a href="/user/tx/privacy-notice"
+                           class='nav-link{% ifequal path "/user/tx/privacy-notice" %} active{%endifequal%}'>
                             {%tr privacy-notice/notice-title %}
                         </a>
                         {% endif %}
@@ -75,14 +75,14 @@
                 </div>
             </div>
             <div class="d-none d-md-block navbar-nav">
-                <a href="/user/error-report"
-                   class='nav-link {% ifequal path "/user/error-report" %} active{%endifequal%}'>
+                <a href="/user/tx/error-report"
+                   class='nav-link {% ifequal path "/user/tx/error-report" %} active{%endifequal%}'>
                     {%tr error-report/problems? %}</a>
             </div>
             {% if not privacy-notice-disabled? %}
             <div class="d-none d-md-block navbar-nav">
-                <a href="/user/privacy-notice"
-                   class='nav-link {% ifequal path "/user/privacy-notice" %} active{%endifequal%}'>
+                <a href="/user/tx/privacy-notice"
+                   class='nav-link {% ifequal path "/user/tx/privacy-notice" %} active{%endifequal%}'>
                     {%tr privacy-notice/notice-title %}</a>
             </div>
             {% endif %}

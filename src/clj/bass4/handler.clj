@@ -2,15 +2,15 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [bass4.layout :refer [error-page] :as layout]
             [bass4.routes.auth :refer [auth-routes]]
-            [bass4.responses.auth :as auth-response]
             [bass4.routes.user :as user-routes]
+            [bass4.routes.user-api :as user-api-routes]
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
             [bass4.routes.quick-login :refer [quick-login-routes]]
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
-            [bass4.routes.lost-password :refer [lost-password-routes] :as lost-password]
+            [bass4.routes.lost-password :as lost-password]
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
@@ -27,9 +27,12 @@
 (defn router-middleware
   [handler request]
   ((-> handler
-       user-routes/user-routes-mw
+       user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
-       user-routes/ajax-user-routes-mw
+       user-routes/root-reroute-mw
+       user-api-routes/api-tx-routes-mw
+       user-routes/user-routes-mw
+       user-api-routes/api-response-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw
        lost-password/lpw-routes-mw)
@@ -46,11 +49,13 @@
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
     #'auth-routes
-    #'lost-password-routes
+    #'lost-password/lost-password-routes
+    #'user-routes/pluggable-ui
     #'user-routes/assessment-routes
-    #'user-routes/user-routes
+    #'user-routes/root-reroute
+    #'user-routes/tx-routes
     #'user-routes/privacy-consent-routes
-    #'user-routes/ajax-user-routes
+    #'user-api-routes/api-routes
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes

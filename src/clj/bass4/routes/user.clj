@@ -15,37 +15,14 @@
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
             [bass4.services.privacy :as privacy-service]
-            [bass4.responses.error-report :as error-report-response]))
-
-(defn request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
-
-;; TODO: Weird stuff going on here. This has been fixed - no?
-;; The request is identified as http by (request/request-url request)
-;; On the server with reverse proxy, some type of rewrite causes the url
-;; to be double encoded. This is a hack until the problem can be solved
-;; in Apache.
-;(defn url-encode-x
-;  "Return the request part of the request."
-;  [string]
-;  (if (env :no-url-encode)
-;    string
-;    (codec/url-encode string)))
+            [bass4.responses.error-report :as error-report-response]
+            [bass4.config :as config]
+            [bass4.file-response :as file]))
 
 
-(defn no-treatment-response
-  [session]
-  (if (:assessments-performed? session)
-    (->
-      (http-response/found "/login")
-      (assoc :session {}))
-    (->
-      (http-response/found "/no-activities")
-      (assoc :session {}))))
+; -----------------------
+;     RULE PREDICATES
+; -----------------------
 
 (defn- consent-needed?
   [request _]
@@ -95,75 +72,99 @@
   (:limited-access? session))
 
 
-(def user-route-rules
-  [{:uri   "/user*"
-    :rules [[#'consent-needed? "/privacy/consent" :ok]
-            [#'assessments-pending? "/assessments" :ok]
-            [#'no-treatment-no-assessments? "/no-activities" :ok]
-            [#'no-treatment-but-assessments? "/login" :ok]
-            [#'limited-access? "/escalate" :ok]]}
-   {:uri   "/user/message*"
-    :rules [[#'messages? :ok 404]
-            [#'send-messages? :ok 404]]}])
+; -----------------------
+;    ROUTES MIDDLEWARE
+; -----------------------
 
-(def privacy-consent-rules
-  [{:uri   "/privacy/consent"
-    :rules [[#'consent-needed? :ok "/user"]]}])
+(def tx-rules
+  [[#'consent-needed? "/user/privacy/consent" :ok]
+   [#'assessments-pending? "/user/assessments" :ok]
+   [#'no-treatment-no-assessments? "/no-activities" :ok]
+   [#'no-treatment-but-assessments? "/login" :ok]
+   [#'limited-access? "/escalate" :ok]])
 
-(def assessment-route-rules
-  [{:uri   "/assessments*"
-    :rules [[#'consent-needed? "/privacy/consent" :ok]]}])
+(def tx-message-rules
+  [[#'messages? :ok 404]
+   [#'send-messages? :ok 404]])
 
 (defn user-routes-mw
+  "Middleware for all /user routes"
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/user*"]
-    (route-rules/wrap-rules user-route-rules)
-    #'user-response/treatment-mw                            ; Adds treatment info to request
+    ["/user/*" "/user"]
     #'user-response/check-assessments-mw
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
+
+(defn user-tx-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user/tx" "/user/tx/*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules tx-rules}
+                             {:uri   "/user/tx/message*"
+                              :rules tx-message-rules}])
+    #'user-response/treatment-mw))
 
 (defn privacy-consent-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/privacy/*"]
-    (route-rules/wrap-rules privacy-consent-rules)
-    #'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
-
-(defn ajax-user-routes-mw
-  [handler]
-  (route-rules/wrap-route-mw
-    handler
-    ["/ajax-user/*"]
-    #'user-response/check-assessments-mw
-    #_#'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #_#'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
+    ["/user/privacy/*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? :ok "/user"]]}])))
 
 (defn assessment-routes-mw
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/assessments*"]
-    (route-rules/wrap-rules assessment-route-rules)
-    #'user-response/check-assessments-mw
-    #'auth-response/auth-re-auth-mw
-    #'middleware/wrap-csrf
-    #'auth-response/double-auth-mw
-    #'auth-response/restricted-mw))
+    ["/user/assessments*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]]}])))
+
+(defn root-reroute-mw
+  "Rerouting when accessing /user/"
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/user" "/user/"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]
+                                      [#'assessments-pending? "/user/assessments" :ok]
+                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/login" :ok]]}])
+    #'user-response/treatment-mw))
+
+; -----------------------
+;          ROUTES
+; -----------------------
+
+(defroutes pluggable-ui
+  (context "/user/ui" [:as request]
+    (GET "*" [] (let [uri      (:uri request)
+                      path     (subs uri (count "/user/ui"))
+                      ui-path  (config/env :pluggable-ui-path)
+                      _        (when-not ui-path
+                                 (throw (Exception. "No :pluggable-ui-path in config")))
+                      response (http-response/file-response path {:root ui-path})]
+                  (if (= 200 (:status response))
+                    (file/file-headers response)
+                    response)))
+    (POST "*" [] {:status  400
+                  :headers {"Content-Type" "text/plain; charset=utf-8"}
+                  :body    "Cannot post to pluggable ui"})))
+
+(defroutes root-reroute
+  (context "/user" []
+    (GET "/" [] (http-response/found "/user/tx"))))
 
 (defroutes assessment-routes
-  (context "/assessments" [:as {{:keys [user]} :db
-                                :as            request}]
+  (context "/user/assessments" [:as {{:keys [user]} :db
+                                     :as            request}]
     (GET "/" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
     (POST "/" [instrument-id items specifications]
       (assessments-response/post-instrument-answers
@@ -173,28 +174,18 @@
         items
         specifications))))
 
-(defroutes ajax-user-routes
-  (context "/ajax-user" [:as
-                         {{:keys [user]} :db
-                          :as            request}]
-    (GET "/privacy-notice" []
-      (user-response/privacy-notice-bare user))))
-
 (defroutes privacy-consent-routes
-  (context "/privacy" [:as
-                       {{:keys [user]}                          :db
-                        {{:keys [treatment-access]} :treatment} :db
-                        :as                                     request}]
+  (context "/user/privacy" [:as {{:keys [user]} :db}]
     (GET "/consent" []
       (user-response/privacy-consent-page user))
     (POST "/consent" [i-consent]
       (user-response/handle-privacy-consent user i-consent))))
 
-(defroutes user-routes
-  (context "/user" [:as
-                    {{:keys [render-map treatment user]}     :db
-                     {{:keys [treatment-access]} :treatment} :db
-                     :as                                     request}]
+(defroutes tx-routes
+  (context "/user/tx" [:as
+                       {{:keys [render-map treatment user]}     :db
+                        {{:keys [treatment-access]} :treatment} :db
+                        :as                                     request}]
     (GET "/" []
       (dashboard/dashboard user (:session request) render-map treatment))
 

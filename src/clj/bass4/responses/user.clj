@@ -53,7 +53,7 @@
         (assessments-pending? request)
         (do
           #_(log/debug "Assessments pending!")
-          (-> (http-response/found "/assessments")
+          (-> (http-response/found "/user/assessments")
               (assoc :session
                      (merge
                        session

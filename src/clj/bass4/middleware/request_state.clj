@@ -43,7 +43,10 @@
 (defn request-state
   [handler request]
   (binding [request-state/*request-state* (atom {})]
-    (let [{:keys [val time]} (time+ (handler request))
+    (let [request   (if request-state/*request-host*
+                      (assoc request :server-name request-state/*request-host*)
+                      request)
+          {:keys [val time]} (time+ (handler request))
           method    (name (:request-method request))
           status    (:status val)
           req-state (request-state/get-state)]

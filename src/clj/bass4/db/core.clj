@@ -12,12 +12,8 @@
     [bass4.request-state :as request-state]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
-    #_[bass4.db.sql-wrapper]
     [bass4.http-utils :as h-utils]
-    [metrics.core :as metrics]
-    [metrics.reporters.csv :as csv]
-    [bass4.config :as config])
-  (:import (java.util Locale)))
+    [bass4.config :as config]))
 
 ;----------------
 ; SETUP DB STATE
@@ -61,31 +57,34 @@
 
 
 #_(defstate metrics-reg
-    :start (let [metrics-reg (metrics/new-registry)
-                 CR          (csv/reporter
-                               metrics-reg
-                               (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
-                 report-freq (env :metrics-report-freq 60)]
-             (csv/start CR report-freq)
-             metrics-reg)
-    :stop (do))
+  :start (let [metrics-reg (metrics/new-registry)
+               CR          (csv/reporter
+                             metrics-reg
+                             (str (config/env :bass-path) "/projects/system/bass4-db-log") {:locale (Locale/US)})
+               report-freq (env :metrics-report-freq 60)]
+           (csv/start CR report-freq)
+           metrics-reg)
+  :stop (do))
 
 
 (defn db-connect!
+  ;; NOTE: MySQL variables cannot be executed on conn
+  ;; since multiple connection are made for each database.
+  ;; And :connection-init-sql only accepts one command.
+  ;; Proper SQL mode (e.g. MYSQL40) must therefore be set in my.cnf
   [local-config]
   (let [url (db-url local-config (config/env :database-port))]
     (delay
       (log/info (str "Attaching " (:name local-config)))
-      (let [conn (conman/connect! {:jdbc-url            (str url "&serverTimezone=UTC&jdbcCompliantTruncation=false&useSSL=false")
+      (let [conn (conman/connect! {:jdbc-url            (str url
+                                                             "&serverTimezone=UTC"
+                                                             "&jdbcCompliantTruncation=false"
+                                                             "&useSSL=false")
                                    :pool-name           (:name local-config)
-                                   ;:metric-registry    metrics-reg
+                                   ;:metric-registry   metrics-reg
                                    :maximum-pool-size   5
                                    :connection-init-sql "SET time_zone = '+00:00';"})]
         (log/info (str (:name local-config) " attached"))
-        (jdbc/execute! conn "SET time_zone = '+00:00';")
-        (when-let [sql-mode (get-in config/env [:db-settings :sql-mode])]
-          (log/info "Setting SQL mode to " sql-mode)
-          (jdbc/execute! conn (str "SET sql_mode = '" sql-mode "';")))
         conn))))
 
 (defn db-disconnect!
@@ -94,9 +93,18 @@
     (log/info (str "Detaching db"))
     (conman/disconnect! @db-conn)))
 
+
+;; Bind queries to *db* dynamic variable which is bound
+;; to each clients database before executing queries
+(def ^:dynamic *db* nil)
+
 (defstate db-connections
-  :start (map-map db-connect!
-                  db-config/local-configs)
+  :start (let [x (map-map db-connect!
+                          db-config/local-configs)]
+           (when (config/env :dev)
+             (log/info "Setting *db* to dev database")
+             (def ^:dynamic *db* @(get x (config/env :dev-db))))
+           x)
   :stop (map-map db-disconnect!
                  db-connections))
 
@@ -104,11 +112,6 @@
   :start @(db-connect! db-config/common-config)
   :stop (do (log/info "Detaching common")
             (conman/disconnect! db-common)))
-
-
-;; Bind queries to *db* dynamic variable which is bound
-;; to each clients database before executing queries
-(def ^:dynamic *db* nil)
 
 (conman/bind-connection *db* "sql/bass.sql")
 (conman/bind-connection *db* "sql/auth.sql")
@@ -158,14 +161,3 @@
     {:status  404
      :headers {"Content-Type" "text/plain; charset=utf-8"}
      :body    "No such DB"}))
-
-(defn init-repl
-  ([] (init-repl :bass4_test))
-  ([db-name]
-   (if (not (contains? db-connections db-name))
-     (throw (Exception. (str "db " db-name " does not exists")))
-     (do
-       (alter-var-root (var host-db) (constantly (constantly db-name)))
-       (alter-var-root (var *db*) (constantly @(get db-connections db-name)))
-       (alter-var-root (var db-config/*local-config*) (constantly (merge db-config/local-defaults (get db-config/local-configs db-name))))
-       (alter-var-root (var request-state/*request-state*) (constantly (atom {})))))))

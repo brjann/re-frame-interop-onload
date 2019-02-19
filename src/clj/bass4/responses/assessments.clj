@@ -57,7 +57,7 @@
         (let [answers-map (instruments/score-instrument instrument-id items specifications)]
           (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
           (assessments-service/check-completed-administrations! user-id round instrument-id)
-          (-> (http-response/found "/assessments"))))
+          (-> (http-response/found "/user/assessments"))))
       (do
         (request-state/record-error! (str "Instrument " instrument-id " does not exist."))
         (http-response/found "/user")))

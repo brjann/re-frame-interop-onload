@@ -2,12 +2,14 @@
   (:require [clojure.tools.logging :as log]
             [bass4.utils :refer [time+] :as utils]))
 
-(def ^:dynamic *request-state*)
+(def ^:dynamic *request-state* nil)
+(def ^:dynamic *request-host* nil)
 
 (defn swap-state!
   ([key f] (swap-state! key f nil))
   ([key f val-if-empty]
-   (utils/swap-key! *request-state* key f val-if-empty)))
+   (when *request-state*
+     (utils/swap-key! *request-state* key f val-if-empty))))
 
 (defn add-to-state-key!
   [key v]
@@ -15,7 +17,8 @@
 
 (defn set-state!
   [key val]
-  (utils/set-key! *request-state* key val))
+  (when *request-state*
+    (utils/set-key! *request-state* key val)))
 
 (defn record-error!
   [error]

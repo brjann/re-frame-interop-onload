@@ -75,11 +75,6 @@
 ;; CREDENTIALS
 ;; ------------
 
-#_(defn- login-url
-    [request]
-    (let [host   (h-utils/get-host request)
-          scheme (name (:scheme request))]
-      (str scheme "://" host)))
 
 (defapi credentials-page
   [project-id :- api/->int session :- [:? map?] request]

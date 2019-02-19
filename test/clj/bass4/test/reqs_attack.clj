@@ -102,10 +102,10 @@
     (let [state (-> *s*
                     (modify-session {:user-id 536975 :double-authed? true})
                     (visit "/user")
-                    (visit "/user/messages")
+                    (visit "/user/tx/messages")
                     (has (status? 200))
                     (modify-session {:auth-re-auth true})
-                    (visit "/user/messages")
+                    (visit "/user/tx/messages")
                     (has (status? 302))
                     (follow-redirect)
                     (has (some-text? "Authenticate again")))]
@@ -120,10 +120,10 @@
     (let [state (-> *s*
                     (modify-session {:user-id 536975 :double-authed? true})
                     (visit "/user")
-                    (visit "/user/messages")
+                    (visit "/user/tx/messages")
                     (has (status? 200))
                     (modify-session {:auth-re-auth true})
-                    (visit "/user/messages")
+                    (visit "/user/tx/messages")
                     (has (status? 302))
                     (follow-redirect)
                     (has (some-text? "Authenticate again")))]
@@ -159,7 +159,7 @@
         (has (status? 302))
         (follow-redirect)
         (advance-time-s! (res-auth/re-auth-timeout))
-        (visit "/user/messages")
+        (visit "/user/tx/messages")
         (has (status? 302))
         (attack-uri
           "/re-auth-ajax"

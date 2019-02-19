@@ -1,4 +1,4 @@
-{% extends "nav.html" %}
+{% extends "tx-base.html" %}
 {% block user-content %}
 <div class="modules-list">
     <div class="row">
@@ -33,7 +33,7 @@
 
                         {% if module.contents.main-text.has-text? %}
                         <li class="list-group-item">
-                            <a class="card-link" href="/user/module/{{module.module-id}}/">
+                            <a class="card-link" href="module/{{module.module-id}}/">
                                 {% tr modules/read-module-text %}
                             </a>
                             {% ifequal module.contents.main-text.accessed? false %}
@@ -62,7 +62,7 @@
 
                         {% if module.contents.homework.has-text? %}
                         <li class="list-group-item">
-                            <a class="card-link" href="/user/module/{{module.module-id}}/homework">
+                            <a class="card-link" href="module/{{module.module-id}}/homework">
                                 {% tr modules/complete-homework %}
                             </a>
                             {% ifequal module.homework-status :ok %}
@@ -95,7 +95,7 @@
 
                             {% if worksheet.has-text? %}
                             <p class="card-text">
-                                <a href="/user/module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">
+                                <a href="module/{{module.module-id}}/worksheet/{{worksheet.content-id}}">
                                     {% tr modules/fill-in %} {{worksheet.content-name}}
                                 </a>
                                 {% if worksheet.data-updated %}

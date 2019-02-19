@@ -2,7 +2,17 @@
   (:require [ring.util.http-response :as http-response]
             [clojure.data.json :as json]
             [clojure.string :as str])
-  (:import (java.net URLEncoder)))
+  (:import (java.net URLEncoder)
+           (java.io PrintWriter)
+           (org.joda.time DateTime)))
+
+(extend DateTime json/JSONWriter {:-write (fn [x ^PrintWriter out]
+                                            (.print out (str "\"" x "\"")))})
+
+(extend-protocol cheshire.generate/JSONable
+  DateTime
+  (to-json [dt gen]
+    (cheshire.generate/write-string gen (str dt))))
 
 (defn get-ip
   [request]

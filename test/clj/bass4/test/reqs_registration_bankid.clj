@@ -84,12 +84,12 @@
           ;; Redirect to pending assessments
           (follow-redirect)
           (has (some-text? "Welcome"))
-          (visit "/assessments")
+          (visit "/user/assessments")
           (has (some-text? "AAQ"))
-          (visit "/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
           (follow-redirect)
           (has (some-text? "Thanks"))
-          (visit "/assessments")
+          (visit "/user/assessments")
           ;; Assessments completed
           (follow-redirect)
           ;; Redirect to finish screen
