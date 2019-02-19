@@ -8,7 +8,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [bass4.api-coercion :as api]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.request-state :as request-state]))
 
 
 (defn- checkbox-id
@@ -296,8 +297,10 @@
   (when *validate-answers?
     (let [res (validate-answers* (get-items-map instrument) item-answers specifications)]
       (when (map? res)
-        (throw (api/api-exception "Instrument answers validation failed"
-                                  (merge res
-                                         {:instrument-id  (:instrument-id instrument)
-                                          :item-answers   item-answers
-                                          :specifications specifications})))))))
+        (let [res (merge res
+                         {:instrument-id  (:instrument-id instrument)
+                          :item-answers   item-answers
+                          :specifications specifications})]
+          (request-state/record-error! "Instrument answers validation failed - answers accepted")
+          (log/error res)
+          #_(throw (api/api-exception "Instrument answers validation failed" res)))))))
