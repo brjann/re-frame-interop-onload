@@ -2,7 +2,6 @@
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
-            [struct.core :as st]
             [bass4.utils :as utils :refer [map-map]])
   (:import (clojure.lang Symbol)
            (java.net URL)))
