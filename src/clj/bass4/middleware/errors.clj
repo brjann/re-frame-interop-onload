@@ -58,8 +58,10 @@
           (do
             (let [msg (.getMessage e)]
               (log/error msg)
+              (log/error data)
               (request-state/record-error! msg))
-            (error-400-page (when (db-config/debug-mode?) (.getMessage e))))
+            (error-400-page (when (db-config/debug-mode?)
+                              (.getMessage e))))
           (throw e))))))
 
 
