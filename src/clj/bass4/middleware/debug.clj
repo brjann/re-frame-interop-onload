@@ -16,7 +16,7 @@
   [handler]
   (fn [request]
     (if (and (db-config/debug-mode?)
-             (not (ajax-post/is-ajax-post? request)))
+             (not (ajax-post/ajax-post? request)))
       ((prone/wrap-exceptions handler) request)
       (handler request))))
 

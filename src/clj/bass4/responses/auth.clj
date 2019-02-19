@@ -15,7 +15,8 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
-            [bass4.services.privacy :as privacy-service])
+            [bass4.services.privacy :as privacy-service]
+            [bass4.http-utils :as h-utils])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -327,7 +328,8 @@
           last-request-time (:last-request-time session)
           re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
           response          (if re-auth?
-                              (if (= (:request-method request) :get)
+                              (if (and (= (:request-method request) :get)
+                                       (not (h-utils/ajax? request)))
                                 (http-response/found (str "/re-auth?return-url=" (request-string request)))
                                 (re-auth-440))
                               (handler (assoc-in request [:session :auth-re-auth] re-auth?)))

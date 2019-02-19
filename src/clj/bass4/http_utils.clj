@@ -44,3 +44,8 @@
   [x]
   (-> (http-response/ok (json/write-str x))
       (http-response/content-type "application/json")))
+
+(defn ajax?
+  [request]
+  (let [requested-with (get (:headers request) "x-requested-with" "")]
+    (= "xmlhttprequest" (str/lower-case requested-with))))
