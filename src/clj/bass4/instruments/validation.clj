@@ -301,6 +301,6 @@
                          {:instrument-id  (:instrument-id instrument)
                           :item-answers   item-answers
                           :specifications specifications})]
-          (request-state/record-error! "Instrument answers validation failed - answers accepted")
-          (log/error res)
-          #_(throw (api/api-exception "Instrument answers validation failed" res)))))))
+          #_(request-state/record-error! "Instrument answers validation failed - answers accepted")
+          #_(log/error res)
+          (throw (api/api-exception "Instrument answers validation failed" res)))))))
