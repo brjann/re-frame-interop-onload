@@ -302,3 +302,13 @@
       (visit "/user")
       (visit "/user/tx/messages")
       (has (status? 200))))
+
+(deftest request-re-auth-ajax
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth? true})
+      (visit "/user/tx/messages")
+      (has (status? 302))
+      (visit "/user/tx/messages" :request-method :post :params {:text "xxx"})
+      (has (status? 302))
+      (visit "/user/tx/messages" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"} :params {:text "xxx"})
+      (has (status? 440))))

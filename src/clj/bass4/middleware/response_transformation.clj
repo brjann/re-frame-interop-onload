@@ -42,17 +42,9 @@
         user-id    (get-in request [:session :user-id])]
     (cond
       (= 440 status)
-      (cond
-        api?
+      (if (or api? ajax?)
         (dissoc response :body)
-
-        ajax?
-        (found-200 response (:body response))
-
-        :else
-        (merge
-          response
-          (http-response/found (:body response))))
+        (merge response (http-response/found (:body response))))
 
       (= 500 status)
       response
