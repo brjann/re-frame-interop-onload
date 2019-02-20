@@ -76,13 +76,6 @@
 ;    ROUTES MIDDLEWARE
 ; -----------------------
 
-(def tx-rules
-  [[#'consent-needed? "/user/privacy/consent" :ok]
-   [#'assessments-pending? "/user/assessments" :ok]
-   [#'no-treatment-no-assessments? "/no-activities" :ok]
-   [#'no-treatment-but-assessments? "/login" :ok]
-   [#'limited-access? "/escalate" :ok]])
-
 (def tx-message-rules
   [[#'messages? :ok 404]
    [#'send-messages? :ok 404]])
@@ -105,7 +98,11 @@
     handler
     ["/user/tx" "/user/tx/*"]
     (route-rules/wrap-rules [{:uri   "*"
-                              :rules tx-rules}
+                              :rules [[#'consent-needed? "/user/privacy/consent" :ok]
+                                      [#'assessments-pending? "/user/assessments" :ok]
+                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/login" :ok]
+                                      [#'limited-access? "/escalate" :ok]]}
                              {:uri   "/user/tx/message*"
                               :rules tx-message-rules}])
     #'user-response/treatment-mw))
@@ -154,9 +151,7 @@
                   (if (= 200 (:status response))
                     (file/file-headers response)
                     response)))
-    (POST "*" [] {:status  400
-                  :headers {"Content-Type" "text/plain; charset=utf-8"}
-                  :body    "Cannot post to pluggable ui"})))
+    (POST "*" [] (http-response/bad-request "Cannot post to pluggable ui"))))
 
 (defroutes root-reroute
   (context "/user" []
