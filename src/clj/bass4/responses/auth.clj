@@ -221,7 +221,6 @@
 
 (defn handle-re-auth
   [session password response]
-  (log/debug (:auth-re-auth? session))
   (if-let [user-id (:user-id session)]
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)

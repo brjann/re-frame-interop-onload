@@ -64,13 +64,13 @@
       (and ajax-post? (= 403 status))
       (assoc response :body "login")
 
-      (and (not ajax?) get? (= 403 status))
+      (and (not (or api? ajax?)) get? (= 403 status))
       (error-pages/error-403-page user-id (:body response))
 
-      (and (not ajax?) get? (= 404 status))
+      (and (not (or api? ajax?)) get? (= 404 status))
       (error-pages/error-404-page (:body response))
 
-      (and (not ajax?) get? (= 400 status))
+      (and (not (or api? ajax?)) get? (= 400 status))
       (error-pages/error-400-page (:body response))
 
       (and (#{400 403 404} status) (not (get-in response [:headers "Content-Type"])))

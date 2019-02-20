@@ -79,7 +79,7 @@
 (def ^:dynamic *skip-csrf* false)
 (defn csrf-wrapper
   [handler request]
-  (if *skip-csrf*
+  (if (or *skip-csrf* (:csrf-disabled (:session request)))
     (handler request)
     ((wrap-anti-forgery
        handler

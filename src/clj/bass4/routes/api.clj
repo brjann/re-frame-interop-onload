@@ -12,7 +12,8 @@
             [ring.util.http-response :as http-response]
             [compojure.api.coercion.core :as cc]
             [ring.middleware.anti-forgery :as anti-forgery]
-            [bass4.layout :as layout])
+            [bass4.layout :as layout]
+            [bass4.config :as config])
   (:import (org.joda.time DateTime)))
 
 (defn treatment-mw
@@ -72,13 +73,20 @@
                                 :description "Come here"}}}
      :exceptions {:handlers
                   {::ex/response-validation response-validation-handler}}}
-    (context "/api" []
+    (context "/api" [:as request]
       (context "/user" [:as {{:keys [user]} :db}]
 
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
           :return String
           (layout/text-response anti-forgery/*anti-forgery-token*))
+
+        (GET "/disable-csrf" []
+          :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."
+          (if (db-config/debug-mode?)
+            (-> (http-response/ok)
+                (assoc :session (assoc (:session request) :csrf-disabled true)))
+            (http-response/forbidden "Not in debug or dev mode")))
 
         (GET "/privacy-notice-html" []
           :summary "Database's privacy notice in HTML format."
@@ -88,7 +96,7 @@
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
           :return String
-          (str (db-config/time-zone)))
+          (layout/text-response (db-config/time-zone)))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
