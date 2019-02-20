@@ -398,7 +398,8 @@ function parse_response(element, response) {
       //TODO: This does not allow for only min or only max
       var check = '';
       if (response["range-min"] != null && response["range-min"] != null) {
-         check = sprintf("data-range-min = '%d' data-range-max = '%d'", response["range-min"], response["range-max"]);
+         // %d makes both values negative if one is negative.
+         check = sprintf("data-range-min = '%s' data-range-max = '%s'", response["range-min"], response["range-max"]);
       }
 
       // Regex check
@@ -572,6 +573,10 @@ function validate_text(item_div) {
 
    if (min != undefined || max != undefined) {
       var int_val = parseInt(val);
+
+      if (val !== int_val.toString()) {
+         int_val = NaN;
+      }
 
       if (min != undefined && max != undefined) {
          if (int_val > max || int_val < min || isNaN(int_val)) {
