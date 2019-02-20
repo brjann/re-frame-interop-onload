@@ -58,7 +58,7 @@
 
 (s/defschema Message
   {:message-id    s/Int
-   :unread?       Boolean
+   :unread?       (s/maybe Boolean)
    :text          String
    :sender-name   String
    :send-datetime DateTime

@@ -42,5 +42,8 @@
   (let [user-id  (:user-id user)
         messages (messages-service/get-all-messages user-id)]
     (->> messages
+         (mapv #(if (= user-id (:sender-id %))
+                  (assoc % :unread? nil)
+                  %))
          (mapv #(dissoc % :sender-class :sender-id :subject))
          (http-response/ok))))

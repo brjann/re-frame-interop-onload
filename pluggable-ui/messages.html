@@ -20,6 +20,10 @@
                var message = m['text'].replace(/(?:\r\n|\r|\n)/g, '<br>');
                var sender = (m['sender-type'] === 'therapist') ? m['sender-name'] : 'me';
                var time = new Date(m['send-datetime']).toDateString();
+               var unread = m['unread?'];
+               if (unread && sender !== "me") {
+                  message = '<strong>' + message + '</strong>';
+               }
                $message_div.append('<p>From: ' + sender + '</p>');
                $message_div.append('<p>' + time + '</p>');
                $message_div.append('<p><em>' + message + '</em></p>');
