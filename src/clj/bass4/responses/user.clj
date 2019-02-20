@@ -23,7 +23,6 @@
 (defn treatment-mw
   [handler]
   (fn [request]
-    (log/debug "xxx")
     (if-let [treatment (when-let [user (get-in request [:db :user])]
                          (treatment-service/user-treatment (:user-id user)))]
       (handler (-> request
@@ -133,4 +132,4 @@
       (no-consent-response user)
 
       :else
-      (layout/error-400-page))))
+      (http-response/bad-request))))

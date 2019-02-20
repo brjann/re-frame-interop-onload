@@ -21,13 +21,10 @@
   :start ((or (:init defaults) identity))
   :stop ((or (:stop defaults) identity)))
 
-(defn auth-error
-  [_ _]
-  (layout/error-403-page))
-
 (defn router-middleware
   [handler request]
   ((-> handler
+       api/api-tx-routes-mw
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw
@@ -49,7 +46,7 @@
 (def app-routes
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
-    #'api/service-routes
+    #'api/api-routes
     #'auth-routes
     #'lost-password/lost-password-routes
     #'user-routes/pluggable-ui

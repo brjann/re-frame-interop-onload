@@ -9,7 +9,7 @@
 (extend DateTime json/JSONWriter {:-write (fn [x ^PrintWriter out]
                                             (.print out (str "\"" x "\"")))})
 
-(extend-protocol cheshire.generate/JSONable
+#_(extend-protocol cheshire.generate/JSONable
   DateTime
   (to-json [dt gen]
     (cheshire.generate/write-string gen (str dt))))

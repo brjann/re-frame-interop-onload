@@ -21,8 +21,8 @@
                                (merge reg-params
                                       {:privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)})))
             (layout/text-response "Registration not allowed"))
-          (layout/error-404-page))
-        (layout/error-404-page)))))
+          (http-response/not-found))
+        (http-response/not-found)))))
 
 (defn spam-check-done?
   [{{:keys [registration]} :session {:keys [reg-params]} :db} _]

@@ -5,7 +5,7 @@
             [clojure.string :as string]
             [bass4.email :as email]
             [clojure.tools.logging :as log]
-            [bass4.layout :refer [error-page error-400-page]]
+            [bass4.layout :as layout]
             [bass4.request-state :as request-state]
             [clojure.string :as string]
             [bass4.db-config :as db-config]
@@ -31,9 +31,9 @@
     (catch Throwable t
       (log/error t)
       (request-state/record-error! t)
-      (error-page {:status  500
-                   :title   "Something bad happened!"
-                   :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
+      (layout/error-page {:status  500
+                          :title   "Something bad happened!"
+                          :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
 (defn internal-error-mw
   [handler request]
@@ -60,20 +60,6 @@
               (log/error msg)
               (log/error data)
               (request-state/record-error! msg))
-            (error-400-page (when (db-config/debug-mode?)
-                              (.getMessage e))))
-          (throw e))))))
-
-
-(defn wrap-schema-error [handler]
-  (fn [req]
-    (try
-      (handler req)
-      (catch ExceptionInfo e
-        (if (or
-              (= (:type (.data e)) :schema.core/error)
-              (string/starts-with? (.getMessage e) "400"))
-          (do
-            (request-state/record-error! (.getMessage e))
-            (error-400-page (when (db-config/debug-mode?) (.getMessage e))))
+            (http-response/bad-request (when (db-config/debug-mode?)
+                                         (.getMessage e))))
           (throw e))))))

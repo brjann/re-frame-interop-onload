@@ -99,7 +99,7 @@
         homework-id
         {:submitted  (get-in treatment-access [:submitted-homeworks (:module-id module)])
          :page-title (str (i18n/tr [:modules/homework]) " " (:module-name module))})
-      (layout/error-404-page (i18n/tr [:modules/no-homework])))))
+      (http-response/not-found (i18n/tr [:modules/no-homework])))))
 
 (defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
@@ -112,7 +112,7 @@
         module-contents
         "module-worksheet.html"
         worksheet-id)
-      (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
+      (http-response/not-found (i18n/tr [:modules/no-worksheet])))))
 
 (defapi worksheet-example
   [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
@@ -131,7 +131,7 @@
                         :content-id   worksheet-id
                         :data-name    data-name
                         :content-data example-data}))
-      (layout/error-404-page (i18n/tr [:modules/no-worksheet])))))
+      (http-response/not-found (i18n/tr [:modules/no-worksheet])))))
 
 (defapi modules-list
   [render-map :- map? modules :- seq? treatment-access-id :- integer?]

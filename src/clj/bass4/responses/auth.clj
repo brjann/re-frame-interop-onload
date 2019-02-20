@@ -357,7 +357,7 @@
   (fn [request]
     (if (:user-id request)
       (handler request)
-      (layout/error-403-page))))
+      (http-response/forbidden))))
 
 
 (defn session-user-id-mw [handler request]

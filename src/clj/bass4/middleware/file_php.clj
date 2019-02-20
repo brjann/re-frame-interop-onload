@@ -31,5 +31,5 @@
                             (bass/uid-file (:uid params))))]
         (if response
           (file/file-headers response)
-          (layout/error-404-page "File not found")))
+          (http-response/not-found "File not found")))
       (handler request))))

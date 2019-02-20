@@ -2,10 +2,34 @@
   (:require [compojure.api.sweet :refer :all]
             [schema.core :as s]
             [ring.util.http-response :as http-response]
-            [bass4.responses.user :as user-response]))
+            [bass4.responses.user :as user-response]
+            [bass4.services.treatment :as treatment-service]
+            [bass4.route-rules :as route-rules]
+            [bass4.routes.user :as user-routes]
+            [clojure.tools.logging :as log]))
 
+(defn treatment-mw
+  [handler]
+  (fn [request]
+    (log/debug "XXX")
+    (if-let [treatment (when-let [user (get-in request [:db :user])]
+                         (treatment-service/user-treatment (:user-id user)))]
+      (handler (-> request
+                   (assoc-in [:db :treatment] treatment)))
+      (handler request))))
 
-(def service-routes
+(defn api-tx-routes-mw
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/api/user/tx" "/api/user/tx/*"]
+    (route-rules/wrap-rules [{:uri   "*"
+                              :rules user-routes/tx-rules}
+                             {:uri   "/user/tx/message*"
+                              :rules user-routes/tx-message-rules}])
+    #'treatment-mw))
+
+(def api-routes
   (api
     {:swagger {:ui   "/swagger-ui"
                :spec "/swagger.json"
@@ -13,18 +37,7 @@
                              :title       "BASS API"
                              :description "XXX"}}}}
     (context "/api" []
-      (GET "/plus" [] (constantly "x"))
       (context "/user" []
-        :dynamic true
         (context "/tx" [:as request]
-          :middleware [user-response/treatment-mw]
           (GET "/" []
             (http-response/ok (get-in request [:db]))))))))
-
-
-
-(api
-  (context "/tx" [:as request]
-    :middleware [user-response/treatment-mw]
-    (GET "/" []
-      (http-response/ok (get-in request [:db])))))

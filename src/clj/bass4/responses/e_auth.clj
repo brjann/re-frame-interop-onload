@@ -228,7 +228,7 @@
         last-name    (get-in session [:e-auth :last-name])]
     (if (and personnummer first-name last-name)
       (layout/text-response (json/write-str (:e-auth session)))
-      (layout/error-400-page "No BankID info in session"))))
+      (http-response/bad-request "No BankID info in session"))))
 
 ;; --------------------------------
 ;;   CANCELLING AND ABORTING REQS

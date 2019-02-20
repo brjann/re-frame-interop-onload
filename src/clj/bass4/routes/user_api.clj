@@ -13,7 +13,8 @@
             [bass4.i18n :as i18n]
             [bass4.http-utils :as h-utils]
             [bass4.db-config :as db-config]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [ring.util.http-response :as http-response]))
 
 (defn api-tx-routes-mw
   [handler]
@@ -117,7 +118,7 @@
           (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
             (modules-response/worksheet-example module worksheet-id return-path)))
         ;; Module not found
-        (layout/error-404-page (i18n/tr [:modules/no-module]))))
+        (http-response/not-found (i18n/tr [:modules/no-module]))))
     (POST "/content-data" [content-data]
       (modules-response/save-worksheet-data
         (get-in treatment [:treatment-access :treatment-access-id])

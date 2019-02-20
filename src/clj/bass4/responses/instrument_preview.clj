@@ -13,7 +13,7 @@
   [instrument-id :- api/->int]
   (if-let [instrument (instruments/get-instrument instrument-id)]
     (layout/render "instrument-preview.html" {:instrument instrument :instrument-id instrument-id})
-    (layout/error-404-page)))
+    (http-response/not-found)))
 
 (defapi post-answers
   [instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
@@ -27,7 +27,7 @@
         (http-response/found (str "/embedded/instrument/" instrument-id "/summary"))))
     (do
       (request-state/record-error! (str "Instrument " instrument-id " does not exist"))
-      (layout/error-400-page))))
+      (http-response/bad-request))))
 
 (defn- checkboxize
   "Makes checkbox items into one item per checkbox option."

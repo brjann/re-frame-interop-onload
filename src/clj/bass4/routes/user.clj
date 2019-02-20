@@ -239,7 +239,7 @@
           (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
             (modules-response/worksheet-example module worksheet-id return-path)))
         ;; Module not found
-        (layout/error-404-page (i18n/tr [:modules/no-module]))))
+        (http-response/not-found (i18n/tr [:modules/no-module]))))
     (POST "/content-data" [content-data]
       (modules-response/save-worksheet-data
         (get-in treatment [:treatment-access :treatment-access-id])

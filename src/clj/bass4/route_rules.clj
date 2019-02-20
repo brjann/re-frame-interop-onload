@@ -63,13 +63,13 @@
       (string? res)
       (if (= :get (:request-method request))
         (http-response/found res)
-        (layout/error-400-page))
+        (http-response/bad-request))
 
       (= 404 res)
-      (layout/error-404-page)
+      (http-response/not-found)
 
       (= 403 res)
-      (layout/error-403-page)
+      (http-response/forbidden)
 
       :else
       (throw (Exception. (str "Rule returned illegal value " res))))))
@@ -82,22 +82,19 @@
                      (match-rules request)
                      (flatten-matching-rules)
                      (eval-rules request))]
-        #_(log/debug res)
-        #_(handler request)
         (if (true? res)
           (handler request)
           res)))))
-
 
 (def compiled-route-middlewares (atom {}))
 
 (defn- compile-middleware
   [handler route-mws]
-  (loop [v handler route-mws route-mws]
+  (loop [v         handler
+         route-mws route-mws]
     (if (empty? route-mws)
       v
       (recur ((first route-mws) v) (rest route-mws)))))
-
 
 (defn wrap-route-mw
   [handler uri-pattern & route-mws]

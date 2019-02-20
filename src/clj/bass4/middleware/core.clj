@@ -2,7 +2,6 @@
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
-            [bass4.layout :refer [error-page error-400-page]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
@@ -27,7 +26,8 @@
             [bass4.routes.ext-login :as ext-login]
             [bass4.clout-cache :as clout-cache]
             [bass4.responses.auth :as auth-response]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [ring.util.http-response :as http-response]))
 
 
 (defn wrap-formats [handler]
@@ -78,9 +78,7 @@
   ;; Takes request as argument but underscored to avoid unused variable type hint
   [_]
   (request-state/add-to-state-key! :info "CSRF error")
-  (error-page
-    {:status 403
-     :title  "Invalid anti-forgery token"}))
+  (http-response/forbidden "Invalid anti-forgery token"))
 
 (def ^:dynamic *skip-csrf* false)
 (defn csrf-wrapper

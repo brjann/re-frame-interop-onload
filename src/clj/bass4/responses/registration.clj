@@ -437,7 +437,7 @@
       personnummer
       (str "/registration/" project-id "/bankid-finished")
       (str "/registration/" project-id "/bankid"))
-    (layout/error-400-page (str "Personnummer does not have valid format " personnummer))))
+    (http-response/bad-request (str "Personnummer does not have valid format " personnummer))))
 
 ;; ----------------
 ;;   REGISTRATION
@@ -514,15 +514,15 @@
     (cond
       ;; All required fields should be present
       (not (all-fields? fields field-values))
-      (layout/error-400-page)
+      (http-response/bad-request)
 
       ;; No fixed fields should have been posted
       (not (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
-      (layout/error-400-page)
+      (http-response/bad-request)
 
       ;; If password has been posted - must be valid
       (not (password-valid? field-values))
-      (layout/error-400-page)
+      (http-response/bad-request)
 
       ;; Only sms number from legal countries
       (not (check-sms (:sms-number field-values) (:sms-countries reg-params)))
@@ -555,7 +555,7 @@
   [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
   (let [consent-text (reg-service/registration-study-consent project-id)]
     (if-not (and (:consent-text consent-text) (= "i-consent" i-consent))
-      (layout/error-400-page)
+      (http-response/bad-request)
       (->
         (http-response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session {:study-consent {:consent-id (:consent-id consent-text)
@@ -575,7 +575,7 @@
   [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
     (if-not (and (:notice-text privacy-notice) (= "i-consent" i-consent))
-      (layout/error-400-page)
+      (http-response/bad-request)
       (->
         (http-response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
