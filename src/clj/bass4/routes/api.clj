@@ -49,16 +49,16 @@
   (http-response/internal-server-error
     (-> data
         (dissoc :request :response :value)
+        (assoc :errors (distinct (:errors data)))
         (update :coercion cc/get-name)
-        #_(assoc :value (-> data :response :body))
         (->> (cc/encode-error (:coercion data))))))
 
 (s/defschema Message
   {:message-id    s/Int
    :unread?       Boolean
    :text          String
-   :send-datetime DateTime
    :sender-name   String
+   :send-datetime DateTime
    :sender-type   String})
 
 (def api-routes
