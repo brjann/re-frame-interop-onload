@@ -10,7 +10,8 @@
             [bass4.time :as b-time]
             [bass4.request-state :as request-state]
             [bass4.layout :as layout]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.http-errors :as http-errors]))
 
 (def ^:const const-fails-until-ip-block 10)
 (def ^:const const-fails-until-global-block 100)            ;; Should be factor of 10 for test to work
@@ -138,7 +139,7 @@
   [request]
   (let [fail-fn        (fn [response]
                          (= 422 (:status response)))
-        delay-response (fn [delay] (layout/error-429 delay))
+        delay-response (fn [delay] (http-errors/error-429 delay))
         attack-routes  [{:method         :post
                          :route          #"/login"
                          :success        (fn [in out]

@@ -23,7 +23,8 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service]
-            [bass4.services.user :as user-service])
+            [bass4.services.user :as user-service]
+            [bass4.http-errors :as http-errors])
   (:import (java.util UUID)))
 
 (def password-regex
@@ -250,7 +251,7 @@
 (defn- wrong-captcha-response
   [project-id new-session]
   (if (captcha-valid? new-session)
-    (-> (layout/error-422 "error")
+    (-> (http-errors/error-422 "error")
         (assoc :session new-session))
     (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc :session new-session))))
@@ -379,7 +380,7 @@
                                :sms-number)]
             (-> (http-response/ok "ok")
                 (assoc-reg-session session {:fixed-fields (set/union fixed-fields #{field-name})})))
-          (layout/error-422 "error"))))))
+          (http-errors/error-422 "error"))))))
 
 (defapi validate-email
   [project-id :- api/->int posted-code :- [[api/str? 1 10]] session :- [:? map?] reg-params :- map?]
@@ -526,7 +527,7 @@
 
       ;; Only sms number from legal countries
       (not (check-sms (:sms-number field-values) (:sms-countries reg-params)))
-      (layout/error-422 "sms-country-error")
+      (http-errors/error-422 "sms-country-error")
 
       ;; If field values include email or sms - these should be validated
       ;; before registration is complete.

@@ -1,6 +1,7 @@
 (ns bass4.responses.auth
   (:require [bass4.services.auth :as auth-service]
             [bass4.services.user :as user-service]
+            [bass4.http-errors :as http-errors]
             [bass4.services.assessments :as administrations]
             [ring.util.http-response :as http-response]
             [schema.core :as s]
@@ -87,7 +88,7 @@
     (if (= code (:double-auth-code session))
       (-> (http-response/found "/user/")
           (assoc :session (assoc session :double-authed? true :double-auth-code nil)))
-      (layout/error-422 "error"))))
+      (http-errors/error-422 "error"))))
 
 
 ;; --------------------------
@@ -193,10 +194,10 @@
   (if-let [user (auth-service/authenticate-by-username username password)]
     (let [{:keys [redirect error session]} (redirect-map user)]
       (if error
-        (layout/error-422 error)
+        (http-errors/error-422 error)
         (-> (http-response/found redirect)
             (assoc :session (create-new-session user session)))))
-    (layout/error-422 "error")))
+    (http-errors/error-422 "error")))
 
 
 ;; -------------
@@ -232,7 +233,7 @@
         (-> response
             (assoc :session (merge session {:auth-re-auth      nil
                                             :last-request-time (t/now)})))
-        (layout/error-422 "error"))
+        (http-errors/error-422 "error"))
       response)
     (http-response/forbidden)))
 
@@ -278,7 +279,7 @@
                                           :double-authed?    true})))
 
       :else
-      (layout/error-422 "error"))))
+      (http-errors/error-422 "error"))))
 
 (defapi handle-escalation
   [session :- [:? map?] password :- [[api/str? 1 100]]]
