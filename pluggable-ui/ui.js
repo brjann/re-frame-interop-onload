@@ -2,7 +2,7 @@ var fetch_csrf;
 
 // Make sure that no ajax calls are made before csrf has been retrieved
 $(document).ajaxSend(function (x, y, z) {
-   if (z.url !== '/api/user/csrf') {
+   if (z.headers === undefined || z.headers['x-ui-init'] !== true) {
       if (fetch_csrf().state() !== 'resolved') {
          throw 'CSRF has not been retrieved';
       }
@@ -10,22 +10,34 @@ $(document).ajaxSend(function (x, y, z) {
 });
 
 fetch_csrf = (function () {
-   let csrf_state;
+   let executed = false;
+   let timezone_state = $.Deferred();
+   let csrf_state = $.Deferred();
    return function () {
-      if (!csrf_state) {
-         csrf_state = $.Deferred();
+      if (!executed) {
+         executed = true;
          console.log('Fetching CSRF');
          $.ajax('/api/user/csrf', {
-            success: function (data) {
-               let csrf = data;
+            headers: {'x-ui-init': true},
+            success: function (csrf) {
                console.log('CSRF: ' + csrf);
                $(document).ajaxSend(function (event, jqxhr, settings) {
                   jqxhr.setRequestHeader("x-csrf-token", csrf);
                });
                csrf_state.resolve();
             }
+         });
+
+         console.log('Fetching timezone');
+         $.ajax('/api/user/timezone-name', {
+            headers: {'x-ui-init': true},
+            success: function (data) {
+               console.log('Timezone: ' + data);
+               timezone_state.resolve();
+            }
          })
+
       }
-      return csrf_state;
+      return $.when(csrf_state, timezone_state);
    }
 })();
