@@ -50,7 +50,9 @@
         (found-200 response (:body response))
 
         :else
-        (http-response/found (:body response)))
+        (merge
+          response
+          (http-response/found (:body response))))
 
       (= 500 status)
       response

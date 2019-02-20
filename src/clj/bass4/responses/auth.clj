@@ -221,6 +221,7 @@
 
 (defn handle-re-auth
   [session password response]
+  (log/debug (:auth-re-auth? session))
   (if-let [user-id (:user-id session)]
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
@@ -323,20 +324,17 @@
           last-request-time (:last-request-time session-in)
           re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
           response          (if re-auth?
-                              (if (and (= (:request-method request) :get)
-                                       (not (h-utils/ajax? request)))
-                                (http-response/found (str "/re-auth?return-url=" (request-string request)))
-                                (http-errors/re-auth-440))
+                              (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
                               (handler (assoc-in request [:session :auth-re-auth?] nil)))
           session-map       {:last-request-time now
                              :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
                                                   (:auth-re-auth? (:session response))
                                                   re-auth?)}
-          session-out       (:session response)]
-
-      (assoc response :session (if (nil? session-out)
-                                 (merge session-in session-map)
-                                 (merge session-out session-map))))))
+          session-out       (:session response)
+          new-session       (if (nil? session-out)
+                              (merge session-in session-map)
+                              (merge session-out session-map))]
+      (assoc response :session new-session))))
 
 (defn double-auth-mw
   [handler]
