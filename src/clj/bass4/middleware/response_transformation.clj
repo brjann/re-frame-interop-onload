@@ -73,5 +73,8 @@
       (and (not ajax?) get? (= 400 status))
       (error-pages/error-400-page (:body response))
 
+      (and (#{400 403 404} status) (not (get-in response [:headers "Content-Type"])))
+      (assoc-in response [:headers "Content-Type"] "text/plain; charset=utf-8")
+
       :else
       response)))

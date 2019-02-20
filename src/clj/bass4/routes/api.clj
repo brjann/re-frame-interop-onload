@@ -10,7 +10,9 @@
             [bass4.responses.messages :as messages-response]
             [compojure.api.exception :as ex]
             [ring.util.http-response :as http-response]
-            [compojure.api.coercion.core :as cc])
+            [compojure.api.coercion.core :as cc]
+            [ring.middleware.anti-forgery :as anti-forgery]
+            [bass4.layout :as layout])
   (:import (org.joda.time DateTime)))
 
 (defn treatment-mw
@@ -67,24 +69,42 @@
                   :spec "/swagger.json"
                   :data {:info {:version     "1.0.0"
                                 :title       "BASS API"
-                                :description "XXX"}}}
+                                :description "Come here"}}}
      :exceptions {:handlers
                   {::ex/response-validation response-validation-handler}}}
     (context "/api" []
       (context "/user" [:as {{:keys [user]} :db}]
+
+        (GET "/csrf" []
+          :summary "Session's CSRF token. Must be included in all posts in header or body."
+          :return String
+          (layout/text-response anti-forgery/*anti-forgery-token*))
+
         (GET "/privacy-notice-html" []
+          :summary "Database's privacy notice in HTML format."
+          :return String
           (user-response/privacy-notice-html user))
+
         (GET "/timezone-name" []
+          :summary "Name of the database's timezone."
+          :return String
           (str (db-config/time-zone)))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
                          {{:keys [treatment-access]} :treatment} :db
                          :as                                     request}]
+
           (GET "/messages" []
-            :summary "list all messages for patient"
+            :summary "All messages for patient."
             :return [Message]
-            (messages-response/api-messages user)))))))
+            (messages-response/api-messages user))
+
+          (POST "/message-read" []
+            :summary "Mark message with message id as read."
+            :body-params [message-id :- s/Int]
+            (messages-response/message-read (:user-id user) message-id)
+            (http-response/ok)))))))
 
 
 #_(context "/api" []
