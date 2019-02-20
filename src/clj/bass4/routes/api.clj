@@ -6,12 +6,13 @@
             [bass4.services.treatment :as treatment-service]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.http-utils :as h-utils]
+            [bass4.db-config :as db-config]))
 
 (defn treatment-mw
   [handler]
   (fn [request]
-    (log/debug "XXX")
     (if-let [treatment (when-let [user (get-in request [:db :user])]
                          (treatment-service/user-treatment (:user-id user)))]
       (handler (-> request
@@ -37,7 +38,11 @@
                              :title       "BASS API"
                              :description "XXX"}}}}
     (context "/api" []
-      (context "/user" []
+      (context "/user" [:as {{:keys [user]} :db}]
+        (GET "/privacy-notice-html" []
+          (user-response/privacy-notice-html user))
+        (GET "/timezone-name" []
+          (str (db-config/time-zone)))
         (context "/tx" [:as request]
           (GET "/" []
             (http-response/ok (get-in request [:db]))))))))

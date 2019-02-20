@@ -72,7 +72,7 @@
               {:assessments-checked? true
                :assessments-pending? false})))))))
 
-(defapi privacy-notice-bare
+(defapi privacy-notice-html
   [user :- map?]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]

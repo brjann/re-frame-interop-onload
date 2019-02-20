@@ -39,7 +39,7 @@
          if (notice_loaded) return;
          notice_loaded = true;
          $.ajax(
-            '/user/api/privacy-notice',
+            '/api/user/privacy-notice-html',
             {
                method: 'get',
                success: function (data) {

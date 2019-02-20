@@ -1,9 +1,10 @@
 (ns bass4.handler
   (:require [compojure.core :refer [routes wrap-routes]]
-            [bass4.layout :as layout]
+            [mount.core :as mount]
+            [clojure.tools.logging :as log]
+            [ring.util.http-response :as http-response]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :as user-routes]
-            [bass4.routes.user-api :as user-api-routes]
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
@@ -12,11 +13,8 @@
             [bass4.routes.e-auth :refer [e-auth-routes]]
             [bass4.routes.lost-password :as lost-password]
             [bass4.env :refer [defaults]]
-            [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
-            [clojure.tools.logging :as log]
-            [bass4.routes.api :as api]
-            [ring.util.http-response :as http-response]))
+            [bass4.routes.api :as api]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -29,9 +27,7 @@
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw
-       user-api-routes/api-tx-routes-mw
        user-routes/user-routes-mw
-       user-api-routes/api-response-mw
        reg-routes/registration-routes-mw
        user-routes/privacy-consent-mw
        lost-password/lpw-routes-mw)
@@ -41,8 +37,6 @@
   [handler]
   (fn [request]
     (router-middleware handler request)))
-
-
 
 (def app-routes
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
@@ -55,7 +49,6 @@
     #'user-routes/root-reroute
     #'user-routes/tx-routes
     #'user-routes/privacy-consent-routes
-    #'user-api-routes/api-routes
     (-> #'e-auth-routes
         (wrap-routes middleware/wrap-csrf))
     (-> #'embedded-routes

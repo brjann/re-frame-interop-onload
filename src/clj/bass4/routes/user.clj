@@ -92,7 +92,7 @@
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/user/*" "/user"]
+    ["/user/*" "/user" "/api/user/*"]
     #'user-response/check-assessments-mw
     #'auth-response/auth-re-auth-mw
     #'middleware/wrap-csrf

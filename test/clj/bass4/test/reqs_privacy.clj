@@ -201,8 +201,8 @@
 (deftest api-privacy-notice
   (with-redefs [privacy-service/privacy-notice-exists? (constantly true)]
     (-> *s*
-        (visit "/user/api/privacy-notice")
+        (visit "/api/user/privacy-notice-html")
         (has (status? 403))
         (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
-        (visit "/user/api/privacy-notice")
+        (visit "/api/user/privacy-notice-html")
         (has (status? 200)))))
