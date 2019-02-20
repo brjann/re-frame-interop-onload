@@ -15,7 +15,8 @@
             [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
             [clojure.tools.logging :as log]
-            [bass4.routes.api :as api]))
+            [bass4.routes.api :as api]
+            [ring.util.http-response :as http-response]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -66,7 +67,12 @@
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw)))
     #'quick-login-routes
     ;; Replacement for route/not-found
-    (layout/route-not-found)))
+    (fn [request]
+      (http-response/not-found)
+      #_(let [body (error-404-page)]
+          (-> (response/render body request)
+              (http-response/status 404)
+              (cond-> (= (:request-method request) :head) (assoc :body nil)))))))
 
 
 (defn app [] (middleware/wrap-base (route-middlewares-wrapper #'app-routes)))

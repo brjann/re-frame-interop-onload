@@ -8,6 +8,7 @@
             [bass4.layout :as layout]
             [bass4.request-state :as request-state]
             [clojure.string :as string]
+            [bass4.error-pages :as error-pages]
             [bass4.db-config :as db-config]
             [ring.util.http-response :as http-response])
   (:import (clojure.lang ExceptionInfo)))
@@ -31,9 +32,9 @@
     (catch Throwable t
       (log/error t)
       (request-state/record-error! t)
-      (layout/error-page {:status  500
-                          :title   "Something bad happened!"
-                          :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
+      (error-pages/error-page {:status  500
+                               :title   "Something bad happened!"
+                               :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
 (defn internal-error-mw
   [handler request]
