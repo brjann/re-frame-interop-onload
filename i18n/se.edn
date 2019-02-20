@@ -173,7 +173,7 @@
                    :go-back               "Prova att gå tillbaka i din webbläsare"
                    :or-login              "eller gå till inloggningssidan"
                    :login                 "Gå till inloggningssidan"
-                   :timeout-hard          "Du har blivit utloggad. Du kommer att omdirigeras till inloggninssidan."
+                   :timeout-hard          "Du har blivit utloggad. Du kommer att omdirigeras till inloggningssidan."
                    :try-reload            "Något har gått fel och du kan inte skicka in din data. Försök igen eller ladda om sidan."
                    :not-authorized        "Ej auktoriserad."
                    :not-authorized-longer "Du har inte tillåtelse att visa denna sida."
