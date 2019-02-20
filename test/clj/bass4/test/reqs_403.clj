@@ -13,8 +13,6 @@
                                      poll-message-chan]]
             [bass4.external-messages :refer [*debug-chan*]]
             [kerodon.test :refer :all]
-            [bass4.middleware.debug :as mw-debug]
-            [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.tools.logging :as log]))
 
 (use-fixtures
