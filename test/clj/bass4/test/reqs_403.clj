@@ -60,12 +60,3 @@
       (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
       (has (status? 403))
       (has (text? "login"))))
-
-(deftest request-403-ajax-with-identity
-  (binding [*debug-chan* (chan)]
-    (-> *s*
-        (modify-session {:user-id 535771 :double-authed? true})
-        (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
-        (has (status? 403))
-        (has (text? "reload"))
-        (pass-by (messages-are? [[:email "403"] [:email "/debug"]] (poll-message-chan *debug-chan*))))))

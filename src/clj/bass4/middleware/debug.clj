@@ -1,13 +1,10 @@
 (ns bass4.middleware.debug
-  (:require [bass4.sms-sender :as sms]
-            [bass4.config :refer [env]]
+  (:require [bass4.config :refer [env]]
             [bass4.email :refer [send-email! send-email*! is-email?]]
-            [bass4.request-state :as request-state]
             [prone.middleware :as prone]
-            [bass4.middleware.ajax-post :as ajax-post]
-            [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [bass4.db-config :as db-config]))
+            [bass4.db-config :as db-config]
+            [bass4.http-utils :as h-utils]))
 
 
 (defn wrap-debug-exceptions
@@ -16,7 +13,7 @@
   [handler]
   (fn [request]
     (if (and (db-config/debug-mode?)
-             (not (ajax-post/ajax-post? request)))
+             (not (h-utils/ajax? request)))
       ((prone/wrap-exceptions handler) request)
       (handler request))))
 
