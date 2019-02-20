@@ -43,7 +43,7 @@
     (cond
       (= 440 status)
       (if (or api? ajax?)
-        (dissoc response :body)
+        (assoc response :body "")
         (merge response (http-response/found (:body response))))
 
       (= 500 status)
