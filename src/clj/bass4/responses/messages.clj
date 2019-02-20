@@ -38,9 +38,9 @@
 
 
 (defapi api-messages
-  [treatment-map :- map? user :- map?]
+  [user :- map?]
   (let [user-id  (:user-id user)
         messages (messages-service/get-all-messages user-id)]
     (->> messages
          (mapv #(dissoc % :sender-class :sender-id :subject))
-         (h-utils/json-response))))
+         (http-response/ok))))
