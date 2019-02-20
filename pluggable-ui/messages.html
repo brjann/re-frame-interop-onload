@@ -14,6 +14,14 @@
 <script type="text/javascript">
    var csrf_ref;
 
+   $(document).ajaxSend(function (x, y, z) {
+      if (z.url !== '/api/user/csrf') {
+         if (fetch_csrf().state() !== 'resolved') {
+            throw 'CSRF has not been retrieved';
+         }
+      }
+   });
+
    function fetch_csrf() {
       if (!csrf_ref) {
          console.log('Fetching CSRF');
