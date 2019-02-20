@@ -139,7 +139,7 @@
   [request]
   (let [fail-fn        (fn [response]
                          (= 422 (:status response)))
-        delay-response (fn [delay] (http-errors/error-429 delay))
+        delay-response (fn [delay] (http-errors/too-many-requests-429 delay))
         attack-routes  [{:method         :post
                          :route          #"/login"
                          :success        (fn [in out]
@@ -188,7 +188,7 @@
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response (constantly (http-errors/error-429 "Too many requests"))}]]
+                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))
                        (re-matches (:route %) (:uri request))))

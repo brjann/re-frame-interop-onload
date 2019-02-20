@@ -281,8 +281,10 @@
       (follow-redirect)
       (visit "/re-auth" :request-method :post :params {:password 536975})
       (has (status? 302))
+      (log-headers)
       (visit "/user")
       (visit "/user/tx/messages")
+      (log-headers)
       (has (status? 200))))
 
 

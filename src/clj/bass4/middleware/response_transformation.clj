@@ -3,7 +3,8 @@
             [bass4.error-pages :as error-pages]
             [bass4.utils :as utils]
             [bass4.layout :as layout]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [ring.util.http-response :as http-response]))
 
 
 
@@ -19,12 +20,15 @@
 ;; If page should just be reloaded, then the url returned should simply be "reload".
 
 (defn found-200
+  [response location]
+  (-> response
+      (assoc :status 200)
+      (assoc :headers {"Content-Type" "text/plain; charset=utf-8"})
+      (assoc :body (str "found " location))))
+
+(defn transform-302
   [response]
-  (let [location (get-in response [:headers "Location"])]
-    (-> response
-        (assoc :status 200)
-        (assoc :headers {"Content-Type" "text/plain; charset=utf-8"})
-        (assoc :body (str "found " location)))))
+  (found-200 response (get-in response [:headers "Location"])))
 
 (defn transform-mw
   [handler request]
@@ -37,13 +41,24 @@
         status     (:status response)
         user-id    (get-in request [:session :user-id])]
     (cond
+      (= 440 status)
+      (cond
+        api?
+        (dissoc response :body)
+
+        ajax?
+        (found-200 response (:body response))
+
+        :else
+        (http-response/found (:body response)))
+
       (= 500 status)
       response
 
       ;; if ajax and response is 302, then send
       ;; the special found location response instead
       (and (or ajax-post? api?) (= 302 status))
-      (found-200 response)
+      (transform-302 response)
 
       ;; The user is trying to post to
       ;; forbidden and is logged in.

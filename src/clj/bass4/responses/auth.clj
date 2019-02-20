@@ -210,12 +210,6 @@
                         "auth/re-auth.html"
                         {:return-url return-url
                          :error      error})))
-(defn re-auth-440
-  ([] (re-auth-440 ""))
-  ([body]
-   {:status  440
-    :headers {}
-    :body    body}))
 
 (defapi re-auth
   [session :- [:? map?] return-url :- [:? [api/str? 1 2000]]]
@@ -227,13 +221,18 @@
 
 (defn handle-re-auth
   [session password response]
+  (log/debug "Re-auth tried" (:user-id session))
   (if-let [user-id (:user-id session)]
     (if (:auth-re-auth session)
       (if (auth-service/authenticate-by-user-id user-id password)
-        (-> response
-            (assoc :session (merge session {:auth-re-auth      nil
-                                            :last-request-time (t/now)})))
-        (http-errors/error-422 "error"))
+        (do
+          (log/debug "Re-auth successful")
+          (-> response
+              (assoc :session (merge session {:auth-re-auth      nil
+                                              :last-request-time (t/now)}))))
+        (do
+          (log/debug "Re-auth failed")
+          (http-errors/error-422 "error")))
       response)
     (http-response/forbidden)))
 
@@ -332,8 +331,8 @@
                               (if (and (= (:request-method request) :get)
                                        (not (h-utils/ajax? request)))
                                 (http-response/found (str "/re-auth?return-url=" (request-string request)))
-                                (re-auth-440))
-                              (handler (assoc-in request [:session :auth-re-auth] re-auth?)))
+                                (http-errors/re-auth-440))
+                              (handler (assoc-in request [:session :auth-re-auth] nil)))
           session-map       {:last-request-time now
                              :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
                                                   (:auth-re-auth (:session response))
