@@ -79,7 +79,7 @@
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
           :return String
-          (layout/text-response anti-forgery/*anti-forgery-token*))
+          (layout/text-response (force anti-forgery/*anti-forgery-token*)))
 
         (GET "/disable-csrf" []
           :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."

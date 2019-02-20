@@ -12,24 +12,61 @@
 <script src="/js/jquery/jquery-3.2.0.min.js" type="text/javascript"></script>
 <script src="/assets/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
 <script type="text/javascript">
+   var csrf_ref;
+
+   function fetch_csrf() {
+      if (!csrf_ref) {
+         console.log('Fetching CSRF');
+         csrf_ref = $.ajax('/api/user/csrf', {
+            success: function (data) {
+               let csrf = data;
+               console.log('CSRF: ' + csrf);
+               $(document).ajaxSend(function (event, jqxhr, settings) {
+                  jqxhr.setRequestHeader("x-csrf-token", csrf);
+               });
+            }
+         })
+      }
+      return csrf_ref;
+   }
+
    $(document).ready(function () {
-      $.ajax("/api/user/tx/messages", {
-         success: function (data) {
-            var $message_div = $('#main');
-            var messages = $.map(data, function (m) {
-               var message = m['text'].replace(/(?:\r\n|\r|\n)/g, '<br>');
-               var sender = (m['sender-type'] === 'therapist') ? m['sender-name'] : 'me';
-               var time = new Date(m['send-datetime']).toDateString();
-               var unread = m['unread?'];
-               if (unread && sender !== "me") {
-                  message = '<strong>' + message + '</strong>';
-               }
-               $message_div.append('<p>From: ' + sender + '</p>');
-               $message_div.append('<p>' + time + '</p>');
-               $message_div.append('<p><em>' + message + '</em></p>');
-            });
-         }
-      });
+      $.when(fetch_csrf()).done(function () {
+         console.log('Fetching messages');
+         $.ajax('/api/user/tx/messages', {
+            success: function (data) {
+               console.log('Messages fetched');
+               let unreads = [];
+               let $message_div = $('#main');
+               $.map(data, function (m) {
+                  let message = m['text'].replace(/(?:\r\n|\r|\n)/g, '<br>');
+                  let sender = (m['sender-type'] === 'therapist') ? m['sender-name'] : 'me';
+                  let time = new Date(m['send-datetime']).toDateString();
+                  let unread = m['unread?'];
+                  if (unread && sender !== "me") {
+                     message = '<strong>' + message + '</strong>';
+                  }
+                  $message_div.append('<p>From: ' + sender + '</p>');
+                  $message_div.append('<p>' + time + '</p>');
+                  $message_div.append('<p><em>' + message + '</em></p>');
+                  if (unread) {
+                     unreads.push(m['message-id']);
+                  }
+               });
+
+               // Notify that all unread messages are now read
+               $.map(unreads, function (id) {
+                  console.log('Marking message ' + id + ' as read');
+                  $.ajax('/api/user/tx/message-read', {
+                        method: 'post',
+                        data: JSON.stringify({'message-id': id}),
+                     contentType: 'application/json'
+                     }
+                  );
+               })
+            }
+         });
+      })
    });
 </script>
 </body>
