@@ -13,7 +13,8 @@
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
     [bass4.http-utils :as h-utils]
-    [bass4.config :as config]))
+    [bass4.config :as config]
+    [ring.util.http-response :as http-response]))
 
 ;----------------
 ; SETUP DB STATE
@@ -158,6 +159,4 @@
               db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
       (request-state/set-state! :name (name db-name))
       (handler request))
-    {:status  404
-     :headers {"Content-Type" "text/plain; charset=utf-8"}
-     :body    "No such DB"}))
+    (http-response/not-found "No such DB")))

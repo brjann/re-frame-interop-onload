@@ -15,7 +15,7 @@
             [bass4.request-state :as request-state]
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-state :refer [request-state]]
-            [bass4.middleware.http-statuses :as ajax-post]
+            [bass4.middleware.response-transformation :as ajax-post]
             [bass4.middleware.embedded :as embedded-mw]
             [bass4.middleware.errors :as errors-mw]
             [bass4.middleware.file-php :as file-php]
@@ -180,7 +180,7 @@
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
-      (wrap-mw-fn #'ajax-post/http-statuses-mw)
+      (wrap-mw-fn #'ajax-post/transform-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
       wrap-reload-headers
       wrap-webjars

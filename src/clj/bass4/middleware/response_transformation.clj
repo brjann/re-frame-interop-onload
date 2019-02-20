@@ -1,7 +1,8 @@
-(ns bass4.middleware.http-statuses
-  (:require [bass4.request-state :as request-state]
-            [bass4.http-utils :as h-utils]
-            [bass4.error-pages :as error-pages]))
+(ns bass4.middleware.response-transformation
+  (:require [bass4.http-utils :as h-utils]
+            [bass4.error-pages :as error-pages]
+            [bass4.utils :as utils]
+            [bass4.layout :as layout]))
 
 
 
@@ -17,17 +18,10 @@
 ;; If page should just be reloaded, then the url returned should simply be "reload".
 
 
-(defn- ajax-found
-  [response]
-  (let [location (get (:headers response) "Location")
-        new-map  {:status  200
-                  :headers {}
-                  :body    (str "found " location)}]
-    (merge response new-map)))
-
-(defn http-statuses-mw
+(defn transform-mw
   [handler request]
   (let [ajax?      (h-utils/ajax? request)
+        api?       (= "/api/" (utils/subs+ (:uri request) 0 5))
         get?       (= :get (:request-method request))
         post?      (= :post (:request-method request))
         ajax-post? (and ajax? post?)
@@ -35,15 +29,11 @@
         status     (:status response)
         user-id    (get-in request [:session :user-id])]
     (cond
-      ;; If ajax and method is get
-      ;; then just forward the response
-      (and get? ajax?)
-      response
-
       ;; if ajax and response is 302, then send
       ;; the special found location response instead
-      (and ajax-post? (= 302 status))
-      (ajax-found response)
+      (and (or ajax-post? api?) (= 302 status))
+      (let [location (get (:headers response) "Location")]
+        (layout/text-response (str "found " location)))
 
       ;; The user is trying to post to
       ;; forbidden and is logged in.
