@@ -1,6 +1,5 @@
 (ns bass4.middleware.core
-  (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
-            [bass4.env :refer [defaults]]
+  (:require [bass4.env :refer [defaults]]
             [clojure.tools.logging :as log]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
@@ -9,13 +8,12 @@
             [immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
-            [clj-time.core :as t]
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.request-state :as request-state]
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-state :refer [request-state]]
-            [bass4.middleware.response-transformation :as ajax-post]
+            [bass4.middleware.response-transformation :as transform]
             [bass4.middleware.embedded :as embedded-mw]
             [bass4.middleware.errors :as errors-mw]
             [bass4.middleware.file-php :as file-php]
@@ -180,7 +178,7 @@
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
-      (wrap-mw-fn #'ajax-post/transform-mw)
+      (wrap-mw-fn #'transform/transform-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
       wrap-reload-headers
       wrap-webjars

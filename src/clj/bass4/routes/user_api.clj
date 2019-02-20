@@ -22,7 +22,9 @@
     handler
     ["/user/api/tx/*"]
     (route-rules/wrap-rules [{:uri   "*"
-                              :rules user-routes/tx-rules}
+                              :rules [[#'user-routes/consent-needed? "/user/privacy/consent" :ok]
+                                      [#'user-routes/assessments-pending? "/user/assessments" :ok]
+                                      [#'user-routes/limited-access? "/escalate" :ok]]}
                              {:uri   "/user/api/tx/message*"
                               :rules user-routes/tx-message-rules}])
     #'user-response/treatment-mw))
