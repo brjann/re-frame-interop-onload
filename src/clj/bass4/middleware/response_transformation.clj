@@ -2,7 +2,8 @@
   (:require [bass4.http-utils :as h-utils]
             [bass4.error-pages :as error-pages]
             [bass4.utils :as utils]
-            [bass4.layout :as layout]))
+            [bass4.layout :as layout]
+            [clojure.tools.logging :as log]))
 
 
 
@@ -36,6 +37,9 @@
         status     (:status response)
         user-id    (get-in request [:session :user-id])]
     (cond
+      (= 500 status)
+      response
+
       ;; if ajax and response is 302, then send
       ;; the special found location response instead
       (and (or ajax-post? api?) (= 302 status))

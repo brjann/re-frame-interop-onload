@@ -7,7 +7,10 @@
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
             [bass4.db-config :as db-config]
-            [bass4.responses.messages :as messages-response])
+            [bass4.responses.messages :as messages-response]
+            [compojure.api.exception :as ex]
+            [ring.util.http-response :as http-response]
+            [compojure.api.coercion.core :as cc])
   (:import (org.joda.time DateTime)))
 
 (defn treatment-mw
@@ -32,21 +35,41 @@
                               :rules user-routes/tx-message-rules}])
     #'treatment-mw))
 
+(defn response-validation-handler
+  "Creates error response based on a response error. The following keys are available:
+
+    :type            type of the exception (::response-validation)
+    :coercion        coercion instance used
+    :in              location of the value ([:response :body])
+    :schema          schema to be validated against
+    :error           schema error
+    :request         raw request
+    :response        raw response"
+  [e data req]
+  (http-response/internal-server-error
+    (-> data
+        (dissoc :request :response :value)
+        (update :coercion cc/get-name)
+        #_(assoc :value (-> data :response :body))
+        (->> (cc/encode-error (:coercion data))))))
+
 (s/defschema Message
   {:message-id    s/Int
+   :unread?       Boolean
    :text          String
    :send-datetime DateTime
-   :sender-id     s/Int
-   :sender-class  String
-   :sender-name   String})
+   :sender-name   String
+   :sender-type   String})
 
 (def api-routes
   (api
-    {:swagger {:ui   "/swagger-ui"
-               :spec "/swagger.json"
-               :data {:info {:version     "1.0.0"
-                             :title       "BASS API"
-                             :description "XXX"}}}}
+    {:swagger    {:ui   "/swagger-ui"
+                  :spec "/swagger.json"
+                  :data {:info {:version     "1.0.0"
+                                :title       "BASS API"
+                                :description "XXX"}}}
+     :exceptions {:handlers
+                  {::ex/response-validation response-validation-handler}}}
     (context "/api" []
       (context "/user" [:as {{:keys [user]} :db}]
         (GET "/privacy-notice-html" []

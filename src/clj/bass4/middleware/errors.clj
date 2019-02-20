@@ -45,7 +45,8 @@
       (mail-request-error! req-state))
     res))
 
-(defn wrap-api-error [handler request]
+(defn wrap-api-error
+  [handler request]
   (try
     (handler request)
     (catch ExceptionInfo e
