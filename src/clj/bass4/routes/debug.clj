@@ -69,7 +69,7 @@
           (layout/text-response "You posted data"))
         (GET "/env" [:as req] (layout/print-var-response env))
         (GET "/timeout" [:as request]
-          (-> (http-response/found "/re-auth")
+          (-> (http-response/found "/re-auth?return-url=/user")
               (assoc :session
                      (merge (:session request)
                             {:auth-re-auth? true}))))
