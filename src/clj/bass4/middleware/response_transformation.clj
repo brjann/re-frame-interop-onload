@@ -17,6 +17,13 @@
 ;; "200 found url" responses - for ajax posts.
 ;; If page should just be reloaded, then the url returned should simply be "reload".
 
+(defn found-200
+  [response]
+  (let [location (get-in response [:headers "Location"])]
+    (-> response
+        (assoc :status 200)
+        (assoc :headers {"Content-Type" "text/plain; charset=utf-8"})
+        (assoc :body (str "found " location)))))
 
 (defn transform-mw
   [handler request]
@@ -32,8 +39,7 @@
       ;; if ajax and response is 302, then send
       ;; the special found location response instead
       (and (or ajax-post? api?) (= 302 status))
-      (let [location (get (:headers response) "Location")]
-        (layout/text-response (str "found " location)))
+      (found-200 response)
 
       ;; The user is trying to post to
       ;; forbidden and is logged in.
