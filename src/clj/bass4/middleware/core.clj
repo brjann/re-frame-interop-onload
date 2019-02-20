@@ -13,18 +13,16 @@
             [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.request-state :as request-state]
-            [bass4.middleware.debug :refer [wrap-debug-exceptions wrap-session-modification]]
+            [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-state :refer [request-state]]
-            [bass4.middleware.ajax-post :refer [ajax-post]]
-            [bass4.middleware.embedded :refer [embedded-mw embedded-iframe]]
-            [bass4.middleware.errors :refer [internal-error-mw] :as errors]
+            [bass4.middleware.ajax-post :as ajax-post]
+            [bass4.middleware.embedded :as embedded-mw]
+            [bass4.middleware.errors :as errors-mw]
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
             [bass4.responses.auth :as auth]
             [bass4.responses.e-auth :as e-auth]
-            [bass4.responses.user :as user-response]
             [bass4.routes.ext-login :as ext-login]
-            [bass4.clout-cache :as clout-cache]
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
             [ring.util.http-response :as http-response]))
@@ -172,23 +170,23 @@
       ;wrap-exceptions
       ;wrap-auth-re-auth
       wrap-formats                                          ; This used to be in def-routes.
-      (wrap-mw-fn #'errors/wrap-api-error)
+      (wrap-mw-fn #'errors-mw/wrap-api-error)
       (wrap-mw-fn #'auth-response/privacy-notice-error-mw)
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
-      wrap-debug-exceptions
-      (wrap-mw-fn #'embedded-mw)
+      debug-mw/wrap-debug-exceptions
+      (wrap-mw-fn #'embedded-mw/embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
-      (wrap-mw-fn #'ajax-post)
+      (wrap-mw-fn #'ajax-post/ajax-post)
       (wrap-mw-fn #'auth/session-user-id-mw)
       wrap-reload-headers
       wrap-webjars
       ; flash middleware was removed from here
       (wrap-mw-fn #'request-state-session-info)
-      wrap-session-modification
+      debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
@@ -203,6 +201,6 @@
 
           (dissoc :session)))
       ;; wrap-reload-headers
-      (wrap-mw-fn #'embedded-iframe)                        ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
-      (wrap-mw-fn #'internal-error-mw)
+      (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
+      (wrap-mw-fn #'errors-mw/internal-error-mw)
       (wrap-mw-fn #'request-state)))
