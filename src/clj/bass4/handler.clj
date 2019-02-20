@@ -14,7 +14,8 @@
             [bass4.env :refer [defaults]]
             [mount.core :as mount]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.routes.api :as api]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -48,6 +49,7 @@
 (def app-routes
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
+    #'api/service-routes
     #'auth-routes
     #'lost-password/lost-password-routes
     #'user-routes/pluggable-ui
