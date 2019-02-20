@@ -221,18 +221,13 @@
 
 (defn handle-re-auth
   [session password response]
-  (log/debug "Re-auth tried" (:user-id session))
   (if-let [user-id (:user-id session)]
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
-        (do
-          (log/debug "Re-auth successful")
-          (-> response
-              (assoc :session (merge session {:auth-re-auth?     nil
-                                              :last-request-time (t/now)}))))
-        (do
-          (log/debug "Re-auth failed")
-          (http-errors/error-422 "error")))
+        (-> response
+            (assoc :session (merge session {:auth-re-auth?     nil
+                                            :last-request-time (t/now)})))
+        (http-errors/error-422 "error"))
       response)
     (http-response/forbidden)))
 
@@ -323,10 +318,10 @@
 (defn auth-re-auth-mw
   [handler]
   (fn [request]
-    (let [session           (:session request)
+    (let [session-in        (:session request)
           now               (t/now)
-          last-request-time (:last-request-time session)
-          re-auth?          (should-re-auth? session now last-request-time (re-auth-timeout))
+          last-request-time (:last-request-time session-in)
+          re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
           response          (if re-auth?
                               (if (and (= (:request-method request) :get)
                                        (not (h-utils/ajax? request)))
@@ -336,11 +331,12 @@
           session-map       {:last-request-time now
                              :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
                                                   (:auth-re-auth? (:session response))
-                                                  re-auth?)}]
+                                                  re-auth?)}
+          session-out       (:session response)]
 
-      (assoc response :session (if (nil? (:session response))
-                                 (merge session session-map)
-                                 (merge (:session response) session-map))))))
+      (assoc response :session (if (nil? session-out)
+                                 (merge session-in session-map)
+                                 (merge session-out session-map))))))
 
 (defn double-auth-mw
   [handler]
