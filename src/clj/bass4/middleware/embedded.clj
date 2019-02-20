@@ -95,9 +95,7 @@
           (do
             (bass-service/update-php-session-last-activity! php-session-id (b-time/to-unix (t/now)))
             (handler request)))
-        (layout/error-page
-          {:status 403
-           :title  "No embedded access"})))))
+        (http-response/forbidden "No embedded access")))))
 
 (defn embedded-request [handler request uid]
   ;; Note that if url uid is attached to already legal embedded path

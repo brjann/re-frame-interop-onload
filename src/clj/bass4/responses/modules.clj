@@ -8,7 +8,8 @@
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
-            [bass4.services.content-data :as content-data-service]))
+            [bass4.services.content-data :as content-data-service]
+            [bass4.http-errors :as http-errors]))
 
 (defn- context-menu
   [module module-contents]
@@ -187,4 +188,4 @@
       (when (not (:ok? submitted))
         (treatment-service/retract-homework! treatment-access module))
       (http-response/found "reload"))
-    (layout/throw-400!)))
+    (http-errors/throw-400!)))

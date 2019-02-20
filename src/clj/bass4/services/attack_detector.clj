@@ -188,7 +188,7 @@
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response (constantly (layout/error-page {:status 429 :message "Too many requests"}))}]]
+                         :delay-response (constantly (http-errors/error-429 "Too many requests"))}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))
                        (re-matches (:route %) (:uri request))))

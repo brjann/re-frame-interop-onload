@@ -3,7 +3,8 @@
             [schema.core :as schema]
             [clojure.tools.logging :as log]
             [bass4.layout :as layout]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [bass4.http-errors :as http-errors])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -35,7 +36,7 @@
 (defn split-dataname-key-value [[label value]]
   (let [[data-name key] (str/split label #"\$")]
     (when (some empty? [data-name key])
-      (layout/throw-400! (str "Split pair " label "=" value " failed")))
+      (http-errors/throw-400! (str "Split pair " label "=" value " failed")))
     [data-name key value]))
 
 (defn remove-identical-data [string-map old-data]

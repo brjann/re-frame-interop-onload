@@ -115,8 +115,6 @@
     :headers {"Content-Type" "text/html; charset=utf-8"}
     :body    (parser/render-file html error-details)}))
 
-
-
 (defn error-403-page
   ([] (error-403-page nil))
   ([user-id] (error-403-page user-id (i18n/tr [:error/not-authorized-longer])))
@@ -141,18 +139,6 @@
                 :message message}
                "error-back-or-login.html")))
 
-#_(defn throw-400!
-    ([] (throw-400! ""))
-    ([message]
-     (let [sep (if (zero? (count message)) "" " ")]
-       (throw (Exception. (str "400" sep message))))))
-
-(defn throw-400!
-  ([] (throw-400! ""))
-  ([message]
-   (throw (ex-info message {:type   :http-error
-                            :status 400}))))
-
 (defn text-response
   [var]
   (-> (str var)
@@ -166,12 +152,6 @@
       (http-response/ok)
       (http-response/content-type "text/plain")))
 
-
-#_(defn datetime-str
-    [val resource-id]
-    (-> (i18n/tr [resource-id])
-        (f/formatter (bass/time-zone))
-        (f/unparse (tc/from-date val))))
 
 (defn datetime-str
   [val resource-id]

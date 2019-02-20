@@ -25,3 +25,10 @@
    {:status  429
     :headers {"Content-Type" "text/plain; charset=utf-8"}
     :body    (str secs)}))
+
+
+(defn throw-400!
+  ([] (throw-400! ""))
+  ([message]
+   (throw (ex-info message {:type   :http-error
+                            :status 400}))))

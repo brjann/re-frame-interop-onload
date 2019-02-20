@@ -1,6 +1,6 @@
 (ns bass4.handler
   (:require [compojure.core :refer [routes wrap-routes]]
-            [bass4.layout :refer [error-page] :as layout]
+            [bass4.layout :as layout]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :as user-routes]
             [bass4.routes.user-api :as user-api-routes]

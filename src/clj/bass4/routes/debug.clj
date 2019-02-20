@@ -82,10 +82,9 @@
           (-> (http-response/found "/debug/session")
               (assoc :session {})))
         (POST "/403" [& params :as request]
-          (layout/error-page {:status 403
-                              :body   "Sorry!"}))
+          (http-response/forbidden "Sorry!"))
         (GET "/403" [& params :as request]
-          (layout/error-403-page (get-in request [:session :user-id])))
+          (http-response/forbidden "Sorry!"))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
 
