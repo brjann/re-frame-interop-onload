@@ -72,7 +72,7 @@
           (-> (http-response/found "/re-auth")
               (assoc :session
                      (merge (:session request)
-                            {:auth-re-auth true}))))
+                            {:auth-re-auth? true}))))
         (GET "/set-session" [& params :as request]
           (-> (http-response/found "/debug/session")
               (assoc :session

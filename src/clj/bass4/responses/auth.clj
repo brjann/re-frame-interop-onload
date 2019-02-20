@@ -183,7 +183,7 @@
     (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
   (merge
     {:user-id           (:user-id user)
-     :auth-re-auth      nil
+     :auth-re-auth?     nil
      :last-login-time   (:last-login-time user)
      :last-request-time (t/now)
      :session-start     (t/now)}
@@ -213,7 +213,7 @@
 
 (defapi re-auth
   [session :- [:? map?] return-url :- [:? [api/str? 1 2000]]]
-  (if (:auth-re-auth session)
+  (if (:auth-re-auth? session)
     (re-auth-page return-url)
     (if (:user-id session)
       (http-response/found "/user/")
@@ -223,12 +223,12 @@
   [session password response]
   (log/debug "Re-auth tried" (:user-id session))
   (if-let [user-id (:user-id session)]
-    (if (:auth-re-auth session)
+    (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (do
           (log/debug "Re-auth successful")
           (-> response
-              (assoc :session (merge session {:auth-re-auth      nil
+              (assoc :session (merge session {:auth-re-auth?     nil
                                               :last-request-time (t/now)}))))
         (do
           (log/debug "Re-auth failed")
@@ -308,7 +308,7 @@
     (:external-login? session)
     false
 
-    (:auth-re-auth session)
+    (:auth-re-auth? session)
     true
 
     (nil? last-request-time)
@@ -332,10 +332,10 @@
                                        (not (h-utils/ajax? request)))
                                 (http-response/found (str "/re-auth?return-url=" (request-string request)))
                                 (http-errors/re-auth-440))
-                              (handler (assoc-in request [:session :auth-re-auth] nil)))
+                              (handler (assoc-in request [:session :auth-re-auth?] nil)))
           session-map       {:last-request-time now
-                             :auth-re-auth      (if (contains? (:session response) :auth-re-auth)
-                                                  (:auth-re-auth (:session response))
+                             :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
+                                                  (:auth-re-auth? (:session response))
                                                   re-auth?)}]
 
       (assoc response :session (if (nil? (:session response))

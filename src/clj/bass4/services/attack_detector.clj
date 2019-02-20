@@ -157,8 +157,8 @@
                         {:method         :post
                          :route          #"/re-auth"
                          :success        (fn [in out]
-                                           (and (:auth-re-auth in)
-                                                (nil? (:auth-re-auth out))))
+                                           (and (:auth-re-auth? in)
+                                                (nil? (:auth-re-auth? out))))
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :post
@@ -171,8 +171,8 @@
                         {:method         :post
                          :route          #"/re-auth-ajax"
                          :success        (fn [in out]
-                                           (and (:auth-re-auth in)
-                                                (nil? (:auth-re-auth out))))
+                                           (and (:auth-re-auth? in)
+                                                (nil? (:auth-re-auth? out))))
                          :fail           fail-fn
                          :delay-response delay-response}
                         {:method         :post

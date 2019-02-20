@@ -168,7 +168,7 @@
       (visit "/user")
       (visit "/user/tx/messages")
       (has (status? 200))
-      (modify-session {:auth-re-auth true})
+      (modify-session {:auth-re-auth? true})
       (visit "/user/tx/messages")
       (has (status? 302))
       (follow-redirect)
@@ -180,13 +180,13 @@
       (visit "/user")
       (visit "/user/tx/messages")
       (has (status? 200))
-      (modify-session {:auth-re-auth true :external-login? true})
+      (modify-session {:auth-re-auth? true :external-login? true})
       (visit "/user/tx/messages")
       (has (status? 200))))
 
 (deftest request-re-auth-pwd
   (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
+      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth? true})
       (visit "/re-auth" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth" :request-method :post :params {:password 536975})
@@ -194,14 +194,14 @@
 
 (deftest request-re-auth-pwd-redirect
   (is (= true (-> *s*
-                  (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
+                  (modify-session {:user-id 536975 :double-authed? true :auth-re-auth? true})
                   (visit "/re-auth" :request-method :post :params {:password 536975 :return-url "/user/tx/messages"})
                   (get-in [:response :headers "Location"])
                   (.contains "/user/tx/messages")))))
 
 (deftest request-re-auth-pwd-ajax
   (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth true})
+      (modify-session {:user-id 536975 :double-authed? true :auth-re-auth? true})
       (visit "/re-auth-ajax" :request-method :post :params {:password 53589})
       (has (status? 422))
       (visit "/re-auth-ajax" :request-method :post :params {:password 536975})
