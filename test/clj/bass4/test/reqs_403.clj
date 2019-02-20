@@ -60,3 +60,10 @@
       (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
       (has (status? 403))
       (has (text? "login"))))
+
+(deftest request-403-ajax-post-reload
+  (-> *s*
+      (modify-session {:user-id 535771 :double-authed? true})
+      (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
+      (has (status? 403))
+      (has (some-text? "reload"))))
