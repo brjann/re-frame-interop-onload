@@ -4,7 +4,7 @@
             [clojure.tools.logging :as log]
             [bass4.responses.messages :as messages-response]
             [bass4.responses.dashboard :as dashboard]
-            [bass4.responses.user :as user-response]
+            [bass4.responses.treatment :as user-response]
             [bass4.responses.modules :as modules-response]
             [bass4.config :refer [env]]
             [bass4.utils :refer [str->int json-safe]]

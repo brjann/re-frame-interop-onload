@@ -2,7 +2,7 @@
   (:require [compojure.api.sweet :refer :all]
             [schema.core :as s]
             [clojure.tools.logging :as log]
-            [bass4.responses.user :as user-response]
+            [bass4.responses.treatment :as user-response]
             [bass4.services.treatment :as treatment-service]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
