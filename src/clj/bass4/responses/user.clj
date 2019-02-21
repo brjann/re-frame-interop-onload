@@ -27,7 +27,8 @@
    :module-name     String
    :active          Boolean
    :activation-date (s/maybe DateTime)
-   :homework-status (s/maybe (s/enum :ok :submitted))})
+   :homework-status (s/maybe (s/enum :ok :submitted))
+   :tags            [String]})
 
 (s/defschema Treatment-info
   {:csrf            String

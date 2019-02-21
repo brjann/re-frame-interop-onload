@@ -33,7 +33,8 @@ WHERE ct.ObjectId=:treatment-id;
 -- :doc treatment modules of treatment
 SELECT
   cm.ObjectId AS `module-id`,
-  cm.Name AS `module-name`
+  cm.Name AS `module-name`,
+  cm.Tags AS `tags`
 FROM links_c_treatment AS lct
   JOIN c_module AS cm
     ON lct.LinkeeId = cm.ObjectId
@@ -54,7 +55,6 @@ SELECT DISTINCT
     ELSE
       TRUE
   END) AS `has-text?`,
-
   lcm.PropertyName AS `type`
 FROM c_module as cm
   JOIN links_c_module AS lcm

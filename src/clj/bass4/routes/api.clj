@@ -66,8 +66,7 @@
                       {::ex/response-validation response-validation-handler}}}
       {:swagger {:ui   "/swagger-ui"
                  :spec "/swagger.json"
-                 :data {:info {:version     "1.0.0"
-                               :title       "BASS API"
+                 :data {:info {:title       "BASS API"
                                :description "Come here"}}}})
     (context "/api" [:as request]
       (context "/user" [:as {{:keys [user]} :db}]

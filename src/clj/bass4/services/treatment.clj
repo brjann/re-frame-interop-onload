@@ -8,7 +8,8 @@
             [bass4.services.messages :as messages]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [clojure.string :as str]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -112,7 +113,8 @@
                     (unserialize-key
                       :modules-automatic-access
                       #(into #{} (keys (filter-map identity (map-map val-to-bool %))))))
-        modules (db/get-treatment-modules {:treatment-id treatment-id})]
+        modules (->> (db/get-treatment-modules {:treatment-id treatment-id})
+                     (map #(assoc % :tags (remove empty? (str/split (or (:tags %) "") #" ")))))]
     (merge info
            {:modules modules})))
 
