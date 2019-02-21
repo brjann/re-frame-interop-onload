@@ -97,7 +97,7 @@
           :dev (env :dev)
           :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
           :page template
-          :csrf-token *anti-forgery-token*
+          :csrf-token (force *anti-forgery-token*)
           :title (bass-service/db-title))))
     "text/html; charset=utf-8"))
 

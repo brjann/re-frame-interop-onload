@@ -59,12 +59,12 @@
 
 (defn messages?
   [{{:keys [treatment]} :db} _]
-  (get-in treatment [:user-components :messaging]))
+  (get-in treatment [:user-components :messaging?]))
 
 (defn send-messages?
   [{{:keys [treatment]} :db :as request} _]
   (if (= :post (:request-method request))
-    (get-in treatment [:user-components :send-messages])
+    (get-in treatment [:user-components :send-messages?])
     true))
 
 (defn limited-access?

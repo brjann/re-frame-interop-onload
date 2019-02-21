@@ -11,7 +11,10 @@
             [bass4.services.assessments :as administrations]
             [bass4.services.treatment :as treatment-service]
             [bass4.services.bass :as bass]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [schema.core :as s]
+            [ring.middleware.anti-forgery :as anti-forgery])
+  (:import (org.joda.time DateTime)))
 
 (defn user-page-map
   [treatment path]
@@ -19,6 +22,39 @@
          {:path          path
           :new-messages? (:new-messages? treatment)}))
 
+(s/defschema Module-info
+  {:module-id       s/Int
+   :module-name     String
+   :active          Boolean
+   :activation-date (s/maybe DateTime)
+   :homework-status (s/maybe (s/enum :ok :submitted))})
+
+(s/defschema Treatment-info
+  {:csrf            String
+   :last-login-time (s/maybe DateTime)
+   :start-date      (s/maybe DateTime)
+   :end-date        (s/maybe DateTime)
+   :modules         [Module-info]
+   :new-messages?   Boolean
+   :messaging?      Boolean
+   :send-messages?  Boolean})
+
+(defn csrf
+  []
+  (let [x (force anti-forgery/*anti-forgery-token*)]
+    (if (string? x)
+      x
+      "")))
+
+(defapi api-tx-info
+  [user :- map? treatment :- map?]
+  (let [res (merge
+              {:csrf (csrf)}
+              (select-keys user [:last-login-time])
+              (select-keys (:treatment-access treatment) [:start-date :end-date])
+              (select-keys treatment [:new-messages?])
+              (:user-components treatment))]
+    (http-response/ok res)))
 
 (defn treatment-mw
   [handler]

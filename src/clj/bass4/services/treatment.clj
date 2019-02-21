@@ -160,9 +160,9 @@
 
 (defn user-components
   [treatment-access treatment]
-  {:modules       (modules-component treatment-access treatment)
-   :messaging     true
-   :send-messages (true? (and (:messages-send-allowed? treatment) (:messages-send-allowed? treatment-access)))})
+  {:modules        (modules-component treatment-access treatment)
+   :messaging?     true
+   :send-messages? (true? (and (:messages-send-allowed? treatment) (:messages-send-allowed? treatment-access)))})
 
 
 ;; TODO: BulletinBoard!?
@@ -190,6 +190,7 @@
 
 (defn retract-homework!
   [treatment-access module]
+
   (db/retract-homework! {:treatment-access-id (:treatment-access-id treatment-access)
                          :module-id           (:module-id module)}))
 

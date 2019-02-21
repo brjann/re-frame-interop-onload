@@ -7,7 +7,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]
             [clojure.tools.logging :as log]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils])
+  (:import (org.joda.time DateTime)))
 
 (defapi messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
@@ -36,6 +37,13 @@
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))
 
+(s/defschema Message
+  {:message-id    s/Int
+   :unread?       (s/maybe Boolean)
+   :text          String
+   :sender-name   String
+   :send-datetime DateTime
+   :sender-type   String})
 
 (defapi api-messages
   [user :- map?]

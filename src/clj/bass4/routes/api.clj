@@ -38,7 +38,7 @@
                               :rules user-routes/tx-message-rules}])
     #'treatment-mw))
 
-(defn response-validation-handler
+#_(defn response-validation-handler
   "Creates error response based on a response error. The following keys are available:
 
     :type            type of the exception (::response-validation)
@@ -56,30 +56,25 @@
         (update :coercion cc/get-name)
         (->> (cc/encode-error (:coercion data))))))
 
-(s/defschema Message
-  {:message-id    s/Int
-   :unread?       (s/maybe Boolean)
-   :text          String
-   :sender-name   String
-   :send-datetime DateTime
-   :sender-type   String})
+(s/defschema User {:name s/Str
+                   :sex  (s/enum :male :female)})
 
 (def api-routes
   (api
-    {:swagger    {:ui   "/swagger-ui"
-                  :spec "/swagger.json"
-                  :data {:info {:version     "1.0.0"
-                                :title       "BASS API"
-                                :description "Come here"}}}
-     :exceptions {:handlers
-                  {::ex/response-validation response-validation-handler}}}
+    (merge
+      #_{:exceptions {:handlers
+                      {::ex/response-validation response-validation-handler}}}
+      {:swagger {:ui   "/swagger-ui"
+                 :spec "/swagger.json"
+                 :data {:info {:version     "1.0.0"
+                               :title       "BASS API"
+                               :description "Come here"}}}})
     (context "/api" [:as request]
       (context "/user" [:as {{:keys [user]} :db}]
-
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
           :return String
-          (layout/text-response (force anti-forgery/*anti-forgery-token*)))
+          (layout/text-response (user-response/csrf)))
 
         (GET "/disable-csrf" []
           :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."
@@ -100,12 +95,16 @@
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
-                         {{:keys [treatment-access]} :treatment} :db
-                         :as                                     request}]
+                         {{:keys [treatment-access]} :treatment} :db}]
+
+          (GET "/treatment-info" []
+            :summary "Info about available treatment components."
+            :return user-response/Treatment-info
+            (user-response/api-tx-info user treatment))
 
           (GET "/messages" []
             :summary "All messages for patient."
-            :return [Message]
+            :return [messages-response/Message]
             (messages-response/api-messages user))
 
           (POST "/message-read" []

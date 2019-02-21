@@ -27,7 +27,7 @@
                        class='nav-link{% ifequal path "/user/tx/" %} active{%endifequal%}'>
                         {%tr dashboard/start %}
                     </a>
-                    {% if messaging %}
+                    {% if messaging? %}
                     <a href="/user/tx/messages"
                        class='nav-link{% ifequal path "/user/tx/messages" %} active{%endifequal%}'>
                         {%tr messages/messages %}
