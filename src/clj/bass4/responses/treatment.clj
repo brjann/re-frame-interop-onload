@@ -49,8 +49,7 @@
    :tags            [String]})
 
 (s/defschema Treatment-info
-  {:csrf            String
-   :last-login-time (s/maybe DateTime)
+  {:last-login-time (s/maybe DateTime)
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
    :modules         [Module-info]
@@ -61,7 +60,6 @@
 (defapi api-tx-info
   [user :- map? treatment :- map?]
   (let [res (merge
-              {:csrf (csrf)}
               (select-keys user [:last-login-time])
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])

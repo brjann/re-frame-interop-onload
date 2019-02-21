@@ -2,20 +2,15 @@
   (:require [compojure.api.sweet :refer :all]
             [schema.core :as s]
             [clojure.tools.logging :as log]
+            [ring.util.http-response :as http-response]
             [bass4.responses.treatment :as user-response]
             [bass4.services.treatment :as treatment-service]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
             [bass4.db-config :as db-config]
             [bass4.responses.messages :as messages-response]
-            [compojure.api.exception :as ex]
-            [ring.util.http-response :as http-response]
-            [compojure.api.coercion.core :as cc]
-            [ring.middleware.anti-forgery :as anti-forgery]
             [bass4.layout :as layout]
-            [bass4.config :as config]
-            [bass4.responses.privacy :as privacy-response])
-  (:import (org.joda.time DateTime)))
+            [bass4.responses.privacy :as privacy-response]))
 
 (defn treatment-mw
   [handler]
@@ -39,23 +34,6 @@
                               :rules user-routes/tx-message-rules}])
     #'treatment-mw))
 
-#_(defn response-validation-handler
-  "Creates error response based on a response error. The following keys are available:
-
-    :type            type of the exception (::response-validation)
-    :coercion        coercion instance used
-    :in              location of the value ([:response :body])
-    :schema          schema to be validated against
-    :error           schema error
-    :request         raw request
-    :response        raw response"
-  [e data req]
-  (http-response/internal-server-error
-    (-> data
-        (dissoc :request :response :value)
-        (assoc :errors (distinct (:errors data)))
-        (update :coercion cc/get-name)
-        (->> (cc/encode-error (:coercion data))))))
 
 (s/defschema User {:name s/Str
                    :sex  (s/enum :male :female)})
@@ -63,8 +41,6 @@
 (def api-routes
   (api
     (merge
-      #_{:exceptions {:handlers
-                      {::ex/response-validation response-validation-handler}}}
       {:swagger {:ui   "/swagger-ui"
                  :spec "/swagger.json"
                  :data {:info {:title       "BASS API"
