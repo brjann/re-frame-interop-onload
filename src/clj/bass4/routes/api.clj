@@ -83,6 +83,12 @@
             :return [messages-response/Message]
             (messages-response/api-messages user))
 
+          (POST "/new-message" []
+            :summary "Send new message."
+            :body-params [message :- String]
+            (messages-response/save-message (:user-id user) message)
+            (http-response/ok))
+
           (POST "/message-read" []
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]

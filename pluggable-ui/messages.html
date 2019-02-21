@@ -29,8 +29,7 @@
                if (unread && sender !== "me") {
                   message = '<strong>' + message + '</strong>';
                }
-               $message_div.append('<p>From: ' + sender + '</p>');
-               $message_div.append('<p>' + time + '</p>');
+               $message_div.append('<p>From: ' + sender + ' on ' + time + '</p>');
                $message_div.append('<p><em>' + message + '</em></p>');
                $message_div.append('<hr>');
                if (unread) {
