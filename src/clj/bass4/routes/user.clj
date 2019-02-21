@@ -1,5 +1,7 @@
 (ns bass4.routes.user
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
+            [ring.util.http-response :as http-response]
+            [clojure.tools.logging :as log]
             [bass4.responses.messages :as messages-response]
             [bass4.responses.dashboard :as dashboard]
             [bass4.responses.user :as user-response]
@@ -8,16 +10,15 @@
             [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.assessments :as assessments-response]
-            [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]
             [bass4.services.privacy :as privacy-service]
             [bass4.responses.error-report :as error-report-response]
             [bass4.config :as config]
-            [bass4.file-response :as file]))
+            [bass4.file-response :as file]
+            [bass4.responses.privacy :as privacy-response]))
 
 
 ; -----------------------
@@ -172,9 +173,9 @@
 (defroutes privacy-consent-routes
   (context "/user/privacy" [:as {{:keys [user]} :db}]
     (GET "/consent" []
-      (user-response/privacy-consent-page user))
+      (privacy-response/privacy-consent-page user))
     (POST "/consent" [i-consent]
-      (user-response/handle-privacy-consent user i-consent))))
+      (privacy-response/handle-privacy-consent user i-consent))))
 
 (defroutes tx-routes
   (context "/user/tx" [:as
@@ -185,7 +186,7 @@
       (dashboard/dashboard user (:session request) render-map treatment))
 
     (GET "/privacy-notice" []
-      (user-response/privacy-notice-page user render-map))
+      (privacy-response/privacy-notice-page user render-map))
 
     ;; ERROR REPORT
     (GET "/error-report" []

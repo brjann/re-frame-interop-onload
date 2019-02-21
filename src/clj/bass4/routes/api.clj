@@ -13,7 +13,8 @@
             [compojure.api.coercion.core :as cc]
             [ring.middleware.anti-forgery :as anti-forgery]
             [bass4.layout :as layout]
-            [bass4.config :as config])
+            [bass4.config :as config]
+            [bass4.responses.privacy :as privacy-response])
   (:import (org.joda.time DateTime)))
 
 (defn treatment-mw
@@ -85,7 +86,7 @@
         (GET "/privacy-notice-html" []
           :summary "Database's privacy notice in HTML format."
           :return String
-          (user-response/privacy-notice-html user))
+          (privacy-response/privacy-notice-html user))
 
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
