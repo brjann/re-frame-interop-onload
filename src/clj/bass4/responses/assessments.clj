@@ -6,7 +6,57 @@
             [bass4.services.instrument :as instruments]
             [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.instruments.validation :as validation]))
+            [bass4.instruments.validation :as validation]
+            [bass4.services.assessments :as administrations]))
+
+
+;; --------------------------
+;;         MIDDLEWARE
+;; --------------------------
+
+(defn- assessments-pending?
+  [request]
+  (let [user-id (:user-id request)]
+    (cond
+      (nil? user-id)
+      false
+
+      :else
+      (< 0 (administrations/create-assessment-round-entries! user-id)))))
+
+(defn check-assessments-mw
+  [handler]
+  (fn [request]
+    (let [session (:session request)]
+      (cond
+        (:assessments-checked? session)
+        (handler request)
+
+        (assessments-pending? request)
+        (do
+          #_(log/debug "Assessments pending!")
+          (-> (http-response/found "/user/assessments")
+              (assoc :session
+                     (merge
+                       session
+                       {:assessments-checked?   true
+                        :assessments-pending?   true
+                        :assessments-performed? true}))))
+
+        :else
+        (let [out-response (handler request)
+              out-session  (or (:session out-response)
+                               session)]
+          (assoc out-response
+            :session
+            (merge
+              out-session
+              {:assessments-checked? true
+               :assessments-pending? false})))))))
+
+;; --------------------------
+;;         RESPONSES
+;; --------------------------
 
 (defn- text-page
   [step]
@@ -64,6 +114,12 @@
     (do
       (request-state/record-error! (str "Instrument " instrument-id " not in ongoing assessments."))
       (http-response/found "/user"))))
+
+
+;; --------------------------
+;;            API
+;; --------------------------
+
 
 (defapi handle-assessments
   [user-id :- integer? session :- [:? map?]]
