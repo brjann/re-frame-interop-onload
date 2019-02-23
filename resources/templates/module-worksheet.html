@@ -7,8 +7,7 @@
 <div class="treatment-content form {% if tabbed? %}tabbed{% endif %}" data-data-name="{{data-name}}"
      id="{{content-id}}">
     {% include "module-content-render-snip.html" %}
-    <form method="post" class="content-submitter" name="contentform" action="/user/content-data"
-          onsubmit="return content_submit();">
+    <form method="post" class="content-submitter" name="contentform" action="/user/content-data">
         <input type="hidden" name="content-data" class="content-poster">
         <button type="submit" class="btn btn-primary">{%tr save %}</button>
     </form>

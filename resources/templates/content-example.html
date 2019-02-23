@@ -9,8 +9,7 @@
     {% else %}
     {{text|safe}}
     {% endif %}
-    <form method="post" class="content-submitter" name="contentform"
-          onsubmit="return content_submit();">
+    <form method="post" class="content-submitter" name="contentform">
         <input type="hidden" name="content-data" class="content-poster">
         <button type="submit" class="btn btn-primary">{%tr save %}</button>
     </form>

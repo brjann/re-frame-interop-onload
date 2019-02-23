@@ -1,7 +1,3 @@
-// Content submitter function
-// - set by content data initializing functions
-var content_submit;
-
 $(document).ready(function () {
 
    var dataname_key_splitter = '$';
@@ -292,7 +288,7 @@ $(document).ready(function () {
       $content_div.areYouSure();
    };
 
-   content_submit = function () {
+   var content_submit = function (event) {
       var form = event.target;
       var content_div = $(form).parent();
       var all_values = {};
@@ -319,6 +315,8 @@ $(document).ready(function () {
       $(form).find('.content-poster').val(JSON.stringify(all_values));
       return true;
    };
+
+   $('.content-submitter').submit(content_submit);
 
    $('.treatment-content').each(function () {
       var $content_div = $(this);
