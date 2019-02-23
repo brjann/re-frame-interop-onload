@@ -3,7 +3,8 @@
             [buddy.hashers :as hashers]
             [bass4.config :as config]
             [bass4.time :as b-time]
-            [bass4.services.bass :as bass-service]))
+            [bass4.services.bass :as bass-service]
+            [clojure.string :as str]))
 
 (defn get-user
   [user-id]
@@ -37,7 +38,8 @@
 
 (defn update-user-properties!
   [user-id properties]
-  (let [properties (if (:password properties)
+  (let [properties (into {} (map (fn [[k v]] [((comp keyword str/lower-case name) k) v]) properties))
+        properties (if (:password properties)
                      (let [password-hash (-> (:password properties)
                                              (str)
                                              (password-hasher))]

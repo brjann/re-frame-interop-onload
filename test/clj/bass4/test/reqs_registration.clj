@@ -10,6 +10,7 @@
                                      log-return
                                      log-headers
                                      log-body
+                                     log-status
                                      disable-attack-detector
                                      *s*
                                      pass-by
@@ -520,7 +521,6 @@
                        :content
                        (first)
                        (string/trim))]
-      (log/debug username password)
       (-> *s*
           (visit "/login" :request-method :post :params {:username username :password password})
           (has (status? 302))
@@ -668,3 +668,47 @@
         ;; Redirect to finish screen
         (follow-redirect)
         (has (some-text? "Login")))))
+
+(deftest registration-all-fields-sql-query-no-assessments
+  (let [email (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
+    (with-redefs [captcha/captcha!         (constantly {:filename "xxx" :digits "6666"})
+                  db/registration-params   (constantly {:allowed?               true,
+                                                        :allow-duplicate-sms?   true,
+                                                        :group                  570281,
+                                                        :sms-countries          "se",
+                                                        :fields                 "a:6:{s:5:\"Email\";b:1;s:9:\"FirstName\";b:1;s:8:\"LastName\";b:1;s:12:\"Personnummer\";b:1;s:9:\"SMSNumber\";b:1;s:8:\"Password\";b:1;}",
+                                                        :bankid-change-names?   false,
+                                                        :auto-username          "email",
+                                                        :bankid?                false,
+                                                        :study-consent?         false,
+                                                        :auto-id-length         3,
+                                                        :allow-duplicate-email? false,
+                                                        :auto-id-prefix         "xxx-"})
+                  passwords/letters-digits (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:first-name "Lemmy"
+                                                                            :last-name  "Kilmister"
+                                                                            :pid-number "19451224-6666"
+                                                                            :email      email
+                                                                            :sms-number "+46070717652"
+                                                                            :password   "LEMMY2015xxx"})
+          (follow-redirect)
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? email))
+          (has (some-text? "chose"))
+          (visit "/registration/564610/finished")
+          (follow-redirect)
+          (has (some-text? "we promise")))
+      (let [by-username (db/get-user-by-username {:username email})]
+        (is (= true (map? by-username))))
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username email :password "LEMMY2015xxx"})
+          (has (status? 302))
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "no active tasks"))))))

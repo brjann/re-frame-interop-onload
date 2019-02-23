@@ -25,7 +25,7 @@
    :SMSNumber    :sms-number
    :Personnummer :pid-number
    ;; Must be lowercase for password hasher to recognize
-   :password     :password})
+   :Password     :password})
 
 (defn- transform-fields
   [fields-str]
