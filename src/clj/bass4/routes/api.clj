@@ -96,14 +96,14 @@
           (POST "/new-message" []
             :summary "Send new message."
             :body-params [message :- String]
-            (messages-response/save-message (:user-id user) message)
-            (http-response/ok))
+            :return {:result String}
+            (messages-response/api-save-message (:user-id user) message))
 
           (POST "/message-read" []
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]
-            (messages-response/message-read (:user-id user) message-id)
-            (http-response/ok)))))))
+            :return {:result String}
+            (messages-response/api-message-read (:user-id user) message-id)))))))
 
 
 #_(context "/api" []

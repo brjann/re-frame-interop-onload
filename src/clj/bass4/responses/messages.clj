@@ -37,10 +37,20 @@
   (messages-service/mark-message-as-read! user-id message-id)
   (http-response/ok "ok"))
 
+(defapi api-message-read
+  [user-id :- integer? message-id :- api/->int]
+  (messages-service/mark-message-as-read! user-id message-id)
+  (http-response/ok {:result "ok"}))
+
+(defapi api-save-message
+  [user-id :- integer? text :- [[api/str? 1 5000]]]
+  (messages-service/save-message! user-id text)
+  (http-response/ok {:result "ok"}))
+
 (s/defschema Message
   {:message-id    s/Int
    :unread?       (s/maybe Boolean)
-   :text          String
+   :message       String
    :sender-name   String
    :send-datetime DateTime
    :sender-type   String})
@@ -53,5 +63,6 @@
          (mapv #(if (= user-id (:sender-id %))
                   (assoc % :unread? nil)
                   %))
-         (mapv #(dissoc % :sender-class :sender-id :subject))
+         (mapv #(assoc % :message (:text %)))
+         (mapv #(dissoc % :sender-class :sender-id :subject :text))
          (http-response/ok))))

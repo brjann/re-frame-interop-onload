@@ -47,7 +47,7 @@
         (GET "/error" [:as req] (do
                                   (request-state/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
-        (GET "/request" [:as req] (layout/print-var-response req))
+        (ANY "/request" [:as req] (layout/print-var-response req))
         (GET "/test" [:as req]
           (layout/render "sleep-diary.html"
                          {:url :url}))
