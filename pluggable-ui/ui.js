@@ -1,5 +1,49 @@
 let init_page,
-   treatment_info;
+   treatment_info,
+   session_timeout = false,
+   queued_ajaxes = [];
+
+let re_auth_perform = function (tryagain) {
+   let prompt_text = tryagain ? 'Wrong password. Try again.' : 'You need to re-enter your password to continue';
+   let password = prompt(prompt_text);
+   $.ajax('/re-auth-ajax',
+      {
+         method: 'post',
+         headers: {'x-ui-init': true},
+         data: [{
+            name: 'password',
+            value: password
+         }],
+         success: function () {
+            while (queued_ajaxes.length > 0) {
+               console.log('Retrying ajax.');
+               let jqHXR = queued_ajaxes.pop();
+               $.ajax(jqHXR);
+            }
+            session_timeout = false;
+         },
+         error: function () {
+            re_auth_perform(true)
+         }
+      });
+};
+
+let re_auth_handler = function (jqXHR) {
+   if (!session_timeout) {
+      session_timeout = true;
+      queued_ajaxes.push(jqXHR);
+      setTimeout(re_auth_perform, 1000);
+   } else {
+      queued_ajaxes.push(jqXHR);
+   }
+};
+
+$(document).ajaxComplete(function (_, jqXHR, options) {
+   if (jqXHR.status === 440) {
+      console.log('timeout!');
+      re_auth_handler(options);
+   }
+});
 
 // Make sure that no ajax calls are made before csrf has been retrieved
 $(document).ajaxSend(function (x, y, z) {
@@ -89,7 +133,7 @@ let form_json_submit = function (event) {
          method: 'post',
          data: data,
          contentType: 'application/json',
-         success: function () {
+         success: function (x, y, z) {
             window.location.reload(true);
          },
          error: function () {

@@ -17,7 +17,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service]
-            [bass4.http-utils :as h-utils])
+            [bass4.http-utils :as h-utils]
+            [clojure.string :as str])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -318,22 +319,24 @@
 (defn auth-re-auth-mw
   [handler]
   (fn [request]
-    (let [session-in        (:session request)
-          now               (t/now)
-          last-request-time (:last-request-time session-in)
-          re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
-          response          (if re-auth?
-                              (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
-                              (handler (assoc-in request [:session :auth-re-auth?] nil)))
-          session-map       {:last-request-time now
-                             :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
-                                                  (:auth-re-auth? (:session response))
-                                                  re-auth?)}
-          session-out       (:session response)
-          new-session       (if (nil? session-out)
-                              (merge session-in session-map)
-                              (merge session-out session-map))]
-      (assoc response :session new-session))))
+    (if (str/starts-with? (:uri request) "/user/ui")
+      (handler request)
+      (let [session-in        (:session request)
+            now               (t/now)
+            last-request-time (:last-request-time session-in)
+            re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
+            response          (if re-auth?
+                                (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
+                                (handler (assoc-in request [:session :auth-re-auth?] nil)))
+            session-map       {:last-request-time now
+                               :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
+                                                    (:auth-re-auth? (:session response))
+                                                    re-auth?)}
+            session-out       (:session response)
+            new-session       (if (nil? session-out)
+                                (merge session-in session-map)
+                                (merge session-out session-map))]
+        (assoc response :session new-session)))))
 
 (defn double-auth-mw
   [handler]
