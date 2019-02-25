@@ -24,6 +24,7 @@
   [handler request]
   ((-> handler
        api/api-tx-routes-mw
+       api/swagger-mw
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw

@@ -34,17 +34,27 @@
                               :rules user-routes/tx-message-rules}])
     #'treatment-mw))
 
+(defn swagger-mw
+  "Limits access to Swagger UI and json to only dev and debug mode."
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/swagger*"]
+    (fn [handler] (fn [request] (if (db-config/debug-mode?)
+                                  (handler request)
+                                  (http-response/not-found))))
+    #'treatment-mw))
+
 
 (s/defschema User {:name s/Str
                    :sex  (s/enum :male :female)})
 
 (def api-routes
   (api
-    (merge
-      {:swagger {:ui   "/swagger-ui"
-                 :spec "/swagger.json"
-                 :data {:info {:title       "BASS API"
-                               :description "Come here"}}}})
+    {:swagger {:ui   "/swagger-ui"
+               :spec "/swagger.json"
+               :data {:info {:title       "BASS API"
+                             :description "Come here"}}}}
     (context "/api" [:as request]
       (context "/user" [:as {{:keys [user]} :db}]
         (GET "/csrf" []
