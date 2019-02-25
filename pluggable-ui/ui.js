@@ -6,14 +6,12 @@ let init_page,
 let re_auth_perform = function (tryagain) {
    let prompt_text = tryagain ? 'Wrong password. Try again.' : 'You need to re-enter your password to continue';
    let password = prompt(prompt_text);
-   $.ajax('/re-auth-ajax',
+   $.ajax('/api/re-auth',
       {
          method: 'post',
          headers: {'x-ui-init': true},
-         data: [{
-            name: 'password',
-            value: password
-         }],
+         contentType: 'application/json',
+         data: JSON.stringify({password: password}),
          success: function () {
             while (queued_ajaxes.length > 0) {
                console.log('Retrying ajax.');
@@ -22,8 +20,13 @@ let re_auth_perform = function (tryagain) {
             }
             session_timeout = false;
          },
-         error: function () {
-            re_auth_perform(true)
+         error: function (jqXHR) {
+            if (jqXHR.status === 422) {
+               re_auth_perform(true)
+            } else {
+               console.log('Return error');
+               console.log(jqXHR);
+            }
          }
       });
 };

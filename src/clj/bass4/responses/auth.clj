@@ -246,6 +246,10 @@
   [session :- [:? map?] password :- [[api/str? 1 100]]]
   (handle-re-auth session password (http-response/ok "ok")))
 
+(defapi check-re-auth-api
+  [session :- [:? map?] password :- [[api/str? 1 100]]]
+  (handle-re-auth session password (http-response/ok {:result "ok"})))
+
 
 
 ;; --------------------

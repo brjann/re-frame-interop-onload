@@ -10,7 +10,8 @@
             [bass4.db-config :as db-config]
             [bass4.responses.messages :as messages-response]
             [bass4.layout :as layout]
-            [bass4.responses.privacy :as privacy-response]))
+            [bass4.responses.privacy :as privacy-response]
+            [bass4.responses.auth :as auth-response]))
 
 (defn treatment-mw
   [handler]
@@ -56,6 +57,11 @@
                :data {:info {:title       "BASS API"
                              :description "Come here"}}}}
     (context "/api" [:as request]
+      (POST "/re-auth" []
+        :summary "Re-authenticate after timeout."
+        :body-params [password :- String]
+        :return {:result String}
+        (auth-response/check-re-auth-api (:session request) password))
       (context "/user" [:as {{:keys [user]} :db}]
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
