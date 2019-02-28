@@ -97,9 +97,10 @@
      :main-text  (first (get categorized "MainTexts"))}))
 
 (defn get-categorized-module-contents
-  [module-id]
-  (-> (get-module-contents module-id)
-      (categorize-module-contents)))
+  [module]
+  (let [module-id (:module-id module)]
+    (-> (get-module-contents module-id)
+        (categorize-module-contents))))
 
 (defn get-module-contents-with-update-time
   [module-ids treatment-access-id]

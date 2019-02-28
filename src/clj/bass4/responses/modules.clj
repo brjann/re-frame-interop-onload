@@ -75,7 +75,7 @@
 
 (defapi main-text
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))
+  (let [module-contents (treatment-service/get-categorized-module-contents module)
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
@@ -89,7 +89,7 @@
 
 (defapi homework
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents module)]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
         treatment-access
@@ -104,7 +104,7 @@
 
 (defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
-  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
         treatment-access
@@ -117,7 +117,7 @@
 
 (defapi worksheet-example
   [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
-  (let [module-contents (treatment-service/get-categorized-module-contents (:module-id module))]
+  (let [module-contents (treatment-service/get-categorized-module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
             data-name    (:data-name content)
