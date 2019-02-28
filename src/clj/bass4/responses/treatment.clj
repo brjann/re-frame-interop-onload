@@ -4,7 +4,8 @@
             [ring.middleware.anti-forgery :as anti-forgery]
             [bass4.utils :refer [json-safe]]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.services.treatment :as treatment-service])
+            [bass4.services.treatment :as treatment-service]
+            [clojure.tools.logging :as log])
   (:import (org.joda.time DateTime)))
 
 
@@ -59,11 +60,19 @@
 
 (defapi api-tx-info
   [user :- map? treatment :- map?]
+  (log/debug (keys (:user-components treatment)))
   (let [res (merge
               (select-keys user [:last-login-time])
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])
-              (:user-components treatment))]
+              (select-keys (:user-components treatment) [:messaging? :send-messages?])
+              {:modules (mapv #(select-keys % [:module-id
+                                               :module-name
+                                               :active
+                                               :activation-date
+                                               :homework-status
+                                               :tags])
+                              (get-in treatment [:user-components :modules]))})]
     (http-response/ok res)))
 
 
