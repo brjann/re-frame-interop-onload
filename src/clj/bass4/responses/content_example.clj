@@ -14,7 +14,7 @@
                          content-id
                          [namespace]
                          #_(conj (:data-imports content) namespace))]
-      (layout/render "content-example.html"
+      (layout/render "content-example-editor.html"
                      {:text         (:text content)
                       :markdown?    (:markdown? content)
                       :tabbed?      (:tabbed? content)
