@@ -168,8 +168,6 @@ $(document).ready(function () {
 			}
 
 			$form.submit(function (event) {
-				console.log('ajax submit fn');
-
 				if (!no_validate) {
 					if (!$form.get(0).checkValidity()) {
 						$form.addClass('was-validated');

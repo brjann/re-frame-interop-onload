@@ -114,6 +114,14 @@
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 
+(defn- get-treatment-modules
+  [treatment-id]
+  (->> (db/get-treatment-modules {:treatment-id treatment-id})
+       (mapv split-tags-property)
+       (mapv #(unserialize-key % :content-namespaces))
+       (mapv (fn [m] (assoc m :content-namespaces
+                              (filter-map #(not (empty? %)) (:content-namespaces m)))))))
+
 (defn treatment-map
   [treatment-id]
   (let [info    (-> (db/get-treatment-info
@@ -121,8 +129,7 @@
                     (unserialize-key
                       :modules-automatic-access
                       #(into #{} (keys (filter-map identity (map-map val-to-bool %))))))
-        modules (->> (db/get-treatment-modules {:treatment-id treatment-id})
-                     (mapv split-tags-property))]
+        modules (get-treatment-modules treatment-id)]
     (merge info
            {:modules modules})))
 

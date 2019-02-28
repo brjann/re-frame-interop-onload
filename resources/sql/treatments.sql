@@ -34,6 +34,7 @@ WHERE ct.ObjectId=:treatment-id;
 SELECT
   cm.ObjectId AS `module-id`,
   cm.Name AS `module-name`,
+  cm.ContentNamespaces AS `content-namespaces`,
   cm.Tags AS `tags`
 FROM links_c_treatment AS lct
   JOIN c_module AS cm
