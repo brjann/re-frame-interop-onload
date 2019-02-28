@@ -42,13 +42,17 @@
 ;;   DB RETRIEVAL
 ;; ----------------
 
-(defn check-file
+(defn- split-tags-property
+  [container]
+  (assoc container :tags (remove empty? (str/split (or (:tags container) "") #" "))))
+
+(defn- check-file
   [content]
   (if (bass/uploaded-file (:file-path content))
     content
     (dissoc content :file-path)))
 
-(defn check-content
+(defn- check-content
   [content]
   (if (empty? (:text content))
     (dissoc content :text)
@@ -62,13 +66,15 @@
       (check-file)
       (check-content)
       (unserialize-key :data-imports)
+      (split-tags-property)
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
 
 (defn get-module-contents*
   [module-ids]
   (->> (db/get-module-contents {:module-ids module-ids})
-       (map check-file)
+       (mapv check-file)
+       (mapv split-tags-property)
        (filter #(or (:has-text? %) (:file-path %)))))
 
 (defn get-module-contents
@@ -114,7 +120,7 @@
                       :modules-automatic-access
                       #(into #{} (keys (filter-map identity (map-map val-to-bool %))))))
         modules (->> (db/get-treatment-modules {:treatment-id treatment-id})
-                     (map #(assoc % :tags (remove empty? (str/split (or (:tags %) "") #" ")))))]
+                     (mapv split-tags-property))]
     (merge info
            {:modules modules})))
 

@@ -49,6 +49,7 @@ SELECT DISTINCT
   ctc.DataName     AS `data-name`,
   ctc.`Name`       AS `content-name`,
   ctc.FilePath     AS `file-path`,
+  ctc.Tags AS `tags`,
   (CASE
     WHEN (ctc.Text IS NULL OR ctc.Text = "") THEN
       FALSE
@@ -74,6 +75,7 @@ SELECT
   DataName    AS `data-name`,
   `Name`      AS `content-name`,
   ImportData  AS `data-imports`,
+  Tags AS `tags`,
   FilePath    AS `file-path`
 FROM c_treatmentcontent
 WHERE ObjectId=:content-id;
