@@ -237,7 +237,7 @@ $(document).ready(function () {
    };
 
    var content_setup_statics = function ($content_div) {
-      var data_name = $content_div.data('data-name');
+      var data_name = $content_div.data('namespace');
       find_statics($content_div).each(function () {
          var element = $(this);
          var key = get_content_data_post_key(element.text(), data_name);
@@ -260,7 +260,7 @@ $(document).ready(function () {
    };
 
    var content_prepend_names = function ($content_div) {
-      var data_name = $content_div.data('data-name');
+      var data_name = $content_div.data('namespace');
       find_inputs($content_div)
          .each(function () {
             var input = this;
@@ -270,7 +270,7 @@ $(document).ready(function () {
 
    var content_fill_values = function ($content_div) {
       //TODO: Does not handle pre-checked checkboxes
-      var data_name = $content_div.data('data-name');
+      var data_name = $content_div.data('namespace');
       find_inputs($content_div)
          .each(function () {
             var input = this;

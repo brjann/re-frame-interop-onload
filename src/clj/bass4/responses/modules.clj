@@ -49,10 +49,10 @@
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
   (let [content      (treatment-service/get-content content-id)
-        data-name    (:data-name content)
+        namespace    (:namespace content)
         content-data (content-data/get-content-data
                        (:treatment-access-id treatment-access)
-                       (conj (:data-imports content) data-name))
+                       (conj (:data-imports content) namespace))
         params       (first params-map)]
     (treatment-service/register-content-access!
       content-id
@@ -67,7 +67,7 @@
               :tabbed?       (:tabbed? content)
               :show-example? (:show-example? content)
               :content-id    content-id
-              :data-name     data-name
+              :namespace     namespace
               :content-data  content-data
               :context-menu  (context-menu module module-contents)
               :page-title    (:content-name content)}
@@ -120,17 +120,17 @@
   (let [module-contents (treatment-service/get-categorized-module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (treatment-service/get-content worksheet-id)
-            data-name    (:data-name content)
+            namespace    (:namespace content)
             example-data (content-data/get-content-data
                            worksheet-id
-                           [data-name])]
+                           [namespace])]
         (layout/render "module-worksheet-example.html"
                        {:return-path  return-path
                         :text         (:text content)
                         :markdown?    (:markdown? content)
                         :tabbed?      (:tabbed? content)
                         :content-id   worksheet-id
-                        :data-name    data-name
+                        :namespace    namespace
                         :content-data example-data}))
       (http-response/not-found (i18n/tr [:modules/no-worksheet])))))
 

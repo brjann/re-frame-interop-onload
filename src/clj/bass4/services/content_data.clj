@@ -34,15 +34,15 @@
     (reduce merge)))
 
 (defn split-dataname-key-value [[label value]]
-  (let [[data-name key] (str/split label #"\$")]
-    (when (some empty? [data-name key])
+  (let [[namespace key] (str/split label #"\$")]
+    (when (some empty? [namespace key])
       (http-errors/throw-400! (str "Split pair " label "=" value " failed")))
-    [data-name key value]))
+    [namespace key value]))
 
 (defn remove-identical-data [string-map old-data]
   (filter
-    (fn [[data-name value-name value]]
-      (let [old-value (get-in old-data [(keyword data-name) (keyword value-name)])]
+    (fn [[namespace value-name value]]
+      (let [old-value (get-in old-data [(keyword namespace) (keyword value-name)])]
         (if (= old-value nil)
           (not= value "")
           (not= old-value value))

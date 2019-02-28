@@ -4,10 +4,10 @@
 <a href="{{path}}/example?return-path={{path}}" class="btn btn-primary btn-sm">{%tr modules/show-example %}</a>
 {% endif %}
 
-<div class="treatment-content form {% if tabbed? %}tabbed{% endif %}" data-data-name="{{data-name}}"
+<div class="treatment-content form {% if tabbed? %}tabbed{% endif %}" data-namespace="{{namespace}}"
      id="{{content-id}}">
     {% include "module-content-render-snip.html" %}
-    <form method="post" class="content-submitter" name="contentform" action="/user/content-data">
+    <form method="post" class="content-submitter" name="contentform" action="/user/tx/content-data">
         <input type="hidden" name="content-data" class="content-poster">
         <button type="submit" class="btn btn-primary">{%tr save %}</button>
     </form>

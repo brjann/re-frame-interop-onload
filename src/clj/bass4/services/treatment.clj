@@ -81,8 +81,9 @@
   [modules]
   (let [module-ids (mapv :module-id (if (sequential? modules)
                                       modules
-                                      [modules]))]
-    (get-module-contents* module-ids)))
+                                      [modules]))
+        contents   (get-module-contents* module-ids)]
+    contents))
 
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
@@ -104,12 +105,12 @@
 
 (defn get-module-contents-with-update-time
   [modules treatment-access-id]
-  (let [last-updates     (map-map first (group-by :data-name (db/get-content-data-last-save {:data-owner-id treatment-access-id})))
+  (let [last-updates     (map-map first (group-by :namespace (db/get-content-data-last-save {:data-owner-id treatment-access-id})))
         content-accesses (->> (db/get-content-first-access {:treatment-access-id treatment-access-id :module-ids (mapv :module-id modules)})
                               (mapv #(vector (:module-id %) (:content-id %)))
                               (into #{}))
         contents         (->> (get-module-contents modules)
-                              (mapv #(assoc % :data-updated (get-in last-updates [(:data-name %) :time])))
+                              (mapv #(assoc % :data-updated (get-in last-updates [(:namespace %) :time])))
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 

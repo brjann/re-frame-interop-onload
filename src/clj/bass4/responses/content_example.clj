@@ -9,15 +9,15 @@
 (defapi edit-example
   [content-id :- api/->int]
   (when-let [content (treatment-service/get-content content-id)]
-    (let [data-name    (:data-name content)
+    (let [namespace    (:namespace content)
           example-data (content-data/get-content-data
                          content-id
-                         [data-name]
-                         #_(conj (:data-imports content) data-name))]
+                         [namespace]
+                         #_(conj (:data-imports content) namespace))]
       (layout/render "content-example.html"
                      {:text         (:text content)
                       :markdown?    (:markdown? content)
                       :tabbed?      (:tabbed? content)
                       :content-id   content-id
-                      :data-name    data-name
+                      :namespace    namespace
                       :content-data example-data}))))

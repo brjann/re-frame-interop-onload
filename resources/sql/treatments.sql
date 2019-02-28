@@ -46,7 +46,7 @@ ORDER BY lct.SortOrder;
 SELECT DISTINCT
   cm.ObjectId      AS `module-id`,
   ctc.ObjectId     AS `content-id`,
-  ctc.DataName     AS `data-name`,
+  ctc.DataName AS `namespace`,
   ctc.`Name`       AS `content-name`,
   ctc.FilePath     AS `file-path`,
   ctc.Tags AS `tags`,
@@ -72,7 +72,7 @@ SELECT
   IsMarkDown  AS `markdown?`,
   ShowExample AS `show-example?`,
   Tabbed      AS `tabbed?`,
-  DataName    AS `data-name`,
+  DataName AS `namespace`,
   `Name`      AS `content-name`,
   ImportData  AS `data-imports`,
   Tags AS `tags`,
@@ -92,8 +92,7 @@ WHERE Id IN (SELECT MAX(Id)
 
 -- :name get-content-data-last-save :? :*
 -- :doc get the content data
-SELECT
-	DataName AS `data-name`,
+SELECT DataName AS `namespace`,
     from_unixtime(Time) AS `time`
 FROM content_data
 WHERE Id IN (SELECT MAX(Id)
