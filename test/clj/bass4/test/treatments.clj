@@ -23,10 +23,10 @@
       (is (= #{5787 3961} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
 
 (deftest empty-content
-  (let [module (treatment/get-module-contents 3961)]
+  (let [module (treatment/get-module-contents* 3961)]
     (is (= #{3980 4001 3989}
            (->>
-             (treatment/get-module-contents 3961)
+             (treatment/get-module-contents* 3961)
              (into #{} (map :content-id)))))))
 
 

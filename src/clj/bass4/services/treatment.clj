@@ -78,11 +78,11 @@
        (filter #(or (:has-text? %) (:file-path %)))))
 
 (defn get-module-contents
-  [module-ids]
-  (get-module-contents*
-    (if (coll? module-ids)
-      module-ids
-      [module-ids])))
+  [modules]
+  (let [module-ids (mapv :module-id (if (sequential? modules)
+                                      modules
+                                      [modules]))]
+    (get-module-contents* module-ids)))
 
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
@@ -99,16 +99,16 @@
 (defn get-categorized-module-contents
   [module]
   (let [module-id (:module-id module)]
-    (-> (get-module-contents module-id)
+    (-> (get-module-contents module)
         (categorize-module-contents))))
 
 (defn get-module-contents-with-update-time
-  [module-ids treatment-access-id]
+  [modules treatment-access-id]
   (let [last-updates     (map-map first (group-by :data-name (db/get-content-data-last-save {:data-owner-id treatment-access-id})))
-        content-accesses (->> (db/get-content-first-access {:treatment-access-id treatment-access-id :module-ids module-ids})
+        content-accesses (->> (db/get-content-first-access {:treatment-access-id treatment-access-id :module-ids (mapv :module-id modules)})
                               (mapv #(vector (:module-id %) (:content-id %)))
                               (into #{}))
-        contents         (->> (get-module-contents module-ids)
+        contents         (->> (get-module-contents modules)
                               (mapv #(assoc % :data-updated (get-in last-updates [(:data-name %) :time])))
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))

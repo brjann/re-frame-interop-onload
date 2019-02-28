@@ -137,7 +137,7 @@
 (defapi modules-list
   [render-map :- map? modules :- seq? treatment-access-id :- integer?]
   (let [module-contents      (treatment-service/get-module-contents-with-update-time
-                               (mapv :module-id modules)
+                               modules
                                treatment-access-id)
         modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
     (layout/render
