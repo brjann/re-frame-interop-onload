@@ -68,7 +68,7 @@ ORDER BY lcm.SortOrder, cm.SortOrder;
 
 -- :name get-content :? :1
 -- :doc
-SELECT
+SELECT ObjectId AS `content-id`,
   Text,
   IsMarkDown  AS `markdown?`,
   ShowExample AS `show-example?`,

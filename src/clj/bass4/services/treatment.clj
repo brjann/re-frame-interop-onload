@@ -52,10 +52,17 @@
     content
     (dissoc content :file-path)))
 
-(defn- check-content
+(defn- check-content-text
   [content]
   (if (empty? (:text content))
     (dissoc content :text)
+    content))
+
+(defn- add-module-namespace
+  "Inject module-specific namespace into contents"
+  [content module]
+  (if-let [namespace (get-in module [:content-namespaces (:content-id content)])]
+    (assoc content :namespace namespace)
     content))
 
 (defn get-content
@@ -64,11 +71,16 @@
         {:content-id content-id}
         #_[:markdown :tabbed :show-example])
       (check-file)
-      (check-content)
+      (check-content-text)
       (unserialize-key :data-imports)
       (split-tags-property)
       ;; Transform true false array for imports into list of imported data
       (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
+
+(defn get-content-in-module
+  [module content-id]
+  (-> (get-content content-id)
+      (add-module-namespace module)))
 
 (defn get-module-contents*
   [module-ids]
@@ -79,11 +91,12 @@
 
 (defn get-module-contents
   [modules]
-  (let [module-ids (mapv :module-id (if (sequential? modules)
-                                      modules
-                                      [modules]))
-        contents   (get-module-contents* module-ids)]
-    contents))
+  (let [modules       (if (sequential? modules)
+                        modules
+                        [modules])
+        modules-by-id (map-map first (group-by :module-id modules))
+        contents      (get-module-contents* (keys modules-by-id))]
+    (mapv #(add-module-namespace % (get modules-by-id (:module-id %))) contents)))
 
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
@@ -99,9 +112,8 @@
 
 (defn get-categorized-module-contents
   [module]
-  (let [module-id (:module-id module)]
-    (-> (get-module-contents module)
-        (categorize-module-contents))))
+  (-> (get-module-contents module)
+      (categorize-module-contents)))
 
 (defn get-module-contents-with-update-time
   [modules treatment-access-id]

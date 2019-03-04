@@ -48,7 +48,7 @@
 
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
-  (let [content      (treatment-service/get-content content-id)
+  (let [content      (treatment-service/get-content-in-module module content-id)
         namespace    (:namespace content)
         content-data (content-data/get-content-data
                        (:treatment-access-id treatment-access)
