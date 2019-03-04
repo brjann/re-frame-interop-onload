@@ -1,15 +1,9 @@
 (ns bass4.passwords
-  (:require [bass4.utils :refer [map-map map-map-keys filter-map]]
-            [bass4.db-config :as db-config]
-            [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [clojure.string :as s]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.math.numeric-tower :as math]
-            [mount.core :refer [defstate]]
-            [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]
-            [clojure.string :as string])
-  (:import [java.io.File]))
+            [bass4.utils :refer [map-map map-map-keys filter-map]]
+            [bass4.db-config :as db-config]))
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
