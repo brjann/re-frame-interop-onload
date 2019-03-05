@@ -102,20 +102,12 @@
                          (string/split #"localhost")
                          (second))
             redirect (-> session
-                         (visit (str uri "&returnURL=htp://www.dn.se"))
-                         (has (status? 400))
-                         (visit (str uri "&returnURL=http:/www.dn.se"))
-                         (has (status? 400))
                          (visit (str uri "&returnURL=http://www.dn.se"))
                          (visit "/user")
                          ;; ext-login middleware catches the change in assessments-pending?
                          ;; status and redirects user
-                         (has (status? 302))
                          (get-in [:response :headers "Location"]))]
-        (is (= "http://www.dn.se" redirect))
-        (-> session
-            (visit "/user/tx/messages")
-            (has (status? 403)))))))
+        (is (= "http://www.dn.se" redirect))))))
 
 
 (deftest request-ext-login-error-uid

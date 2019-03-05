@@ -61,8 +61,10 @@
   [handler request]
   (let [res (handler request)]
     (if-let [return-url (return-url-after-assessments (:session res))]
-      (-> (http-response/found return-url)
-          (assoc :session {}))
+      (do
+        (log/info "Assessment completed for" (get-in res [:session :user-id]) "returning to" return-url)
+        (-> (http-response/found return-url)
+            (assoc :session {})))
       res)))
 
 
@@ -110,7 +112,9 @@
         (logged-response "0 No pending administrations")
 
         :else
-        (logged-response (uid-url (:user-id user) request))))))
+        (do
+          (log/info "Assessments pending for" (:user-id user))
+          (logged-response (uid-url (:user-id user) request)))))))
 
 (defapi do-login
   [uid :- [[api/str? 1 100]] return-url :- [[api/str? 1 2000] api/url?]]
