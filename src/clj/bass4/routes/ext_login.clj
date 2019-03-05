@@ -51,17 +51,19 @@
 
       :else (handler request))))
 
+(defn return-url-after-assessments
+  [session]
+  (and (not (:assessments-pending? session))
+       (:assessments-checked? session)
+       (:return-url session)))
+
 (defn return-url-mw
   [handler request]
-  (let [session-in  (:session request)
-        out         (handler request)
-        session-out (:session out)]
-    (if (and (:return-url session-in)
-             (:assessments-pending? session-in)
-             (not (:assessments-pending? session-out)))
-      (-> (http-response/found (:return-url session-in))
+  (let [res (handler request)]
+    (if-let [return-url (return-url-after-assessments (:session res))]
+      (-> (http-response/found return-url)
           (assoc :session {}))
-      out)))
+      res)))
 
 
 ;; ------------

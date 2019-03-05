@@ -91,6 +91,31 @@
             (visit "/user/tx/messages")
             (has (status? 403)))))))
 
+(deftest request-ext-login-empty-assessment-pending
+  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+    (let [user-id (user-service/create-user! 536103 {:Group "642451" :firstname "ext-login-test-empty"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (let [session  *s*
+            uri      (-> session
+                         (visit (str "/ext-login/check-pending/" user-id))
+                         (get-in [:response :body])
+                         (string/split #"localhost")
+                         (second))
+            redirect (-> session
+                         (visit (str uri "&returnURL=htp://www.dn.se"))
+                         (has (status? 400))
+                         (visit (str uri "&returnURL=http:/www.dn.se"))
+                         (has (status? 400))
+                         (visit (str uri "&returnURL=http://www.dn.se"))
+                         (visit "/user")
+                         ;; ext-login middleware catches the change in assessments-pending?
+                         ;; status and redirects user
+                         (has (status? 302))
+                         (get-in [:response :headers "Location"]))]
+        (is (= "http://www.dn.se" redirect))
+        (-> session
+            (visit "/user/tx/messages")
+            (has (status? 403)))))))
 
 
 (deftest request-ext-login-error-uid
