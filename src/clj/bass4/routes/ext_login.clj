@@ -62,7 +62,8 @@
   (let [res (handler request)]
     (if-let [return-url (return-url-after-assessments (:session res))]
       (do
-        (log/info "Assessment completed for" (get-in res [:session :user-id]) "returning to" return-url)
+        (when-not config/test-mode?
+          (log/info "Assessment completed for" (get-in res [:session :user-id]) "returning to" return-url))
         (-> (http-response/found return-url)
             (assoc :session {})))
       res)))
@@ -113,7 +114,8 @@
 
         :else
         (do
-          (log/info "Assessments pending for" (:user-id user))
+          (when-not config/test-mode?
+            (log/info "Assessments pending for" (:user-id user)))
           (logged-response (uid-url (:user-id user) request)))))))
 
 (defapi do-login
