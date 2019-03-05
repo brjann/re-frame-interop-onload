@@ -148,9 +148,9 @@
                    :please-re-auth-form     "Ditt lösenord krävs innan du kan posta till systemet."
                    :no-activities           "Inga aktiviteter"
                    :no-activities-info      "Det finns inga aktiviteter för denna användare. Du har loggats ut."
-                   :lost-password           "Jag har tappat mitt lösenord"
+                   :lost-password           "Jag har glömt mitt lösenord"
                    :password-needed         "Lösenord krävs"}
- :lost-password   {:title                   "Tappat lösenord"
+ :lost-password   {:title                   "Glömt lösenord"
                    :request-info            "Skriv in ditt användarnamn eller lösenord. Vi kommer att skicka ett mejl med en länk. Klicka på länken för att be om ett nytt lösenord."
                    :request-email-header    "Be om nytt lösenord"
                    :request-email-text      "Klicka på länken nedan för att be om ett nytt lösenord. \n\n %1\n\n Länken gäller i en timme och kan bara användas en gång. Om du inte har bett om nytt lösenord, var snäll kontakta oss på %2."
