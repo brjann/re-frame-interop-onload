@@ -10,7 +10,9 @@
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [clojure.string :as str]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.services.content-data :as content-data]
+            [clojure.set :as set]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -38,6 +40,21 @@
           (db/get-treatment-accesses
             {:user-id user-id}))))
 
+
+
+;; --------------------
+;;  MODULE CONTENT DATA
+;; --------------------
+
+(defn get-module-content-data
+  [treatment-access module-content]
+  (let [data-imports (:data-imports module-content)
+        namespaces   (conj (keys data-imports) (:namespace module-content))
+        aliasing     (utils/filter-map identity data-imports)
+        data         (content-data/get-content-data
+                       (:treatment-access-id treatment-access)
+                       namespaces)]
+    (set/rename-keys data aliasing)))
 
 ;; --------------------
 ;;   GET FULL CONTENT

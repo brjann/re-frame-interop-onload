@@ -48,12 +48,10 @@
 
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
-  (let [content      (treatment-service/get-content-in-module module content-id)
-        namespace    (:namespace content)
-        content-data (content-data/get-content-data
-                       (:treatment-access-id treatment-access)
-                       (conj (keys (:data-imports content)) namespace))
-        params       (first params-map)]
+  (let [module-content (treatment-service/get-content-in-module module content-id)
+        namespace      (:namespace module-content)
+        content-data   (treatment-service/get-module-content-data treatment-access module-content)
+        params         (first params-map)]
     (treatment-service/register-content-access!
       content-id
       (:module-id module)
@@ -61,16 +59,16 @@
     (layout/render
       template
       (merge render-map
-             {:text          (:text content)
-              :file-path     (:file-path content)
-              :markdown?     (:markdown? content)
-              :tabbed?       (:tabbed? content)
-              :show-example? (:show-example? content)
+             {:text          (:text module-content)
+              :file-path     (:file-path module-content)
+              :markdown?     (:markdown? module-content)
+              :tabbed?       (:tabbed? module-content)
+              :show-example? (:show-example? module-content)
               :content-id    content-id
               :namespace     namespace
               :content-data  content-data
               :context-menu  (context-menu module module-contents)
-              :page-title    (:content-name content)}
+              :page-title    (:content-name module-content)}
              params))))
 
 (defapi main-text

@@ -15,11 +15,11 @@
 (defn reduce-content-map [m [x & xs :as s]]
   (if (empty? s)
     m
-    (recur (merge m (assoc m (keyword (:valuename x)) (:value x))) xs)))
+    (recur (merge m (assoc m (:valuename x) (:value x))) xs)))
 
 (defn unflatten-content-data
   [s]
-  (reduce (fn [m x] (update-in m [(keyword (:dataname x))] #(conj % x))) {} s))
+  (reduce (fn [m x] (update-in m [(:dataname x)] #(conj % x))) {} s))
 
 (defn content-data-transform [content-data]
   {(key content-data) (->> (val content-data)
@@ -42,7 +42,7 @@
 (defn remove-identical-data [string-map old-data]
   (filter
     (fn [[namespace value-name value]]
-      (let [old-value (get-in old-data [(keyword namespace) (keyword value-name)])]
+      (let [old-value (get-in old-data [namespace value-name])]
         (if (= old-value nil)
           (not= value "")
           (not= old-value value))
