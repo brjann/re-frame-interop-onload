@@ -135,6 +135,14 @@
         contents      (get-module-contents* (keys modules-by-id))]
     (mapv #(inject-module-namespace % (get modules-by-id (:module-id %))) contents)))
 
+(defn get-module-main-text-id
+  [module-id]
+  (:content-id (db/get-module-main-text-id {:module-id module-id})))
+
+(defn get-module-homework-id
+  [module-id]
+  (:content-id (db/get-module-homework-id {:module-id module-id})))
+
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
 ;; --------------------------
@@ -293,8 +301,8 @@
 ;; --------------------------
 
 (defn submit-homework!
-  [treatment-access module]
-  (db/submit-homework! {:treatment-access-id (:treatment-access-id treatment-access)
+  [treatment-access-id module]
+  (db/submit-homework! {:treatment-access-id treatment-access-id
                         :module-id           (:module-id module)}))
 
 (defn retract-homework!

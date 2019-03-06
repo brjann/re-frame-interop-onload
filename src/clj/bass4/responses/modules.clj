@@ -167,20 +167,28 @@
 
 (defapi save-worksheet-data
   [treatment-access-id :- integer? module :- map? content-id :- api/->int content-data :- [api/->json map?]]
-  (when (handle-content-data content-data treatment-access-id (get-in module [:content-ns-aliases content-id]))
+  (when (handle-content-data content-data
+                             treatment-access-id
+                             (get-in module [:content-ns-aliases content-id]))
     (http-response/found "reload")))
 
 (defapi save-main-text-data
-  [treatment-access :- map? content-data :- [api/->json map?]]
-  (when (handle-content-data content-data (:treatment-access-id treatment-access))
-    (http-response/ok {})))
+  [treatment-access-id :- integer? module :- map? content-data :- [api/->json map?]]
+  (let [main-text-id (treatment-service/get-module-main-text-id (:module-id module))]
+    (when (handle-content-data content-data
+                               treatment-access-id
+                               (get-in module [:content-ns-aliases main-text-id]))
+      (http-response/ok {}))))
 
 (defapi save-homework
-  [treatment-access :- map? module :- map? content-data :- [api/->json map?] submit? :- api/->bool]
-  (when (handle-content-data content-data (:treatment-access-id treatment-access))
-    (when submit?
-      (treatment-service/submit-homework! treatment-access module))
-    (http-response/found "reload")))
+  [treatment-access-id :- integer? module :- map? content-data :- [api/->json map?] submit? :- api/->bool]
+  (let [homework-id (treatment-service/get-module-homework-id (:module-id module))]
+    (when (handle-content-data content-data
+                               treatment-access-id
+                               (get-in module [:content-ns-aliases homework-id]))
+      (when submit?
+        (treatment-service/submit-homework! treatment-access-id module))
+      (http-response/found "reload"))))
 
 (defapi retract-homework
   [treatment-access :- map? module :- map?]

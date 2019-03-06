@@ -219,13 +219,23 @@
         (routes
           (GET "/" [] (modules-response/main-text treatment-access render-map module))
           (POST "/" [content-data]
-            (modules-response/save-main-text-data treatment-access content-data))
+            (modules-response/save-main-text-data
+              (:treatment-access-id treatment-access)
+              module
+              content-data))
+
           (GET "/homework" []
             (modules-response/homework treatment-access render-map module))
           (POST "/homework" [content-data submit?]
-            (modules-response/save-homework treatment-access module content-data submit?))
+            (modules-response/save-homework
+              (:treatment-access-id treatment-access)
+              module
+              content-data
+              submit?))
+
           (POST "/retract-homework" []
             (modules-response/retract-homework treatment-access module))
+
           (GET "/worksheet/:worksheet-id" [worksheet-id]
             (modules-response/worksheet
               treatment-access
@@ -234,15 +244,12 @@
               worksheet-id))
           (POST "/worksheet/:worksheet-id" [worksheet-id content-data]
             (modules-response/save-worksheet-data
-              (get-in treatment [:treatment-access :treatment-access-id])
+              (:treatment-access-id treatment-access)
               module
               worksheet-id
               content-data))
+
           (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
             (modules-response/worksheet-example module worksheet-id return-path)))
         ;; Module not found
-        (http-response/not-found (i18n/tr [:modules/no-module]))))
-    #_(POST "/content-data" [content-data]
-      (modules-response/save-worksheet-data
-        (get-in treatment [:treatment-access :treatment-access-id])
-        content-data))))
+        (http-response/not-found (i18n/tr [:modules/no-module]))))))

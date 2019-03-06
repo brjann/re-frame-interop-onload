@@ -68,6 +68,22 @@ FROM c_module as cm
 WHERE lcm.LinkerId IN (:v*:module-ids)
 ORDER BY lcm.SortOrder, cm.SortOrder;
 
+
+-- :name get-module-main-text-id :? :1
+-- :doc
+SELECT DISTINCT LinkeeId AS `content-id`
+FROM links_c_module
+WHERE LinkerId=:module-id AND PropertyName='MainTexts'
+ORDER BY SortOrder;
+
+-- :name get-module-homework-id :? :1
+-- :doc
+SELECT DISTINCT LinkeeId AS `content-id`
+FROM links_c_module
+WHERE LinkerId=:module-id AND PropertyName='Homework'
+ORDER BY SortOrder;
+
+
 -- :name get-content :? :1
 -- :doc
 SELECT ObjectId AS `content-id`,
