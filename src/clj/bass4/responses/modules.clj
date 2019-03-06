@@ -163,7 +163,8 @@
     (http-response/found "reload")))
 
 (defapi save-worksheet-data
-  [treatment-access-id :- integer? content-data :- [api/->json map?]]
+  [treatment-access-id :- integer? content-id :- api/->int content-data :- [api/->json map?]]
+  (log/debug content-data)
   (when (handle-content-data content-data treatment-access-id)
     (http-response/found "reload")))
 
