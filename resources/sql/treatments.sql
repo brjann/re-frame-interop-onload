@@ -35,8 +35,8 @@ SELECT
   cm.ObjectId AS `module-id`,
   cm.Name AS `module-name`,
   cm.ContentNamespaces AS `content-namespaces`,
-  cm.DisabledNamespaceImports AS `disabled-namespace-imports`,
-  cm.MoreNamespaceImports AS `more-namespace-imports`,
+  cm.ContentDisabledImports AS `content-disabled-imports`,
+  cm.ContentMoreImports AS `content-more-imports`,
   cm.Tags AS `tags`
 FROM links_c_treatment AS lct
   JOIN c_module AS cm

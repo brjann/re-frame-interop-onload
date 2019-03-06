@@ -100,8 +100,8 @@
   [content module]
   (let [content-id   (:content-id content)
         data-imports (:data-imports content)
-        disabled     (get-in module [:disabled-namespace-imports content-id])
-        more         (get-in module [:more-namespace-imports content-id])]
+        disabled     (get-in module [:content-disabled-imports content-id])
+        more         (get-in module [:content-more-imports content-id])]
     (assoc content :data-imports (-> (apply dissoc data-imports disabled)
                                      (merge more)))))
 
@@ -166,20 +166,20 @@
 
 (defn- unserialize-disabled-imports
   [module]
-  (assoc module :disabled-namespace-imports (->> (php->clj (:disabled-namespace-imports module))
-                                                 (into {})
-                                                 (mapv (fn [[k v]] (let [[content-id namespace] (str/split k #"\$")]
+  (assoc module :content-disabled-imports (->> (php->clj (:content-disabled-imports module))
+                                               (into {})
+                                               (mapv (fn [[k v]] (let [[content-id namespace] (str/split k #"\$")]
                                                                      {:content-id (utils/str->int content-id)
                                                                       :namespace  namespace
                                                                       :disabled?  v})))
-                                                 (filter :disabled?)
-                                                 (group-by :content-id)
-                                                 (mapv (fn [[k v]] [k (into #{} (mapv :namespace v))]))
-                                                 (into {}))))
+                                               (filter :disabled?)
+                                               (group-by :content-id)
+                                               (mapv (fn [[k v]] [k (into #{} (mapv :namespace v))]))
+                                               (into {}))))
 
 (defn unserialize-more-imports
   [module]
-  (let [unser (->> (php->clj (:more-namespace-imports module))
+  (let [unser (->> (php->clj (:content-more-imports module))
                    (into {})
                    (mapv (fn [[k v]] [(str->int k) (str/trim v)]))
                    (remove (fn [[_ v]] (empty? v)))
@@ -188,7 +188,7 @@
                                                       [namespace alias]))
                                              (into {}))]))
                    (into {}))]
-    (assoc module :more-namespace-imports unser)))
+    (assoc module :content-more-imports unser)))
 
 (defn- get-treatment-modules
   [treatment-id]
