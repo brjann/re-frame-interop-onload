@@ -4,7 +4,8 @@
             [clojure.tools.logging :as log]
             [bass4.layout :as layout]
             [clojure.string :as str]
-            [bass4.http-errors :as http-errors])
+            [bass4.http-errors :as http-errors]
+            [clojure.set :as set])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -33,7 +34,7 @@
     (map content-data-transform)
     (reduce merge)))
 
-(defn split-dataname-key-value [[label value]]
+(defn split-namespace-key-value [[label value]]
   (let [[namespace key] (str/split label #"\$")]
     (when (some empty? [namespace key])
       (http-errors/throw-400! (str "Split pair " label "=" value " failed")))
@@ -57,11 +58,19 @@
           %) string-map))
 
 (defn save-content-data!
-  [data-map treatment-access-id]
-  (when (seq data-map)
-    (let [string-map (mapv split-dataname-key-value (into [] data-map))
-          data-names (distinct (map first string-map))
-          old-data   (get-content-data treatment-access-id data-names)
-          save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
-      (when (< 0 (count save-data))
-        (db/save-content-data! {:content-data save-data})))))
+  ([data-map treatment-access-id]
+   (save-content-data! data-map treatment-access-id {}))
+  ([data-map treatment-access-id ns-aliases]
+   (when (seq data-map)
+     (let [string-map (mapv split-namespace-key-value (into [] data-map))
+           string-map (if (seq ns-aliases)
+                        (let [ns-aliases-invert (set/map-invert ns-aliases)]
+                          (mapv (fn [[namespace key value]]
+                                  [(get ns-aliases-invert namespace namespace) key value])
+                                string-map))
+                        string-map)
+           data-names (distinct (map first string-map))
+           old-data   (get-content-data treatment-access-id data-names)
+           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
+       (when (< 0 (count save-data))
+         (db/save-content-data! {:content-data save-data}))))))

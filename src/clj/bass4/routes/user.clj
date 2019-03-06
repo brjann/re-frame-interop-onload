@@ -235,13 +235,14 @@
           (POST "/worksheet/:worksheet-id" [worksheet-id content-data]
             (modules-response/save-worksheet-data
               (get-in treatment [:treatment-access :treatment-access-id])
+              module
               worksheet-id
               content-data))
           (GET "/worksheet/:worksheet-id/example" [worksheet-id return-path]
             (modules-response/worksheet-example module worksheet-id return-path)))
         ;; Module not found
         (http-response/not-found (i18n/tr [:modules/no-module]))))
-    (POST "/content-data" [content-data]
+    #_(POST "/content-data" [content-data]
       (modules-response/save-worksheet-data
         (get-in treatment [:treatment-access :treatment-access-id])
         content-data))))

@@ -151,11 +151,14 @@
 ;--------------
 
 (defn- handle-content-data
-  [data-map treatment-access-id]
-  (content-data-service/save-content-data!
-    data-map
-    treatment-access-id)
-  true)
+  ([data-map treatment-access-id]
+   (handle-content-data data-map treatment-access-id {}))
+  ([data-map treatment-access-id ns-aliases]
+   (content-data-service/save-content-data!
+     data-map
+     treatment-access-id
+     ns-aliases)
+   true))
 
 (defapi save-worksheet-example-data
   [content-id :- api/->int content-data :- [api/->json map?]]
@@ -163,9 +166,8 @@
     (http-response/found "reload")))
 
 (defapi save-worksheet-data
-  [treatment-access-id :- integer? content-id :- api/->int content-data :- [api/->json map?]]
-  (log/debug content-data)
-  (when (handle-content-data content-data treatment-access-id)
+  [treatment-access-id :- integer? module :- map? content-id :- api/->int content-data :- [api/->json map?]]
+  (when (handle-content-data content-data treatment-access-id (get-in module [:content-ns-aliases content-id]))
     (http-response/found "reload")))
 
 (defapi save-main-text-data
