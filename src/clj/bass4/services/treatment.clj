@@ -39,9 +39,9 @@
             {:user-id user-id}))))
 
 
-;; ----------------
-;;   DB RETRIEVAL
-;; ----------------
+;; --------------------
+;;   GET FULL CONTENT
+;; --------------------
 
 (defn- split-tags-property
   [container]
@@ -59,13 +59,6 @@
     (dissoc content :text)
     content))
 
-(defn- add-module-namespace
-  "Inject module-specific namespace into contents"
-  [content module]
-  (if-let [namespace (get-in module [:content-namespaces (:content-id content)])]
-    (assoc content :namespace namespace)
-    content))
-
 (defn get-content
   [content-id]
   (-> (db/get-content
@@ -75,14 +68,35 @@
       (check-content-text)
       (unserialize-key :data-imports)
       (split-tags-property)
-      ;; Transform true false array for imports into list of imported data
+      ;; Transform true false array for imports into map with import ns as key and nil as alias
       ((fn [content] (assoc content :data-imports (-> (keys (filter-map identity (:data-imports content)))
                                                       (#(zipmap % (repeat (count %) nil)))))))))
+
+(defn- inject-module-namespace
+  "Inject module-specific namespace into contents"
+  [content module]
+  (if-let [namespace (get-in module [:content-namespaces (:content-id content)])]
+    (assoc content :namespace namespace)
+    content))
+
+(defn- inject-module-imports
+  [content module]
+  (let [content-id   (:content-id content)
+        data-imports (:data-imports content)
+        disabled     (get-in module [:disabled-namespace-imports content-id])
+        more         (get-in module [:more-namespace-imports content-id])]
+    (assoc content :data-imports (-> (apply dissoc data-imports disabled)
+                                     (merge more)))))
 
 (defn get-content-in-module
   [module content-id]
   (-> (get-content content-id)
-      (add-module-namespace module)))
+      (inject-module-namespace module)
+      (inject-module-imports module)))
+
+;; --------------------------
+;;  MODULE CONTENTS SUMMARY
+;; --------------------------
 
 (defn get-module-contents*
   [module-ids]
@@ -98,7 +112,7 @@
                         [modules])
         modules-by-id (map-map first (group-by :module-id modules))
         contents      (get-module-contents* (keys modules-by-id))]
-    (mapv #(add-module-namespace % (get modules-by-id (:module-id %))) contents)))
+    (mapv #(inject-module-namespace % (get modules-by-id (:module-id %))) contents)))
 
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
@@ -143,7 +157,7 @@
                                                                       :disabled?  v})))
                                                  (filter :disabled?)
                                                  (group-by :content-id)
-                                                 (mapv (fn [[k v]] [k (mapv :namespace v)]))
+                                                 (mapv (fn [[k v]] [k (into #{} (mapv :namespace v))]))
                                                  (into {}))))
 
 (defn unserialize-more-imports
@@ -248,6 +262,10 @@
        :new-messages?    (messages/new-messages? user-id)
        :user-components  (user-components treatment-access treatment)
        :treatment        treatment})))
+
+;; --------------------------
+;;      CONTENT MUTATIONS
+;; --------------------------
 
 (defn submit-homework!
   [treatment-access module]
