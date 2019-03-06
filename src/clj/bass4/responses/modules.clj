@@ -52,7 +52,7 @@
         namespace    (:namespace content)
         content-data (content-data/get-content-data
                        (:treatment-access-id treatment-access)
-                       (conj (:data-imports content) namespace))
+                       (conj (keys (:data-imports content)) namespace))
         params       (first params-map)]
     (treatment-service/register-content-access!
       content-id

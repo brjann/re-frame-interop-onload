@@ -76,7 +76,8 @@
       (unserialize-key :data-imports)
       (split-tags-property)
       ;; Transform true false array for imports into list of imported data
-      (#(assoc % :data-imports (keys (filter-map identity (:data-imports %)))))))
+      ((fn [content] (assoc content :data-imports (-> (keys (filter-map identity (:data-imports content)))
+                                                      (#(zipmap % (repeat (count %) nil)))))))))
 
 (defn get-content-in-module
   [module content-id]
