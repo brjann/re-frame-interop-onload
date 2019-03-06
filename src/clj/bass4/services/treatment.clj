@@ -49,8 +49,8 @@
 (defn get-module-content-data
   [treatment-access module-content]
   (let [data-imports (:data-imports module-content)
-        namespaces   (conj (keys data-imports) (:namespace module-content))
-        aliasing     (utils/filter-map identity data-imports)
+        namespaces   (conj data-imports (:namespace module-content))
+        aliasing     (:ns-aliases module-content)
         data         (content-data/get-content-data
                        (:treatment-access-id treatment-access)
                        namespaces)]
@@ -85,9 +85,9 @@
       (check-content-text)
       (unserialize-key :data-imports)
       (split-tags-property)
-      ;; Transform true false array for imports into map with import ns as key and nil as alias
-      ((fn [content] (assoc content :data-imports (-> (keys (filter-map identity (:data-imports content)))
-                                                      (#(zipmap % (repeat (count %) nil)))))))))
+      ;; Transform true false array for imports into set with imported namespaces
+      ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
+                                                       (into #{})))))))
 
 (defn- inject-module-namespace
   "Inject module-specific namespace into contents"
@@ -101,9 +101,13 @@
   (let [content-id   (:content-id content)
         data-imports (:data-imports content)
         disabled     (get-in module [:content-disabled-imports content-id])
-        more         (get-in module [:content-more-imports content-id])]
-    (assoc content :data-imports (-> (apply dissoc data-imports disabled)
-                                     (merge more)))))
+        more         (get-in module [:content-ns-imports content-id])
+        aliases      (get-in module [:content-ns-aliases content-id])]
+    (-> content
+        (assoc :data-imports (-> data-imports
+                                 (set/difference disabled)
+                                 (set/union more)))
+        (assoc :ns-aliases aliases))))
 
 (defn get-content-in-module
   [module content-id]
@@ -169,9 +173,9 @@
   (assoc module :content-disabled-imports (->> (php->clj (:content-disabled-imports module))
                                                (into {})
                                                (mapv (fn [[k v]] (let [[content-id namespace] (str/split k #"\$")]
-                                                                     {:content-id (utils/str->int content-id)
-                                                                      :namespace  namespace
-                                                                      :disabled?  v})))
+                                                                   {:content-id (utils/str->int content-id)
+                                                                    :namespace  namespace
+                                                                    :disabled?  v})))
                                                (filter :disabled?)
                                                (group-by :content-id)
                                                (mapv (fn [[k v]] [k (into #{} (mapv :namespace v))]))
@@ -179,16 +183,20 @@
 
 (defn unserialize-more-imports
   [module]
-  (let [unser (->> (php->clj (:content-more-imports module))
-                   (into {})
-                   (mapv (fn [[k v]] [(str->int k) (str/trim v)]))
-                   (remove (fn [[_ v]] (empty? v)))
-                   (mapv (fn [[k v]] [k (->> (str/split-lines v)
-                                             (mapv #(let [[namespace alias] (remove empty? (str/split % #" "))]
-                                                      [namespace alias]))
-                                             (into {}))]))
-                   (into {}))]
-    (assoc module :content-more-imports unser)))
+  (let [unser        (->> (php->clj (:content-more-imports module))
+                          (into {})
+                          (mapv (fn [[k v]] [(str->int k) (str/trim v)]))
+                          (remove (fn [[_ v]] (empty? v)))
+                          (mapv (fn [[k v]] [k (->> (str/split-lines v)
+                                                    (mapv #(let [[namespace alias] (remove empty? (str/split % #" "))]
+                                                             [namespace alias]))
+                                                    (into {}))]))
+                          (into {}))
+        more-imports (utils/map-map (comp set keys) unser)
+        aliases      (utils/map-map #(utils/filter-map identity %) unser)]
+    (-> module
+        (assoc :content-ns-imports more-imports :content-ns-aliases aliases)
+        (dissoc :content-more-imports))))
 
 (defn- get-treatment-modules
   [treatment-id]
