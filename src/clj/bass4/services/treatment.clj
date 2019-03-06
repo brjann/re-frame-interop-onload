@@ -127,6 +127,11 @@
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 
+
+;; --------------------------
+;;      MODULE RETRIEVAL
+;; --------------------------
+
 (defn- unserialize-disabled-imports
   [module]
   (assoc module :disabled-namespace-imports (->> (php->clj (:disabled-namespace-imports module))
@@ -163,6 +168,10 @@
        (mapv (fn [m] (assoc m :content-namespaces
                               (filter-map #(not (empty? %)) (:content-namespaces m)))))))
 
+;; --------------------------
+;;    TREATMENT RETRIEVAL
+;; --------------------------
+
 (defn treatment-map
   [treatment-id]
   (let [info    (-> (db/get-treatment-info
@@ -174,11 +183,9 @@
     (merge info
            {:modules modules})))
 
-
-#_(defn- convert-dates
-    [treatment-access]
-    [(tc/from-sql-date (:start-date treatment-access))
-     (tc/from-sql-date (:end-date treatment-access))])
+;; --------------------------
+;; TREATMENT ACCESS RETRIEVAL
+;; --------------------------
 
 (defn- treatment-ongoing?
   [treatment-access]
