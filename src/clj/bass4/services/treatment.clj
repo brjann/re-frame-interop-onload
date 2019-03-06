@@ -9,7 +9,8 @@
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.utils :as utils]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -126,11 +127,39 @@
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 
+(defn- unserialize-disabled-imports
+  [module]
+  (assoc module :disabled-namespace-imports (->> (php->clj (:disabled-namespace-imports module))
+                                                 (into {})
+                                                 (mapv (fn [[k v]] (let [[content-id namespace] (str/split k #"\$")]
+                                                                     {:content-id (utils/str->int content-id)
+                                                                      :namespace  namespace
+                                                                      :disabled?  v})))
+                                                 (filter :disabled?)
+                                                 (group-by :content-id)
+                                                 (mapv (fn [[k v]] [k (mapv :namespace v)]))
+                                                 (into {}))))
+
+(defn unserialize-more-imports
+  [module]
+  (let [unser (->> (php->clj (:more-namespace-imports module))
+                   (into {})
+                   (mapv (fn [[k v]] [(str->int k) (str/trim v)]))
+                   (remove (fn [[_ v]] (empty? v)))
+                   (mapv (fn [[k v]] [k (->> (str/split-lines v)
+                                             (mapv #(let [[namespace alias] (remove empty? (str/split % #" "))]
+                                                      [namespace alias]))
+                                             (into {}))]))
+                   (into {}))]
+    (assoc module :more-namespace-imports unser)))
+
 (defn- get-treatment-modules
   [treatment-id]
   (->> (db/get-treatment-modules {:treatment-id treatment-id})
        (mapv split-tags-property)
        (mapv #(unserialize-key % :content-namespaces))
+       (mapv unserialize-disabled-imports)
+       (mapv unserialize-more-imports)
        (mapv (fn [m] (assoc m :content-namespaces
                               (filter-map #(not (empty? %)) (:content-namespaces m)))))))
 
