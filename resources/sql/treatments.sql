@@ -29,6 +29,18 @@ SELECT
 FROM c_treatment AS ct
 WHERE ct.ObjectId=:treatment-id;
 
+-- :name get-module :? :1
+-- :doc
+SELECT
+  cm.ObjectId AS `module-id`,
+  cm.Name AS `module-name`,
+  cm.ContentNamespaces AS `content-namespaces`,
+  cm.ContentDisabledImports AS `content-disabled-imports`,
+  cm.ContentMoreImports AS `content-more-imports`,
+  cm.Tags AS `tags`
+FROM c_module AS cm
+WHERE cm.ObjectId = :module-id;
+
 -- :name get-treatment-modules :? :*
 -- :doc treatment modules of treatment
 SELECT

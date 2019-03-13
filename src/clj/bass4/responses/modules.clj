@@ -50,7 +50,9 @@
   [treatment-access render-map module module-contents template content-id & params-map]
   (let [module-content (treatment-service/get-content-in-module module content-id)
         namespace      (:namespace module-content)
-        content-data   (treatment-service/get-module-content-data treatment-access module-content)
+        content-data   (treatment-service/get-module-content-data
+                         (:treatment-access-id treatment-access)
+                         module-content)
         params         (first params-map)]
     (treatment-service/register-content-access!
       content-id

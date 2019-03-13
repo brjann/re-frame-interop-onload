@@ -47,12 +47,12 @@
 ;; --------------------
 
 (defn get-module-content-data
-  [treatment-access module-content]
+  [treatment-access-id module-content]
   (let [data-imports (:data-imports module-content)
         namespaces   (conj data-imports (:namespace module-content))
         aliasing     (:ns-aliases module-content)
         data         (content-data/get-content-data
-                       (:treatment-access-id treatment-access)
+                       treatment-access-id
                        namespaces)]
     (set/rename-keys data aliasing)))
 
@@ -206,15 +206,27 @@
         (assoc :content-ns-imports more-imports :content-ns-aliases aliases)
         (dissoc :content-more-imports))))
 
-(defn- get-treatment-modules
-  [treatment-id]
-  (->> (db/get-treatment-modules {:treatment-id treatment-id})
+(defn- process-modules
+  [modules]
+  (->> modules
        (mapv split-tags-property)
        (mapv #(unserialize-key % :content-namespaces))
        (mapv unserialize-disabled-imports)
        (mapv unserialize-more-imports)
        (mapv (fn [m] (assoc m :content-namespaces
                               (filter-map #(not (empty? %)) (:content-namespaces m)))))))
+
+(defn- get-treatment-modules
+  [treatment-id]
+  (-> (db/get-treatment-modules {:treatment-id treatment-id})
+      (process-modules)))
+
+(defn get-module
+  [module-id]
+  (-> (db/get-module {:module-id module-id})
+      (vector)
+      (process-modules)
+      (first)))
 
 ;; --------------------------
 ;;    TREATMENT RETRIEVAL
