@@ -191,7 +191,7 @@
         (visit "/user/tx/module/642518/homework" :request-method :post :params {:content-data (json/write-str {"export-content-hw$export" "7"
                                                                                                                "export-module-hw$export"  "8"
                                                                                                                "alias$export"             "9"})
-                                                                                :submit?      false})
+                                                                                :submit?      0})
         (has (status? 302))
         (visit "/user/tx/module/642529/worksheet/642525")
         (has (some-text? "\"export-content-hw\":{\"export\":\"7\"}"))
