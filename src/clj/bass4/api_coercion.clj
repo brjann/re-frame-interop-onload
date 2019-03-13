@@ -49,7 +49,7 @@
   [x]
   (if (boolean? x)
     x
-    (let [x (->int x)]
+    (when-let [x (->int x)]
       (not (zero? x)))))
 
 (defn ->json
