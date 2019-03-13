@@ -17,7 +17,8 @@
             [bass4.services.user :as user-service]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [bass4.config :as config]))
 
 (use-fixtures
   :once
@@ -35,6 +36,17 @@
     (-> *s*
         (visit "/ext-login/check-pending/900")
         (has (some-text? "0 External login not allowed from this IP")))))
+
+(deftest request-ext-login-x-forwarded-for
+  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
+    (with-redefs [config/env (merge config/env {:x-forwarded-for-index 0})]
+      (-> *s*
+          (visit "/ext-login/check-pending/ext-login-1" :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
+          (has (some-text? "0 External login not allowed from this IP"))))
+    (with-redefs [config/env (merge config/env {:x-forwarded-for-index 1})]
+      (-> *s*
+          (visit "/ext-login/check-pending/ext-login-1" :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
+          (has (some-text? "0 No pending administrations"))))))
 
 (deftest request-ext-login-allowed-ok-ip-no-user
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]

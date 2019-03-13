@@ -113,7 +113,7 @@
           (layout/text-response
             (str "x-ip " (get-in request [:headers "x-forwarded-for"]) "\n"
                  "ip " (:remote-addr request) "\n"
-                 "selected ip " (h-utils/get-ip request))))
+                 "selected ip " (h-utils/get-client-ip request))))
         (GET "/encode-decode" [& params]
           (layout/print-var-response params))
         (GET "/exception" []

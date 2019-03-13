@@ -1,7 +1,8 @@
 (ns bass4.http-utils
   (:require [ring.util.http-response :as http-response]
             [clojure.data.json :as json]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [bass4.config :as config])
   (:import (java.net URLEncoder)
            (java.io PrintWriter)
            (org.joda.time DateTime)))
@@ -14,11 +15,19 @@
   (to-json [dt gen]
     (cheshire.generate/write-string gen (str dt))))
 
-(defn get-ip
+(defn- x-forwarded-index
+  [x-forwarded index]
+  (let [ips (->> (str/split x-forwarded #"[, ]")
+                 (remove empty?)
+                 (reverse)
+                 (into []))]
+    (get ips index)))
+
+(defn get-client-ip
   [request]
-  (-> (or (get-in request [:headers "x-forwarded-for"]) (:remote-addr request))
-      (str/split #"[, ]")
-      (first)))
+  (if-let [x-forwarded (get-in request [:headers "x-forwarded-for"])]
+    (x-forwarded-index x-forwarded (config/env :x-forwarded-for-index 0))
+    (:remote-addr request)))
 
 (defn get-host
   [request]

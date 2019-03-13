@@ -32,8 +32,8 @@
 (defn- match-request-ip
   [request ips-str]
   (when-not config/test-mode?
-    (log/info "Request from " (h-utils/get-ip request)))
-  (let [remote-ip   (h-utils/get-ip request)
+    (log/info "Request from " (h-utils/get-client-ip request)))
+  (let [remote-ip   (h-utils/get-client-ip request)
         allowed-ips (into #{} (mapv #(first (string/split % #" ")) (string/split-lines ips-str)))]
     (contains? allowed-ips remote-ip)))
 
@@ -47,7 +47,7 @@
       (and
         (string/starts-with? (:uri request) "/ext-login/check-pending/")
         (not (match-request-ip request ips)))
-      (logged-response (str "0 External login not allowed from this IP " (h-utils/get-ip request)))
+      (logged-response (str "0 External login not allowed from this IP " (h-utils/get-client-ip request)))
 
       :else (handler request))))
 

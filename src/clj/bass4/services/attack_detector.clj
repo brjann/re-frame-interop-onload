@@ -63,7 +63,7 @@
   ([type request] (register-failed-login! type request {}))
   ([type request info]
    (let [now        (t/now)
-         ip-address (h-utils/get-ip request)]
+         ip-address (h-utils/get-client-ip request)]
      (save-failed-login!
        (name type)
        (:db-name db-config/*local-config*)
@@ -78,7 +78,7 @@
 
 (defn register-successful-login!
   [request]
-  (ip-successful-login! (h-utils/get-ip request)))
+  (ip-successful-login! (h-utils/get-client-ip request)))
 
 (defn ip-blocked?
   [ip-address]
@@ -97,7 +97,7 @@
 
 (defn delay-ip!
   [request]
-  (let [ip-address (h-utils/get-ip request)]
+  (let [ip-address (h-utils/get-client-ip request)]
     (when (ip-blocked? ip-address)
       (let [now               (t/now)
             last-request-time (get-last-request-time ip-address now)]

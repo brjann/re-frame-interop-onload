@@ -62,7 +62,7 @@
      (launch-bankid request personnummer redirect-success redirect-fail config-key)))
   ([request personnummer redirect-success redirect-fail config-key]
    (let [session (:session request)
-         user-ip (h-utils/get-ip request)]
+         user-ip (h-utils/get-client-ip request)]
      (-> (http-response/found "/e-auth/bankid/status")
          (assoc :session (merge
                            session
