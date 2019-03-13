@@ -1,3 +1,4 @@
+var content_submit;
 $(document).ready(function () {
 
    var dataname_key_splitter = '$';
@@ -93,8 +94,7 @@ $(document).ready(function () {
          return function () {
             if ($tab_title_el.val() === '') {
                tab_link.text(empty_text);
-            }
-            else {
+            } else {
                tab_link.text($tab_title_el.val());
             }
          };
@@ -183,8 +183,7 @@ $(document).ready(function () {
 
       if ($content_div.hasClass('tabbed')) {
          tabelizer(0, $content_div);
-      }
-      else {
+      } else {
          $('.tabbed').each(tabelizer);
       }
    };
@@ -196,8 +195,7 @@ $(document).ready(function () {
    var get_content_data_post_key = function (value_name, data_name) {
       if (value_name.indexOf(dataname_key_splitter) === -1) {
          return data_name + dataname_key_splitter + value_name;
-      }
-      else {
+      } else {
          return value_name;
       }
    };
@@ -278,8 +276,7 @@ $(document).ready(function () {
             if (value !== undefined) {
                if (input.type === 'radio' || input.type === 'checkbox') {
                   $(input).prop('checked', value == input.value);
-               }
-               else {
+               } else {
                   $(input).val(value);
                }
                eval_data_property(input, 'on-data-load-value');
@@ -288,7 +285,11 @@ $(document).ready(function () {
       $content_div.areYouSure();
    };
 
-   var content_submit = function (event) {
+   content_submit = function (event) {
+      if (event === undefined) {
+         alert('Event is undefined. Please check form-ajax wrapping of onsubmit.');
+         return false;
+      }
       var form = event.target;
       var content_div = $(form).parent();
       var all_values = {};
@@ -299,24 +300,19 @@ $(document).ready(function () {
                if ($(input).prop('checked')) {
                   all_values[input.name] = $(input).val();
                }
-            }
-            else if (input.type == 'checkbox') {
+            } else if (input.type == 'checkbox') {
                if ($(input).prop('checked')) {
                   all_values[input.name] = $(input).val();
-               }
-               else {
+               } else {
                   all_values[input.name] = '';
                }
-            }
-            else {
+            } else {
                all_values[input.name] = $(input).val();
             }
          });
       $(form).find('.content-poster').val(JSON.stringify(all_values));
       return true;
    };
-
-   $('.content-submitter').submit(content_submit);
 
    $('.treatment-content').each(function () {
       var $content_div = $(this);
@@ -364,12 +360,10 @@ function eval_data_property(element, data_property) {
 
          if (typeof val === 'function') {
             return val.apply(element, arguments);
-         }
-         else {
+         } else {
             return val;
          }
-      }
-      catch (err) {
+      } catch (err) {
          console.log('Failed to eval', data_property, "on element", element);
          console.log(err);
       }

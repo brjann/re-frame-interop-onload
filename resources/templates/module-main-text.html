@@ -27,7 +27,8 @@
             <span id="position-indicator" class="badge badge-pill badge-primary">XX/XX</span>
         </div>
         {% include "module-content-render-snip.html" %}
-        <form method="post" class="content-submitter" name="contentform" data-on-success="main_text_save_complete">
+        <form method="post" class="content-submitter" name="contentform"
+              data-on-success="main_text_save_complete" onsubmit="return content_submit(event);">
             <input type="hidden" name="content-data" class="content-poster">
             <button type="submit" class="btn btn-primary hidden btn-block fixed-bottom changes-saver">
                 {%tr save-changes %}

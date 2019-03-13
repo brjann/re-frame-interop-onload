@@ -180,7 +180,7 @@ $(document).ready(function () {
 				// If form has own submit function, call it
 				// if it returns false, then abort.
 				if (formsubmit !== undefined) {
-					if (!formsubmit()) {
+               if (!formsubmit(event)) {
                   $form.addClass('was-validated');
 						event.preventDefault();
 						event.stopPropagation();
