@@ -146,7 +146,19 @@
              {:modules    modules-with-content
               :page-title (i18n/tr [:modules/modules])}))))
 
-
+(defapi view-user-content
+  [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]
+  (let [module         (treatment-service/get-module module-id)
+        module-content (treatment-service/get-content-in-module module content-id)
+        namespace      (:namespace module-content)
+        content-data   (treatment-service/get-module-content-data treatment-access-id module-content)]
+    (layout/render "user-content-viewer.html"
+                   {:text         (:text module-content)
+                    :markdown?    (:markdown? module-content)
+                    :tabbed?      (:tabbed? module-content)
+                    :content-id   content-id
+                    :namespace    namespace
+                    :content-data content-data})))
 
 ;--------------
 ; CONTENT DATA

@@ -1,0 +1,18 @@
+{% extends "simple.html" %}
+{% block content %}
+<div class="treatment-content form {% if tabbed? %}tabbed{% endif %} read-only" data-namespace="{{namespace}}"
+     id="{{content-id}}">
+    {% include "module-content-render-snip.html" %}
+</div>
+
+{% endblock %}
+
+{% block page-scripts %}
+<script type="text/javascript">
+   // @formatter:off
+    var content_data = {{content-data|json|safe}} || {};
+    // @formatter:on
+
+</script>
+{% script-modified "/js/contentdata.js" %}
+{% endblock %}
