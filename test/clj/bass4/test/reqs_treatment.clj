@@ -12,12 +12,15 @@
                                      modify-session
                                      log-body
                                      log-headers
+                                     log-status
                                      log-response]]
             [clj-time.core :as t]
             [clojure.data.json :as json]
             [bass4.responses.error-report :as error-report-response]
             [bass4.services.user :as user-service]
-            [bass4.services.privacy :as privacy-service])
+            [bass4.services.privacy :as privacy-service]
+            [bass4.services.bass :as bass]
+            [bass4.time :as b-time])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -144,7 +147,25 @@
         (visit "/user/tx/module/642529/worksheet/642534" :request-method :post :params {:content-data (json/write-str {"override$export" "0"})})
         (has (status? 302))
         (visit "/user/tx/module/642518/worksheet/642535")
-        (has (some-text? "{\"override\":{\"export\":\"0\"}")))))
+        (has (some-text? "{\"override\":{\"export\":\"0\"}")))
+    (let [view-checks [[642518 642528 ["\"export-content-ws\":{\"export\":\"1\"}"
+                                       "\"export-module-ws\":{\"export\":\"2\"}"
+                                       "\"alias\":{\"export\":\"3\"}"]]
+                       [642518 642532 ["\"export-content-main\":{\"export\":\"4\"}"
+                                       "\"export-module-main\":{\"export\":\"5\"}"
+                                       "\"alias\":{\"export\":\"6\"}"]]
+                       [642518 642533 ["\"export-content-hw\":{\"export\":\"7\"}"
+                                       "\"export-module-hw\":{\"export\":\"8\"}"
+                                       "\"alias\":{\"export\":\"9\"}"]]]]
+      (doseq [[module-id content-id texts] view-checks]
+        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
+          (with-redefs [bass/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
+                        bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+            (doseq [text texts]
+              (-> *s*
+                  (visit "/embedded/create-session?uid=8")
+                  (visit (str "/embedded/" path))
+                  (has (some-text? text))))))))))
 
 (deftest ns-imports-exports-write-imports
   (with-redefs [privacy-service/user-must-consent? (constantly false)])
@@ -203,4 +224,23 @@
         (visit "/user/tx/module/642518/worksheet/642535" :request-method :post :params {:content-data (json/write-str {"override$export" "0"})})
         (has (status? 302))
         (visit "/user/tx/module/642529/worksheet/642534")
-        (has (some-text? "{\"override\":{\"export\":\"0\"}")))))
+        (has (some-text? "{\"override\":{\"export\":\"0\"}")))
+    (let [view-checks [[642529 642519 "\"export-content-ws\":{\"export\":\"1\"}"]
+                       [642529 642520 "\"export-module-ws\":{\"export\":\"2\"}"]
+                       [642529 642521 "\"export-alias-ws\":{\"export\":\"3\"}"]
+
+                       [642529 642522 "\"export-content-main\":{\"export\":\"4\"}"]
+                       [642529 642523 "\"export-module-main\":{\"export\":\"5\"}"]
+                       [642529 642524 "\"export-alias-main\":{\"export\":\"6\"}"]
+
+                       [642529 642525 "\"export-content-hw\":{\"export\":\"7\"}"]
+                       [642529 642526 "\"export-module-hw\":{\"export\":\"8\"}"]
+                       [642529 642527 "\"export-alias-hw\":{\"export\":\"9\"}"]]]
+      (doseq [[module-id content-id text] view-checks]
+        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
+          (with-redefs [bass/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
+                        bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+            (-> *s*
+                (visit "/embedded/create-session?uid=8")
+                (visit (str "/embedded/" path))
+                (has (some-text? text)))))))))
