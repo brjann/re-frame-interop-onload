@@ -278,7 +278,7 @@
                               true :ok
                               false :submitted)]
     (map #(merge %
-                 {:active          (active-fn %)
+                 {:active?         (active-fn %)
                   :activation-date (activation-date-fn %)
                   :homework-status (homework-status-fn %)})
          (:modules treatment))))

@@ -215,7 +215,7 @@
       ;; but it's nothing compared to the previous chaos.
       (if-let [module (->> (get-in treatment [:tx-components :modules])
                            (filter #(= (str->int module-id) (:module-id %)))
-                           (some #(and (:active %) %)))]
+                           (some #(and (:active? %) %)))]
         (routes
           (GET "/" [] (modules-response/main-text treatment-access render-map module))
           (POST "/" [content-data]

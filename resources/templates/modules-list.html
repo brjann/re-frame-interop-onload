@@ -4,7 +4,7 @@
     <div class="row">
         {% for module in modules %}
         <div class="col-sm-12 col-md-6">
-            {% if module.active %}
+            {% if module.active? %}
             <!--
         <div class="card {% ifequal module.homework-status :ok %}border-success{% endifequal %}">
             <h5 class="card-header text-white

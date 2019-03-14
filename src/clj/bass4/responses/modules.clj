@@ -239,7 +239,7 @@
 (s/defschema Module-info
   {:module-id       s/Int
    :module-name     String
-   :active          Boolean
+   :active?         Boolean
    :activation-date (s/maybe DateTime)
    :homework-status (s/maybe (s/enum :ok :submitted))
    :tags            [String]})
