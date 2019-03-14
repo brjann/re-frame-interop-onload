@@ -26,7 +26,7 @@
 
 (defapi dashboard
   [user :- map? session :- [:? map?] render-map :- map? treatment :- map?]
-  (let [new-modules (new-modules (:modules (:user-components treatment)) (:last-login-time session))
+  (let [new-modules (new-modules (:modules (:tx-components treatment)) (:last-login-time session))
         [start-date end-date days-remaining] (treatment-dates treatment)]
     (layout/render "dashboard.html"
                    (merge render-map

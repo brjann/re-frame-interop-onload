@@ -136,15 +136,17 @@
 
 (defapi modules-list
   [render-map :- map? modules :- seq? treatment-access-id :- integer?]
-  (let [module-contents      (treatment-service/get-module-contents-with-update-time
-                               modules
-                               treatment-access-id)
-        modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
-    (layout/render
-      "modules-list.html"
-      (merge render-map
-             {:modules    modules-with-content
-              :page-title (i18n/tr [:modules/modules])}))))
+  (if-not (seq modules)
+    (layout/text-response "No modules in treatment")
+    (let [module-contents      (treatment-service/get-module-contents-with-update-time
+                                 modules
+                                 treatment-access-id)
+          modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
+      (layout/render
+        "modules-list.html"
+        (merge render-map
+               {:modules    modules-with-content
+                :page-title (i18n/tr [:modules/modules])})))))
 
 (defapi view-user-content
   [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]

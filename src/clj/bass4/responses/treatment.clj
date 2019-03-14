@@ -15,7 +15,7 @@
 
 (defn treatment-page-map
   [treatment path]
-  (merge (:user-components treatment)
+  (merge (:tx-components treatment)
          {:path          path
           :new-messages? (:new-messages? treatment)}))
 
@@ -60,19 +60,19 @@
 
 (defapi api-tx-info
   [user :- map? treatment :- map?]
-  (log/debug (keys (:user-components treatment)))
+  (log/debug (keys (:tx-components treatment)))
   (let [res (merge
               (select-keys user [:last-login-time])
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])
-              (select-keys (:user-components treatment) [:messaging? :send-messages?])
+              (select-keys (:tx-components treatment) [:messaging? :send-messages?])
               {:modules (mapv #(select-keys % [:module-id
                                                :module-name
                                                :active
                                                :activation-date
                                                :homework-status
                                                :tags])
-                              (get-in treatment [:user-components :modules]))})]
+                              (get-in treatment [:tx-components :modules]))})]
     (http-response/ok res)))
 
 

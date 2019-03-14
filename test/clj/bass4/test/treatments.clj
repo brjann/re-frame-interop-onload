@@ -20,7 +20,7 @@
     (let [treatments       (treatment/user-treatment 543021)
           treatment-access (:treatment-access treatments)]
       (is (= 3958 (:treatment-id treatment-access)))
-      (is (= #{5787 3961} (into #{} (map :module-id (filter :active (get-in treatments [:user-components :modules])))))))))
+      (is (= #{5787 3961} (into #{} (map :module-id (filter :active (get-in treatments [:tx-components :modules])))))))))
 
 (deftest empty-content
   (let [module (treatment/get-module-contents* [3961])]
@@ -41,7 +41,7 @@
                            :linker-class  "cTreatmentAccess"
                            :linkee-class  "cTreatment"})
     (let [user-treatment (treatment/user-treatment user-id)]
-      (is (= #{5787 4002 4003 4007} (into #{} (map :module-id (filter :active (get-in user-treatment [:user-components :modules])))))))))
+      (is (= #{5787 4002 4003 4007} (into #{} (map :module-id (filter :active (get-in user-treatment [:tx-components :modules])))))))))
 ;	public function getRemainingTreatmentDuration(){
 ;		if($this->Treatment->AccessStartAndEndDate){
 ;			if(getMidnight() < $this->StartDate) return 0;
@@ -92,8 +92,8 @@
 (deftest treatment-messaging
   (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
     ;; User not allowed - treatment allows
-    (is (= false (get-in (treatment/user-treatment 549821) [:user-components :send-messages?])))
+    (is (= false (get-in (treatment/user-treatment 549821) [:tx-components :send-messages?])))
     ;; User allowed - treatment allows
-    (is (= true (get-in (treatment/user-treatment 543021) [:user-components :send-messages?])))
+    (is (= true (get-in (treatment/user-treatment 543021) [:tx-components :send-messages?])))
     ;; User allowed - treatment does not allows
-    (is (= false (get-in (treatment/user-treatment 550132) [:user-components :send-messages?])))))
+    (is (= false (get-in (treatment/user-treatment 550132) [:tx-components :send-messages?])))))

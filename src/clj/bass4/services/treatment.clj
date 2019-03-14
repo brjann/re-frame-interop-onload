@@ -305,7 +305,7 @@
     (let [treatment (treatment-map (:treatment-id treatment-access))]
       {:treatment-access treatment-access
        :new-messages?    (messages/new-messages? user-id)
-       :user-components  (user-components treatment-access treatment)
+       :tx-components    (user-components treatment-access treatment)
        :treatment        treatment})))
 
 ;; --------------------------

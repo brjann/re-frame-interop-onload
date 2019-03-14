@@ -60,12 +60,12 @@
 
 (defn messages?
   [{{:keys [treatment]} :db} _]
-  (get-in treatment [:user-components :messaging?]))
+  (get-in treatment [:tx-components :messaging?]))
 
 (defn send-messages?
   [{{:keys [treatment]} :db :as request} _]
   (if (= :post (:request-method request))
-    (get-in treatment [:user-components :send-messages?])
+    (get-in treatment [:tx-components :send-messages?])
     true))
 
 (defn limited-access?
@@ -208,12 +208,12 @@
     (GET "/modules" []
       (modules-response/modules-list
         render-map
-        (:modules (:user-components treatment))
+        (:modules (:tx-components treatment))
         (:treatment-access-id treatment-access)))
     (context "/module/:module-id" [module-id]
       ;; This is maybe a bit dirty,
       ;; but it's nothing compared to the previous chaos.
-      (if-let [module (->> (get-in treatment [:user-components :modules])
+      (if-let [module (->> (get-in treatment [:tx-components :modules])
                            (filter #(= (str->int module-id) (:module-id %)))
                            (some #(and (:active %) %)))]
         (routes

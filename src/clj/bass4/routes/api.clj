@@ -3,13 +3,13 @@
             [schema.core :as s]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.responses.treatment :as user-response]
+            [bass4.layout :as layout]
             [bass4.services.treatment :as treatment-service]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
             [bass4.db-config :as db-config]
             [bass4.responses.messages :as messages-response]
-            [bass4.layout :as layout]
+            [bass4.responses.treatment :as treatment-response]
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]))
 
@@ -66,7 +66,7 @@
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
           :return String
-          (layout/text-response (user-response/csrf)))
+          (layout/text-response (treatment-response/csrf)))
 
         (GET "/disable-csrf" []
           :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."
@@ -91,8 +91,13 @@
 
           (GET "/treatment-info" []
             :summary "Info about available treatment components."
-            :return user-response/Treatment-info
-            (user-response/api-tx-info user treatment))
+            :return treatment-response/Treatment-info
+            (treatment-response/api-tx-info user treatment))
+
+          (GET "/modules" []
+            :summary "All modules in treatment with treatment content info."
+            :return [messages-response/Message]
+            (messages-response/api-messages user))
 
           (GET "/messages" []
             :summary "All messages for patient."
