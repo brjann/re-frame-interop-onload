@@ -5,7 +5,8 @@
             [bass4.utils :refer [json-safe]]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.treatment :as treatment-service]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [bass4.responses.modules :as modules-response])
   (:import (org.joda.time DateTime)))
 
 
@@ -41,19 +42,11 @@
       x
       "")))
 
-(s/defschema Module-info
-  {:module-id       s/Int
-   :module-name     String
-   :active          Boolean
-   :activation-date (s/maybe DateTime)
-   :homework-status (s/maybe (s/enum :ok :submitted))
-   :tags            [String]})
-
 (s/defschema Treatment-info
   {:last-login-time (s/maybe DateTime)
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
-   :modules         [Module-info]
+   :modules         [modules-response/Module-info]
    :new-messages?   Boolean
    :messaging?      Boolean
    :send-messages?  Boolean})
@@ -66,12 +59,7 @@
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])
               (select-keys (:tx-components treatment) [:messaging? :send-messages?])
-              {:modules (mapv #(select-keys % [:module-id
-                                               :module-name
-                                               :active
-                                               :activation-date
-                                               :homework-status
-                                               :tags])
+              {:modules (mapv #(select-keys % (keys modules-response/Module-info))
                               (get-in treatment [:tx-components :modules]))})]
     (http-response/ok res)))
 

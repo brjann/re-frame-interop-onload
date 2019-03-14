@@ -9,7 +9,18 @@
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
             [bass4.services.content-data :as content-data-service]
-            [bass4.http-errors :as http-errors]))
+            [bass4.http-errors :as http-errors]
+            [schema.core :as s]
+            [bass4.utils :as utils])
+  (:import (org.joda.time DateTime)))
+
+
+(defn get-modules-with-content
+  [modules treatment-access-id]
+  (let [module-contents (treatment-service/get-module-contents-with-update-time
+                          modules
+                          treatment-access-id)]
+    (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)))
 
 (defn- context-menu
   [module module-contents]
@@ -138,15 +149,11 @@
   [render-map :- map? modules :- seq? treatment-access-id :- integer?]
   (if-not (seq modules)
     (layout/text-response "No modules in treatment")
-    (let [module-contents      (treatment-service/get-module-contents-with-update-time
-                                 modules
-                                 treatment-access-id)
-          modules-with-content (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)]
-      (layout/render
-        "modules-list.html"
-        (merge render-map
-               {:modules    modules-with-content
-                :page-title (i18n/tr [:modules/modules])})))))
+    (layout/render
+      "modules-list.html"
+      (merge render-map
+             {:modules    (get-modules-with-content modules treatment-access-id)
+              :page-title (i18n/tr [:modules/modules])}))))
 
 (defapi view-user-content
   [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]
@@ -214,3 +221,45 @@
         (treatment-service/retract-homework! treatment-access module))
       (http-response/found "reload"))
     (http-errors/throw-400!)))
+
+
+;--------------
+;      API
+;--------------
+
+(s/defschema Content-info
+  {:content-id   s/Int
+   :content-name String
+   :accessed?    Boolean
+   :namespace    String
+   :has-text?    s/Bool
+   :data-updated (s/maybe DateTime)
+   :tags         [String]})
+
+(s/defschema Module-info
+  {:module-id       s/Int
+   :module-name     String
+   :active          Boolean
+   :activation-date (s/maybe DateTime)
+   :homework-status (s/maybe (s/enum :ok :submitted))
+   :tags            [String]})
+
+(s/defschema Module-with-content
+  (merge Module-info
+         {:main-text  (s/maybe Content-info)
+          :worksheets [Content-info]
+          :homework   (s/maybe Content-info)}))
+
+(defapi api-modules-list
+  [modules :- seq? treatment-access-id :- integer?]
+  (when (seq modules)
+    (let [modules-with-content (get-modules-with-content modules treatment-access-id)
+          res                  (mapv (fn [module]
+                                       (let [content-keys #(select-keys % (keys Content-info))
+                                             contents     (:contents module)
+                                             contents     {:main-text  (utils/fnil+ content-keys (:main-text contents))
+                                                           :worksheets (mapv content-keys (:worksheets contents))
+                                                           :homework   (utils/fnil+ content-keys (:homework contents))}]
+                                         (merge (select-keys module (keys Module-with-content)) contents)))
+                                     modules-with-content)]
+      (http-response/ok res))))

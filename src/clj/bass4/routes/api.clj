@@ -11,7 +11,8 @@
             [bass4.responses.messages :as messages-response]
             [bass4.responses.treatment :as treatment-response]
             [bass4.responses.privacy :as privacy-response]
-            [bass4.responses.auth :as auth-response]))
+            [bass4.responses.auth :as auth-response]
+            [bass4.responses.modules :as modules-response]))
 
 (defn treatment-mw
   [handler]
@@ -57,11 +58,13 @@
                :data {:info {:title       "BASS API"
                              :description "Come here"}}}}
     (context "/api" [:as request]
+
       (POST "/re-auth" []
         :summary "Re-authenticate after timeout."
         :body-params [password :- String]
         :return {:result String}
         (auth-response/check-re-auth-api (:session request) password))
+
       (context "/user" [:as {{:keys [user]} :db}]
         (GET "/csrf" []
           :summary "Session's CSRF token. Must be included in all posts in header or body."
@@ -96,8 +99,10 @@
 
           (GET "/modules" []
             :summary "All modules in treatment with treatment content info."
-            :return [messages-response/Message]
-            (messages-response/api-messages user))
+            :return [modules-response/Module-with-content]
+            (modules-response/api-modules-list
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
 
           (GET "/messages" []
             :summary "All messages for patient."
@@ -114,7 +119,13 @@
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]
             :return {:result String}
-            (messages-response/api-message-read (:user-id user) message-id)))))))
+            (messages-response/api-message-read (:user-id user) message-id))
+
+          (POST "/content-accessed" []
+            :summary "Mark content as accessed by user."
+            :body-params [content-id :- s/Int]
+            :return {:result String}
+            (http-response/ok {:result "ok"})))))))
 
 
 #_(context "/api" []
