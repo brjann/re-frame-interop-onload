@@ -38,7 +38,7 @@
   ([setting-keys] (db-setting setting-keys nil))
   ([setting-keys default]
    (let [db-name (keyword (db-name))
-         setting (or (get-in config/env [:db-settings (cons db-name setting-keys)])
+         setting (or (get-in config/env (into [:db-settings db-name] setting-keys))
                      (get-in config/env setting-keys)
                      default)]
      (when (nil? setting)
