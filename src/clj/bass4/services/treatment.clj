@@ -283,7 +283,7 @@
                   :homework-status (homework-status-fn %)})
          (:modules treatment))))
 
-(defn user-components
+(defn tx-components
   [treatment-access treatment]
   {:modules        (modules-component treatment-access treatment)
    :messaging?     true
@@ -305,7 +305,7 @@
     (let [treatment (treatment-map (:treatment-id treatment-access))]
       {:treatment-access treatment-access
        :new-messages?    (messages/new-messages? user-id)
-       :tx-components    (user-components treatment-access treatment)
+       :tx-components    (tx-components treatment-access treatment)
        :treatment        treatment})))
 
 ;; --------------------------
