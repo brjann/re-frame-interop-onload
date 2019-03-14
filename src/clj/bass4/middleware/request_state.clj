@@ -6,7 +6,8 @@
             [clojure.string :as string]
             [clojure.string :as s]
             [clojure.tools.logging :as log]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.http-utils :as h-utils]))
 
 
 
@@ -17,7 +18,7 @@
 (defn save-log!
   [req-state request time method status response-size]
   (db/save-pageload! {:db-name         (:name req-state),
-                      :remote-ip       (:session-cookie req-state),
+                      :remote-ip       (hash (h-utils/get-client-ip request)),
                       :sql-time        (when (:sql-times req-state)
                                          (/ (apply + (:sql-times req-state)) 1000)),
                       :sql-max-time    (when (:sql-times req-state)
