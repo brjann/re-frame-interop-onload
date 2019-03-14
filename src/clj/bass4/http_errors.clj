@@ -33,6 +33,9 @@
                             :status 400}))))
 
 (defn re-auth-440
+  "https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+  440 Login Time-out
+  The client's session has expired and must log in again"
   ([] (re-auth-440 ""))
   ([body]
    {:status  440

@@ -56,7 +56,25 @@
     {:swagger {:ui   "/swagger-ui"
                :spec "/swagger.json"
                :data {:info {:title       "BASS API"
-                             :description "Come here"}}}}
+                             :description (str "# Notes\n"
+                                               "## Only for logged in users\n"
+                                               "Currently, the api is only available for a user who is logged in. "
+                                               "Login is done through BASS and all API requests are received in the "
+                                               "context of the current user (through a session cookie). Thus, there "
+                                               "is no need (or possible) to submit the identity of the current user "
+                                               "as part of the api requests.\n\n"
+                                               "## Status 440\n"
+                                               "All api requests MUST be prepared to handle a status 440 response. "
+                                               "This response means that the user's session has timed out and they need "
+                                               "to re-authenticate.\n\n"
+                                               "When a 440 response is returned, the app needs to ask the user for their "
+                                               "password and submit the password to `/api/re-auth`\n\n"
+                                               "## CSRF token\n"
+                                               "All api `post` requests to `/user/*` MUST include a CSRF token.\n\n"
+                                               "The token can be retrieved by making a request to `/user/csrf`\n\n"
+                                               "The token is included in the request header as `X-CSRF-Token`\n\n"
+                                               "The CSRF requirement can be disabled in debug mode for the current "
+                                               "session by making a request to `/user/disable-csrf`")}}}}
     (context "/api" [:as request]
 
       (POST "/re-auth" []
