@@ -20,8 +20,8 @@
       console.log('Fetching main text');
       $.ajax('/api/user/tx/module-main/' + module_id,
          {
-            success: function (m) {
-               $content_div.append(content_handler(m));
+            success: function (main_text) {
+               $content_div.append(content_handler(module_id, main_text));
             }
          })
    };

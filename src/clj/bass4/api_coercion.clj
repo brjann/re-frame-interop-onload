@@ -2,8 +2,11 @@
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
-            [bass4.utils :as utils :refer [map-map]])
-  (:import (clojure.lang Symbol)
+            [bass4.utils :as utils :refer [map-map]]
+            [bass4.request-state :as request-state]
+            [ring.util.http-response :as http-response]
+            [bass4.db-config :as db-config])
+  (:import (clojure.lang Symbol ExceptionInfo)
            (java.net URL)))
 
 
@@ -12,6 +15,15 @@
 ;;    VALIDATORS AND COERCERS
 ;; -----------------------------
 
+(defn api-exception-response
+  [^ExceptionInfo e]
+  (let [data (.data e)
+        msg  (.getMessage e)]
+    (log/error msg)
+    (log/error data)
+    (request-state/record-error! msg))
+  (http-response/bad-request (when (db-config/debug-mode?)
+                               (.getMessage e))))
 
 (defn url?
   [s]

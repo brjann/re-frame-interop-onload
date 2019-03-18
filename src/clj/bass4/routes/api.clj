@@ -12,7 +12,8 @@
             [bass4.responses.treatment :as treatment-response]
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
-            [bass4.responses.modules :as modules-response]))
+            [bass4.responses.modules :as modules-response]
+            [bass4.api-coercion :as api]))
 
 (defn treatment-mw
   [handler]
@@ -53,28 +54,30 @@
 
 (def api-routes
   (api
-    {:swagger {:ui   "/swagger-ui"
-               :spec "/swagger.json"
-               :data {:info {:title       "BASS API"
-                             :description (str "# Notes\n"
-                                               "## Only for logged in users\n"
-                                               "Currently, the api is only available for a user who is logged in. "
-                                               "Login is done through BASS and all API requests are received in the "
-                                               "context of the current user (through a session cookie). Thus, there "
-                                               "is no need (or possible) to submit the identity of the current user "
-                                               "as part of the api requests.\n\n"
-                                               "## Status 440\n"
-                                               "All api requests MUST be prepared to handle a status 440 response. "
-                                               "This response means that the user's session has timed out and they need "
-                                               "to re-authenticate.\n\n"
-                                               "When a 440 response is returned, the app needs to ask the user for their "
-                                               "password and submit the password to `/api/re-auth`\n\n"
-                                               "## CSRF token\n"
-                                               "All api `post` requests to `/user/*` MUST include a CSRF token.\n\n"
-                                               "The token can be retrieved by making a request to `/user/csrf`\n\n"
-                                               "The token is included in the request header as `X-CSRF-Token`\n\n"
-                                               "The CSRF requirement can be disabled in debug mode for the current "
-                                               "session by making a request to `/user/disable-csrf`")}}}}
+    {:exceptions {:handlers {:bass4.api-coercion/api-exception (fn [^Exception e _ _]
+                                                                 (api/api-exception-response e))}}
+     :swagger    {:ui   "/swagger-ui"
+                  :spec "/swagger.json"
+                  :data {:info {:title       "BASS API"
+                                :description (str "# Notes\n"
+                                                  "## Only for logged in users\n"
+                                                  "Currently, the api is only available for a user who is logged in. "
+                                                  "Login is done through BASS and all API requests are received in the "
+                                                  "context of the current user (through a session cookie). Thus, there "
+                                                  "is no need (or possible) to submit the identity of the current user "
+                                                  "as part of the api requests.\n\n"
+                                                  "## Status 440\n"
+                                                  "All api requests MUST be prepared to handle a status 440 response. "
+                                                  "This response means that the user's session has timed out and they need "
+                                                  "to re-authenticate.\n\n"
+                                                  "When a 440 response is returned, the app needs to ask the user for their "
+                                                  "password and submit the password to `/api/re-auth`\n\n"
+                                                  "## CSRF token\n"
+                                                  "All api `post` requests to `/user/*` MUST include a CSRF token.\n\n"
+                                                  "The token can be retrieved by making a request to `/user/csrf`\n\n"
+                                                  "The token is included in the request header as `X-CSRF-Token`\n\n"
+                                                  "The CSRF requirement can be disabled in debug mode for the current "
+                                                  "session by making a request to `/user/disable-csrf`")}}}}
     (context "/api" [:as request]
 
       (POST "/re-auth" []
@@ -138,10 +141,11 @@
                               "                    \"key2\": \"value2\"}\n"
                               "    {\"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}\n")
-            :query-params [namespaces :- [String]]
             :return (s/maybe {String {String String}})
-            (modules-response/api-get-content-data
-              namespaces
+            (modules-response/api-get-module-content-data
+              module-id
+              content-id
+              (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
           (GET "/content-data/" []
@@ -157,7 +161,7 @@
               namespaces
               (:treatment-access-id treatment-access)))
 
-          (POST "/content-data" []
+          #_(POST "/content-data" []
             :summary "Save content data."
             :description (str "Expects json in format:\n\n"
                               "    {\"namespace1$key1\": \"value1\"\n"

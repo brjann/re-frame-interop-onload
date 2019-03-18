@@ -10,7 +10,8 @@
             [clojure.string :as string]
             [bass4.error-pages :as error-pages]
             [bass4.db-config :as db-config]
-            [ring.util.http-response :as http-response])
+            [ring.util.http-response :as http-response]
+            [bass4.api-coercion :as api])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn mail-request-error!
@@ -57,11 +58,5 @@
               (= :schema.core/error type)
               (and (= :http-error type)
                    (= 400 (:status data))))
-          (do
-            (let [msg (.getMessage e)]
-              (log/error msg)
-              (log/error data)
-              (request-state/record-error! msg))
-            (http-response/bad-request (when (db-config/debug-mode?)
-                                         (.getMessage e))))
+          (api/api-exception-response e)
           (throw e))))))

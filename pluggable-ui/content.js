@@ -307,7 +307,7 @@ let content_handler = (function () {
       alert(JSON.stringify(all_values));
    };
 
-   return function (content) {
+   return function (module_id, content) {
       var html;
       if (content['markdown?']) {
          let converter = new showdown.Converter();
@@ -328,11 +328,7 @@ let content_handler = (function () {
          $content_div.append($submit);
       }
 
-      let namespaces_params = [namespace]
-         .concat(content['data-imports'])
-         .join('&namespaces=');
-
-      $.ajax('/api/user/tx/content-data?namespaces=' + namespaces_params,
+      $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content['content-id'],
          {
             success: function (content_data) {
                create_tabs($content_div, content_data);

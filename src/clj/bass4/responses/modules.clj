@@ -222,24 +222,26 @@
                                      modules-with-content)]
       (http-response/ok res))))
 
-(defapi api-main-text
-  [module-id :- api/->int modules :- seq?]
+(defn- get-module
+  [module-id modules]
   (let [module (first (filter #(= module-id (:module-id %)) modules))]
     (cond
       (nil? module)
-      (http-response/not-found (str "No such module " module-id))
+      (http-response/not-found! (str "No such module " module-id))
 
       (not (:active? module))
-      (http-response/forbidden (str "Module " module-id " not active."))
+      (http-response/forbidden! (str "Module " module-id " not active.")))))
 
-      :else
-      (if-let [main-text-id (treatment-service/get-module-main-text-id module-id)]
-        (let [module-content (treatment-service/get-content-in-module module main-text-id)
-              res            (-> module-content
-                                 (select-keys (keys MainText))
-                                 (update :data-imports #(into [] %)))]
-          (http-response/ok res))
-        (http-response/not-found (str "Module " module-id " has no main text"))))))
+(defapi api-main-text
+  [module-id :- api/->int modules :- seq?]
+  (let [module (get-module module-id modules)]
+    (if-let [main-text-id (treatment-service/get-module-main-text-id module-id)]
+      (let [module-content (treatment-service/get-content-in-module module main-text-id)
+            res            (-> module-content
+                               (select-keys (keys MainText))
+                               (update :data-imports #(into [] %)))]
+        (http-response/ok res))
+      (http-response/not-found (str "Module " module-id " has no main text")))))
 
 ;--------------
 ; CONTENT DATA
@@ -304,16 +306,21 @@
   (not (zero? (count v))))
 
 (defapi api-get-module-content-data
-  [namespaces :- [vector? size?] treatment-access-id :- integer?]
-  ;; TODO: CHECK IF ALLOWED??
-  (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+  [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
+  (let [module         (get-module module-id modules)
+        module-content (treatment-service/get-content-in-module module content-id)
+        content-data   (treatment-service/get-module-content-data
+                         treatment-access-id
+                         module-content)]
+    ;; TODO: CHECK IF ALLOWED??
+    (http-response/ok content-data)))
 
 (defapi api-get-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]
   ;; TODO: CHECK IF ALLOWED??
   (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
 
-(defapi api-save-content-data
-  [content-data :- map? treatment-access-id :- integer?]
-  ;; TODO: CHECK IF ALLOWED??
-  (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+#_(defapi api-save-content-data
+    [content-data :- map? treatment-access-id :- integer?]
+    ;; TODO: CHECK IF ALLOWED??
+    (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
