@@ -53,7 +53,6 @@
 
 (defapi api-tx-info
   [user :- map? treatment :- map?]
-  (log/debug (keys (:tx-components treatment)))
   (let [res (merge
               (select-keys user [:last-login-time])
               (select-keys (:treatment-access treatment) [:start-date :end-date])

@@ -312,8 +312,20 @@
         content-data   (treatment-service/get-module-content-data
                          treatment-access-id
                          module-content)]
-    ;; TODO: CHECK IF ALLOWED??
     (http-response/ok content-data)))
+
+(defapi api-save-module-content-data
+  [module-id :- api/->int content-id :- api/->int data :- map? modules :- seq? treatment-access-id :- int?]
+  (let [module   (get-module module-id modules)
+        data-vec (reduce-kv
+                   (fn [init namespace key-values]
+                     (into init
+                           (map (fn [[key value]]
+                                  [(name namespace) (name key) value]) key-values))) [] data)]
+    (content-data/save-api-content-data! data-vec
+                                         treatment-access-id
+                                         (get-in module [:content-ns-aliases content-id]))
+    (http-response/ok {:result "ok"})))
 
 (defapi api-get-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]

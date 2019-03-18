@@ -1,4 +1,3 @@
-var content_data = {};
 let content_handler = (function () {
 
    var dataname_key_splitter = '$';
@@ -231,13 +230,6 @@ let content_handler = (function () {
          SETUP CONTENT DATA DIV
       ---------------------------- */
 
-   var readonly = function ($content_div) {
-      $content_div.find(':input')
-         .each(function (index, input) {
-            $(input).attr('disabled', 'disabled');
-         })
-   };
-
    var setup_statics = function ($content_div, namespace) {
       find_statics($content_div).each(function () {
          var element = $(this);
@@ -285,26 +277,45 @@ let content_handler = (function () {
          });
    };
 
-   let content_submit = function ($content_div) {
+
+   let content_submit = function ($content_div, module_id, content_id) {
       var all_values = {};
+      let add_data = function (name, value) {
+         let [namespace, key] = name.split(dataname_key_splitter, 2);
+         if (all_values[namespace] === undefined) {
+            all_values[namespace] = {};
+         }
+         all_values[namespace][key] = value;
+      };
+
       find_inputs($content_div)
          .each(function () {
-            var input = this;
-            if (input.type == 'radio') {
+            let input = this;
+            let name = input.name;
+            let value = $(input).val();
+            if (input.type === 'radio') {
                if ($(input).prop('checked')) {
-                  all_values[input.name] = $(input).val();
+                  add_data(name, value);
                }
-            } else if (input.type == 'checkbox') {
+            } else if (input.type === 'checkbox') {
                if ($(input).prop('checked')) {
-                  all_values[input.name] = $(input).val();
+                  add_data(name, value);
                } else {
-                  all_values[input.name] = '';
+                  add_data(name, '');
                }
             } else {
-               all_values[input.name] = $(input).val();
+               add_data(name, value);
             }
          });
-      alert(JSON.stringify(all_values));
+      $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content_id,
+         {
+            method: 'post',
+            data: JSON.stringify({data: all_values}),
+            contentType: 'application/json',
+            success: function () {
+               alert('Your data was saved!');
+            }
+         });
    };
 
    return function (module_id, content) {
@@ -315,27 +326,25 @@ let content_handler = (function () {
       } else {
          html = content['text'];
       }
-      let $content_div = $('<div>' + html + '</div>');
-      let namespace = content['namespace'];
-      let inputs = prepend_names($content_div, namespace);
+      let $content_div = $('<div>' + html + '</div>'),
+         namespace = content['namespace'],
+         inputs = prepend_names($content_div, namespace),
+         content_id = content['content-id'];
       setup_statics($content_div);
 
       if (inputs.length > 0) {
          let $submit = $('<p><button>Save</button></p>')
             .click(function () {
-               content_submit($content_div);
+               content_submit($content_div, module_id, content_id);
             });
          $content_div.append($submit);
       }
 
-      $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content['content-id'],
+      $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content_id,
          {
             success: function (content_data) {
                create_tabs($content_div, content_data);
                fill_values($content_div, content_data);
-               if ($(this).hasClass('read-only')) {
-                  readonly($content_div);
-               }
                fill_statics($content_div, content_data);
                $('.readonly :input').prop('disabled', true);
             }

@@ -13,7 +13,8 @@
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.modules :as modules-response]
-            [bass4.api-coercion :as api]))
+            [bass4.api-coercion :as api])
+  (:import (java.util HashMap)))
 
 (defn treatment-mw
   [handler]
@@ -135,8 +136,7 @@
           (GET "/module-content-data/:module-id/:content-id"
                [module-id content-id]
             :summary "Get content data belonging to namespaces within a module and content."
-            :description (str "ALIASED\n\n"
-                              "Returns json in format:\n\n"
+            :description (str "Returns data with aliased namespaces in format\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
                               "                    \"key2\": \"value2\"}\n"
                               "    {\"namespace2\": {\"key3\": \"value3\"\n"
@@ -145,6 +145,24 @@
             (modules-response/api-get-module-content-data
               module-id
               content-id
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
+          (POST "/module-content-data/:module-id/:content-id"
+                [module-id content-id]
+            :summary "Save content data belonging to content within a module."
+            :description (str "Saves data and handles aliased namespaces\n\n"
+                              "Expects data in format:\n\n"
+                              "    {\"namespace1\": {\"key1\": \"value1\"\n"
+                              "                    \"key2\": \"value2\"}\n"
+                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
+                              "                    \"key4\": \"value4\"}\n")
+            :body-params [data]
+            ;:return {:result String}
+            (modules-response/api-save-module-content-data
+              module-id
+              content-id
+              data
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
