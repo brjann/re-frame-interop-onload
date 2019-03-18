@@ -46,7 +46,7 @@
   {:last-login-time (s/maybe DateTime)
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
-   :modules         [modules-response/Module-info]
+   :modules         [modules-response/ModuleInfo]
    :new-messages?   Boolean
    :messaging?      Boolean
    :send-messages?  Boolean})
@@ -59,7 +59,7 @@
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])
               (select-keys (:tx-components treatment) [:messaging? :send-messages?])
-              {:modules (mapv #(select-keys % (keys modules-response/Module-info))
+              {:modules (mapv #(select-keys % (keys modules-response/ModuleInfo))
                               (get-in treatment [:tx-components :modules]))})]
     (http-response/ok res)))
 

@@ -117,10 +117,17 @@
 
           (GET "/modules" []
             :summary "All modules in treatment with treatment content info."
-            :return [modules-response/Module-with-content]
+            :return [modules-response/ModuleWithContent]
             (modules-response/api-modules-list
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
+
+          (GET "/module-main/:module-id" [module-id]
+            :summary "Main text of module."
+            :return modules-response/MainText
+            (modules-response/api-main-text
+              module-id
+              (:modules (:tx-components treatment))))
 
           (GET "/messages" []
             :summary "All messages for patient."

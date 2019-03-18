@@ -1,16 +1,16 @@
 (ns bass4.responses.modules
   (:require [ring.util.http-response :as http-response]
+            [clojure.tools.logging :as log]
+            [schema.core :as s]
             [bass4.http-utils :refer [url-escape]]
             [bass4.services.treatment :as treatment-service]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
-            [clojure.tools.logging :as log]
             [bass4.services.treatment :as treatment-service]
             [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
-            [schema.core :as s]
             [bass4.utils :as utils])
   (:import (org.joda.time DateTime)))
 
@@ -227,7 +227,7 @@
 ;      API
 ;--------------
 
-(s/defschema Content-info
+(s/defschema ContentInfo
   {:content-id   s/Int
    :content-name String
    :accessed?    Boolean
@@ -236,7 +236,7 @@
    :data-updated (s/maybe DateTime)
    :tags         [String]})
 
-(s/defschema Module-info
+(s/defschema ModuleInfo
   {:module-id       s/Int
    :module-name     String
    :active?         Boolean
@@ -244,22 +244,52 @@
    :homework-status (s/maybe (s/enum :ok :submitted))
    :tags            [String]})
 
-(s/defschema Module-with-content
-  (merge Module-info
-         {:main-text  (s/maybe Content-info)
-          :worksheets [Content-info]
-          :homework   (s/maybe Content-info)}))
+(s/defschema ModuleWithContent
+  (merge ModuleInfo
+         {:main-text  (s/maybe ContentInfo)
+          :worksheets [ContentInfo]
+          :homework   (s/maybe ContentInfo)}))
+
+(s/defschema MainText
+  {:content-id   s/Int
+   :content-name String
+   :data-imports [String]
+   :markdown?    Boolean
+   :namespace    String
+   :text         String
+   :tags         [String]})
 
 (defapi api-modules-list
   [modules :- seq? treatment-access-id :- integer?]
   (when (seq modules)
     (let [modules-with-content (get-modules-with-content modules treatment-access-id)
           res                  (mapv (fn [module]
-                                       (let [content-keys #(select-keys % (keys Content-info))
+                                       (let [content-keys #(select-keys % (keys ContentInfo))
                                              contents     (:contents module)
                                              contents     {:main-text  (utils/fnil+ content-keys (:main-text contents))
                                                            :worksheets (mapv content-keys (:worksheets contents))
                                                            :homework   (utils/fnil+ content-keys (:homework contents))}]
-                                         (merge (select-keys module (keys Module-with-content)) contents)))
+                                         (merge
+                                           (select-keys module (keys ModuleWithContent))
+                                           contents)))
                                      modules-with-content)]
       (http-response/ok res))))
+
+(defapi api-main-text
+  [module-id :- api/->int modules :- seq?]
+  (let [module (first (filter #(= module-id (:module-id %)) modules))]
+    (cond
+      (nil? module)
+      (http-response/not-found (str "No such module " module-id))
+
+      (not (:active? module))
+      (http-response/forbidden (str "Module " module-id " not active."))
+
+      :else
+      (if-let [main-text-id (treatment-service/get-module-main-text-id module-id)]
+        (let [module-content (treatment-service/get-content-in-module module main-text-id)
+              res            (-> module-content
+                                 (select-keys (keys MainText))
+                                 (update :data-imports #(into [] %)))]
+          (http-response/ok res))
+        (http-response/not-found (str "Module " module-id " has no main text"))))))
