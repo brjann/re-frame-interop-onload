@@ -30,7 +30,7 @@ let content_handler = (function () {
              TABS CREATION
       ---------------------------- */
 
-   var content_create_tabs = function ($content_div) {
+   var content_create_tabs = function ($content_div, content_data) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
          var all_names = find_inputs(tabbed_content).map(function () {
@@ -204,7 +204,7 @@ let content_handler = (function () {
       }
    };
 
-   var get_content_data_value = function (input_name) {
+   var get_content_data_value = function (input_name, content_data) {
       var a = input_name.split(dataname_key_splitter, 2);
       var namespace = a[0];
       var key = a[1];
@@ -238,22 +238,21 @@ let content_handler = (function () {
          })
    };
 
-   var content_setup_statics = function ($content_div) {
-      var data_name = $content_div.data('namespace');
+   var content_setup_statics = function ($content_div, namespace) {
       find_statics($content_div).each(function () {
          var element = $(this);
-         var key = get_content_data_post_key(element.text(), data_name);
+         var key = get_content_data_post_key(element.text(), namespace);
          element.data('data-key', key);
          element.addClass('key_' + key);
          element.text('');
       });
    };
 
-   var content_fill_statics = function ($content_div) {
+   var content_fill_statics = function ($content_div, content_data) {
       find_statics($content_div).each(function () {
          var element = $(this);
          var key = $(this).data('data-key');
-         var value = get_content_data_value(key);
+         var value = get_content_data_value(key, content_data);
          if (value === undefined) {
             value = '';
          }
@@ -269,12 +268,12 @@ let content_handler = (function () {
          });
    };
 
-   var content_fill_values = function ($content_div) {
+   var content_fill_values = function ($content_div, content_data) {
       //TODO: Does not handle pre-checked checkboxes
       find_inputs($content_div)
          .each(function () {
             var input = this;
-            var value = get_content_data_value(input.name);
+            var value = get_content_data_value(input.name, content_data);
             if (value !== undefined) {
                if (input.type === 'radio' || input.type === 'checkbox') {
                   $(input).prop('checked', value == input.value);
@@ -322,19 +321,28 @@ let content_handler = (function () {
       } else {
          html = content['text'];
       }
-
       let $content_div = $(html);
       let namespace = content['namespace'];
       content_prepend_names($content_div, namespace);
       content_setup_statics($content_div);
-      content_create_tabs($content_div);
-      content_fill_values($content_div);
-      if ($(this).hasClass('read-only')) {
-         content_readonly($content_div);
-      }
-      content_fill_statics($content_div);
-      $('.readonly :input').prop('disabled', true);
-      console.log($content_div);
+
+      let namespaces_params = [namespace]
+         .concat(content['data-imports'])
+         .join('&namespaces=');
+
+      $.ajax('/api/user/tx/content-data?namespaces=' + namespaces_params,
+         {
+            success: function (content_data) {
+               content_create_tabs($content_div, content_data);
+               content_fill_values($content_div, content_data);
+               if ($(this).hasClass('read-only')) {
+                  content_readonly($content_div);
+               }
+               content_fill_statics($content_div, content_data);
+               $('.readonly :input').prop('disabled', true);
+            }
+         });
+
       return $content_div;
    };
 })();

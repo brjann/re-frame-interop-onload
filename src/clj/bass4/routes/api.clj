@@ -129,7 +129,7 @@
               module-id
               (:modules (:tx-components treatment))))
 
-          (GET "/content-data/" []
+          (GET "/content-data" []
             :summary "Get content data belonging to namespaces."
             :description (str "Returns json in format:\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
