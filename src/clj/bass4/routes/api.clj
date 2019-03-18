@@ -13,8 +13,7 @@
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.modules :as modules-response]
-            [bass4.api-coercion :as api])
-  (:import (java.util HashMap)))
+            [bass4.api-coercion :as api]))
 
 (defn treatment-mw
   [handler]
@@ -139,8 +138,8 @@
             :description (str "Returns data with aliased namespaces in format\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
                               "                    \"key2\": \"value2\"}\n"
-                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
-                              "                    \"key4\": \"value4\"}\n")
+                              "     \"namespace2\": {\"key3\": \"value3\"\n"
+                              "                    \"key4\": \"value4\"}}\n")
             :return (s/maybe {String {String String}})
             (modules-response/api-get-module-content-data
               module-id
@@ -153,10 +152,10 @@
             :summary "Save content data belonging to content within a module."
             :description (str "Saves data and handles aliased namespaces\n\n"
                               "Expects data in format:\n\n"
-                              "    {\"namespace1\": {\"key1\": \"value1\"\n"
-                              "                    \"key2\": \"value2\"}\n"
-                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
-                              "                    \"key4\": \"value4\"}\n")
+                              "    {\"data\": {\"namespace1\": {\"key1\": \"value1\",\n"
+                              "                             \"key2\": \"value2\"},\n"
+                              "              \"namespace2\": {\"key3\": \"value3\",\n"
+                              "                             \"key4\": \"value4\"}}}\n")
             :body-params [data]
             ;:return {:result String}
             (modules-response/api-save-module-content-data
@@ -168,28 +167,32 @@
 
           (GET "/content-data/" []
             :summary "Get content data belonging to namespaces."
-            :description (str "Returns json in format:\n\n"
+            :description (str "Provides direct access to content data without "
+                              "handling module content aliasing\n\n"
+                              "Returns data in format:\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
                               "                    \"key2\": \"value2\"}\n"
-                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
-                              "                    \"key4\": \"value4\"}\n")
+                              "     \"namespace2\": {\"key3\": \"value3\"\n"
+                              "                    \"key4\": \"value4\"}}\n")
             :query-params [namespaces :- [String]]
             :return (s/maybe {String {String String}})
             (modules-response/api-get-content-data
               namespaces
               (:treatment-access-id treatment-access)))
 
-          #_(POST "/content-data" []
+          (POST "/content-data" []
             :summary "Save content data."
-            :description (str "Expects json in format:\n\n"
-                              "    {\"namespace1$key1\": \"value1\"\n"
-                              "     \"namespace1$key2\": \"value2\"\n"
-                              "     \"namespace2$key3\": \"value3\"\n"
-                              "     \"namespace2$key4\": \"value4\"}")
-            :body-params {String String}
+            :description (str "Provides writing directly to content data without "
+                              "handling module content aliasing\n\n"
+                              "Expects data in format:\n\n"
+                              "    {\"data\": {\"namespace1\": {\"key1\": \"value1\",\n"
+                              "                             \"key2\": \"value2\"},\n"
+                              "              \"namespace2\": {\"key3\": \"value3\",\n"
+                              "                             \"key4\": \"value4\"}}}\n")
+            :body-params [data]
             :return {:result String}
-            (modules-response/api-get-content-data
-              namespaces
+            (modules-response/api-save-content-data
+              data
               (:treatment-access-id treatment-access)))
 
           (GET "/messages" []
