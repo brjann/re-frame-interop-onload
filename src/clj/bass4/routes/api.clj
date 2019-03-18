@@ -112,7 +112,7 @@
 
           (GET "/treatment-info" []
             :summary "Info about available treatment components."
-            :return treatment-response/Treatment-info
+            :return treatment-response/TreatmentInfo
             (treatment-response/api-tx-info user treatment))
 
           (GET "/modules" []
@@ -128,6 +128,19 @@
             (modules-response/api-main-text
               module-id
               (:modules (:tx-components treatment))))
+
+          (GET "/content-data/" []
+            :summary "Get content data belonging to namespaces."
+            :description (str "Returns json in format:\n\n"
+                              "    {\"namespace1\": {\"key1\": \"value1\"\n"
+                              "                    \"key2\": \"value2\"}\n"
+                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
+                              "                    \"key4\": \"value4\"}\n")
+            :query-params [namespaces :- [String]]
+            :return {String {String String}}
+            (modules-response/api-content-data
+              namespaces
+              (:treatment-access-id treatment-access)))
 
           (GET "/messages" []
             :summary "All messages for patient."

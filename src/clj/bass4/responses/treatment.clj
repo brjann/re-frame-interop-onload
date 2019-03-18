@@ -42,7 +42,7 @@
       x
       "")))
 
-(s/defschema Treatment-info
+(s/defschema TreatmentInfo
   {:last-login-time (s/maybe DateTime)
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
