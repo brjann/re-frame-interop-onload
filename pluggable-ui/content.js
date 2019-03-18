@@ -266,6 +266,7 @@ let content_handler = (function () {
             var input = this;
             $(input).prop('name', get_content_data_post_key(input.name, namespace));
          });
+      return inputs;
    };
 
    var fill_values = function ($content_div, content_data) {
@@ -323,7 +324,7 @@ let content_handler = (function () {
       }
       let $content_div = $(html);
       let namespace = content['namespace'];
-      prepend_names($content_div, namespace);
+      console.log(prepend_names($content_div, namespace));
       setup_statics($content_div);
 
       let namespaces_params = [namespace]

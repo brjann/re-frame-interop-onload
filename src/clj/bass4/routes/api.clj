@@ -137,7 +137,7 @@
                               "    {\"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}\n")
             :query-params [namespaces :- [String]]
-            :return {String {String String}}
+            :return (s/maybe {String {String String}})
             (modules-response/api-content-data
               namespaces
               (:treatment-access-id treatment-access)))
