@@ -12,24 +12,18 @@
 <div id="main"></div>
 <script src="/js/jquery/jquery-3.2.0.min.js" type="text/javascript"></script>
 <script src="/assets/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>
 <script src="ui.js" type="text/javascript"></script>
+<script src="content.js" type="text/javascript"></script>
 <script type="text/javascript">
-   let content_last_updated = function (content) {
-      if (content['data-updated']) {
-         return 'Last edited: ' + new Date(content['data-updated']).toDateString();
-      }
-      return '';
-   };
-   let content_accessed = function (content) {
-      if (!content['accessed?']) {
-         return 'NEW!';
-      }
-      return '';
-   };
-
-   let load_content = function ($modules_div, module_id) {
-      console.log('Fetching modules');
-      $.ajax('/api/user/tx/module-main/' + module_id)
+   let load_content = function ($content_div, module_id) {
+      console.log('Fetching main text');
+      $.ajax('/api/user/tx/module-main/' + module_id,
+         {
+            success: function (m) {
+               $content_div.append(content_handler(m));
+            }
+         })
    };
 
    $(document).ready(function () {
