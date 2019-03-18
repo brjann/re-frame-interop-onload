@@ -303,7 +303,17 @@
   [v]
   (not (zero? (count v))))
 
-(defapi api-content-data
+(defapi api-get-module-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]
+  ;; TODO: CHECK IF ALLOWED??
+  (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+
+(defapi api-get-content-data
+  [namespaces :- [vector? size?] treatment-access-id :- integer?]
+  ;; TODO: CHECK IF ALLOWED??
+  (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+
+(defapi api-save-content-data
+  [content-data :- map? treatment-access-id :- integer?]
   ;; TODO: CHECK IF ALLOWED??
   (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))

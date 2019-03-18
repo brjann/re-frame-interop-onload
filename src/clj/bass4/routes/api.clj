@@ -129,7 +129,22 @@
               module-id
               (:modules (:tx-components treatment))))
 
-          (GET "/content-data" []
+          (GET "/module-content-data/:module-id/:content-id"
+               [module-id content-id]
+            :summary "Get content data belonging to namespaces within a module and content."
+            :description (str "ALIASED\n\n"
+                              "Returns json in format:\n\n"
+                              "    {\"namespace1\": {\"key1\": \"value1\"\n"
+                              "                    \"key2\": \"value2\"}\n"
+                              "    {\"namespace2\": {\"key3\": \"value3\"\n"
+                              "                    \"key4\": \"value4\"}\n")
+            :query-params [namespaces :- [String]]
+            :return (s/maybe {String {String String}})
+            (modules-response/api-get-content-data
+              namespaces
+              (:treatment-access-id treatment-access)))
+
+          (GET "/content-data/" []
             :summary "Get content data belonging to namespaces."
             :description (str "Returns json in format:\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
@@ -138,7 +153,20 @@
                               "                    \"key4\": \"value4\"}\n")
             :query-params [namespaces :- [String]]
             :return (s/maybe {String {String String}})
-            (modules-response/api-content-data
+            (modules-response/api-get-content-data
+              namespaces
+              (:treatment-access-id treatment-access)))
+
+          (POST "/content-data" []
+            :summary "Save content data."
+            :description (str "Expects json in format:\n\n"
+                              "    {\"namespace1$key1\": \"value1\"\n"
+                              "     \"namespace1$key2\": \"value2\"\n"
+                              "     \"namespace2$key3\": \"value3\"\n"
+                              "     \"namespace2$key4\": \"value4\"}")
+            :body-params {String String}
+            :return {:result String}
+            (modules-response/api-get-content-data
               namespaces
               (:treatment-access-id treatment-access)))
 

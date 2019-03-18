@@ -285,15 +285,9 @@ let content_handler = (function () {
          });
    };
 
-   let content_submit = function (event) {
-      if (event === undefined) {
-         alert('Event is undefined. Please check form-ajax wrapping of onsubmit.');
-         return false;
-      }
-      var form = event.target;
-      var content_div = $(form).parent();
+   let content_submit = function ($content_div) {
       var all_values = {};
-      find_inputs(content_div)
+      find_inputs($content_div)
          .each(function () {
             var input = this;
             if (input.type == 'radio') {
@@ -310,8 +304,7 @@ let content_handler = (function () {
                all_values[input.name] = $(input).val();
             }
          });
-      $(form).find('.content-poster').val(JSON.stringify(all_values));
-      return true;
+      alert(JSON.stringify(all_values));
    };
 
    return function (content) {
@@ -322,10 +315,18 @@ let content_handler = (function () {
       } else {
          html = content['text'];
       }
-      let $content_div = $(html);
+      let $content_div = $('<div>' + html + '</div>');
       let namespace = content['namespace'];
-      console.log(prepend_names($content_div, namespace));
+      let inputs = prepend_names($content_div, namespace);
       setup_statics($content_div);
+
+      if (inputs.length > 0) {
+         let $submit = $('<p><button>Save</button></p>')
+            .click(function () {
+               content_submit($content_div);
+            });
+         $content_div.append($submit);
+      }
 
       let namespaces_params = [namespace]
          .concat(content['data-imports'])
