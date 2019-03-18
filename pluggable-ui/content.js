@@ -30,7 +30,7 @@ let content_handler = (function () {
              TABS CREATION
       ---------------------------- */
 
-   var content_create_tabs = function ($content_div, content_data) {
+   var create_tabs = function ($content_div, content_data) {
       // TODO: This function is not optimized. Runs through all input fields multiple times
       var getMaxTabCount = function (tabbed_content) {
          var all_names = find_inputs(tabbed_content).map(function () {
@@ -231,14 +231,14 @@ let content_handler = (function () {
          SETUP CONTENT DATA DIV
       ---------------------------- */
 
-   var content_readonly = function ($content_div) {
+   var readonly = function ($content_div) {
       $content_div.find(':input')
          .each(function (index, input) {
             $(input).attr('disabled', 'disabled');
          })
    };
 
-   var content_setup_statics = function ($content_div, namespace) {
+   var setup_statics = function ($content_div, namespace) {
       find_statics($content_div).each(function () {
          var element = $(this);
          var key = get_content_data_post_key(element.text(), namespace);
@@ -248,7 +248,7 @@ let content_handler = (function () {
       });
    };
 
-   var content_fill_statics = function ($content_div, content_data) {
+   var fill_statics = function ($content_div, content_data) {
       find_statics($content_div).each(function () {
          var element = $(this);
          var key = $(this).data('data-key');
@@ -260,15 +260,15 @@ let content_handler = (function () {
       });
    };
 
-   var content_prepend_names = function ($content_div, namespace) {
-      find_inputs($content_div)
-         .each(function () {
+   var prepend_names = function ($content_div, namespace) {
+      let inputs = find_inputs($content_div);
+      inputs.each(function () {
             var input = this;
             $(input).prop('name', get_content_data_post_key(input.name, namespace));
          });
    };
 
-   var content_fill_values = function ($content_div, content_data) {
+   var fill_values = function ($content_div, content_data) {
       //TODO: Does not handle pre-checked checkboxes
       find_inputs($content_div)
          .each(function () {
@@ -323,8 +323,8 @@ let content_handler = (function () {
       }
       let $content_div = $(html);
       let namespace = content['namespace'];
-      content_prepend_names($content_div, namespace);
-      content_setup_statics($content_div);
+      prepend_names($content_div, namespace);
+      setup_statics($content_div);
 
       let namespaces_params = [namespace]
          .concat(content['data-imports'])
@@ -333,12 +333,12 @@ let content_handler = (function () {
       $.ajax('/api/user/tx/content-data?namespaces=' + namespaces_params,
          {
             success: function (content_data) {
-               content_create_tabs($content_div, content_data);
-               content_fill_values($content_div, content_data);
+               create_tabs($content_div, content_data);
+               fill_values($content_div, content_data);
                if ($(this).hasClass('read-only')) {
-                  content_readonly($content_div);
+                  readonly($content_div);
                }
-               content_fill_statics($content_div, content_data);
+               fill_statics($content_div, content_data);
                $('.readonly :input').prop('disabled', true);
             }
          });
