@@ -79,16 +79,18 @@
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
-  (binding [email/*email-reroute*            :void
-            sms/*sms-reroute*                :void
-            clojure.test/*stack-trace-depth* 10
-            mw/*skip-csrf*                   true
-            config/test-mode?                true
-            *s*                              @s
-            i-validation/*validate-answers?  false
-            request-state/*request-host*     (config/env :test-host)
-            db/*db*                          @(get db/db-connections (config/env :test-db))]
-    (f)))
+  (let [test-db (config/env :test-db)]
+    (binding [email/*email-reroute*            :void
+              sms/*sms-reroute*                :void
+              clojure.test/*stack-trace-depth* 10
+              mw/*skip-csrf*                   true
+              config/test-mode?                true
+              *s*                              @s
+              i-validation/*validate-answers?  false
+              request-state/*request-host*     (config/env :test-host)
+              db-config/*local-config*         (merge db-config/local-defaults (get db-config/local-configs test-db))
+              db/*db*                          @(get db/db-connections test-db)]
+      (f))))
 
 (defn disable-attack-detector [f]
   (with-redefs [a-d/get-delay-time         (constantly nil)

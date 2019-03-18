@@ -47,7 +47,7 @@
 
 (defn debug-mode?
   []
-  (or (db-setting [:debug-mode] false) (contains? config/env :dev)))
+  (or (db-setting [:debug-mode] false) (:dev config/env)))
 
 (defn- check-keys
   [local-config]
