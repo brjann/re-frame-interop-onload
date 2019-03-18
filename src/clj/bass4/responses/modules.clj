@@ -11,7 +11,8 @@
             [bass4.i18n :as i18n]
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [clojure.string :as str])
   (:import (org.joda.time DateTime)))
 
 
@@ -247,14 +248,21 @@
 ; CONTENT DATA
 ;--------------
 
-(defn- handle-content-data
+(defn- split-namespace-key-value [[label value]]
+  (let [[namespace key] (str/split label #"\$")]
+    (when (some empty? [namespace key])
+      (http-errors/throw-400! (str "Split pair " label "=" value " failed")))
+    [namespace key value]))
+
+(defn handle-content-data
   ([data-map treatment-access-id]
    (handle-content-data data-map treatment-access-id {}))
   ([data-map treatment-access-id ns-aliases]
-   (content-data-service/save-content-data!
-     data-map
-     treatment-access-id
-     ns-aliases)
+   (let [data-vec (mapv split-namespace-key-value (into [] data-map))]
+     (content-data-service/save-api-content-data!
+       data-vec
+       treatment-access-id
+       ns-aliases))
    true))
 
 (defapi save-worksheet-example-data
@@ -314,14 +322,18 @@
                          module-content)]
     (http-response/ok content-data)))
 
+(defn data-map->vec
+  [data]
+  (reduce-kv
+    (fn [init namespace key-values]
+      (into init
+            (map (fn [[key value]]
+                   [(name namespace) (name key) value]) key-values))) [] data))
+
 (defapi api-save-module-content-data
   [module-id :- api/->int content-id :- api/->int data :- map? modules :- seq? treatment-access-id :- int?]
   (let [module   (get-module module-id modules)
-        data-vec (reduce-kv
-                   (fn [init namespace key-values]
-                     (into init
-                           (map (fn [[key value]]
-                                  [(name namespace) (name key) value]) key-values))) [] data)]
+        data-vec (data-map->vec data)]
     (content-data/save-api-content-data! data-vec
                                          treatment-access-id
                                          (get-in module [:content-ns-aliases content-id]))
@@ -332,7 +344,9 @@
   ;; TODO: CHECK IF ALLOWED??
   (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
 
-#_(defapi api-save-content-data
-    [content-data :- map? treatment-access-id :- integer?]
-    ;; TODO: CHECK IF ALLOWED??
-    (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+(defapi api-save-content-data
+  [data :- map? treatment-access-id :- int?]
+  (let [data-vec (data-map->vec data)]
+    (content-data/save-api-content-data! data-vec
+                                         treatment-access-id)
+    (http-response/ok {:result "ok"})))

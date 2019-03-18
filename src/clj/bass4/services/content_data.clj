@@ -59,29 +59,9 @@
           %) string-map))
 
 
-;; TODO Combine these two functions
-(defn save-content-data!
-  ([data-map treatment-access-id]
-   (save-content-data! data-map treatment-access-id {}))
-  ([data-map treatment-access-id ns-aliases]
-   (when (seq data-map)
-     ;; TODO: Move split into response namespace
-     (let [string-map (mapv split-namespace-key-value (into [] data-map))
-           string-map (if (seq ns-aliases)
-                        (let [ns-aliases-invert (set/map-invert ns-aliases)]
-                          (mapv (fn [[namespace key value]]
-                                  [(get ns-aliases-invert namespace namespace) key value])
-                                string-map))
-                        string-map)
-           data-names (distinct (map first string-map))
-           old-data   (get-content-data treatment-access-id data-names)
-           save-data  (add-data-time-and-owner (remove-identical-data string-map old-data) treatment-access-id)]
-       (when (< 0 (count save-data))
-         (db/save-content-data! {:content-data save-data}))))))
-
 (defn save-api-content-data!
   ([data-vec treatment-access-id]
-   (save-content-data! data-vec treatment-access-id {}))
+   (save-api-content-data! data-vec treatment-access-id {}))
   ([data-vec treatment-access-id ns-aliases]
    (when (seq data-vec)
      (let [data-vec   (if (seq ns-aliases)
@@ -93,6 +73,5 @@
            data-names (distinct (map first data-vec))
            old-data   (get-content-data treatment-access-id data-names)
            save-data  (add-data-time-and-owner (remove-identical-data data-vec old-data) treatment-access-id)]
-       (log/debug save-data)
        (when (< 0 (count save-data))
          (db/save-content-data! {:content-data save-data}))))))
