@@ -337,11 +337,11 @@ let content_handler = (function () {
       setup_statics($content_div);
 
       if (inputs.length > 0) {
-         let $submit = $('<p><button>Save</button></p>')
+         let $submit = $('<button id="save-button">Save</button>')
             .click(function () {
                content_submit($content_div, module_id, content_id);
             });
-         $content_div.append($submit);
+         $('<p></p>').append($submit).appendTo($content_div);
       }
 
       console.log('Fething content data');

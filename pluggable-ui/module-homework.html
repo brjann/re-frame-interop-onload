@@ -21,7 +21,18 @@
       $.ajax('/api/user/tx/module-homework/' + module_id,
          {
             success: function (homework) {
-               $content_div.append(content_handler(module_id, homework));
+               let $content = content_handler(module_id, homework);
+               let $save_button = $content.find('#save-button');
+               if ($save_button.length > 0) {
+                  $save_button.text('Save without submitting');
+                  $('<button>Submit homework</button>')
+                     .insertBefore($save_button)
+                     .click(function () {
+                        $save_button.click();
+
+                     });
+                  $content_div.append($content);
+               }
             }
          })
    };

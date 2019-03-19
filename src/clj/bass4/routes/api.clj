@@ -118,6 +118,10 @@
             :return treatment-response/TreatmentInfo
             (treatment-response/api-tx-info user treatment))
 
+          ;; --------------
+          ;;    MODULES
+          ;; --------------
+
           (GET "/modules" []
             :summary "All modules in treatment with treatment content info."
             :return [modules-response/ModuleWithContent]
@@ -138,6 +142,18 @@
             (modules-response/api-homework
               module-id
               (:modules (:tx-components treatment))))
+
+          (POST "/module-homework-submit/:module-id" [module-id]
+            :summary "Mark homework as submitted."
+            :return {:result String}
+            (modules-response/api-homework-submit
+              module-id
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
+          ;; --------------
+          ;;  CONTENT DATA
+          ;; --------------
 
           (GET "/module-content-data/:module-id/:content-id"
                [module-id content-id]
@@ -201,6 +217,10 @@
             (modules-response/api-save-content-data
               data
               (:treatment-access-id treatment-access)))
+
+          ;; --------------
+          ;;    MESSAGES
+          ;; --------------
 
           (GET "/messages" []
             :summary "All messages for patient."

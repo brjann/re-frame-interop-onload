@@ -299,7 +299,10 @@
       (http-response/not-found! (str "No such module " module-id))
 
       (not (:active? module))
-      (http-response/forbidden! (str "Module " module-id " not active.")))))
+      (http-response/forbidden! (str "Module " module-id " not active."))
+
+      :else
+      module)))
 
 (defn- module-content
   [module-id modules get-id-fn schema]
@@ -328,6 +331,15 @@
                  Homework)
         module (first (filter #(= module-id (:module-id %)) modules))]
     (http-response/ok (assoc res :status (:homework-status module)))))
+
+(defapi api-homework-submit
+  [module-id :- api/->int modules :- seq? treatment-access-id :- int?]
+  (let [module (get-module module-id modules)]
+    (if (treatment-service/get-module-homework-id module-id)
+      (do
+        (treatment-service/submit-homework! treatment-access-id module)
+        (http-response/ok {:result "ok"}))
+      (http-response/not-found (str "Module " module-id " has no homework")))))
 
 ;--------------------
 ;  CONTENT DATA API
