@@ -320,11 +320,15 @@ let content_handler = (function () {
 
    return function (module_id, content) {
       var html;
-      if (content['markdown?']) {
-         let converter = new showdown.Converter();
-         html = converter.makeHtml(content['text']);
+      if (content['text'] !== null) {
+         if (content['markdown?']) {
+            let converter = new showdown.Converter();
+            html = converter.makeHtml(content['text']);
+         } else {
+            html = content['text'];
+         }
       } else {
-         html = content['text'];
+         html = 'No content';
       }
       let $content_div = $('<div>' + html + '</div>'),
          namespace = content['namespace'],

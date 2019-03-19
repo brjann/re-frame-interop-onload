@@ -68,12 +68,12 @@
   [content]
   (if (bass/uploaded-file (:file-path content))
     content
-    (dissoc content :file-path)))
+    (assoc content :file-path nil)))
 
 (defn- check-content-text
   [content]
   (if (empty? (:text content))
-    (dissoc content :text)
+    (assoc content :text nil)
     content))
 
 (defn get-content

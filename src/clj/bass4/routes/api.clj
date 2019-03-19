@@ -134,8 +134,8 @@
 
           (GET "/module-homework/:module-id" [module-id]
             :summary "Homework of module."
-            :return modules-response/MainText
-            (modules-response/api-main-text
+            :return modules-response/Homework
+            (modules-response/api-homework
               module-id
               (:modules (:tx-components treatment))))
 

@@ -171,86 +171,6 @@
                     :content-data content-data})))
 
 
-;--------------
-;  MODULE API
-;--------------
-
-(s/defschema ContentInfo
-  {:content-id   s/Int
-   :content-name String
-   :accessed?    Boolean
-   :namespace    String
-   :has-text?    s/Bool
-   :data-updated (s/maybe DateTime)
-   :tags         [String]})
-
-(s/defschema ModuleInfo
-  {:module-id       s/Int
-   :module-name     String
-   :active?         Boolean
-   :activation-date (s/maybe DateTime)
-   :homework-status (s/maybe (s/enum :ok :submitted))
-   :tags            [String]})
-
-(s/defschema ModuleWithContent
-  (merge ModuleInfo
-         {:main-text  (s/maybe ContentInfo)
-          :worksheets [ContentInfo]
-          :homework   (s/maybe ContentInfo)}))
-
-(s/defschema MainText
-  {:content-id   s/Int
-   :content-name String
-   :data-imports [String]
-   :markdown?    Boolean
-   :namespace    String
-   :text         String
-   :tags         [String]})
-
-(defapi api-modules-list
-  [modules :- seq? treatment-access-id :- integer?]
-  (when (seq modules)
-    (let [modules-with-content (get-modules-with-content modules treatment-access-id)
-          res                  (mapv (fn [module]
-                                       (let [content-keys #(select-keys % (keys ContentInfo))
-                                             contents     (:contents module)
-                                             contents     {:main-text  (utils/fnil+ content-keys (:main-text contents))
-                                                           :worksheets (mapv content-keys (:worksheets contents))
-                                                           :homework   (utils/fnil+ content-keys (:homework contents))}]
-                                         (merge
-                                           (select-keys module (keys ModuleWithContent))
-                                           contents)))
-                                     modules-with-content)]
-      (http-response/ok res))))
-
-(defn- get-module
-  [module-id modules]
-  (let [module (first (filter #(= module-id (:module-id %)) modules))]
-    (cond
-      (nil? module)
-      (http-response/not-found! (str "No such module " module-id))
-
-      (not (:active? module))
-      (http-response/forbidden! (str "Module " module-id " not active.")))))
-
-(defn- module-content
-  [module-id modules get-fn schema]
-  (let [module (get-module module-id modules)]
-    (if-let [main-text-id (get-fn)]
-      (let [module-content (treatment-service/get-content-in-module module main-text-id)
-            res            (-> module-content
-                               (select-keys (keys schema))
-                               (update :data-imports #(into [] %)))]
-        (http-response/ok res))
-      (http-response/not-found (str "Module " module-id " has no main text")))))
-
-(defapi api-main-text
-  [module-id :- api/->int modules :- seq?]
-  (module-content
-    module-id
-    modules
-    #(treatment-service/get-module-main-text-id module-id)
-    MainText))
 
 ;--------------
 ; CONTENT DATA
@@ -313,13 +233,105 @@
     (http-errors/throw-400!)))
 
 
+;--------------
+;  MODULE API
+;--------------
+
+(s/defschema ContentInfo
+  {:content-id   s/Int
+   :content-name String
+   :accessed?    Boolean
+   :namespace    String
+   :has-text?    s/Bool
+   :data-updated (s/maybe DateTime)
+   :tags         [String]})
+
+(s/defschema ModuleInfo
+  {:module-id       s/Int
+   :module-name     String
+   :active?         Boolean
+   :activation-date (s/maybe DateTime)
+   :homework-status (s/maybe (s/enum :ok :submitted))
+   :tags            [String]})
+
+(s/defschema ModuleWithContent
+  (merge ModuleInfo
+         {:main-text  (s/maybe ContentInfo)
+          :worksheets [ContentInfo]
+          :homework   (s/maybe ContentInfo)}))
+
+(s/defschema MainText
+  {:content-id   s/Int
+   :content-name String
+   :data-imports [String]
+   :markdown?    Boolean
+   :namespace    String
+   :text         (s/maybe String)
+   :file-path    (s/maybe String)
+   :tags         [String]})
+
+(s/defschema Homework
+  (merge
+    MainText
+    {:status (s/maybe (s/enum :ok :submitted))}))
+
+(defapi api-modules-list
+  [modules :- seq? treatment-access-id :- integer?]
+  (when (seq modules)
+    (let [modules-with-content (get-modules-with-content modules treatment-access-id)
+          res                  (mapv (fn [module]
+                                       (let [content-keys #(select-keys % (keys ContentInfo))
+                                             contents     (:contents module)
+                                             contents     {:main-text  (utils/fnil+ content-keys (:main-text contents))
+                                                           :worksheets (mapv content-keys (:worksheets contents))
+                                                           :homework   (utils/fnil+ content-keys (:homework contents))}]
+                                         (merge
+                                           (select-keys module (keys ModuleWithContent))
+                                           contents)))
+                                     modules-with-content)]
+      (http-response/ok res))))
+
+(defn- get-module
+  [module-id modules]
+  (let [module (first (filter #(= module-id (:module-id %)) modules))]
+    (cond
+      (nil? module)
+      (http-response/not-found! (str "No such module " module-id))
+
+      (not (:active? module))
+      (http-response/forbidden! (str "Module " module-id " not active.")))))
+
+(defn- module-content
+  [module-id modules get-id-fn schema]
+  (let [module (get-module module-id modules)]
+    (if-let [content-id (get-id-fn)]
+      (let [module-content (treatment-service/get-content-in-module module content-id)]
+        (-> module-content
+            (select-keys (keys schema))
+            (update :data-imports #(into [] %))))
+      (http-response/not-found! (str "Module " module-id " has no such content")))))
+
+(defapi api-main-text
+  [module-id :- api/->int modules :- seq?]
+  (http-response/ok (module-content
+                      module-id
+                      modules
+                      #(treatment-service/get-module-main-text-id module-id)
+                      MainText)))
+
+(defapi api-homework
+  [module-id :- api/->int modules :- seq?]
+  (let [res    (module-content
+                 module-id
+                 modules
+                 #(treatment-service/get-module-homework-id module-id)
+                 Homework)
+        module (first (filter #(= module-id (:module-id %)) modules))]
+    (http-response/ok (assoc res :status (:homework-status module)))))
+
 ;--------------------
 ;  CONTENT DATA API
 ;--------------------
-
-(defn- size?
-  [v]
-  (not (zero? (count v))))
 
 (defapi api-get-module-content-data
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
@@ -346,6 +358,10 @@
                                          treatment-access-id
                                          (get-in module [:content-ns-aliases content-id]))
     (http-response/ok {:result "ok"})))
+
+(defn- size?
+  [v]
+  (not (zero? (count v))))
 
 (defapi api-get-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]
