@@ -318,7 +318,14 @@ let content_handler = (function () {
          });
    };
 
-   return function (module_id, content) {
+   let make_readonly = function ($content_div) {
+      $content_div.find(':input')
+         .each(function (index, input) {
+            $(input).attr('disabled', 'disabled');
+         })
+   };
+
+   return function (module_id, content, readonly) {
       var html;
       if (content['text'] !== null) {
          if (content['markdown?']) {
@@ -336,7 +343,7 @@ let content_handler = (function () {
          content_id = content['content-id'];
       setup_statics($content_div);
 
-      if (inputs.length > 0) {
+      if (inputs.length > 0 && !readonly) {
          let $submit = $('<button id="save-button">Save</button>')
             .click(function () {
                content_submit($content_div, module_id, content_id);
@@ -352,6 +359,9 @@ let content_handler = (function () {
                create_tabs($content_div, content_data);
                fill_values($content_div, content_data);
                fill_statics($content_div, content_data);
+               if (readonly) {
+                  make_readonly($content_div);
+               }
                $('.readonly :input').prop('disabled', true);
             }
          });

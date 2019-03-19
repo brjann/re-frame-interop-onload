@@ -16,23 +16,39 @@
 <script src="ui.js" type="text/javascript"></script>
 <script src="content.js" type="text/javascript"></script>
 <script type="text/javascript">
+
    let load_content = function ($content_div, module_id) {
       console.log('Fetching homework');
       $.ajax('/api/user/tx/module-homework/' + module_id,
          {
             success: function (homework) {
-               let $content = content_handler(module_id, homework);
+               let readonly = homework['status'] === 'ok' || homework['status'] === 'submitted',
+                  $content = content_handler(module_id, homework, readonly);
+
+               if (homework['status'] === 'ok') {
+                  $content.prepend('<p><strong>Your homework has been reviewed by your therapist.</strong></p>')
+               } else if (homework['status'] === 'submitted') {
+                  $content.prepend('<p><strong>You have submitted your homework and it is waiting to be reviewed by your therapist.</strong></p>')
+               }
+
                let $save_button = $content.find('#save-button');
                if ($save_button.length > 0) {
                   $save_button.text('Save without submitting');
                   $('<button>Submit homework</button>')
                      .insertBefore($save_button)
                      .click(function () {
+                        console.log('Submitting homework');
+                        $.ajax('/api/user/tx/module-homework-submit/' + module_id,
+                           {
+                              method: 'post',
+                              success: function () {
+                                 console.log('Homework submitted')
+                              }
+                           });
                         $save_button.click();
-
                      });
-                  $content_div.append($content);
                }
+               $content_div.append($content);
             }
          })
    };
