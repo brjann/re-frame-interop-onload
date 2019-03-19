@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BASS4 ui demo</title>
+    <link href="/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div id="menu"></div>
+<div id="main"></div>
+<script src="/js/jquery/jquery-3.2.0.min.js" type="text/javascript"></script>
+<script src="/assets/bootstrap/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+<script src="showdown.min.js"></script>
+<script src="ui.js" type="text/javascript"></script>
+<script src="content.js" type="text/javascript"></script>
+<script type="text/javascript">
+   let load_content = function ($content_div, module_id) {
+      console.log('Fetching homework');
+      $.ajax('/api/user/tx/module-homework/' + module_id,
+         {
+            success: function (homework) {
+               $content_div.append(content_handler(module_id, homework));
+            }
+         })
+   };
+
+   $(document).ready(function () {
+      $.when(init_page()).done(function () {
+         let $main_div = $('#main');
+         let $content_div = $('<div></div>').appendTo($main_div);
+         let module_id = parseInt(getParameterByName('module-id', window.location.href));
+         load_content($content_div, module_id);
+      });
+   });
+</script>
+</body>
+</html>

@@ -340,7 +340,7 @@
         content-data   (treatment-service/get-module-content-data
                          treatment-access-id
                          module-content)]
-    (http-response/ok content-data)))
+    (http-response/ok (or content-data {}))))
 
 (defn data-map->vec
   [data]

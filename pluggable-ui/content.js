@@ -344,9 +344,11 @@ let content_handler = (function () {
          $content_div.append($submit);
       }
 
+      console.log('Fething content data');
       $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content_id,
          {
             success: function (content_data) {
+               console.log('Content fetched');
                create_tabs($content_div, content_data);
                fill_values($content_div, content_data);
                fill_statics($content_div, content_data);
