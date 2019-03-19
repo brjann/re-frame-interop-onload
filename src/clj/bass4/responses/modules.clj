@@ -233,16 +233,24 @@
       (not (:active? module))
       (http-response/forbidden! (str "Module " module-id " not active.")))))
 
-(defapi api-main-text
-  [module-id :- api/->int modules :- seq?]
+(defn- module-content
+  [module-id modules get-fn schema]
   (let [module (get-module module-id modules)]
-    (if-let [main-text-id (treatment-service/get-module-main-text-id module-id)]
+    (if-let [main-text-id (get-fn)]
       (let [module-content (treatment-service/get-content-in-module module main-text-id)
             res            (-> module-content
-                               (select-keys (keys MainText))
+                               (select-keys (keys schema))
                                (update :data-imports #(into [] %)))]
         (http-response/ok res))
       (http-response/not-found (str "Module " module-id " has no main text")))))
+
+(defapi api-main-text
+  [module-id :- api/->int modules :- seq?]
+  (module-content
+    module-id
+    modules
+    #(treatment-service/get-module-main-text-id module-id)
+    MainText))
 
 ;--------------
 ; CONTENT DATA

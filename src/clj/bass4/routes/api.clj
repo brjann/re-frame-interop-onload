@@ -132,6 +132,13 @@
               module-id
               (:modules (:tx-components treatment))))
 
+          (GET "/module-homework/:module-id" [module-id]
+            :summary "Homework of module."
+            :return modules-response/MainText
+            (modules-response/api-main-text
+              module-id
+              (:modules (:tx-components treatment))))
+
           (GET "/module-content-data/:module-id/:content-id"
                [module-id content-id]
             :summary "Get content data belonging to namespaces within a module and content."
