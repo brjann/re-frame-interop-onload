@@ -151,6 +151,17 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
+          (POST "/module-content-access/:module-id/:content-id"
+                [module-id content-id]
+            :summary "Mark content as accessed by user."
+            :return {:result String}
+            (modules-response/api-module-content-access
+              module-id
+              content-id
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
+
           ;; --------------
           ;;  CONTENT DATA
           ;; --------------
@@ -237,14 +248,7 @@
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]
             :return {:result String}
-            (messages-response/api-message-read (:user-id user) message-id))
-
-          (POST "/content-accessed" []
-            :summary "Mark content as accessed by user."
-            :body-params [content-id :- s/Int]
-            :return {:result String}
-            (http-response/ok {:result "ok"})))))))
-
+            (messages-response/api-message-read (:user-id user) message-id)))))))
 
 #_(context "/api" []
     (GET "/authenticated" []

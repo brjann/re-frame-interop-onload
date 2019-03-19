@@ -341,6 +341,17 @@
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " has no homework")))))
 
+(defapi api-module-content-access
+  [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
+  (let [_               (get-module module-id modules)      ;; Error if module not available
+        module-contents (treatment-service/get-module-contents* [module-id])
+        content-ids     (mapv :content-id module-contents)]
+    (if (utils/in? content-ids content-id)
+      (do
+        (treatment-service/register-content-access! content-id module-id treatment-access-id)
+        (http-response/ok {:result "ok"}))
+      (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
+
 ;--------------------
 ;  CONTENT DATA API
 ;--------------------
