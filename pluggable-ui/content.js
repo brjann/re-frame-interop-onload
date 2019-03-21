@@ -144,7 +144,6 @@ let content_handler = (function () {
                tab.text(tab_name + ' ' + tab_index);
                var new_content = cloneContent(tabbed_content, tab_index, tab);
                $(tab.data('target')).append(new_content);
-               add_markdown_classes();
 
                addPlusTab(tabs_ul, tab_div, tabbed_content_id, on_click);
             }
@@ -341,6 +340,9 @@ let content_handler = (function () {
          namespace = content['namespace'],
          inputs = prepend_names($content_div, namespace),
          content_id = content['content-id'];
+      if (content['tags'].indexOf('key') >= 0) {
+         $content_div.css('background-color', 'red');
+      }
       setup_statics($content_div);
 
       if (inputs.length > 0 && !readonly) {
@@ -351,7 +353,7 @@ let content_handler = (function () {
          $('<p></p>').append($submit).appendTo($content_div);
       }
 
-      console.log('Fething content data');
+      console.log('Fetching content data');
       $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content_id,
          {
             success: function (content_data) {
@@ -366,6 +368,7 @@ let content_handler = (function () {
             }
          });
 
+      console.log(content['accessed?']);
       return $content_div;
    };
 })();

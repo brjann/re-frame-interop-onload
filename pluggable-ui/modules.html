@@ -27,6 +27,15 @@
       return '';
    };
 
+   let key_exercise = function (content) {
+      if (content['tags'].indexOf('key') >= 0) {
+         return '<strong>KEY EXERCISE</strong>&nbsp;';
+      } else {
+         return '';
+      }
+
+   };
+
    let load_modules = function ($modules_div) {
       console.log('Fetching modules');
       $.ajax('/api/user/tx/modules', {
@@ -41,14 +50,14 @@
                   if (m['main-text']) {
                      $modules_div.append('<p><a href="module-main.html?module-id=' + m['module-id'] + '">' +
                         'Read module text</a>&nbsp;' + content_last_updated(m['main-text'])
-                        + '&nbsp;' + content_accessed(m['main-text']) +
+                        + '&nbsp;' + key_exercise(m['main-text']) + content_accessed(m['main-text']) +
                         '</p>')
                   }
                   $.map(m['worksheets'], function (w) {
                      $modules_div.append('<p>' +
                         '<a href="module-worksheet.html?module-id=' + m['module-id'] + '&worksheet-id=' + w['content-id'] + '">' +
                         'Fill in worksheet ' + w['content-name'] +
-                        '</a>&nbsp;' + content_last_updated(w) + '&nbsp;' + content_accessed(w) +
+                        '</a>&nbsp;' + key_exercise(w) + content_last_updated(w) + '&nbsp;' + content_accessed(w) +
                         '</p>')
                   });
                   if (m['homework']) {
@@ -62,7 +71,8 @@
                      }
                      $modules_div.append('<p>' +
                         '<a href="module-homework.html?module-id=' + m['module-id'] + '">' +
-                        'Complete module homework</a>&nbsp;' + status + '&nbsp;' + content_accessed(m['homework']) +
+                        'Complete module homework</a>&nbsp;' + status + key_exercise(m['homework']) +
+                        '&nbsp;' + content_accessed(m['homework']) +
                         '</p>')
                   }
                }
