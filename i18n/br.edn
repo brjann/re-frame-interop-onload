@@ -95,14 +95,15 @@
                    :in-days     "em %1 dias"
                    :yesterday   "ontem"
                    :days-ago    "%1 dias atrás"}
- :messages        {:sent-on-from   "Enviado em %1 %2"
-                   :from-therapist "De %1 em %2"
-                   :must-message   "Por favor, escreva uma mensagem de texto"
-                   :subject        "Assunto da mensagem"
-                   :text           "Mensagem de texto"
-                   :save-draft     "Salvar rascunho"
-                   :messages       "Mensagens"
-                   :new-message    "Você tem uma mensagem não lida"}
+ :messages        {:sent-on-from      "Enviado em %1 %2"
+                   :from-therapist    "De %1 em %2"
+                   :must-message      "Por favor, escreva uma mensagem de texto"
+                   :subject           "Assunto da mensagem"
+                   :text              "Mensagem de texto"
+                   :save-draft        "Salvar rascunho"
+                   :messages          "Mensagens"
+                   :new-message-title "Nova mensagem"
+                   :new-message       "Você tem uma mensagem não lida"}
  :modules         {:modules                 "Módulos"
                    :activated               "Ativado"
                    :module-text             "Texto do módulo"

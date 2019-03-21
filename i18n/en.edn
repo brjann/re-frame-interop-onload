@@ -95,14 +95,15 @@
                    :in-days     "in %1 days"
                    :yesterday   "yesterday"
                    :days-ago    "%1 days ago"}
- :messages        {:sent-on-from   "Sent by %1 %2"
-                   :from-therapist "From %1 on %2"
-                   :must-message   "Please write message text"
-                   :subject        "Message subject"
-                   :text           "Message text"
-                   :save-draft     "Save draft"
-                   :messages       "Messages"
-                   :new-message    "You have a new message"}
+ :messages        {:sent-on-from      "Sent by %1 %2"
+                   :from-therapist    "From %1 on %2"
+                   :must-message      "Please write message text"
+                   :subject           "Message subject"
+                   :text              "Message text"
+                   :save-draft        "Save draft"
+                   :messages          "Messages"
+                   :new-message-title "New message"
+                   :new-message       "You have a new message"}
  :modules         {:modules                 "Modules"
                    :activated               "Activated"
                    :module-text             "Module text"

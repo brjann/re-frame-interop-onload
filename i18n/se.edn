@@ -95,14 +95,15 @@
                    :in-days     "om %1 dagar"
                    :yesterday   "igår"
                    :days-ago    "%1 dagar sedan"}
- :messages        {:sent-on-from   "Skickat %2 av %1"
-                   :from-therapist "Från %1 %2"
-                   :must-message   "Du måste ange meddelandetext"
-                   :subject        "Ämne"
-                   :text           "Text"
-                   :save-draft     "Spara utkast"
-                   :messages       "Meddelanden"
-                   :new-message    "Du har nya meddelanden"}
+ :messages        {:sent-on-from      "Skickat %2 av %1"
+                   :from-therapist    "Från %1 %2"
+                   :must-message      "Du måste ange meddelandetext"
+                   :subject           "Ämne"
+                   :text              "Text"
+                   :save-draft        "Spara utkast"
+                   :messages          "Meddelanden"
+                   :new-message-title "Nytt meddelande"
+                   :new-message       "Du har nya meddelanden"}
  :modules         {:modules                 "Moduler"
                    :activated               "Aktiverad"
                    :module-text             "Modultext"
