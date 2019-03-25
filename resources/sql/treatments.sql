@@ -103,11 +103,20 @@ FROM links_c_module
 WHERE LinkerId=:module-id AND PropertyName='MainTexts'
 ORDER BY SortOrder;
 
+
 -- :name get-module-homework-id :? :1
 -- :doc
 SELECT DISTINCT LinkeeId AS `content-id`
 FROM links_c_module
 WHERE LinkerId=:module-id AND PropertyName='Homework'
+ORDER BY SortOrder;
+
+
+-- :name get-module-worksheet-id :? :1
+-- :doc
+SELECT DISTINCT LinkeeId AS `content-id`
+FROM links_c_module
+WHERE LinkerId=:module-id AND PropertyName='Worksheets' AND LinkeeId = :worksheet-id
 ORDER BY SortOrder;
 
 
