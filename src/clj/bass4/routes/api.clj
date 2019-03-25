@@ -134,14 +134,16 @@
             :return modules-response/MainText
             (modules-response/api-main-text
               module-id
-              (:modules (:tx-components treatment))))
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
 
           (GET "/module-homework/:module-id" [module-id]
             :summary "Homework of module."
             :return modules-response/Homework
             (modules-response/api-homework
               module-id
-              (:modules (:tx-components treatment))))
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
 
           (POST "/module-homework-submit/:module-id" [module-id]
             :summary "Mark homework as submitted."
@@ -151,9 +153,13 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (POST "/module-content-access/:module-id/:content-id"
-                [module-id content-id]
+          (POST "/module-content-access" []
             :summary "Mark content as accessed by user."
+            :description (str "Mark content as accessed by user. "
+                              "Should be called the first time a user accesses the content "
+                              "(i.e., when the `accessed?` property is false.")
+            :body-params [module-id :- Integer
+                          content-id :- Integer]
             :return {:result String}
             (modules-response/api-module-content-access
               module-id

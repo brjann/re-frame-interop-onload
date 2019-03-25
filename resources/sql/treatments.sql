@@ -172,7 +172,7 @@ INSERT IGNORE INTO content_data_accesses
 (content_id, treatment_access_id, module_id, `time`)
 VALUES (:content-id, :treatment-access-id, :module-id, now());
 
--- :name get-content-first-access :? :*
+-- :name module-content-first-access :? :*
 -- :doc
 SELECT
 	module_id AS `module-id`,
@@ -180,3 +180,10 @@ SELECT
     `time`
 FROM content_data_accesses
 WHERE treatment_access_id = :treatment-access-id AND module_id IN(:v*:module-ids) ;
+
+-- :name content-first-access :? :*
+-- :doc
+SELECT
+    `time`
+FROM content_data_accesses
+WHERE treatment_access_id = :treatment-access-id AND module_id = :module-id AND content_id = :content-id;

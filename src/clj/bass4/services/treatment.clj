@@ -119,6 +119,14 @@
 ;;  MODULE CONTENTS SUMMARY
 ;; --------------------------
 
+(defn content-accessed?
+  [treatment-access-id module-id content-id]
+  (-> (db/content-first-access {:treatment-access-id treatment-access-id
+                                :module-id           module-id
+                                :content-id          content-id})
+      (seq)
+      (boolean)))
+
 (defn get-module-contents*
   [module-ids]
   (->> (db/get-module-contents {:module-ids module-ids})
@@ -163,7 +171,7 @@
 (defn get-module-contents-with-update-time
   [modules treatment-access-id]
   (let [last-updates     (map-map first (group-by :namespace (db/get-content-data-last-save {:data-owner-id treatment-access-id})))
-        content-accesses (->> (db/get-content-first-access {:treatment-access-id treatment-access-id :module-ids (mapv :module-id modules)})
+        content-accesses (->> (db/module-content-first-access {:treatment-access-id treatment-access-id :module-ids (mapv :module-id modules)})
                               (mapv #(vector (:module-id %) (:content-id %)))
                               (into #{}))
         contents         (->> (get-module-contents modules)

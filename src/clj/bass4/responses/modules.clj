@@ -265,6 +265,7 @@
    :content-name String
    :data-imports [String]
    :markdown?    Boolean
+   :accessed?    Boolean
    :namespace    String
    :text         (s/maybe String)
    :file-path    (s/maybe String)
@@ -305,26 +306,31 @@
       module)))
 
 (defn- module-content
-  [module-id modules get-id-fn schema]
+  [treatment-access-id module-id modules get-id-fn schema]
   (let [module (get-module module-id modules)]
     (if-let [content-id (get-id-fn)]
       (let [module-content (treatment-service/get-content-in-module module content-id)]
         (-> module-content
             (select-keys (keys schema))
-            (update :data-imports #(into [] %))))
+            (update :data-imports #(into [] %))
+            (assoc :accessed? (treatment-service/content-accessed? treatment-access-id
+                                                                   module-id
+                                                                   content-id))))
       (http-response/not-found! (str "Module " module-id " has no such content")))))
 
 (defapi api-main-text
-  [module-id :- api/->int modules :- seq?]
+  [module-id :- api/->int modules :- seq? treatment-access-id]
   (http-response/ok (module-content
+                      treatment-access-id
                       module-id
                       modules
                       #(treatment-service/get-module-main-text-id module-id)
                       MainText)))
 
 (defapi api-homework
-  [module-id :- api/->int modules :- seq?]
+  [module-id :- api/->int modules :- seq? treatment-access-id]
   (let [res    (module-content
+                 treatment-access-id
                  module-id
                  modules
                  #(treatment-service/get-module-homework-id module-id)
