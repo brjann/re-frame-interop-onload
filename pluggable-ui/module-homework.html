@@ -41,7 +41,7 @@
                      .insertBefore($save_button)
                      .click(function () {
                         console.log('Submitting homework');
-                        $.ajax('/api/user/tx/module-homework-submit/',
+                        $.ajax('/api/user/tx/module-homework-submit',
                            {
                               method: 'put',
                               contentType: 'application/json',

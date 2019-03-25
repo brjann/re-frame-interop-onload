@@ -156,7 +156,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (PUT "/module-homework-submit/" []
+          (PUT "/module-homework-submit" []
             :summary "Mark homework as submitted."
             :body-params [module-id :- s/Int]
             :return {:result String}
