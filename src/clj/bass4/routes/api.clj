@@ -82,6 +82,15 @@
 
       (POST "/re-auth" []
         :summary "Re-authenticate after timeout."
+        :description (str "After a 440 response, the app MUST ask the user to re-authenticate "
+                          "towards this endpoint.\n\n"
+                          "# HTTP status error responses\n\n"
+                          "## 422\n"
+                          "Wrong username or password\n\n"
+                          "## 429\n"
+                          "After too many failed attempts - BASS will respond with 429 Too many requests "
+                          "and the user will need to wait a few seconds before attempting again. "
+                          "The minimum number of seconds to wait is given in the body of the response.")
         :body-params [password :- String]
         :return {:result String}
         (auth-response/check-re-auth-api (:session request) password))
