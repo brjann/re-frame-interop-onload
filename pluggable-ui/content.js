@@ -350,6 +350,7 @@ let content_handler = (function () {
          $.ajax('/api/user/tx/module-content-accessed',
             {
                method: 'put',
+               contentType: 'application/json',
                data: JSON.stringify(
                   {
                      'content-id': content_id,
@@ -358,7 +359,6 @@ let content_handler = (function () {
                success: function () {
                   console.log('Content marked as accessed');
                },
-               contentType: 'application/json',
             })
       }
 

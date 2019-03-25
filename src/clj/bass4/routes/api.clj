@@ -138,24 +138,27 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (GET "/module-main/:module-id" [module-id]
+          (GET "/module-main/:module-id" []
             :summary "Main text of module."
+            :path-params [module-id :- s/Int]
             :return modules-response/MainText
             (modules-response/api-main-text
               module-id
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (GET "/module-homework/:module-id" [module-id]
+          (GET "/module-homework/:module-id" []
             :summary "Homework of module."
+            :path-params [module-id :- s/Int]
             :return modules-response/Homework
             (modules-response/api-homework
               module-id
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (PUT "/module-homework-submit/:module-id" [module-id]
+          (PUT "/module-homework-submit/" []
             :summary "Mark homework as submitted."
+            :body-params [module-id :- s/Int]
             :return {:result String}
             (modules-response/api-homework-submit
               module-id
@@ -181,14 +184,14 @@
           ;;  CONTENT DATA
           ;; --------------
 
-          (GET "/module-content-data/:module-id/:content-id"
-               [module-id content-id]
+          (GET "/module-content-data/:module-id/:content-id" []
             :summary "Get content data belonging to namespaces within a module and content."
             :description (str "Returns data with aliased namespaces in format\n\n"
                               "    {\"namespace1\": {\"key1\": \"value1\"\n"
                               "                    \"key2\": \"value2\"}\n"
                               "     \"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}}\n")
+            :path-params [module-id :- s/Int content-id :- s/Int]
             :return (s/maybe {String {String String}})
             (modules-response/api-get-module-content-data
               module-id
@@ -196,8 +199,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (PUT "/module-content-data/:module-id/:content-id"
-               [module-id content-id]
+          (PUT "/module-content-data/:module-id/:content-id" []
             :summary "Save content data belonging to content within a module."
             :description (str "Saves data and handles aliased namespaces\n\n"
                               "Expects data in format:\n\n"
@@ -205,6 +207,7 @@
                               "                             \"key2\": \"value2\"},\n"
                               "              \"namespace2\": {\"key3\": \"value3\",\n"
                               "                             \"key4\": \"value4\"}}}\n")
+            :path-params [module-id :- s/Int content-id :- s/Int]
             :body-params [data]
             ;:return {:result String}
             (modules-response/api-save-module-content-data
