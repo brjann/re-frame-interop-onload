@@ -86,7 +86,7 @@
                           "towards this endpoint.\n\n"
                           "# HTTP status error responses\n\n"
                           "## 422\n"
-                          "Wrong username or password.\n\n"
+                          "Wrong password.\n\n"
                           "## 429\n"
                           "After too many failed attempts - BASS will respond with 429 Too many requests "
                           "and the user will need to wait a few seconds before attempting again. "
