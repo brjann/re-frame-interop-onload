@@ -238,7 +238,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (GET "/content-data/" []
+          (GET "/content-data" []
             :summary "Get content data belonging to namespaces."
             :description (str "Provides direct access to content data without "
                               "handling module content aliasing\n\n"
