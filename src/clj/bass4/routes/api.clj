@@ -145,7 +145,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (POST "/module-homework-submit/:module-id" [module-id]
+          (PUT "/module-homework-submit/:module-id" [module-id]
             :summary "Mark homework as submitted."
             :return {:result String}
             (modules-response/api-homework-submit
@@ -153,13 +153,13 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (POST "/module-content-access" []
+          (PUT "/module-content-access" []
             :summary "Mark content as accessed by user."
             :description (str "Mark content as accessed by user. "
                               "Should be called the first time a user accesses the content "
                               "(i.e., when the `accessed?` property is false.")
-            :body-params [module-id :- Integer
-                          content-id :- Integer]
+            :body-params [module-id :- s/Int
+                          content-id :- s/Int]
             :return {:result String}
             (modules-response/api-module-content-access
               module-id
@@ -187,8 +187,8 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (POST "/module-content-data/:module-id/:content-id"
-                [module-id content-id]
+          (PUT "/module-content-data/:module-id/:content-id"
+               [module-id content-id]
             :summary "Save content data belonging to content within a module."
             :description (str "Saves data and handles aliased namespaces\n\n"
                               "Expects data in format:\n\n"
@@ -220,7 +220,7 @@
               namespaces
               (:treatment-access-id treatment-access)))
 
-          (POST "/content-data" []
+          (PUT "/content-data" []
             :summary "Save content data."
             :description (str "Provides writing directly to content data without "
                               "handling module content aliasing\n\n"
@@ -250,7 +250,7 @@
             :return {:result String}
             (messages-response/api-save-message (:user-id user) message))
 
-          (POST "/message-read" []
+          (PUT "/message-read" []
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]
             :return {:result String}
