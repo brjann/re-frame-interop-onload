@@ -79,16 +79,17 @@
 
 (defn get-content
   [content-id]
-  (-> (db/get-content
-        {:content-id content-id}
-        #_[:markdown :tabbed :show-example])
-      (check-file)
-      (check-content-text)
-      (unserialize-key :data-imports)
-      (split-tags-property)
-      ;; Transform true false array for imports into set with imported namespaces
-      ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
-                                                       (into #{})))))))
+  ;; TODO: This function cannot rely on content existing
+  ;; path: api-get-module-content-data
+  (some-> (db/get-content
+            {:content-id content-id})
+          (check-file)
+          (check-content-text)
+          (unserialize-key :data-imports)
+          (split-tags-property)
+          ;; Transform true false array for imports into set with imported namespaces
+          ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
+                                                           (into #{})))))))
 
 (defn- inject-module-namespace
   "Inject module-specific namespace into contents"
@@ -112,9 +113,11 @@
 
 (defn get-content-in-module
   [module content-id]
-  (-> (get-content content-id)
-      (inject-module-namespace module)
-      (inject-module-imports module)))
+  ;; TODO: This function cannot rely on content existing
+  ;; path: api-get-module-content-data
+  (some-> (get-content content-id)
+          (inject-module-namespace module)
+          (inject-module-imports module)))
 
 ;; --------------------------
 ;;  MODULE CONTENTS SUMMARY

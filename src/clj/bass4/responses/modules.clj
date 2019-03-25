@@ -389,11 +389,13 @@
 (defapi api-get-module-content-data
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (let [module         (get-module module-id modules)
-        module-content (treatment-service/get-content-in-module module content-id)
-        content-data   (treatment-service/get-module-content-data
-                         treatment-access-id
-                         module-content)]
-    (http-response/ok (or content-data {}))))
+        module-content (treatment-service/get-content-in-module module content-id)]
+    (if module-content
+      (let [content-data (treatment-service/get-module-content-data
+                           treatment-access-id
+                           module-content)]
+        (http-response/ok (or content-data {})))
+      (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
 
 (defn data-map->vec
   [data]
