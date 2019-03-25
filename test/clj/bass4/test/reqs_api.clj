@@ -21,7 +21,8 @@
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.services.user :as user-service]
-            [bass4.services.treatment :as treatment]))
+            [bass4.services.treatment :as treatment]
+            [clojure.data.json :as json]))
 
 
 (use-fixtures
@@ -123,6 +124,28 @@
         (has (status? 400))
         (visit "/api/user/tx/content-data" :request-method :put :body-params {:data {"xxx" "yyy"}})
         (has (status? 400)))))
+
+(defn api-response
+  [s]
+  (-> s
+      :enlive
+      first
+      :content
+      first
+      :content
+      first
+      (json/read-str :key-fn keyword)))
+
+(deftest module-list
+  (let [user-id (create-user-with-treatment!)]
+    (let [res        (api-response (-> *s*
+                                       (modify-session {:user-id user-id :double-authed? true})
+                                       (visit "/api/user/tx/modules")))
+          module-ids (->> res
+                          (filter :active?)
+                          (map :module-id)
+                          (into #{}))]
+      (is (= #{5787 4002 4003 4007} module-ids)))))
 
 (deftest activate-module
   (let [user-id (create-user-with-treatment!)]
