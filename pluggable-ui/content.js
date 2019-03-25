@@ -308,7 +308,7 @@ let content_handler = (function () {
          });
       $.ajax('/api/user/tx/module-content-data/' + module_id + '/' + content_id,
          {
-            method: 'post',
+            method: 'put',
             data: JSON.stringify({data: all_values}),
             contentType: 'application/json',
             success: function () {
