@@ -15,6 +15,21 @@ FROM c_treatmentaccess AS ca
     ON ca.ObjectId = lca.LinkerId AND lca.PropertyName = "Treatment"
 WHERE ca.ParentId = :user-id ORDER BY ca.ObjectId;
 
+-- :name get-module-accesses :? :1
+-- :doc
+SELECT
+  ModuleAccesses AS `module-accesses`
+FROM c_treatmentaccess
+WHERE ObjectId = :treatment-access-id;
+
+-- :name update-module-accesses! :! :1
+-- :doc
+UPDATE c_treatmentaccess
+SET
+  ModuleAccesses = :module-accesses
+WHERE ObjectId = :treatment-access-id;
+
+
 -- :name get-treatment-info :? :1
 -- :doc
 SELECT

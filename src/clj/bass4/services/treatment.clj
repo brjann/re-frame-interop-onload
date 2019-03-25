@@ -1,6 +1,7 @@
 (ns bass4.services.treatment
   (:require [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
+            [bass4.php_clj.core :refer [clj->php]]
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
             [clojure.set]
@@ -317,8 +318,18 @@
        :treatment        treatment})))
 
 ;; --------------------------
-;;      CONTENT MUTATIONS
+;;    TREATMENT MUTATIONS
 ;; --------------------------
+
+(defn activate-module!
+  [treatment-access-id module-id]
+  (let [module-accesses-string (-> (db/get-module-accesses {:treatment-access-id treatment-access-id})
+                                   (:module-accesses)
+                                   (php->clj)
+                                   (assoc module-id (b-time/to-unix (t/now)))
+                                   (clj->php))]
+    (db/update-module-accesses! {:treatment-access-id treatment-access-id
+                                 :module-accesses     module-accesses-string})))
 
 (defn submit-homework!
   [treatment-access-id module]

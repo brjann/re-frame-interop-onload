@@ -371,6 +371,15 @@
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
 
+(defapi api-activate-module
+  [module-id :- api/->int modules :- seq? treatment-access-id :- int?]
+  (if-let [module (first (filter #(= module-id (:module-id %)) modules))]
+    (do
+      (when-not (:active? module)
+        (treatment-service/activate-module! treatment-access-id module-id))
+      (http-response/ok {:result "ok"}))
+    (http-response/not-found! (str "No such module " module-id))))
+
 ;--------------------
 ;  CONTENT DATA API
 ;--------------------

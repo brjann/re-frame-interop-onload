@@ -190,6 +190,15 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
+          (PUT "/activate-module" []
+            :summary "Grants user access to a module."
+            :body-params [module-id :- s/Int]
+            :return {:result String}
+            (modules-response/api-activate-module
+              module-id
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
 
           ;; --------------
           ;;  CONTENT DATA
