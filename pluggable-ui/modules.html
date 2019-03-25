@@ -36,6 +36,21 @@
 
    };
 
+   let activate_module = function (module_id) {
+      console.log('Activating module');
+      $.ajax('/api/user/tx/activate-module',
+         {
+            method: 'put',
+            data: JSON.stringify({'module-id': module_id}),
+            contentType: 'application/json',
+            success: function () {
+               console.log('Module activated');
+               alert('Module has been activated!');
+            }
+         }
+      )
+   };
+
    let load_modules = function ($modules_div) {
       console.log('Fetching modules');
       $.ajax('/api/user/tx/modules', {
@@ -44,7 +59,12 @@
             $.map(data, function (m) {
                $modules_div.append('<h2>' + m['module-name'] + '</h2');
                if (!m['active?']) {
-                  $modules_div.append('<p><em>Not available</em></p>');
+                  let $activate_btn = $('<button>Give me access!</button>').click(function () {
+                     activate_module(m['module-id']);
+                  });
+                  $('<p><em>Not available</em>&nbsp;</p>')
+                     .append($activate_btn)
+                     .appendTo($modules_div);
                } else {
                   $modules_div.append('<small>Available ' + new Date(m['activation-date']).toDateString() + '</small>');
                   if (m['main-text']) {
