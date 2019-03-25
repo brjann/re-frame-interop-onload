@@ -115,8 +115,14 @@
         (has (status? 400))
         (visit "/api/user/tx/module-content-data/4003/4001" :request-method :put :body-params {:data {"xxx" "yyy"}})
         (has (status? 400))
-        
-        )))
+        (visit "/api/user/tx/content-data")
+        (has (status? 400))
+        (visit "/api/user/tx/content-data?xxx=yyy")
+        (has (status? 400))
+        (visit "/api/user/tx/content-data" :request-method :put :body-params {:xxx {}})
+        (has (status? 400))
+        (visit "/api/user/tx/content-data" :request-method :put :body-params {:data {"xxx" "yyy"}})
+        (has (status? 400)))))
 
 (deftest activate-module
   (let [user-id (create-user-with-treatment!)]
