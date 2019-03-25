@@ -159,6 +159,10 @@
   [module-id worksheet-id]
   (boolean (seq (db/get-module-worksheet-id {:module-id module-id :worksheet-id worksheet-id}))))
 
+(defn module-has-content?
+  [module-id content-id]
+  (boolean (seq (db/get-module-content-id {:module-id module-id :content-id content-id}))))
+
 ;; --------------------------
 ;;   CONTENT CATEGORIZATION
 ;; --------------------------

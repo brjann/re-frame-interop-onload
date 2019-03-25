@@ -409,10 +409,13 @@
   [module-id :- api/->int content-id :- api/->int data :- map? modules :- seq? treatment-access-id :- int?]
   (let [module   (get-module module-id modules)
         data-vec (data-map->vec data)]
-    (content-data/save-api-content-data! data-vec
-                                         treatment-access-id
-                                         (get-in module [:content-ns-aliases content-id]))
-    (http-response/ok {:result "ok"})))
+    (if (treatment-service/module-has-content? module-id content-id)
+      (do
+        (content-data/save-api-content-data! data-vec
+                                             treatment-access-id
+                                             (get-in module [:content-ns-aliases content-id]))
+        (http-response/ok {:result "ok"}))
+      (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
 
 (defn- size?
   [v]

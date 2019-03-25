@@ -120,6 +120,14 @@ WHERE LinkerId=:module-id AND PropertyName='Worksheets' AND LinkeeId = :workshee
 ORDER BY SortOrder;
 
 
+-- :name get-module-content-id :? :1
+-- :doc
+SELECT DISTINCT LinkeeId AS `content-id`
+FROM links_c_module
+WHERE LinkerId=:module-id AND LinkeeId = :content-id
+ORDER BY SortOrder;
+
+
 -- :name get-content :? :1
 -- :doc
 SELECT ObjectId AS `content-id`,
