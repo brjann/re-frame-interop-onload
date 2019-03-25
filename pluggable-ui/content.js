@@ -254,9 +254,9 @@ let content_handler = (function () {
    var prepend_names = function ($content_div, namespace) {
       let inputs = find_inputs($content_div);
       inputs.each(function () {
-            var input = this;
-            $(input).prop('name', get_content_data_post_key(input.name, namespace));
-         });
+         var input = this;
+         $(input).prop('name', get_content_data_post_key(input.name, namespace));
+      });
       return inputs;
    };
 
@@ -325,6 +325,7 @@ let content_handler = (function () {
    };
 
    return function (module_id, content, readonly) {
+
       var html;
       if (content['text'] !== null) {
          if (content['markdown?']) {
@@ -343,6 +344,24 @@ let content_handler = (function () {
       if (content['tags'].indexOf('key') >= 0) {
          $content_div.css('background-color', 'red');
       }
+      // Mark content as accessed if it has not been accessed before
+      if (!content['accessed?']) {
+         console.log('Marking content as accessed');
+         $.ajax('/api/user/tx/module-content-accessed',
+            {
+               method: 'put',
+               data: JSON.stringify(
+                  {
+                     'content-id': content_id,
+                     'module-id': module_id
+                  }),
+               success: function () {
+                  console.log('Content marked as accessed');
+               },
+               contentType: 'application/json',
+            })
+      }
+
       setup_statics($content_div);
 
       if (inputs.length > 0 && !readonly) {
