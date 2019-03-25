@@ -276,6 +276,9 @@
     MainText
     {:status (s/maybe (s/enum :ok :submitted))}))
 
+(s/defschema Worksheet
+  MainText)
+
 (defapi api-modules-list
   [modules :- seq? treatment-access-id :- integer?]
   (when (seq modules)
@@ -346,6 +349,16 @@
         (treatment-service/submit-homework! treatment-access-id module)
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " has no homework")))))
+
+(defapi api-worksheet
+  [module-id :- api/->int worksheet-id :- api/->int modules :- seq? treatment-access-id]
+  (let [res (module-content
+              treatment-access-id
+              module-id
+              modules
+              (constantly worksheet-id)
+              Worksheet)]
+    (http-response/ok res)))
 
 (defapi api-module-content-access
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]

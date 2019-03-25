@@ -165,6 +165,17 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
+          (GET "/module-worksheet/:module-id/:worksheet-id" []
+            :summary "Homework of module."
+            :path-params [module-id :- s/Int
+                          worksheet-id :- s/Int]
+            :return modules-response/Worksheet
+            (modules-response/api-worksheet
+              module-id
+              worksheet-id
+              (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
           (PUT "/module-content-accessed" []
             :summary "Mark content as accessed by user."
             :description (str "Mark content as accessed by user. "
@@ -191,7 +202,8 @@
                               "                    \"key2\": \"value2\"}\n"
                               "     \"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}}\n")
-            :path-params [module-id :- s/Int content-id :- s/Int]
+            :path-params [module-id :- s/Int
+                          content-id :- s/Int]
             :return (s/maybe {String {String String}})
             (modules-response/api-get-module-content-data
               module-id
