@@ -399,11 +399,14 @@
 
 (defn data-map->vec
   [data]
-  (reduce-kv
-    (fn [init namespace key-values]
-      (into init
-            (map (fn [[key value]]
-                   [(name namespace) (name key) value]) key-values))) [] data))
+  (try
+    (reduce-kv
+      (fn [init namespace key-values]
+        (into init
+              (map (fn [[key value]]
+                     [(name namespace) (name key) value]) key-values))) [] data)
+    (catch Exception _
+      (http-response/bad-request! "'data' parameter in wrong format"))))
 
 (defapi api-save-module-content-data
   [module-id :- api/->int content-id :- api/->int data :- map? modules :- seq? treatment-access-id :- int?]
