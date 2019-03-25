@@ -153,7 +153,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (PUT "/module-content-access" []
+          (PUT "/module-content-accessed" []
             :summary "Mark content as accessed by user."
             :description (str "Mark content as accessed by user. "
                               "Should be called the first time a user accesses the content "
