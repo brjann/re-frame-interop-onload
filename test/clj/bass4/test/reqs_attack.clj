@@ -20,7 +20,9 @@
             [bass4.middleware.core :as mw]
             [bass4.responses.auth :as res-auth]
             [bass4.services.registration :as reg-service]
-            [bass4.services.attack-detector :as a-d]))
+            [bass4.services.attack-detector :as a-d]
+            [clojure.data.json :as json]
+            [clojure.tools.logging :as log]))
 
 
 (use-fixtures
@@ -40,17 +42,23 @@
     (db/clear-failed-logins!)))
 
 
+(defn visit-params
+  [state uri & params]
+  (apply visit (into [state uri] (flatten params))))
 
 (defn attack-uri
-  ([state uri post attacks]
-   (attack-uri state uri post attacks "localhost"))
-  ([state uri post attacks from-ip-address]
+  ([state uri post-params attacks]
+   (attack-uri state uri post-params attacks "localhost"))
+  ([state uri post-params attacks from-ip-address]
    (loop [current-state state attacks attacks]
      (if (seq attacks)
-       (let [[wait status] (first attacks)]
+       (let [[wait status] (first attacks)
+             params (if (map? post-params)
+                      [:params post-params]
+                      post-params)]
          (-> current-state
              (advance-time-s! wait)
-             (visit uri :request-method :post :params post :remote-addr from-ip-address)
+             (visit-params uri [:request-method :post :remote-addr from-ip-address] params)
              (has (status? status))
              ((fn [state]
                 (if (= 302 (get-in state [:response :status]))
@@ -114,6 +122,35 @@
         "/re-auth"
         {:password "xxx"}
         standard-attack))))
+
+(deftest attack-api-re-auth
+  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+    (let [state (-> *s*
+                    (modify-session {:user-id 536975 :double-authed? true})
+                    (visit "/user")
+                    (visit "/api/user/tx/messages")
+                    (has (status? 200))
+                    (modify-session {:auth-re-auth? true})
+                    (visit "/api/user/tx/messages")
+                    (has (status? 440)))]
+      (attack-uri
+        state
+        "/api/re-auth"
+        [:body-params {:password "xxx"}]
+        standard-attack))))
+
+#_(deftest attack-api-re-auth-xxx
+    (with-redefs [auth-service/double-auth-code (constantly "666777")]
+      (let [state (-> *s*
+                      (modify-session {:user-id 536975 :double-authed? true})
+                      (visit "/user")
+                      (visit "/api/user/tx/messages")
+                      (has (status? 200))
+                      (modify-session {:auth-re-auth? true})
+                      (visit "/api/user/tx/messages")
+                      (has (status? 440))
+                      (visit "/api/re-auth" :request-method :post :body-params {:password "xxx"}))]
+        (log/debug state))))
 
 (deftest attack-re-auth-ajax
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
