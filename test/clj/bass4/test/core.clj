@@ -183,11 +183,17 @@
       first
       (json/read-str :key-fn keyword)))
 
-(defmacro api-response? [expected]
-  `(kerodon.test/validate =
-                          api-response
-                          ~expected
-                          (~'api-response? ~expected)))
+(defmacro api-response?
+  ([expected]
+   `(kerodon.test/validate =
+                           api-response
+                           ~expected
+                           (~'api-response? ~expected)))
+  ([transform expected]
+   `(kerodon.test/validate =
+                           (comp ~transform api-response)
+                           ~expected
+                           (~'api-response? ~expected))))
 
 (defmacro pass-by
   [prev form]
