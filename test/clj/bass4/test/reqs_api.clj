@@ -42,20 +42,26 @@
       (has (status? 200))))
 
 (defn create-user-with-treatment!
-  [treatment-id]
-  (let [user-id             (user-service/create-user! 543018 {:Group "537404" :firstname "tx-text"})
-        treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                :parent-id     user-id
-                                                                :property-name "TreatmentAccesses"}))]
-    (db/update-object-properties! {:table-name "c_treatmentaccess"
-                                   :object-id  treatment-access-id
-                                   :updates    {:AccessEnabled true}})
-    (db/create-bass-link! {:linker-id     treatment-access-id
-                           :linkee-id     treatment-id
-                           :link-property "Treatment"
-                           :linker-class  "cTreatmentAccess"
-                           :linkee-class  "cTreatment"})
-    user-id))
+  ([treatment-id]
+   (create-user-with-treatment! treatment-id false))
+  ([treatment-id with-login?]
+   (let [user-id             (user-service/create-user! 543018 {:Group     "537404"
+                                                                :firstname "tx-text"})
+         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                 :parent-id     user-id
+                                                                 :property-name "TreatmentAccesses"}))]
+     (when with-login?
+       (user-service/update-user-properties! user-id {:username user-id
+                                                      :password user-id}))
+     (db/update-object-properties! {:table-name "c_treatmentaccess"
+                                    :object-id  treatment-access-id
+                                    :updates    {:AccessEnabled true}})
+     (db/create-bass-link! {:linker-id     treatment-access-id
+                            :linkee-id     treatment-id
+                            :link-property "Treatment"
+                            :linker-class  "cTreatmentAccess"
+                            :linkee-class  "cTreatment"})
+     user-id)))
 
 (deftest request-errors
   (let [user-id (create-user-with-treatment! 551356)]
@@ -177,21 +183,21 @@
          (has (some-text? "\"export-content-ws\":{\"export\":\"1\"}"))
          (has (some-text? "\"export-module-ws\":{\"export\":\"2\"}"))
          (has (some-text? "\"alias\":{\"export\":\"3\"}"))
-         (visit "/api/user/tx/module-content-data/642529/642522" :request-method :put :body-params {:data {:export-content-main  {:export "4"}}})
+         (visit "/api/user/tx/module-content-data/642529/642522" :request-method :put :body-params {:data {:export-content-main {:export "4"}}})
          (has (status? 200))
-         (visit "/api/user/tx/module-content-data/642529/642523" :request-method :put :body-params {:data {:export-module-main  {:export "5"}}})
+         (visit "/api/user/tx/module-content-data/642529/642523" :request-method :put :body-params {:data {:export-module-main {:export "5"}}})
          (has (status? 200))
-         (visit "/api/user/tx/module-content-data/642529/642524" :request-method :put :body-params {:data {:export-alias-main  {:export "6"}}})
+         (visit "/api/user/tx/module-content-data/642529/642524" :request-method :put :body-params {:data {:export-alias-main {:export "6"}}})
          (has (status? 200))
          (visit "/user/tx/module/642518/")
          (has (some-text? "\"export-content-main\":{\"export\":\"4\"}"))
          (has (some-text? "\"export-module-main\":{\"export\":\"5\"}"))
          (has (some-text? "\"alias\":{\"export\":\"6\"}"))
-         (visit "/api/user/tx/module-content-data/642529/642525" :request-method :put :body-params {:data {:export-content-hw  {:export "7"}}})
+         (visit "/api/user/tx/module-content-data/642529/642525" :request-method :put :body-params {:data {:export-content-hw {:export "7"}}})
          (has (status? 200))
-         (visit "/api/user/tx/module-content-data/642529/642526" :request-method :put :body-params {:data {:export-module-hw  {:export "8"}}})
+         (visit "/api/user/tx/module-content-data/642529/642526" :request-method :put :body-params {:data {:export-module-hw {:export "8"}}})
          (has (status? 200))
-         (visit "/api/user/tx/module-content-data/642529/642527" :request-method :put :body-params {:data {:export-alias-hw  {:export "9"}}})
+         (visit "/api/user/tx/module-content-data/642529/642527" :request-method :put :body-params {:data {:export-alias-hw {:export "9"}}})
          (has (status? 200))
          (visit "/user/tx/module/642518/homework")
          (has (some-text? "\"export-content-hw\":{\"export\":\"7\"}"))
