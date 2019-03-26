@@ -16,6 +16,7 @@
                                      modify-session
                                      poll-message-chan
                                      messages-are?
+                                     ->!
                                      pass-by]]
             [clojure.tools.logging :as log]
             [bass4.db.core :as db]
@@ -46,6 +47,9 @@
         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
                                                                 :property-name "TreatmentAccesses"}))]
+    (db/update-object-properties! {:table-name "c_treatmentaccess"
+                                   :object-id  treatment-access-id
+                                   :updates    {:AccessEnabled true}})
     (db/create-bass-link! {:linker-id     treatment-access-id
                            :linkee-id     treatment-id
                            :link-property "Treatment"
@@ -155,3 +159,57 @@
         (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 3981}))
     (let [user-treatment (treatment/user-treatment user-id)]
       (is (= #{5787 4002 4003 4007 3981} (into #{} (map :module-id (filter :active? (get-in user-treatment [:tx-components :modules])))))))))
+
+(deftest ns-imports-exports-write-exports
+  (let [user-id (create-user-with-treatment! 642517)
+        s       (atom *s*)]
+    (->! s
+         (modify-session {:user-id user-id :double-authed? true})
+         (visit "/user/tx")
+         (has (some-text? "Start page"))
+         (visit "/api/user/tx/module-content-data/642529/642519" :request-method :put :body-params {:data {:export-content-ws {:export "1"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642520" :request-method :put :body-params {:data {:export-module-ws {:export "2"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642521" :request-method :put :body-params {:data {:export-alias-ws {:export "3"}}})
+         (has (status? 200))
+         (visit "/user/tx/module/642518/worksheet/642528")
+         (has (some-text? "\"export-content-ws\":{\"export\":\"1\"}"))
+         (has (some-text? "\"export-module-ws\":{\"export\":\"2\"}"))
+         (has (some-text? "\"alias\":{\"export\":\"3\"}"))
+         (visit "/api/user/tx/module-content-data/642529/642522" :request-method :put :body-params {:data {:export-content-main  {:export "4"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642523" :request-method :put :body-params {:data {:export-module-main  {:export "5"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642524" :request-method :put :body-params {:data {:export-alias-main  {:export "6"}}})
+         (has (status? 200))
+         (visit "/user/tx/module/642518/")
+         (has (some-text? "\"export-content-main\":{\"export\":\"4\"}"))
+         (has (some-text? "\"export-module-main\":{\"export\":\"5\"}"))
+         (has (some-text? "\"alias\":{\"export\":\"6\"}"))
+         (visit "/api/user/tx/module-content-data/642529/642525" :request-method :put :body-params {:data {:export-content-hw  {:export "7"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642526" :request-method :put :body-params {:data {:export-module-hw  {:export "8"}}})
+         (has (status? 200))
+         (visit "/api/user/tx/module-content-data/642529/642527" :request-method :put :body-params {:data {:export-alias-hw  {:export "9"}}})
+         (has (status? 200))
+         (visit "/user/tx/module/642518/homework")
+         (has (some-text? "\"export-content-hw\":{\"export\":\"7\"}"))
+         (has (some-text? "\"export-module-hw\":{\"export\":\"8\"}"))
+         (has (some-text? "\"alias\":{\"export\":\"9\"}"))
+         (visit "/api/user/tx/module-content-data/642529/642534" :request-method :put :body-params {:data {:override {:export "0"}}})
+         (has (status? 200))
+         (visit "/user/tx/module/642518/worksheet/642535")
+         (has (some-text? "{\"override\":{\"export\":\"0\"}")))
+    (let [api-checks [[642518 642528 {:export-content-ws {:export "1"}
+                                      :export-module-ws  {:export "2"}
+                                      :alias             {:export "3"}}]
+                      [642518 642532 {:export-content-main {:export "4"}
+                                      :export-module-main  {:export "5"}
+                                      :alias               {:export "6"}}]
+                      [642518 642533 {:export-content-hw {:export "7"}
+                                      :export-module-hw  {:export "8"}
+                                      :alias             {:export "9"}}]]]
+      (doseq [[module-id content-id vals] api-checks]
+        (let [res (api-response (visit @s (str "/api/user/tx/module-content-data/" module-id "/" content-id)))]
+          (is (= vals res)))))))
