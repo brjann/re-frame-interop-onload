@@ -23,7 +23,8 @@
             [clojure.tools.logging :as log]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.time :as b-time]))
 
 
 (use-fixtures
@@ -157,19 +158,43 @@
         (visit "/api/user/tx/modules")
         (has (api-response? active-modules #{5787 4002 4003 4007 3981})))))
 
+(defn- send-message-to-user
+  [user-id message-text]
+  (let [message-id (:objectid (db/create-bass-object! {:class-name    "cMessage"
+                                                       :parent-id     user-id
+                                                       :property-name "Messages"}))]
+    (db/update-object-properties! {:table-name "c_message"
+                                   :object-id  message-id
+                                   :updates    {:MessageText message-text
+                                                :ReadTime    0
+                                                :Draft       0
+                                                :SendTime    (b-time/to-unix (t/now))}})
+    (db/create-bass-link! {:linker-id     message-id
+                           :linkee-id     110
+                           :link-property "Sender"
+                           :linker-class  "cMessage"
+                           :linkee-class  "cTherapist"})
+    message-id))
 
 (deftest send-message
-    (let [user-id (create-user-with-treatment! 551356)]
-        (-> *s*
-            (modify-session {:user-id user-id :double-authed? true})
-            (visit "/api/user/tx/messages")
-            (has (api-response? []))
-            (visit "/api/user/tx/new-message" :request-method :post :body-params {:message "xxx"})
-            (has (status? 200))
-            (visit "/api/user/tx/messages")
-            (has (api-response? (comp :message first) "xxx"))
-            (log-status))))
-
+  (let [user-id    (create-user-with-treatment! 551356 true)
+        message-id (atom nil)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/api/user/tx/messages")
+        (has (api-response? []))
+        (visit "/api/user/tx/new-message" :request-method :post :body-params {:message "xxx"})
+        (has (status? 200))
+        (visit "/api/user/tx/messages")
+        (has (api-response? (comp #(select-keys % [:message :sender-type]) first) {:message "xxx" :sender-type "participant"}))
+        (pass-by (reset! message-id (send-message-to-user user-id "zzz")))
+        (visit "/api/user/tx/messages")
+        (has (api-response? (comp #(select-keys % [:message :sender-type :unread?]) second)
+                            {:message "zzz" :sender-type "therapist" :unread? true}))
+        (visit "/api/user/tx/message-read" :request-method :put :body-params {:message-id @message-id})
+        (visit "/api/user/tx/messages")
+        (has (api-response? (comp #(select-keys % [:message :sender-type :unread?]) second)
+                            {:message "zzz" :sender-type "therapist" :unread? false})))))
 
 (deftest ns-imports-exports-write-exports
   (let [user-id (create-user-with-treatment! 642517)]
