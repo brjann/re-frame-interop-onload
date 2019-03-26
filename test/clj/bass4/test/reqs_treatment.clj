@@ -94,7 +94,6 @@
         (has (status? 200)))))
 
 (deftest ns-imports-exports-write-exports
-  (with-redefs [privacy-service/user-must-consent? (constantly false)])
   (let [user-id             (user-service/create-user! 543018 {:firstname "import-export"})
         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
@@ -110,7 +109,6 @@
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
-        (log-headers)
         (has (some-text? "Start page"))
         (visit "/user/tx/messages")
         (has (status? 200))
@@ -168,7 +166,6 @@
                   (has (some-text? text))))))))))
 
 (deftest ns-imports-exports-write-imports
-  (with-redefs [privacy-service/user-must-consent? (constantly false)])
   (let [user-id             (user-service/create-user! 543018 {:firstname "import-export"})
         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
@@ -184,7 +181,6 @@
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
-        (log-headers)
         (has (some-text? "Start page"))
         (visit "/user/tx/messages")
         (has (status? 200))

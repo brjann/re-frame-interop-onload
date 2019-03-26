@@ -212,3 +212,46 @@
          (has (status? 200))
          (visit "/api/user/tx/module-content-data/642518/642535")
          (has (api-response? {:override {:export "0"}})))))
+
+(deftest ns-imports-exports-write-imports
+  (let [user-id (create-user-with-treatment! 642517)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/user/tx")
+        (has (some-text? "Start page"))
+        (visit "/api/user/tx/module-content-data/642518/642528" :request-method :put :body-params {:data {:export-content-ws {:export "1"}
+                                                                                                          :export-module-ws  {:export "2"}
+                                                                                                          :alias             {:export "3"}}})
+        (has (status? 200))
+        (visit "/api/user/tx/module-content-data/642529/642519")
+        (has (api-response? {:export-content-ws {:export "1"}}))
+        (visit "/api/user/tx/module-content-data/642529/642520")
+        (has (api-response? {:export-module-ws {:export "2"}}))
+        (visit "/api/user/tx/module-content-data/642529/642521")
+        (has (api-response? {:export-alias-ws {:export "3"}}))
+        (visit "/api/user/tx/module-content-data/642518/642532" :request-method :put :body-params {:data {:export-content-main {:export "4"}
+                                                                                                          :export-module-main  {:export "5"}
+                                                                                                          :alias               {:export "6"}}})
+        (has (status? 200))
+        (visit "/api/user/tx/module-content-data/642529/642522")
+        (has (api-response? {:export-content-main {:export "4"}}))
+        (visit "/api/user/tx/module-content-data/642529/642523")
+        (has (api-response? {:export-module-main {:export "5"}}))
+        (visit "/api/user/tx/module-content-data/642529/642524")
+        (has (api-response? {:export-alias-main {:export "6"}}))
+
+        (visit "/api/user/tx/module-content-data/642518/642533" :request-method :put :body-params {:data {:export-content-hw {:export "7"}
+                                                                                                          :export-module-hw  {:export "8"}
+                                                                                                          :alias             {:export "9"}}})
+        (has (status? 200))
+        (visit "/api/user/tx/module-content-data/642529/642525")
+        (has (api-response? {:export-content-hw {:export "7"}}))
+        (visit "/api/user/tx/module-content-data/642529/642526")
+        (has (api-response? {:export-module-hw {:export "8"}}))
+        (visit "/api/user/tx/module-content-data/642529/642527")
+        (has (api-response? {:export-alias-hw {:export "9"}}))
+
+        (visit "/api/user/tx/module-content-data/642518/642535" :request-method :put :body-params {:data {:override {:export "0"}}})
+        (has (status? 200))
+        (visit "/api/user/tx/module-content-data/642529/642534")
+        (has (api-response? {:override {:export "0"}})))))
