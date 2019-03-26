@@ -40,20 +40,21 @@
       (visit "/user/tx/messages")
       (has (status? 200))))
 
-(defn create-user-with-treatment! []
-  (let [user-id             (user-service/create-user! 543018 {:Group "537404" :firstname "autotest-module"})
+(defn create-user-with-treatment!
+  [treatment-id]
+  (let [user-id             (user-service/create-user! 543018 {:Group "537404" :firstname "tx-text"})
         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
                                                                 :property-name "TreatmentAccesses"}))]
     (db/create-bass-link! {:linker-id     treatment-access-id
-                           :linkee-id     551356
+                           :linkee-id     treatment-id
                            :link-property "Treatment"
                            :linker-class  "cTreatmentAccess"
                            :linkee-class  "cTreatment"})
     user-id))
 
 (deftest request-errors
-  (let [user-id (create-user-with-treatment!)]
+  (let [user-id (create-user-with-treatment! 551356)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/re-auth" :request-method :post :body-params {:module-id 666})
@@ -137,7 +138,7 @@
       (json/read-str :key-fn keyword)))
 
 (deftest module-list
-  (let [user-id (create-user-with-treatment!)]
+  (let [user-id (create-user-with-treatment! 551356)]
     (let [res        (api-response (-> *s*
                                        (modify-session {:user-id user-id :double-authed? true})
                                        (visit "/api/user/tx/modules")))
@@ -148,7 +149,7 @@
       (is (= #{5787 4002 4003 4007} module-ids)))))
 
 (deftest activate-module
-  (let [user-id (create-user-with-treatment!)]
+  (let [user-id (create-user-with-treatment! 551356)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 3981}))

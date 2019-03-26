@@ -352,7 +352,6 @@
 
 (defapi api-worksheet
   [module-id :- api/->int worksheet-id :- api/->int modules :- seq? treatment-access-id]
-  (log/debug modules)
   (let [res (module-content
               treatment-access-id
               module-id
