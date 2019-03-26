@@ -234,6 +234,11 @@
    (log-body (visit s "/debug/session"))
    s))
 
+(defn log-api-response
+  ([s]
+   (log/debug (api-response s))
+   s))
+
 (defmacro ->! [a & forms]
   `(if-not (and (symbol? '~a)
                 (= (class ~a) clojure.lang.Atom))

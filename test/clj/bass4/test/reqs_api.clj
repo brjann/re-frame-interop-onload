@@ -18,6 +18,7 @@
                                      messages-are?
                                      api-response?
                                      ->!
+                                     log-api-response
                                      pass-by]]
             [clojure.tools.logging :as log]
             [bass4.db.core :as db]
@@ -155,6 +156,19 @@
         (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 3981})
         (visit "/api/user/tx/modules")
         (has (api-response? active-modules #{5787 4002 4003 4007 3981})))))
+
+
+(deftest send-message
+    (let [user-id (create-user-with-treatment! 551356)]
+        (-> *s*
+            (modify-session {:user-id user-id :double-authed? true})
+            (visit "/api/user/tx/messages")
+            (has (api-response? []))
+            (visit "/api/user/tx/new-message" :request-method :post :body-params {:message "xxx"})
+            (has (status? 200))
+            (visit "/api/user/tx/messages")
+            (has (api-response? (comp :message first) "xxx"))
+            (log-status))))
 
 
 (deftest ns-imports-exports-write-exports

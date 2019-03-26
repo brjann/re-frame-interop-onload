@@ -12,7 +12,9 @@ SELECT
   END AS `sender-type`,
   CASE
   WHEN lcm.LinkeeClass IS NULL THEN "*unknown*" ELSE
-    CASE WHEN lcm.LinkeeClass = 'cTherapist' THEN ct.`Name` ELSE CONCAT(cp.FirstName, " ", cp.LastName) END
+    CASE WHEN lcm.LinkeeClass = 'cTherapist'
+      THEN ct.`Name`
+      ELSE "" END
   END AS `sender-name`,
   (ReadTime = 0 OR ReadTime IS NULL) AS `unread?`
 FROM c_message AS cm
