@@ -7,6 +7,7 @@
             [bass4.db.sql-wrapper]
             [bass4.utils :refer [map-map]]
             [kerodon.core :refer :all]
+            [kerodon.test]
             [bass4.handler :refer :all]
             [clj-time.coerce :as tc]
             [clojure.string :as string]
@@ -163,13 +164,30 @@
                                 :expected msg-pred#}))))
 
 (defmacro sub-map?
-  [criterion]
+  [expected]
   `(fn [response# msg#]
      (let [body#         (get-in response# [:response :body])
            response-map# (json/read-str body#)
-           sub-map#      (select-keys response-map# (keys ~criterion))]
-       (is (= ~criterion sub-map#) msg#))
+           sub-map#      (select-keys response-map# (keys ~expected))]
+       (is (= ~expected sub-map#) msg#))
      response#))
+
+(defn api-response
+  [s]
+  (-> s
+      :enlive
+      first
+      :content
+      first
+      :content
+      first
+      (json/read-str :key-fn keyword)))
+
+(defmacro api-response? [expected]
+  `(kerodon.test/validate =
+                          api-response
+                          ~expected
+                          (~'api-response? ~expected)))
 
 (defmacro pass-by
   [prev form]
