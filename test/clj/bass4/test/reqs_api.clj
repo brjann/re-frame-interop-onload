@@ -45,8 +45,10 @@
 
 (defn create-user-with-treatment!
   ([treatment-id]
-   (create-user-with-treatment! treatment-id false))
+   (create-user-with-treatment! treatment-id false {}))
   ([treatment-id with-login?]
+   (create-user-with-treatment! treatment-id with-login? {}))
+    ([treatment-id with-login? access-properties]
    (let [user-id             (user-service/create-user! 543018 {:Group     "537404"
                                                                 :firstname "tx-text"})
          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
@@ -57,7 +59,8 @@
                                                       :password user-id}))
      (db/update-object-properties! {:table-name "c_treatmentaccess"
                                     :object-id  treatment-access-id
-                                    :updates    {:AccessEnabled true}})
+                                    :updates    (merge {:AccessEnabled true}
+                                                       access-properties)})
      (db/create-bass-link! {:linker-id     treatment-access-id
                             :linkee-id     treatment-id
                             :link-property "Treatment"
@@ -67,7 +70,7 @@
 
 
 (deftest request-errors
-  (let [user-id (create-user-with-treatment! 551356)]
+    (let [user-id (create-user-with-treatment! 551356 false {:MessagesSendDisallow true})]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/re-auth" :request-method :post :body-params {:module-id 666})
@@ -76,9 +79,19 @@
         (has (status? 400))
         (visit "/api/user/tx/module-main/666")
         (has (status? 404))
+        ;; Module 4009 not active
+        (visit "/api/user/tx/module-main/4009")
+        (has (status? 403))
+        (visit "/api/user/tx/module-homework/4009")
+        (has (status? 403))
+        (visit "/api/user/tx/module-worksheet/4009/5119")
+        (has (status? 403))
         (visit "/api/user/tx/module-homework/xxx")
         (has (status? 400))
         (visit "/api/user/tx/module-homework/666")
+        (has (status? 404))
+        ;; Module 5787 has no homework
+        (visit "/api/user/tx/module-homework/5787")
         (has (status? 404))
         (visit "/api/user/tx/module-homework-submit" :request-method :put :body-params {:module-id "xx"})
         (has (status? 400))
@@ -91,6 +104,90 @@
         (visit "/api/user/tx/module-worksheet/666/666")
         (has (status? 404))
         (visit "/api/user/tx/module-worksheet/4003/666")
+        (has (status? 404))
+        ;; Worksheet 4019 not present in module 4003
+        (visit "/api/user/tx/module-worksheet/4003/4019")
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id "xx" :content-id "xxx"})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 666 :content-id "xxx"})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id "xxx" :content-id 666})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 666 :content-id 666})
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 4003 :content-id 666})
+        (has (status? 404))
+        (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id "xx"})
+        (has (status? 400))
+        (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 666})
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/xxx/yyy")
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/666/yyy")
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/yyy/666")
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/666/666")
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/4003/666")
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/4003/4022")
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/xxx/yyy" :request-method :put :body-params {:data {}})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/666/yyy" :request-method :put :body-params {:data {}})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/xxx/666" :request-method :put :body-params {:data {}})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/666/666" :request-method :put :body-params {:data {}})
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/4003/666" :request-method :put :body-params {:data {}})
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/4003/4022" :request-method :put :body-params {:data {}})
+        (has (status? 404))
+        (visit "/api/user/tx/module-content-data/4003/4001" :request-method :put :body-params {:xxx {}})
+        (has (status? 400))
+        (visit "/api/user/tx/module-content-data/4003/4001" :request-method :put :body-params {:data {"xxx" "yyy"}})
+        (has (status? 400))
+        (visit "/api/user/tx/content-data")
+        (has (status? 400))
+        (visit "/api/user/tx/content-data?xxx=yyy")
+        (has (status? 400))
+        (visit "/api/user/tx/content-data" :request-method :put :body-params {:xxx {}})
+        (has (status? 400))
+        (visit "/api/user/tx/content-data" :request-method :put :body-params {:data {"xxx" "yyy"}})
+        (has (status? 400))
+        (visit "/api/user/tx/message" :request-method :post :body-params {:message "xxx"})
+        (has (status? 404)))))
+
+(deftest request-successes
+    (let [user-id (create-user-with-treatment! 551356)]
+        (-> *s*
+            (modify-session {:user-id user-id :double-authed? true})
+            (visit "/api/user/tx/modules")
+            (has (status? 200))
+            (visit "/api/user/tx/module-main/4002")
+            (has (status? 200))
+            (visit "/api/user/tx/module-homework/4002")
+            (has (status? 200))
+            (visit "/api/user/tx/module-worksheet/4002/4025")
+            (has (status? 200))
+            (visit "/api/user/tx/module-homework/666")
+            (has (status? 404))
+            (visit "/api/user/tx/module-homework-submit" :request-method :put :body-params {:module-id "xx"})
+            (has (status? 400))
+            (visit "/api/user/tx/module-homework-submit" :request-method :put :body-params {:module-id 666})
+            (has (status? 404))
+            (visit "/api/user/tx/module-worksheet/xxx/yyy")
+            (has (status? 400))
+            (visit "/api/user/tx/module-worksheet/666/yyy")
+            (has (status? 400))
+            (visit "/api/user/tx/module-worksheet/666/666")
+            (has (status? 404))
+            (visit "/api/user/tx/module-worksheet/4003/666")
+            (has (status? 404))
+            (visit "/api/user/tx/module-worksheet/4003/4019")
         (has (status? 404))
         (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id "xx" :content-id "xxx"})
         (has (status? 400))
@@ -145,7 +242,7 @@
 
 
 (deftest activate-module
-  (let [user-id        (create-user-with-treatment! 551356)
+    (let [user-id      (create-user-with-treatment! 551356 false)
         active-modules #(->> %
                              (filter :active?)
                              (map :module-id)
@@ -177,13 +274,13 @@
     message-id))
 
 (deftest send-message
-  (let [user-id    (create-user-with-treatment! 551356 true)
+    (let [user-id  (create-user-with-treatment! 551356)
         message-id (atom nil)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/user/tx/messages")
         (has (api-response? []))
-        (visit "/api/user/tx/new-message" :request-method :post :body-params {:message "xxx"})
+        (visit "/api/user/tx/message" :request-method :post :body-params {:message "xxx"})
         (has (status? 200))
         (visit "/api/user/tx/messages")
         (has (api-response? (comp #(select-keys % [:message :sender-type]) first) {:message "xxx" :sender-type "participant"}))

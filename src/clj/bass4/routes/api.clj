@@ -277,7 +277,7 @@
             :return [messages-response/Message]
             (messages-response/api-messages user))
 
-          (POST "/new-message" []
+          (POST "/message" []
             :summary "Send new message."
             :body-params [message :- String]
             :return {:result String}

@@ -57,7 +57,7 @@
          load_messages($message_div);
          if (treatment_info['send-messages?']) {
             let $message_div = $('#main');
-            $message_div.append('<div><form method="POST" action="/api/user/tx/new-message" id="message-form">' +
+            $message_div.append('<div><form method="POST" action="/api/user/tx/message" id="message-form">' +
                '<p><b>New Message</b></p>' +
                '<textarea name="message" cols="50" rows="5"></textarea>' +
                '<input type="submit" value="Send message">' +

@@ -8,8 +8,20 @@ SELECT
   AccessEnabled  AS `access-enabled?`,
 	from_unixtime(StartDate)    AS `start-date`,
 	from_unixtime(EndDate)      AS `end-date`,
-	1 - MessagesSendDisallow    AS `messages-send-allowed?`,
-  1 - MessagesReceiveDisallow AS `messages-receive-allowed?`
+# 	1 - MessagesSendDisallow    AS `messages-send-allowed?`,
+#   1 - MessagesReceiveDisallow AS `messages-receive-allowed?`
+# 	1 - IFNULL(MessagesSendDisallow, 0)    AS `messages-send-allowed?`,
+#   1 - IFNULL(MessagesReceiveDisallow, 0) AS `messages-receive-allowed?`
+(CASE WHEN ISNULL(MessagesSendDisallow) THEN
+  TRUE
+ELSE
+  1 - MessagesSendDisallow
+  END) AS `messages-send-allowed?`,
+(CASE WHEN ISNULL(MessagesReceiveDisallow) THEN
+  TRUE
+ELSE
+  1 - MessagesReceiveDisallow
+  END) AS `messages-receive-allowed?`
 FROM c_treatmentaccess AS ca
   JOIN links_c_treatmentaccess AS lca
     ON ca.ObjectId = lca.LinkerId AND lca.PropertyName = "Treatment"
