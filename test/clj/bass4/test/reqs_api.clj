@@ -162,11 +162,16 @@
         (visit "/api/user/tx/message" :request-method :post :body-params {:message "xxx"})
         (has (status? 404)))))
 
-(deftest iterate-modules
+(deftest iterate-treatment
+  "Iterate all treatment components to ensure that responses
+  fulfill schemas"
   (let [user-id (create-user-with-treatment! 551356)]
     (let [s           (-> *s*
                           (modify-session {:user-id user-id :double-authed? true})
-                          (visit "/api/user/tx/modules"))
+                          (visit "/api/user/tx/treatment-info")
+                          (has (status? 200))
+                          (visit "/api/user/tx/modules")
+                          (has (status? 200)))
           module-list (api-response s)]
       (doseq [module module-list]
         (let [module-id (:module-id module)]
