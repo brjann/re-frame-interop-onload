@@ -194,9 +194,24 @@
             (->
               s
               (visit (str "/api/user/tx/module-homework/" module-id))
-              (has (status? 200))))
-          (log/debug (keys module)))))))
+              (has (status? 200)))))))))
 
+(deftest submit-homework
+  (let [user-id         (create-user-with-treatment! 551356)
+        homework-status (fn [res]
+                          (->> res
+                               (filter #(= 4002 (:module-id %)))
+                               (first)
+                               :homework-status))]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/api/user/tx/modules")
+        (has (status? 200))
+        (has (api-response? homework-status nil))
+        (visit "/api/user/tx/module-homework-submit" :request-method :put :body-params {:module-id 4002})
+        (has (status? 200))
+        (visit "/api/user/tx/modules")
+        (has (api-response? homework-status "submitted")))))
 
 (deftest activate-module
   (let [user-id        (create-user-with-treatment! 551356 false)
