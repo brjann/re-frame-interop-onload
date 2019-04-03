@@ -24,8 +24,10 @@
             [clojure.tools.logging :as log]
             [bass4.db.core :as db]
             [clj-time.core :as t]
+            [clj-time.format :as tf]
             [bass4.services.user :as user-service]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time])
+  (:import (org.joda.time DateTime)))
 
 
 (use-fixtures
@@ -230,6 +232,26 @@
         (visit "/api/user/tx/modules")
         (has (api-response? content-accessed true)))))
 
+(deftest module-content-last-updated
+  (let [user-id           (create-user-with-treatment! 551356)
+        data-last-updated (fn [res]
+                            (->> res
+                                 (filter #(= 4002 (:module-id %)))
+                                 (first)
+                                 :homework
+                                 :data-updated))]
+    (api-response (-> *s*
+                      (modify-session {:user-id user-id :double-authed? true})
+                      (visit "/api/user/tx/modules")
+                      (has (api-response? data-last-updated nil))
+                      (visit "/api/user/tx/module-content-data/4002/4018" :request-method :put :body-params {:data {:hemuppgift2i {:xxx "1"}}})
+                      (has (status? 200))
+                      (visit "/api/user/tx/modules")
+                      (has (api-response? (comp class
+                                                tf/parse
+                                                data-last-updated)
+                                          DateTime))))))
+
 (deftest activate-module
   (let [user-id        (create-user-with-treatment! 551356 false)
         active-modules #(->> %
@@ -283,7 +305,7 @@
                             {:message "zzz" :sender-type "therapist" :unread? false})))))
 
 (deftest ns-write
-  (let [user-id (create-user-with-treatment! 551356 false)
+  (let [user-id (create-user-with-treatment! 551356)
         data    {:xxx {:www "1"
                        :zzz "2"}
                  :yyy {:www "3"
