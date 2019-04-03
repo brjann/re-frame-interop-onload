@@ -200,7 +200,7 @@
   (let [user-id         (create-user-with-treatment! 551356)
         homework-status (fn [res]
                           (->> res
-                               (filter #(= 4002 (:module-id %)))
+                               (filterv #(= 4002 (:module-id %)))
                                (first)
                                :homework-status))]
     (-> *s*
@@ -212,6 +212,23 @@
         (has (status? 200))
         (visit "/api/user/tx/modules")
         (has (api-response? homework-status "submitted")))))
+
+(deftest module-content-accessed
+  (let [user-id          (create-user-with-treatment! 551356)
+        content-accessed (fn [res]
+                           (->> res
+                                (filter #(= 4002 (:module-id %)))
+                                (first)
+                                :homework
+                                :accessed?))]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/api/user/tx/modules")
+        (has (api-response? content-accessed false))
+        (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 4002 :content-id 4018})
+        (has (status? 200))
+        (visit "/api/user/tx/modules")
+        (has (api-response? content-accessed true)))))
 
 (deftest activate-module
   (let [user-id        (create-user-with-treatment! 551356 false)
