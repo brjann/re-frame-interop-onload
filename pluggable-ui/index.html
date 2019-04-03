@@ -29,6 +29,9 @@
                + ' and ends '
                + end_date
                + '</p>');
+         if (treatment_info['new-message?']) {
+            $main_div.append('<p>You have a new message!</p>');
+         }
       });
    });
 </script>

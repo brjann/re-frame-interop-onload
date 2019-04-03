@@ -47,7 +47,7 @@
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
    :modules         [modules-response/ModuleInfo]
-   :new-messages?   Boolean
+   :new-message?    Boolean
    :messaging?      Boolean
    :send-messages?  Boolean})
 
@@ -59,7 +59,10 @@
               (select-keys treatment [:new-messages?])
               (select-keys (:tx-components treatment) [:messaging? :send-messages?])
               {:modules (mapv #(select-keys % (keys modules-response/ModuleInfo))
-                              (get-in treatment [:tx-components :modules]))})]
+                              (get-in treatment [:tx-components :modules]))})
+        res (-> res
+                (assoc :new-message? (:new-messages? res))
+                (dissoc :new-messages?))]
     (http-response/ok res)))
 
 
