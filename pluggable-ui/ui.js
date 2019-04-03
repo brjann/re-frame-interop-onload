@@ -1,5 +1,6 @@
 let init_page,
    treatment_info,
+   timezone,
    session_timeout = false,
    queued_ajaxes = [];
 
@@ -81,6 +82,7 @@ init_page = (function () {
    let executed = false;
    let tx_info_state = $.Deferred();
    let csrf_state = $.Deferred();
+   let timezone_state = $.Deferred();
    return function () {
       if (!executed) {
          executed = true;
@@ -105,10 +107,19 @@ init_page = (function () {
                populate_menu(treatment_info);
                tx_info_state.resolve();
             }
-         })
+         });
 
+         console.log('Fetching timezone');
+         $.ajax('/api/user/timezone-name', {
+            headers: {'x-ui-init': true},
+            success: function (data) {
+               console.log('Timezone fetched');
+               timezone = data;
+               timezone_state.resolve();
+            }
+         })
       }
-      return $.when(csrf_state, tx_info_state);
+      return $.when(csrf_state, tx_info_state, timezone_state);
    }
 })();
 
@@ -165,4 +176,11 @@ let getParameterByName = function (name, url) {
    if (!results) return null;
    if (!results[2]) return '';
    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+};
+
+let format_date = function (date_str, format_str) {
+   if (format_str === undefined) {
+      format_str = 'YYYY-MM-DD';
+      return moment(date_str).tz(timezone).format(format_str);
+   }
 };
