@@ -80,6 +80,11 @@
                                                   "session by making a request to `/user/disable-csrf`")}}}}
     (context "/api" [:as request]
 
+      (GET "/logout" []
+        :summary "Logout from session."
+        :return {:result String}
+        (auth-response/logout))
+
       (POST "/re-auth" []
         :summary "Re-authenticate after timeout."
         :description (str "After a 440 response, the app MUST ask the user to re-authenticate "

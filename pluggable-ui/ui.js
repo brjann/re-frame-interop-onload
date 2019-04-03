@@ -65,7 +65,16 @@ let populate_menu = function (treatment_info) {
    }
    $menu_div.append('&nbsp;<a href="modules.html">Modules</a>');
    $menu_div.append('&nbsp;<a href="privacy-notice.html">Privacy notice</a>');
-   $menu_div.append('&nbsp;<a href="logout.html">Log out</a>');
+   let logout = $('<a href="#">Log out</a>');
+   logout.click(function () {
+      $.ajax('/api/logout',
+         {
+            success: function () {
+               window.location.href = '/';
+            },
+         });
+   });
+   $menu_div.append('&nbsp;').append(logout);
 };
 
 init_page = (function () {
