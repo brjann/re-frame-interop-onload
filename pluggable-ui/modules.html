@@ -18,7 +18,7 @@
 <script type="text/javascript">
    let content_last_updated = function (content) {
       if (content['data-updated']) {
-         return 'Last edited: ' + new Date(content['data-updated']).toDateString();
+         return 'Last edited: ' + format_date(content['data-updated'], 'YYYY-MM-DD hh:ss');
       }
       return '';
    };
@@ -68,7 +68,7 @@
                      .append($activate_btn)
                      .appendTo($modules_div);
                } else {
-                  $modules_div.append('<small>Available ' + new Date(m['activation-date']).toDateString() + '</small>');
+                  $modules_div.append('<small>Available ' + format_date(m['activation-date']) + '</small>');
                   if (m['main-text']) {
                      $modules_div.append('<p><a href="module-main.html?module-id=' + m['module-id'] + '">' +
                         'Read module text</a>&nbsp;' + content_last_updated(m['main-text'])

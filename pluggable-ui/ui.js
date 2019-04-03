@@ -181,6 +181,6 @@ let getParameterByName = function (name, url) {
 let format_date = function (date_str, format_str) {
    if (format_str === undefined) {
       format_str = 'YYYY-MM-DD';
-      return moment(date_str).tz(timezone).format(format_str);
    }
+   return moment(date_str).tz(timezone).format(format_str);
 };

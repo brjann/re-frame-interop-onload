@@ -25,7 +25,8 @@
             $.map(data, function (m) {
                let message = m['message'].replace(/(?:\r\n|\r|\n)/g, '<br>');
                let sender = (m['sender-type'] === 'therapist') ? m['sender-name'] : 'me';
-               let time = new Date(m['send-datetime']).toDateString();
+               let time = format_date(m['send-datetime'], 'YYYY-MM-DD hh:mm');
+
                let unread = m['unread?'];
                if (unread && sender !== "me") {
                   message = '<strong>' + message + '</strong>';
