@@ -73,11 +73,21 @@
                                                   "When a 440 response is returned, the app needs to ask the user for their "
                                                   "password and submit the password to `/api/re-auth`\n\n"
                                                   "## CSRF token\n"
-                                                  "All api `post` requests to `/user/*` MUST include a CSRF token.\n\n"
-                                                  "The token can be retrieved by making a request to `/user/csrf`\n\n"
+                                                  "All api `post` and `put` requests to `/api/user/*` MUST include a CSRF token.\n\n"
+                                                  "The token can be retrieved by making a request to `/api/user/csrf`\n\n"
                                                   "The token is included in the request header as `X-CSRF-Token`\n\n"
                                                   "The CSRF requirement can be disabled in debug mode for the current "
-                                                  "session by making a request to `/user/disable-csrf`")}}}}
+                                                  "session by making a request to `/api/user/disable-csrf`\n\n"
+                                                  "## Dates and timezone\n"
+                                                  "All dates are returned in UTC timezone by the API. "
+                                                  "If the app wants to display them in the database's "
+                                                  "timezone (rather than the browser's timezone), the database timezone name "
+                                                  "(see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) "
+                                                  "can be retrieved at `/api/user/timezone-name` and dates "
+                                                  "appropriately converted.\n\n"
+                                                  "While it may be good to show for example message "
+                                                  "send times in local date, treatment start and end "
+                                                  "dates should be shown in database's timezone.")}}}}
     (context "/api" [:as request]
 
       (GET "/logout" []
