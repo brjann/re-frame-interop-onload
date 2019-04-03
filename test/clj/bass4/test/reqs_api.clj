@@ -296,13 +296,17 @@
         (visit "/api/user/tx/messages")
         (has (api-response? (comp #(select-keys % [:message :sender-type]) first) {:message "xxx" :sender-type "participant"}))
         (pass-by (reset! message-id (send-message-to-user user-id "zzz")))
+        (visit "/api/user/tx/treatment-info")
+        (has (api-response? :new-message? true))
         (visit "/api/user/tx/messages")
         (has (api-response? (comp #(select-keys % [:message :sender-type :unread?]) second)
                             {:message "zzz" :sender-type "therapist" :unread? true}))
         (visit "/api/user/tx/message-read" :request-method :put :body-params {:message-id @message-id})
         (visit "/api/user/tx/messages")
         (has (api-response? (comp #(select-keys % [:message :sender-type :unread?]) second)
-                            {:message "zzz" :sender-type "therapist" :unread? false})))))
+                            {:message "zzz" :sender-type "therapist" :unread? false}))
+        (visit "/api/user/tx/treatment-info")
+        (has (api-response? :new-message? false)))))
 
 (deftest ns-write
   (let [user-id (create-user-with-treatment! 551356)
