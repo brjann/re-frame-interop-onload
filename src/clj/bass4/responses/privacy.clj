@@ -9,13 +9,22 @@
             [bass4.i18n :as i18n]
             [bass4.services.user :as user-service]))
 
-(defapi privacy-notice-html
-  [user :- map?]
+(defn privacy-notice
+  [user]
   (let [project-id  (:project-id user)
         notice-text (:notice-text (privacy-service/get-privacy-notice project-id))]
     (when (nil? notice-text)
       (throw (Exception. "Missing privacy notice when showing bare. Guards have failed.")))
+    notice-text))
+
+(defapi privacy-notice-html
+  [user :- map?]
+  (let [notice-text (privacy-notice user)]
     (layout/text-response (md/md-to-html-string notice-text))))
+
+(defapi privacy-notice-raw
+  [user :- map?]
+  (layout/text-response (privacy-notice user)))
 
 (defapi privacy-consent-page
   [user :- map?]

@@ -113,6 +113,11 @@
           :return String
           (privacy-response/privacy-notice-html user))
 
+        (GET "/privacy-notice" []
+          :summary "Database's privacy notice in raw (markdown) format."
+          :return String
+          (privacy-response/privacy-notice-raw user))
+
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
           :return String
