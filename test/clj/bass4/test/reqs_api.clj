@@ -282,6 +282,23 @@
         (has (api-response? (comp #(select-keys % [:message :sender-type :unread?]) second)
                             {:message "zzz" :sender-type "therapist" :unread? false})))))
 
+(deftest ns-write
+  (let [user-id (create-user-with-treatment! 551356 false)
+        data    {:xxx {:www "1"
+                       :zzz "2"}
+                 :yyy {:www "3"
+                       :zzz "4"}}]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/api/user/tx/content-data?namespaces=xxx&namespaces=yyy")
+        (has (status? 200))
+        (has (api-response? nil))
+        (visit "/api/user/tx/content-data" :request-method :put :body-params {:data data})
+        (has (status? 200))
+        (visit "/api/user/tx/content-data?namespaces=xxx&namespaces=yyy")
+        (has (status? 200))
+        (has (api-response? data)))))
+
 (deftest ns-imports-exports-write-exports
   (let [user-id (create-user-with-treatment! 642517)]
     (-> *s*
