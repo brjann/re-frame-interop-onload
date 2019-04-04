@@ -50,7 +50,8 @@ WHERE ObjectId=:user-id;
 -- :name update-last-login! :! :1
 -- :doc
 UPDATE c_participant
-SET LastLogin = unix_timestamp(now())
+SET LastLogin = unix_timestamp(now()),
+    SMSNotificationSent = 0
 WHERE ObjectId=:user-id;
 
 -- :name update-login-count! :! :1
