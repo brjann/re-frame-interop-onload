@@ -210,7 +210,7 @@
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
-          (PUT "/activate-module" []
+          #_(PUT "/activate-module" []
             :summary "Grants user access to a module."
             :body-params [module-id :- s/Int]
             :return {:result String}

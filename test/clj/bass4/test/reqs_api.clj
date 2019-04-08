@@ -26,7 +26,8 @@
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [bass4.services.user :as user-service]
-            [bass4.time :as b-time])
+            [bass4.time :as b-time]
+            [bass4.services.treatment :as treatment-service])
   (:import (org.joda.time DateTime)))
 
 
@@ -121,10 +122,10 @@
         (has (status? 404))
         (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 4003 :content-id 666})
         (has (status? 404))
-        (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id "xx"})
-        (has (status? 400))
-        (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 666})
-        (has (status? 404))
+        #_(visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id "xx"})
+        #_(has (status? 400))
+        #_(visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 666})
+        #_(has (status? 404))
         (visit "/api/user/tx/module-content-data/xxx/yyy")
         (has (status? 400))
         (visit "/api/user/tx/module-content-data/666/yyy")
@@ -164,10 +165,52 @@
         (visit "/api/user/tx/message" :request-method :post :body-params {:message "xxx"})
         (has (status? 404)))))
 
-(deftest iterate-treatment
+#_(deftest iterate-treatment
+    "Iterate all treatment components to ensure that responses
+    fulfill schemas"
+    (let [user-id (create-user-with-treatment! 551356)]
+      (let [s           (-> *s*
+                            (modify-session {:user-id user-id :double-authed? true})
+                            (visit "/api/user/tx/treatment-info")
+                            (has (status? 200))
+                            (visit "/api/user/timezone-name")
+                            (has (status? 200))
+                            (visit "/api/user/privacy-notice")
+                            (has (status? 200))
+                            (visit "/api/user/tx/modules")
+                            (has (status? 200)))
+            module-list (api-response s)]
+        (doseq [module module-list]
+          (let [module-id (:module-id module)]
+            (when-not (:active? module)
+              (->
+                s
+                (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id module-id})
+                (has (status? 200))))
+            (when (:main-text module)
+              (->
+                s
+                (visit (str "/api/user/tx/module-main/" module-id))
+                (has (status? 200))))
+            (doseq [worksheet (:worksheets module)]
+              (->
+                s
+                (visit (str "/api/user/tx/module-worksheet/" module-id "/" (:content-id worksheet)))
+                (has (status? 200))))
+            (when (:homework module)
+              (->
+                s
+                (visit (str "/api/user/tx/module-homework/" module-id))
+                (has (status? 200)))))))))
+
+(deftest iterate-treatment-no-activate-module
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
-  (let [user-id (create-user-with-treatment! 551356)]
+  (let [user-id             (create-user-with-treatment! 551356)
+        treatment-access-id (-> (treatment-service/user-treatment user-id)
+                                :treatment-access
+                                :treatment-access-id)]
+    (log/debug treatment-access-id)
     (let [s           (-> *s*
                           (modify-session {:user-id user-id :double-authed? true})
                           (visit "/api/user/tx/treatment-info")
@@ -182,10 +225,7 @@
       (doseq [module module-list]
         (let [module-id (:module-id module)]
           (when-not (:active? module)
-            (->
-              s
-              (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id module-id})
-              (has (status? 200))))
+            (treatment-service/activate-module! treatment-access-id module-id))
           (when (:main-text module)
             (->
               s
@@ -256,19 +296,19 @@
                                                 data-last-updated)
                                           DateTime))))))
 
-(deftest activate-module
-  (let [user-id        (create-user-with-treatment! 551356 false)
-        active-modules #(->> %
-                             (filter :active?)
-                             (map :module-id)
-                             (into #{}))]
-    (-> *s*
-        (modify-session {:user-id user-id :double-authed? true})
-        (visit "/api/user/tx/modules")
-        (has (api-response? active-modules #{5787 4002 4003 4007}))
-        (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 3981})
-        (visit "/api/user/tx/modules")
-        (has (api-response? active-modules #{5787 4002 4003 4007 3981})))))
+#_(deftest activate-module
+    (let [user-id        (create-user-with-treatment! 551356 false)
+          active-modules #(->> %
+                               (filter :active?)
+                               (map :module-id)
+                               (into #{}))]
+      (-> *s*
+          (modify-session {:user-id user-id :double-authed? true})
+          (visit "/api/user/tx/modules")
+          (has (api-response? active-modules #{5787 4002 4003 4007}))
+          (visit "/api/user/tx/activate-module" :request-method :put :body-params {:module-id 3981})
+          (visit "/api/user/tx/modules")
+          (has (api-response? active-modules #{5787 4002 4003 4007 3981})))))
 
 (defn- send-message-to-user
   [user-id message-text]
