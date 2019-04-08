@@ -10,7 +10,7 @@
             [bass4.treatment.responses :as treatment-response]
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
-            [bass4.module.responses :as modules-response]
+            [bass4.module.api :as module-api]
             [bass4.api-coercion :as api]
             [bass4.treatment.builder :as treatment-builder]))
 
@@ -152,16 +152,16 @@
 
           (GET "/modules" []
             :summary "All modules in treatment with treatment content info."
-            :return [modules-response/ModuleWithContent]
-            (modules-response/api-modules-list
+            :return [module-api/ModuleWithContent]
+            (module-api/modules-list
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
 
           (GET "/module-main/:module-id" []
             :summary "Main text of module."
             :path-params [module-id :- s/Int]
-            :return modules-response/MainText
-            (modules-response/api-main-text
+            :return module-api/MainText
+            (module-api/main-text
               module-id
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
@@ -169,8 +169,8 @@
           (GET "/module-homework/:module-id" []
             :summary "Homework of module."
             :path-params [module-id :- s/Int]
-            :return modules-response/Homework
-            (modules-response/api-homework
+            :return module-api/Homework
+            (module-api/homework
               module-id
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
@@ -179,7 +179,7 @@
             :summary "Mark homework as submitted."
             :body-params [module-id :- s/Int]
             :return {:result String}
-            (modules-response/api-homework-submit
+            (module-api/homework-submit
               module-id
               (:modules (:tx-components treatment))
               (:treatment-access-id treatment-access)))
@@ -188,8 +188,8 @@
             :summary "Homework of module."
             :path-params [module-id :- s/Int
                           worksheet-id :- s/Int]
-            :return modules-response/Worksheet
-            (modules-response/api-worksheet
+            :return module-api/Worksheet
+            (module-api/worksheet
               module-id
               worksheet-id
               (:modules (:tx-components treatment))
@@ -203,7 +203,7 @@
             :body-params [module-id :- s/Int
                           content-id :- s/Int]
             :return {:result String}
-            (modules-response/api-module-content-access
+            (module-api/module-content-access
               module-id
               content-id
               (:modules (:tx-components treatment))
@@ -213,7 +213,7 @@
               :summary "Grants user access to a module."
               :body-params [module-id :- s/Int]
               :return {:result String}
-              (modules-response/api-activate-module
+              (module-api/activate-module
                 module-id
                 (:modules (:tx-components treatment))
                 (:treatment-access-id treatment-access)))
@@ -233,7 +233,7 @@
             :path-params [module-id :- s/Int
                           content-id :- s/Int]
             :return (s/maybe {String {String String}})
-            (modules-response/api-get-module-content-data
+            (module-api/get-module-content-data
               module-id
               content-id
               (:modules (:tx-components treatment))
@@ -250,7 +250,7 @@
             :path-params [module-id :- s/Int content-id :- s/Int]
             :body-params [data]
             ;:return {:result String}
-            (modules-response/api-save-module-content-data
+            (module-api/save-module-content-data
               module-id
               content-id
               data
@@ -260,7 +260,7 @@
           (GET "/content-data-namespaces" []
             :summary "Get all content data namespaces that have data for user."
             :return [String]
-            (modules-response/api-get-content-data-namespaces
+            (module-api/get-content-data-namespaces
               (:treatment-access-id treatment-access)))
 
           (GET "/content-data" []
@@ -274,7 +274,7 @@
                               "                    \"key4\": \"value4\"}}\n")
             :query-params [namespaces :- [String]]
             :return (s/maybe {String {String String}})
-            (modules-response/api-get-content-data
+            (module-api/get-content-data
               namespaces
               (:treatment-access-id treatment-access)))
 
@@ -289,7 +289,7 @@
                               "                             \"key4\": \"value4\"}}}\n")
             :body-params [data]
             :return {:result String}
-            (modules-response/api-save-content-data
+            (module-api/save-content-data
               data
               (:treatment-access-id treatment-access)))
 

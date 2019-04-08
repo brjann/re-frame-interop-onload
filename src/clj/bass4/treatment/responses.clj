@@ -6,7 +6,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.treatment.builder :as treatment-builder]
             [clojure.tools.logging :as log]
-            [bass4.module.responses :as modules-response])
+            [bass4.module.responses :as modules-response]
+            [bass4.module.api :as module-api])
   (:import (org.joda.time DateTime)))
 
 
@@ -46,7 +47,7 @@
   {:last-login-time (s/maybe DateTime)
    :start-date      (s/maybe DateTime)
    :end-date        (s/maybe DateTime)
-   :modules         [modules-response/ModuleInfo]
+   :modules         [module-api/ModuleInfo]
    :new-message?    Boolean
    :messaging?      Boolean
    :send-messages?  Boolean})
@@ -58,7 +59,7 @@
               (select-keys (:treatment-access treatment) [:start-date :end-date])
               (select-keys treatment [:new-messages?])
               (select-keys (:tx-components treatment) [:messaging? :send-messages?])
-              {:modules (mapv #(select-keys % (keys modules-response/ModuleInfo))
+              {:modules (mapv #(select-keys % (keys module-api/ModuleInfo))
                               (get-in treatment [:tx-components :modules]))})
         res (-> res
                 (assoc :new-message? (:new-messages? res))

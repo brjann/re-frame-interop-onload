@@ -25,6 +25,8 @@
 ;; --------------------
 
 
+
+
 (defn- inject-module-namespace
   "Inject module-specific namespace into contents"
   [content module]
@@ -93,3 +95,9 @@
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))]
     (map-map categorize-module-contents (group-by :module-id contents))))
 
+(defn get-modules-with-content
+  [modules treatment-access-id]
+  (let [module-contents (get-module-contents-with-update-time
+                          modules
+                          treatment-access-id)]
+    (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)))
