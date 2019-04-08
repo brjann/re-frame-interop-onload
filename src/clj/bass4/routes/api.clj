@@ -1,10 +1,8 @@
 (ns bass4.routes.api
   (:require [compojure.api.sweet :refer :all]
             [schema.core :as s]
-            [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
-            [bass4.services.treatment :as treatment-service]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
             [bass4.db-config :as db-config]
@@ -13,13 +11,14 @@
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
             [bass4.responses.modules :as modules-response]
-            [bass4.api-coercion :as api]))
+            [bass4.api-coercion :as api]
+            [bass4.services.treatment-builder :as treatment-builder]))
 
 (defn treatment-mw
   [handler]
   (fn [request]
     (if-let [treatment (when-let [user (get-in request [:db :user])]
-                         (treatment-service/user-treatment (:user-id user)))]
+                         (treatment-builder/user-treatment (:user-id user)))]
       (handler (-> request
                    (assoc-in [:db :treatment] treatment)))
       (handler request))))

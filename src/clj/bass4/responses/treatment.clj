@@ -4,7 +4,7 @@
             [ring.middleware.anti-forgery :as anti-forgery]
             [bass4.utils :refer [json-safe]]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.services.treatment :as treatment-service]
+            [bass4.services.treatment-builder :as treatment-builder]
             [clojure.tools.logging :as log]
             [bass4.responses.modules :as modules-response])
   (:import (org.joda.time DateTime)))
@@ -24,7 +24,7 @@
   [handler]
   (fn [request]
     (if-let [treatment (when-let [user (get-in request [:db :user])]
-                         (treatment-service/user-treatment (:user-id user)))]
+                         (treatment-builder/user-treatment (:user-id user)))]
       (handler (-> request
                    (assoc-in [:db :treatment] treatment)
                    (assoc-in [:db :render-map] (treatment-page-map treatment (:uri request)))))

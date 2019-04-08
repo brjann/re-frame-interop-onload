@@ -27,7 +27,9 @@
             [clj-time.format :as tf]
             [bass4.services.user :as user-service]
             [bass4.time :as b-time]
-            [bass4.services.treatment :as treatment-service])
+            [bass4.services.treatment :as treatment-service]
+            [bass4.services.module :as module-service]
+            [bass4.services.treatment-builder :as treatment-builder])
   (:import (org.joda.time DateTime)))
 
 
@@ -207,7 +209,7 @@
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
   (let [user-id             (create-user-with-treatment! 551356)
-        treatment-access-id (-> (treatment-service/user-treatment user-id)
+        treatment-access-id (-> (treatment-builder/user-treatment user-id)
                                 :treatment-access
                                 :treatment-access-id)]
     (let [s           (-> *s*
@@ -224,7 +226,7 @@
       (doseq [module module-list]
         (let [module-id (:module-id module)]
           (when-not (:active? module)
-            (treatment-service/activate-module! treatment-access-id module-id))
+            (module-service/activate-module! treatment-access-id module-id))
           (when (:main-text module)
             (->
               s

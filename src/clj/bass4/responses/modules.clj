@@ -1,24 +1,22 @@
 (ns bass4.responses.modules
   (:require [ring.util.http-response :as http-response]
-            [clojure.tools.logging :as log]
             [schema.core :as s]
+            [clojure.string :as str]
             [bass4.http-utils :refer [url-escape]]
-            [bass4.services.treatment :as treatment-service]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
-            [bass4.services.treatment :as treatment-service]
-            [bass4.services.content-data :as content-data]
             [bass4.i18n :as i18n]
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
             [bass4.utils :as utils]
-            [clojure.string :as str])
+            [bass4.services.module :as module-service]
+            [bass4.services.module-builder :as module-builder])
   (:import (org.joda.time DateTime)))
 
 
 (defn get-modules-with-content
   [modules treatment-access-id]
-  (let [module-contents (treatment-service/get-module-contents-with-update-time
+  (let [module-contents (module-builder/get-module-contents-with-update-time
                           modules
                           treatment-access-id)]
     (mapv #(assoc % :contents (get module-contents (:module-id %))) modules)))
@@ -60,13 +58,13 @@
 
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
-  (let [module-content (treatment-service/get-content-in-module module content-id)
+  (let [module-content (module-builder/get-content-in-module module content-id)
         namespace      (:namespace module-content)
-        content-data   (treatment-service/get-module-content-data
+        content-data   (module-builder/get-module-content-data
                          (:treatment-access-id treatment-access)
                          module-content)
         params         (first params-map)]
-    (treatment-service/register-content-access!
+    (module-service/register-content-access!
       content-id
       (:module-id module)
       (:treatment-access-id treatment-access))
@@ -87,7 +85,7 @@
 
 (defapi main-text
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (treatment-service/get-categorized-module-contents module)
+  (let [module-contents (module-builder/get-categorized-module-contents module)
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
@@ -101,7 +99,7 @@
 
 (defapi homework
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (treatment-service/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/get-categorized-module-contents module)]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
         treatment-access
@@ -116,7 +114,7 @@
 
 (defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
-  (let [module-contents (treatment-service/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/get-categorized-module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
         treatment-access
@@ -129,11 +127,11 @@
 
 (defapi worksheet-example
   [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
-  (let [module-contents (treatment-service/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/get-categorized-module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
-      (let [content      (treatment-service/get-content worksheet-id)
+      (let [content      (module-service/get-content worksheet-id)
             namespace    (:namespace content)
-            example-data (content-data/get-content-data
+            example-data (content-data-service/get-content-data
                            worksheet-id
                            [namespace])]
         (layout/render "module-worksheet-example.html"
@@ -158,10 +156,10 @@
 
 (defapi view-user-content
   [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]
-  (let [module         (treatment-service/get-module module-id)
-        module-content (treatment-service/get-content-in-module module content-id)
+  (let [module         (module-service/get-module module-id)
+        module-content (module-builder/get-content-in-module module content-id)
         namespace      (:namespace module-content)
-        content-data   (treatment-service/get-module-content-data treatment-access-id module-content)]
+        content-data   (module-builder/get-module-content-data treatment-access-id module-content)]
     (layout/render "user-content-viewer.html"
                    {:text         (:text module-content)
                     :markdown?    (:markdown? module-content)
@@ -207,7 +205,7 @@
 
 (defapi save-main-text-data
   [treatment-access-id :- integer? module :- map? content-data :- [api/->json map?]]
-  (let [main-text-id (treatment-service/get-module-main-text-id (:module-id module))]
+  (let [main-text-id (module-service/get-module-main-text-id (:module-id module))]
     (when (handle-content-data content-data
                                treatment-access-id
                                (get-in module [:content-ns-aliases main-text-id]))
@@ -215,12 +213,12 @@
 
 (defapi save-homework
   [treatment-access-id :- integer? module :- map? content-data :- [api/->json map?] submit? :- api/->bool]
-  (let [homework-id (treatment-service/get-module-homework-id (:module-id module))]
+  (let [homework-id (module-service/get-module-homework-id (:module-id module))]
     (when (handle-content-data content-data
                                treatment-access-id
                                (get-in module [:content-ns-aliases homework-id]))
       (when submit?
-        (treatment-service/submit-homework! treatment-access-id module))
+        (module-service/submit-homework! treatment-access-id module))
       (http-response/found "reload"))))
 
 (defapi retract-homework
@@ -228,7 +226,7 @@
   (if-let [submitted (get-in treatment-access [:submitted-homeworks (:module-id module)])]
     (do
       (when (not (:ok? submitted))
-        (treatment-service/retract-homework! treatment-access module))
+        (module-service/retract-homework! treatment-access module))
       (http-response/found "reload"))
     (http-errors/throw-400!)))
 
@@ -312,13 +310,13 @@
   [treatment-access-id module-id modules get-id-fn schema]
   (let [module (get-module module-id modules)]
     (if-let [content-id (get-id-fn)]
-      (let [module-content (treatment-service/get-content-in-module module content-id)]
+      (let [module-content (module-builder/get-content-in-module module content-id)]
         (-> module-content
             (select-keys (keys schema))
             (update :data-imports #(into [] %))
-            (assoc :accessed? (treatment-service/content-accessed? treatment-access-id
-                                                                   module-id
-                                                                   content-id))))
+            (assoc :accessed? (module-service/content-accessed? treatment-access-id
+                                                                module-id
+                                                                content-id))))
       (http-response/not-found! (str "Module " module-id " has no such content")))))
 
 (defapi api-main-text
@@ -327,7 +325,7 @@
                       treatment-access-id
                       module-id
                       modules
-                      #(treatment-service/get-module-main-text-id module-id)
+                      #(module-service/get-module-main-text-id module-id)
                       MainText)))
 
 (defapi api-homework
@@ -336,7 +334,7 @@
                  treatment-access-id
                  module-id
                  modules
-                 #(treatment-service/get-module-homework-id module-id)
+                 #(module-service/get-module-homework-id module-id)
                  Homework)
         module (first (filter #(= module-id (:module-id %)) modules))]
     (http-response/ok (assoc res :status (:homework-status module)))))
@@ -344,9 +342,9 @@
 (defapi api-homework-submit
   [module-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (let [module (get-module module-id modules)]
-    (if (treatment-service/get-module-homework-id module-id)
+    (if (module-service/get-module-homework-id module-id)
       (do
-        (treatment-service/submit-homework! treatment-access-id module)
+        (module-service/submit-homework! treatment-access-id module)
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " has no homework")))))
 
@@ -356,7 +354,7 @@
               treatment-access-id
               module-id
               modules
-              #(when (treatment-service/module-has-worksheet? module-id worksheet-id)
+              #(when (module-service/module-has-worksheet? module-id worksheet-id)
                  worksheet-id)
               Worksheet)]
     (http-response/ok res)))
@@ -364,11 +362,11 @@
 (defapi api-module-content-access
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (let [_               (get-module module-id modules)      ;; Error if module not available
-        module-contents (treatment-service/get-module-contents* [module-id])
+        module-contents (module-service/module-contents [module-id])
         content-ids     (mapv :content-id module-contents)]
     (if (utils/in? content-ids content-id)
       (do
-        (treatment-service/register-content-access! content-id module-id treatment-access-id)
+        (module-service/register-content-access! content-id module-id treatment-access-id)
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
 
@@ -377,7 +375,7 @@
   (if-let [module (first (filter #(= module-id (:module-id %)) modules))]
     (do
       (when-not (:active? module)
-        (treatment-service/activate-module! treatment-access-id module-id))
+        (module-service/activate-module! treatment-access-id module-id))
       (http-response/ok {:result "ok"}))
     (http-response/not-found! (str "No such module " module-id))))
 
@@ -387,10 +385,10 @@
 
 (defapi api-get-module-content-data
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
-  (if (treatment-service/module-has-content? module-id content-id)
+  (if (module-service/module-has-content? module-id content-id)
     (let [module         (get-module module-id modules)
-          module-content (treatment-service/get-content-in-module module content-id)
-          content-data   (treatment-service/get-module-content-data
+          module-content (module-builder/get-content-in-module module content-id)
+          content-data   (module-builder/get-module-content-data
                            treatment-access-id
                            module-content)]
       (http-response/ok (or content-data {})))
@@ -411,11 +409,11 @@
   [module-id :- api/->int content-id :- api/->int data :- map? modules :- seq? treatment-access-id :- int?]
   (let [module   (get-module module-id modules)
         data-vec (data-map->vec data)]
-    (if (treatment-service/module-has-content? module-id content-id)
+    (if (module-service/module-has-content? module-id content-id)
       (do
-        (content-data/save-api-content-data! data-vec
-                                             treatment-access-id
-                                             (get-in module [:content-ns-aliases content-id]))
+        (content-data-service/save-api-content-data! data-vec
+                                                     treatment-access-id
+                                                     (get-in module [:content-ns-aliases content-id]))
         (http-response/ok {:result "ok"}))
       (http-response/not-found (str "Module " module-id " does not have content " content-id)))))
 
@@ -425,15 +423,15 @@
 
 (defapi api-get-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]
-  (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+  (http-response/ok (content-data-service/get-content-data treatment-access-id namespaces)))
 
 (defapi api-get-content-data-namespaces
   [treatment-access-id :- integer?]
-  (http-response/ok (content-data/get-content-data-namespaces treatment-access-id)))
+  (http-response/ok (content-data-service/get-content-data-namespaces treatment-access-id)))
 
 (defapi api-save-content-data
   [data :- map? treatment-access-id :- int?]
   (let [data-vec (data-map->vec data)]
-    (content-data/save-api-content-data! data-vec
-                                         treatment-access-id)
+    (content-data-service/save-api-content-data! data-vec
+                                                 treatment-access-id)
     (http-response/ok {:result "ok"})))
