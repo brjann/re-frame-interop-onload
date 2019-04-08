@@ -116,7 +116,7 @@
           :return String
           (layout/text-response (treatment-response/csrf)))
 
-        (GET "/disable-csrf" []
+        (PUT "/disable-csrf" []
           :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."
           (if (db-config/debug-mode?)
             (-> (http-response/ok)
