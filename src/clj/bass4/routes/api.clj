@@ -90,7 +90,7 @@
                                                   "dates should be shown in database's timezone.")}}}}
     (context "/api" [:as request]
 
-      (GET "/logout" []
+      (POST "/logout" []
         :summary "Logout from session."
         :return {:result String}
         (auth-response/logout))

@@ -239,7 +239,12 @@
             (->
               s
               (visit (str "/api/user/tx/module-homework/" module-id))
-              (has (status? 200)))))))))
+              (has (status? 200))))))
+      (-> s
+          (visit "/api/logout" :request-method :post)
+          (has (status? 200))
+          (visit "/api/user/tx/modules")
+          (has (status? 403))))))
 
 (deftest submit-homework
   (let [user-id         (create-user-with-treatment! 551356)
