@@ -148,7 +148,8 @@
                       ui-path  (config/env :pluggable-ui-path)
                       _        (when-not ui-path
                                  (throw (Exception. "No :pluggable-ui-path in config")))
-                      response (http-response/file-response path {:root ui-path})]
+                      response (or (http-response/file-response path {:root ui-path})
+                                   (http-response/file-response "" {:root ui-path}))]
                   (if (= 200 (:status response))
                     (file/file-headers response)
                     response)))
