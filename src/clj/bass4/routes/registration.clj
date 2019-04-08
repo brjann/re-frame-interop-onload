@@ -1,7 +1,7 @@
 (ns bass4.routes.registration
   (:require [bass4.layout :as layout]
-            [bass4.services.registration :as reg-service]
-            [bass4.responses.registration :as reg-response]
+            [bass4.registration.services :as reg-service]
+            [bass4.registration.responses :as reg-response]
             [bass4.utils :refer [str->int]]
             [compojure.core :refer [defroutes context GET POST routes]]
             [ring.util.http-response :as http-response]

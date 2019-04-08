@@ -1,8 +1,8 @@
-(ns bass4.services.module-builder
+(ns bass4.module.builder
   (:require [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
-            [bass4.services.module :as module-service]
+            [bass4.module.services :as module-service]
             [bass4.services.content-data :as content-data]
             [clojure.set :as set]))
 

@@ -11,7 +11,7 @@
             [clojure.java.io :as io]
             [bass4.db-config :as db-config]
             [clojure.data.json :as json]
-            [bass4.responses.instrument-preview :as instruments]
+            [bass4.instrument.preview :as instruments]
             [bass4.services.bass :as bass]
             [mount.core :as mount]
             [clojure.pprint]

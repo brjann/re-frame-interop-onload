@@ -1,11 +1,11 @@
-(ns bass4.services.treatment-builder
+(ns bass4.treatment.builder
   (:require [clj-time.core :as t]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
             [bass4.services.messages :as messages]
-            [bass4.services.module :as module-service]
-            [bass4.services.treatment :as treatment-service]))
+            [bass4.module.services :as module-service]
+            [bass4.treatment.services :as treatment-service]))
 
 
 ;; --------------------------

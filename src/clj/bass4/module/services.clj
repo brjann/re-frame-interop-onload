@@ -1,4 +1,4 @@
-(ns bass4.services.module
+(ns bass4.module.services
   (:require [clojure.set]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
             [bass4.services.bass :as bass]

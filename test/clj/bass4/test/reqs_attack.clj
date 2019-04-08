@@ -19,7 +19,7 @@
             [bass4.services.auth :as auth-service]
             [bass4.middleware.core :as mw]
             [bass4.responses.auth :as res-auth]
-            [bass4.services.registration :as reg-service]
+            [bass4.registration.services :as reg-service]
             [bass4.services.attack-detector :as a-d]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]))

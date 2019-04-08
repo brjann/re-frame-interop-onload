@@ -1,4 +1,4 @@
-(ns bass4.responses.registration
+(ns bass4.registration.responses
   (:require [ring.util.http-response :as http-response]
             [clj-time.core :as t]
             [clojure.core.cache :as cache]
@@ -9,7 +9,7 @@
             [bass4.config :refer [env]]
             [bass4.captcha :as captcha]
             [bass4.passwords :as passwords]
-            [bass4.services.registration :as reg-service]
+            [bass4.registration.services :as reg-service]
             [bass4.responses.auth :as res-auth]
             [bass4.utils :refer [filter-map fnil+ in? json-safe]]
             [bass4.layout :as layout]

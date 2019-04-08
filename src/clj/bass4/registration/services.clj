@@ -1,4 +1,4 @@
-(ns bass4.services.registration
+(ns bass4.registration.services
   (:require [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.utils :refer [filter-map map-map in? subs+]]

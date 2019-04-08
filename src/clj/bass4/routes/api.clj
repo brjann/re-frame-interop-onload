@@ -7,12 +7,12 @@
             [bass4.routes.user :as user-routes]
             [bass4.db-config :as db-config]
             [bass4.responses.messages :as messages-response]
-            [bass4.responses.treatment :as treatment-response]
+            [bass4.treatment.responses :as treatment-response]
             [bass4.responses.privacy :as privacy-response]
             [bass4.responses.auth :as auth-response]
-            [bass4.responses.modules :as modules-response]
+            [bass4.module.responses :as modules-response]
             [bass4.api-coercion :as api]
-            [bass4.services.treatment-builder :as treatment-builder]))
+            [bass4.treatment.builder :as treatment-builder]))
 
 (defn treatment-mw
   [handler]

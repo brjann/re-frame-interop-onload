@@ -4,7 +4,7 @@
             [bass4.services.content-data :as content-data]
             [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]
-            [bass4.responses.modules :as modules-response]))
+            [bass4.module.responses :as modules-response]))
 
 (use-fixtures
   :once

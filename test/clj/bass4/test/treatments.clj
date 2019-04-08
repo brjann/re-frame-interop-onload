@@ -1,12 +1,12 @@
 (ns bass4.test.treatments
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
-            [bass4.services.treatment-builder :as treatment-builder]
+            [bass4.treatment.builder :as treatment-builder]
             [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
             [clj-time.coerce :as tc]
-            [bass4.services.module :as module-service]))
+            [bass4.module.services :as module-service]))
 
 (use-fixtures
   :once

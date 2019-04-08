@@ -27,9 +27,9 @@
             [clj-time.format :as tf]
             [bass4.services.user :as user-service]
             [bass4.time :as b-time]
-            [bass4.services.treatment :as treatment-service]
-            [bass4.services.module :as module-service]
-            [bass4.services.treatment-builder :as treatment-builder])
+            [bass4.treatment.services :as treatment-service]
+            [bass4.module.services :as module-service]
+            [bass4.treatment.builder :as treatment-builder])
   (:import (org.joda.time DateTime)))
 
 

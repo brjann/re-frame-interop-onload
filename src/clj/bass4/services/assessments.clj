@@ -7,7 +7,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
-            [bass4.services.instrument-answers :as instrument-answers]))
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 
 ;; ------------------------------

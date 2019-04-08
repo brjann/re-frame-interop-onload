@@ -1,11 +1,11 @@
-(ns bass4.services.treatment
+(ns bass4.treatment.services
   (:require [clojure.set]
             [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
             [bass4.time :as b-time]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
-            [bass4.services.module :as module-service]))
+            [bass4.module.services :as module-service]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses

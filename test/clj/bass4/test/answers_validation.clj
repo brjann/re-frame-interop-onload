@@ -1,12 +1,12 @@
 (ns bass4.test.answers-validation
   (:require [clojure.test :refer :all]
-            [bass4.instruments.validation :refer :all]
+            [bass4.instrument.validation :refer :all]
             [bass4.utils :as utils]
             [clojure.tools.logging :as log]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
-            [bass4.services.instrument :as instruments-service]
+            [bass4.instrument.services :as instruments-service]
             [clojure.walk :as walk]))
 
 

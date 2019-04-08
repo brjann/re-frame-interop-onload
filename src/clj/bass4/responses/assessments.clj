@@ -3,10 +3,10 @@
             [ring.util.http-response :as http-response]
             [bass4.utils :refer [json-safe]]
             [clojure.tools.logging :as log]
-            [bass4.services.instrument :as instruments]
+            [bass4.instrument.services :as instruments]
             [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.instruments.validation :as validation]
+            [bass4.instrument.validation :as validation]
             [bass4.services.assessments :as administrations]))
 
 

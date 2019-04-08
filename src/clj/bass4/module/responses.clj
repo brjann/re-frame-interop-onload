@@ -1,4 +1,4 @@
-(ns bass4.responses.modules
+(ns bass4.module.responses
   (:require [ring.util.http-response :as http-response]
             [schema.core :as s]
             [clojure.string :as str]
@@ -9,8 +9,8 @@
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
             [bass4.utils :as utils]
-            [bass4.services.module :as module-service]
-            [bass4.services.module-builder :as module-builder])
+            [bass4.module.services :as module-service]
+            [bass4.module.builder :as module-builder])
   (:import (org.joda.time DateTime)))
 
 

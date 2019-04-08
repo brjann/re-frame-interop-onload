@@ -19,7 +19,7 @@
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [bass4.services.attack-detector :as a-d]
-            [bass4.instruments.validation :as i-validation]))
+            [bass4.instrument.validation :as i-validation]))
 
 (use-fixtures
   :once

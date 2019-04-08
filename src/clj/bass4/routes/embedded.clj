@@ -1,9 +1,9 @@
 (ns bass4.routes.embedded
   (:require [bass4.layout :as layout]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
-            [bass4.responses.instrument-preview :as instruments]
+            [bass4.instrument.preview :as instruments]
             [bass4.responses.content-example :as content-example]
-            [bass4.responses.modules :as modules]
+            [bass4.module.responses :as modules]
             [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.admin-panel :as admin-panel]
             [ring.util.http-response :as http-response]))

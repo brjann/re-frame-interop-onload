@@ -1,5 +1,5 @@
-(ns bass4.responses.instrument-preview
-  (:require [bass4.services.instrument :as instruments]
+(ns bass4.instrument.preview
+  (:require [bass4.instrument.services :as instruments]
             [ring.util.http-response :as http-response]
             [clojure.tools.logging :as log]
             [schema.core :as s]
@@ -7,7 +7,7 @@
             [bass4.layout :as layout]
             [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.instruments.validation :as validation]))
+            [bass4.instrument.validation :as validation]))
 
 (defapi instrument-page
   [instrument-id :- api/->int]

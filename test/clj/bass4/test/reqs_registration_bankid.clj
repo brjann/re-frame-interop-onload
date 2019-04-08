@@ -19,7 +19,7 @@
                                                                         user-opens-app!
                                                                         user-authenticates!
                                                                         user-cancels!]]
-            [bass4.services.registration :as reg-service]))
+            [bass4.registration.services :as reg-service]))
 
 
 (use-fixtures

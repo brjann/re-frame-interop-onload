@@ -23,7 +23,7 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clojure.string :as string]
-            [bass4.services.registration :as reg-service]
+            [bass4.registration.services :as reg-service]
             [bass4.external-messages :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
             [bass4.services.attack-detector :as a-d]

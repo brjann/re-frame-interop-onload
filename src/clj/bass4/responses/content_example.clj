@@ -3,7 +3,7 @@
     [bass4.layout :as layout]
     [bass4.services.content-data :as content-data]
     [bass4.api-coercion :as api :refer [defapi]]
-    [bass4.services.module :as module-service]))
+    [bass4.module.services :as module-service]))
 
 (defapi edit-example
   [content-id :- api/->int]

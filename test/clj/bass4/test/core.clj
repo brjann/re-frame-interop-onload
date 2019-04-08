@@ -22,7 +22,7 @@
             [clojure.string :as str]
             [bass4.email :as email]
             [bass4.sms-sender :as sms]
-            [bass4.instruments.validation :as i-validation]
+            [bass4.instrument.validation :as i-validation]
             [clojure.data.json :as json]
             [bass4.request-state :as request-state]
             [bass4.db.core :as db]
