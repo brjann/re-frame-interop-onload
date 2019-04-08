@@ -25,7 +25,8 @@
             [bass4.instruments.validation :as i-validation]
             [clojure.data.json :as json]
             [bass4.request-state :as request-state]
-            [bass4.db.core :as db]))
+            [bass4.db.core :as db]
+            [net.cgrand.enlive-html :as enlive]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -176,11 +177,8 @@
   [s]
   (-> s
       :enlive
-      first
-      :content
-      first
-      :content
-      first
+      (enlive/texts)
+      (first)
       (json/read-str :key-fn keyword)))
 
 (defmacro api-response?

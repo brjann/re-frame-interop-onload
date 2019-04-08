@@ -373,6 +373,22 @@
         (has (status? 200))
         (has (api-response? data)))))
 
+(deftest module-content-tags
+  (let [user-id (create-user-with-treatment! 642517)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/user/tx")
+        (has (some-text? "Start page"))
+        (visit "/api/user/tx/treatment-info")
+        (has (api-response? (comp (partial into #{}) :tags second :modules) #{"mtag1" "mtag2"}))
+        (visit "/api/user/tx/modules")
+        (has (api-response? (comp (partial into #{}) :tags second) #{"mtag1" "mtag2"}))
+        (has (api-response? (comp (partial into #{}) :tags first :worksheets second) #{"ctag1" "ctag2"}))
+        (visit "/api/user/tx/module-worksheet/642518/642528")
+        (has (api-response? (comp (partial into #{}) :tags) #{"ctag1" "ctag2"}))
+        (has (some-text? "ctag1"))
+        (has (some-text? "ctag2")))))
+
 (deftest ns-imports-exports-write-exports
   (let [user-id (create-user-with-treatment! 642517)]
     (-> *s*
