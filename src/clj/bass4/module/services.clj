@@ -80,7 +80,7 @@
           ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
                                                            (into #{})))))))
 
-(defn module-contents
+(defn modules-contents
   [module-ids]
   (->> (db/get-module-contents {:module-ids module-ids})
        (mapv check-file)

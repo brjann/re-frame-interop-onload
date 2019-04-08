@@ -36,7 +36,7 @@
     (db/get-content-data-namespaces {:data-owner-id data-owner-id})
     (map :dataname)))
 
-(defn content-last-updates
+(defn namespaces-last-updates
   [treatment-access-id]
   (->> (db/get-content-data-last-save {:data-owner-id treatment-access-id})
        (group-by :namespace)

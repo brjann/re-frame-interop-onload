@@ -55,7 +55,7 @@
 (defapi modules-list
   [modules :- seq? treatment-access-id :- integer?]
   (when (seq modules)
-    (let [modules-with-content (module-builder/get-modules-with-content modules treatment-access-id)
+    (let [modules-with-content (module-builder/add-content-info modules treatment-access-id)
           res                  (mapv (fn [module]
                                        (let [content-keys #(select-keys % (keys ContentInfo))
                                              contents     (:contents module)
@@ -137,7 +137,7 @@
 (defapi module-content-access
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (let [_               (get-module module-id modules)      ;; Error if module not available
-        module-contents (module-service/module-contents [module-id])
+        module-contents (module-service/modules-contents [module-id])
         content-ids     (mapv :content-id module-contents)]
     (if (utils/in? content-ids content-id)
       (do

@@ -8,10 +8,8 @@
             [bass4.i18n :as i18n]
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
-            [bass4.utils :as utils]
             [bass4.module.services :as module-service]
-            [bass4.module.builder :as module-builder])
-  (:import (org.joda.time DateTime)))
+            [bass4.module.builder :as module-builder]))
 
 
 (defn- context-menu
@@ -78,7 +76,7 @@
 
 (defapi main-text
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (module-builder/get-categorized-module-contents module)
+  (let [module-contents (module-builder/module-contents module)
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
@@ -92,7 +90,7 @@
 
 (defapi homework
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (module-builder/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/module-contents module)]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
         treatment-access
@@ -107,7 +105,7 @@
 
 (defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
-  (let [module-contents (module-builder/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
         treatment-access
@@ -120,7 +118,7 @@
 
 (defapi worksheet-example
   [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
-  (let [module-contents (module-builder/get-categorized-module-contents module)]
+  (let [module-contents (module-builder/module-contents module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (module-service/get-content worksheet-id)
             namespace    (:namespace content)
@@ -144,7 +142,7 @@
     (layout/render
       "modules-list.html"
       (merge render-map
-             {:modules    (module-builder/get-modules-with-content modules treatment-access-id)
+             {:modules    (module-builder/add-content-info modules treatment-access-id)
               :page-title (i18n/tr [:modules/modules])}))))
 
 (defapi view-user-content

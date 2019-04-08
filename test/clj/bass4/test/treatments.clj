@@ -21,7 +21,7 @@
       (is (= #{5787 3961} (into #{} (map :module-id (filter :active? (get-in treatments [:tx-components :modules])))))))))
 
 (deftest empty-content
-  (let [module (module-service/module-contents [3961])]
+  (let [module (module-service/modules-contents [3961])]
     (is (= #{3980 4001 3989}
            (->>
              module
