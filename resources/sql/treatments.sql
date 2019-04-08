@@ -175,6 +175,12 @@ WHERE Id IN (SELECT MAX(Id)
              WHERE DataOwnerId= :data-owner-id
              GROUP BY DataName);
 
+-- :name get-content-data-namespaces :? :*
+-- :doc get the content data
+SELECT DISTINCT DataName
+FROM content_data
+WHERE DataOwnerId=:data-owner-id;
+
 -- :name save-content-data! :! :n
 -- :doc save content data
 INSERT INTO content_data

@@ -35,6 +35,12 @@
     (map content-data-transform)
     (reduce merge)))
 
+(defn get-content-data-namespaces
+  [data-owner-id]
+  (->>
+    (db/get-content-data-namespaces {:data-owner-id data-owner-id})
+    (map :dataname)))
+
 (defn split-namespace-key-value [[label value]]
   (let [[namespace key] (str/split label #"\$")]
     (when (some empty? [namespace key])

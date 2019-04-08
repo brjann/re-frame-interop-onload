@@ -211,13 +211,13 @@
               (:treatment-access-id treatment-access)))
 
           #_(PUT "/activate-module" []
-            :summary "Grants user access to a module."
-            :body-params [module-id :- s/Int]
-            :return {:result String}
-            (modules-response/api-activate-module
-              module-id
-              (:modules (:tx-components treatment))
-              (:treatment-access-id treatment-access)))
+              :summary "Grants user access to a module."
+              :body-params [module-id :- s/Int]
+              :return {:result String}
+              (modules-response/api-activate-module
+                module-id
+                (:modules (:tx-components treatment))
+                (:treatment-access-id treatment-access)))
 
 
           ;; --------------
@@ -256,6 +256,12 @@
               content-id
               data
               (:modules (:tx-components treatment))
+              (:treatment-access-id treatment-access)))
+
+          (GET "/content-data-namespaces" []
+            :summary "Get all content data namespaces that have data for user."
+            :return [String]
+            (modules-response/api-get-content-data-namespaces
               (:treatment-access-id treatment-access)))
 
           (GET "/content-data" []

@@ -425,8 +425,11 @@
 
 (defapi api-get-content-data
   [namespaces :- [vector? size?] treatment-access-id :- integer?]
-  ;; TODO: CHECK IF ALLOWED??
   (http-response/ok (content-data/get-content-data treatment-access-id namespaces)))
+
+(defapi api-get-content-data-namespaces
+  [treatment-access-id :- integer?]
+  (http-response/ok (content-data/get-content-data-namespaces treatment-access-id)))
 
 (defapi api-save-content-data
   [data :- map? treatment-access-id :- int?]

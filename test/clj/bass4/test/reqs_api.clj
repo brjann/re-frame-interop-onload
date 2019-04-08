@@ -210,7 +210,6 @@
         treatment-access-id (-> (treatment-service/user-treatment user-id)
                                 :treatment-access
                                 :treatment-access-id)]
-    (log/debug treatment-access-id)
     (let [s           (-> *s*
                           (modify-session {:user-id user-id :double-authed? true})
                           (visit "/api/user/tx/treatment-info")
@@ -375,6 +374,8 @@
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
         (has (some-text? "Start page"))
+        (visit "/api/user/tx/content-data-namespaces")
+        (has (api-response? []))
         (visit "/api/user/tx/module-content-data/642529/642519" :request-method :put :body-params {:data {:export-content-ws {:export "1"}}})
         (has (status? 200))
         (visit "/api/user/tx/module-content-data/642529/642520" :request-method :put :body-params {:data {:export-module-ws {:export "2"}}})
@@ -408,7 +409,18 @@
         (visit "/api/user/tx/module-content-data/642529/642534" :request-method :put :body-params {:data {:override {:export "0"}}})
         (has (status? 200))
         (visit "/api/user/tx/module-content-data/642518/642535")
-        (has (api-response? {:override {:export "0"}})))))
+        (has (api-response? {:override {:export "0"}}))
+        (visit "/api/user/tx/content-data-namespaces")
+        (has (api-response? #(into #{} %) #{"export-alias-hw"
+                                            "export-alias-main"
+                                            "export-alias-ws"
+                                            "export-content-hw"
+                                            "export-content-main"
+                                            "export-content-ws"
+                                            "export-module-hw"
+                                            "export-module-main"
+                                            "export-module-ws"
+                                            "override"})))))
 
 
 (deftest ns-imports-exports-write-imports
@@ -417,6 +429,8 @@
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
         (has (some-text? "Start page"))
+        (visit "/api/user/tx/content-data-namespaces")
+        (has (api-response? []))
         (visit "/api/user/tx/module-content-data/642518/642528" :request-method :put :body-params {:data {:export-content-ws {:export "1"}
                                                                                                           :export-module-ws  {:export "2"}
                                                                                                           :alias             {:export "3"}}})
@@ -452,4 +466,15 @@
         (visit "/api/user/tx/module-content-data/642518/642535" :request-method :put :body-params {:data {:override {:export "0"}}})
         (has (status? 200))
         (visit "/api/user/tx/module-content-data/642529/642534")
-        (has (api-response? {:override {:export "0"}})))))
+        (has (api-response? {:override {:export "0"}}))
+        (visit "/api/user/tx/content-data-namespaces")
+        (has (api-response? #(into #{} %) #{"export-alias-hw"
+                                            "export-alias-main"
+                                            "export-alias-ws"
+                                            "export-content-hw"
+                                            "export-content-main"
+                                            "export-content-ws"
+                                            "export-module-hw"
+                                            "export-module-main"
+                                            "export-module-ws"
+                                            "override"})))))
