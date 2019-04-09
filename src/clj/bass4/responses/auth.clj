@@ -14,7 +14,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service]
-            [bass4.session.timeout :as session-timeout])
+            [bass4.session.timeout :as session-timeout]
+            [bass4.session.create :as session-create])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -178,12 +179,7 @@
   (when (and (not (privacy-service/privacy-notice-disabled?))
              (not (privacy-service/privacy-notice-exists? (:project-id user))))
     (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
-  (merge
-    {:user-id         (:user-id user)
-     :auth-re-auth?   nil
-     :last-login-time (:last-login-time user)
-     :session-start   (t/now)}
-    additional))
+  (session-create/new user additional))
 
 (defapi handle-login
   [username :- [[api/str? 1 100]] password :- [[api/str? 1 100]]]
