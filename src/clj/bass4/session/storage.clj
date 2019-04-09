@@ -1,60 +1,17 @@
-(ns bass4.middleware.session
-  "Adapted from https://github.com/luminus-framework/jdbc-ring-session"
+(ns bass4.session.storage
+  "Adapted from https://github.com/luminus-framework/jdbc-ring-session
+  All db adapters except mysql removed"
   (:require [clojure.java.jdbc :as jdbc]
             [taoensso.nippy :as nippy]
             [ring.middleware.session.store :refer :all])
-  (:import java.util.UUID
-           org.apache.commons.codec.binary.Base64))
+  (:import java.util.UUID))
 
 (defn serialize-mysql [value]
-  (nippy/freeze value))
-
-(defn serialize-postgres [value]
-  (nippy/freeze value))
-
-(defn serialize-oracle [value]
-  (-> value nippy/freeze Base64/encodeBase64))
-
-(defn serialize-h2 [value]
   (nippy/freeze value))
 
 (defn deserialize-mysql [value]
   (when value
     (nippy/thaw value)))
-
-(defn deserialize-postgres [value]
-  (when value
-    (nippy/thaw value)))
-
-(defn deserialize-oracle [blob]
-  (when blob
-    (-> blob (.getBytes 1 (.length blob)) Base64/decodeBase64 nippy/thaw)))
-
-(defn deserialize-h2 [value]
-  (when value
-    (nippy/thaw value)))
-
-(def serializers
-  {:mysql    serialize-mysql
-   :postgres serialize-postgres
-   :oracle   serialize-oracle
-   :h2       serialize-h2})
-
-(def deserializers
-  {:mysql    deserialize-mysql
-   :postgres deserialize-postgres
-   :oracle   deserialize-oracle
-   :h2       deserialize-h2})
-
-(defn detect-db [db-spec]
-  (let [db-name (with-open [conn (jdbc/get-connection db-spec)]
-                  (.. conn getMetaData getDatabaseProductName toLowerCase))]
-    (cond
-      (.contains db-name "oracle") :oracle
-      (.contains db-name "postgres") :postgres
-      (.contains db-name "mysql") :mysql
-      (.contains db-name "h2") :h2
-      :else (throw (Exception. (str "unrecognized DB: " db-name))))))
 
 (defn read-session-value [datasource table deserialize key]
   (jdbc/with-db-transaction [conn datasource]
@@ -102,9 +59,8 @@
 
 (defn jdbc-store
   ""
-  [db-spec & [{:keys [table serialize deserialize]
+  [db-spec & [{:keys [table]
                :or   {table :session_store}}]]
-  (let [db-type     (detect-db db-spec)
-        serialize   (or serialize (serializers db-type))
-        deserialize (or deserialize (deserializers db-type))]
+  (let [serialize   serialize-mysql
+        deserialize deserialize-mysql]
     (JdbcStore. db-spec table serialize deserialize)))

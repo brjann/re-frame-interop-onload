@@ -6,7 +6,7 @@
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
             [ring.middleware.session :as ring-session]
-            [bass4.middleware.session :as jdbc-session]
+            [bass4.session.storage :as jdbc-session]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
             [bass4.db.core :as db]
