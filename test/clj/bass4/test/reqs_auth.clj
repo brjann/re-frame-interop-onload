@@ -248,6 +248,19 @@
       (visit "/debug/session")
       (has (some-text? ":test888"))))
 
+(deftest request-re-auth-timeout-path-integrity
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (dec (config/env :timeout-soft)))
+        (visit "/login")
+        (has (status? 200))
+        (advance-time-s! 1)
+        (visit "/user/tx/messages")
+        (has (status? 302)))))
+
 (deftest request-re-auth-timeout
   (fix-time
     (-> *s*
