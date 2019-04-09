@@ -26,6 +26,7 @@
                  [metosin/ring-http-response "0.9.1"]       ; https://github.com/metosin/ring-http-response
                  [prismatic/schema "1.1.10"]                ; https://github.com/plumatic/schema
                  [clout "2.2.1"]                            ; https://github.com/weavejester/clout
+                 [jdbc-ring-session "1.2"]                  ; https://github.com/luminus-framework/jdbc-ring-session
 
                  ; Database and state management libraries
                  [conman "0.8.3"]                           ; https://github.com/luminus-framework/conman
