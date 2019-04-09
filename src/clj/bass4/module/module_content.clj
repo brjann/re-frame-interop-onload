@@ -1,4 +1,4 @@
-(ns bass4.module.builder
+(ns bass4.module.module-content
   (:require [clojure.set :as set]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
@@ -72,6 +72,14 @@
                        namespaces)]
     (set/rename-keys data aliasing)))
 
+(defn assoc-accessed?
+  "Add accessed? key to module content"
+  [module-content module-id treatment-access-id]
+  (assoc module-content :accessed? (module-service/content-accessed?
+                                     treatment-access-id
+                                     module-id
+                                     (:content-id module-content))))
+
 (defn content-in-module
   "Specific content within a module with module namespaces injected.
   Caller guarantees that content exists and belongs to module"
@@ -82,7 +90,7 @@
         (inject-module-imports module))
     (throw (Exception. (str "Content " content-id " does not exist")))))
 
-(defn module-contents-by-category
+(defn contents-by-category
   "Categorized module contents for a specific module.
   Used by modules HTML response"
   [module]

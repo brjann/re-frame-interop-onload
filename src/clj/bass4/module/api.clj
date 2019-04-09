@@ -6,7 +6,7 @@
             [bass4.services.content-data :as content-data-service]
             [bass4.utils :as utils]
             [bass4.module.services :as module-service]
-            [bass4.module.builder :as module-builder])
+            [bass4.module.module-content :as module-content])
   (:import (org.joda.time DateTime)))
 
 
@@ -55,7 +55,7 @@
 (defapi modules-list
   [modules :- seq? treatment-access-id :- integer?]
   (when (seq modules)
-    (let [modules-with-content (module-builder/assoc-content-info modules treatment-access-id)
+    (let [modules-with-content (module-content/assoc-content-info modules treatment-access-id)
           res                  (mapv (fn [module]
                                        (let [content-keys #(select-keys % (keys ContentInfo))
                                              contents     (:contents module)
@@ -85,13 +85,13 @@
   [treatment-access-id module-id modules get-id-fn schema]
   (let [module (get-module module-id modules)]
     (if-let [content-id (get-id-fn)]
-      (let [module-content (module-builder/content-in-module module content-id)]
+      (let [module-content (module-content/content-in-module module content-id)]
         (-> module-content
             (select-keys (keys schema))
             (update :data-imports #(into [] %))
-            (assoc :accessed? (module-service/content-accessed? treatment-access-id
-                                                                module-id
-                                                                content-id))))
+            (module-content/assoc-accessed?
+              module-id
+              treatment-access-id)))
       (http-response/not-found! (str "Module " module-id " has no such content")))))
 
 (defapi main-text
@@ -162,8 +162,8 @@
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (if (module-service/module-has-content? module-id content-id)
     (let [module         (get-module module-id modules)
-          module-content (module-builder/content-in-module module content-id)
-          content-data   (module-builder/module-content-data
+          module-content (module-content/content-in-module module content-id)
+          content-data   (module-content/module-content-data
                            treatment-access-id
                            module-content)]
       (http-response/ok (or content-data {})))

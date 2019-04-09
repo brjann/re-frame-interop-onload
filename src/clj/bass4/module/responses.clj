@@ -9,7 +9,7 @@
             [bass4.services.content-data :as content-data-service]
             [bass4.http-errors :as http-errors]
             [bass4.module.services :as module-service]
-            [bass4.module.builder :as module-builder]))
+            [bass4.module.module-content :as module-content]))
 
 
 (defn- context-menu
@@ -49,9 +49,9 @@
 
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
-  (let [module-content (module-builder/content-in-module module content-id)
+  (let [module-content (module-content/content-in-module module content-id)
         namespace      (:namespace module-content)
-        content-data   (module-builder/module-content-data
+        content-data   (module-content/module-content-data
                          (:treatment-access-id treatment-access)
                          module-content)
         params         (first params-map)]
@@ -76,7 +76,7 @@
 
 (defapi main-text
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (module-builder/module-contents-by-category module)
+  (let [module-contents (module-content/contents-by-category module)
         module-text-id  (:content-id (:main-text module-contents))]
     (module-content-renderer
       treatment-access
@@ -90,7 +90,7 @@
 
 (defapi homework
   [treatment-access :- map? render-map :- map? module :- map?]
-  (let [module-contents (module-builder/module-contents-by-category module)]
+  (let [module-contents (module-content/contents-by-category module)]
     (if-let [homework-id (:content-id (:homework module-contents))]
       (module-content-renderer
         treatment-access
@@ -105,7 +105,7 @@
 
 (defapi worksheet
   [treatment-access :- map? render-map :- map? module :- map? worksheet-id :- api/->int]
-  (let [module-contents (module-builder/module-contents-by-category module)]
+  (let [module-contents (module-content/contents-by-category module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (module-content-renderer
         treatment-access
@@ -118,7 +118,7 @@
 
 (defapi worksheet-example
   [module :- map? worksheet-id :- api/->int return-path :- [[api/str? 1 2000] api/url?]]
-  (let [module-contents (module-builder/module-contents-by-category module)]
+  (let [module-contents (module-content/contents-by-category module)]
     (if (some #(= worksheet-id (:content-id %)) (:worksheets module-contents))
       (let [content      (module-service/get-content worksheet-id)
             namespace    (:namespace content)
@@ -142,15 +142,15 @@
     (layout/render
       "modules-list.html"
       (merge render-map
-             {:modules    (module-builder/assoc-content-info modules treatment-access-id)
+             {:modules    (module-content/assoc-content-info modules treatment-access-id)
               :page-title (i18n/tr [:modules/modules])}))))
 
 (defapi view-user-content
   [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]
   (let [module         (module-service/get-module module-id)
-        module-content (module-builder/content-in-module module content-id)
+        module-content (module-content/content-in-module module content-id)
         namespace      (:namespace module-content)
-        content-data   (module-builder/module-content-data treatment-access-id module-content)]
+        content-data   (module-content/module-content-data treatment-access-id module-content)]
     (layout/render "user-content-viewer.html"
                    {:text         (:text module-content)
                     :markdown?    (:markdown? module-content)
@@ -220,8 +220,3 @@
         (module-service/retract-homework! treatment-access module))
       (http-response/found "reload"))
     (http-errors/throw-400!)))
-
-
-;--------------
-;  MODULE API
-;--------------
