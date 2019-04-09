@@ -85,7 +85,7 @@
   [treatment-access-id module-id modules get-id-fn schema]
   (let [module (get-module module-id modules)]
     (if-let [content-id (get-id-fn)]
-      (let [module-content (module-builder/get-content-in-module module content-id)]
+      (let [module-content (module-builder/content-in-module module content-id)]
         (-> module-content
             (select-keys (keys schema))
             (update :data-imports #(into [] %))
@@ -162,7 +162,7 @@
   [module-id :- api/->int content-id :- api/->int modules :- seq? treatment-access-id :- int?]
   (if (module-service/module-has-content? module-id content-id)
     (let [module         (get-module module-id modules)
-          module-content (module-builder/get-content-in-module module content-id)
+          module-content (module-builder/content-in-module module content-id)
           content-data   (module-builder/get-module-content-data
                            treatment-access-id
                            module-content)]

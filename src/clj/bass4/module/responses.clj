@@ -49,7 +49,7 @@
 
 (defn- module-content-renderer
   [treatment-access render-map module module-contents template content-id & params-map]
-  (let [module-content (module-builder/get-content-in-module module content-id)
+  (let [module-content (module-builder/content-in-module module content-id)
         namespace      (:namespace module-content)
         content-data   (module-builder/get-module-content-data
                          (:treatment-access-id treatment-access)
@@ -148,7 +148,7 @@
 (defapi view-user-content
   [treatment-access-id :- api/->int module-id :- api/->int content-id :- api/->int]
   (let [module         (module-service/get-module module-id)
-        module-content (module-builder/get-content-in-module module content-id)
+        module-content (module-builder/content-in-module module content-id)
         namespace      (:namespace module-content)
         content-data   (module-builder/get-module-content-data treatment-access-id module-content)]
     (layout/render "user-content-viewer.html"

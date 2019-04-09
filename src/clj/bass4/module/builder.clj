@@ -45,7 +45,7 @@
                                  (set/union more)))
         (assoc :ns-aliases aliases))))
 
-(defn get-content-in-module
+(defn content-in-module
   "Specific content within a module"
   [module content-id]
   ;; TODO: This function cannot rely on content existing
@@ -62,16 +62,6 @@
          (def modules (:modules (:tx-components (bass4.treatment.builder/user-treatment 583461))))
          (def treatment-access-id (:treatment-access-id (:treatment-access (bass4.treatment.builder/user-treatment 583461)))))
 
-(defn- get-module-contents
-  [modules]
-  (let [modules       (if (sequential? modules)
-                        modules
-                        [modules])
-        modules-by-id (map-map first (group-by :module-id modules))
-        contents      (module-service/modules-contents (keys modules-by-id))]
-    (mapv #(inject-module-namespace % (get modules-by-id (:module-id %)))
-          contents)))
-
 (defn- categorize-module-contents
   [contents]
   (let [categorized (group-by :type contents)]
@@ -80,20 +70,30 @@
      ;; TODO: Handle multiple main texts
      :main-text  (first (get categorized "MainTexts"))}))
 
+(defn- modules-contents
+  "Returns unsorted and un-categorized list of all contents belonging
+  to modules."
+  [modules]
+  (let [modules-by-id (map-map first (group-by :module-id modules))
+        contents      (module-service/modules-contents (keys modules-by-id))]
+    (mapv #(inject-module-namespace % (get modules-by-id (:module-id %)))
+          contents)))
+
 (defn module-contents
   "All module contents for a specific module.
   Used by modules HTML response"
   [module]
-  (-> (get-module-contents module)
+  (-> (modules-contents [module])
       (categorize-module-contents)))
 
 (defn add-content-info
-  "Adds content info to a list of modules
+  "Adds content info including last data changes
+  to a list of modules.
   Used by HTML response and API module lists"
   [modules treatment-access-id]
   (let [last-updates     (content-data-service/namespaces-last-updates treatment-access-id)
         content-accesses (module-service/content-accesses modules treatment-access-id)
-        contents         (->> (get-module-contents modules)
+        contents         (->> (modules-contents modules)
                               (mapv #(assoc % :data-updated (get-in last-updates [(:namespace %) :time])))
                               (mapv #(assoc % :accessed? (contains? content-accesses [(:module-id %) (:content-id %)]))))
         categorized      (map-map categorize-module-contents (group-by :module-id contents))]
