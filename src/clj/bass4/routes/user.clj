@@ -89,7 +89,7 @@
     handler
     ["/user/*" "/user" "/api/user/*"]
     #'assessments-response/check-assessments-mw
-    #'session-timeout/auth-re-auth-mw
+    #(session-timeout/timeout-re-auth % (config/env :timeout-soft))
     #'middleware/wrap-csrf
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))

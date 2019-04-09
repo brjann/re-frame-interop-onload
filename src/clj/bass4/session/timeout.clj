@@ -47,9 +47,9 @@
       (assoc :session (assoc session :auth-re-auth? true))))
 
 (defn normal-response
-  [handler request session-in now]
+  [handler request session-in now re-auth-timeout]
   (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
-        soft-timeout-at (t/plus now (t/seconds (dec (re-auth-timeout)))) ; dec because comparison is strictly after
+        soft-timeout-at (t/plus now (t/seconds (dec re-auth-timeout))) ; dec because comparison is strictly after
         session-out     (:session response)
         new-session     (merge (if (nil? session-out)
                                  session-in
@@ -57,19 +57,21 @@
                                {:re-auth-timeout-at soft-timeout-at})]
     (assoc response :session new-session)))
 
-(defn auth-re-auth-mw
-  [handler]
-  (fn [request]
-    (if (or (str/starts-with? (:uri request) "/user/ui")
-            (:external-login? (:session request)))
-      (handler request)
-      (let [session-in      (:session request)
-            now             (current-time)
-            soft-timeout-at (:re-auth-timeout-at session-in)
-            re-auth?        (should-re-auth? session-in now soft-timeout-at)]
-        (if re-auth?
-          (re-auth-response request session-in)
-          (normal-response handler request session-in now))))))
+(defn timeout-re-auth
+  ([handler]
+   (timeout-re-auth handler (* 60 60)))
+  ([handler re-auth-timeout]
+   (fn [request]
+     (if (or (str/starts-with? (:uri request) "/user/ui")
+             (:external-login? (:session request)))
+       (handler request)
+       (let [session-in      (:session request)
+             now             (current-time)
+             soft-timeout-at (:re-auth-timeout-at session-in)
+             re-auth?        (should-re-auth? session-in now soft-timeout-at)]
+         (if re-auth?
+           (re-auth-response request session-in)
+           (normal-response handler request session-in now re-auth-timeout)))))))
 
 #_(defn- current-time []
     (quot (System/currentTimeMillis) 1000))
