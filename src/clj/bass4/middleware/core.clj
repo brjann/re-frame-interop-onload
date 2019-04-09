@@ -185,7 +185,6 @@
       (wrap-mw-fn #'request-state-session-info)
       (wrap-mw-fn #'transform/transform-mw)
       debug-mw/wrap-session-modification
-      ;; Default absolute time-out to 2 hours
       (session-timeout/wrap-session-hard-timeout (config/env :timeout-hard))
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (ring-session/wrap-session
@@ -204,5 +203,5 @@
           (assoc-in [:security :anti-forgery] false)
           (dissoc :session)))
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
-      (wrap-mw-fn #'errors-mw/internal-error-mw)
+      (wrap-mw-fn #'errors-mw/catch-internal-error-mw)
       (wrap-mw-fn #'request-state)))
