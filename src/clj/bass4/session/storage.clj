@@ -3,7 +3,8 @@
   All db adapters except mysql removed"
   (:require [clojure.java.jdbc :as jdbc]
             [taoensso.nippy :as nippy]
-            [ring.middleware.session.store :refer :all])
+            [ring.middleware.session.store :refer :all]
+            [bass4.session.timeout :as session-timeout])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -34,7 +35,7 @@
       conn
       table
       {:session_id       key
-       :idle_timeout     (:ring.middleware.session-timeout/idle-timeout value)
+       :idle_timeout     (::session-timeout/hard-timeout value)
        :absolute_timeout (:ring.middleware.session-timeout/absolute-timeout value)
        :value            (serialize value)})
     key))

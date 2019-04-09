@@ -20,7 +20,8 @@
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.config :as config]))
 
 (use-fixtures
   :once
@@ -133,39 +134,40 @@
                                              :password            user-id
                                              :QuickLoginPassword  q-id
                                              :QuickLoginTimestamp (b-time/to-unix (t/now))})
-      (-> *s*
-          (visit (str "/q/" q-id))
-          (has (status? 302))
-          ;; Session created
-          (follow-redirect)
-          ;; Assessments checked
-          (follow-redirect)
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-          (follow-redirect)
-          (has (some-text? "top top top thanks"))
-          (visit "/user/assessments")
-          (follow-redirect)
-          (visit "/user")
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Password needed"))
-          (visit "/escalate" :request-method :post :params {:password "xxx"})
-          (has (status? 422))
-          (visit "/escalate" :request-method :post :params {:password user-id})
-          (has (status? 302))
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Start page"))
-          (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-          (visit "/user/")
-          (follow-redirect)
-          (has (some-text? "Authenticate again"))
-          (visit "/re-auth" :request-method :post :params {:password "xxx"})
-          (has (status? 422))
-          (visit "/re-auth" :request-method :post :params {:password user-id})
-          (has (status? 302))
-          (visit "/user/tx")
-          (has (some-text? "Start page"))))))
+      (fix-time
+        (-> *s*
+            (visit (str "/q/" q-id))
+            (has (status? 302))
+            ;; Session created
+            (follow-redirect)
+            ;; Assessments checked
+            (follow-redirect)
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+            (follow-redirect)
+            (has (some-text? "top top top thanks"))
+            (visit "/user/assessments")
+            (follow-redirect)
+            (visit "/user")
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Password needed"))
+            (visit "/escalate" :request-method :post :params {:password "xxx"})
+            (has (status? 422))
+            (visit "/escalate" :request-method :post :params {:password user-id})
+            (has (status? 302))
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Start page"))
+            (advance-time-s! (config/env :timeout-soft))
+            (visit "/user/")
+            (follow-redirect)
+            (has (some-text? "Authenticate again"))
+            (visit "/re-auth" :request-method :post :params {:password "xxx"})
+            (has (status? 422))
+            (visit "/re-auth" :request-method :post :params {:password user-id})
+            (has (status? 302))
+            (visit "/user/tx")
+            (has (some-text? "Start page")))))))

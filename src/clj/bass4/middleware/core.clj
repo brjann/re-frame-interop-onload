@@ -6,7 +6,8 @@
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
             [ring.middleware.session :as ring-session]
-            [bass4.session.storage :as jdbc-session]
+            [bass4.session.storage :as session-storage]
+            [bass4.session.timeout :as session-timeout]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
             [bass4.db.core :as db]
@@ -86,7 +87,8 @@
        handler
        {:error-handler csrf-error}) request)))
 
-(defn wrap-csrf [handler]
+(defn wrap-csrf
+  [handler]
   (fn [request]
     (csrf-wrapper handler request)))
 
@@ -179,16 +181,20 @@
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
-      (wrap-mw-fn #'transform/transform-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
+      ;; TODO: Move these two further down
       wrap-reload-headers
       wrap-webjars
-      ; flash middleware was removed from here
       (wrap-mw-fn #'request-state-session-info)
+      (wrap-mw-fn #'transform/transform-mw)
       debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
-      (ring-session/wrap-session {:cookie-attrs {:http-only true}
-                                  :store        (jdbc-session/jdbc-store db/db-common)})
+      #_(session-timeout/wrap-hard-session-timeout
+          {:timeout          10
+           :timeout-response (http-response/forbidden "Session timeout")})
+      (ring-session/wrap-session
+        {:cookie-attrs {:http-only true}
+         :store        (session-storage/jdbc-store db/db-common)})
       (wrap-defaults
         (->
           ;; TODO: This results in eternal loop. Although it should not.

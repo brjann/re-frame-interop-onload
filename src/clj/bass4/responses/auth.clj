@@ -290,6 +290,9 @@
 ;;  RE-AUTH MIDDLEWARE
 ;; --------------------
 
+(defn current-time
+  []
+  (t/now))
 
 (defn re-auth-timeout
   []
@@ -305,9 +308,6 @@
 (defn- should-re-auth?
   [session now last-request-time re-auth-time-limit]
   (cond
-    (:external-login? session)
-    false
-
     (:auth-re-auth? session)
     true
 
@@ -320,19 +320,42 @@
 
     :else nil))
 
+(defn- should-re-auth2?
+  [session now soft-timeout-at re-auth-time-limit]
+  (cond
+    (:auth-re-auth? session)
+    true
+
+    (nil? soft-timeout-at)
+    false
+
+    (t/after? now soft-timeout-at)
+    true
+
+    :else false))
+
+(defn- re-auth-response
+  [])
+
 (defn auth-re-auth-mw
   [handler]
   (fn [request]
-    (if (str/starts-with? (:uri request) "/user/ui")
+    (if (or (str/starts-with? (:uri request) "/user/ui")
+            (:external-login? (:session request)))
       (handler request)
       (let [session-in        (:session request)
-            now               (t/now)
+            now               (current-time)
+            soft-timeout-at   (:soft-timeout-at session-in)
+            _                 (log/debug "Current time" now)
+            _                 (log/debug "Timeout in" soft-timeout-at)
             last-request-time (:last-request-time session-in)
-            re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
+            re-auth?          (should-re-auth2? session-in now soft-timeout-at (re-auth-timeout))
             response          (if re-auth?
                                 (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
                                 (handler (assoc-in request [:session :auth-re-auth?] nil)))
+            soft-timeout-at   (t/plus now (t/seconds (re-auth-timeout)))
             session-map       {:last-request-time now
+                               :soft-timeout-at   soft-timeout-at
                                :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
                                                     (:auth-re-auth? (:session response))
                                                     re-auth?)}
