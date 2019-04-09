@@ -25,7 +25,8 @@
             [bass4.routes.ext-login :as ext-login]
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [bass4.config :as config]))
 
 
 (defn wrap-formats [handler]
@@ -189,9 +190,7 @@
       (wrap-mw-fn #'transform/transform-mw)
       debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
-      #_(session-timeout/wrap-hard-session-timeout
-          {:timeout          10
-           :timeout-response (http-response/forbidden "Session timeout")})
+      (session-timeout/wrap-session-hard-timeout (config/env :timeout-hard))
       (ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store db/db-common)})

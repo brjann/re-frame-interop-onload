@@ -16,7 +16,6 @@
                                      modify-session
                                      advance-time-s!]]
             [bass4.db.core :as db]
-            [bass4.session.timeout :refer [re-auth-timeout]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
@@ -112,7 +111,7 @@
           (follow-redirect)
           (visit "/user/assessments")
           (has (status? 200))
-          (advance-time-s! (re-auth-timeout))
+          (advance-time-s! (config/env :timeout-soft))
           (visit "/user/assessments")
           (has (status? 200))))))
 
