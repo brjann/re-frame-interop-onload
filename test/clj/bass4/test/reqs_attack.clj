@@ -22,7 +22,8 @@
             [bass4.registration.services :as reg-service]
             [bass4.services.attack-detector :as a-d]
             [clojure.data.json :as json]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.session.timeout :as session-timeout]))
 
 
 (use-fixtures
@@ -195,7 +196,7 @@
         (visit "/double-auth" :request-method :post :params {:code "666777"})
         (has (status? 302))
         (follow-redirect)
-        (advance-time-s! (res-auth/re-auth-timeout))
+        (advance-time-s! (session-timeout/re-auth-timeout))
         (visit "/user/tx/messages")
         (has (status? 302))
         (attack-uri

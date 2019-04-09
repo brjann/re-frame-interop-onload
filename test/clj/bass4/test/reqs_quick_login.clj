@@ -16,7 +16,7 @@
                                      modify-session
                                      advance-time-s!]]
             [bass4.db.core :as db]
-            [bass4.responses.auth :refer [re-auth-timeout]]
+            [bass4.session.timeout :refer [re-auth-timeout]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]

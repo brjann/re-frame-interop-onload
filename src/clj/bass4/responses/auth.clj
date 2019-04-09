@@ -1,12 +1,9 @@
 (ns bass4.responses.auth
   (:require [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors]
-            [bass4.services.assessments :as administrations]
             [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]
             [bass4.config :refer [env]]
             [clj-time.core :as t]
             [bass4.layout :as layout]
@@ -16,9 +13,7 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
-            [bass4.services.privacy :as privacy-service]
-            [bass4.http-utils :as h-utils]
-            [clojure.string :as str])
+            [bass4.services.privacy :as privacy-service])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -282,95 +277,6 @@
   [session :- [:? map?] password :- [[api/str? 1 100]]]
   (handle-escalation* session password))
 
-
-
-;; --------------------
-;;  RE-AUTH MIDDLEWARE
-;; --------------------
-
-(defn reset-soft-timeout
-  [session]
-  (dissoc session :auth-re-auth? :soft-timeout-at))
-
-(defn current-time
-  []
-  (t/now))
-
-(defn re-auth-timeout
-  []
-  (or (env :timeout-soft) (* 30 60)))
-
-(defn- request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
-
-(defn- should-re-auth?
-  [session now last-request-time re-auth-time-limit]
-  (cond
-    (:auth-re-auth? session)
-    true
-
-    (nil? last-request-time)
-    nil
-
-    (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-      (>= time-elapsed re-auth-time-limit))
-    true
-
-    :else nil))
-
-(defn- should-re-auth2?
-  [session now soft-timeout-at]
-  (cond
-    (:auth-re-auth? session)
-    true
-
-    (nil? soft-timeout-at)
-    false
-
-    (t/after? now soft-timeout-at)
-    true
-
-    :else false))
-
-(defn- re-auth-response
-  [request session]
-  (log/debug "Timeout!")
-  (-> (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
-      (assoc :session (assoc session :auth-re-auth? true))))
-
-(defn normal-response
-  [handler request session-in now]
-  (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
-        soft-timeout-at (t/plus now (t/seconds (dec (re-auth-timeout)))) ; dec because comparison is strictly after
-        session-out     (:session response)
-        session-map     {:soft-timeout-at soft-timeout-at
-                         :auth-re-auth?   (if (contains? session-out :auth-re-auth?)
-                                            (:auth-re-auth? session-out)
-                                            false)}
-        new-session     (if (nil? session-out)
-                          (merge session-in session-map)
-                          (merge session-out session-map))]
-    (assoc response :session new-session)))
-
-(defn auth-re-auth-mw
-  [handler]
-  (fn [request]
-    (if (or (str/starts-with? (:uri request) "/user/ui")
-            (:external-login? (:session request)))
-      (handler request)
-      (let [session-in      (:session request)
-            now             (current-time)
-            soft-timeout-at (:soft-timeout-at session-in)
-            _               (log/debug "Current time" now)
-            _               (log/debug "Timeout in" soft-timeout-at)
-            re-auth?        (should-re-auth2? session-in now soft-timeout-at)]
-        (if re-auth?
-          (re-auth-response request session-in)
-          (normal-response handler request session-in now))))))
 
 (defn double-auth-mw
   [handler]

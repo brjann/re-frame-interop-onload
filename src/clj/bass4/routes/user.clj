@@ -18,7 +18,8 @@
             [bass4.responses.error-report :as error-report-response]
             [bass4.config :as config]
             [bass4.file-response :as file]
-            [bass4.responses.privacy :as privacy-response]))
+            [bass4.responses.privacy :as privacy-response]
+            [bass4.session.timeout :as session-timeout]))
 
 
 ; -----------------------
@@ -88,7 +89,7 @@
     handler
     ["/user/*" "/user" "/api/user/*"]
     #'assessments-response/check-assessments-mw
-    #'auth-response/auth-re-auth-mw
+    #'session-timeout/auth-re-auth-mw
     #'middleware/wrap-csrf
     #'auth-response/double-auth-mw
     #'auth-response/restricted-mw))
