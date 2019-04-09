@@ -55,7 +55,7 @@
 (defapi modules-list
   [modules :- seq? treatment-access-id :- integer?]
   (when (seq modules)
-    (let [modules-with-content (module-builder/add-content-info modules treatment-access-id)
+    (let [modules-with-content (module-builder/assoc-content-info modules treatment-access-id)
           res                  (mapv (fn [module]
                                        (let [content-keys #(select-keys % (keys ContentInfo))
                                              contents     (:contents module)
@@ -163,7 +163,7 @@
   (if (module-service/module-has-content? module-id content-id)
     (let [module         (get-module module-id modules)
           module-content (module-builder/content-in-module module content-id)
-          content-data   (module-builder/get-module-content-data
+          content-data   (module-builder/module-content-data
                            treatment-access-id
                            module-content)]
       (http-response/ok (or content-data {})))

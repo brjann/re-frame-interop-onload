@@ -6,22 +6,8 @@
             [bass4.module.services :as module-service]
             [bass4.services.content-data :as content-data-service]))
 
-;; --------------------
-;;  MODULE CONTENT DATA
-;; --------------------
-
-(defn get-module-content-data
-  [treatment-access-id module-content]
-  (let [data-imports (:data-imports module-content)
-        namespaces   (conj data-imports (:namespace module-content))
-        aliasing     (:ns-aliases module-content)
-        data         (content-data-service/get-content-data
-                       treatment-access-id
-                       namespaces)]
-    (set/rename-keys data aliasing)))
-
 ;; -----------------------
-;;  CONTENT WITHIN MODULE
+;;      INTERNAL FNS
 ;; -----------------------
 
 (defn- inject-module-namespace
@@ -45,24 +31,8 @@
                                  (set/union more)))
         (assoc :ns-aliases aliases))))
 
-(defn content-in-module
-  "Specific content within a module"
-  [module content-id]
-  ;; TODO: This function cannot rely on content existing
-  ;; path: api-get-module-content-data
-  (some-> (module-service/get-content content-id)
-          (inject-module-namespace module)
-          (inject-module-imports module)))
-
-;; --------------------------
-;;  MODULE CONTENTS SUMMARY
-;; --------------------------
-
-(comment "To test functions accepting modules for user 'treatment-test'"
-         (def modules (:modules (:tx-components (bass4.treatment.builder/user-treatment 583461))))
-         (def treatment-access-id (:treatment-access-id (:treatment-access (bass4.treatment.builder/user-treatment 583461)))))
-
 (defn- categorize-module-contents
+  "Categorizes list of module contents"
   [contents]
   (let [categorized (group-by :type contents)]
     {:worksheets (get categorized "Worksheets")
@@ -76,17 +46,50 @@
   [modules]
   (let [modules-by-id (map-map first (group-by :module-id modules))
         contents      (module-service/modules-contents (keys modules-by-id))]
-    (mapv #(inject-module-namespace % (get modules-by-id (:module-id %)))
+    (mapv (fn [content] (let [module (get modules-by-id (:module-id content))]
+                          (-> content
+                              (inject-module-namespace module)
+                              (inject-module-imports module))))
           contents)))
 
-(defn module-contents
-  "All module contents for a specific module.
+
+(comment "To test functions accepting modules for user 'treatment-test'"
+         (def modules (:modules (:tx-components (bass4.treatment.builder/user-treatment 583461))))
+         (def treatment-access-id (:treatment-access-id (:treatment-access (bass4.treatment.builder/user-treatment 583461)))))
+
+;; --------------------------
+;;        PUBLIC FNS
+;; --------------------------
+
+(defn module-content-data
+  "Content data within module with aliases applied"
+  [treatment-access-id module-content]
+  (let [data-imports (:data-imports module-content)
+        namespaces   (conj data-imports (:namespace module-content))
+        aliasing     (:ns-aliases module-content)
+        data         (content-data-service/get-content-data
+                       treatment-access-id
+                       namespaces)]
+    (set/rename-keys data aliasing)))
+
+(defn content-in-module
+  "Specific content within a module with module namespaces injected.
+  Caller guarantees that content exists and belongs to module"
+  [module content-id]
+  (if-let [content (module-service/get-content content-id)]
+    (-> content
+        (inject-module-namespace module)
+        (inject-module-imports module))
+    (throw (Exception. (str "Content " content-id " does not exist")))))
+
+(defn module-contents-by-category
+  "Categorized module contents for a specific module.
   Used by modules HTML response"
   [module]
   (-> (modules-contents [module])
       (categorize-module-contents)))
 
-(defn add-content-info
+(defn assoc-content-info
   "Adds content info including last data changes
   to a list of modules.
   Used by HTML response and API module lists"

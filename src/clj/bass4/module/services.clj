@@ -67,18 +67,17 @@
     content))
 
 (defn get-content
+  "Get content from db."
   [content-id]
-  ;; TODO: This function cannot rely on content existing
-  ;; path: api-get-module-content-data
-  (some-> (db/get-content
-            {:content-id content-id})
-          (check-file)
-          (check-content-text)
-          (unserialize-key :data-imports)
-          (split-tags-property)
-          ;; Transform true false array for imports into set with imported namespaces
-          ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
-                                                           (into #{})))))))
+  (when-let [content (db/get-content {:content-id content-id})]
+    (-> content
+        (check-file)
+        (check-content-text)
+        (unserialize-key :data-imports)
+        (split-tags-property)
+        ;; Transform true false array for imports into set with imported namespaces
+        ((fn [content] (assoc content :data-imports (->> (keys (filter-map identity (:data-imports content)))
+                                                         (into #{}))))))))
 
 (defn modules-contents
   [module-ids]
