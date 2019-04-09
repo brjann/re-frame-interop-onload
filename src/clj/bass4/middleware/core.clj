@@ -5,9 +5,8 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
-    #_[immutant.web.middleware :refer [wrap-session]]
             [ring.middleware.session :as ring-session]
-            [jdbc-ring-session.core :as jdbc-session]
+            [bass4.middleware.session :as jdbc-session]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
             [bass4.db.core :as db]
@@ -189,7 +188,6 @@
       debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (ring-session/wrap-session {:cookie-attrs {:http-only true}
-                                  :timeout      (or (env :timeout-hard) (* 120 60))
                                   :store        (jdbc-session/jdbc-store db/db-common)})
       (wrap-defaults
         (->
