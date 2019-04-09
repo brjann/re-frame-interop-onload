@@ -22,7 +22,7 @@ FROM c_message AS cm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
   LEFT JOIN c_therapist as ct ON lcm.LinkeeId = ct.ObjectId
   JOIN c_participant as cp ON cp.ObjectId = :user-id
-WHERE cm.ParentId = :user-id AND cm.Draft = 0 ORDER BY cm.SendTime ASC;
+WHERE cm.ParentId = :user-id AND cm.Draft = 0 AND cm.ParentProperty = "Messages" ORDER BY cm.SendTime ASC;
 
 -- :name get-message-draft :? :1
 -- :doc get draft message for a specific user
@@ -34,7 +34,11 @@ SELECT
 FROM c_message AS cm
   LEFT JOIN links_c_message AS lcm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
-WHERE cm.ParentId = :user-id AND cm.Draft = 1 AND lcm.LinkeeId = :user-id LIMIT 1;
+WHERE
+  cm.ParentId = :user-id AND cm.Draft = 1 AND
+  cm.ParentProperty = "Messages" AND
+  lcm.LinkeeId = :user-id
+LIMIT 1;
 
 
 -- :name save-message! :! :n
@@ -57,7 +61,7 @@ WHERE ObjectId = :message-id;
 
 -- :name set-message-sender! :! :n
 -- :doc set sender of message
-CALL create_bass_link(:message-id, :user-id, "Sender", "cMessage", "cParticipant")
+CALL create_bass_link(:message-id, :user-id, "Sender", "cMessage", "cParticipant");
 
 -- :name get-message-by-id :? :1
 -- :doc
@@ -80,6 +84,7 @@ WHERE
   (cm.ReadTime = 0 OR cm.ReadTime IS NULL) AND
   cm.ParentId = :user-id AND
   cm.ObjectId = :message-id AND
+  cm.ParentProperty = "Messages" AND
   (cm.ParentId != lcm.LinkeeId OR lcm.LinkeeId IS NULL);
 
 
@@ -96,4 +101,10 @@ FROM c_message AS cm
     ON cm.ObjectId = lcm.LinkerId AND lcm.PropertyName = "Sender"
   LEFT JOIN c_therapist as ct ON lcm.LinkeeId = ct.ObjectId
   JOIN c_participant as cp ON cp.ObjectId = :user-id
-WHERE cm.ParentId = :user-id AND cm.Draft = 0 AND LinkeeClass = 'cTherapist' AND ReadTime = 0 ORDER BY cm.SendTime ASC;
+WHERE
+  cm.ParentId = :user-id AND
+  cm.Draft = 0 AND
+  cm.ParentProperty = "Messages" AND
+  LinkeeClass = 'cTherapist' AND
+  ReadTime = 0
+ORDER BY cm.SendTime ASC;
