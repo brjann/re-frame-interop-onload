@@ -7,7 +7,7 @@
             [clojure.string :as str]))
 
 
-(defn reset-soft-timeout
+(defn reset-re-auth
   [session]
   (dissoc session :auth-re-auth? :soft-timeout-at))
 

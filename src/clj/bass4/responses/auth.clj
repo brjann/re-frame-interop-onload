@@ -13,7 +13,8 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
-            [bass4.services.privacy :as privacy-service])
+            [bass4.services.privacy :as privacy-service]
+            [bass4.session.timeout :as session-timeout])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -220,8 +221,7 @@
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
-            (assoc :session (merge session {:auth-re-auth?   nil
-                                            :soft-timeout-at nil})))
+            (assoc :session (session-timeout/reset-re-auth session)))
         (http-errors/error-422 "error"))
       response)
     (http-response/forbidden)))
