@@ -99,12 +99,12 @@
 #_(deftest double-auth-send-fail
     (with-redefs [debug/new-sms-in-header!  (constantly false)
                   debug/new-mail-in-header! (constantly false)]
-    (-> *s*
-        (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
-        (follow-redirect)
-        (follow-redirect)
-        #_(follow-redirect)
-        (has (some-text? "activities")))))
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
+          (follow-redirect)
+          (follow-redirect)
+          #_(follow-redirect)
+          (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
@@ -113,8 +113,8 @@
         (pass-by (messages-are? [[:sms "777666"]] (poll-message-chan *debug-chan*))))))
 
 #_(deftest double-auth-mail-fallback
-    (with-redefs [debug/new-sms-in-header!    (constantly false)
-                auth-service/double-auth-code (constantly "777666")]
+    (with-redefs [debug/new-sms-in-header!      (constantly false)
+                  auth-service/double-auth-code (constantly "777666")]
       (-> *s*
           (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
           (pass-by (is (= #{{:type :email :message "777666"}} (poll-message-chan *debug-chan*)))))))
@@ -165,10 +165,18 @@
       (visit "/user/tx/messages")
       (has (status? 403))))
 
+(deftest request-re-auth-debug-timeout
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true})
+      (visit "/user/tx/messages")
+      (has (status? 200))
+      (visit "/debug/timeout")
+      (visit "/user/tx/messages")
+      (has (status? 302))))
+
 (deftest request-re-auth
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true})
-      (visit "/user")
       (visit "/user/tx/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth? true})

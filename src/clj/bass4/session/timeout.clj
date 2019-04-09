@@ -9,7 +9,7 @@
 
 (defn reset-re-auth
   [session]
-  (dissoc session :auth-re-auth? :soft-timeout-at))
+  (dissoc session :auth-re-auth? :re-auth-timeout-at))
 
 (defn current-time
   []
@@ -49,16 +49,12 @@
 (defn normal-response
   [handler request session-in now]
   (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
-        _               (log/debug (re-auth-timeout))
         soft-timeout-at (t/plus now (t/seconds (dec (re-auth-timeout)))) ; dec because comparison is strictly after
         session-out     (:session response)
-        session-map     {:soft-timeout-at soft-timeout-at
-                         :auth-re-auth?   (if (contains? session-out :auth-re-auth?)
-                                            (:auth-re-auth? session-out)
-                                            false)}
-        new-session     (if (nil? session-out)
-                          (merge session-in session-map)
-                          (merge session-out session-map))]
+        new-session     (merge (if (nil? session-out)
+                                 session-in
+                                 session-out)
+                               {:re-auth-timeout-at soft-timeout-at})]
     (assoc response :session new-session)))
 
 (defn auth-re-auth-mw
@@ -69,14 +65,14 @@
       (handler request)
       (let [session-in      (:session request)
             now             (current-time)
-            soft-timeout-at (:soft-timeout-at session-in)
+            soft-timeout-at (:re-auth-timeout-at session-in)
             re-auth?        (should-re-auth? session-in now soft-timeout-at)]
         (if re-auth?
           (re-auth-response request session-in)
           (normal-response handler request session-in now))))))
 
 #_(defn- current-time []
-  (quot (System/currentTimeMillis) 1000))
+    (quot (System/currentTimeMillis) 1000))
 
 (defn wrap-hard-session-timeout*
   [handler request timeout timeout-response timeout-handler]
