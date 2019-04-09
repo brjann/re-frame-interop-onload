@@ -5,7 +5,8 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
-            [immutant.web.middleware :refer [wrap-session]]
+    #_[immutant.web.middleware :refer [wrap-session]]
+            [ring.middleware.session :as ring-session]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
             [bass4.db.core :as db]
@@ -186,7 +187,7 @@
       (wrap-mw-fn #'request-state-session-info)
       debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
-      (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
+      (ring-session/wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
         (->
           ;; TODO: This results in eternal loop. Although it should not.
