@@ -182,9 +182,6 @@
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
-      ;; TODO: Move these two further down
-      wrap-reload-headers
-      wrap-webjars
       (wrap-mw-fn #'request-state-session-info)
       (wrap-mw-fn #'transform/transform-mw)
       debug-mw/wrap-session-modification
@@ -194,16 +191,17 @@
       (ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store db/db-common)})
+      wrap-reload-headers
+      wrap-webjars
       (wrap-defaults
         (->
-          ;; TODO: This results in eternal loop. Although it should not.
+          ;; TODO: Remove (env :ssl) if everything seems to be working
           ;; https://github.com/ring-clojure/ring-defaults#proxies
-          (if (env :ssl)
+          #_(if (env :ssl)
             (assoc secure-site-defaults :proxy (env :proxy))
             site-defaults)
-          #_site-defaults
+          site-defaults
           (assoc-in [:security :anti-forgery] false)
-
           (dissoc :session)))
       ;; wrap-reload-headers
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
