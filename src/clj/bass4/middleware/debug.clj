@@ -7,7 +7,7 @@
             [bass4.http-utils :as h-utils]))
 
 
-(defn wrap-debug-exceptions
+(defn wrap-prone-debug-exceptions
   "Catches request exceptions and returns prone page.
   Exceptions in ajax post requests are not caught."
   [handler]

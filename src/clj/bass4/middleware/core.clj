@@ -177,7 +177,7 @@
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
-      debug-mw/wrap-debug-exceptions
+      debug-mw/wrap-prone-debug-exceptions
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
@@ -203,7 +203,6 @@
           site-defaults
           (assoc-in [:security :anti-forgery] false)
           (dissoc :session)))
-      ;; wrap-reload-headers
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'errors-mw/internal-error-mw)
       (wrap-mw-fn #'request-state)))
