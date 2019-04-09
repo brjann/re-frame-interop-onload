@@ -9,6 +9,8 @@
             [bass4.module.module-content :as module-content])
   (:import (org.joda.time DateTime)))
 
+(def HomeworkStatus
+  (s/maybe (s/enum :ok :submitted :not-submitted)))
 
 (s/defschema ContentInfo
   {:content-id   s/Int
@@ -24,7 +26,7 @@
    :module-name     String
    :active?         Boolean
    :activation-date (s/maybe DateTime)
-   :homework-status (s/maybe (s/enum :ok :submitted))
+   :homework-status HomeworkStatus
    :tags            [String]})
 
 (s/defschema ModuleWithContent
@@ -47,7 +49,7 @@
 (s/defschema Homework
   (merge
     MainText
-    {:status (s/maybe (s/enum :ok :submitted))}))
+    {:status HomeworkStatus}))
 
 (s/defschema Worksheet
   MainText)

@@ -250,20 +250,24 @@
 
 (deftest submit-homework
   (let [user-id         (create-user-with-treatment! 551356)
-        homework-status (fn [res]
-                          (->> res
-                               (filterv #(= 4002 (:module-id %)))
-                               (first)
-                               :homework-status))]
+        homework-status (fn [module-id] (fn [res]
+                                          (->> res
+                                               (filterv #(= module-id (:module-id %)))
+                                               (first)
+                                               (#(if (nil? %)
+                                                   (throw (Exception. (str "Module " module-id " does not exist")))
+                                                   %))
+                                               :homework-status)))]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/user/tx/modules")
         (has (status? 200))
-        (has (api-response? homework-status nil))
+        (has (api-response? (homework-status 5787) nil))
+        (has (api-response? (homework-status 4002) "not-submitted"))
         (visit "/api/user/tx/module-homework-submit" :request-method :put :body-params {:module-id 4002})
         (has (status? 200))
         (visit "/api/user/tx/modules")
-        (has (api-response? homework-status "submitted")))))
+        (has (api-response? (homework-status 4002) "submitted")))))
 
 (deftest module-content-accessed
   (let [user-id          (create-user-with-treatment! 551356)

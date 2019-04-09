@@ -5,7 +5,8 @@
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
             [bass4.services.messages :as messages]
             [bass4.module.services :as module-service]
-            [bass4.treatment.services :as treatment-service]))
+            [bass4.treatment.services :as treatment-service]
+            [clojure.tools.logging :as log]))
 
 
 ;; --------------------------
@@ -21,24 +22,26 @@
 
 (defn modules-component
   [treatment-access treatment]
-  (let [active-fn          #(or (not (:modules-manual-access? treatment))
-                                (contains?
-                                  (clojure.set/union
-                                    (:modules-active treatment-access)
-                                    (:modules-automatic-access treatment))
-                                  (:module-id %)))
-        activation-date-fn #(when (and (:modules-manual-access? treatment))
-                              (get-in treatment-access
-                                      [:modules-activation-dates (:module-id %)]))
-        homework-status-fn #(case (get-in treatment-access
-                                          [:submitted-homeworks (:module-id %) :ok?])
-                              nil nil
-                              true :ok
-                              false :submitted)]
-    (map #(merge %
-                 {:active?         (active-fn %)
-                  :activation-date (activation-date-fn %)
-                  :homework-status (homework-status-fn %)})
+  (let [active-fn          (fn [module] (or (not (:modules-manual-access? treatment))
+                                            (contains?
+                                              (clojure.set/union
+                                                (:modules-active treatment-access)
+                                                (:modules-automatic-access treatment))
+                                              (:module-id module))))
+        activation-date-fn (fn [module] (when (and (:modules-manual-access? treatment))
+                                          (get-in treatment-access
+                                                  [:modules-activation-dates (:module-id module)])))
+        homework-status-fn (fn [module]
+                             (when (module-service/get-module-homework-id (:module-id module))
+                               (case (get-in treatment-access
+                                             [:submitted-homeworks (:module-id module) :ok?])
+                                 nil :not-submitted
+                                 true :ok
+                                 false :submitted)))]
+    (map (fn [module] (merge module
+                             {:active?         (active-fn module)
+                              :activation-date (activation-date-fn module)
+                              :homework-status (homework-status-fn module)}))
          (:modules treatment))))
 
 ;; --------------------------
