@@ -86,6 +86,8 @@
 ;;    HARD TIMEOUT
 ;; -------------------
 
+(def ^:dynamic *timeout-hard-override* nil)
+
 (defn no-hard-timeout-response
   [handler request session-in now hard-timeout]
   (let [response        (handler request)
@@ -102,7 +104,8 @@
    (wrap-session-hard-timeout handler (* 2 60 60)))
   ([handler hard-timeout]
    (fn [request]
-     (let [session-in      (:session request)
+     (let [hard-timeout    (or *timeout-hard-override* hard-timeout)
+           session-in      (:session request)
            now             (current-time)
            hard-timeout-at (:hard-timeout-at session-in)
            hard-timeout?   (t/after? now hard-timeout-at)]

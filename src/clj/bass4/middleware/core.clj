@@ -178,7 +178,6 @@
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
       debug-mw/wrap-debug-exceptions
-      (wrap-mw-fn #'embedded-mw/embedded-mw)
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
@@ -191,6 +190,7 @@
       debug-mw/wrap-session-modification
       ;; Default absolute time-out to 2 hours
       (session-timeout/wrap-session-hard-timeout (config/env :timeout-hard))
+      (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store db/db-common)})

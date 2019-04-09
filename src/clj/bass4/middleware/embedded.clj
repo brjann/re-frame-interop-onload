@@ -9,7 +9,8 @@
             [clj-time.core :as t]
             [bass4.time :as b-time]
             [bass4.utils :as utils]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.session.timeout :as session-timeout]))
 
 (defn get-session-file
   [uid]
@@ -50,13 +51,12 @@
         true))))
 
 (defn check-php-session
-  [{:keys [user-id php-session-id]}]
+  [timeouts {:keys [user-id php-session-id]}]
   (if-let [php-session (bass-service/get-php-session php-session-id)]
     (let [last-activity      (:last-activity php-session)
           php-user-id        (:user-id php-session)
           now-unix           (b-time/to-unix (t/now))
           time-diff-activity (- now-unix last-activity)
-          timeouts           (bass-service/get-staff-timeouts)
           re-auth-timeout    (:re-auth-timeout timeouts)
           absolute-timeout   (:absolute-timeout timeouts)]
       (cond
@@ -78,11 +78,12 @@
   (let [current-path   (:uri request)
         session        (:session request)
         embedded-paths (:embedded-paths session)
-        php-session-id (:php-session-id session)]
+        php-session-id (:php-session-id session)
+        timeouts       (bass-service/get-staff-timeouts)]
     (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
       (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
-        (case (check-php-session (:session request))
+        (case (check-php-session timeouts (:session request))
           (::user-mismatch ::no-session ::absolute-timeout)
           (->
             (http-response/found "/embedded/error/no-session")
@@ -92,7 +93,7 @@
           (http-response/found "/embedded/error/re-auth")
 
           ::ok
-          (do
+          (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
             (bass-service/update-php-session-last-activity! php-session-id (b-time/to-unix (t/now)))
             (handler request)))
         (http-response/forbidden "No embedded access")))))
@@ -115,7 +116,7 @@
       (create-session handler request uid)
       (embedded-request handler request uid))))
 
-(defn embedded-mw
+(defn wrap-embedded-request
   [handler request]
   (if (when-let [path (:uri request)]
         (string/starts-with? path "/embedded"))
