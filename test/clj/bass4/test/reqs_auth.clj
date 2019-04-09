@@ -295,24 +295,6 @@
         (visit "/user/tx/messages")
         (has (status? 200)))))
 
-;; Don't understand what this test was testing
-#_(deftest request-re-auth-last-request-time3
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/tx/messages")
-      (has (status? 302))
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (follow-redirect)
-      (visit "/user")
-      (visit "/user/tx/messages")
-      (has (status? 200))))
-
 (deftest request-re-auth-ajax
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true :auth-re-auth? true})

@@ -183,11 +183,10 @@
              (not (privacy-service/privacy-notice-exists? (:project-id user))))
     (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
   (merge
-    {:user-id           (:user-id user)
-     :auth-re-auth?     nil
-     :last-login-time   (:last-login-time user)
-     :last-request-time (t/now)
-     :session-start     (t/now)}
+    {:user-id         (:user-id user)
+     :auth-re-auth?   nil
+     :last-login-time (:last-login-time user)
+     :session-start   (t/now)}
     additional))
 
 (defapi handle-login
@@ -226,8 +225,8 @@
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
-            (assoc :session (merge session {:auth-re-auth?     nil
-                                            :last-request-time (t/now)})))
+            (assoc :session (merge session {:auth-re-auth?   nil
+                                            :soft-timeout-at nil})))
         (http-errors/error-422 "error"))
       response)
     (http-response/forbidden)))
@@ -274,7 +273,6 @@
       (-> (http-response/found "/user")
           (assoc :session (merge session {:external-login?   nil
                                           :limited-access?   nil
-                                          :last-request-time (t/now)
                                           :double-authed?    true})))
 
       :else
@@ -289,6 +287,10 @@
 ;; --------------------
 ;;  RE-AUTH MIDDLEWARE
 ;; --------------------
+
+(defn reset-soft-timeout
+  [session]
+  (dissoc session :auth-re-auth? :soft-timeout-at))
 
 (defn current-time
   []
@@ -321,7 +323,7 @@
     :else nil))
 
 (defn- should-re-auth2?
-  [session now soft-timeout-at re-auth-time-limit]
+  [session now soft-timeout-at]
   (cond
     (:auth-re-auth? session)
     true
@@ -335,7 +337,24 @@
     :else false))
 
 (defn- re-auth-response
-  [])
+  [request session]
+  (log/debug "Timeout!")
+  (-> (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
+      (assoc :session (assoc session :auth-re-auth? true))))
+
+(defn normal-response
+  [handler request session-in now]
+  (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
+        soft-timeout-at (t/plus now (t/seconds (dec (re-auth-timeout)))) ; dec because comparison is strictly after
+        session-out     (:session response)
+        session-map     {:soft-timeout-at soft-timeout-at
+                         :auth-re-auth?   (if (contains? session-out :auth-re-auth?)
+                                            (:auth-re-auth? session-out)
+                                            false)}
+        new-session     (if (nil? session-out)
+                          (merge session-in session-map)
+                          (merge session-out session-map))]
+    (assoc response :session new-session)))
 
 (defn auth-re-auth-mw
   [handler]
@@ -343,27 +362,15 @@
     (if (or (str/starts-with? (:uri request) "/user/ui")
             (:external-login? (:session request)))
       (handler request)
-      (let [session-in        (:session request)
-            now               (current-time)
-            soft-timeout-at   (:soft-timeout-at session-in)
-            _                 (log/debug "Current time" now)
-            _                 (log/debug "Timeout in" soft-timeout-at)
-            last-request-time (:last-request-time session-in)
-            re-auth?          (should-re-auth2? session-in now soft-timeout-at (re-auth-timeout))
-            response          (if re-auth?
-                                (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
-                                (handler (assoc-in request [:session :auth-re-auth?] nil)))
-            soft-timeout-at   (t/plus now (t/seconds (re-auth-timeout)))
-            session-map       {:last-request-time now
-                               :soft-timeout-at   soft-timeout-at
-                               :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
-                                                    (:auth-re-auth? (:session response))
-                                                    re-auth?)}
-            session-out       (:session response)
-            new-session       (if (nil? session-out)
-                                (merge session-in session-map)
-                                (merge session-out session-map))]
-        (assoc response :session new-session)))))
+      (let [session-in      (:session request)
+            now             (current-time)
+            soft-timeout-at (:soft-timeout-at session-in)
+            _               (log/debug "Current time" now)
+            _               (log/debug "Timeout in" soft-timeout-at)
+            re-auth?        (should-re-auth2? session-in now soft-timeout-at)]
+        (if re-auth?
+          (re-auth-response request session-in)
+          (normal-response handler request session-in now))))))
 
 (defn double-auth-mw
   [handler]
