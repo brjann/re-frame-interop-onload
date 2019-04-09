@@ -277,10 +277,14 @@
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/user/tx/modules")
         (has (api-response? content-accessed false))
+        (visit (str "/api/user/tx/module-homework/" 4002))
+        (has (api-response? :accessed? false))
         (visit "/api/user/tx/module-content-accessed" :request-method :put :body-params {:module-id 4002 :content-id 4018})
         (has (status? 200))
         (visit "/api/user/tx/modules")
-        (has (api-response? content-accessed true)))))
+        (has (api-response? content-accessed true))
+        (visit (str "/api/user/tx/module-homework/" 4002))
+        (has (api-response? :accessed? true)))))
 
 (deftest module-content-last-updated
   (let [user-id           (create-user-with-treatment! 551356)
