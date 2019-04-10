@@ -95,7 +95,7 @@
                    :in-days     "em %1 dias"
                    :yesterday   "ontem"
                    :days-ago    "%1 dias atrás"}
- :messages        {:sent-on-from      "Enviado em %1 %2"
+ :messages        {:sent-on-from      "Enviado por %1 %2"
                    :from-therapist    "De %1 em %2"
                    :must-message      "Por favor, escreva uma mensagem de texto"
                    :subject           "Assunto da mensagem"
