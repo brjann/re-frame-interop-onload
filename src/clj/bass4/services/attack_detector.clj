@@ -25,7 +25,7 @@
 
 (defn get-failed-logins
   [now]
-  (db/get-failed-logins {:time now :attack-interval const-attack-interval}))
+  (db/get-failed-logins {:time (tc/to-epoch now) :attack-interval const-attack-interval}))
 
 (defn logins-by-ip
   [logins]
