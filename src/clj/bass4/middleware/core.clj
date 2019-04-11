@@ -189,7 +189,7 @@
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (ring-session/wrap-session
         {:cookie-attrs {:http-only true}
-         :store        (session-storage/jdbc-store db/db-common)})
+         :store        (session-storage/jdbc-store #'db/db-common)})
       wrap-reload-headers
       wrap-webjars
       (wrap-defaults

@@ -41,21 +41,21 @@
        :value        (serialize-mysql value)})
     key))
 
-(deftype JdbcStore [datasource table]
+(deftype JdbcStore [datasource-state table]
   SessionStore
   (read-session
     [_ key]
-    (read-session-value datasource table key))
+    (read-session-value @datasource-state table key))
   (write-session
     [_ key value]
-    (jdbc/with-db-transaction [conn datasource]
+    (jdbc/with-db-transaction [conn @datasource-state]
       (if key
         (update-session-value! conn table key value)
         (insert-session-value! conn table value))))
   (delete-session
     [_ key]
     (log/debug "Deleting session" key)
-    (jdbc/delete! datasource table ["session_id = ?" key])
+    (jdbc/delete! @datasource-state table ["session_id = ?" key])
     nil))
 
 (ns-unmap *ns* '->JdbcStore)

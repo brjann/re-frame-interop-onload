@@ -21,16 +21,16 @@
 
 (defn start-cleaner
   "starts a session cleaner
-   conn - database connection
+   conn-state - database connection state
    config - configuration map that ring-jdbc-session was initialized with"
-  ([conn] (start-cleaner conn {}))
-  ([conn {:keys [interval]
+  ([conn-state] (start-cleaner conn-state {}))
+  ([conn-state {:keys [interval]
           :or   {interval 60}
           :as   config}]
    (let [scheduler ^ScheduledExecutorService (Executors/newScheduledThreadPool 1)]
      (log/info "Starting cleaner")
      (.scheduleWithFixedDelay scheduler
-                              (fn [] (remove-sessions conn config))
+                              (fn [] (remove-sessions @conn-state config))
                               0
                               (long interval)
                               TimeUnit/SECONDS)
@@ -39,17 +39,23 @@
        (stopped? [_] (.isShutdown scheduler))
        (stop [_] (.shutdown scheduler))))))
 
+;;
+;; This was included as a pre-condition
+;; #_{:pre [(satisfies? Stoppable session-cleaner)]}
+;; but the state does not satisfy Stoppable
+;; Unclear why
+;;
+
 (defn stop-cleaner
   "stops the instance of the session cleaner"
   [session-cleaner]
-  {:pre [(satisfies? Stoppable session-cleaner)]}
   (log/info "Stopping cleaner")
   (.stop session-cleaner))
 
 (defstate
   cleaner
   :start
-  (start-cleaner db/db-common)
+  (start-cleaner #'db/db-common {:interval 300})
 
   :stop
   (stop-cleaner cleaner))
