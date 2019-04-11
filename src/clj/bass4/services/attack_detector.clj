@@ -11,7 +11,8 @@
             [bass4.request-state :as request-state]
             [bass4.layout :as layout]
             [bass4.config :as config]
-            [bass4.http-errors :as http-errors]))
+            [bass4.http-errors :as http-errors]
+            [bass4.utils :as utils]))
 
 (def ^:const const-fails-until-ip-block 10)
 (def ^:const const-fails-until-global-block 100)            ;; Should be factor of 10 for test to work
@@ -113,7 +114,7 @@
 (defn get-last-request-time-global
   [now]
   (let [res @global-last-request]
-    (if (or (nil? res) (< (tc/to-epoch now) (tc/to-epoch res)))
+    (if (or (nil? res) (< now res))
       (do
         (reset! global-last-request now)
         now)
@@ -122,9 +123,9 @@
 (defn delay-global!
   []
   (when @global-block
-    (let [now               (t/now)
+    (let [now               (utils/current-time)
           last-request-time (get-last-request-time-global now)]
-      (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
+      (let [delay (let [seconds-since-request (- now last-request-time)]
                     (when (> const-global-block-delay seconds-since-request)
                       (- const-global-block-delay seconds-since-request)))]
         (when (not delay)
