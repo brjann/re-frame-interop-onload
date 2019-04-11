@@ -5,8 +5,7 @@
             [taoensso.nippy :as nippy]
             [ring.middleware.session.store :refer :all]
             [bass4.session.timeout :as session-timeout]
-            [clojure.tools.logging :as log]
-            [clj-time.coerce :as tc])
+            [clojure.tools.logging :as log])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -25,7 +24,7 @@
 
 (defn update-session-value! [conn table key value]
   (jdbc/with-db-transaction [conn conn]
-    (let [data    {:hard_timeout (tc/to-epoch (::session-timeout/hard-timeout-at value))
+    (let [data    {:hard_timeout (::session-timeout/hard-timeout-at value)
                    :value        (serialize-mysql value)}
           updated (jdbc/update! conn table data ["session_id = ? " key])]
       (when (zero? (first updated))
@@ -38,7 +37,7 @@
       conn
       table
       {:session_id   key
-       :hard_timeout (tc/to-epoch (::session-timeout/hard-timeout-at value))
+       :hard_timeout (::session-timeout/hard-timeout-at value)
        :value        (serialize-mysql value)})
     key))
 
