@@ -1,15 +1,10 @@
 (ns bass4.services.attack-detector
-  (:require [bass4.db.core :as db]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
+  (:require [clojure.tools.logging :as log]
+            [bass4.db.core :as db]
             [bass4.config :refer [env]]
             [bass4.utils :refer [filter-map nil-zero?]]
             [bass4.http-utils :as h-utils]
             [bass4.db-config :as db-config]
-            [clj-time.coerce :as tc]
-            [bass4.time :as b-time]
-            [bass4.request-state :as request-state]
-            [bass4.layout :as layout]
             [bass4.config :as config]
             [bass4.http-errors :as http-errors]
             [bass4.utils :as utils]))
@@ -21,12 +16,16 @@
 (def ^:const const-global-block-delay 2)
 (def ^:const const-attack-interval 900)
 
+;; ----------------------
+;;  MANAGE FAILED LOGINS
+;; ----------------------
+
 (def blocked-ips (atom {}))
 (def global-block (atom nil))
 
 (defn get-failed-logins
   [now]
-  (db/get-failed-logins {:time (tc/to-epoch now) :attack-interval const-attack-interval}))
+  (db/get-failed-logins {:time now :attack-interval const-attack-interval}))
 
 (defn logins-by-ip
   [logins]
@@ -53,7 +52,7 @@
   [type db ip-address info now]
   (let [record (merge {:type       type
                        :db         db
-                       :time       (b-time/to-unix now)
+                       :time       now
                        :ip-address ip-address
                        :user-id    ""
                        :username   ""}
@@ -63,7 +62,7 @@
 (defn register-failed-login!
   ([type request] (register-failed-login! type request {}))
   ([type request info]
-   (let [now        (t/now)
+   (let [now        (utils/current-time)
          ip-address (h-utils/get-client-ip request)]
      (save-failed-login!
        (name type)
@@ -81,6 +80,10 @@
   [request]
   (ip-successful-login! (h-utils/get-client-ip request)))
 
+;; --------------------
+;;    SINGLE IP ATTACK
+;; --------------------
+
 (defn ip-blocked?
   [ip-address]
   (contains? @blocked-ips ip-address))
@@ -90,7 +93,7 @@
 (defn get-last-request-time
   [ip-address now]
   (let [res (get @blocked-last-request ip-address)]
-    (if (or (nil? res) (< (tc/to-epoch now) (tc/to-epoch res)))
+    (if (or (nil? res) (< now res))
       (do
         (swap! blocked-last-request #(assoc % ip-address now))
         now)
@@ -100,14 +103,18 @@
   [request]
   (let [ip-address (h-utils/get-client-ip request)]
     (when (ip-blocked? ip-address)
-      (let [now               (t/now)
+      (let [now               (utils/current-time)
             last-request-time (get-last-request-time ip-address now)]
-        (let [delay (let [seconds-since-request (t/in-seconds (t/interval last-request-time now))]
+        (let [delay (let [seconds-since-request (- now last-request-time)]
                       (when (> const-ip-block-delay seconds-since-request)
                         (- const-ip-block-delay seconds-since-request)))]
           (when (not delay)
             (swap! blocked-last-request #(assoc % ip-address now)))
           delay)))))
+
+;; --------------------
+;;    GLOBAL ATTACK
+;; --------------------
 
 (def global-last-request (atom nil))
 
@@ -131,6 +138,10 @@
         (when (not delay)
           (reset! global-last-request nil))
         delay))))
+
+;; --------------------
+;;    ATTACK VECTORS
+;; --------------------
 
 (defn get-delay-time
   [request]
@@ -196,7 +207,7 @@
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response #(http-errors/too-many-requests-429 "Too many requests")}]]
+                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))
                        (re-matches (:route %) (:uri request))))
