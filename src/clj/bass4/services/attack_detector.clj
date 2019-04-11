@@ -89,7 +89,7 @@
 (defn get-last-request-time
   [ip-address now]
   (let [res (get @blocked-last-request ip-address)]
-    (if (or (nil? res) (t/before? now res))
+    (if (or (nil? res) (< (tc/to-epoch now) (tc/to-epoch res)))
       (do
         (swap! blocked-last-request #(assoc % ip-address now))
         now)
@@ -113,7 +113,7 @@
 (defn get-last-request-time-global
   [now]
   (let [res @global-last-request]
-    (if (or (nil? res) (t/before? now res))
+    (if (or (nil? res) (< (tc/to-epoch now) (tc/to-epoch res)))
       (do
         (reset! global-last-request now)
         now)
