@@ -55,7 +55,7 @@
   (if-let [php-session (bass-service/get-php-session php-session-id)]
     (let [last-activity      (:last-activity php-session)
           php-user-id        (:user-id php-session)
-          now-unix           (b-time/to-unix (t/now))
+          now-unix           (utils/current-time)
           time-diff-activity (- now-unix last-activity)
           re-auth-timeout    (:re-auth-timeout timeouts)
           absolute-timeout   (:absolute-timeout timeouts)]
@@ -94,7 +94,7 @@
 
           ::ok
           (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
-            (bass-service/update-php-session-last-activity! php-session-id (b-time/to-unix (t/now)))
+            (bass-service/update-php-session-last-activity! php-session-id (utils/current-time))
             (handler request)))
         (http-response/forbidden "No embedded access")))))
 
