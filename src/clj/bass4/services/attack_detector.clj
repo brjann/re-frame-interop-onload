@@ -44,9 +44,9 @@
       (swap! blocked-ips #(dissoc % ip-address now)))
     (if (and (<= const-fails-until-global-block (count failed-logins))
              (<= const-global-block-ip-count (count (group-by :ip-address failed-logins))))
-      (swap! global-block (constantly now))
+      (reset! global-block now)
       ;; TODO: Can global-block be used instead of last-request-global?
-      (swap! global-block (constantly nil)))))
+      (reset! global-block nil))))
 
 (defn save-failed-login!
   [type db ip-address info now]
@@ -115,7 +115,7 @@
   (let [res @global-last-request]
     (if (or (nil? res) (t/before? now res))
       (do
-        (swap! global-last-request (constantly now))
+        (reset! global-last-request now)
         now)
       res)))
 
@@ -128,7 +128,7 @@
                     (when (> const-global-block-delay seconds-since-request)
                       (- const-global-block-delay seconds-since-request)))]
         (when (not delay)
-          (swap! global-last-request (constantly nil)))
+          (reset! global-last-request nil))
         delay))))
 
 (defn get-delay-time
@@ -195,7 +195,7 @@
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
+                         :delay-response #(http-errors/too-many-requests-429 "Too many requests")}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))
                        (re-matches (:route %) (:uri request))))
