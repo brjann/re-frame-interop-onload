@@ -10,7 +10,7 @@ WHERE ObjectId = 100;
 -- :doc
 UPDATE c_participant SET
  `LostPasswordRequestUID` = :uid,
- LostPasswordRequestTime = UNIX_TIMESTAMP(:now)
+ LostPasswordRequestTime = :now
  WHERE `ObjectId` = :user-id;
 
 
@@ -37,4 +37,4 @@ SELECT
   bass4.db.core/sql-user-fields
   ~*/
 FROM c_participant
-WHERE LostPasswordRequestUID = :uid AND LostPasswordRequestTime > UNIX_TIMESTAMP(:now) - :time-limit
+WHERE LostPasswordRequestUID = :uid AND LostPasswordRequestTime > (:now - :time-limit)
