@@ -4,6 +4,7 @@
             [luminus.http-server :as http]
             [bass4.config :refer [env]]
             [bass4.i18n]
+            [bass4.session.cleaner]
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
             [clj-logging-config.log4j :as log-config]

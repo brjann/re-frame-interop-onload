@@ -5,7 +5,8 @@
             [taoensso.nippy :as nippy]
             [ring.middleware.session.store :refer :all]
             [bass4.session.timeout :as session-timeout]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clj-time.coerce :as tc])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -15,43 +16,43 @@
   (when value
     (nippy/thaw value)))
 
-(defn read-session-value [datasource table deserialize key]
+(defn read-session-value [datasource table key]
   (jdbc/with-db-transaction [conn datasource]
     (-> (jdbc/query conn [(str "select value from " (name table) " where session_id = ?") key])
-        first :value deserialize)))
+        first
+        :value
+        deserialize-mysql)))
 
-(defn update-session-value! [conn table serialize key value]
+(defn update-session-value! [conn table key value]
   (jdbc/with-db-transaction [conn conn]
-    (let [data    {:idle_timeout     (:ring.middleware.session-timeout/idle-timeout value)
-                   :absolute_timeout (:ring.middleware.session-timeout/absolute-timeout value)
-                   :value            (serialize value)}
+    (let [data    {:hard_timeout (tc/to-epoch (::session-timeout/hard-timeout-at value))
+                   :value        (serialize-mysql value)}
           updated (jdbc/update! conn table data ["session_id = ? " key])]
       (when (zero? (first updated))
         (jdbc/insert! conn table (assoc data :session_id key)))
       key)))
 
-(defn insert-session-value! [conn table serialize value]
+(defn insert-session-value! [conn table value]
   (let [key (str (UUID/randomUUID))]
     (jdbc/insert!
       conn
       table
-      {:session_id       key
-       :idle_timeout     (::session-timeout/hard-timeout value)
-       :absolute_timeout (:ring.middleware.session-timeout/absolute-timeout value)
-       :value            (serialize value)})
+      {:session_id   key
+       :hard_timeout (tc/to-epoch (::session-timeout/hard-timeout-at value))
+       :value        (serialize-mysql value)})
     key))
 
-(deftype JdbcStore [datasource table serialize deserialize]
+(deftype JdbcStore [datasource table]
   SessionStore
   (read-session
     [_ key]
-    (read-session-value datasource table deserialize key))
+    (read-session-value datasource table key))
   (write-session
     [_ key value]
     (jdbc/with-db-transaction [conn datasource]
       (if key
-        (update-session-value! conn table serialize key value)
-        (insert-session-value! conn table serialize value))))
+        (update-session-value! conn table key value)
+        (insert-session-value! conn table value))))
   (delete-session
     [_ key]
     (log/debug "Deleting session" key)
@@ -64,6 +65,4 @@
   ""
   [db-spec & [{:keys [table]
                :or   {table :session_store}}]]
-  (let [serialize   serialize-mysql
-        deserialize deserialize-mysql]
-    (JdbcStore. db-spec table serialize deserialize)))
+  (JdbcStore. db-spec table))
