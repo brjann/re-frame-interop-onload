@@ -26,12 +26,15 @@
             [clojure.data.json :as json]
             [bass4.request-state :as request-state]
             [bass4.db.core :as db]
-            [net.cgrand.enlive-html :as enlive]))
+            [net.cgrand.enlive-html :as enlive]
+            [bass4.time :as b-time]
+            [bass4.utils :as utils]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
 
 (def test-now (atom nil))
+(def test-current-time (atom nil))
 
 (defn modify-session
   [s session]
@@ -41,21 +44,28 @@
 (defmacro fix-time
   [body]
   `(do
-     (swap! test-now (constantly (t/now)))
+     (reset! test-current-time (utils/current-time))
+     (reset! test-now (t/now))
      (with-redefs
        [t/now (fn [] @test-now)]
-       ~body)))
+       (binding [utils/current-time (fn [] @test-current-time)]
+         ~body))))
 
 (defn advance-time-s!
   ([secs]
-   (swap! test-now (constantly (t/plus (t/now) (t/seconds secs)))))
+   (swap! test-now #(t/plus % (t/seconds secs)))
+   (swap! test-current-time #(+ % secs)))
   ([state secs]
    (advance-time-s! secs)
    state))
 
 (defn advance-time-d!
   ([days]
-   (swap! test-now (constantly (t/plus (t/now) (t/days days)))))
+   (swap! test-now #(t/plus % (t/days days)))
+   (swap! test-current-time (fn [ct]
+                              (let [ct-time  (tc/from-epoch ct)
+                                    new-time (t/plus ct-time (t/days days))]
+                                (tc/to-epoch new-time)))))
   ([state days]
    (advance-time-s! days)
    state))
