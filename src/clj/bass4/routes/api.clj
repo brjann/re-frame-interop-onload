@@ -89,6 +89,11 @@
                                                   "dates should be shown in database's timezone.")}}}}
     (context "/api" [:as request]
 
+      (GET "/session-status" []
+        :summary "Returns number of seconds until session dies and needs re-authentication"
+        :return {}
+        (do))
+
       (POST "/logout" []
         :summary "Logout from session."
         :return {:result String}

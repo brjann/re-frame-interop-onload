@@ -261,24 +261,6 @@
         (visit "/user/tx/messages")
         (has (status? 302)))))
 
-(deftest request-hard-timeout
-  (fix-time
-    (-> *s*
-        (modify-session {:user-id 536975 :double-authed? true})
-        (visit "/user/tx/messages")
-        (has (status? 200))
-        (advance-time-s! (dec (config/env :timeout-hard)))
-        (visit "/user/tx/messages")
-        (has (status? 302))
-        (advance-time-s! 1)
-        (visit "/user/tx/messages")
-        (has (status? 302))
-        (advance-time-s! (config/env :timeout-hard))
-        (visit "/user/tx/messages")
-        (has (status? 403))
-        (visit "/user/tx/messages")
-        (has (status? 403)))))
-
 (deftest request-re-auth-timeout
   (fix-time
     (-> *s*

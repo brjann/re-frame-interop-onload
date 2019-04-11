@@ -4,7 +4,11 @@
             [bass4.http-errors :as http-errors]
             [bass4.config :refer [env]]
             [bass4.session.create :as session-create]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [ring.util.http-response :as http-response]
+            [bass4.layout :as layout]
+            [clojure.data.json :as json]
+            [clojure.tools.logging :as log]))
 
 ;; -------------------
 ;;   RE-AUTH TIMEOUT
@@ -82,6 +86,22 @@
         hard-timeout-at (+ now (dec hard-timeout))]         ; dec because comparison is strictly after
     (session-create/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
 
+(defn- session-status
+  [request hard-timeout-at hard-timeout?]
+  (let [session            (:session request)
+        now                (utils/current-time)
+        re-auth-timeout-at (::re-auth-timeout-at session)
+        res                (when-not (or (empty? (dissoc session ::hard-timeout-at))
+                                         hard-timeout?)
+                             {:hard    (when hard-timeout-at
+                                         (- hard-timeout-at now))
+                              :re-auth (when re-auth-timeout-at
+                                         (max 0 (- re-auth-timeout-at now)))})]
+    (-> res
+        (json/write-str)
+        (http-response/ok)
+        (assoc :headers {"Content-type" "application/json"}))))
+
 (defn- wrap-session-hard-timeout*
   [handler request hard-timeout]
   (let [hard-timeout    (or *timeout-hard-override* hard-timeout)
@@ -89,10 +109,12 @@
         now             (utils/current-time)
         hard-timeout-at (::hard-timeout-at session-in)
         hard-timeout?   (and hard-timeout-at (> now hard-timeout-at))]
-    (if hard-timeout?
-      (let [response (handler (assoc request :session {}))]
-        (assoc response :session {}))
-      (no-hard-timeout-response handler request session-in now hard-timeout))))
+    (if (= "/api/session-status" (:uri request))
+      (session-status request hard-timeout-at hard-timeout?)
+      (if hard-timeout?
+        (let [response (handler (assoc request :session nil))]
+          (assoc response :session nil))
+        (no-hard-timeout-response handler request session-in now hard-timeout)))))
 
 (defn wrap-session-hard-timeout
   ([handler]
