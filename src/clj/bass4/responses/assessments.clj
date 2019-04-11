@@ -7,7 +7,8 @@
             [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
-            [bass4.services.assessments :as administrations]))
+            [bass4.services.assessments :as administrations]
+            [bass4.session.create :as session-create]))
 
 
 ;; --------------------------
@@ -27,9 +28,9 @@
 (defn check-assessments-mw
   [handler]
   (fn [request]
-    (let [session (:session request)]
+    (let [session-in (:session request)]
       (cond
-        (:assessments-checked? session)
+        (:assessments-checked? session-in)
         (handler request)
 
         (assessments-pending? request)
@@ -38,21 +39,25 @@
           (-> (http-response/found "/user/assessments")
               (assoc :session
                      (merge
-                       session
+                       session-in
                        {:assessments-checked?   true
                         :assessments-pending?   true
                         :assessments-performed? true}))))
 
         :else
-        (let [out-response (handler request)
-              out-session  (or (:session out-response)
-                               session)]
-          (assoc out-response
-            :session
-            (merge
-              out-session
-              {:assessments-checked? true
-               :assessments-pending? false})))))))
+        #_(let [out-response (handler request)
+                out-session  (or (:session out-response)
+                                 session-in)]
+            (assoc out-response
+              :session
+              (merge
+                out-session
+                {:assessments-checked? true
+                 :assessments-pending? false})))
+        (session-create/assoc-out-session (handler request)
+                                          session-in
+                                          {:assessments-checked? true
+                                           :assessments-pending? false})))))
 
 ;; --------------------------
 ;;         RESPONSES
@@ -72,10 +77,10 @@
     (request-state/add-to-state-key! :info (str "Instrument " instrument-id))
     (if-let [instrument (instruments/get-instrument instrument-id)]
       (bass4.layout/render "assessment-instrument.html"
-                           {:instrument instrument
+                           {:instrument    instrument
                             :instrument-id instrument-id
-                            :order (:instrument-order step)
-                            :count (:instrument-count step)})
+                            :order         (:instrument-order step)
+                            :count         (:instrument-count step)})
       (do
         ;; Could not find instrument - record error and mark step as completed
         (assessments-service/step-completed! step)

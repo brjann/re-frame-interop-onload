@@ -262,7 +262,6 @@
         (has (status? 302)))))
 
 (deftest request-hard-timeout
-  (log/debug (config/env :timeout-hard))
   (fix-time
     (-> *s*
         (modify-session {:user-id 536975 :double-authed? true})
@@ -275,6 +274,8 @@
         (visit "/user/tx/messages")
         (has (status? 302))
         (advance-time-s! (config/env :timeout-hard))
+        (visit "/user/tx/messages")
+        (has (status? 403))
         (visit "/user/tx/messages")
         (has (status? 403)))))
 
@@ -344,3 +345,14 @@
       (has (status? 302))
       (visit "/user/tx/messages" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"} :params {:text "xxx"})
       (has (status? 440))))
+
+(deftest request-logout
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true})
+      (visit "/user/tx/messages")
+      (has (status? 200))
+      (visit "/logout")
+      (visit "/user/tx/messages")
+      (has (status? 403))
+      (visit "/user/tx/messages")
+      (has (status? 403))))

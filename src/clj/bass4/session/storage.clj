@@ -4,7 +4,8 @@
   (:require [clojure.java.jdbc :as jdbc]
             [taoensso.nippy :as nippy]
             [ring.middleware.session.store :refer :all]
-            [bass4.session.timeout :as session-timeout])
+            [bass4.session.timeout :as session-timeout]
+            [clojure.tools.logging :as log])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -53,6 +54,7 @@
         (insert-session-value! conn table serialize value))))
   (delete-session
     [_ key]
+    (log/debug "Deleting session" key)
     (jdbc/delete! datasource table ["session_id = ?" key])
     nil))
 

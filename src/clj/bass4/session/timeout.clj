@@ -4,7 +4,8 @@
             [clojure.tools.logging :as log]
             [bass4.config :refer [env]]
             [clj-time.core :as t]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.session.create :as session-create]))
 
 
 
@@ -57,14 +58,17 @@
 
 (defn no-re-auth-response
   [handler request session-in now re-auth-timeout]
-  (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
-        soft-timeout-at (t/plus now (t/seconds (dec re-auth-timeout))) ; dec because comparison is strictly after
-        session-out     (:session response)
-        new-session     (merge (if (nil? session-out)
-                                 session-in
-                                 session-out)
-                               {:re-auth-timeout-at soft-timeout-at})]
-    (assoc response :session new-session)))
+  (let [response         (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
+        soft-timeout-at  (t/plus now (t/seconds (dec re-auth-timeout))) ; dec because comparison is strictly after
+        session-out      (:session response)
+        session-deleted? (and (contains? response :session) (nil? session-out))]
+    (session-create/assoc-out-session response session-in {:re-auth-timeout-at soft-timeout-at})
+    #_(if session-deleted?
+        response
+        (assoc response :session (merge (if (nil? session-out)
+                                          session-in
+                                          session-out)
+                                        {:re-auth-timeout-at soft-timeout-at})))))
 
 (defn wrap-session-re-auth-timeout
   ([handler]
@@ -97,7 +101,8 @@
                                  session-in
                                  session-out)
                                {:hard-timeout-at hard-timeout-at})]
-    (assoc response :session new-session)))
+    #_(assoc response :session new-session)
+    (session-create/assoc-out-session response session-in {:hard-timeout-at hard-timeout-at})))
 
 (defn wrap-session-hard-timeout
   ([handler]

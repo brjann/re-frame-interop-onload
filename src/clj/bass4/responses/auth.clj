@@ -33,7 +33,7 @@
 
 (defapi logout []
   (-> (http-response/found "/login")
-      (assoc :session {})))
+      (assoc :session nil)))
 
 ;; ------------------
 ;;    DOUBLE-AUTH
