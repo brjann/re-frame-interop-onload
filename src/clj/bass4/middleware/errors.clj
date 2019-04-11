@@ -37,7 +37,7 @@
                                :title   "Something bad happened!"
                                :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
 
-(defn internal-error-mw
+(defn catch-internal-error-mw
   [handler request]
   (let [res       (catch-request-error handler request)
         req-state (request-state/get-state)]

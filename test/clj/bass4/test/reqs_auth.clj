@@ -12,6 +12,8 @@
                                      log-headers
                                      log-session
                                      disable-attack-detector
+                                     fix-time
+                                     advance-time-s!
                                      *s*
                                      modify-session
                                      poll-message-chan
@@ -24,7 +26,8 @@
             [clj-time.core :as t]
             [bass4.services.attack-detector :as a-d]
             [bass4.services.user :as user-service]
-            [bass4.external-messages :as external-messages :refer [*debug-chan*]]))
+            [bass4.external-messages :as external-messages :refer [*debug-chan*]]
+            [bass4.config :as config]))
 
 
 (use-fixtures
@@ -96,12 +99,12 @@
 #_(deftest double-auth-send-fail
     (with-redefs [debug/new-sms-in-header!  (constantly false)
                   debug/new-mail-in-header! (constantly false)]
-    (-> *s*
-        (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
-        (follow-redirect)
-        (follow-redirect)
-        #_(follow-redirect)
-        (has (some-text? "activities")))))
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
+          (follow-redirect)
+          (follow-redirect)
+          #_(follow-redirect)
+          (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
   (with-redefs [auth-service/double-auth-code (constantly "777666")]
@@ -110,8 +113,8 @@
         (pass-by (messages-are? [[:sms "777666"]] (poll-message-chan *debug-chan*))))))
 
 #_(deftest double-auth-mail-fallback
-    (with-redefs [debug/new-sms-in-header!    (constantly false)
-                auth-service/double-auth-code (constantly "777666")]
+    (with-redefs [debug/new-sms-in-header!      (constantly false)
+                  auth-service/double-auth-code (constantly "777666")]
       (-> *s*
           (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})
           (pass-by (is (= #{{:type :email :message "777666"}} (poll-message-chan *debug-chan*)))))))
@@ -162,10 +165,18 @@
       (visit "/user/tx/messages")
       (has (status? 403))))
 
+(deftest request-re-auth-debug-timeout
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true})
+      (visit "/user/tx/messages")
+      (has (status? 200))
+      (visit "/debug/timeout")
+      (visit "/user/tx/messages")
+      (has (status? 302))))
+
 (deftest request-re-auth
   (-> *s*
       (modify-session {:user-id 536975 :double-authed? true})
-      (visit "/user")
       (visit "/user/tx/messages")
       (has (status? 200))
       (modify-session {:auth-re-auth? true})
@@ -237,71 +248,93 @@
       (visit "/debug/session")
       (has (some-text? ":test888"))))
 
+(deftest request-re-auth-timeout-path-integrity
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (dec (config/env :timeout-soft)))
+        (visit "/login")
+        (has (status? 200))
+        (advance-time-s! 1)
+        (visit "/user/tx/messages")
+        (has (status? 302)))))
 
-(deftest request-re-auth-last-request-time
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (visit "/user")
-      (visit "/user/tx/messages")
-      (has (status? 200))
-      (visit "/debug/session")
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/tx/messages")
-      (has (status? 302))
-      (visit "/user/tx/messages")
-      (has (status? 302))
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (has (status? 302))
-      (visit "/user/tx/messages")
-      (has (status? 200))))
+(deftest request-hard-timeout
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (dec (config/env :timeout-hard)))
+        (visit "/user/tx/messages")
+        (has (status? 302))
+        (advance-time-s! 1)
+        (visit "/user/tx/messages")
+        (has (status? 302))
+        (advance-time-s! (config/env :timeout-hard))
+        (visit "/user/tx/messages")
+        (has (status? 403))
+        (visit "/user/tx/messages")
+        (has (status? 403)))))
 
+(deftest request-re-auth-timeout
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (dec (config/env :timeout-soft)))
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! 1)
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (config/env :timeout-soft))
+        (visit "/user/tx/messages")
+        (has (status? 302))
+        (visit "/user/tx/messages")
+        (has (status? 302))
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (has (status? 302))
+        (visit "/user/tx/messages")
+        (has (status? 200)))))
 
-(deftest request-re-auth-last-request-time-external-login
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true :external-login? true})
-      (visit "/user")
-      (visit "/user/tx/messages")
-      (has (status? 200))
-      (visit "/debug/session")
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/tx/messages")
-      (has (status? 200))))
+(deftest request-re-auth-timeout-external-login
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true :external-login? false})
+        (visit "/user")
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (config/env :timeout-soft))
+        (visit "/user/tx/messages")
+        (has (status? 302))))
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true :external-login? true})
+        (visit "/user")
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (config/env :timeout-soft))
+        (visit "/user/tx/messages")
+        (has (status? 200)))))
 
-(deftest request-re-auth-last-request-time2
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/tx/messages")
-      (follow-redirect)
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (has (status? 302))
-      (visit "/user")
-      (visit "/user/tx/messages")
-      (has (status? 200))))
-
-
-(deftest request-re-auth-last-request-time3
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/user/tx/messages")
-      (has (status? 302))
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/debug/session")
-      (has (some-text? "1985-10-26T01:20:00.000Z"))
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (follow-redirect)
-      (visit "/user")
-      (visit "/user/tx/messages")
-      (has (status? 200))))
+(deftest request-re-auth-timeout-re-auth
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (config/env :timeout-soft))
+        (visit "/user/tx/messages")
+        (follow-redirect)
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (has (status? 302))
+        (visit "/user")
+        (visit "/user/tx/messages")
+        (has (status? 200)))))
 
 (deftest request-re-auth-ajax
   (-> *s*
@@ -312,3 +345,14 @@
       (has (status? 302))
       (visit "/user/tx/messages" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"} :params {:text "xxx"})
       (has (status? 440))))
+
+(deftest request-logout
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true})
+      (visit "/user/tx/messages")
+      (has (status? 200))
+      (visit "/logout")
+      (visit "/user/tx/messages")
+      (has (status? 403))
+      (visit "/user/tx/messages")
+      (has (status? 403))))

@@ -12,15 +12,21 @@
 
 (def ^:dynamic test-mode? false)
 
+(def ^:const defaults {:timeout-hard (* 2 60 60)
+                       :timeout-soft (* 1 60 60)})
+
 (defn merge-args
   []
-  (let [config [(args)
-                (source/from-system-props)
-                (source/from-env)]
+  (let [config   [(args)
+                  (source/from-system-props)
+                  (source/from-env)]
         ; Split filename to avoid refactoring when filename changes
         filename (str (System/getProperty "user.dir") "/local" ".edn")]
-    [:merge (if (.exists (io/file filename))
-              (conj config (source/from-file filename))
-              config)]))
+    [:merge (conj config (merge defaults
+                                (when (.exists (io/file filename))
+                                  (source/from-file filename))))
+     #_(if (.exists (io/file filename))
+         (conj config (source/from-file filename))
+         config)]))
 
 (defstate env :start (apply load-config (merge-args)))

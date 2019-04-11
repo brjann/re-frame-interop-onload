@@ -43,25 +43,24 @@
   (subs (str (UUID/randomUUID)) 0 32))
 
 (deftest request-post-answers
-  (fix-time
-    (let [php-session-id (get-php-session-id)
-          now            (b-time/to-unix (t/now))]
-      (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
-      (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
-        (-> *s*
-            (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
-            (visit "/embedded/instrument/1647")
-            (has (status? 200))
-            (visit "/embedded/instrument/1647" :request-method :post :params {})
-            (has (status? 400))
-            (pass-by (messages-are? [[:email "nil error"]] (poll-message-chan *debug-chan*)))
-            (visit "/embedded/instrument/1647" :request-method :post :params {:items "x" :specifications "y"})
-            (pass-by (messages-are? [[:email "api/->json"]] (poll-message-chan *debug-chan*)))
-            (has (status? 400))
-            (visit "/embedded/instrument/1647" :request-method :post :params {:items "{}" :specifications "{}"})
-            (has (status? 302))
-            (visit "/embedded/instrument/535690")
-            (has (status? 403)))))))
+  (let [php-session-id (get-php-session-id)
+        now            (b-time/to-unix (t/now))]
+    (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
+    (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
+      (-> *s*
+          (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
+          (visit "/embedded/instrument/1647")
+          (has (status? 200))
+          (visit "/embedded/instrument/1647" :request-method :post :params {})
+          (has (status? 400))
+          (pass-by (messages-are? [[:email "nil error"]] (poll-message-chan *debug-chan*)))
+          (visit "/embedded/instrument/1647" :request-method :post :params {:items "x" :specifications "y"})
+          (pass-by (messages-are? [[:email "api/->json"]] (poll-message-chan *debug-chan*)))
+          (has (status? 400))
+          (visit "/embedded/instrument/1647" :request-method :post :params {:items "{}" :specifications "{}"})
+          (has (status? 302))
+          (visit "/embedded/instrument/535690")
+          (has (status? 403))))))
 
 
 (deftest request-wrong-instrument

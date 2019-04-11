@@ -5,7 +5,9 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
-            [immutant.web.middleware :refer [wrap-session]]
+            [ring.middleware.session :as ring-session]
+            [bass4.session.storage :as session-storage]
+            [bass4.session.timeout :as session-timeout]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
             [bass4.db.core :as db]
@@ -23,7 +25,8 @@
             [bass4.routes.ext-login :as ext-login]
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [bass4.config :as config]))
 
 
 (defn wrap-formats [handler]
@@ -85,7 +88,8 @@
        handler
        {:error-handler csrf-error}) request)))
 
-(defn wrap-csrf [handler]
+(defn wrap-csrf
+  [handler]
   (fn [request]
     (csrf-wrapper handler request)))
 
@@ -173,32 +177,31 @@
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
-      debug-mw/wrap-debug-exceptions
-      (wrap-mw-fn #'embedded-mw/embedded-mw)
+      debug-mw/wrap-prone-debug-exceptions
       (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'db/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
-      (wrap-mw-fn #'transform/transform-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
+      (wrap-mw-fn #'request-state-session-info)
+      (wrap-mw-fn #'transform/transform-mw)
+      debug-mw/wrap-session-modification
+      (session-timeout/wrap-session-hard-timeout (config/env :timeout-hard))
+      (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
+      (ring-session/wrap-session
+        {:cookie-attrs {:http-only true}
+         :store        (session-storage/jdbc-store #'db/db-common)})
       wrap-reload-headers
       wrap-webjars
-      ; flash middleware was removed from here
-      (wrap-mw-fn #'request-state-session-info)
-      debug-mw/wrap-session-modification
-      ;; Default absolute time-out to 2 hours
-      (wrap-session {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})
       (wrap-defaults
         (->
-          ;; TODO: This results in eternal loop. Although it should not.
+          ;; TODO: Remove (env :ssl) if everything seems to be working
           ;; https://github.com/ring-clojure/ring-defaults#proxies
-          (if (env :ssl)
+          #_(if (env :ssl)
             (assoc secure-site-defaults :proxy (env :proxy))
             site-defaults)
-          #_site-defaults
+          site-defaults
           (assoc-in [:security :anti-forgery] false)
-
           (dissoc :session)))
-      ;; wrap-reload-headers
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
-      (wrap-mw-fn #'errors-mw/internal-error-mw)
+      (wrap-mw-fn #'errors-mw/catch-internal-error-mw)
       (wrap-mw-fn #'request-state)))

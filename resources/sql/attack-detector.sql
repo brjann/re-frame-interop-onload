@@ -11,10 +11,10 @@ SELECT
   IPAddress as `ip-address`,
   DB,
   `Type`,
-  UNIX_TIMESTAMP(`time`) AS `time`
+  `time` AS `time`
 FROM common_log_failed_logins
 WHERE
-  FROM_UNIXTIME(`time`) > DATE_SUB(:time, INTERVAL :sql:attack-interval SECOND);
+   `time` > (:time - :attack-interval);
 
 
 -- :name clear-failed-logins! :! :1

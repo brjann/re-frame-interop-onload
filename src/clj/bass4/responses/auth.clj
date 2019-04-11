@@ -1,12 +1,9 @@
 (ns bass4.responses.auth
   (:require [bass4.services.auth :as auth-service]
-            [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors]
-            [bass4.services.assessments :as administrations]
             [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]
             [bass4.config :refer [env]]
             [clj-time.core :as t]
             [bass4.layout :as layout]
@@ -17,8 +14,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service]
-            [bass4.http-utils :as h-utils]
-            [clojure.string :as str])
+            [bass4.session.timeout :as session-timeout]
+            [bass4.session.create :as session-create])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -36,7 +33,7 @@
 
 (defapi logout []
   (-> (http-response/found "/login")
-      (assoc :session {})))
+      (assoc :session nil)))
 
 ;; ------------------
 ;;    DOUBLE-AUTH
@@ -182,13 +179,7 @@
   (when (and (not (privacy-service/privacy-notice-disabled?))
              (not (privacy-service/privacy-notice-exists? (:project-id user))))
     (throw (ex-info "No privacy notice" {:type ::no-privacy-notice})))
-  (merge
-    {:user-id           (:user-id user)
-     :auth-re-auth?     nil
-     :last-login-time   (:last-login-time user)
-     :last-request-time (t/now)
-     :session-start     (t/now)}
-    additional))
+  (session-create/new user additional))
 
 (defapi handle-login
   [username :- [[api/str? 1 100]] password :- [[api/str? 1 100]]]
@@ -226,8 +217,7 @@
     (if (:auth-re-auth? session)
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
-            (assoc :session (merge session {:auth-re-auth?     nil
-                                            :last-request-time (t/now)})))
+            (assoc :session (session-timeout/reset-re-auth session)))
         (http-errors/error-422 "error"))
       response)
     (http-response/forbidden)))
@@ -274,7 +264,6 @@
       (-> (http-response/found "/user")
           (assoc :session (merge session {:external-login?   nil
                                           :limited-access?   nil
-                                          :last-request-time (t/now)
                                           :double-authed?    true})))
 
       :else
@@ -284,63 +273,6 @@
   [session :- [:? map?] password :- [[api/str? 1 100]]]
   (handle-escalation* session password))
 
-
-
-;; --------------------
-;;  RE-AUTH MIDDLEWARE
-;; --------------------
-
-
-(defn re-auth-timeout
-  []
-  (or (env :timeout-soft) (* 30 60)))
-
-(defn- request-string
-  "Return the request part of the request."
-  [request]
-  (str (:uri request)
-       (when-let [query (:query-string request)]
-         (str "?" query))))
-
-(defn- should-re-auth?
-  [session now last-request-time re-auth-time-limit]
-  (cond
-    (:external-login? session)
-    false
-
-    (:auth-re-auth? session)
-    true
-
-    (nil? last-request-time)
-    nil
-
-    (let [time-elapsed (t/in-seconds (t/interval last-request-time now))]
-      (>= time-elapsed re-auth-time-limit))
-    true
-
-    :else nil))
-
-(defn auth-re-auth-mw
-  [handler]
-  (fn [request]
-    (if (str/starts-with? (:uri request) "/user/ui")
-      (handler request)
-      (let [session-in        (:session request)
-            now               (t/now)
-            last-request-time (:last-request-time session-in)
-            re-auth?          (should-re-auth? session-in now last-request-time (re-auth-timeout))
-            response          (if re-auth?
-                                (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
-                                (handler (assoc-in request [:session :auth-re-auth?] nil)))
-            session-map       {:last-request-time now
-                               :auth-re-auth?     (if (contains? (:session response) :auth-re-auth?)
-                                                    (:auth-re-auth? (:session response))
-                                                    re-auth?)}
-            session-out       (:session response)
-            new-session       (if (nil? session-out)
-                                (merge session-in session-map)
-                                (merge session-out session-map))]
-        (assoc response :session new-session)))))
 
 (defn double-auth-mw
   [handler]

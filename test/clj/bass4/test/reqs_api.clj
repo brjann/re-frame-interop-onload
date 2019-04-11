@@ -18,6 +18,8 @@
                                      messages-are?
                                      api-response?
                                      api-response
+                                     fix-time
+                                     advance-time-s!
                                      ->!
                                      log-api-response
                                      pass-by]]
@@ -27,9 +29,9 @@
             [clj-time.format :as tf]
             [bass4.services.user :as user-service]
             [bass4.time :as b-time]
-            [bass4.treatment.services :as treatment-service]
             [bass4.module.services :as module-service]
-            [bass4.treatment.builder :as treatment-builder])
+            [bass4.treatment.builder :as treatment-builder]
+            [bass4.config :as config])
   (:import (org.joda.time DateTime)))
 
 
@@ -39,14 +41,17 @@
   disable-attack-detector)
 
 (deftest request-api-re-auth
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (modify-session {:last-request-time (t/date-time 1985 10 26 1 20 0 0)})
-      (visit "/api/user/tx/messages")
-      (has (status? 440))
-      (visit "/re-auth" :request-method :post :params {:password 536975})
-      (visit "/user/tx/messages")
-      (has (status? 200))))
+  (fix-time
+    (-> *s*
+        (modify-session {:user-id 536975 :double-authed? true})
+        (visit "/api/user/tx/messages")
+        (has (status? 200))
+        (advance-time-s! (config/env :timeout-soft))
+        (visit "/api/user/tx/messages")
+        (has (status? 440))
+        (visit "/re-auth" :request-method :post :params {:password 536975})
+        (visit "/user/tx/messages")
+        (has (status? 200)))))
 
 
 (defn create-user-with-treatment!

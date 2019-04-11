@@ -204,6 +204,7 @@
 ;;   TIME FUNCTIONS
 ;; ------------------
 
+;; TODO: Move to b-time when cyclic dependency has been removed
 ;; Also present in b-time...
 (defn to-unix
   [now]
@@ -211,6 +212,10 @@
       (tc/to-long)
       (/ 1000)
       (int)))
+
+(defn ^:dynamic current-time
+  []
+  (quot (System/currentTimeMillis) 1000))
 
 ;; ---------
 ;;   QUEUE

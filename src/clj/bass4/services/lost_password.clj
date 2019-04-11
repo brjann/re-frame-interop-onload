@@ -4,7 +4,8 @@
             [clj-time.format :as f]
             [bass4.services.bass :as bass]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [bass4.utils :as utils])
   (:import (java.util UUID)))
 
 (defn lost-password-method []
@@ -37,11 +38,11 @@
 (defn create-request-uid!
   [user]
   (let [uid (str (subs (str (UUID/randomUUID)) 0 13) "-" (:user-id user))]
-    (db/set-lost-password-request-uid! {:user-id (:user-id user) :uid uid :now (t/now)})
+    (db/set-lost-password-request-uid! {:user-id (:user-id user) :uid uid :now (utils/current-time)})
     uid))
 
 (defn get-user-by-request-uid
   [uid]
-  (when-let [user (db/get-user-by-lost-password-request-uid! {:uid uid :now (t/now) :time-limit uid-time-limit})]
+  (when-let [user (db/get-user-by-lost-password-request-uid! {:uid uid :now (utils/current-time) :time-limit uid-time-limit})]
     (db/reset-lost-password-request-uid! {:user-id (:user-id user)})
     user))

@@ -58,24 +58,24 @@
 
 (deftest db-settings
   (with-redefs [config/env (merge config/env
-                                  {:timeout-hard 666
-                                   :db-settings  {(test-db) {}}})]
-    (is (= 666 (db-config/db-setting [:timeout-hard]))))
+                                  {:setting-666 666
+                                   :db-settings {(test-db) {}}})]
+    (is (= 666 (db-config/db-setting [:setting-666]))))
 
   (with-redefs [config/env (merge config/env
                                   {:db-settings {(test-db) {}}})]
     (is (= :thrown (try
-                     (do (db-config/db-setting [:timeout-hard])
+                     (do (db-config/db-setting [:setting-666])
                          false)
                      (catch Exception _
                        :thrown))))
-    (is (= :default (db-config/db-setting [:timeout-hard] :default))))
+    (is (= :default (db-config/db-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
-                                  {:db-settings {(test-db) {:timeout-hard 666}}})]
-    (is (= 666 (db-config/db-setting [:timeout-hard] :default))))
+                                  {:db-settings {(test-db) {:setting-666 666}}})]
+    (is (= 666 (db-config/db-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
-                                  {:timeout-hard 333
-                                   :db-settings  {(test-db) {:timeout-hard 666}}})]
-    (is (= 666 (db-config/db-setting [:timeout-hard] :default)))))
+                                  {:setting-666 333
+                                   :db-settings {(test-db) {:setting-666 666}}})]
+    (is (= 666 (db-config/db-setting [:setting-666] :default)))))

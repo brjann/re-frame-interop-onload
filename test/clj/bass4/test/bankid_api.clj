@@ -11,7 +11,6 @@
                                      log-return
                                      *s*
                                      advance-time-s!
-                                     fix-time
                                      test-now]]
             [bass4.config :refer [env]]
             [bass4.test.bankid.mock-collect :as mock-collect]
