@@ -3,12 +3,13 @@
   (:require [clojure.string :as str]
             [bass4.http-errors :as http-errors]
             [bass4.config :refer [env]]
-            [bass4.session.create :as session-create]
+            [bass4.session.utils :as session-utils]
             [bass4.utils :as utils]
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [clojure.data.json :as json]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.config :as config]))
 
 ;; -------------------
 ;;   RE-AUTH TIMEOUT
@@ -18,9 +19,10 @@
   [session]
   (dissoc session :auth-re-auth? ::re-auth-timeout-at))
 
-(defn re-auth-timeout
+(defn re-auth-timeout-map
   []
-  (or (env :timeout-soft) (* 30 60)))
+  {::re-auth-timeout-at (+ (utils/current-time)
+                           (or (env :timeout-soft) (* 30 60)))})
 
 (defn- request-string
   "Return the request part of the request."
@@ -38,7 +40,7 @@
     (nil? soft-timeout-at)
     false
 
-    (> now soft-timeout-at)
+    (>= now soft-timeout-at)
     true
 
     :else false))
@@ -49,30 +51,27 @@
       (assoc :session (assoc session :auth-re-auth? true))))
 
 (defn- no-re-auth-response
-  [handler request session-in now re-auth-timeout]
-  (let [response        (handler (assoc request :session (dissoc session-in :auth-re-auth?)))
-        soft-timeout-at (+ now (dec re-auth-timeout))]      ; dec because comparison is strictly after
-    (session-create/assoc-out-session response session-in {::re-auth-timeout-at soft-timeout-at})))
+  [handler request session-in]
+  (let [response (handler (assoc request :session (dissoc session-in :auth-re-auth?)))]
+    (session-utils/assoc-out-session response session-in (re-auth-timeout-map))))
 
 (defn- wrap-session-re-auth-timeout*
-  [handler request re-auth-timeout]
+  [handler request]
   (if (or (str/starts-with? (:uri request) "/user/ui")
           (:external-login? (:session request)))
     (handler request)
-    (let [session-in      (:session request)
-          now             (utils/current-time)
-          soft-timeout-at (::re-auth-timeout-at session-in)
-          re-auth?        (should-re-auth? session-in now soft-timeout-at)]
+    (let [session-in         (:session request)
+          now                (utils/current-time)
+          re-auth-timeout-at (::re-auth-timeout-at session-in)
+          re-auth?           (should-re-auth? session-in now re-auth-timeout-at)]
       (if re-auth?
         (re-auth-response request session-in)
-        (no-re-auth-response handler request session-in now re-auth-timeout)))))
+        (no-re-auth-response handler request session-in)))))
 
 (defn wrap-session-re-auth-timeout
   ([handler]
-   (wrap-session-re-auth-timeout handler (* 60 60)))
-  ([handler re-auth-timeout]
    (fn [request]
-     (wrap-session-re-auth-timeout* handler request re-auth-timeout))))
+     (wrap-session-re-auth-timeout* handler request))))
 
 ;; -------------------
 ;;    HARD TIMEOUT
@@ -83,8 +82,8 @@
 (defn- no-hard-timeout-response
   [handler request session-in now hard-timeout]
   (let [response        (handler request)
-        hard-timeout-at (+ now (dec hard-timeout))]         ; dec because comparison is strictly after
-    (session-create/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
+        hard-timeout-at (+ now hard-timeout)]               ; dec because comparison is strictly after
+    (session-utils/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
 
 (defn- session-status
   [request hard-timeout-at hard-timeout?]
@@ -95,7 +94,7 @@
                                          hard-timeout?)
                              {:hard    (when hard-timeout-at
                                          (- hard-timeout-at now))
-                              :re-auth (when re-auth-timeout-at
+                              :re-auth (when (and re-auth-timeout-at (not (:external-login? session)))
                                          (max 0 (- re-auth-timeout-at now)))})]
     (-> res
         (json/write-str)
@@ -108,7 +107,7 @@
         session-in      (:session request)
         now             (utils/current-time)
         hard-timeout-at (::hard-timeout-at session-in)
-        hard-timeout?   (and hard-timeout-at (> now hard-timeout-at))]
+        hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
     (if (= "/api/session-status" (:uri request))
       (session-status request hard-timeout-at hard-timeout?)
       (if hard-timeout?

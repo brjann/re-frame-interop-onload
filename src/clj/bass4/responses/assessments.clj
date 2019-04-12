@@ -8,7 +8,7 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
             [bass4.services.assessments :as administrations]
-            [bass4.session.create :as session-create]))
+            [bass4.session.utils :as session-utils]))
 
 
 ;; --------------------------
@@ -54,9 +54,9 @@
                 out-session
                 {:assessments-checked? true
                  :assessments-pending? false})))
-        (session-create/assoc-out-session (handler request)
-                                          session-in
-                                          {:assessments-checked? true
+        (session-utils/assoc-out-session (handler request)
+                                         session-in
+                                         {:assessments-checked?  true
                                            :assessments-pending? false})))))
 
 ;; --------------------------
