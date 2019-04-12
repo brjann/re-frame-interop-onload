@@ -135,29 +135,31 @@ $(document).ready(function () {
    update_size(true);
 });
 
-function init_instrument(instrument) {
-   instrument.find(".option-label")
+function init_instrument($instrument) {
+   $instrument.find(".option-label")
       .click(function () {
-         instrument.parent().click()
+         $instrument.parent().click()
       });
 
-   instrument.find(":radio, :checkbox").parent()
+   $instrument.find(":radio, :checkbox").parent()
       .addClass("has-option")
       .click(checker_parent_click);
 
    // Activate item change also for specs to add has-data class
    // after specification missing error
    //instrument.find(":input").not(".spec").change(item_change);
-   instrument.find(":input.spec").change(spec_change);
-   instrument.find(":input").change(item_change);
+   $instrument.find(":input.spec").change(spec_change);
+   $instrument.find(":input").change(item_change);
 
-   instrument.find(".col:has(.cell)").addClass('cell');
-   if (instrument.hasClass('responsive') && instrument.hasClass('first-col-is-number')) {
-      instrument.find('.page').children().not('.navigator').each(handle_first_col);
+   $instrument.find(".col:has(.cell)").addClass('cell');
+   if ($instrument.hasClass('responsive') && $instrument.hasClass('first-col-is-number')) {
+      $instrument.find('.page').children().not('.navigator').each(handle_first_col);
    }
 
-   var pages = instrument.find('.page');
+   var pages = $instrument.find('.page');
    pages.each(init_pages(pages));
+
+   $instrument.addClass('form').areYouSure();
 }
 
 function init_pages(pages) {
