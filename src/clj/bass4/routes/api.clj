@@ -91,8 +91,10 @@
 
       (GET "/session-status" []
         :summary "Returns number of seconds until session dies and needs re-authentication"
-        :return {}
-        (do))
+        :return (s/maybe {:hard    (s/maybe Long)
+                          :re-auth (s/maybe Long)})
+        ;; This is a mock api declaration. session-timeout handles the response
+        (throw (Exception. "This method should never be called.")))
 
       (POST "/logout" []
         :summary "Logout from session."
