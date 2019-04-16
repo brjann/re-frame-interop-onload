@@ -98,7 +98,8 @@
         (parser/render-file
           template
           (merge params
-                 {:dev                      (env :dev)
+                 {:in-session?              session-timeout/*in-session?*
+                  :dev                      (env :dev)
                   :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
                   :page                     template
                   :csrf-token               csrf-token

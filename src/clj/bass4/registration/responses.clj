@@ -604,6 +604,13 @@
                      {:project-id project-id}
                      reg-params))))
 
+;; --------------
+;;   LOGGED IN
+;; --------------
+(defapi logged-in-page
+  []
+  (layout/render "registration-logged-in.html"))
+
+
 ;; TODO: Max number of sms
-;; TODO: Clear session before registration
 ;; TODO: Test confirming one contact info and then going back changing the other - only one code sent

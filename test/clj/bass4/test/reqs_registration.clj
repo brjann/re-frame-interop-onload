@@ -15,6 +15,8 @@
                                      *s*
                                      pass-by
                                      messages-are?
+                                     fix-time
+                                     modify-session
                                      poll-message-chan]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
@@ -63,6 +65,9 @@
                                                              :study-consent?         true})
                 passwords/letters-digits        (constantly "METALLICA")]
     (-> *s*
+        (visit "/registration/564610")
+        (follow-redirect)
+        (has (some-text? "Welcome"))
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
         (follow-redirect)
@@ -712,3 +717,16 @@
           (follow-redirect)
           (follow-redirect)
           (has (some-text? "no active tasks"))))))
+
+(deftest already-logged-in
+  (-> *s*
+      (modify-session {:user-id 536975 :double-authed? true})
+      (visit "/user/tx/messages")
+      (has (status? 200))
+      (visit "/registration/564610")
+      (follow-redirect)
+      (follow-redirect)
+      (has (some-text? "Already"))
+      (visit "/registration/564610/logout")
+      (follow-redirect)
+      (has (some-text? "Welcome"))))

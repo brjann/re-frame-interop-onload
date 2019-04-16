@@ -24,6 +24,10 @@
           (http-response/not-found))
         (http-response/not-found)))))
 
+(defn logged-in?
+  [{:keys [session]} _]
+  (boolean (:user-id session)))
+
 (defn spam-check-done?
   [{{:keys [registration]} :session {:keys [reg-params]} :db} _]
   (let [captcha-ok?  (:captcha-ok? registration)
@@ -62,12 +66,17 @@
   (:privacy-notice-disabled? reg-params))
 
 (def route-rules
-  [{:uri   "/registration/:project/captcha"
-    :rules [[#'spam-check-done? "form" :ok]
+  [{:uri   "/registration/:project/info"
+    :rules [[#'logged-in? "logged-in" :ok]]}
+
+   {:uri   "/registration/:project/captcha"
+    :rules [[#'logged-in? "logged-in" :ok]
+            [#'spam-check-done? "form" :ok]
             [#'use-bankid? "bankid" :ok]]}
 
    {:uri   "/registration/:project/bankid"
-    :rules [[#'spam-check-done? "form" :ok]
+    :rules [[#'logged-in? "logged-in" :ok]
+            [#'spam-check-done? "form" :ok]
             [#'use-bankid? :ok "captcha"]]}
 
    {:uri   "/registration/:project/privacy"
@@ -106,6 +115,13 @@
                                          {:keys [reg-params]} :db}]
     (GET "/" []
       (http-response/found (str "/registration/" project-id "/info")))
+
+    (GET "/logged-in" []
+      (reg-response/logged-in-page))
+
+    (GET "/logout" []
+      (-> (http-response/found "info")
+          (assoc :session nil)))
 
     (GET "/info" []
       (reg-response/info-page project-id))
