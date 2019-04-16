@@ -12,7 +12,9 @@
             [bass4.responses.auth :as auth-response]
             [bass4.module.api :as module-api]
             [bass4.api-coercion :as api]
-            [bass4.treatment.builder :as treatment-builder]))
+            [bass4.treatment.builder :as treatment-builder]
+            [bass4.session.timeout :as session-timeout]
+            [bass4.utils :as utils]))
 
 (defn treatment-mw
   [handler]
@@ -89,12 +91,30 @@
                                                   "dates should be shown in database's timezone.")}}}}
     (context "/api" [:as request]
 
-      (GET "/session-status" []
-        :summary "Returns number of seconds until session dies and needs re-authentication"
-        :return (s/maybe {:hard    (s/maybe Long)
-                          :re-auth (s/maybe Long)})
-        ;; This is a mock api declaration. session-timeout handles the response
-        (throw (Exception. "This method should never be called.")))
+      (context "/session" []
+        ;; This is a mock api declaration. session-timeout handles the responses
+        (GET "/status" []
+          :summary "Returns number of seconds until session dies and needs re-authentication"
+          :return (s/maybe {:hard    (s/maybe Long)
+                            :re-auth (s/maybe Long)})
+          (throw (Exception. "This method should never be called.")))
+
+        (POST "/timeout-re-auth" []
+          :summary "Forces session into re-auth timeout"
+          :return {:result String}
+          (throw (Exception. "This method should never be called.")))
+
+        (POST "/timeout-hard" []
+          :summary "Forces session into hard timeout (deletes the session)"
+          :return {:result String}
+          (throw (Exception. "This method should never be called.")))
+
+        (POST "/timeout-hard-soon" []
+          :summary "Forces session into hard timeout soon (as configured by :timeout-hard-soon setting)"
+          :description (str "Forces session into hard timeout soon. Configured by :timeout-hard-soon setting,"
+                            "which defaults to 1 hour.")
+          :return {:result String}
+          (throw (Exception. "This method should never be called."))))
 
       (POST "/logout" []
         :summary "Logout from session."

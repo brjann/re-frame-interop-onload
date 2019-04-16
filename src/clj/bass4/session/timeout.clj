@@ -11,6 +11,18 @@
             [clojure.tools.logging :as log]
             [bass4.config :as config]))
 
+(defn timeout-hard-limit
+  []
+  (config/env :timeout-hard))
+
+(defn timeout-hard-soon-limit
+  []
+  (config/env :timeout-hard-soon))
+
+(defn timeout-re-auth--limit
+  []
+  (config/env :timeout-soft))
+
 ;; -------------------
 ;;   RE-AUTH TIMEOUT
 ;; -------------------
@@ -101,6 +113,32 @@
         (http-response/ok)
         (assoc :headers {"Content-type" "application/json"}))))
 
+(defn session-api
+  "Please note that these methods should be declared in the API"
+  [request hard-timeout-at hard-timeout?]
+  (case (:uri request)
+    "/api/session/status"
+    (session-status request hard-timeout-at hard-timeout?)
+
+    "/api/session/timeout-re-auth"
+    (-> (http-response/ok {:result "ok"})
+        (assoc :session
+               (merge (:session request)
+                      {::re-auth-timeout-at (utils/current-time)})))
+
+    "/api/session/timeout-hard"
+    (-> (http-response/ok {:result "ok"})
+        (assoc :session
+               (merge (:session request)
+                      {::hard-timeout-at (utils/current-time)})))
+
+    "/api/session/timeout-hard-soon"
+    (-> (http-response/ok {:result "ok"})
+        (assoc :session
+               (merge (:session request)
+                      {::hard-timeout-at (+ (utils/current-time)
+                                            (timeout-hard-soon-limit))})))))
+
 (defn- wrap-session-hard-timeout*
   [handler request hard-timeout]
   (let [hard-timeout    (or *timeout-hard-override* hard-timeout)
@@ -108,8 +146,8 @@
         now             (utils/current-time)
         hard-timeout-at (::hard-timeout-at session-in)
         hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
-    (if (= "/api/session-status" (:uri request))
-      (session-status request hard-timeout-at hard-timeout?)
+    (if (str/starts-with? (:uri request) "/api/session/")
+      (session-api request hard-timeout-at hard-timeout?)
       (if hard-timeout?
         (let [response (handler (assoc request :session nil))]
           (assoc response :session nil))
