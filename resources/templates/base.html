@@ -36,6 +36,7 @@
 {% script "/assets/jquery-color/jquery.color.js" %}
 {% script "/assets/bootstrap/js/bootstrap.bundle.min.js" %}
 {% script-modified "/js/layout.js" %}
+{% script-modified "/js/session-status.js" %}
 <script src="/js/underscore-min.js"></script>
 {% script-modified "/js/form-ajax.js" %}
 {% script-modified "/js/are-you-sure.js" %}
@@ -44,6 +45,7 @@
 {% script-modified "/js/instruments.js" %}
 <script type="text/javascript">
    // @formatter:off
+   var in_session = {{in-session?}};
    var session_timeout_hard_soon = {{timeout-hard-soon}};
    // @formatter:on
    var csrfToken = "{{csrf-token}}";

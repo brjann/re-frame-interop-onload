@@ -10,6 +10,8 @@
             [clojure.tools.logging :as log]
             [bass4.config :as config]))
 
+(def ^:dynamic *in-session?* false)
+
 (defn timeout-hard-limit
   []
   (config/env :timeout-hard))
@@ -149,8 +151,10 @@
       (session-api request hard-timeout-at hard-timeout?)
       (if hard-timeout?
         (let [response (handler (assoc request :session nil))]
-          (assoc response :session nil))
-        (no-hard-timeout-response handler request session-in now hard-timeout)))))
+          (binding [*in-session?* false]
+            (assoc response :session nil)))
+        (binding [*in-session?* (not (empty? session-in))]
+          (no-hard-timeout-response handler request session-in now hard-timeout))))))
 
 (defn wrap-session-hard-timeout
   ([handler]
