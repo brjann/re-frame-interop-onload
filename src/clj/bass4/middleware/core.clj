@@ -119,27 +119,7 @@
       (request-state/add-to-state-key! :info "Assessments pending"))
     res))
 
-;; I tried to wrap around immutant.web.middleware/wrap-session
-;; but it did not work. Worked in browser but not tests.
-;;
-;; This code does not work in tests
-;(defn session-cookie-wrapper
-;  [handler request]
-;  ;; Default absolute time-out to 2 hours
-;  (let [session-handler (wrap-session handler {:cookie-attrs {:http-only true} :timeout (or (env :timeout-hard) (* 120 60))})]
-;    (session-handler request)))
-;
-;(defn wrap-session-cookie
-;  [handler]
-;  (fn [request]
-;    (session-cookie-wrapper handler request)))
-;
-; Failing test using kerodon
-;(get-in (-> (session (app))
-;            (modify-session {:user-id 549821 :double-authed? true})
-;            (visit "/debug/session")) [:response :body])
-
-;; So extra wrapper instead
+;; TODO: Maybe move into session ns
 (defn request-state-session-info
   [handler request]
   (let [session (:session request)]
