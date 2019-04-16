@@ -43,6 +43,9 @@
 {% script "/js/sprintf.min.js" %}
 {% script-modified "/js/instruments.js" %}
 <script type="text/javascript">
+   // @formatter:off
+   var session_timeout_hard_soon = {{timeout-hard-soon}};
+   // @formatter:on
    var csrfToken = "{{csrf-token}}";
    var context = "{{servlet-context}}";
    var text_offline_warning = "{%tr offline-warning %}";

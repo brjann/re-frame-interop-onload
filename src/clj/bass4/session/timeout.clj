@@ -6,7 +6,6 @@
             [bass4.session.utils :as session-utils]
             [bass4.utils :as utils]
             [ring.util.http-response :as http-response]
-            [bass4.layout :as layout]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [bass4.config :as config]))

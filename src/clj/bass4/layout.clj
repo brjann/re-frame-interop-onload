@@ -22,7 +22,8 @@
             [ring.util.http-response :refer [content-type ok] :as http-response]
             [clj-time.coerce :as tc]
             [selmer.tags :as tags]
-            [bass4.services.privacy :as privacy-service]))
+            [bass4.services.privacy :as privacy-service]
+            [bass4.session.timeout :as session-timeout]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -98,6 +99,7 @@
           :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
           :page template
           :csrf-token (force *anti-forgery-token*)
+          :timeout-hard-soon (session-timeout/timeout-hard-soon-limit)
           :title (bass-service/db-title))))
     "text/html; charset=utf-8"))
 
