@@ -8,7 +8,8 @@
             [ring.util.http-response :as http-response]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.http-utils :as h-utils]))
 
 (def ^:dynamic *in-session?* false)
 
@@ -109,10 +110,7 @@
                                          (- hard-timeout-at now))
                               :re-auth (when (and re-auth-timeout-at (not (:external-login? session)))
                                          (max 0 (- re-auth-timeout-at now)))})]
-    (-> res
-        (json/write-str)
-        (http-response/ok)
-        (assoc :headers {"Content-type" "application/json"}))))
+    (h-utils/json-response res)))
 
 (defn session-api
   "Please note that these methods should be declared in the API"
@@ -122,20 +120,20 @@
     (session-status request hard-timeout-at hard-timeout?)
 
     "/api/session/timeout-re-auth"
-    (-> (http-response/ok {:result "ok"})
+    (-> (h-utils/json-response {:result "ok"})
         (assoc :session
                (merge (:session request)
                       {::re-auth-timeout-at (utils/current-time)})))
 
     "/api/session/timeout-hard"
-    (-> (http-response/ok {:result "ok"})
+    (-> (h-utils/json-response {:result "ok"})
         (assoc :session
                (merge (:session request)
                       {::hard-timeout-at (utils/current-time)})))
 
     "/api/session/timeout-hard-soon"
     (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
-      (-> (http-response/ok {:result "ok"})
+      (-> (h-utils/json-response {:result "ok"})
           (assoc :session
                  (merge (:session request)
                         {::hard-timeout-at    (+ (utils/current-time)
