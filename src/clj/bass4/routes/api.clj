@@ -110,9 +110,14 @@
           (throw (Exception. "This method should never be called.")))
 
         (POST "/timeout-hard-soon" []
-          :summary "Forces session into hard timeout soon (as configured by :timeout-hard-soon setting)"
+          :summary "Forces session into hard timeout soon"
           :description (str "Forces session into hard timeout soon. Configured by :timeout-hard-soon setting,"
                             "which defaults to 1 hour.")
+          :return {:result String}
+          (throw (Exception. "This method should never be called.")))
+
+        (POST "/renew" []
+          :summary "Sets timeouts to default values"
           :return {:result String}
           (throw (Exception. "This method should never be called."))))
 
