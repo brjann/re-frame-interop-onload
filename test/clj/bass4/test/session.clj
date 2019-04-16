@@ -174,9 +174,39 @@
           (has (api-response? {:hard    timeout-hard
                                :re-auth 0}))
           (visit "/api/user/tx/messages")
-          (has (status? 440))
+          (has (status? 440))))))
+
+(deftest session-timeout-timeout-soon
+  (let [timeout-hard      (session-timeout/timeout-hard-limit)
+        timeout-re-auth   (session-timeout/timeout-re-auth--limit)
+        timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
+    (fix-time
+      (-> *s*
+          (visit "/api/session/status")
+          (has (api-response? nil))
+          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (visit "/api/user/tx/messages")
+          (has (status? 200))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    timeout-hard
+                               :re-auth timeout-re-auth}))
           (visit "/api/session/timeout-hard-soon")
           (has (status? 200))
           (visit "/api/session/status")
           (has (api-response? {:hard    timeout-hard-soon
-                               :re-auth 0}))))))
+                               :re-auth 0}))))
+    (fix-time
+      (-> *s*
+          (visit "/api/session/status")
+          (has (api-response? nil))
+          (modify-session (session-create/new {:user-id 536975} {:external-login? true}))
+          (visit "/api/user/tx/messages")
+          (has (status? 200))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    timeout-hard
+                               :re-auth nil}))
+          (visit "/api/session/timeout-hard-soon")
+          (has (status? 200))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    timeout-hard-soon
+                               :re-auth nil}))))))

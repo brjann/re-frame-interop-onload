@@ -134,11 +134,14 @@
                       {::hard-timeout-at (utils/current-time)})))
 
     "/api/session/timeout-hard-soon"
-    (-> (http-response/ok {:result "ok"})
-        (assoc :session
-               (merge (:session request)
-                      {::hard-timeout-at (+ (utils/current-time)
-                                            (timeout-hard-soon-limit))})))))
+    (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
+      (-> (http-response/ok {:result "ok"})
+          (assoc :session
+                 (merge (:session request)
+                        {::hard-timeout-at    (+ (utils/current-time)
+                                                 (timeout-hard-soon-limit))
+                         ::re-auth-timeout-at (when re-auth-timeout-at
+                                                0)}))))))
 
 (defn- wrap-session-hard-timeout*
   [handler request hard-timeout]
