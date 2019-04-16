@@ -21,7 +21,7 @@
   []
   (config/env :timeout-hard-soon))
 
-(defn timeout-re-auth--limit
+(defn timeout-re-auth-limit
   []
   (config/env :timeout-soft))
 
@@ -148,7 +148,7 @@
                  (merge (:session request)
                         {::hard-timeout-at    (timeout-hard-soon-limit)
                          ::re-auth-timeout-at (when re-auth-timeout-at
-                                                (timeout-re-auth--limit))}))))))
+                                                (timeout-re-auth-limit))}))))))
 
 (defn- wrap-session-hard-timeout*
   [handler request hard-timeout]

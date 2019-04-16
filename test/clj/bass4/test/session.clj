@@ -53,7 +53,7 @@
 
 (deftest session-status-time-passes-re-auth
   (let [timeout-hard    (session-timeout/timeout-hard-limit)
-        timeout-re-auth (session-timeout/timeout-re-auth--limit)]
+        timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -81,7 +81,7 @@
 
 (deftest session-status-time-passes-hard
   (let [timeout-hard    (session-timeout/timeout-hard-limit)
-        timeout-re-auth (session-timeout/timeout-re-auth--limit)]
+        timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -111,7 +111,7 @@
 
 (deftest session-status-logout
   (let [timeout-hard    (session-timeout/timeout-hard-limit)
-        timeout-re-auth (session-timeout/timeout-re-auth--limit)]
+        timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -129,7 +129,7 @@
 
 (deftest session-status-no-re-auth-path
   (let [timeout-hard    (session-timeout/timeout-hard-limit)
-        timeout-re-auth (session-timeout/timeout-re-auth--limit)]
+        timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -156,7 +156,7 @@
 
 (deftest session-timeout-modification
   (let [timeout-hard      (session-timeout/timeout-hard-limit)
-        timeout-re-auth   (session-timeout/timeout-re-auth--limit)
+        timeout-re-auth   (session-timeout/timeout-re-auth-limit)
         timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
     (fix-time
       (-> *s*
@@ -178,7 +178,7 @@
 
 (deftest session-timeout-timeout-soon
   (let [timeout-hard      (session-timeout/timeout-hard-limit)
-        timeout-re-auth   (session-timeout/timeout-re-auth--limit)
+        timeout-re-auth   (session-timeout/timeout-re-auth-limit)
         timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
     (fix-time
       (-> *s*
