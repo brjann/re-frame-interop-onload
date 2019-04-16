@@ -90,18 +90,21 @@
 (defn render
   "renders the HTML template located relative to resources/templates"
   [template & [params]]
-  (content-type
-    (ok
-      (parser/render-file
-        template
-        (assoc params
-          :dev (env :dev)
-          :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
-          :page template
-          :csrf-token (force *anti-forgery-token*)
-          :timeout-hard-soon (session-timeout/timeout-hard-soon-limit)
-          :title (bass-service/db-title))))
-    "text/html; charset=utf-8"))
+  (let [csrf-token (if (bound? #'*anti-forgery-token*)
+                     (force *anti-forgery-token*)
+                     "")]
+    (content-type
+      (ok
+        (parser/render-file
+          template
+          (merge params
+                 {:dev                      (env :dev)
+                  :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
+                  :page                     template
+                  :csrf-token               csrf-token
+                  :timeout-hard-soon        (session-timeout/timeout-hard-soon-limit)
+                  :title                    (bass-service/db-title)})))
+      "text/html; charset=utf-8")))
 
 (defn text-response
   [var]
