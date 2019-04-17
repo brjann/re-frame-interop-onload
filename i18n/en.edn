@@ -27,7 +27,8 @@
  :download        "Download"
  :session-status  {:renew-click-title   "Confirm that you are active"
                    :renew-click-text    "You have been inactive for a long while and need to confirm that you are still using the system. Please click the button below to prevent you from being logged out."
-                   :renew-password-text "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."}
+                   :renew-password-text "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."
+                   :time-to-logout      "Time to logout: %d min %d sec"}
  :registration    {:begin-registration         "Begin registration"
                    :logged-in-title            "Already logged in"
                    :logged-in-text             "You are already logged into the system. If you want to continue with the registration you will be logged out."

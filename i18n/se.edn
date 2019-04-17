@@ -27,7 +27,8 @@
  :download        "Ladda ned"
  :session-status  {:renew-click-title   "Bekräfta att du är aktiv"
                    :renew-click-text    "Du har varit inaktiv en lång stund och behöver bekräfta att du fortfarande använder systemet. Var vänlig klicka på knappen nedan för att inte bli utloggad."
-                   :renew-password-text "Du har varit inaktiv en lång stund och behöver ange ditt lösenord för att bekräfta att du fortfarande använder systemet. Var vänlig ange ditt lösenord nedan för att inte bli utloggad."}
+                   :renew-password-text "Du har varit inaktiv en lång stund och behöver ange ditt lösenord för att bekräfta att du fortfarande använder systemet. Var vänlig ange ditt lösenord nedan för att inte bli utloggad."
+                   :time-to-logout      "Tid till utloggning: %d min %d sek"}
  :registration    {:begin-registration         "Påbörja anmälan"
                    :logged-in-title            "Redan inloggad"
                    :logged-in-text             "Du är redan inloggad i systemet. Om du vill fortsätta med anmälan kommer du att bli utloggad."
