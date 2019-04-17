@@ -151,8 +151,6 @@
                           {::hard-timeout-at    (+ (utils/current-time)
                                                    (timeout-hard-limit))})))))))
 
-;; TODO: Write /renew tests
-
 ;; -------------------
 ;;    HARD TIMEOUT
 ;; -------------------

@@ -15,22 +15,22 @@
                                      *s*
                                      pass-by
                                      messages-are?
+                                     api-response?
                                      fix-time
+                                     advance-time-s!
                                      modify-session
                                      poll-message-chan]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
-            [bass4.middleware.debug :as debug]
-            [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clojure.string :as string]
             [bass4.registration.services :as reg-service]
             [bass4.external-messages :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
-            [bass4.services.attack-detector :as a-d]
             [net.cgrand.enlive-html :as enlive]
-            [bass4.services.privacy :as privacy-service]))
+            [bass4.services.privacy :as privacy-service]
+            [bass4.session.timeout :as session-timeout]))
 
 
 (use-fixtures
@@ -53,97 +53,118 @@
       (visit "/registration/666/info")
       (has (status? 404))))
 
-(deftest registration-flow
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none
-                                                             :study-consent?         true})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610")
-        (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
-        (has (status? 422))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (has (status? 302))
-        (visit "/registration/564610/captcha")
-        (has (status? 302))
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "Who is collecting the data"))
-        (visit "/registration/564610/privacy" :request-method :post :params {})
-        (pass-by (messages-are?
-                   [[:email "API"]]
-                   (poll-message-chan *debug-chan*)))
-        (has (status? 400))
-        (visit "/registration/564610/form")
-        (has (status? 302))
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (has (status? 302))
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "I want to be in the study"))
-        (visit "/registration/564610/form")
-        (follow-redirect)
-        (has (some-text? "I want to be in the study"))
-        (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
-        (follow-redirect)
-        (has (some-text? "Enter your"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
-        (has (status? 400))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (has (status? 302))
-        (pass-by (messages-are?
-                   [[:email "METALLICA"]
-                    [:sms "METALLICA"]]
-                   (poll-message-chan *debug-chan* 2)))
-        (follow-redirect)
-        (has (some-text? "Validate"))
-        (visit "/registration/564610/form")
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434" :code-sms "345345"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA" :code-sms "345345"})
-        (has (status? 200))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
-        (has (status? 302))
-        ;; Redirect to finish
-        (follow-redirect)
-        ;; Session created
-        (follow-redirect)
-        ;; Redirect to pending assessments
-        (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/user/assessments")
-        (has (some-text? "AAQ"))
-        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-        (follow-redirect)
-        (has (some-text? "Thanks"))
-        (visit "/user/assessments")
-        ;; Assessments completed
-        (follow-redirect)
-        ;; Redirect to finish screen
-        (follow-redirect)
-        (has (some-text? "Login")))))
+(deftest registration-flow+renew
+  (fix-time
+    (let [timeout-hard      (session-timeout/timeout-hard-limit)
+          timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
+      (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                    reg-service/registration-params (constantly {:allowed?               true
+                                                                 :fields                 #{:email :sms-number}
+                                                                 :group                  564616
+                                                                 :allow-duplicate-email? true
+                                                                 :allow-duplicate-sms?   true
+                                                                 :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                 :auto-username          :none
+                                                                 :study-consent?         true})
+                    passwords/letters-digits        (constantly "METALLICA")]
+        (-> *s*
+            (visit "/registration/564610")
+            (follow-redirect)
+            (has (some-text? "Welcome"))
+            (visit "/registration/564610/captcha")
+            ;; Captcha session is created
+            (follow-redirect)
+            (has (some-text? "code below"))
+            (visit "/registration/564610/captcha" :request-method :post :params {:captcha "234234"})
+            (has (status? 422))
+            (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+            (has (status? 302))
+            (visit "/registration/564610/captcha")
+            (has (status? 302))
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Who is collecting the data"))
+            (visit "/api/session/timeout-hard-soon")
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard-soon
+                                 :re-auth nil}))
+            (visit "/api/session/renew")
+            (has (status? 200))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard
+                                 :re-auth nil}))
+            (visit "/registration/564610/privacy" :request-method :post :params {})
+            (pass-by (messages-are?
+                       [[:email "API"]]
+                       (poll-message-chan *debug-chan*)))
+            (has (status? 400))
+            (visit "/registration/564610/form")
+            (has (status? 302))
+            (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+            (has (status? 302))
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "I want to be in the study"))
+            (visit "/registration/564610/form")
+            (follow-redirect)
+            (has (some-text? "I want to be in the study"))
+            (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
+            (follow-redirect)
+            (has (some-text? "Enter your"))
+            (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+            (has (status? 400))
+            (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
+            (has (status? 400))
+            (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
+            (has (status? 400))
+            (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
+            (has (status? 422))
+            (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
+            (has (status? 400))
+            (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
+            (has (status? 400))
+            (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+            (has (status? 302))
+            (pass-by (messages-are?
+                       [[:email "METALLICA"]
+                        [:sms "METALLICA"]]
+                       (poll-message-chan *debug-chan* 2)))
+            (follow-redirect)
+            (has (some-text? "Validate"))
+            (visit "/registration/564610/form")
+            (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434" :code-sms "345345"})
+            (has (status? 422))
+            (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA" :code-sms "345345"})
+            (has (status? 200))
+            (visit "/registration/564610/validate-sms" :request-method :post :params {:code-email "METALLICA" :code-sms "METALLICA"})
+            (has (status? 302))
+            ;; Redirect to finish
+            (follow-redirect)
+            ;; Session created
+            (follow-redirect)
+            ;; Redirect to pending assessments
+            (follow-redirect)
+            (has (some-text? "Welcome"))
+            (visit "/user/assessments")
+            (has (some-text? "AAQ"))
+            (visit "/api/session/timeout-hard-soon")
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard-soon
+                                 :re-auth nil}))
+            (visit "/api/session/renew")
+            (has (status? 200))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard
+                                 :re-auth nil}))
+            (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+            (follow-redirect)
+            (has (some-text? "Thanks"))
+            (visit "/user/assessments")
+            ;; Assessments completed
+            (follow-redirect)
+            ;; Redirect to finish screen
+            (follow-redirect)
+            (has (some-text? "Login")))))))
 
 (deftest registration-no-study-consent
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
