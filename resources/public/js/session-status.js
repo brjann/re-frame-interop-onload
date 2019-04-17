@@ -5,7 +5,8 @@ $(document).ready(function () {
       first_run = true,
       timeout_soon = false,
       $time_to_logout,
-      time_to_logout_handle;
+      time_to_logout_handle,
+      $timeout_modal;
 
    renew_session_password_success = function () {
       timeout_soon = false;
@@ -22,10 +23,10 @@ $(document).ready(function () {
    var set_time_to_logout_text = function ($time_to_logout, hard) {
       var min = Math.floor(hard / 60);
       var sec = hard % 60;
-      $time_to_logout.text(sprintf(text_time_to_logout, min, sec));
+      $time_to_logout.text(sprintf(text_session_time_to_logout, min, sec));
    };
 
-   update_time_to_logout = function ($time_to_logout, hard) {
+   var update_time_to_logout = function ($time_to_logout, hard) {
       if (time_to_logout_handle !== undefined) {
          clearInterval(time_to_logout_handle);
       }
@@ -42,22 +43,47 @@ $(document).ready(function () {
          clearInterval(interval_handle);
          return;
       }
-      var hard = data.hard,
+      first_run = false;
+
+      var hard, re_auth;
+      if (data !== null) {
+         hard = data['hard'];
          re_auth = data['re-auth'];
+      }
+
+      if (data === null || hard === 0) {
+         if (timeout_soon) {
+            clearInterval(time_to_logout_handle);
+            clearInterval(interval_handle);
+            $timeout_modal.find('input').remove();
+            $timeout_modal.find('button').remove();
+            $timeout_modal.find('.button').remove();
+            $time_to_logout.text(sprintf(text_session_time_to_logout, 0, 0));
+            $time_to_logout.parent()
+               .append('<p>' + text_session_timeout_hard + '</p>')
+               .css('color', 'red');
+         } else {
+            alert(text_session_timeout_hard);
+            window.location.href = "/login"
+         }
+         return;
+      }
 
       if (timeout_soon) {
          update_time_to_logout($time_to_logout, hard);
-      } else if (hard <= session_timeout_hard_soon) {
+         return;
+      }
+
+      if (hard <= session_timeout_hard_soon) {
          timeout_soon = true;
          console.log('Timeout soon!');
-         var $modal;
          if (re_auth === null) {
-            $modal = $('#renew-session-click-modal');
+            $timeout_modal = $('#renew-session-click-modal');
          } else {
-            $modal = $('#renew-session-password-modal');
+            $timeout_modal = $('#renew-session-password-modal');
          }
-         $modal.modal();
-         $time_to_logout = $modal.find('.time-to-logout');
+         $timeout_modal.modal();
+         $time_to_logout = $timeout_modal.find('.time-to-logout');
          update_time_to_logout($time_to_logout, hard);
       }
    };
@@ -71,6 +97,7 @@ $(document).ready(function () {
 
    if (in_session) {
       interval_handle = setInterval(session_checker, 1000 * 5);
+      session_checker();
    } else {
       console.log('Not in session - no session checker');
    }

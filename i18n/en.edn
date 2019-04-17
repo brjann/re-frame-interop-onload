@@ -28,6 +28,7 @@
  :session-status  {:renew-click-title   "Confirm that you are active"
                    :renew-click-text    "You have been inactive for a long while and need to confirm that you are still using the system. Please click the button below to prevent you from being logged out."
                    :renew-password-text "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."
+                   :hard-timeout        "You have been inactive for a long while and you have been logged out. Any unsaved data has been lost."
                    :time-to-logout      "Time to logout: %d min %d sec"}
  :registration    {:begin-registration         "Begin registration"
                    :logged-in-title            "Already logged in"
