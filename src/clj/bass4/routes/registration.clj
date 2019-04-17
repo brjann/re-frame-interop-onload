@@ -28,6 +28,10 @@
   [{:keys [session]} _]
   (boolean (:user-id session)))
 
+(defn session?
+  [{:keys [session]} _]
+  (not (empty? session)))
+
 (defn spam-check-done?
   [{{:keys [registration]} :session {:keys [reg-params]} :db} _]
   (let [captcha-ok?  (:captcha-ok? registration)
@@ -67,7 +71,8 @@
 
 (def route-rules
   [{:uri   "/registration/:project/info"
-    :rules [[#'logged-in? "logged-in" :ok]]}
+    :rules [[#'logged-in? "logged-in" :ok]
+            [#'session? "clear-session" :ok]]}
 
    {:uri   "/registration/:project/captcha"
     :rules [[#'logged-in? "logged-in" :ok]
@@ -119,7 +124,7 @@
     (GET "/logged-in" []
       (reg-response/logged-in-page))
 
-    (GET "/logout" []
+    (GET "/clear-session" []
       (-> (http-response/found "info")
           (assoc :session nil)))
 

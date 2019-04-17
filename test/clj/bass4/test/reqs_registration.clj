@@ -748,6 +748,21 @@
       (follow-redirect)
       (follow-redirect)
       (has (some-text? "Already"))
-      (visit "/registration/564610/logout")
+      (visit "/registration/564610/clear-session")
+      (follow-redirect)
+      (has (some-text? "Welcome"))))
+
+(deftest session-has-data
+  ;; Doesn't have data - 1 redirect
+  (-> *s*
+      (visit "/registration/564610")
+      (follow-redirect)
+      (has (some-text? "Welcome")))
+  ;; Does have data - 3 redirects
+  (-> *s*
+      (modify-session {"xxx" true})
+      (visit "/registration/564610")
+      (follow-redirect)
+      (follow-redirect)
       (follow-redirect)
       (has (some-text? "Welcome"))))
