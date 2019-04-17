@@ -134,10 +134,9 @@
                  (merge (:session request)
                         {::hard-timeout-at (+ (utils/current-time)
                                               (timeout-hard-soon-limit))}
-                        (if re-auth-timeout-at
+                        (when re-auth-timeout-at
                           {::re-auth-timeout-at 0
-                           :auth-re-auth?       true}
-                          {::re-auth-timeout-at nil})))))
+                           :auth-re-auth?       true})))))
 
     "/api/session/renew"
     (let [session (:session request)]
@@ -150,8 +149,9 @@
             (assoc :session
                    (merge (:session request)
                           {::hard-timeout-at    (+ (utils/current-time)
-                                                   (timeout-hard-limit))
-                           ::re-auth-timeout-at nil})))))))
+                                                   (timeout-hard-limit))})))))))
+
+;; TODO: Write /renew tests
 
 ;; -------------------
 ;;    HARD TIMEOUT
