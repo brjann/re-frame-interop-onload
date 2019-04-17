@@ -261,8 +261,8 @@ $(document).ready(function () {
  */
 
 function re_auth_modal_success() {
-	$(this).find(".alert").hide();
-	$(this).find("input").val("");
+   $(this).find('.alert').hide();
+   $(this).find('input').val('');
 }
 
 function re_auth_modal_error(jqXHR) {

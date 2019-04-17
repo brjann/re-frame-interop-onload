@@ -194,7 +194,14 @@
           (has (status? 200))
           (visit "/api/session/status")
           (has (api-response? {:hard    timeout-hard-soon
-                               :re-auth 0}))))
+                               :re-auth 0}))
+          (visit "/api/user/tx/messages")
+          (has (status? 440))
+          (visit "/re-auth" :request-method :post :params {:password 536975})
+          (has (status? 302))
+          (visit "/api/user/tx/messages")
+          (has (status? 200))))
+
     (fix-time
       (-> *s*
           (visit "/api/session/status")

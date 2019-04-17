@@ -29,14 +29,16 @@
 ;;   RE-AUTH TIMEOUT
 ;; -------------------
 
-(defn reset-re-auth
-  [session]
-  (dissoc session :auth-re-auth? ::re-auth-timeout-at))
-
 (defn re-auth-timeout-map
   []
   {::re-auth-timeout-at (+ (utils/current-time)
-                           (or (env :timeout-soft) (* 30 60)))})
+                           (timeout-re-auth-limit))})
+
+(defn reset-re-auth
+  [session]
+  (merge session
+         {:auth-re-auth? false}
+         (re-auth-timeout-map)))
 
 (defn- request-string
   "Return the request part of the request."
@@ -136,10 +138,12 @@
       (-> (h-utils/json-response {:result "ok"})
           (assoc :session
                  (merge (:session request)
-                        {::hard-timeout-at    (+ (utils/current-time)
-                                                 (timeout-hard-soon-limit))
-                         ::re-auth-timeout-at (when re-auth-timeout-at
-                                                0)}))))
+                        {::hard-timeout-at (+ (utils/current-time)
+                                              (timeout-hard-soon-limit))}
+                        (if re-auth-timeout-at
+                          {::re-auth-timeout-at 0
+                           :auth-re-auth?       true}
+                          {::re-auth-timeout-at nil})))))
 
     "/api/session/renew"
     (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
