@@ -5,8 +5,14 @@ $(document).ready(function () {
       if (first_run && data === null) {
          console.log('First run and no session info, clearing interval');
          clearInterval(timeout);
+         return;
       }
       console.log(data);
+      var hard = data.hard,
+         re_auth = data['re-auth'];
+      if (hard <= session_timeout_hard_soon) {
+         ;
+      }
    };
 
    var session_checker = function () {

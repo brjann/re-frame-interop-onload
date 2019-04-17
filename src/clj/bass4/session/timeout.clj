@@ -141,7 +141,7 @@
                          ::re-auth-timeout-at (when re-auth-timeout-at
                                                 0)}))))
 
-    "/api/session/timeout-hard-soon"
+    "/api/session/renew"
     (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
       (-> (h-utils/json-response {:result "ok"})
           (assoc :session
