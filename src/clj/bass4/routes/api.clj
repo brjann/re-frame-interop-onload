@@ -117,7 +117,9 @@
           (throw (Exception. "This method should never be called.")))
 
         (POST "/renew" []
-          :summary "Sets timeouts to default values"
+          :summary "Sets hard timeout to default value."
+          :description (str "Sets hard timeout to default value. \n\n"
+                            "Cannot be used for sessions that require re-auth to renew session.")
           :return {:result String}
           (throw (Exception. "This method should never be called."))))
 

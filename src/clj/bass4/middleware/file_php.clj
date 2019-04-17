@@ -29,7 +29,6 @@
 
                             (:uid params)
                             (http-response/file-response (str (bass/uid-file (:uid params))))))]
-        (log/debug response)
         (if response
           (file/file-headers response)
           (http-response/not-found "File not found")))

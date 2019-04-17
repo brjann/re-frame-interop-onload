@@ -89,17 +89,9 @@
    (fn [request]
      (wrap-session-re-auth-timeout* handler request))))
 
-;; -------------------
-;;    HARD TIMEOUT
-;; -------------------
-
-(def ^:dynamic *timeout-hard-override* nil)
-
-(defn- no-hard-timeout-response
-  [handler request session-in now hard-timeout]
-  (let [response        (handler request)
-        hard-timeout-at (+ now hard-timeout)]               ; dec because comparison is strictly after
-    (session-utils/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
+;; ------------------------
+;;    SESSION STATUS API
+;; ------------------------
 
 (defn- session-status
   [request hard-timeout-at hard-timeout?]
@@ -110,7 +102,9 @@
                                          hard-timeout?)
                              {:hard    (when hard-timeout-at
                                          (- hard-timeout-at now))
-                              :re-auth (when (and re-auth-timeout-at (not (:external-login? session)))
+                              :re-auth (when (and re-auth-timeout-at
+                                                  (:user-id session)
+                                                  (not (:external-login? session)))
                                          (max 0 (- re-auth-timeout-at now)))})]
     (h-utils/json-response res)))
 
@@ -146,17 +140,34 @@
                           {::re-auth-timeout-at nil})))))
 
     "/api/session/renew"
-    (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
-      (-> (h-utils/json-response {:result "ok"})
-          (assoc :session
-                 (merge (:session request)
-                        {::hard-timeout-at    (timeout-hard-soon-limit)
-                         ::re-auth-timeout-at (when re-auth-timeout-at
-                                                (timeout-re-auth-limit))}))))))
+    (let [session (:session request)]
+      (cond
+        (not (or (:external-login? session) (not (:user-id session))))
+        (http-response/bad-request "Renew can only be used for non-user or external-login sessions")
+
+        :else
+        (-> (h-utils/json-response {:result "ok"})
+            (assoc :session
+                   (merge (:session request)
+                          {::hard-timeout-at    (+ (utils/current-time)
+                                                   (timeout-hard-limit))
+                           ::re-auth-timeout-at nil})))))))
+
+;; -------------------
+;;    HARD TIMEOUT
+;; -------------------
+
+(def ^:dynamic *timeout-hard-override* nil)
+
+(defn- no-hard-timeout-response
+  [handler request session-in now hard-timeout]
+  (let [response        (handler request)
+        hard-timeout-at (+ now hard-timeout)]
+    (session-utils/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
 
 (defn- wrap-session-hard-timeout*
-  [handler request hard-timeout]
-  (let [hard-timeout    (or *timeout-hard-override* hard-timeout)
+  [handler request]
+  (let [hard-timeout    (or *timeout-hard-override* (timeout-hard-limit))
         session-in      (:session request)
         now             (utils/current-time)
         hard-timeout-at (::hard-timeout-at session-in)
@@ -171,8 +182,6 @@
           (no-hard-timeout-response handler request session-in now hard-timeout))))))
 
 (defn wrap-session-hard-timeout
-  ([handler]
-   (wrap-session-hard-timeout handler (* 2 60 60)))
-  ([handler hard-timeout]
-   (fn [request]
-     (wrap-session-hard-timeout* handler request hard-timeout))))
+  [handler]
+  (fn [request]
+    (wrap-session-hard-timeout* handler request)))
