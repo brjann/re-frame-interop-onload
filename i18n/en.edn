@@ -25,11 +25,9 @@
                    :username-password       "If you have a username and password:"}
  :offline-warning "You seem to be offline. Please make sure you are online before posting."
  :download        "Download"
- :session-status  {:renew-click-title    "Inactivity warning"
-                   :renew-click-text     "You have been inactive for a long while and need to confirm that you are still using the system. Please click the button below to prevent you from being logged out."
-                   :renew-click-button   "Confirm"
-                   :renew-password-title "Authenticate again"
-                   :renew-password-text  "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."}
+ :session-status  {:renew-click-title   "Confirm that you are active"
+                   :renew-click-text    "You have been inactive for a long while and need to confirm that you are still using the system. Please click the button below to prevent you from being logged out."
+                   :renew-password-text "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."}
  :registration    {:begin-registration         "Begin registration"
                    :logged-in-title            "Already logged in"
                    :logged-in-text             "You are already logged into the system. If you want to continue with the registration you will be logged out."
