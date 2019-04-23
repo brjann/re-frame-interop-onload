@@ -9,7 +9,9 @@
                                      debug-headers-not-text?
                                      log-return
                                      log-body
+                                     log-headers
                                      *s*
+                                     pass-by
                                      advance-time-s!
                                      fix-time
                                      modify-session]]
@@ -85,7 +87,7 @@
   (-> *s*
       (attack-uri
         "/login"
-        {:username "xxx" :password "xxx"}
+        {:username "%€#&()" :password "%€#&()"}
         standard-attack)
       (visit "/login" :request-method :post :params {:username 536975 :password 536975})
       (has (status? 429))
@@ -104,7 +106,7 @@
       (attack-uri
         state
         "/double-auth"
-        {:code "xxx"}
+        {:code "%€#&()"}
         standard-attack))))
 
 (deftest attack-re-auth
@@ -122,7 +124,7 @@
       (attack-uri
         state
         "/re-auth"
-        {:password "xxx"}
+        {:password "%€#&()"}
         standard-attack))))
 
 (deftest attack-api-re-auth
@@ -138,7 +140,7 @@
       (attack-uri
         state
         "/api/re-auth"
-        [:body-params {:password "xxx"}]
+        [:body-params {:password "%€#&()"}]
         standard-attack))))
 
 #_(deftest attack-api-re-auth-xxx
@@ -151,7 +153,7 @@
                       (modify-session {:auth-re-auth? true})
                       (visit "/api/user/tx/messages")
                       (has (status? 440))
-                      (visit "/api/re-auth" :request-method :post :body-params {:password "xxx"}))]
+                      (visit "/api/re-auth" :request-method :post :body-params {:password "%€#&()"}))]
         (log/debug state))))
 
 (deftest attack-re-auth-ajax
@@ -169,7 +171,7 @@
       (attack-uri
         state
         "/re-auth-ajax"
-        {:password "xxx"}
+        {:password "%€#&()"}
         standard-attack))))
 
 (deftest attack-login-double-auth
@@ -177,7 +179,7 @@
     (-> *s*
         (attack-uri
           "/login"
-          {:username "536975" :password "xxx"}
+          {:username "536975" :password "%€#&()"}
           (repeat 1 [0 422]))
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
@@ -185,7 +187,7 @@
         (has (some-text? "666777"))
         (attack-uri
           "/double-auth"
-          {:code "xxx"}
+          {:code "%€#&()"}
           (concat
             (repeat (dec a-d/const-ip-block-delay) [0 422])
             [[0 429]
@@ -202,7 +204,7 @@
         (has (status? 302))
         (attack-uri
           "/re-auth-ajax"
-          {:password "xxx"}
+          {:password "%€#&()"}
           (concat
             (repeat 10 [0 422])
             (repeat 10 [0 429])))
@@ -215,7 +217,7 @@
     (-> *s*
         (attack-uri
           "/login"
-          {:username "536975" :password "xxx"}
+          {:username "536975" :password "%€#&()"}
           [[0 422]])
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
@@ -223,13 +225,13 @@
         (has (some-text? "666777"))
         (attack-uri
           "/double-auth"
-          {:code "xxx"}
+          {:code "%€#&()"}
           [[70 422]
            [70 422]]))
     (-> *s*
         (attack-uri
           "/login"
-          {:username "xxx" :password "xxx"}
+          {:username "%€#&()" :password "%€#&()"}
           (concat
             (repeat
               (- a-d/const-fails-until-ip-block 3)
@@ -242,7 +244,7 @@
     (-> *s*
         (attack-uri
           "/login"
-          {:username "536975" :password "xxx"}
+          {:username "536975" :password "%€#&()"}
           [[0 422]])
         (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
         (has (status? 302))
@@ -250,19 +252,19 @@
         (has (some-text? "666777"))
         (attack-uri
           "/double-auth"
-          {:code "xxx"}
+          {:code "%€#&()"}
           [[70 422]
            [70 422]]))
     (-> *s*
         (attack-uri
           "/login"
-          {:username "xxx" :password "xxx"}
+          {:username "%€#&()" :password "%€#&()"}
           standard-attack
           "192.168.0.1"))))
 
 
 (deftest attack-registration
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+  (with-redefs [captcha/captcha!                (constantly {:filename "%€#&()" :digits "6666"})
                 reg-service/registration-params (constantly {:allowed?               true
                                                              :fields                 #{:first-name :last-name}
                                                              :group                  570281 ;;No assessments in this group
@@ -279,7 +281,7 @@
         (follow-redirect)
         (attack-uri
           "/registration/564610/captcha"
-          {:captcha "xxx"}
+          {:captcha "%€#&()"}
           (concat
             (repeat 4 [0 422])
             [[0 302]]
@@ -304,32 +306,32 @@
     (attack-uri
       *s*
       "/login"
-      {:username "xxx" :password "xxx"}
+      {:username "%€#&()" :password "%€#&()"}
       (repeat (/ a-d/const-fails-until-global-block 10) [1 422])
       (str ip-address)))
   (-> *s*
-      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hejsan")
+      (visit "/login" :request-method :post :params {:username "%€#&()" :password "%€#&()"} :remote-addr "hejsan")
       (has (status? 429)))
   (advance-time-s! a-d/const-global-block-delay)
   (-> *s*
-      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "hoppsan")
+      (visit "/login" :request-method :post :params {:username "%€#&()" :password "%€#&()"} :remote-addr "hoppsan")
       (has (status? 422)))
   (-> *s*
-      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "tjosan")
+      (visit "/login" :request-method :post :params {:username "%€#&()" :password "%€#&()"} :remote-addr "tjosan")
       (has (status? 429)))
   (-> *s*
-      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "METALLICA")
+      (visit "/login" :request-method :post :params {:username "%€#&()" :password "%€#&()"} :remote-addr "METALLICA")
       (has (status? 429)))
   (advance-time-s! a-d/const-global-block-delay)
   (-> *s*
-      (visit "/login" :request-method :post :params {:username "xxx" :password "xxx"} :remote-addr "SLAYER")
+      (visit "/login" :request-method :post :params {:username "%€#&()" :password "%€#&()"} :remote-addr "SLAYER")
       (has (status? 422)))
   (advance-time-s! a-d/const-attack-interval)
   (dotimes [ip-address 5]
     (attack-uri
       *s*
       "/login"
-      {:username "xxx" :password "xxx"}
+      {:username "%€#&()" :password "%€#&()"}
       (repeat (/ a-d/const-fails-until-global-block 10) [1 422])
       (str ip-address))))
 
