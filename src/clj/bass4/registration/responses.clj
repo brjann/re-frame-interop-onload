@@ -112,25 +112,71 @@
                  {:email      (:email emails)
                   :project-id project-id})))
 
+;; TODO: Make private and use test-trick
+(defn resolve-duplicate
+  [existing-user reg-fields reg-params]
+  (cond
+    (and (:username existing-user) (:password existing-user))
+    [:login]
+
+    (not (:allow-resume? reg-params))
+    [:duplicate :no-resume]
+
+    (or (nil? (:group existing-user))
+        (not (= (:group reg-params) (:group existing-user))))
+    [:duplicate :group-mismatch]
+
+    (and (not (:allow-duplicate-sms? reg-params))
+         (not (:allow-duplicate-email? reg-params)))
+    (cond
+      (not= (:sms-number existing-user) (:sms-number reg-fields))
+      [:duplicate :sms-mismatch]
+
+      (not= (:email existing-user) (:email reg-fields))
+      [:duplicate :email-mismatch]
+
+      :else
+      [:resume :both])
+
+    (not (:allow-duplicate-sms? reg-params))
+    (if (= (:sms-number existing-user) (:sms-number reg-fields))
+      [:resume :sms]
+      [:duplicate :sms-mismatch])
+
+    (not (:allow-duplicate-email? reg-params))
+    (if (= (:email existing-user) (:email reg-fields))
+      [:resume :email]
+      [:duplicate :email-mismatch])
+
+    :else
+    (throw (Exception. "Conds should have been met"))))
+
 (defn handle-duplicates
-  [project-id session duplicates]
-  (log/debug duplicates)
-  (-> (http-response/found (str "/registration/" project-id "/duplicate"))
-      (reset-reg-session session)))
+  [project-id session reg-params duplicates]
+  (log/debug (:registration session))
+  (let [[action reason] (if (< 1 (count duplicates))
+                          ;; TODO: Test this case as req
+                          [:duplicate :too-many]
+                          (let [user   (user-service/get-user (first duplicates))
+                                fields (get-in session [:registration :field-values])]
+                            (resolve-duplicate user fields reg-params)))]
+    (log/debug action reason)
+
+    (-> (http-response/found (str "/registration/" project-id "/duplicate"))
+        (reset-reg-session session))))
 
 
 (defn- duplicate-conflict?
   [field-values reg-params]
-  (if-let [duplicates-map (merge
-                            (when (not (:allow-duplicate-email? reg-params))
-                              (select-keys field-values [:email]))
-                            (when (not (:allow-duplicate-sms? reg-params))
-                              (select-keys field-values [:sms-number]))
-                            (when (and (:bankid? reg-params)
-                                       (not (:allow-duplicate-bankid? reg-params)))
-                              (select-keys field-values [:pid-number])))]
-    (reg-service/duplicate-participants duplicates-map)
-    false))
+  (when-let [duplicates-map (merge
+                              (when (not (:allow-duplicate-email? reg-params))
+                                (select-keys field-values [:email]))
+                              (when (not (:allow-duplicate-sms? reg-params))
+                                (select-keys field-values [:sms-number]))
+                              (when (and (:bankid? reg-params)
+                                         (not (:allow-duplicate-bankid? reg-params)))
+                                (select-keys field-values [:pid-number])))]
+    (reg-service/duplicate-participants duplicates-map)))
 
 
 ;; ---------------
@@ -199,7 +245,7 @@
 (defn- complete-registration
   [project-id field-values reg-params session]
   (if-let [duplicates (duplicate-conflict? field-values reg-params)]
-    (handle-duplicates project-id session duplicates)
+    (handle-duplicates project-id session reg-params duplicates)
     (create-user project-id field-values reg-params session)))
 
 ;; ---------------

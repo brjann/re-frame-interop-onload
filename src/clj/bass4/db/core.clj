@@ -33,6 +33,7 @@
   from_unixtime(LastLogin) AS `last-login-time`,
   `Password`,
   `OldPassword` AS `old-password`,
+  `Group` AS `group`,
   CASE
     WHEN (PrivacyNoticeConsentTime IS NULL OR PrivacyNoticeConsentTime = 0)
       THEN NULL
