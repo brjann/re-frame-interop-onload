@@ -22,10 +22,8 @@
                                      messages-are?
                                      pass-by]]
             [clojure.core.async :refer [chan]]
-            [bass4.config :as config]
             [bass4.session.create :as session-create]
-            [bass4.session.timeout :as session-timeout]
-            [clojure.tools.logging :as log]))
+            [bass4.session.timeout :as session-timeout]))
 
 (use-fixtures
   :once
@@ -155,9 +153,8 @@
                                :re-auth nil}))))))
 
 (deftest session-timeout-modification
-  (let [timeout-hard      (session-timeout/timeout-hard-limit)
-        timeout-re-auth   (session-timeout/timeout-re-auth-limit)
-        timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
+  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+        timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -199,8 +196,19 @@
           (has (status? 440))
           (visit "/api/session/renew")
           (has (status? 400))
-          (visit "/re-auth" :request-method :post :params {:password 536975})
+          (advance-time-s! 1)
+          (visit "/re-auth" :request-method :post :params {:password "wrong"})
+          (has (status? 422))
+          (visit "/api/session/status")
+          ;; Timeout should not reset because request was made
+          (has (api-response? {:hard    (dec timeout-hard-soon)
+                               :re-auth 0}))
+          (visit "/re-auth" :request-method :post :params {:password "536975"})
           (has (status? 302))
+          (visit "/api/session/status")
+          ;; Timeout should now be reset
+          (has (api-response? {:hard    timeout-hard
+                               :re-auth timeout-re-auth}))
           (visit "/api/user/tx/messages")
           (has (status? 200))))
 

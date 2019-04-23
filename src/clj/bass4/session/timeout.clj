@@ -148,8 +148,8 @@
         (-> (h-utils/json-response {:result "ok"})
             (assoc :session
                    (merge (:session request)
-                          {::hard-timeout-at    (+ (utils/current-time)
-                                                   (timeout-hard-limit))})))))))
+                          {::hard-timeout-at (+ (utils/current-time)
+                                                (timeout-hard-limit))})))))))
 
 ;; -------------------
 ;;    HARD TIMEOUT
@@ -160,7 +160,12 @@
 (defn- no-hard-timeout-response
   [handler request session-in now hard-timeout]
   (let [response        (handler request)
-        hard-timeout-at (+ now hard-timeout)]
+        session-out     (:session response)
+        hard-timeout-at (if (and (:auth-re-auth? session-in) ; Do not reset hard timeout if re-auth needed
+                                 (not (and (contains? session-out :auth-re-auth?)
+                                           (false? (boolean (:auth-re-auth? session-out))))))
+                          (::hard-timeout-at session-in)
+                          (+ now hard-timeout))]
     (session-utils/assoc-out-session response session-in {::hard-timeout-at hard-timeout-at})))
 
 (defn- wrap-session-hard-timeout*
