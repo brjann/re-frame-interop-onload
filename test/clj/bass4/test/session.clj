@@ -173,6 +173,16 @@
           (visit "/api/user/tx/messages")
           (has (status? 440))))))
 
+(deftest session-user-id
+  (-> *s*
+      (visit "/api/session/user-id")
+      (has (api-response? nil))
+      (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+      (visit "/api/user/tx/messages")
+      (has (status? 200))
+      (visit "/api/session/user-id")
+      (has (api-response? {:user-id 536975}))))
+
 (deftest session-timeout-timeout-soon
   (let [timeout-hard      (session-timeout/timeout-hard-limit)
         timeout-re-auth   (session-timeout/timeout-re-auth-limit)

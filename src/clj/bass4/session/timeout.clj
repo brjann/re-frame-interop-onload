@@ -115,7 +115,8 @@
   (case (:uri request)
     "/api/session/user-id"
     (h-utils/json-response
-      {:user-id (get-in request [:session :user-id])})
+      (when-let [user-id (get-in request [:session :user-id])]
+        {:user-id user-id}))
 
     "/api/session/status"
     (session-status request hard-timeout-at hard-timeout?)
