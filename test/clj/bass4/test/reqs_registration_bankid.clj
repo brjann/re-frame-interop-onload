@@ -27,26 +27,26 @@
   test-fixtures)
 
 (use-fixtures
-    :each
-    bankid-utils/reqs-fixtures)
+  :each
+  bankid-utils/reqs-fixtures)
 
 (deftest registration-flow-bankid
   (let [pnr "191212121212"]
-      (with-redefs [reg-service/registration-params (constantly {:allowed?                true
-                                                                 :fields                  #{:email
-                                                                                            :sms-number
-                                                                                            :pid-number
-                                                                                            :first-name
-                                                                                            :last-name}
-                                                                 :group                   564616
-                                                                 :allow-duplicate-email?  true
-                                                                 :allow-duplicate-sms?    true
-                                                                 :sms-countries           ["se" "gb" "dk" "no" "fi"]
-                                                                 :auto-username           :none
-                                                                 :bankid?                 true
-                                                                 :bankid-change-names?    false
-                                                                 :allow-duplicate-bankid? true})
-                  passwords/letters-digits          (constantly "METALLICA")]
+    (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+                                                               :fields                  #{:email
+                                                                                          :sms-number
+                                                                                          :pid-number
+                                                                                          :first-name
+                                                                                          :last-name}
+                                                               :group                   564616
+                                                               :allow-duplicate-email?  true
+                                                               :allow-duplicate-sms?    true
+                                                               :sms-countries           ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username           :none
+                                                               :bankid?                 true
+                                                               :bankid-change-names?    false
+                                                               :allow-duplicate-bankid? true})
+                  passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
           (follow-redirect)
@@ -101,10 +101,10 @@
   (let [pnr "191212121212"]
     (with-redefs [reg-service/registration-params (constantly {:allowed?                true
                                                                :fields                  #{:email
-                                                                                         :sms-number
-                                                                                         :pid-number
-                                                                                         :first-name
-                                                                                         :last-name}
+                                                                                          :sms-number
+                                                                                          :pid-number
+                                                                                          :first-name
+                                                                                          :last-name}
                                                                :group                   564616
                                                                :allow-duplicate-email?  true
                                                                :allow-duplicate-sms?    true
@@ -164,10 +164,10 @@
   (let [pnr "191212121212"]
     (with-redefs [reg-service/registration-params (constantly {:allowed?                true
                                                                :fields                  #{:email
-                                                                                         :sms-number
-                                                                                         :pid-number
-                                                                                         :first-name
-                                                                                         :last-name}
+                                                                                          :sms-number
+                                                                                          :pid-number
+                                                                                          :first-name
+                                                                                          :last-name}
                                                                :group                   564616
                                                                :allow-duplicate-email?  true
                                                                :allow-duplicate-sms?    true
@@ -218,4 +218,39 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (has (status? 302))
           ;; Redirect to finish
+          (follow-redirect)))))
+
+(deftest registration-flow-bankid-no-duplicates
+  (let [pnr "191212121212"]
+    (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+                                                               :fields                  #{:email
+                                                                                          :sms-number
+                                                                                          :pid-number
+                                                                                          :first-name
+                                                                                          :last-name}
+                                                               :group                   564616
+                                                               :allow-duplicate-email?  true
+                                                               :allow-duplicate-sms?    true
+                                                               :sms-countries           ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username           :none
+                                                               :bankid?                 true
+                                                               :bankid-change-names?    false
+                                                               :allow-duplicate-bankid? false})
+                  passwords/letters-digits        (constantly "METALLICA")
+                  reg-service/pid-exists?         (constantly true)]
+      (-> *s*
+          (visit "/registration/564610/")
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/registration/564610/form")
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "BankID"))
+          (visit "/registration/564610/bankid" :request-method :post :params {:personnummer pnr})
+          (follow-redirect)
+          (has (some-text? "Contacting"))
+          (user-authenticates! pnr)
+          (collect+wait)
+          (visit "/e-auth/bankid/collect" :request-method :post)
+          (follow-redirect)
           (follow-redirect)))))

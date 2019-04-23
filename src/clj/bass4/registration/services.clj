@@ -141,13 +141,14 @@
   [pid-number]
   (not (empty? (db/get-user-id-by-pid {:pid-number pid-number}))))
 
-(defn duplicate-info?
-  [{:keys [email sms-number]}]
-  (->> (db/check-duplicate-info
-         {:email      (or email "_")
-          :sms-number (or sms-number "_")})
-       :count
-       (< 0)))
+(defn duplicate-participants
+  [{:keys [email sms-number pid-number]}]
+  (->> (db/check-duplicates
+         {:email      (or email "%€#&()")
+          :sms-number (or sms-number "%€#&()")
+          :pid-number (or pid-number "%€#&()")})
+       (map :user-id)
+       (seq)))
 
 (defn- next-auto-id
   [project-id]

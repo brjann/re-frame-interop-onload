@@ -65,14 +65,17 @@ SELECT ObjectId AS `user-id`
 FROM c_participant
 WHERE Personnummer=:pid-number;
 
--- :name check-duplicate-info :? :1
+-- :name check-duplicates :? :*
 SELECT
-  count(*) AS `count`
+  ObjectId AS `user-id`
 FROM c_participant
 WHERE
   SMSNumber = :sms-number
   OR
-  Email = :email;
+  Email = :email
+  OR
+  Personnummer = :pid-number
+LIMIT 2;
 
 -- :name get-current-auto-id-for-update :? :1
 SELECT RegistrationAutoIdCurrent as `auto-id`

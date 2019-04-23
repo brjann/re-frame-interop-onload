@@ -103,6 +103,7 @@
 ;;   DUPLICATE
 ;; -------------
 
+
 (defapi duplicate-page
   [project-id :- api/->int]
   (let [emails (bass/db-contact-info project-id)]
@@ -111,6 +112,12 @@
                  {:email      (:email emails)
                   :project-id project-id})))
 
+(defn handle-duplicates
+  [project-id session duplicates]
+  (log/debug duplicates)
+  (-> (http-response/found (str "/registration/" project-id "/duplicate"))
+      (reset-reg-session session)))
+
 
 (defn- duplicate-conflict?
   [field-values reg-params]
@@ -118,8 +125,11 @@
                             (when (not (:allow-duplicate-email? reg-params))
                               (select-keys field-values [:email]))
                             (when (not (:allow-duplicate-sms? reg-params))
-                              (select-keys field-values [:sms-number])))]
-    (reg-service/duplicate-info? duplicates-map)
+                              (select-keys field-values [:sms-number]))
+                            (when (and (:bankid? reg-params)
+                                       (not (:allow-duplicate-bankid? reg-params)))
+                              (select-keys field-values [:pid-number])))]
+    (reg-service/duplicate-participants duplicates-map)
     false))
 
 
@@ -188,9 +198,8 @@
 
 (defn- complete-registration
   [project-id field-values reg-params session]
-  (if (duplicate-conflict? field-values reg-params)
-    (-> (http-response/found (str "/registration/" project-id "/duplicate"))
-        (reset-reg-session session))
+  (if-let [duplicates (duplicate-conflict? field-values reg-params)]
+    (handle-duplicates project-id session duplicates)
     (create-user project-id field-values reg-params session)))
 
 ;; ---------------
@@ -280,7 +289,6 @@
 ;; --------------
 ;;   VALIDATION
 ;; --------------
-
 
 (def validation-code-length 5)
 
