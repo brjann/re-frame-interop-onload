@@ -12,6 +12,7 @@
             [bass4.http-utils :as h-utils]))
 
 (def ^:dynamic *in-session?* false)
+(def ^:dynamic *user-id* false)
 
 (defn timeout-hard-limit
   []
@@ -112,6 +113,10 @@
   "Please note that these methods should be declared in the API"
   [request hard-timeout-at hard-timeout?]
   (case (:uri request)
+    "/api/session/user-id"
+    (h-utils/json-response
+      {:user-id (get-in request [:session :user-id])})
+
     "/api/session/status"
     (session-status request hard-timeout-at hard-timeout?)
 
@@ -181,7 +186,8 @@
         (let [response (handler (assoc request :session nil))]
           (binding [*in-session?* false]
             (assoc response :session nil)))
-        (binding [*in-session?* (not (empty? session-in))]
+        (binding [*in-session?* (not (empty? session-in))
+                  *user-id*     (:user-id session-in)]
           (no-hard-timeout-response handler request session-in now hard-timeout))))))
 
 (defn wrap-session-hard-timeout

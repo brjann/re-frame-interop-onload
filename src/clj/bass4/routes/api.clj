@@ -93,6 +93,11 @@
 
       (context "/session" []
         ;; This is a mock api declaration. session-timeout handles the responses
+        (GET "/user-id" []
+          :summary "Returns current user-id "
+          :return {:user-id (s/maybe Long)}
+          (throw (Exception. "This method should never be called.")))
+        
         (GET "/status" []
           :summary "Returns number of seconds until session dies and needs re-authentication"
           :return (s/maybe {:hard    (s/maybe Long)

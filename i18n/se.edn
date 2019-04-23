@@ -28,7 +28,8 @@
  :session-status  {:renew-click-title   "Bekräfta att du är aktiv"
                    :renew-click-text    "Du har varit inaktiv en lång stund och behöver bekräfta att du fortfarande använder systemet. Var vänlig klicka på knappen nedan för att inte bli utloggad."
                    :renew-password-text "Du har varit inaktiv en lång stund och behöver ange ditt lösenord för att bekräfta att du fortfarande använder systemet. Var vänlig ange ditt lösenord nedan för att inte bli utloggad."
-                   :timeout-hard        "Du har varit inaktiv en lång stund och du har blivit utloggad. Eventuella osparade data har förlorats."
+                   :no-session          "Du har blivit utloggad, kanske för att du har varit inaktiv en lång stund. Eventuella osparade data har förlorats."
+                   :another-session     "Du har en annan pågående aktivitet i ett annat webbläsarfönster. Stäng detta webbläsarfönster och återgå till det andra fönstret."
                    :time-to-logout      "Tid till utloggning: %d min %d sek"
                    :return-to-login     "Tillbaka till inloggning"}
  :registration    {:begin-registration         "Påbörja anmälan"

@@ -105,6 +105,7 @@
                  {:in-session?              session-timeout/*in-session?*
                   :dev                      (env :dev)
                   :dev?                     (env :dev)
+                  :user-id                  session-timeout/*user-id*
                   :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
                   :page                     template
                   :csrf-token               csrf-token

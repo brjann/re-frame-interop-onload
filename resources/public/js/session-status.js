@@ -36,22 +36,40 @@ $(document).ready(function () {
       }, 1000)
    };
 
-   var session_checker_success = function (data) {
-      console.log(data);
+   var session_checker_success = function (timeouts, status_user_id) {
 
-      if (first_run && data === null) {
+      if (status_user_id !== null) {
+         status_user_id = status_user_id['user-id'];
+      }
+
+      if (status_user_id !== user_id) {
+         clearInterval(interval_handle);
+
+         if (status_user_id === null && timeouts === null) {
+            alert(text_session_no_session);
+            window.location.href = session_timeout_return_path;
+         } else {
+            alert(text_session_another_session);
+            $('body')
+               .empty()
+               .text(text_session_another_session);
+         }
+         return;
+      }
+
+      if (first_run && timeouts === null) {
          clearInterval(interval_handle);
          return;
       }
       first_run = false;
 
       var hard, re_auth;
-      if (data !== null) {
-         hard = data['hard'];
-         re_auth = data['re-auth'];
+      if (timeouts !== null) {
+         hard = timeouts['hard'];
+         re_auth = timeouts['re-auth'];
       }
 
-      if (data === null || hard === 0) {
+      if (timeouts === null || hard === 0) {
          if (timeout_soon) {
             clearInterval(time_to_logout_handle);
             clearInterval(interval_handle);
@@ -64,24 +82,22 @@ $(document).ready(function () {
                   .text(session_timeout_return_link_text));
             $time_to_logout.text(sprintf(text_session_time_to_logout, 0, 0));
             $time_to_logout.parent()
-               .append('<p>' + text_session_timeout_hard + '</p>')
+               .append('<p>' + text_session_no_session + '</p>')
                .css('color', 'red');
          } else {
-            alert(text_session_timeout_hard);
+            alert(text_session_no_session);
             window.location.href = session_timeout_return_path;
          }
          return;
       }
 
       if (timeout_soon) {
-         // TODO: What happens if user goes offline?
          update_time_to_logout($time_to_logout, hard);
          return;
       }
 
       if (hard <= session_timeout_hard_soon) {
          timeout_soon = true;
-         console.log('Timeout soon!');
          if (re_auth === null) {
             $timeout_modal = $('#renew-session-click-modal');
          } else {
@@ -94,16 +110,15 @@ $(document).ready(function () {
    };
 
    var session_checker = function () {
-      $.ajax('/api/session/status',
-         {
-            success: session_checker_success
-         })
+      var $status = $.ajax('/api/session/status');
+      var $user_id = $.ajax('/api/session/user-id');
+      $.when($status, $user_id).done(function (x, y) {
+         session_checker_success(x[0], y[0]);
+      });
    };
 
    if (in_session) {
       interval_handle = setInterval(session_checker, session_status_poll_interval);
       session_checker();
-   } else {
-      console.log('Not in session - no session checker');
    }
 });
