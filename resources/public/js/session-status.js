@@ -58,6 +58,10 @@ $(document).ready(function () {
             $timeout_modal.find('input').remove();
             $timeout_modal.find('button').remove();
             $timeout_modal.find('.button').remove();
+            $timeout_modal.find('.modal-footer')
+               .append($('<a class="btn btn-primary">')
+                  .prop('href', session_timeout_return_path)
+                  .text(session_timeout_return_link_text));
             $time_to_logout.text(sprintf(text_session_time_to_logout, 0, 0));
             $time_to_logout.parent()
                .append('<p>' + text_session_timeout_hard + '</p>')

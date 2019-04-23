@@ -90,14 +90,17 @@
 (defn render
   "renders the HTML template located relative to resources/templates"
   [template & [params]]
-  (let [csrf-token (if (bound? #'*anti-forgery-token*)
-                     (force *anti-forgery-token*)
-                     "")]
+  (let [csrf-token       (if (bound? #'*anti-forgery-token*)
+                           (force *anti-forgery-token*)
+                           "")
+        return-link-text (i18n/tr [(or (:session-timeout-return-link-text params)
+                                       :session-status/return-to-login)])]
     (content-type
       (ok
         (parser/render-file
           template
-          (merge {:session-timeout-return-path "/login"}
+          (merge {:session-timeout-return-path      "/login"
+                  :session-timeout-return-link-text return-link-text}
                  params
                  {:in-session?              session-timeout/*in-session?*
                   :dev                      (env :dev)
