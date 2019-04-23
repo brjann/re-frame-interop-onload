@@ -93,7 +93,7 @@
   (let [csrf-token       (if (bound? #'*anti-forgery-token*)
                            (force *anti-forgery-token*)
                            "")
-        return-link-text (i18n/tr [(or (:session-timeout-return-link-text params)
+        return-link-text (i18n/tr [(or (:session-timeout-return-link-text-key params)
                                        :session-status/return-to-login)])]
     (content-type
       (ok
@@ -104,6 +104,7 @@
                  params
                  {:in-session?              session-timeout/*in-session?*
                   :dev                      (env :dev)
+                  :dev?                     (env :dev)
                   :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
                   :page                     template
                   :csrf-token               csrf-token

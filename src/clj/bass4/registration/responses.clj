@@ -31,8 +31,9 @@
 (defn render-page
   [project-id template & [params]]
   (layout/render template
-                 (assoc params :session-timeout-return-path
-                               (str "/registration/" project-id))))
+                 (merge params
+                        {:session-timeout-return-path          (str "/registration/" project-id)
+                         :session-timeout-return-link-text-key :registration/register-again})))
 
 (def password-regex
   #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")

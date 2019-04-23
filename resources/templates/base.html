@@ -48,11 +48,11 @@
    // @formatter:off
    var in_session = {{in-session?}};
    var session_timeout_hard_soon = {{timeout-hard-soon}};
+   var session_status_poll_interval = {% if dev? %} 1000 * 5 {% else %} 1000 * 30 {% endif %};
    // @formatter:on
    // Timeout return path is used by javascript to redirect user on hard timeout
    var session_timeout_return_path = "{{session-timeout-return-path}}";
    var session_timeout_return_link_text = "{{session-timeout-return-link-text}}";
-   var session_status_poll_interval = 1000 * 30;
    var csrfToken = "{{csrf-token}}";
    var text_offline_warning = "{%tr offline-warning %}";
    var text_timeout_hard = "{%tr error/timeout-hard %}";
