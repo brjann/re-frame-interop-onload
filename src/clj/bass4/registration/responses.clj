@@ -23,9 +23,16 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service]
+            [bass4.session.timeout :as session-timeout]
             [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors])
   (:import (java.util UUID)))
+
+(defn render-page
+  [project-id template & [params]]
+  (layout/render template
+                 (assoc params :session-timeout-return-path
+                               (str "/registration/" project-id))))
 
 (def password-regex
   #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
@@ -69,8 +76,9 @@
     (if (zero? (count (assessments/get-pending-assessments user-id)))
       (to-finished-page project-id session)
       (to-assessments project-id user-id request))
-    (layout/render "registration-finished.html"
-                   (reg-service/finished-content project-id))))
+    (render-page project-id
+                 "registration-finished.html"
+                 (reg-service/finished-content project-id))))
 
 ;; ------------
 ;; CREDENTIALS
@@ -81,11 +89,12 @@
   [project-id :- api/->int session :- [:? map?] request]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
-      (layout/render "registration-credentials.html"
-                     {:username   (:username credentials)
-                      :password   (:password credentials)
-                      :login-url  (h-utils/get-host-address request)
-                      :project-id project-id})
+      (render-page project-id
+                   "registration-credentials.html"
+                   {:username   (:username credentials)
+                    :password   (:password credentials)
+                    :login-url  (h-utils/get-host-address request)
+                    :project-id project-id})
       ;; Wrong place - redirect
       (http-response/found (str "/registration/" project-id)))))
 
@@ -96,9 +105,10 @@
 (defapi duplicate-page
   [project-id :- api/->int]
   (let [emails (bass/db-contact-info project-id)]
-    (layout/render "registration-duplicate.html"
-                   {:email      (:email emails)
-                    :project-id project-id})))
+    (render-page project-id
+                 "registration-duplicate.html"
+                 {:email      (:email emails)
+                  :project-id project-id})))
 
 
 (defn- duplicate-conflict?
@@ -198,12 +208,12 @@
 (defn- captcha-page
   [project-id filename]
   (let [content (reg-service/captcha-content project-id)]
-    (layout/render
-      "registration-captcha.html"
-      (merge
-        content
-        {:project-id project-id
-         :filename   filename}))))
+    (render-page project-id
+                 "registration-captcha.html"
+                 (merge
+                   content
+                   {:project-id project-id
+                    :filename   filename}))))
 
 (def ^:const const-captcha-tries 5)
 (def ^:const const-captcha-timeout 60)
@@ -312,20 +322,21 @@
 
 (defn render-validation-page
   [project-id codes fixed-fields field-values]
-  (layout/render "registration-validation.html"
-                 (merge
-                   {:email       (when (and
-                                         (contains? codes :code-email)
-                                         (not (contains? fixed-fields :email)))
-                                   (:email field-values))
-                    :sms-number  (when (and
-                                         (contains? codes :code-sms)
-                                         (not (contains? fixed-fields :sms-number)))
-                                   (:sms-number field-values))
-                    :project-id  project-id
-                    :code-length validation-code-length}
-                   (when (db-config/debug-mode?)
-                     codes))))
+  (render-page project-id
+               "registration-validation.html"
+               (merge
+                 {:email       (when (and
+                                       (contains? codes :code-email)
+                                       (not (contains? fixed-fields :email)))
+                                 (:email field-values))
+                  :sms-number  (when (and
+                                       (contains? codes :code-sms)
+                                       (not (contains? fixed-fields :sms-number)))
+                                 (:sms-number field-values))
+                  :project-id  project-id
+                  :code-length validation-code-length}
+                 (when (db-config/debug-mode?)
+                   codes))))
 
 (defapi validation-page
   [project-id :- api/->int session :- [:? map?]]
@@ -402,11 +413,11 @@
 (defapi bankid-page
   [project-id :- api/->int]
   (let [reg-content (reg-service/registration-content project-id)]
-    (layout/render
-      "registration-bankid.html"
-      (merge
-        reg-content
-        {:project-id project-id}))))
+    (render-page project-id
+                 "registration-bankid.html"
+                 (merge
+                   reg-content
+                   {:project-id project-id}))))
 
 (defn get-bankid-fields
   [session params]
@@ -464,18 +475,19 @@
                         (:fixed-fields reg-session))
         sms-countries (str "[\"" (string/join "\",\"" (:sms-countries reg-content)) "\"]")]
     ;; TODO: Show country for fixed sms number
-    (layout/render "registration-form.html"
-                   (merge
-                     reg-content
-                     fields-map
-                     {:project-id     project-id
-                      :sms-countries  sms-countries
-                      :sms?           (or (contains? fields-map :sms-number)
-                                          (contains? fields-map :sms-number-value))
-                      :password-regex password-regex
-                      :pid-name       (if (:bankid? reg-content)
-                                        (i18n/tr [:registration/personnummer])
-                                        (:pid-name reg-content))}))))
+    (render-page project-id
+                 "registration-form.html"
+                 (merge
+                   reg-content
+                   fields-map
+                   {:project-id     project-id
+                    :sms-countries  sms-countries
+                    :sms?           (or (contains? fields-map :sms-number)
+                                        (contains? fields-map :sms-number-value))
+                    :password-regex password-regex
+                    :pid-name       (if (:bankid? reg-content)
+                                      (i18n/tr [:registration/personnummer])
+                                      (:pid-name reg-content))}))))
 
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
@@ -548,9 +560,10 @@
 (defapi study-consent-page
   [project-id :- api/->int]
   (let [consent-text (:consent-text (reg-service/registration-study-consent project-id))]
-    (layout/render "registration-study-consent.html"
-                   {:project-id   project-id
-                    :consent-text consent-text})))
+    (render-page project-id
+                 "registration-study-consent.html"
+                 {:project-id   project-id
+                  :consent-text consent-text})))
 
 (defapi handle-study-consent
   [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
@@ -568,9 +581,10 @@
 (defapi privacy-page
   [project-id :- api/->int]
   (let [privacy-notice (privacy-service/get-privacy-notice project-id)]
-    (layout/render "registration-privacy-notice.html"
-                   {:project-id     project-id
-                    :privacy-notice (:notice-text privacy-notice)})))
+    (render-page project-id
+                 "registration-privacy-notice.html"
+                 {:project-id     project-id
+                  :privacy-notice (:notice-text privacy-notice)})))
 
 (defapi handle-privacy-consent
   [project-id :- api/->int i-consent :- [[api/str? 1 20]] session :- [:? map?]]
@@ -599,10 +613,11 @@
 (defapi info-page
   [project-id :- api/->int]
   (let [reg-params (reg-service/registration-content project-id)]
-    (layout/render "registration-info.html"
-                   (merge
-                     {:project-id project-id}
-                     reg-params))))
+    (render-page project-id
+                 "registration-info.html"
+                 (merge
+                   {:project-id project-id}
+                   reg-params))))
 
 ;; --------------
 ;;   LOGGED IN

@@ -64,12 +64,13 @@ $(document).ready(function () {
                .css('color', 'red');
          } else {
             alert(text_session_timeout_hard);
-            window.location.href = "/login"
+            window.location.href = session_timeout_return_path;
          }
          return;
       }
 
       if (timeout_soon) {
+         // TODO: What happens if user goes offline?
          update_time_to_logout($time_to_logout, hard);
          return;
       }
@@ -96,7 +97,7 @@ $(document).ready(function () {
    };
 
    if (in_session) {
-      interval_handle = setInterval(session_checker, 1000 * 5);
+      interval_handle = setInterval(session_checker, session_status_poll_interval);
       session_checker();
    } else {
       console.log('Not in session - no session checker');

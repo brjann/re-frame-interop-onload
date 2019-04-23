@@ -97,7 +97,8 @@
       (ok
         (parser/render-file
           template
-          (merge params
+          (merge {:session-timeout-return-path "/login"}
+                 params
                  {:in-session?              session-timeout/*in-session?*
                   :dev                      (env :dev)
                   :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
