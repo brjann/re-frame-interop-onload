@@ -32,20 +32,21 @@
 
 (deftest registration-flow-bankid
   (let [pnr "191212121212"]
-    (with-redefs [reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email
-                                                                                         :sms-number
-                                                                                         :pid-number
-                                                                                         :first-name
-                                                                                         :last-name}
-                                                               :group                  564616
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :bankid?                true
-                                                               :bankid-change-names?   false})
-                  passwords/letters-digits        (constantly "METALLICA")]
+      (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+                                                                 :fields                  #{:email
+                                                                                            :sms-number
+                                                                                            :pid-number
+                                                                                            :first-name
+                                                                                            :last-name}
+                                                                 :group                   564616
+                                                                 :allow-duplicate-email?  true
+                                                                 :allow-duplicate-sms?    true
+                                                                 :sms-countries           ["se" "gb" "dk" "no" "fi"]
+                                                                 :auto-username           :none
+                                                                 :bankid?                 true
+                                                                 :bankid-change-names?    false
+                                                                 :allow-duplicate-bankid? true})
+                  passwords/letters-digits          (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
           (follow-redirect)
@@ -98,19 +99,20 @@
 
 (deftest registration-flow-bankid-no-name-change
   (let [pnr "191212121212"]
-    (with-redefs [reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email
+    (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+                                                               :fields                  #{:email
                                                                                          :sms-number
                                                                                          :pid-number
                                                                                          :first-name
                                                                                          :last-name}
-                                                               :group                  564616
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :bankid?                true
-                                                               :bankid-change-names?   false})
+                                                               :group                   564616
+                                                               :allow-duplicate-email?  true
+                                                               :allow-duplicate-sms?    true
+                                                               :sms-countries           ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username           :none
+                                                               :bankid?                 true
+                                                               :bankid-change-names?    false
+                                                               :allow-duplicate-bankid? true})
                   passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")
@@ -160,19 +162,20 @@
 
 (deftest registration-flow-bankid-name-change
   (let [pnr "191212121212"]
-    (with-redefs [reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email
+    (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+                                                               :fields                  #{:email
                                                                                          :sms-number
                                                                                          :pid-number
                                                                                          :first-name
                                                                                          :last-name}
-                                                               :group                  564616
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :bankid?                true
-                                                               :bankid-change-names?   true})
+                                                               :group                   564616
+                                                               :allow-duplicate-email?  true
+                                                               :allow-duplicate-sms?    true
+                                                               :sms-countries           ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username           :none
+                                                               :bankid?                 true
+                                                               :bankid-change-names?    true
+                                                               :allow-duplicate-bankid? true})
                   passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/")

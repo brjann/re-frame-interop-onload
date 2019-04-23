@@ -435,11 +435,15 @@
 (defapi bankid-finished
   [project-id :- api/->int session :- [:? map?] reg-params :- map?]
   (if (bankid-done? session)
-    (->
-      (http-response/found (str "/registration/" project-id "/privacy"))
-      (assoc-reg-session session (merge (get-bankid-fields session reg-params)
-                                        {:bankid-done? true}))
-      (assoc-in [:session :e-auth] nil))
+    (let [bankid-fields (get-bankid-fields session reg-params)]
+      (if (and (reg-service/pid-exists? (get-in bankid-fields [:field-values :pid-number]))
+               (not (:allow-duplicate-bankid? reg-params)))
+        (throw (Exception. "Personnummer already exists"))
+        (->
+          (http-response/found (str "/registration/" project-id "/privacy"))
+          (assoc-reg-session session (merge bankid-fields
+                                            {:bankid-done? true}))
+          (assoc-in [:session :e-auth] nil))))
     (throw (ex-info "BankID returned incomplete complete info" {:e-auth session}))))
 
 (defapi bankid-poster

@@ -78,7 +78,8 @@
                                          (not duplicate-email?))
                                     (and (contains? fields :sms-number)
                                          (not (:allow-duplicate-sms? params)))
-                                    (:bankid? params)))
+                                    (and (:bankid? params)
+                                         (not (:allow-duplicate-bankid? params)))))
                            false
 
                            (not= :none auto-username)
@@ -135,6 +136,10 @@
                                                  (when username {:username username})
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))
+
+(defn pid-exists?
+  [pid-number]
+  (not (empty? (db/get-user-id-by-pid {:pid-number pid-number}))))
 
 (defn duplicate-info?
   [{:keys [email sms-number]}]
