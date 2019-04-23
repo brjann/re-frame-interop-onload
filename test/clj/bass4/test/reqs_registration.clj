@@ -705,17 +705,76 @@
                                           :allow-duplicate-email? false
                                           :group                  nil}))))
 
-(deftest registration-duplicate-info-resume-sms
+(deftest registration-duplicate-info-too-many
   (let [sms-number (random-sms)
         email      (random-email)]
     (user-service/create-user! 543018 {:SMSNumber sms-number
-                                       :Email     "brjann@gmail.com"
+                                       :Email     email
+                                       :group     564616})
+    (user-service/create-user! 543018 {:SMSNumber sms-number
+                                       :Email     email
                                        :group     564616})
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
                                                                :group                  564616
                                                                :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   false
+                                                               :sms-countries          ["se"]
+                                                               :allow-resume?          true})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? "already exists"))))))
+
+(deftest registration-duplicate-resume
+  (let [sms-number (random-sms)
+        email      (random-email)]
+    (user-service/create-user! 543018 {:SMSNumber sms-number
+                                       :Email     email
+                                       :group     564616})
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  564616
+                                                               :allow-duplicate-email? false
+                                                               :allow-duplicate-sms?   false
+                                                               :sms-countries          ["se"]
+                                                               :allow-resume?          true})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? "already exists"))))))
+
+(deftest registration-duplicate-login
+  (let [sms-number (random-sms)
+        email      (random-email)]
+    (user-service/create-user! 543018 {:SMSNumber sms-number
+                                       :Email     email
+                                       :group     564616
+                                       :password  "xxx"
+                                       :username  "xxx"})
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  564616
+                                                               :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
                                                                :sms-countries          ["se"]
                                                                :allow-resume?          true})
