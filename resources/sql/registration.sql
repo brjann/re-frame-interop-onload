@@ -54,7 +54,8 @@ SELECT
   RegistrationAutoPassword AS `auto-password?`,
   RegistrationUseBankID AS `bankid?`,
   RegistrationAllowChangeBankIDNames AS `bankid-change-names?`,
-  RegistrationConsentRequired AS `study-consent?`
+  RegistrationConsentRequired AS `study-consent?`,
+  RegistrationAllowResume AS `allow-resume?`
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 

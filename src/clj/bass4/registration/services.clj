@@ -8,7 +8,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [bass4.time :as b-time]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.utils :as utils]))
 
 (defn captcha-content
   [project-id]
@@ -46,6 +47,9 @@
         fields           (if (= auto-username :email)
                            (conj fields :email)
                            fields)
+        fields           (if (= :none auto-username)
+                           (disj fields :password)
+                           fields)
         fields           (if (:bankid? params)
                            (clojure.set/union
                              fields
@@ -53,21 +57,46 @@
                            fields)
         auto-password?   (cond
                            (contains? fields :password) false
-                           (not= auto-username :none) true
-                           :else (:auto-password? params))
+                           (not= :none auto-username) true
+                           :else false)
         duplicate-email? (if (= auto-username :email)
                            false
                            (:allow-duplicate-email? params))
         auto-id?         (if (= auto-username :participant-id)
                            true
-                           (:auto-id? params))]
+                           (:auto-id? params))
+        group            (when-not (utils/nil-zero? (:group params))
+                           (:group params))
+        allow-resume?    (cond
+                           (not (:allow-resume? params))
+                           false
+
+                           (not group)
+                           false
+
+                           (not (or (and (contains? fields :email)
+                                         (not duplicate-email?))
+                                    (and (contains? fields :sms-number)
+                                         (not (:allow-duplicate-sms? params)))
+                                    (:bankid? params)))
+                           false
+
+                           (not= :none auto-username)
+                           false
+
+                           auto-password?
+                           false
+
+                           :else true)]
     ;; pid-validator is replaced by swedish validator later if bankid? is true
     (merge params
            {:auto-username          auto-username
             :auto-id?               auto-id?
             :fields                 fields
+            :group                  group
             :auto-password?         auto-password?
-            :allow-duplicate-email? duplicate-email?})))
+            :allow-duplicate-email? duplicate-email?
+            :allow-resume?          allow-resume?})))
 
 (defn registration-params
   [project-id]
