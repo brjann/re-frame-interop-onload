@@ -113,10 +113,10 @@
                   :project-id project-id})))
 
 ;; TODO: Make private and use test-trick
-(defn resolve-duplicate
+(defn- resolve-duplicate
   [existing-user reg-fields reg-params]
   (cond
-    (and (:username existing-user) (:password existing-user))
+    (and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
     [:login]
 
     (not (:allow-resume? reg-params))

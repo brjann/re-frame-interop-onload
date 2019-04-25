@@ -592,118 +592,139 @@
   (str (System/currentTimeMillis) @sms-email-counter "@example.com"))
 
 (deftest handle-duplicates
-  (is (= [:duplicate :no-resume]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          false
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false})))
-  (is (= [:resume :both]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
-  (is (= [:resume :email]
-         (reg-response/resolve-duplicate {:sms-number "555"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   true
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
-  (is (= [:resume :sms]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "ljotsson"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? true
-                                          :group                  666})))
-  (is (= [:duplicate :sms-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "555"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
-  (is (= [:duplicate :email-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "ljotsson"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
+  (let [resolve-duplicate @#'reg-response/resolve-duplicate]
+    (is (= [:duplicate :no-resume]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          false
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false})))
+    (is (= [:resume :both]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false
+                               :group                  666})))
+    (is (= [:resume :email]
+           (resolve-duplicate {:sms-number "555"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   true
+                               :allow-duplicate-email? false
+                               :group                  666})))
+    (is (= [:resume :sms]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "ljotsson"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? true
+                               :group                  666})))
+    (is (= [:duplicate :sms-mismatch]
+           (resolve-duplicate {:sms-number "555"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false
+                               :group                  666})))
+    (is (= [:duplicate :email-mismatch]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "ljotsson"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false
+                               :group                  666})))
 
-  (is (= [:duplicate :sms-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "555"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? true
-                                          :group                  666})))
-  (is (= [:duplicate :email-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "ljotsson"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   true
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
-  (is (= [:login]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :username   "brjann"
-                                          :password   "brjann"
-                                          :group      666}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false})))
+    (is (= [:duplicate :sms-mismatch]
+           (resolve-duplicate {:sms-number "555"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? true
+                               :group                  666})))
+    (is (= [:duplicate :email-mismatch]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "ljotsson"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   true
+                               :allow-duplicate-email? false
+                               :group                  666})))
+    (is (= [:login]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   "brjann"
+                               :password   "brjann"
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false})))
 
-  (is (= [:duplicate :group-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      555}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false
-                                          :group                  666})))
-  (is (= [:duplicate :group-mismatch]
-         (reg-response/resolve-duplicate {:sms-number "666"
-                                          :email      "brjann"
-                                          :group      nil}
-                                         {:sms-number "666"
-                                          :email      "brjann"}
-                                         {:allow-resume?          true
-                                          :allow-duplicate-sms?   false
-                                          :allow-duplicate-email? false
-                                          :group                  nil}))))
+    (is (= [:duplicate :group-mismatch]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      555}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false
+                               :group                  666})))
+    (is (= [:duplicate :group-mismatch]
+           (resolve-duplicate {:sms-number "666"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      nil}
+                              {:sms-number "666"
+                               :email      "brjann"}
+                              {:allow-resume?          true
+                               :allow-duplicate-sms?   false
+                               :allow-duplicate-email? false
+                               :group                  nil})))))
 
 (deftest registration-duplicate-info-too-many
   (let [sms-number (random-sms)
