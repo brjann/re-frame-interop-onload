@@ -25,7 +25,8 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.services.user :as user-service]
-            [bass4.http-errors :as http-errors])
+            [bass4.http-errors :as http-errors]
+            [bass4.error-pages :as error-pages])
   (:import (java.util UUID)))
 
 (defn render-page
@@ -49,22 +50,53 @@
   (let [reg-session (merge (:registration session) reg-map)]
     (assoc response :session (assoc session :registration reg-session))))
 
-;; ------------
-;; FINISHED
-;; ------------
-
 (defn reset-reg-session
   [response session]
   (assoc response :session (dissoc session :registration)))
 
-(defn- to-finished-page
+;; -----------------
+;;  RESUME FINISHED
+;; -----------------
+
+(defapi resume-assessments-page
+  [project-id :- api/->int]
+  (render-page project-id "registration-resume-assessments.html"))
+
+(defapi resume-finished-page
+  [project-id :- api/->int]
+  (let [emails (bass/db-contact-info project-id)]
+    (render-page project-id
+                 "registration-resume-finished.html"
+                 {:email      (:email emails)
+                  :project-id project-id})))
+
+
+(defn- to-resume-finished
+  [project-id session]
+  (->
+    (http-response/found (str "/registration/" project-id "/resume-finished"))
+    (reset-reg-session session)))
+
+(defn- to-resume-assessments
+  [project-id user-id]
+  (->
+    (http-response/found "resume-assessments")
+    (assoc :session (res-auth/create-new-session
+                      (user-service/get-user user-id)
+                      {:external-login? true}))))
+
+;; ------------
+;;   FINISHED
+;; ------------
+
+(defn- to-finished
   [project-id session]
   (->
     (http-response/found (str "/registration/" project-id "/finished"))
     (reset-reg-session session)))
 
 (defn- to-assessments
-  [project-id user-id request]
+  [user-id]
   (->
     (http-response/found "/user")
     (assoc :session (res-auth/create-new-session
@@ -73,13 +105,20 @@
 
 (defapi finished-router
   [project-id :- api/->int session :- [:? map?] request]
-  (if-let [user-id (get-in session [:registration :credentials :user-id])]
-    (if (zero? (count (assessments/get-pending-assessments user-id)))
-      (to-finished-page project-id session)
-      (to-assessments project-id user-id request))
-    (render-page project-id
-                 "registration-finished.html"
-                 (reg-service/finished-content project-id))))
+  (let [reg-session (:registration session)]
+    (log/debug (:resume? reg-session))
+    (if-let [user-id (get-in reg-session [:credentials :user-id])]
+      (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))]
+        (if (:resume? reg-session)
+          (if ongoing-assessments?
+            (to-resume-assessments project-id user-id)
+            (to-resume-finished project-id session))
+          (if ongoing-assessments?
+            (to-assessments user-id)
+            (to-finished project-id session))))
+      (render-page project-id
+                   "registration-finished.html"
+                   (reg-service/finished-content project-id)))))
 
 ;; ------------
 ;; CREDENTIALS
@@ -610,15 +649,15 @@
     (cond
       ;; All required fields should be present
       (not (all-fields? fields field-values))
-      (http-response/bad-request)
+      (http-response/bad-request "Missing required field")
 
       ;; No fixed fields should have been posted
       (not (empty? (set/intersection fixed-fields (set (keys posted-fields)))))
-      (http-response/bad-request)
+      (http-response/bad-request "Fixed field posted")
 
       ;; If password has been posted - must be valid
       (not (password-valid? field-values))
-      (http-response/bad-request)
+      (http-response/bad-request "Invalid password")
 
       ;; Only sms number from legal countries
       (not (check-sms (:sms-number field-values) (:sms-countries reg-params)))

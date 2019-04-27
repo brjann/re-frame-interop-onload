@@ -80,7 +80,11 @@
                    :credentials-info           "Below are your login credentials. Please write them down and keep them in a safe place."
                    :entered-password           "The password that you chose"
                    :login-address              "The address to the login page is"
-                   :credentials-noted          "Click here when you have noted your credentials."}
+                   :credentials-noted          "Click here when you have noted your credentials."
+                   :resume-finished-heading    "Registration already completed"
+                   :resume-finished-info       "You have completed this registration before. If you have any questions, contact project manager at"
+                   :resume-assessments-heading "Continue registration"
+                   :resume-assessments-info    "You have initiated this registration before but did not complete it. You will continue from your where you were."}
  :dashboard       {:start           "Start page"
                    :welcome         "Welcome!"
                    :new-modules     "You have access to new modules"

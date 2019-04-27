@@ -30,6 +30,11 @@
   test-fixtures
   disable-attack-detector)
 
+(deftest not-found
+  (-> *s*
+      (visit "/api/session/xxx")
+      (has (status? 404))))
+
 (deftest hard-timeout
   (let [timeout-hard (session-timeout/timeout-hard-limit)]
     (fix-time

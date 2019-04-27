@@ -103,7 +103,9 @@
             [#'privacy-consent? :ok "privacy"]
             [#'study-consent-required? "study-consent" :ok]
             [#'all-fields-present? :ok "form"]
-            [#'needs-validation? :ok "form"]]}])
+            [#'needs-validation? :ok "form"]]}
+   {:uri   "/registration/:project/resume-assessment"
+    :rules [[#'logged-in? :ok 403]]}])
 
 (defn registration-routes-mw
   [handler]
@@ -173,6 +175,11 @@
 
     (GET "/finished" [:as request]
       (reg-response/finished-router project-id session request))
+
+    (GET "/resume-finished" []
+      (reg-response/resume-finished-page project-id))
+    (GET "/resume-assessments" []
+      (reg-response/resume-assessments-page project-id))
 
     (GET "/cancel" []
       (reg-response/cancel-registration project-id session))))

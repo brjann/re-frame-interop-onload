@@ -155,7 +155,10 @@
             (assoc :session
                    (merge (:session request)
                           {::hard-timeout-at (+ (utils/current-time)
-                                                (timeout-hard-limit))})))))))
+                                                (timeout-hard-limit))})))))
+
+    ;default
+    (http-response/not-found)))
 
 ;; -------------------
 ;;    HARD TIMEOUT
