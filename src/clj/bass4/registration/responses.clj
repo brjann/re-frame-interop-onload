@@ -116,8 +116,8 @@
 (defn- resolve-duplicate
   [existing-user reg-fields reg-params]
   (cond
-    (and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
-    [:login]
+    ;(and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
+    ;[:login]
 
     (not (:allow-resume? reg-params))
     [:duplicate :no-resume]

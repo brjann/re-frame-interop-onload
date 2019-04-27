@@ -32,8 +32,7 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.services.user :as user-service]
-            [bass4.registration.responses :as reg-response])
-  (:import (java.util UUID)))
+            [bass4.registration.responses :as reg-response]))
 
 
 (use-fixtures
@@ -689,7 +688,8 @@
                                :allow-duplicate-sms?   true
                                :allow-duplicate-email? false
                                :group                  666})))
-    (is (= [:login]
+    ;; This was a test for if login credentials were available
+    (is (= [:resume :both]
            (resolve-duplicate {:sms-number "666"
                                :email      "brjann"
                                :username   "brjann"
@@ -699,7 +699,8 @@
                                :email      "brjann"}
                               {:allow-resume?          true
                                :allow-duplicate-sms?   false
-                               :allow-duplicate-email? false})))
+                               :allow-duplicate-email? false
+                               :group                  666})))
 
     (is (= [:duplicate :group-mismatch]
            (resolve-duplicate {:sms-number "666"
