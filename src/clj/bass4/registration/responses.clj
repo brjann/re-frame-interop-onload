@@ -165,30 +165,67 @@
         (not (= (:group reg-params) (:group existing-user))))
     [:duplicate :group-mismatch]
 
-    (and (not (:allow-duplicate-sms? reg-params))
-         (not (:allow-duplicate-email? reg-params)))
-    (cond
-      (not= (:sms-number existing-user) (:sms-number reg-fields))
+    :else
+    (let [identical-sms?   (= (:sms-number existing-user) (:sms-number reg-fields))
+          identical-email? (= (:email existing-user) (:email reg-fields))
+          identical-pid?   (= (:pid-number existing-user (:pid-number reg-fields)))
+          fails            (concat
+                             (when (and (not (:allow-duplicate-sms? reg-params))
+                                        (not identical-sms?))
+                               [:sms-mismatch])
+                             (when (and (not (:allow-duplicate-email? reg-params))
+                                        (not identical-email?))
+                               [:email-mismatch])
+                             (when (and (:bankid? reg-params)
+                                        (not (:allow-duplicate-bankid? reg-params))
+                                        (not identical-pid?))
+                               [:pid-mismatch]))]
+      (if (seq fails)
+        [:duplicate (into #{} fails)]
+        [:resume :ok])))
+  #_(cond
+      ;(and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
+      ;[:login]
+
+      (not (:allow-resume? reg-params))
+      [:duplicate :no-resume]
+
+      (or (nil? (:group existing-user))
+          (not (= (:group reg-params) (:group existing-user))))
+      [:duplicate :group-mismatch]
+
+      (and (not (:allow-duplicate-sms? reg-params))
+           (not identical-sms?))
       [:duplicate :sms-mismatch]
 
-      (not= (:email existing-user) (:email reg-fields))
+      (and (not (:allow-duplicate-email? reg-params))
+           (not identical-email?))
       [:duplicate :email-mismatch]
 
+      (and (not (:allow-duplicate-sms? reg-params))
+           (not (:allow-duplicate-email? reg-params)))
+      (cond
+        (not identical-sms?)
+        [:duplicate :sms-mismatch]
+
+        (not identical-email?)
+        [:duplicate :email-mismatch]
+
+        :else
+        [:resume :both])
+
+      (not (:allow-duplicate-sms? reg-params))
+      (if identical-sms?
+        [:resume :sms]
+        [:duplicate :sms-mismatch])
+
+      (not (:allow-duplicate-email? reg-params))
+      (if identical-email?
+        [:resume :email]
+        [:duplicate :email-mismatch])
+
       :else
-      [:resume :both])
-
-    (not (:allow-duplicate-sms? reg-params))
-    (if (= (:sms-number existing-user) (:sms-number reg-fields))
-      [:resume :sms]
-      [:duplicate :sms-mismatch])
-
-    (not (:allow-duplicate-email? reg-params))
-    (if (= (:email existing-user) (:email reg-fields))
-      [:resume :email]
-      [:duplicate :email-mismatch])
-
-    :else
-    (throw (Exception. "A cond should have been met"))))
+      (throw (Exception. "A cond should have been met"))))
 
 (defn- handle-resume
   [project-id session reg-params user]
@@ -466,7 +503,6 @@
 
 (def validated-codes (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 60 24))))
 
-;; TODO: Evict old code uids
 (defn- code-validated!
   [uid code-key]
   (swap! validated-codes #(assoc % uid (set/union (get % uid) #{code-key}))))
@@ -553,14 +589,19 @@
   [project-id :- api/->int session :- [:? map?] reg-params :- map?]
   (if (bankid-done? session)
     (let [bankid-fields (get-bankid-fields session reg-params)]
-      (if (and (reg-service/pid-exists? (get-in bankid-fields [:field-values :pid-number]))
-               (not (:allow-duplicate-bankid? reg-params)))
-        (throw (Exception. "Personnummer already exists"))
-        (->
-          (http-response/found (str "/registration/" project-id "/privacy"))
-          (assoc-reg-session session (merge bankid-fields
-                                            {:bankid-done? true}))
-          (assoc-in [:session :e-auth] nil))))
+      (->
+        (http-response/found (str "/registration/" project-id "/privacy"))
+        (assoc-reg-session session (merge bankid-fields
+                                          {:bankid-done? true}))
+        (assoc-in [:session :e-auth] nil))
+      #_(if (and (reg-service/pid-exists? (get-in bankid-fields [:field-values :pid-number]))
+                 (not (:allow-duplicate-bankid? reg-params)))
+          (throw (Exception. "Personnummer already exists"))
+          (->
+            (http-response/found (str "/registration/" project-id "/privacy"))
+            (assoc-reg-session session (merge bankid-fields
+                                              {:bankid-done? true}))
+            (assoc-in [:session :e-auth] nil))))
     (throw (ex-info "BankID returned incomplete complete info" {:e-auth session}))))
 
 (defapi bankid-poster

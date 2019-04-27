@@ -604,7 +604,7 @@
                               {:allow-resume?          false
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false})))
-    (is (= [:resume :both]
+    (is (= [:resume :ok]
            (resolve-duplicate {:sms-number "666"
                                :email      "brjann"
                                :username   ""
@@ -616,7 +616,7 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false
                                :group                  666})))
-    (is (= [:resume :email]
+    (is (= [:resume :ok]
            (resolve-duplicate {:sms-number "555"
                                :email      "brjann"
                                :username   ""
@@ -628,7 +628,7 @@
                                :allow-duplicate-sms?   true
                                :allow-duplicate-email? false
                                :group                  666})))
-    (is (= [:resume :sms]
+    (is (= [:resume :ok]
            (resolve-duplicate {:sms-number "666"
                                :email      "brjann"
                                :username   ""
@@ -640,7 +640,7 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? true
                                :group                  666})))
-    (is (= [:duplicate :sms-mismatch]
+    (is (= [:duplicate #{:sms-mismatch}]
            (resolve-duplicate {:sms-number "555"
                                :email      "brjann"
                                :username   ""
@@ -652,7 +652,7 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false
                                :group                  666})))
-    (is (= [:duplicate :email-mismatch]
+    (is (= [:duplicate #{:email-mismatch}]
            (resolve-duplicate {:sms-number "666"
                                :email      "ljotsson"
                                :username   ""
@@ -665,7 +665,7 @@
                                :allow-duplicate-email? false
                                :group                  666})))
 
-    (is (= [:duplicate :sms-mismatch]
+    (is (= [:duplicate #{:sms-mismatch}]
            (resolve-duplicate {:sms-number "555"
                                :email      "brjann"
                                :username   ""
@@ -677,7 +677,7 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? true
                                :group                  666})))
-    (is (= [:duplicate :email-mismatch]
+    (is (= [:duplicate #{:email-mismatch}]
            (resolve-duplicate {:sms-number "666"
                                :email      "brjann"
                                :username   ""
@@ -689,20 +689,6 @@
                                :allow-duplicate-sms?   true
                                :allow-duplicate-email? false
                                :group                  666})))
-    ;; This was a test for if login credentials were available
-    (is (= [:resume :both]
-           (resolve-duplicate {:sms-number "666"
-                               :email      "brjann"
-                               :username   "brjann"
-                               :password   "brjann"
-                               :group      666}
-                              {:sms-number "666"
-                               :email      "brjann"}
-                              {:allow-resume?          true
-                               :allow-duplicate-sms?   false
-                               :allow-duplicate-email? false
-                               :group                  666})))
-
     (is (= [:duplicate :group-mismatch]
            (resolve-duplicate {:sms-number "666"
                                :email      "brjann"
@@ -832,7 +818,6 @@
           (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-          (has (status? 302))
           ;; Redirect to finish
           (follow-redirect)
           ;; Session created
