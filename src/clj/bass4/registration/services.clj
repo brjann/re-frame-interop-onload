@@ -82,12 +82,6 @@
                                          (not (:allow-duplicate-bankid? params)))))
                            false
 
-                           (not= :none auto-username)
-                           false
-
-                           auto-password?
-                           false
-
                            :else true)]
     ;; pid-validator is replaced by swedish validator later if bankid? is true
     (merge params

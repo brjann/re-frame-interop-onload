@@ -149,11 +149,35 @@
       [:duplicate :email-mismatch])
 
     :else
-    (throw (Exception. "Conds should have been met"))))
+    (throw (Exception. "A cond should have been met"))))
 
-(defn handle-duplicates
+(defn- handle-resume
+  [project-id session reg-params user]
+  (let [user-id  (:user-id user)
+        password (when (or (:auto-password? reg-params)
+                           (contains? (:fields reg-params) :password))
+                   (let [password (if (:auto-password? reg-params)
+                                    (passwords/password)
+                                    (if-let [password (get-in session [:registration :field-values :password])]
+                                      password
+                                      (throw (ex-info "Password not present in registration" (:registration session)))))]
+                     (log/debug "Updating password")
+                     (user-service/update-user-properties! user-id {:password password})
+                     password))]
+    (if (:username user)
+      (->
+        (http-response/found (str "/registration/" project-id "/credentials"))
+        (assoc-reg-session session {:resume?     true
+                                    :credentials (merge
+                                                   {:user-id user-id :username (:username user)}
+                                                   (when (:auto-password? reg-params) {:password password}))}))
+      (->
+        (http-response/found (str "/registration/" project-id "/finished"))
+        (assoc-reg-session session {:resume?     true
+                                    :credentials {:user-id user-id}})))))
+
+(defn- handle-duplicates
   [project-id session reg-params duplicates]
-  (log/debug (:registration session))
   (let [[action reason] (if (< 1 (count duplicates))
                           ;; TODO: Test this case as req
                           [:duplicate :too-many]
@@ -161,9 +185,10 @@
                                 fields (get-in session [:registration :field-values])]
                             (resolve-duplicate user fields reg-params)))]
     (log/debug action reason)
-
-    (-> (http-response/found (str "/registration/" project-id "/duplicate"))
-        (reset-reg-session session))))
+    (if (= :duplicate action)
+      (-> (http-response/found (str "/registration/" project-id "/duplicate"))
+          (reset-reg-session session))
+      (handle-resume project-id session reg-params (first duplicates)))))
 
 
 (defn- duplicate-conflict?

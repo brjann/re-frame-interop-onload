@@ -757,7 +757,7 @@
           (follow-redirect)
           (has (some-text? "already exists"))))))
 
-(deftest registration-duplicate-resume
+(deftest registration-duplicate-resume-allowed
   (let [sms-number (random-sms)
         email      (random-email)]
     (user-service/create-user! 543018 {:SMSNumber sms-number
@@ -782,9 +782,9 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
           (follow-redirect)
-          (has (some-text? "already exists"))))))
+          (has (some-text? "we promise"))))))
 
-(deftest registration-duplicate-login
+(deftest registration-duplicate-login-resume-not-allowed
   (let [sms-number (random-sms)
         email      (random-email)]
     (user-service/create-user! 543018 {:SMSNumber sms-number
@@ -798,8 +798,8 @@
                                                                :group                  564616
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true})
+                                                               :allow-resume?          false
+                                                               :sms-countries          ["se"]})
                   passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
