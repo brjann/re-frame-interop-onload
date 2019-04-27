@@ -972,7 +972,9 @@
           (has (some-text? email))
           (has (some-text? "chose"))
           (visit "/registration/564610/finished")
+          (log-headers)
           (follow-redirect)
+          (log-body)
           (has (some-text? "we promise")))
       (let [by-username (db/get-user-by-username {:username email})]
         (is (= true (map? by-username))))

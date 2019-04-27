@@ -164,7 +164,7 @@
                      (log/debug "Updating password")
                      (user-service/update-user-properties! user-id {:password password})
                      password))]
-    (if (:username user)
+    (if (not (empty? (:username user)))
       (->
         (http-response/found (str "/registration/" project-id "/credentials"))
         (assoc-reg-session session {:resume?     true
@@ -177,18 +177,17 @@
                                     :credentials {:user-id user-id}})))))
 
 (defn- handle-duplicates
-  [project-id session reg-params duplicates]
-  (let [[action reason] (if (< 1 (count duplicates))
-                          ;; TODO: Test this case as req
-                          [:duplicate :too-many]
-                          (let [user   (user-service/get-user (first duplicates))
-                                fields (get-in session [:registration :field-values])]
-                            (resolve-duplicate user fields reg-params)))]
+  [project-id session reg-params duplicate-ids]
+  (let [[action reason user] (if (< 1 (count duplicate-ids))
+                               [:duplicate :too-many]
+                               (let [user   (user-service/get-user (first duplicate-ids))
+                                     fields (get-in session [:registration :field-values])]
+                                 (conj (resolve-duplicate user fields reg-params) user)))]
     (log/debug action reason)
     (if (= :duplicate action)
       (-> (http-response/found (str "/registration/" project-id "/duplicate"))
           (reset-reg-session session))
-      (handle-resume project-id session reg-params (first duplicates)))))
+      (handle-resume project-id session reg-params user))))
 
 
 (defn- duplicate-conflict?
