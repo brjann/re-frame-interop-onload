@@ -759,7 +759,17 @@
                               {:allow-resume?          true
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false
-                               :group                  nil})))))
+                               :group                  nil})))
+    (is (= :thrown (try
+                     (resolve-duplicate {:group 10}
+                                        {}
+                                        {:group                   10
+                                         :allow-resume?           true
+                                         :allow-duplicate-sms?    true
+                                         :allow-duplicate-email?  true
+                                         :allow-duplicate-bankid? true})
+                     (catch Exception _
+                       :thrown))))))
 
 (deftest registration-duplicate-info-too-many
   (let [sms-number (random-sms)

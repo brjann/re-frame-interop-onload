@@ -151,13 +151,9 @@
                  {:email      (:email emails)
                   :project-id project-id})))
 
-;; TODO: Make private and use test-trick
 (defn- resolve-duplicate
   [existing-user reg-fields reg-params]
   (cond
-    ;(and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
-    ;[:login]
-
     (not (:allow-resume? reg-params))
     [:duplicate :no-resume]
 
@@ -169,63 +165,25 @@
     (let [identical-sms?   (= (:sms-number existing-user) (:sms-number reg-fields))
           identical-email? (= (:email existing-user) (:email reg-fields))
           identical-pid?   (= (:pid-number existing-user) (:pid-number reg-fields))
+          match-sms?       (not (:allow-duplicate-sms? reg-params))
+          match-email?     (not (:allow-duplicate-email? reg-params))
+          match-pid?       (and (:bankid? reg-params)
+                                (not (:allow-duplicate-bankid? reg-params)))
           fails            (concat
-                             (when (and (not (:allow-duplicate-sms? reg-params))
+                             (when (and match-sms?
                                         (not identical-sms?))
                                [:sms-mismatch])
-                             (when (and (not (:allow-duplicate-email? reg-params))
+                             (when (and match-email?
                                         (not identical-email?))
                                [:email-mismatch])
-                             (when (and (:bankid? reg-params)
-                                        (not (:allow-duplicate-bankid? reg-params))
+                             (when (and match-pid?
                                         (not identical-pid?))
                                [:pid-mismatch]))]
+      (when-not (some true? [match-sms? match-email? match-pid?])
+        (throw (ex-info "No unique identifier but :allow-resume? true anyway" (or reg-params {}))))
       (if (seq fails)
         [:duplicate (into #{} fails)]
-        [:resume :ok])))
-  #_(cond
-      ;(and (not (empty? (:username existing-user))) (not (empty? (:password existing-user))))
-      ;[:login]
-
-      (not (:allow-resume? reg-params))
-      [:duplicate :no-resume]
-
-      (or (nil? (:group existing-user))
-          (not (= (:group reg-params) (:group existing-user))))
-      [:duplicate :group-mismatch]
-
-      (and (not (:allow-duplicate-sms? reg-params))
-           (not identical-sms?))
-      [:duplicate :sms-mismatch]
-
-      (and (not (:allow-duplicate-email? reg-params))
-           (not identical-email?))
-      [:duplicate :email-mismatch]
-
-      (and (not (:allow-duplicate-sms? reg-params))
-           (not (:allow-duplicate-email? reg-params)))
-      (cond
-        (not identical-sms?)
-        [:duplicate :sms-mismatch]
-
-        (not identical-email?)
-        [:duplicate :email-mismatch]
-
-        :else
-        [:resume :both])
-
-      (not (:allow-duplicate-sms? reg-params))
-      (if identical-sms?
-        [:resume :sms]
-        [:duplicate :sms-mismatch])
-
-      (not (:allow-duplicate-email? reg-params))
-      (if identical-email?
-        [:resume :email]
-        [:duplicate :email-mismatch])
-
-      :else
-      (throw (Exception. "A cond should have been met"))))
+        [:resume :ok]))))
 
 (defn- handle-resume
   [project-id session reg-params user]
