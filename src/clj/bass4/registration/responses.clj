@@ -168,7 +168,7 @@
     :else
     (let [identical-sms?   (= (:sms-number existing-user) (:sms-number reg-fields))
           identical-email? (= (:email existing-user) (:email reg-fields))
-          identical-pid?   (= (:pid-number existing-user (:pid-number reg-fields)))
+          identical-pid?   (= (:pid-number existing-user) (:pid-number reg-fields))
           fails            (concat
                              (when (and (not (:allow-duplicate-sms? reg-params))
                                         (not identical-sms?))

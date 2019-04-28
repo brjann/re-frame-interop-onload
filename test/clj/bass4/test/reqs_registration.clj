@@ -640,6 +640,38 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? true
                                :group                  666})))
+    (is (= [:resume :ok]
+           (resolve-duplicate {:sms-number "555"
+                               :pid-number "19121212-1212"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "555"
+                               :email      "brjann"
+                               :pid-number "19121212-1212"}
+                              {:allow-resume?           true
+                               :allow-duplicate-sms?    false
+                               :allow-duplicate-email?  false
+                               :allow-duplicate-bankid? false
+                               :bankid?                 true
+                               :group                   666})))
+    (is (= [:resume :ok]
+           (resolve-duplicate {:sms-number "555"
+                               :pid-number "19121212-1212"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "666"
+                               :email      "illugi"
+                               :pid-number "19121212-1212"}
+                              {:allow-resume?           true
+                               :allow-duplicate-sms?    true
+                               :allow-duplicate-email?  true
+                               :allow-duplicate-bankid? false
+                               :bankid?                 true
+                               :group                   666})))
     (is (= [:duplicate #{:sms-mismatch}]
            (resolve-duplicate {:sms-number "555"
                                :email      "brjann"
@@ -652,6 +684,22 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false
                                :group                  666})))
+    (is (= [:duplicate #{:pid-mismatch}]
+           (resolve-duplicate {:sms-number "555"
+                               :pid-number "19121212-1212"
+                               :email      "brjann"
+                               :username   ""
+                               :password   ""
+                               :group      666}
+                              {:sms-number "555"
+                               :email      "brjann"
+                               :pid-number "19131313-1313"}
+                              {:allow-resume?           true
+                               :allow-duplicate-sms?    false
+                               :allow-duplicate-email?  false
+                               :allow-duplicate-bankid? false
+                               :bankid?                 true
+                               :group                   666})))
     (is (= [:duplicate #{:email-mismatch}]
            (resolve-duplicate {:sms-number "666"
                                :email      "ljotsson"
@@ -664,7 +712,6 @@
                                :allow-duplicate-sms?   false
                                :allow-duplicate-email? false
                                :group                  666})))
-
     (is (= [:duplicate #{:sms-mismatch}]
            (resolve-duplicate {:sms-number "555"
                                :email      "brjann"
