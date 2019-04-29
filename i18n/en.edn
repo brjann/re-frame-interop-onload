@@ -87,7 +87,7 @@
                    :resuming-finished-heading    "Registration already completed"
                    :resuming-finished-info       "You have completed this registration before. If you have any questions, contact project manager at"
                    :resuming-assessments-heading "Continue registration"
-                   :resuming-assessments-info    "You have initiated this registration before but did not complete it. You will continue from your where you were."}
+                   :resuming-assessments-info    "You have started this registration before but did not complete it. You will continue from your where you were."}
  :dashboard       {:start           "Start page"
                    :welcome         "Welcome!"
                    :new-modules     "You have access to new modules"
