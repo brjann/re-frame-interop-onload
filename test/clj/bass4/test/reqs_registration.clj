@@ -465,7 +465,8 @@
           (follow-redirect)
           (has (some-text? email))
           (has (some-text? "chose"))
-          (has (some-text? "interrupted"))))))
+          (has (some-text? "interrupted"))
+          (has (some-text? "login address"))))))
 
 (deftest registration-no-credentials-no-assessments
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -1084,6 +1085,7 @@
             ;; Session created
             (follow-redirect)
             (has (some-text? "Continue registration"))
+            (has (not-text? "exact"))
             (visit "/user")
             ;; Redirect to pending assessments
             (follow-redirect)
