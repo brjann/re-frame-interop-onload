@@ -928,6 +928,7 @@
           ;; Session created
           (follow-redirect)
           (has (some-text? "Continue registration"))
+          (has (some-text? "exact"))
           (visit "/user")
           ;; Redirect to pending assessments
           (follow-redirect)
@@ -1003,6 +1004,7 @@
             ;; Session created
             (follow-redirect)
             (has (some-text? "Continue registration"))
+            (has (not-text? "exact"))
             (visit "/user")
             ;; Redirect to pending assessments
             (follow-redirect)

@@ -58,29 +58,36 @@
 ;;  RESUME FINISHED
 ;; -----------------
 
-(defapi resume-assessments-page
-  [project-id :- api/->int]
-  (render-page project-id "registration-resume-assessments.html"))
+(defapi resuming-assessments-page
+  [project-id :- api/->int request]
+  (let [user         (get-in request [:db :user])
+        credentials? (and (not (empty? (:username user)))
+                          (not (empty? (:password user))))]
+    (log/debug (:db request))
+    (render-page
+      project-id
+      "registration-resuming-assessments.html"
+      {:credentials? credentials?})))
 
-(defapi resume-finished-page
+(defapi resuming-finished-page
   [project-id :- api/->int]
   (let [emails (bass/db-contact-info project-id)]
     (render-page project-id
-                 "registration-resume-finished.html"
+                 "registration-resuming-finished.html"
                  {:email      (:email emails)
                   :project-id project-id})))
 
 
-(defn- to-resume-finished
+(defn- to-resuming-finished
   [project-id session]
   (->
-    (http-response/found (str "/registration/" project-id "/resume-finished"))
+    (http-response/found (str "/registration/" project-id "/resuming-finished"))
     (reset-reg-session session)))
 
-(defn- to-resume-assessments
+(defn- to-resuming-assessments
   [project-id user-id]
   (->
-    (http-response/found "resume-assessments")
+    (http-response/found "resuming-assessments")
     (assoc :session (res-auth/create-new-session
                       (user-service/get-user user-id)
                       {:external-login? true}))))
@@ -110,8 +117,8 @@
       (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))]
         (if (:resume? reg-session)
           (if ongoing-assessments?
-            (to-resume-assessments project-id user-id)
-            (to-resume-finished project-id session))
+            (to-resuming-assessments project-id user-id)
+            (to-resuming-finished project-id session))
           (if ongoing-assessments?
             (to-assessments user-id)
             (to-finished project-id session))))

@@ -1,0 +1,11 @@
+{% extends "simple.html" %}
+{% block content %}
+<h1>{%tr registration/resuming-assessments-heading %}</h1>
+<p>
+    {%tr registration/resuming-assessments-info %}
+    {% if not credentials? %}
+    {%tr registration/no-credentials-resume-info %}
+    {% endif %}
+</p>
+<a href="/user" class="btn btn-primary">{%tr continue %}</a>
+{% endblock %}

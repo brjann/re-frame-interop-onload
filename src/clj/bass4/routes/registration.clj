@@ -176,10 +176,10 @@
     (GET "/finished" [:as request]
       (reg-response/finished-router project-id session request))
 
-    (GET "/resume-finished" []
-      (reg-response/resume-finished-page project-id))
-    (GET "/resume-assessments" []
-      (reg-response/resume-assessments-page project-id))
+    (GET "/resuming-finished" []
+      (reg-response/resuming-finished-page project-id))
+    (GET "/resuming-assessments" [:as request]
+      (reg-response/resuming-assessments-page project-id request))
 
     (GET "/cancel" []
       (reg-response/cancel-registration project-id session))))
