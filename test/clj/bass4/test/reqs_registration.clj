@@ -147,8 +147,6 @@
             (follow-redirect)
             ;; Session created
             (follow-redirect)
-            (has (some-text? "exact"))
-            (visit "/user")
             ;; Redirect to pending assessments
             (follow-redirect)
             (has (some-text? "Welcome"))
@@ -273,8 +271,6 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
-        (has (some-text? "exact"))
-        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -308,8 +304,6 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
-        (has (some-text? "exact"))
-        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -1138,6 +1132,56 @@
           (follow-redirect)
           (has (some-text? "already exists"))))))
 
+(deftest registration-duplicate-login-resume-not-allowed2
+  (let [sms-number (random-sms)
+        email      (random-email)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :auto-username          :none
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  564616
+                                                               :allow-duplicate-email? false
+                                                               :allow-duplicate-sms?   false
+                                                               :allow-resume?          false
+                                                               :sms-countries          ["se"]})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (has (status? 302))
+          ;; Redirect to finish
+          (follow-redirect)
+          ;; Session created
+          (follow-redirect)
+          ;; Redirect to pending assessments
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/user/assessments")
+          (has (some-text? "AAQ"))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+          (follow-redirect)
+          (visit "/api/session/timeout-hard")
+          (visit "/user/assessments")
+          (has (status? 403)))
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          ;; Redirect to finish
+          (follow-redirect)
+          (has (some-text? "already exists"))))))
+
 (deftest registration-duplicate-login-resume-mismatch
   (let [sms-number (random-sms)
         email      (random-email)]
@@ -1278,8 +1322,6 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
-        (has (some-text? "exact"))
-        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))

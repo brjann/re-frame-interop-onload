@@ -176,7 +176,7 @@
       (reg-response/credentials-page project-id session request reg-params))
 
     (GET "/finished" [:as request]
-      (reg-response/finished-router project-id session request))
+      (reg-response/finished-router project-id session reg-params))
 
     (GET "/no-credentials-resume-info" [:as request]
       (reg-response/no-credentials-resume-info-page project-id request))

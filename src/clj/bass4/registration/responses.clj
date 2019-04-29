@@ -124,7 +124,7 @@
                       {:external-login? true}))))
 
 (defapi finished-router
-  [project-id :- api/->int session :- [:? map?] request]
+  [project-id :- api/->int session :- [:? map?] reg-params]
   (let [reg-session (:registration session)]
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
       (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))
@@ -134,7 +134,7 @@
             (to-resuming-assessments project-id user-id)
             (to-resuming-finished project-id session))
           (if ongoing-assessments?
-            (if credentials?
+            (if (or credentials? (not (:allow-resume? reg-params)))
               (to-assessments user-id)
               (to-no-credentials-resume-info user-id))
             (to-finished project-id session))))
