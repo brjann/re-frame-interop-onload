@@ -31,8 +31,8 @@
 ;;    LOGOUT
 ;; -------------
 
-(defapi logout []
-  (-> (http-response/found "/login")
+(defapi logout [session]
+  (-> (http-response/found (or (:logout-path session) "/login"))
       (assoc :session nil)))
 
 ;; ------------------

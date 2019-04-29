@@ -131,7 +131,7 @@
       (POST "/logout" []
         :summary "Logout from session."
         :return {:result String}
-        (auth-response/logout))
+        (auth-response/logout (:session request)))
 
       (POST "/re-auth" []
         :summary "Re-authenticate after timeout."

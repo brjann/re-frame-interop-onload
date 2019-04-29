@@ -6,8 +6,8 @@
             [buddy.hashers :as hashers]))
 
 (defroutes auth-routes
-  (GET "/logout" []
-    (auth-response/logout))
+  (GET "/logout" [:as {:keys [session]}]
+    (auth-response/logout session))
 
   (GET "/" [:as request]
     (if (get-in request [:session :user-id])
