@@ -1114,35 +1114,6 @@
 (deftest registration-duplicate-login-resume-not-allowed
   (let [sms-number (random-sms)
         email      (random-email)]
-    (user-service/create-user! 564610 {:SMSNumber sms-number
-                                       :Email     email
-                                       :group     564616
-                                       :password  "xxx"
-                                       :username  "xxx"})
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  564616
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :allow-resume?          false
-                                                               :sms-countries          ["se"]})
-                  passwords/letters-digits        (constantly "METALLICA")]
-      (-> *s*
-          (visit "/registration/564610/captcha")
-          ;; Captcha session is created
-          (follow-redirect)
-          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number sms-number})
-          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-          (follow-redirect)
-          (has (some-text? "already exists"))))))
-
-(deftest registration-duplicate-login-resume-not-allowed2
-  (let [sms-number (random-sms)
-        email      (random-email)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :auto-username          :none
