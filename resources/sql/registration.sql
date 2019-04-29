@@ -60,11 +60,6 @@ SELECT
 FROM c_treatmentinterface
 WHERE ObjectId=:project-id;
 
--- :name get-user-id-by-pid :? :1
-SELECT ObjectId AS `user-id`
-FROM c_participant
-WHERE Personnummer=:pid-number;
-
 -- :name check-duplicates :? :*
 SELECT
   ObjectId AS `user-id`

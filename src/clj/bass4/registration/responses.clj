@@ -552,15 +552,7 @@
         (http-response/found (str "/registration/" project-id "/privacy"))
         (assoc-reg-session session (merge bankid-fields
                                           {:bankid-done? true}))
-        (assoc-in [:session :e-auth] nil))
-      #_(if (and (reg-service/pid-exists? (get-in bankid-fields [:field-values :pid-number]))
-                 (not (:allow-duplicate-bankid? reg-params)))
-          (throw (Exception. "Personnummer already exists"))
-          (->
-            (http-response/found (str "/registration/" project-id "/privacy"))
-            (assoc-reg-session session (merge bankid-fields
-                                              {:bankid-done? true}))
-            (assoc-in [:session :e-auth] nil))))
+        (assoc-in [:session :e-auth] nil)))
     (throw (ex-info "BankID returned incomplete complete info" {:e-auth session}))))
 
 (defapi bankid-poster

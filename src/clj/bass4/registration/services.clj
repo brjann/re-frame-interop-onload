@@ -131,10 +131,6 @@
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))
 
-(defn pid-exists?
-  [pid-number]
-  (not (empty? (db/get-user-id-by-pid {:pid-number pid-number}))))
-
 (defn duplicate-participants
   [{:keys [email sms-number pid-number]}]
   (->> (db/check-duplicates
@@ -149,10 +145,7 @@
   (jdbc/with-db-transaction [conn db/*db*]
     (let [id (:auto-id (db/get-current-auto-id-for-update conn {:project-id project-id}))]
       (db/increment-auto-id! conn {:project-id project-id})
-      id))
-  #_(let [id (:auto-id (db/get-current-auto-id-for-update {:project-id project-id}))]
-      (db/increment-auto-id! {:project-id project-id})
-      id))
+      id)))
 
 (defn generate-participant-id
   [project-id prefix length]
