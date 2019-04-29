@@ -14,7 +14,8 @@
             [bass4.api-coercion :as api]
             [bass4.treatment.builder :as treatment-builder]
             [bass4.session.timeout :as session-timeout]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.i18n :as i18n]))
 
 (defn treatment-mw
   [handler]
@@ -134,9 +135,16 @@
         (auth-response/logout (:session request)))
 
       (GET "/logout-path" []
-        :summary "Returns the path to where the user should be redirected when logged out."
-        :return String
-        (or (get-in request [:session :logout-path]) "/login"))
+        :summary "Returns the path and path text after log out."
+        :description "Returns the path and imperative text for the path after the user has logged out."
+        :return {:path String
+                 :text String}
+        (let [session (:session request)
+              path    (or (:logout-path session) "/login")
+              text    (i18n/tr [(or (:logout-path-text-key session)
+                                    :return-to-login)])]
+          (http-response/ok {:path path
+                             :text text})))
 
       (POST "/re-auth" []
         :summary "Re-authenticate after timeout."

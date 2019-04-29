@@ -31,8 +31,8 @@
   [project-id template & [params]]
   (layout/render template
                  (merge params
-                        {:session-timeout-return-path          (str "/registration/" project-id)
-                         :session-timeout-return-link-text-key :registration/register-again})))
+                        {:logout-path      (str "/registration/" project-id)
+                         :logout-path-text (i18n/tr [:registration/register-again])})))
 
 (def password-regex
   #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
@@ -53,13 +53,16 @@
   (assoc response :session (dissoc session :registration)))
 
 (defn create-session
-  [user-id redirect logout-path]
+  [project-id user-id redirect return-to-registration?]
   (->
     (http-response/found redirect)
     (assoc :session (res-auth/create-new-session
                       (user-service/get-user user-id)
-                      {:external-login? true
-                       :logout-path     logout-path}))))
+                      (merge
+                        {:external-login? true}
+                        (when return-to-registration?
+                          {:logout-path          (str "/registration/" project-id)
+                           :logout-path-text-key :registration/register-again}))))))
 
 
 ;; -----------------
@@ -93,8 +96,7 @@
 
 (defn- to-resuming-assessments
   [project-id user-id credentials?]
-  (create-session user-id "resuming-assessments" (when (not credentials?)
-                                                   (str "/registration/" project-id))))
+  (create-session project-id user-id "resuming-assessments" (not credentials?)))
 
 ;; ------------
 ;;   FINISHED
@@ -114,12 +116,11 @@
 
 (defn- to-no-credentials-resume-info
   [project-id user-id]
-  (create-session user-id "no-credentials-resume-info" (str "/registration/" project-id)))
+  (create-session project-id user-id "no-credentials-resume-info" true))
 
 (defn- to-assessments
   [project-id user-id credentials?]
-  (create-session user-id "/user" (when (not credentials?)
-                                    (str "/registration/" project-id))))
+  (create-session project-id user-id "/user" (not credentials?)))
 
 (defapi finished-router
   [project-id :- api/->int session :- [:? map?] reg-params]
@@ -236,10 +237,10 @@
 (defn- handle-duplicates
   [project-id session reg-params duplicate-ids]
   (let [[action _ user] (if (< 1 (count duplicate-ids))
-                               [:duplicate :too-many]
-                               (let [user   (user-service/get-user (first duplicate-ids))
-                                     fields (get-in session [:registration :field-values])]
-                                 (conj (resolve-duplicate user fields reg-params) user)))]
+                          [:duplicate :too-many]
+                          (let [user   (user-service/get-user (first duplicate-ids))
+                                fields (get-in session [:registration :field-values])]
+                            (conj (resolve-duplicate user fields reg-params) user)))]
     (if (= :duplicate action)
       (-> (http-response/found (str "/registration/" project-id "/duplicate"))
           (reset-reg-session session))

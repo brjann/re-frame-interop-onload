@@ -17,6 +17,7 @@
  :contact-support "You can contact support at "
  :characters-left "Characters left"
  :too-long!       "too long!"
+ :return-to-login "Return to login"
  :quick-login     {:expired-title           "Login expired"
                    :expired-text            "Your login code has expired."
                    :invalid-title           "Invalid login code"
@@ -30,8 +31,7 @@
                    :renew-password-text "You have been inactive for a long while and need to enter your password to confirm that you are still using the system. Please enter your password below to prevent you from being logged out."
                    :no-session          "You have been logged, perhaps because you have been inactive for a long while. Any unsaved data has been lost."
                    :another-session     "You have another process ongoing in another browser window. Please close this browser window and go to the other window."
-                   :time-to-logout      "Time to logout: %d min %d sec"
-                   :return-to-login     "Return to login"}
+                   :time-to-logout      "Time to logout: %d min %d sec"}
  :registration    {:begin-registration           "Begin registration"
                    :logged-in-title              "Already logged in"
                    :logged-in-text               "You are already logged into the system. If you want to continue with the registration you will be logged out."

@@ -42,19 +42,23 @@ $(document).ready(function () {
          status_user_id = status_user_id['user-id'];
       }
 
-      if (status_user_id !== user_id) {
-         clearInterval(interval_handle);
+      if (first_run && status_user_id !== null) {
+         user_id = status_user_id;
+      } else {
+         if (status_user_id !== user_id) {
+            clearInterval(interval_handle);
 
-         if (status_user_id === null && timeouts === null) {
-            alert(text_session_no_session);
-            window.location.href = session_timeout_return_path;
-         } else {
-            alert(text_session_another_session);
-            $('body')
-               .empty()
-               .text(text_session_another_session);
+            if (status_user_id === null && timeouts === null) {
+               alert(text_session_no_session);
+               window.location.href = logout_path;
+            } else {
+               alert(text_session_another_session);
+               $('body')
+                  .empty()
+                  .text(text_session_another_session);
+            }
+            return;
          }
-         return;
       }
 
       if (first_run && timeouts === null) {
@@ -78,15 +82,15 @@ $(document).ready(function () {
             $timeout_modal.find('.button').remove();
             $timeout_modal.find('.modal-footer')
                .append($('<a class="btn btn-primary">')
-                  .prop('href', session_timeout_return_path)
-                  .text(session_timeout_return_link_text));
+                  .prop('href', logout_path)
+                  .text(logout_path_text));
             $time_to_logout.text(sprintf(text_session_time_to_logout, 0, 0));
             $time_to_logout.parent()
                .append('<p>' + text_session_no_session + '</p>')
                .css('color', 'red');
          } else {
             alert(text_session_no_session);
-            window.location.href = session_timeout_return_path;
+            window.location.href = logout_path;
          }
          return;
       }
@@ -109,6 +113,22 @@ $(document).ready(function () {
       }
    };
 
+   var init_session = function () {
+      var $status = $.ajax('/api/session/status');
+      var $user_id = $.ajax('/api/session/user-id');
+      if (logout_path === null) {
+         var $logout_path = $.ajax('/api/logout-path');
+         $.when($status, $user_id, $logout_path).done(function (x, y, z) {
+            logout_path = z[0].path;
+            logout_path_text = z[0].text;
+            session_checker_success(x[0], y[0]);
+         });
+      } else {
+         session_checker();
+      }
+   };
+
+
    var session_checker = function () {
       var $status = $.ajax('/api/session/status');
       var $user_id = $.ajax('/api/session/user-id');
@@ -119,6 +139,6 @@ $(document).ready(function () {
 
    if (in_session) {
       interval_handle = setInterval(session_checker, session_status_poll_interval);
-      session_checker();
+      init_session();
    }
 });

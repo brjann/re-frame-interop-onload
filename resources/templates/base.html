@@ -45,15 +45,15 @@
 {% script "/js/sprintf.min.js" %}
 {% script-modified "/js/instruments.js" %}
 <script type="text/javascript">
+   var user_id = null;
    // @formatter:off
-   var user_id = {{user-id|default:"null"}};
+   var logout_path = {% if logout-path %} "{{logout-path}}" {% else %} null {% endif %};
+   var logout_path_text = {% if logout-path-text %} "{{logout-path-text}}" {% else %} null {% endif %};
    var in_session = {{in-session?}};
    var session_timeout_hard_soon = {{timeout-hard-soon}};
    var session_status_poll_interval = {% if dev? %} 1000 * 5 {% else %} 1000 * 30 {% endif %};
    // @formatter:on
    // Timeout return path is used by javascript to redirect user on hard timeout
-   var session_timeout_return_path = "{{session-timeout-return-path}}";
-   var session_timeout_return_link_text = "{{session-timeout-return-link-text}}";
    var text_session_another_session = "{%tr session-status/another-session %}";
    var text_session_time_to_logout = "{%tr session-status/time-to-logout %}";
    var text_session_no_session = "{%tr session-status/no-session %}";
