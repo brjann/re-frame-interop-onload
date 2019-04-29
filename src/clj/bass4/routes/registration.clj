@@ -173,13 +173,13 @@
       (reg-response/duplicate-page project-id))
 
     (GET "/credentials" [:as request]
-      (reg-response/credentials-page project-id session request reg-params))
+      (reg-response/credentials-page project-id session request))
 
     (GET "/finished" [:as request]
       (reg-response/finished-router project-id session reg-params))
 
     (GET "/no-credentials-resume-info" [:as request]
-      (reg-response/no-credentials-resume-info-page project-id request))
+      (reg-response/no-credentials-resume-info-page project-id))
 
     (GET "/resuming-finished" []
       (reg-response/resuming-finished-page project-id))

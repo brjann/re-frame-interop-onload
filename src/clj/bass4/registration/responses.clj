@@ -23,10 +23,8 @@
             [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service]
-            [bass4.session.timeout :as session-timeout]
             [bass4.services.user :as user-service]
-            [bass4.http-errors :as http-errors]
-            [bass4.error-pages :as error-pages])
+            [bass4.http-errors :as http-errors])
   (:import (java.util UUID)))
 
 (defn render-page
@@ -109,7 +107,7 @@
     (reset-reg-session session)))
 
 (defapi no-credentials-resume-info-page
-  [project-id session]
+  [project-id]
   (render-page project-id
                "registration-no-credentials-resume-info.html"
                (reg-service/finished-content project-id)))
@@ -148,7 +146,7 @@
 
 
 (defapi credentials-page
-  [project-id :- api/->int session :- [:? map?] request req-params]
+  [project-id :- api/->int session :- [:? map?] request]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
       (do
@@ -237,7 +235,7 @@
 
 (defn- handle-duplicates
   [project-id session reg-params duplicate-ids]
-  (let [[action reason user] (if (< 1 (count duplicate-ids))
+  (let [[action _ user] (if (< 1 (count duplicate-ids))
                                [:duplicate :too-many]
                                (let [user   (user-service/get-user (first duplicate-ids))
                                      fields (get-in session [:registration :field-values])]
