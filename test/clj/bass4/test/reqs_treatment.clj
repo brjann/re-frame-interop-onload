@@ -6,7 +6,7 @@
             [kerodon.test :refer :all]
             [bass4.db.core :as db]
             [bass4.test.core :refer [test-fixtures
-                                     not-text?
+                                     fn-not-text?
                                      disable-attack-detector
                                      *s*
                                      modify-session
@@ -34,7 +34,7 @@
         (modify-session {:user-id 549821 :double-authed? true})
         (visit "/user")
         (visit "/user/tx/messages")
-        (not-text? "New message")
+        (fn-not-text? "New message")
         (visit "/user/tx/messages" :request-method :post :params {:message "xxx"})
         (has (status? 404))
         (visit "/user/tx/messages-save-draft" :request-method :post :params {:message "xxx"})
@@ -77,7 +77,7 @@
         (has (some-text? "Retract"))
         (visit "/user/tx/module/3961/retract-homework" :request-method :post)
         (visit "/user/tx/module/3961/homework")
-        (not-text? "Retract")
+        (fn-not-text? "Retract")
         (visit "/user/tx/module/3961/worksheet/4001")
         (has (status? 200))
         (visit "/user/tx/module/3961/worksheet/4000")

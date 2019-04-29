@@ -106,7 +106,6 @@
 (defapi finished-router
   [project-id :- api/->int session :- [:? map?] request]
   (let [reg-session (:registration session)]
-    (log/debug (:resume? reg-session))
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
       (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))]
         (if (:resume? reg-session)
@@ -126,15 +125,19 @@
 
 
 (defapi credentials-page
-  [project-id :- api/->int session :- [:? map?] request]
+  [project-id :- api/->int session :- [:? map?] request req-params]
   (let [credentials (get-in session [:registration :credentials])]
     (if (contains? credentials :username)
-      (render-page project-id
-                   "registration-credentials.html"
-                   {:username   (:username credentials)
-                    :password   (:password credentials)
-                    :login-url  (h-utils/get-host-address request)
-                    :project-id project-id})
+      (do
+        (when-not (:user-id credentials)
+          (throw (ex-info "Credentials did not include user-id" credentials)))
+        (render-page project-id
+                     "registration-credentials.html"
+                     {:username     (:username credentials)
+                      :password     (:password credentials)
+                      :login-url    (h-utils/get-host-address request)
+                      :project-id   project-id
+                      :assessments? (assessments/get-pending-assessments (:user-id credentials))}))
       ;; Wrong place - redirect
       (http-response/found (str "/registration/" project-id)))))
 
@@ -195,7 +198,6 @@
                                     (if-let [password (get-in session [:registration :field-values :password])]
                                       password
                                       (throw (ex-info "Password not present in registration" (:registration session)))))]
-                     (log/debug "Updating password")
                      (user-service/update-user-properties! user-id {:password password})
                      password))]
     (if (not (empty? (:username user)))
@@ -217,7 +219,6 @@
                                (let [user   (user-service/get-user (first duplicate-ids))
                                      fields (get-in session [:registration :field-values])]
                                  (conj (resolve-duplicate user fields reg-params) user)))]
-    (log/debug action reason)
     (if (= :duplicate action)
       (-> (http-response/found (str "/registration/" project-id "/duplicate"))
           (reset-reg-session session))

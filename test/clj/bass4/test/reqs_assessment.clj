@@ -6,7 +6,7 @@
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
             [bass4.test.core :refer [test-fixtures
-                                     not-text?
+                                     fn-not-text?
                                      log-return
                                      log-body
                                      log-headers
@@ -170,7 +170,7 @@
         (follow-redirect)
         (has (some-text? "welcome 0"))
         (has (some-text? "welcome 2"))
-        (not-text? "welcome 1")
+        (fn-not-text? "welcome 1")
         (visit "/user/assessments" :request-method :post :params {:instrument-id 535693 :items "{}" :specifications "{}"})
         (visit "/user/assessments" :request-method :post :params {:instrument-id 547380 :items "{}" :specifications "{}"})
         (visit "/user/assessments" :request-method :post :params {:instrument-id 547374 :items "{}" :specifications "{}"})
@@ -178,7 +178,7 @@
         (follow-redirect)
         (has (some-text? "thanks 0"))
         (has (some-text? "thanks 2"))
-        (not-text? "thanks 1"))))
+        (fn-not-text? "thanks 1"))))
 
 (deftest empty-assessment
   (let [user-id (user-service/create-user! 572594 {:Group "572598" :firstname "group-test"})]

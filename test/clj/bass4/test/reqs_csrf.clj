@@ -5,7 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
-            [bass4.test.core :refer [test-fixtures not-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer [test-fixtures fn-not-text? log-return disable-attack-detector *s*]]
             [bass4.services.user :as user-service]
             [bass4.db.core :as db]))
 

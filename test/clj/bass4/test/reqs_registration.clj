@@ -19,6 +19,8 @@
                                      fix-time
                                      advance-time-s!
                                      modify-session
+                                     fn-not-text?
+                                     not-text?
                                      poll-message-chan]]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
@@ -427,6 +429,7 @@
           (follow-redirect)
           (has (some-text? email))
           (has (some-text? "chose"))
+          (has (not-text? "interrupted"))
           (visit "/registration/564610/finished")
           (follow-redirect)
           (has (some-text? "we promise")))
@@ -434,6 +437,35 @@
             by-participant-id (db/get-user-by-participant-id {:participant-id participant-id})]
         (is (= true (map? by-username)))
         (is (= 1 (count by-participant-id)))))))
+
+(deftest registration-auto-id-email-username-own-password-with-assessments
+  (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
+        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
+    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params     (constantly {:allowed?               true
+                                                                   :fields                 #{:email :sms-number :password}
+                                                                   :group                  653388
+                                                                   :allow-duplicate-email? false
+                                                                   :allow-duplicate-sms?   true
+                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                   :auto-username          :email
+                                                                   :auto-id-prefix         "xxx-"
+                                                                   :auto-id-length         3
+                                                                   :auto-id?               true})
+                  reg-service/generate-participant-id (constantly participant-id)
+                  passwords/letters-digits            (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email email :sms-number "+46070717652" :password "LEMMY2015xxx"})
+          (follow-redirect)
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? email))
+          (has (some-text? "chose"))
+          (has (some-text? "interrupted"))))))
 
 (deftest registration-no-credentials-no-assessments
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})

@@ -171,7 +171,7 @@
       (reg-response/duplicate-page project-id))
 
     (GET "/credentials" [:as request]
-      (reg-response/credentials-page project-id session request))
+      (reg-response/credentials-page project-id session request reg-params))
 
     (GET "/finished" [:as request]
       (reg-response/finished-router project-id session request))

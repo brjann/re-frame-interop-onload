@@ -79,6 +79,7 @@
                    :credentials-heading        "Your login credentials"
                    :credentials-info           "Below are your login credentials. Please write them down and keep them in a safe place."
                    :entered-password           "The password that you chose"
+                   :credentials-resume-info    "After this screen, you will need to fill in questionnaires to complete the registration. If you are not able to complete all questionnaires at this time or your registration is interrupted, go the the login address and use your login credentials to complete the registration."
                    :login-address              "The address to the login page is"
                    :credentials-noted          "Click here when you have noted your credentials."
                    :resume-finished-heading    "Registration already completed"

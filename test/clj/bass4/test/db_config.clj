@@ -3,7 +3,7 @@
             [bass4.config :as config]
             [bass4.db-config :as db-config]
             [bass4.test.core :refer [test-fixtures
-                                     not-text?
+                                     fn-not-text?
                                      log-return
                                      log-body
                                      log-headers

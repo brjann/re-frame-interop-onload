@@ -6,7 +6,7 @@
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
             [bass4.test.core :refer [test-fixtures
-                                     not-text?
+                                     fn-not-text?
                                      log-return
                                      log-body
                                      log-headers

@@ -131,7 +131,7 @@
                              :expected (string/join ", " strs)}))
   response)
 
-(defn not-text?
+(defn fn-not-text?
   [response text]
   (let [body (get-in response [:response :body])]
     (clojure.test/do-report {:actual   (str "has " text)
@@ -202,6 +202,24 @@
                            (comp ~transform api-response)
                            ~expected
                            (~'api-response? ~expected))))
+
+(defn- collapse-extra-whitespace
+  "Replace one or more consecutive whitespaces with a single space,
+  i.e., unwraps all text onto a single line."
+  [state]
+  (-> (:enlive state)
+      (enlive/texts)
+      (str/join)
+      (str/replace #"\s+" " ")))
+
+;; TODO: This macro does not generate an test fail logo in Cursive - neither does some-text?
+(defmacro not-text?
+  [expected]
+  #_(kerodon.test/validate-text ~'not-text? #(not (.contains ^String %1 ^CharSequence %2)) ~expected)
+  `(kerodon.test/validate #(not (.contains ^String %1 ^CharSequence %2))
+                          ~collapse-extra-whitespace
+                          ~expected
+                          (~test "not=" ~expected)))
 
 (defmacro pass-by
   [prev form]
