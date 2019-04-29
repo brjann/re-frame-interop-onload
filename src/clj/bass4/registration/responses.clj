@@ -54,6 +54,16 @@
   [response session]
   (assoc response :session (dissoc session :registration)))
 
+(defn create-session
+  [user-id redirect logout-path]
+  (->
+    (http-response/found redirect)
+    (assoc :session (res-auth/create-new-session
+                      (user-service/get-user user-id)
+                      {:external-login? true
+                       :logout-path     logout-path}))))
+
+
 ;; -----------------
 ;;  RESUME FINISHED
 ;; -----------------
@@ -84,12 +94,9 @@
     (reset-reg-session session)))
 
 (defn- to-resuming-assessments
-  [project-id user-id]
-  (->
-    (http-response/found "resuming-assessments")
-    (assoc :session (res-auth/create-new-session
-                      (user-service/get-user user-id)
-                      {:external-login? true}))))
+  [project-id user-id credentials?]
+  (create-session user-id "resuming-assessments" (when (not credentials?)
+                                                   (str "/registration/" project-id))))
 
 ;; ------------
 ;;   FINISHED
@@ -108,20 +115,13 @@
                (reg-service/finished-content project-id)))
 
 (defn- to-no-credentials-resume-info
-  [user-id]
-  (->
-    (http-response/found "no-credentials-resume-info")
-    (assoc :session (res-auth/create-new-session
-                      (user-service/get-user user-id)
-                      {:external-login? true}))))
+  [project-id user-id]
+  (create-session user-id "no-credentials-resume-info" (str "/registration/" project-id)))
 
 (defn- to-assessments
-  [user-id]
-  (->
-    (http-response/found "/user")
-    (assoc :session (res-auth/create-new-session
-                      (user-service/get-user user-id)
-                      {:external-login? true}))))
+  [project-id user-id credentials?]
+  (create-session user-id "/user" (when (not credentials?)
+                                    (str "/registration/" project-id))))
 
 (defapi finished-router
   [project-id :- api/->int session :- [:? map?] reg-params]
@@ -131,12 +131,12 @@
             credentials?         (contains? (:credentials reg-session) :username)]
         (if (:resume? reg-session)
           (if ongoing-assessments?
-            (to-resuming-assessments project-id user-id)
+            (to-resuming-assessments project-id user-id credentials?)
             (to-resuming-finished project-id session))
           (if ongoing-assessments?
             (if (or credentials? (not (:allow-resume? reg-params)))
-              (to-assessments user-id)
-              (to-no-credentials-resume-info user-id))
+              (to-assessments project-id user-id credentials?)
+              (to-no-credentials-resume-info project-id user-id))
             (to-finished project-id session))))
       (render-page project-id
                    "registration-finished.html"
