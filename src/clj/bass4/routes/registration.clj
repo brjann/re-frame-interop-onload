@@ -105,6 +105,8 @@
             [#'all-fields-present? :ok "form"]
             [#'needs-validation? :ok "form"]]}
    {:uri   "/registration/:project/resume-assessment"
+    :rules [[#'logged-in? :ok 403]]}
+   {:uri   "/registration/:project/no-credentials-resume-info"
     :rules [[#'logged-in? :ok 403]]}])
 
 (defn registration-routes-mw
@@ -175,6 +177,9 @@
 
     (GET "/finished" [:as request]
       (reg-response/finished-router project-id session request))
+
+    (GET "/no-credentials-resume-info" [:as request]
+      (reg-response/no-credentials-resume-info-page project-id request))
 
     (GET "/resuming-finished" []
       (reg-response/resuming-finished-page project-id))

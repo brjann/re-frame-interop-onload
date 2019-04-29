@@ -63,7 +63,6 @@
   (let [user         (get-in request [:db :user])
         credentials? (and (not (empty? (:username user)))
                           (not (empty? (:password user))))]
-    (log/debug (:db request))
     (render-page
       project-id
       "registration-resuming-assessments.html"
@@ -102,6 +101,20 @@
     (http-response/found (str "/registration/" project-id "/finished"))
     (reset-reg-session session)))
 
+(defapi no-credentials-resume-info-page
+  [project-id session]
+  (render-page project-id
+               "registration-no-credentials-resume-info.html"
+               (reg-service/finished-content project-id)))
+
+(defn- to-no-credentials-resume-info
+  [user-id]
+  (->
+    (http-response/found "no-credentials-resume-info")
+    (assoc :session (res-auth/create-new-session
+                      (user-service/get-user user-id)
+                      {:external-login? true}))))
+
 (defn- to-assessments
   [user-id]
   (->
@@ -114,13 +127,16 @@
   [project-id :- api/->int session :- [:? map?] request]
   (let [reg-session (:registration session)]
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
-      (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))]
+      (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))
+            credentials?         (contains? (:credentials reg-session) :username)]
         (if (:resume? reg-session)
           (if ongoing-assessments?
             (to-resuming-assessments project-id user-id)
             (to-resuming-finished project-id session))
           (if ongoing-assessments?
-            (to-assessments user-id)
+            (if credentials?
+              (to-assessments user-id)
+              (to-no-credentials-resume-info user-id))
             (to-finished project-id session))))
       (render-page project-id
                    "registration-finished.html"

@@ -147,6 +147,8 @@
             (follow-redirect)
             ;; Session created
             (follow-redirect)
+            (has (some-text? "exact"))
+            (visit "/user")
             ;; Redirect to pending assessments
             (follow-redirect)
             (has (some-text? "Welcome"))
@@ -271,6 +273,8 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
+        (has (some-text? "exact"))
+        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -304,6 +308,8 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
+        (has (some-text? "exact"))
+        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
@@ -905,6 +911,8 @@
           (follow-redirect)
           ;; Session created
           (follow-redirect)
+          (has (some-text? "exact"))
+          (visit "/user")
           ;; Redirect to pending assessments
           (follow-redirect)
           (has (some-text? "Welcome"))
@@ -1270,6 +1278,8 @@
         (follow-redirect)
         ;; Session created
         (follow-redirect)
+        (has (some-text? "exact"))
+        (visit "/user")
         ;; Redirect to pending assessments
         (follow-redirect)
         (has (some-text? "Welcome"))
