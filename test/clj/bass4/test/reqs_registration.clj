@@ -150,6 +150,8 @@
             ;; Redirect to pending assessments
             (follow-redirect)
             (has (some-text? "Welcome"))
+            (visit "/api/logout-path")
+            (has (text? "/registration/564610"))
             (visit "/user/assessments")
             (has (some-text? "AAQ"))
             (visit "/api/session/timeout-hard-soon")
@@ -906,6 +908,8 @@
           ;; Session created
           (follow-redirect)
           (has (some-text? "exact"))
+          (visit "/api/logout-path")
+          (has (text? "/registration/564610"))
           (visit "/user")
           ;; Redirect to pending assessments
           (follow-redirect)
@@ -932,6 +936,8 @@
           (follow-redirect)
           (has (some-text? "Continue registration"))
           (has (some-text? "exact"))
+          (visit "/api/logout-path")
+          (has (text? "/registration/564610"))
           (visit "/user")
           ;; Redirect to pending assessments
           (follow-redirect)
@@ -978,6 +984,8 @@
             ;; Redirect to pending assessments
             (follow-redirect)
             (has (some-text? "Welcome"))
+            (visit "/api/logout-path")
+            (has (text? "/login"))
             (visit "/user/assessments")
             (has (some-text? "AAQ"))
             (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
