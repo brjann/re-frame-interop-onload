@@ -750,4 +750,3 @@
 
 
 ;; TODO: Max number of sms
-;; TODO: Test confirming one contact info and then going back changing the other - only one code sent
