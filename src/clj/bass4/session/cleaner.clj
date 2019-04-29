@@ -11,8 +11,7 @@
   [conn {:keys [table]
          :or   {table :session_store}}]
   (let [t (quot (System/currentTimeMillis) 1000)]
-    (jdbc/delete! conn table ["hard_timeout < ?" t])
-    (log/debug "Deleted sessions older than" t)))
+    (jdbc/delete! conn table ["hard_timeout < ?" t])))
 
 (defprotocol Stoppable
   "Something that can be stopped"

@@ -159,17 +159,17 @@
       (wrap-mw-fn #'request-db-user-mw)
       debug-mw/wrap-prone-debug-exceptions
       (wrap-mw-fn #'file-php/File-php)
-      (wrap-mw-fn #'db/db-middleware)
-      (wrap-mw-fn #'a-d/attack-detector-mw)
       (wrap-mw-fn #'auth/session-user-id-mw)
       (wrap-mw-fn #'request-state-session-info)
-      (wrap-mw-fn #'transform/transform-mw)
       debug-mw/wrap-session-modification
+      (wrap-mw-fn #'transform/transform-mw)
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store #'db/db-common)})
+      (wrap-mw-fn #'db/db-middleware)
+      (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
       wrap-webjars
       (wrap-defaults

@@ -54,7 +54,6 @@
         (insert-session-value! conn table value))))
   (delete-session
     [_ key]
-    (log/debug "Deleting session" key)
     (jdbc/delete! @datasource-state table ["session_id = ?" key])
     nil))
 
