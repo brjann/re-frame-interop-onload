@@ -159,8 +159,8 @@
       (wrap-mw-fn #'request-db-user-mw)
       debug-mw/wrap-prone-debug-exceptions
       (wrap-mw-fn #'file-php/File-php)
-      (wrap-mw-fn #'auth/session-user-id-mw)
       (wrap-mw-fn #'request-state-session-info)
+      (wrap-mw-fn #'auth/session-user-id-mw)
       debug-mw/wrap-session-modification
       (wrap-mw-fn #'transform/transform-mw)
       (session-timeout/wrap-session-hard-timeout)
