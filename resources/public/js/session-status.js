@@ -1,7 +1,7 @@
 var renew_session_password_success, renew_session_click_success;
 
 $(document).ready(function () {
-   var interval_handle,
+   var check_session_handle,
       first_run = true,
       timeout_soon = false,
       $time_to_logout,
@@ -46,7 +46,7 @@ $(document).ready(function () {
          user_id = status_user_id;
       } else {
          if (status_user_id !== user_id) {
-            clearInterval(interval_handle);
+            clearInterval(check_session_handle);
 
             if (status_user_id === null && timeouts === null) {
                alert(text_session_no_session);
@@ -62,7 +62,7 @@ $(document).ready(function () {
       }
 
       if (first_run && timeouts === null) {
-         clearInterval(interval_handle);
+         clearInterval(check_session_handle);
          return;
       }
       first_run = false;
@@ -74,9 +74,9 @@ $(document).ready(function () {
       }
 
       if (timeouts === null || hard === 0) {
+         clearInterval(check_session_handle);
          if (timeout_soon) {
             clearInterval(time_to_logout_handle);
-            clearInterval(interval_handle);
             $timeout_modal.find('input').remove();
             $timeout_modal.find('button').remove();
             $timeout_modal.find('.button').remove();
@@ -138,7 +138,7 @@ $(document).ready(function () {
    };
 
    if (in_session) {
-      interval_handle = setInterval(session_checker, session_status_poll_interval);
+      check_session_handle = setInterval(session_checker, session_status_poll_interval);
       init_session();
    }
 });
