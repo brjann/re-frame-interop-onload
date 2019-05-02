@@ -3,14 +3,10 @@
             [clojure.string :as string]
             [bass4.services.bass :as bass]
             [ring.util.http-response :as http-response]
-            [bass4.layout :as layout]
-            [clojure.tools.logging :as log]
             [bass4.services.bass :as bass-service]
-            [clj-time.core :as t]
-            [bass4.time :as b-time]
             [bass4.utils :as utils]
-            [clojure.string :as str]
-            [bass4.session.timeout :as session-timeout]))
+            [bass4.session.timeout :as session-timeout]
+            [bass4.http-utils :as h-utils]))
 
 (defn get-session-file
   [uid]
@@ -28,10 +24,11 @@
                                 #{})
           embedded-paths      (conj prev-embedded-paths path)]
       (-> (http-response/found path)
-          (assoc :session {:user-id        user-id
-                           :embedded-paths embedded-paths
-                           :php-session-id php-session-id})))
-    (layout/print-var-response "Wrong uid.")))
+          (assoc :session {:user-id         user-id
+                           :embedded-paths  embedded-paths
+                           :php-session-id  php-session-id
+                           :external-login? true})))
+    (h-utils/text-response "Wrong uid.")))
 
 (defn legal-character
   [c]
@@ -103,18 +100,22 @@
         url-uid-session (when uid
                           (let [{:keys [user-id path php-session-id]}
                                 (get-session-file uid)]
-                            {:user-id        user-id
-                             :embedded-paths (conj embedded-paths path)
-                             :php-session-id php-session-id}))]
+                            {:user-id         user-id
+                             :embedded-paths  (conj embedded-paths path)
+                             :php-session-id  php-session-id
+                             :external-login? true}))]
     (check-embedded-path handler (update request :session #(merge % url-uid-session)))))
+
+(def ^:dynamic *embedded-request?* false)
 
 (defn handle-embedded
   [handler request]
-  (let [path (:uri request)
-        uid  (get-in request [:params :uid])]
-    (if (string/starts-with? path "/embedded/create-session")
-      (create-session handler request uid)
-      (embedded-request handler request uid))))
+  (binding [*embedded-request?* true]
+    (let [path (:uri request)
+          uid  (get-in request [:params :uid])]
+      (if (string/starts-with? path "/embedded/create-session")
+        (create-session handler request uid)
+        (embedded-request handler request uid)))))
 
 (defn wrap-embedded-request
   [handler request]

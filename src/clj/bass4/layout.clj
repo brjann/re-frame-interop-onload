@@ -23,7 +23,8 @@
             [clj-time.coerce :as tc]
             [selmer.tags :as tags]
             [bass4.services.privacy :as privacy-service]
-            [bass4.session.timeout :as session-timeout]))
+            [bass4.session.timeout :as session-timeout]
+            [bass4.middleware.embedded :as embedded-mw]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -98,7 +99,8 @@
         (parser/render-file
           template
           (merge params
-                 {:in-session?              session-timeout/*in-session?*
+                 {:in-session?              (and session-timeout/*in-session?*
+                                                 (not embedded-mw/*embedded-request?*))
                   :dev                      (env :dev)
                   :dev?                     (env :dev)
                   :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)

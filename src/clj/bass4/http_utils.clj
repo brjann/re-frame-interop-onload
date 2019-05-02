@@ -54,6 +54,12 @@
   (-> (http-response/ok (json/write-str x))
       (http-response/content-type "application/json")))
 
+(defn text-response
+  [var]
+  (-> (str var)
+      (http-response/ok)
+      (http-response/content-type "text/plain")))
+
 (defn ajax?
   [request]
   (let [requested-with (get (:headers request) "x-requested-with" "")]

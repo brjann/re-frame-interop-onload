@@ -6,7 +6,14 @@ $(document).ready(function () {
       timeout_soon = false,
       $time_to_logout,
       time_to_logout_handle,
-      $timeout_modal;
+      $timeout_modal,
+      prevent_timeout_soon_;
+
+   if (typeof prevent_timeout_soon !== 'undefined') {
+      prevent_timeout_soon_ = prevent_timeout_soon;
+   } else {
+      prevent_timeout_soon_ = false;
+   }
 
    renew_session_password_success = function () {
       timeout_soon = false;
@@ -100,7 +107,7 @@ $(document).ready(function () {
          return;
       }
 
-      if (hard <= session_timeout_hard_soon) {
+      if (hard <= session_timeout_hard_soon && !prevent_timeout_soon_) {
          timeout_soon = true;
          if (re_auth === null) {
             $timeout_modal = $('#renew-session-click-modal');
