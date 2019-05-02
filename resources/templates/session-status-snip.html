@@ -12,6 +12,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">{%tr confirm %}</button>
+                    <button onclick="timeout_logout();" class="btn btn-warning">{%tr logout %}</button>
                 </div>
             </form>
         </div>
@@ -39,8 +40,15 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
+                    <a href="/logout" class="btn btn-warning">{%tr logout %}</a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+   function timeout_logout() {
+      window.location.href = logout_path;
+   }
+</script>
