@@ -5,10 +5,11 @@
             [bass4.php_clj.reader :as reader]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [flatland.ordered.map :refer [ordered-map]]
             [mount.core :refer [defstate]]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clojure.walk :as walk])
   (:import (java.io BufferedInputStream File)
            (mount.core DerefableState)))
 
@@ -20,7 +21,7 @@
   ([dir]
    (->> (ls dir)
         (map #(vector (-> (.getName %)
-                          (s/replace #"[.]edn$" "")
+                          (str/replace #"[.]edn$" "")
                           (keyword)) %))
         (into {})
         (map-map slurp)
@@ -55,11 +56,11 @@
   [s]
   (loop [acc [] s s]
     (if (zero? (.available s))
-      (s/join acc)
+      (str/join acc)
       (let [c (reader/read-char s)]
         (cond
           (= \" c)
-          (s/join acc)
+          (str/join acc)
 
           (= \\ c)
           (recur (conj acc (reader/read-char s)) s)
@@ -71,13 +72,13 @@
   [s]
   (loop [acc [] s s]
     (if (zero? (.available s))
-      [(keyword (s/join acc))]
+      [(keyword (str/join acc))]
       (do (.mark s 1)
           (let [c (reader/read-char s)]
             (if (or (in? [\( \) \{ \} \, \"] c)
-                    (s/blank? (str c)))
+                    (str/blank? (str c)))
               (do (.reset s)
-                  (keyword (s/join acc)))
+                  (keyword (str/join acc)))
               (recur (conj acc c) s)))))))
 
 (defn- i18n-map-to-list*
@@ -108,20 +109,28 @@
   ([i18n-list new-map keys]
    (loop [acc [] i18n-list i18n-list]
      (if (nil? (seq i18n-list))
-       (str "{" (s/join \newline acc) "}")
+       (str "{" (str/join \newline acc) "}")
        (let [[key value] (take 2 i18n-list)]
          (if (vector? value)
            (let [sub-map     (i18n-list-to-str value new-map (conj keys key))
                  key-sub-map (str key " " sub-map)]
              (recur (conj acc key-sub-map) (nthrest i18n-list 2)))
            (let [value     (get-in new-map (conj keys key))
-                 key-value (str key " \"" (s/escape value {\" "\\\"" \newline "\\n"}) "\"")]
+                 key-value (str key " \"" (str/escape value {\" "\\\"" \newline "\\n"}) "\"")]
              (recur (conj acc key-value) (nthrest i18n-list 2)))))))))
+
+(defn add-missing
+  [m]
+  (let [f (fn [[k v]] [k (str "MISSING:" v)])]
+    (walk/postwalk (fn [x] (if (and (map-entry? x)
+                                    (string? (second x)))
+                             (f x)
+                             x)) m)))
 
 (defn merge-i18n
   [lang]
   (let [new-map   (deep-merge
-                    (:en i18n-map)
+                    (add-missing (:en i18n-map))
                     (get i18n-map (keyword lang)))
         i18n-list (-> (System/getProperty "user.dir")
                       (io/file "i18n/en.edn")
