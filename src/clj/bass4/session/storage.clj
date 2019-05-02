@@ -64,10 +64,8 @@
 (ns-unmap *ns* '->JdbcStore)
 
 (defn jdbc-store
-  ""
-  [db-spec & [{:keys [table]
-               :or   {table :session_store}}]]
-  (JdbcStore. db-spec table))
+  [db-spec]
+  (JdbcStore. db-spec :session_store))
 
 (defn wrap-db-session
   "Wraps ring session with db-specific cookie name"
