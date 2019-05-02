@@ -127,8 +127,6 @@
     (request-state/set-state! :session-start (:session-start session)))
   (handler request))
 
-
-
 ;;
 ;; http://squirrel.pl/blog/2012/04/10/ring-handlers-functional-decorator-pattern/
 ;; ORDER OF MIDDLEWARE WRAPPERS
@@ -165,7 +163,8 @@
       (wrap-mw-fn #'transform/transform-mw)
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
-      (ring-session/wrap-session
+      (session-storage/wrap-session)
+      #_(ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store #'db/db-common)})
       (wrap-mw-fn #'db/db-middleware)

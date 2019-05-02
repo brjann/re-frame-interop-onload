@@ -5,7 +5,9 @@
             [taoensso.nippy :as nippy]
             [ring.middleware.session.store :refer :all]
             [bass4.session.timeout :as session-timeout]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [ring.middleware.session :as ring-session]
+            [bass4.db.core :as db])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -64,3 +66,12 @@
   [db-spec & [{:keys [table]
                :or   {table :session_store}}]]
   (JdbcStore. db-spec table))
+
+(defn wrap-session
+  [handler]
+  (fn [request]
+    (let [ring-wrap-session (ring-session/wrap-session
+                              handler
+                              {:cookie-attrs {:http-only true}
+                               :store        (jdbc-store #'db/db-common)})]
+      (ring-wrap-session request))))
