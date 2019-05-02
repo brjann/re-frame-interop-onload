@@ -99,13 +99,13 @@
         (http-response/forbidden "No embedded access")))))
 
 (defn embedded-request [handler request uid]
-  ;; Note that if url uid is attached to already legal embedded path
-  ;; - user is thrown out because only the uid file's embedded info
-  ;; is included.
-  (let [url-uid-session (when uid
+  (let [embedded-paths  (get-in request [:session :embedded-paths] #{})
+        url-uid-session (when uid
                           (let [{:keys [user-id path php-session-id]}
                                 (get-session-file uid)]
-                            {:user-id user-id :embedded-paths #{path} :php-session-id php-session-id}))]
+                            {:user-id        user-id
+                             :embedded-paths (conj embedded-paths path)
+                             :php-session-id php-session-id}))]
     (check-embedded-path handler (update request :session #(merge % url-uid-session)))))
 
 (defn handle-embedded
