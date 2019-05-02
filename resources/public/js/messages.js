@@ -61,7 +61,7 @@ $(document).ready(function(){
 					$.ajax(
                   '/user/tx/message-read',
 						{
-							method: 'put',
+                     method: 'post',
 							data: {'message-id': id.substr(8)},
 							success: function () {
 								message.find('.visibility').animate({color: 'rgba(0, 0, 0, 0)'});
