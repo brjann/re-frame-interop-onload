@@ -163,7 +163,7 @@
       (wrap-mw-fn #'transform/transform-mw)
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
-      (session-storage/wrap-session)
+      (session-storage/wrap-db-session)
       #_(ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store #'db/db-common)})

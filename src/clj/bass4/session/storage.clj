@@ -7,7 +7,9 @@
             [bass4.session.timeout :as session-timeout]
             [clojure.tools.logging :as log]
             [ring.middleware.session :as ring-session]
-            [bass4.db.core :as db])
+            [bass4.db.core :as db]
+            [clojure.string :as str]
+            [bass4.db-config :as db-config])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -67,11 +69,22 @@
                :or   {table :session_store}}]]
   (JdbcStore. db-spec table))
 
-(defn wrap-session
+(defn wrap-db-session
+  "Wraps ring session with db-specific cookie name"
   [handler]
-  (fn [request]
-    (let [ring-wrap-session (ring-session/wrap-session
-                              handler
-                              {:cookie-attrs {:http-only true}
-                               :store        (jdbc-store #'db/db-common)})]
-      (ring-wrap-session request))))
+  (let [db-session-handlers (atom {})]
+    (fn [request]
+      (let [cookie-name     (str "BASS-cookie-"
+                                 (db-config/db-name)
+                                 (when (str/starts-with? (:uri request) "/embedded")
+                                   "-embedded"))
+            session-handler (if (contains? @db-session-handlers cookie-name)
+                              (get @db-session-handlers cookie-name)
+                              (let [sh (ring-session/wrap-session
+                                         handler
+                                         {:cookie-attrs {:http-only true}
+                                          :cookie-name  cookie-name
+                                          :store        (jdbc-store #'db/db-common)})]
+                                (swap! db-session-handlers #(assoc % cookie-name sh))
+                                sh))]
+        (session-handler request)))))
