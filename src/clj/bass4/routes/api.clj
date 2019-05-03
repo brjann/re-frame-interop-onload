@@ -45,7 +45,8 @@
   (route-rules/wrap-route-mw
     handler
     ["/swagger*"]
-    (fn [handler] (fn [request] (if (db-config/debug-mode?)
+    (fn [handler] (fn [request] (if (or (db-config/debug-mode?)
+                                        (db-config/db-setting [:expose-swagger?] false))
                                   (handler request)
                                   (http-response/not-found))))
     #'treatment-mw))

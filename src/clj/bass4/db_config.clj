@@ -38,9 +38,13 @@
   ([setting-keys] (db-setting setting-keys nil))
   ([setting-keys default]
    (let [db-name (keyword (db-name))
-         setting (or (get-in config/env (into [:db-settings db-name] setting-keys))
-                     (get-in config/env setting-keys)
-                     default)]
+         setting (let [x (get-in config/env (into [:db-settings db-name] setting-keys))]
+                   (if-not (nil? x)
+                     x
+                     (let [x (get-in config/env setting-keys)]
+                       (if-not (nil? x)
+                         x
+                         default))))]
      (when (nil? setting)
        (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
      setting)))
