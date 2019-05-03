@@ -46,7 +46,7 @@
                                    :test        false
                                    :debug-mode  true
                                    :db-settings {(test-db) {:debug-mode false}}})]
-    (is (= true (db-config/debug-mode?))))
+    (is (= false (db-config/debug-mode?))))
 
   (with-redefs [config/env (merge config/env
                                   {:dev         false

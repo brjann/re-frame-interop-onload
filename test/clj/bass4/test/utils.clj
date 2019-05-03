@@ -40,7 +40,7 @@
   (is (= {:jag "är glad", :hejsan "hoppsan"} (parse-php-constants "define('hejsan', \"hoppsan\");\ndefine(\"jag\", \"är glad\");"))))
 
 (deftest i18n-merge
-  (is (= (:en i18n/i18n-map) (clojure.edn/read-string (i18n/merge-i18n "xx")))))
+  (is (= (i18n/add-missing (:en i18n/i18n-map)) (clojure.edn/read-string (i18n/merge-i18n "xx")))))
 
 (deftest i18n-map-to-list
   (is (= [:x "y" :s [:s "x"]] (i18n/i18n-map-to-list "{:x\"y\":s{:s\"x\"}}"))))
