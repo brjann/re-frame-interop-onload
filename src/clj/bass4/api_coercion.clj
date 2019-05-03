@@ -104,15 +104,15 @@
   (let [v (if (and (string? v) (< 20 (count v)))
             (str (subs v 0 20) "... " (- (count v) 20) " more chars")
             v)]
-    (throw (api-exception
-             (str message "spec: " spec ", parameter: " arg-name ", value: " (subs (str (class v)) 6) "(" v ")")
-             {:spec  spec
-              :param arg-name
-              :value v}))))
+    (api-exception
+      (str message "spec: " spec ", parameter: " arg-name ", value: " (subs (str (class v)) 6) "(" v ")")
+      {:spec  spec
+       :param arg-name
+       :value v})))
 
 (defmacro defapi
   [api-name & more]
-  (when-not (instance? Symbol api-name)
+  (when-not (symbol? api-name)
     (throw (IllegalArgumentException. "First argument to def-api must be a symbol")))
   (let [[doc-string
          arg-spec
@@ -149,7 +149,7 @@
                           (list (spec-fn arg :coerce spec))
 
                           :else
-                          (throw (Exception. (str "Spec functions must end with ! (coercion) or ? (validation). \""
+                          (throw (Exception. (str "Spec functions begin with -> (coercion) or end with ? (validation). \""
                                                   spec-name "\" did not."))))))
         let-vec     (mapv (fn [[arg specs]]
                             (let [specs       (if (vector? specs) specs [specs])
