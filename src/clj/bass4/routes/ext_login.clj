@@ -119,11 +119,15 @@
           (logged-response (uid-url (:user-id user) request)))))))
 
 (defapi do-login
-  [uid :- [[api/str? 1 100]] return-url :- [[api/str? 1 2000] api/url?]]
+  [uid :- [[api/str? 1 100]]
+   return-url :- [[api/str? 1 2000] api/url?]
+   logout-url :- [:? [api/str? 1 2000] api/url?]]
   (if-let [user (-> (bass/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user")
-        (assoc :session (auth-response/create-new-session user {:external-login? true :return-url return-url})))
+        (assoc :session (auth-response/create-new-session user {:external-login? true
+                                                                :return-url      return-url
+                                                                :logout-path     logout-url})))
     (if return-url
       (http-response/found return-url)
       (http-response/bad-request "Bad UID and no return url"))))
@@ -137,5 +141,5 @@
   (context "/ext-login" [:as request]
     (GET "/check-pending/:participant-id" [participant-id]
       (check-pending participant-id request))
-    (GET "/do-login" [uid returnURL]
-      (do-login uid returnURL))))
+    (GET "/do-login" [uid returnURL logoutURL]
+      (do-login uid returnURL logoutURL))))

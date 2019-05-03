@@ -103,6 +103,29 @@
             (visit "/user/tx/messages")
             (has (status? 403)))))))
 
+(deftest request-ext-login-assessment-pending-logout-url
+  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "ext-login-test"})]
+      (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
+      (let [session  *s*
+            uri      (-> session
+                         (visit (str "/ext-login/check-pending/" user-id))
+                         (get-in [:response :body])
+                         (string/split #"localhost")
+                         (second))
+            redirect (-> session
+                         (visit (str uri "&returnURL=http://www.dn.se&logoutURL=http://www.svd.se"))
+                         (visit "/user")
+                         (follow-redirect)
+                         (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+                         (visit "/logout")
+                         (has (status? 302))
+                         (get-in [:response :headers "Location"]))]
+        (is (= "http://www.svd.se" redirect))
+        (-> session
+            (visit "/user/tx/messages")
+            (has (status? 403)))))))
+
 (deftest request-ext-login-empty-assessment-pending
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [user-id (user-service/create-user! 536103 {:Group "642451" :firstname "ext-login-test-empty"})]
