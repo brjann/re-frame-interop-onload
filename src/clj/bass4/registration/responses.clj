@@ -128,15 +128,21 @@
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
       (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))
             credentials?         (contains? (:credentials reg-session) :username)]
-        (if (:resume? reg-session)
-          (if ongoing-assessments?
-            (to-resuming-assessments project-id user-id credentials?)
-            (to-resuming-finished project-id session))
-          (if ongoing-assessments?
-            (if (or credentials? (not (:allow-resume? reg-params)))
-              (to-assessments project-id user-id credentials?)
-              (to-no-credentials-resume-info project-id user-id))
-            (to-finished project-id session))))
+        (cond
+          (and (:resume? reg-session) ongoing-assessments?)
+          (to-resuming-assessments project-id user-id credentials?)
+
+          (:resume? reg-session)
+          (to-resuming-finished project-id session)
+
+          (and ongoing-assessments? (or credentials? (not (:allow-resume? reg-params))))
+          (to-assessments project-id user-id credentials?)
+
+          ongoing-assessments?
+          (to-no-credentials-resume-info project-id user-id)
+
+          :else
+          (to-finished project-id session)))
       (render-page project-id
                    "registration-finished.html"
                    (reg-service/finished-content project-id)))))
