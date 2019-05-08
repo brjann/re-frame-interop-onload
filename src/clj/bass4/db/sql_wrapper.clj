@@ -1,6 +1,5 @@
 (ns bass4.db.sql-wrapper
   (:require [bass4.utils :as utils]
-            [bass4.request-state :as request-state]
             [clojure.tools.logging :as log]
             [hugsql.core :as hugsql]
             [clojure.java.jdbc :as jdbc]
@@ -9,7 +8,8 @@
             [clj-time.core :as t]
             [bass4.db-config :as db-config]
             [bass4.config :as config]
-            [bass4.db.core :as db])
+            [bass4.db.core :as db]
+            [bass4.middleware.request-logger :as request-logger])
   (:import (java.sql SQLException)))
 
 
@@ -56,8 +56,8 @@
         error?    (instance? SQLException val)
         unix      (tc/to-epoch (t/now))
         tries     (if error? max-tries (:tries (meta val)))]
-    (request-state/swap-state! :sql-count inc 0)
-    (request-state/swap-state! :sql-times #(conj % time) [])
+    (request-logger/swap-state! :sql-count inc 0)
+    (request-logger/swap-state! :sql-times #(conj % time) [])
     (when-not (or (= db db/db-common) config/test-mode?)
       (jdbc/execute! db/db-common [(str "INSERT INTO common_log_queries"
                                         "(`platform`, `db`, `time`, `query`, `duration`, `tries`, `error?`, `error`)"

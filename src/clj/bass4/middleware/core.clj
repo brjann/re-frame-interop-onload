@@ -1,18 +1,16 @@
 (ns bass4.middleware.core
   (:require [bass4.env :refer [defaults]]
-            [clojure.tools.logging :as log]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
+            [ring.util.http-response :as http-response]
             [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
-            [ring.middleware.session :as ring-session]
             [bass4.session.storage :as session-storage]
             [bass4.session.timeout :as session-timeout]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
             [cprop.tools]
-            [bass4.db.core :as db]
+            [bass4.db.middleware :as db-middleware]
             [bass4.config :refer [env]]
-            [bass4.request-state :as request-state]
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-logger :as request-logger]
             [bass4.middleware.response-transformation :as transform]
@@ -24,9 +22,7 @@
             [bass4.responses.e-auth :as e-auth]
             [bass4.routes.ext-login :as ext-login]
             [bass4.responses.auth :as auth-response]
-            [bass4.services.user :as user-service]
-            [ring.util.http-response :as http-response]
-            [bass4.config :as config]))
+            [bass4.services.user :as user-service]))
 
 
 (defn wrap-formats [handler]
@@ -76,7 +72,7 @@
 (defn- csrf-error
   ;; Takes request as argument but underscored to avoid unused variable type hint
   [_]
-  (request-state/add-to-state-key! :info "CSRF error")
+  (request-logger/add-to-state-key! :info "CSRF error")
   (http-response/forbidden "Invalid anti-forgery token"))
 
 (def ^:dynamic *skip-csrf* false)
@@ -100,8 +96,8 @@
     yes: add user map to session
     no: remove :user-id key from from session
     Also adds some request state info"
-  (request-state/set-state! :session-cookie (get-in request [:cookies "JSESSIONID" :value]
-                                                    (get-in request [:cookies "ring-session" :value])))
+  (request-logger/set-state! :session-cookie (get-in request [:cookies "JSESSIONID" :value]
+                                                     (get-in request [:cookies "ring-session" :value])))
   (let [assessments-pending-pre?  (get-in request [:session :assessments-pending?])
         res                       (handler (if-let [user (user-service/get-user (:user-id request))]
                                              (assoc-in request [:db :user] user)
@@ -110,21 +106,21 @@
                                     (true? (get-in res [:session :assessments-pending?])))]
     (cond
       assessments-pending-post?
-      (request-state/add-to-state-key! :info "Assessments pending")
+      (request-logger/add-to-state-key! :info "Assessments pending")
 
       (and assessments-pending-pre? (false? assessments-pending-post?))
-      (request-state/add-to-state-key! :info "Assessments completed")
+      (request-logger/add-to-state-key! :info "Assessments completed")
 
       assessments-pending-pre?
-      (request-state/add-to-state-key! :info "Assessments pending"))
+      (request-logger/add-to-state-key! :info "Assessments pending"))
     res))
 
 ;; TODO: Maybe move into session ns
 (defn request-state-session-info
   [handler request]
   (let [session (:session request)]
-    (request-state/set-state! :user-id (:user-id session))
-    (request-state/set-state! :session-start (:session-start session)))
+    (request-logger/set-state! :user-id (:user-id session))
+    (request-logger/set-state! :session-start (:session-start session)))
   (handler request))
 
 ;;
@@ -167,7 +163,7 @@
       #_(ring-session/wrap-session
         {:cookie-attrs {:http-only true}
          :store        (session-storage/jdbc-store #'db/db-common)})
-      (wrap-mw-fn #'db/db-middleware)
+      (wrap-mw-fn #'db-middleware/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
       wrap-webjars

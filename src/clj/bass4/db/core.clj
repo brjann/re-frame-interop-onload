@@ -1,20 +1,14 @@
 (ns bass4.db.core
   (:require
-    [clojure.java.jdbc :as jdbc]
     [ring.util.codec :refer [url-encode]]
     [bass4.utils :refer [map-map filter-map time+ val-to-bool]]
     [conman.core :as conman]
-    [clojure.set :as set]
-    [bass4.config :refer [env]]
     [mount.core :refer [defstate]]
     [bass4.db-config :as db-config]
     [clojure.tools.logging :as log]
-    [bass4.request-state :as request-state]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
-    [bass4.http-utils :as h-utils]
-    [bass4.config :as config]
-    [ring.util.http-response :as http-response]))
+    [bass4.config :as config]))
 
 ;----------------
 ; SETUP DB STATE
@@ -131,34 +125,3 @@
 
 ;; clj-time.jdbc registers protocol extensions,
 ;; so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
-
-;;-------------------------
-;; DB RESOLVING MIDDLEWARE
-;;-------------------------
-
-(defn host-db
-  [host db-mappings]
-  (or (get db-mappings host) (:default db-mappings)))
-
-(defn resolve-db [request]
-  (let [db-mappings (env :db-mappings)
-        host        (keyword (h-utils/get-server request))
-        db-name     (host-db host db-mappings)]
-    (when (contains? db-connections db-name)
-      [db-name @(get db-connections db-name)]
-      #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
-
-;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
-;; occur after this file has changed? It seems that mount stops and starts the
-;; db-connection AFTER the *db* variable has been bound to a db-connection. This
-;; closes the old connection and creates a new one. Which is used at the next
-;; request, explaining why it works again then. This should not affect the production
-;; environment.
-(defn db-middleware
-  [handler request]
-  (if-let [[db-name db-conn] (resolve-db request)]
-    (binding [*db*                     db-conn
-              db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
-      (request-state/set-state! :name (name db-name))
-      (handler request))
-    (http-response/not-found "No such DB")))

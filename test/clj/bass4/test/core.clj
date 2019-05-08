@@ -24,11 +24,10 @@
             [bass4.sms-sender :as sms]
             [bass4.instrument.validation :as i-validation]
             [clojure.data.json :as json]
-            [bass4.request-state :as request-state]
             [bass4.db.core :as db]
             [net.cgrand.enlive-html :as enlive]
-            [bass4.time :as b-time]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.middleware.request-logger :as request-logger]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -99,7 +98,7 @@
               config/test-mode?                true
               *s*                              @s
               i-validation/*validate-answers?  false
-              request-state/*request-host*     (config/env :test-host)
+              request-logger/*request-host*    (config/env :test-host)
               db-config/*local-config*         (merge db-config/local-defaults (get db-config/local-configs test-db))
               db/*db*                          @(get db/db-connections test-db)]
       (f))))

@@ -1,21 +1,14 @@
 (ns bass4.routes.debug
   (:require [bass4.layout :as layout]
-            [bass4.services.auth :as auth]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
             [bass4.db.core :as db]
             [ring.util.http-response :as http-response]
-            [ring.util.request :as request]
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
-            [bass4.captcha :as captcha]
             [clojure.java.io :as io]
             [bass4.db-config :as db-config]
             [clojure.data.json :as json]
-            [bass4.instrument.preview :as instruments]
-            [bass4.services.bass :as bass]
-            [mount.core :as mount]
             [clojure.pprint]
-            [bass4.request-state :as request-state]
             [ring.util.codec :as codec]
             [bass4.email :as mail]
             [clj-http.client :as http]
@@ -26,7 +19,8 @@
             [ring.util.http-response :as http-response]
             [clj-time.coerce :as tc]
             [bass4.time :as b-time]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [bass4.middleware.request-logger :as request-logger]))
 
 (defn check-pending-http
   [participant-id request]
@@ -45,7 +39,7 @@
         (GET "/timezone" [:as req] (layout/print-var-response (db-config/time-zone)))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
-                                  (request-state/record-error! "An evil error message")
+                                  (request-logger/record-error! "An evil error message")
                                   (str "Ten divided by zero: " (/ 10 0))))
         (ANY "/request" [:as req] (layout/print-var-response req))
         (GET "/test" [:as req]

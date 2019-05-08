@@ -1,15 +1,13 @@
 (ns bass4.instrument.validation
   (:require [bass4.php_clj.core :refer [clj->php]]
             [bass4.php-clj.safe :refer [php->clj]]
-            [bass4.instrument.services :as instruments-service]
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [clojure.string :as s]
             [bass4.utils :as utils]
             [clojure.set :as set]
             [clojure.string :as str]
             [bass4.api-coercion :as api]
-            [clojure.tools.logging :as log]
-            [bass4.request-state :as request-state]))
+            [clojure.tools.logging :as log]))
 
 
 (defn- checkbox-id
@@ -301,6 +299,6 @@
                          {:instrument-id  (:instrument-id instrument)
                           :item-answers   item-answers
                           :specifications specifications})]
-          #_(request-state/record-error! "Instrument answers validation failed - answers accepted")
+          #_(request-logger/record-error! "Instrument answers validation failed - answers accepted")
           #_(log/error res)
           (throw (api/api-exception "Instrument answers validation failed" res)))))))

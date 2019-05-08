@@ -2,13 +2,42 @@
   (:require [bass4.db.core :as db]
             [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clj-time.coerce :as tc]
-            [bass4.request-state :as request-state]
             [clojure.string :as string]
             [clojure.string :as s]
-            [clojure.tools.logging :as log]
             [bass4.config :as config]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.utils :as utils]))
 
+
+(def ^:dynamic *request-state* nil)
+(def ^:dynamic *request-host* nil)
+
+(defn swap-state!
+  ([key f] (swap-state! key f nil))
+  ([key f val-if-empty]
+   (when *request-state*
+     (utils/swap-key! *request-state* key f val-if-empty))))
+
+(defn add-to-state-key!
+  [key v]
+  (swap-state! key #(conj %1 v) []))
+
+(defn set-state!
+  [key val]
+  (when *request-state*
+    (utils/set-key! *request-state* key val)))
+
+(defn record-error!
+  [error]
+  (swap-state! :error-count inc 0)
+  (swap-state! :error-messages
+               #(if %
+                  (clojure.string/join "\n----------------\n" [% (str error)])
+                  (str error))))
+
+(defn get-state
+  []
+  @*request-state*)
 
 
 ;; ----------------
@@ -43,14 +72,14 @@
 ;; Don't really know how to handle that...
 (defn wrap-logger
   [handler request]
-  (binding [request-state/*request-state* (atom {})]
-    (let [request   (if request-state/*request-host*
-                      (assoc request :server-name request-state/*request-host*)
+  (binding [*request-state* (atom {})]
+    (let [request   (if *request-host*
+                      (assoc request :server-name *request-host*)
                       request)
           {:keys [val time]} (time+ (handler request))
           method    (name (:request-method request))
           status    (:status val)
-          req-state (request-state/get-state)]
+          req-state (get-state)]
       ;; Only save if request is tied to specific database
       (when (and (:name req-state) (not config/test-mode?))
         (let [body      (:body val)

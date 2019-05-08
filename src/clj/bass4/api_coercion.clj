@@ -3,9 +3,9 @@
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
             [bass4.utils :as utils :refer [map-map]]
-            [bass4.request-state :as request-state]
             [ring.util.http-response :as http-response]
-            [bass4.db-config :as db-config])
+            [bass4.db-config :as db-config]
+            [bass4.middleware.request-logger :as request-logger])
   (:import (clojure.lang Symbol ExceptionInfo)
            (java.net URL)))
 
@@ -21,7 +21,7 @@
         msg  (.getMessage e)]
     (log/error msg)
     (log/error data)
-    (request-state/record-error! msg))
+    (request-logger/record-error! msg))
   (http-response/bad-request (when (db-config/debug-mode?)
                                (.getMessage e))))
 

@@ -1,13 +1,11 @@
 (ns bass4.instrument.preview
   (:require [bass4.instrument.services :as instruments]
             [ring.util.http-response :as http-response]
-            [clojure.tools.logging :as log]
-            [schema.core :as s]
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
-            [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.instrument.validation :as validation]))
+            [bass4.instrument.validation :as validation]
+            [bass4.middleware.request-logger :as request-logger]))
 
 (defapi instrument-page
   [instrument-id :- api/->int]
@@ -26,7 +24,7 @@
         (instruments/save-test-answers! instrument-id answers-map)
         (http-response/found (str "/embedded/instrument/" instrument-id "/summary"))))
     (do
-      (request-state/record-error! (str "Instrument " instrument-id " does not exist"))
+      (request-logger/record-error! (str "Instrument " instrument-id " does not exist"))
       (http-response/bad-request))))
 
 (defn- checkboxize

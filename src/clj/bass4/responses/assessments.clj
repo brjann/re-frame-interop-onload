@@ -1,14 +1,13 @@
 (ns bass4.responses.assessments
-  (:require [bass4.services.assessments :as assessments-service]
-            [ring.util.http-response :as http-response]
+  (:require [ring.util.http-response :as http-response]
+            [bass4.services.assessments :as assessments-service]
             [bass4.utils :refer [json-safe]]
-            [clojure.tools.logging :as log]
             [bass4.instrument.services :as instruments]
-            [bass4.request-state :as request-state]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
             [bass4.services.assessments :as administrations]
-            [bass4.session.utils :as session-utils]))
+            [bass4.session.utils :as session-utils]
+            [bass4.middleware.request-logger :as request-logger]))
 
 
 ;; --------------------------
@@ -65,16 +64,16 @@
 
 (defn- text-page
   [step]
-  (request-state/add-to-state-key! :info "Assessment text")
+  (request-logger/add-to-state-key! :info "Assessment text")
   (assessments-service/step-completed! step)
   (bass4.layout/render "assessment-text.html"
                        {:texts (try (clojure.edn/read-string (:texts step))
-                                    (catch Exception e ""))}))
+                                    (catch Exception _ ""))}))
 
 (defn- instrument-page
   [step]
   (let [instrument-id (:instrument-id step)]
-    (request-state/add-to-state-key! :info (str "Instrument " instrument-id))
+    (request-logger/add-to-state-key! :info (str "Instrument " instrument-id))
     (if-let [instrument (instruments/get-instrument instrument-id)]
       (bass4.layout/render "assessment-instrument.html"
                            {:instrument    instrument
@@ -84,7 +83,7 @@
       (do
         ;; Could not find instrument - record error and mark step as completed
         (assessments-service/step-completed! step)
-        (request-state/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
+        (request-logger/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
         (http-response/found "/user")))))
 
 (defn- assessment-page
@@ -114,10 +113,10 @@
           (assessments-service/check-completed-administrations! user-id round instrument-id)
           (-> (http-response/found "/user/assessments"))))
       (do
-        (request-state/record-error! (str "Instrument " instrument-id " does not exist."))
+        (request-logger/record-error! (str "Instrument " instrument-id " does not exist."))
         (http-response/found "/user")))
     (do
-      (request-state/record-error! (str "Instrument " instrument-id " not in ongoing assessments."))
+      (request-logger/record-error! (str "Instrument " instrument-id " not in ongoing assessments."))
       (http-response/found "/user"))))
 
 

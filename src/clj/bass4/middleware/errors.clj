@@ -1,17 +1,11 @@
 (ns bass4.middleware.errors
-  (:require [bass4.layout :as layout]
-            [bass4.config :refer [env]]
+  (:require [bass4.config :refer [env]]
             [bass4.utils :refer [nil-zero?]]
-            [clojure.string :as string]
             [bass4.email :as email]
             [clojure.tools.logging :as log]
-            [bass4.layout :as layout]
-            [bass4.request-state :as request-state]
-            [clojure.string :as string]
             [bass4.error-pages :as error-pages]
-            [bass4.db-config :as db-config]
-            [ring.util.http-response :as http-response]
-            [bass4.api-coercion :as api])
+            [bass4.api-coercion :as api]
+            [bass4.middleware.request-logger :as request-logger])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn mail-request-error!
@@ -32,7 +26,7 @@
     (handler req)
     (catch Throwable t
       (log/error t)
-      (request-state/record-error! t)
+      (request-logger/record-error! t)
       (error-pages/error-page {:status  500
                                :title   "Something bad happened!"
                                :message (str "Try reloading the page or going back in your browser. Please contact " (env :email-admin) " if the problem persists.")}))))
@@ -40,7 +34,7 @@
 (defn catch-internal-error-mw
   [handler request]
   (let [res       (catch-request-error handler request)
-        req-state (request-state/get-state)]
+        req-state (request-logger/get-state)]
     ;; Email errors
     (when-not (nil-zero? (:error-count req-state))
       (mail-request-error! req-state))
