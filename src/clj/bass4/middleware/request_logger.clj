@@ -1,4 +1,4 @@
-(ns bass4.middleware.request-state
+(ns bass4.middleware.request-logger
   (:require [bass4.db.core :as db]
             [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clj-time.coerce :as tc]
@@ -41,7 +41,7 @@
 ;; I would like to place this in the request-state namespace, however
 ;; that creates a circular dependency because db also uses the request-state
 ;; Don't really know how to handle that...
-(defn request-state
+(defn wrap-logger
   [handler request]
   (binding [request-state/*request-state* (atom {})]
     (let [request   (if request-state/*request-host*

@@ -14,7 +14,7 @@
             [bass4.config :refer [env]]
             [bass4.request-state :as request-state]
             [bass4.middleware.debug :as debug-mw]
-            [bass4.middleware.request-state :refer [request-state]]
+            [bass4.middleware.request-logger :as request-logger]
             [bass4.middleware.response-transformation :as transform]
             [bass4.middleware.embedded :as embedded-mw]
             [bass4.middleware.errors :as errors-mw]
@@ -183,4 +183,4 @@
           (dissoc :session)))
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'errors-mw/catch-internal-error-mw)
-      (wrap-mw-fn #'request-state)))
+      (wrap-mw-fn #'request-logger/wrap-logger)))
