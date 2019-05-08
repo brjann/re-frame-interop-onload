@@ -43,6 +43,15 @@ $(document).ready(function () {
       }, 1000)
    };
 
+   var clear_body_no_session = function () {
+      $('body')
+         .empty()
+         .html(sprintf('<p>%s</p><p><a href="%s">%s</a></p>',
+            text_session_no_session,
+            logout_path,
+            text_go_to_login));
+   };
+
    var session_checker_success = function (timeouts, status_user_id) {
 
       if (status_user_id !== null) {
@@ -56,10 +65,8 @@ $(document).ready(function () {
             clearInterval(check_session_handle);
 
             if (status_user_id === null && timeouts === null) {
-               alert(text_session_no_session);
-               window.location.href = logout_path;
+               clear_body_no_session();
             } else {
-               alert(text_session_another_session);
                $('body')
                   .empty()
                   .text(text_session_another_session);
@@ -96,8 +103,7 @@ $(document).ready(function () {
                .append('<p>' + text_session_no_session + '</p>')
                .css('color', 'red');
          } else {
-            alert(text_session_no_session);
-            window.location.href = logout_path;
+            clear_body_no_session();
          }
          return;
       }
