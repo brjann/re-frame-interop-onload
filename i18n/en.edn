@@ -1,5 +1,6 @@
 {:submit          "Submit"
  :confirm         "Confirm"
+ :cancel          "Cancel"
  :next            "Next"
  :previous        "Previous"
  :me              "me"

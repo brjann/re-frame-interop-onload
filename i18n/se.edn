@@ -1,5 +1,6 @@
 {:submit          "Skicka in"
  :confirm         "Bekräfta"
+ :cancel          "Cancel"
  :next            "Nästa"
  :previous        "Föregående"
  :me              "mig"
