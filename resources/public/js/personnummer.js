@@ -39,7 +39,7 @@ function personnummer_valid(nr) {
    return this.valid ? '' : error_str;
 }
 
-function validate_personnummer() {
+function validate_personnummer(event) {
    var p_input = event.target;
    var personnummer = $('#personnummer');
    var error = personnummer_valid($(p_input).val());

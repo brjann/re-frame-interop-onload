@@ -9,7 +9,7 @@
             <label for="personnummer-input" class="col-sm-3 col-form-label">{%tr registration/personnummer %}</label>
             <div class="col-sm-9">
                 <input type="text" class="form-control" id="personnummer-input"
-                       placeholder="19121212-1212" oninput="validate_personnummer();" required>
+                       placeholder="19121212-1212" oninput="validate_personnummer(event);" required>
             </div>
         </div>
         <button type="submit" class="btn btn-primary">{%tr registration/bankid-start %}</button>
