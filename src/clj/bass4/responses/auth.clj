@@ -25,7 +25,8 @@
 
 (defapi no-activities-page []
   (layout/render
-    "auth/no-activities.html"))
+    "auth/no-activities.html"
+    {:in-session? false}))
 
 ;; -------------
 ;;    LOGOUT
@@ -169,7 +170,8 @@
 
 (defapi login-page []
   (layout/render
-    "auth/login.html"))
+    "auth/login.html"
+    {:in-session? false}))
 
 (defn create-new-session
   [user additional]

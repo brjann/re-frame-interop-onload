@@ -98,8 +98,7 @@
       (ok
         (parser/render-file
           template
-          (merge params
-                 {:in-session?              (and session-timeout/*in-session?*
+          (merge {:in-session?              (and session-timeout/*in-session?*
                                                  (not embedded-mw/*embedded-request?*))
                   :dev                      (env :dev)
                   :dev?                     (env :dev)
@@ -107,7 +106,8 @@
                   :page                     template
                   :csrf-token               csrf-token
                   :timeout-hard-soon        (session-timeout/timeout-hard-soon-limit)
-                  :title                    (bass-service/db-title)})))
+                  :title                    (bass-service/db-title)}
+                 params)))
       "text/html; charset=utf-8")))
 
 (defn text-response
