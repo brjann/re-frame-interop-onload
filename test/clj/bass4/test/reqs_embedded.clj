@@ -42,6 +42,12 @@
   []
   (subs (str (UUID/randomUUID)) 0 32))
 
+(deftest wrong-uid
+  (with-redefs [bass/read-session-file (constantly {:user-id nil :path "instrument/1647" :php-session-id nil})]
+    (-> *s*
+        (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
+        (has (some-text? "Wrong uid")))))
+
 (deftest request-post-answers
   (let [php-session-id (get-php-session-id)
         now            (b-time/to-unix (t/now))]
