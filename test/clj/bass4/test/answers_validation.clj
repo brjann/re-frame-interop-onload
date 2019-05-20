@@ -348,7 +348,15 @@
     (is (= {:jumps #{2}} (validate-answers* items {"1" "1" "2" "-3"} {})))
     (is (= {:constraints {2 {:regex-error "-3"}}}
            (validate-answers* items {"1" "0" "2" "-3"} {})))
-    (is (nil? (validate-answers* items {"1" "0" "2" ""} {})))))
+    (is (nil? (validate-answers* items {"1" "0" "2" ""} {}))))
+  (let [items {1 {:response-type "TX"
+                  :name          "1"
+                  :regex         "^x"
+                  :optional?     false}}]
+    (is (nil? (validate-answers* items {"1" "x"} {})))
+    (is (nil? (validate-answers* items {"1" "xx"} {})))
+    (is (= {:constraints {1 {:regex-error "yx"}}}
+           (validate-answers* items {"1" "yx"} {})))))
 
 ;; ------------------------
 ;;     SPECIFICATIONS

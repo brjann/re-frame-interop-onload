@@ -51,7 +51,7 @@
    var logout_path_text = {% if logout-path-text %} "{{logout-path-text}}" {% else %} null {% endif %};
    var in_session = {{in-session?}};
    var session_timeout_hard_soon = {{timeout-hard-soon}};
-   var session_status_poll_interval = {% if dev? %} 1000 * 5 {% else %} 1000 * 30 {% endif %};
+   var session_status_poll_interval = {{session-status-poll-interval}};
    // @formatter:on
    // Timeout return path is used by javascript to redirect user on hard timeout
    var text_session_another_session = "{%tr session-status/another-session %}";

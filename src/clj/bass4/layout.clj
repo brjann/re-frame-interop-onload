@@ -24,7 +24,8 @@
             [selmer.tags :as tags]
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
-            [bass4.middleware.embedded :as embedded-mw]))
+            [bass4.middleware.embedded :as embedded-mw]
+            [bass4.db-config :as db-config]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -98,15 +99,17 @@
       (ok
         (parser/render-file
           template
-          (merge {:in-session?              (and session-timeout/*in-session?*
+          (merge {:in-session?                  (and session-timeout/*in-session?*
                                                  (not embedded-mw/*embedded-request?*))
-                  :dev                      (env :dev)
-                  :dev?                     (env :dev)
-                  :privacy-notice-disabled? (privacy-service/privacy-notice-disabled?)
-                  :page                     template
-                  :csrf-token               csrf-token
-                  :timeout-hard-soon        (session-timeout/timeout-hard-soon-limit)
-                  :title                    (bass-service/db-title)}
+                  :dev                          (env :dev)
+                  :dev?                         (env :dev)
+                  :privacy-notice-disabled?     (privacy-service/privacy-notice-disabled?)
+                  :page                         template
+                  :csrf-token                   csrf-token
+                  :timeout-hard-soon            (session-timeout/timeout-hard-soon-limit)
+                  :title                        (bass-service/db-title)
+                  :session-status-poll-interval (* 1000
+                                                   (db-config/db-setting [:session-status-poll-interval] 30))}
                  params)))
       "text/html; charset=utf-8")))
 
