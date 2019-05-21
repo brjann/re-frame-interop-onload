@@ -56,7 +56,9 @@
           (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "tjosan" :specifications "tjosan"})
           (has (status? 400))
           (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-          (has (status? 400))))))
+          ;; Answers validation inactivated
+          #_(has (status? 400))
+          (has (status? 302))))))
 
 
 (deftest group-assessment

@@ -6,7 +6,8 @@
             [bass4.services.bass :as bass-service]
             [bass4.utils :as utils]
             [bass4.session.timeout :as session-timeout]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [clojure.tools.logging :as log]))
 
 (defn get-session-file
   [uid]
@@ -15,20 +16,21 @@
 
 (defn create-session
   [handler request uid]
-  (if-let [{:keys [user-id path php-session-id]} (get-session-file uid)]
-    (let [session             (:session request)
-          prev-embedded-paths (if (and (:embedded-paths session)
-                                       (= (:user-id session) user-id)
-                                       (= (:php-session-id session) php-session-id))
-                                (:embedded-paths session)
-                                #{})
-          embedded-paths      (conj prev-embedded-paths path)]
-      (-> (http-response/found path)
-          (assoc :session {:user-id         user-id
-                           :embedded-paths  embedded-paths
-                           :php-session-id  php-session-id
-                           :external-login? true})))
-    (h-utils/text-response "Wrong uid.")))
+  (let [{:keys [user-id path php-session-id]} (get-session-file uid)]
+    (if (every? identity [user-id path php-session-id])
+      (let [session             (:session request)
+            prev-embedded-paths (if (and (:embedded-paths session)
+                                         (= (:user-id session) user-id)
+                                         (= (:php-session-id session) php-session-id))
+                                  (:embedded-paths session)
+                                  #{})
+            embedded-paths      (conj prev-embedded-paths path)]
+        (-> (http-response/found path)
+            (assoc :session {:user-id         user-id
+                             :embedded-paths  embedded-paths
+                             :php-session-id  php-session-id
+                             :external-login? true})))
+      (h-utils/text-response "Wrong uid."))))
 
 (defn legal-character
   [c]

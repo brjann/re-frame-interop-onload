@@ -67,9 +67,6 @@
                       :info            (->> (:info req-state)
                                             (s/join "\n"))}))
 
-;; I would like to place this in the request-state namespace, however
-;; that creates a circular dependency because db also uses the request-state
-;; Don't really know how to handle that...
 (defn wrap-logger
   [handler request]
   (binding [*request-state* (atom {})]
@@ -77,17 +74,21 @@
                       (assoc request :server-name *request-host*)
                       request)
           {:keys [val time]} (time+ (handler request))
+          response  val
           method    (name (:request-method request))
-          status    (:status val)
+          status    (:status response)
           req-state (get-state)]
       ;; Only save if request is tied to specific database
-      (when (and (:name req-state) (not config/test-mode?))
-        (let [body      (:body val)
+      (when (and (:name req-state)
+                 (not config/test-mode?)
+                 (not (::no-log? response)))
+        (let [body      (:body response)
               body-size (if (string? body)
                           (count body)
                           0)]
           (save-log! req-state request time method status body-size)))
       ;;val
-      (if (:debug-headers req-state)
-        (assoc val :headers (assoc (:headers val) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
-        val))))
+      (let [response (dissoc response ::no-log?)]
+        (if (:debug-headers req-state)
+          (assoc response :headers (assoc (:headers response) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
+          response)))))

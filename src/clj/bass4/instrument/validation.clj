@@ -7,7 +7,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [bass4.api-coercion :as api]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.middleware.request-logger :as request-logger]))
 
 
 (defn- checkbox-id
@@ -199,10 +200,9 @@
                            (when-not (>= range-max answer-int)
                              true))))
         regex-error? (when-not (empty? (:regex item+answer))
-
                        (try
                          (let [regex (re-pattern (:regex item+answer))]
-                           (when-not (re-matches regex answer)
+                           (when-not (re-find regex answer)
                              true))
                          (catch Exception _)))]
     (when (or range-error?
@@ -299,6 +299,9 @@
                          {:instrument-id  (:instrument-id instrument)
                           :item-answers   item-answers
                           :specifications specifications})]
-          #_(request-logger/record-error! "Instrument answers validation failed - answers accepted")
-          #_(log/error res)
-          (throw (api/api-exception "Instrument answers validation failed" res)))))))
+          ;; The validation is inactivated because it fails on answers that js accepts.
+          ;; - Check regex compatibility (what happens if valid js regex is invalid in java?)
+          ;; - Trim strings before testing or submitting them
+          (request-logger/record-error! "Instrument answers validation failed - answers accepted")
+          (log/error res)
+          #_(throw (api/api-exception "Instrument answers validation failed" res)))))))
