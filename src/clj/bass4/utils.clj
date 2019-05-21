@@ -1,11 +1,11 @@
 (ns bass4.utils
   (:require [clojure.data.json :as json]
             [bass4.php-clj.safe :refer [php->clj]]
-            [clojure.string :as s]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.math.numeric-tower :as math]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [clojure.string :as str]))
 
 (defn unserialize-key
   ([m k] (unserialize-key m k identity))
@@ -82,7 +82,7 @@
   (cond
     (integer? s) s
     (nil? s) nil
-    (re-find #"^-?\d+$" (s/trim s)) (read-string s)))
+    (re-find #"^-?\d+$" (str/trim s)) (read-string s)))
 
 (defn val-to-bool
   [x]
@@ -108,8 +108,8 @@
 (defmacro time+
   "Evaluates expr and returns a map with a :val and :time keys"
   [expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr
+  `(let [start#   (. System (nanoTime))
+         ret#     ~expr
          elapsed# (/ (double (- (. System (nanoTime)) start#)) 1000000.0)]
      {:val ret# :time elapsed#}))
 
@@ -129,8 +129,8 @@
 
 (defn- un-escape [str]
   (-> (subs str 1 (dec (count str)))
-      (clojure.string/replace  #"\\([^\\])" "$1")
-      (clojure.string/replace  "\\\\" "\\")))
+      (clojure.string/replace #"\\([^\\])" "$1")
+      (clojure.string/replace "\\\\" "\\")))
 
 (defn- parse-constants-rec [matcher]
   (let [match (re-find matcher)]
@@ -234,3 +234,14 @@
 (defn queue-add!
   [queue item]
   (swap! queue #(conj % item)))
+
+(defn escape-html
+  [s]
+  (str/escape s {\< "&lt;"
+                 \> "&gt;"
+                 \& "&amp;"
+                 \" "&quot;"}))
+
+(defn remove-html
+  [s]
+  (str/replace s #"\<|\>|\&|\"" ""))
