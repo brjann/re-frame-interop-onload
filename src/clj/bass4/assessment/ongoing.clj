@@ -148,6 +148,7 @@
 
 (defn- user-administrations
   [user-id group-id assessment-series-id]
+  ;; TODO: When EDN-tests have been removed, SQL sorting no longer needed
   (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
     (group-by #(:assessment-id %) administrations)))
 
