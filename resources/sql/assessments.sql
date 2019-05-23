@@ -91,7 +91,7 @@ SELECT
               THEN 0
           ELSE 1
           END)
-     END) AS `active`,
+     END) AS `active?`,
 
   (CASE
      WHEN cpa.DateCompleted IS NULL

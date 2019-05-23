@@ -375,7 +375,7 @@
       group-id ass-group-single 1 {:date (midnight)})
     (let [res (first (assessments/ongoing-assessments user-id))]
       ; Tomorrow
-      (is (= [:thank-you-text
+      (is (= #{:thank-you-text
               :repetition-type
               :assessment-index
               :show-texts-if-swallowed?
@@ -389,7 +389,7 @@
               :shuffle-instruments
               :priority
               :group-administration-id
-              :active
+               :active?
               :clinician-rated?
               :repetitions
               :group-activation-date
@@ -398,8 +398,8 @@
               :participant-administration-id
               :allow-swallow?
               :assessment-name
-              :activation-hour]
-             (keys res)))
+               :activation-hour}
+             (into #{} (keys res))))
       (is (= true (sub-map? {:thank-you-text "thankyou"
                              :welcome-text   "welcome"
                              :date-completed 0M
@@ -413,31 +413,31 @@
       user-id ass-individual-single 1 {:date (midnight)})
     (let [res (first (assessments/ongoing-assessments user-id))]
       ; Tomorrow
-      (is (= [:thank-you-text
-              :repetition-type
-              :assessment-index
-              :show-texts-if-swallowed?
-              :date-completed
-              :assessment-id
-              :participant-activation-date
-              :repetition-interval
-              :scope
-              :instruments
-              :welcome-text
-              :shuffle-instruments
-              :priority
-              :group-administration-id
-              :active
-              :clinician-rated?
-              :repetitions
-              :group-activation-date
-              :time-limit
-              :is-record?
-              :participant-administration-id
-              :allow-swallow?
-              :assessment-name
-              :activation-hour]
-             (keys res)))
+      (is (= #{:thank-you-text
+               :repetition-type
+               :assessment-index
+               :show-texts-if-swallowed?
+               :date-completed
+               :assessment-id
+               :participant-activation-date
+               :repetition-interval
+               :scope
+               :instruments
+               :welcome-text
+               :shuffle-instruments
+               :priority
+               :group-administration-id
+               :active?
+               :clinician-rated?
+               :repetitions
+               :group-activation-date
+               :time-limit
+               :is-record?
+               :participant-administration-id
+               :allow-swallow?
+               :assessment-name
+               :activation-hour}
+             (into #{} (keys res))))
       (is (= true (sub-map? {:thank-you-text "thankyou1"
                              :welcome-text   "welcome1"
                              :date-completed 0M

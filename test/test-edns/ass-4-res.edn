@@ -14,7 +14,7 @@
   :priority                      10,
   :show-texts-if-swallowed?      true,
   :group-administration-id       nil,
-  :active                        1,
+  :active?                       true,
   :is-record?                    false,
   :repetitions                   1,
   :group-activation-date         nil,

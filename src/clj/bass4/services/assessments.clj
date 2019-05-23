@@ -139,7 +139,7 @@
                        (> (:assessment-index administration) (:repetitions assessment))
                        ::as-superfluous
 
-                       (zero? (:active administration))
+                       (not (:active? administration))
                        ::as-inactive
 
                        (check-next-status assessment next-administration-status)
