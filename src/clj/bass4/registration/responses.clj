@@ -17,7 +17,7 @@
             [bass4.sms-sender :as sms]
             [bass4.email :as mail]
             [bass4.services.bass :as bass]
-            [bass4.assessment.services :as assessments]
+            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
             [bass4.db-config :as db-config]
@@ -126,7 +126,7 @@
   [project-id :- api/->int session :- [:? map?] reg-params]
   (let [reg-session (:registration session)]
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
-      (let [ongoing-assessments? (pos? (count (assessments/ongoing-assessments user-id)))
+      (let [ongoing-assessments? (pos? (count (assessment-ongoing/ongoing-assessments user-id)))
             credentials?         (contains? (:credentials reg-session) :username)]
         (cond
           (and (:resume? reg-session) ongoing-assessments?)
@@ -165,7 +165,7 @@
                       :password     (:password credentials)
                       :login-url    (h-utils/get-host-address request)
                       :project-id   project-id
-                      :assessments? (assessments/ongoing-assessments (:user-id credentials))}))
+                      :assessments? (assessment-ongoing/ongoing-assessments (:user-id credentials))}))
       ;; Wrong place - redirect
       (http-response/found (str "/registration/" project-id)))))
 

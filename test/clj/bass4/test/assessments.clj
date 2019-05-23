@@ -1,7 +1,7 @@
 (ns bass4.test.assessments
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
-            [bass4.assessment.services :as assessments]
+            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.administration :as administration]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
@@ -23,7 +23,7 @@
                 db/get-user-assessment-series (constantly {:assessment-series-id 535756})
                 db/get-user-assessments       (constantly (get-edn "ass-1-series-ass"))
                 db/get-user-administrations   (constantly (get-edn "ass-1-adms"))]
-    (assessments/ongoing-assessments 535795)))
+    (assessment-ongoing/ongoing-assessments 535795)))
 
 (defn get-ass-1-rounds
   [pending]
@@ -46,7 +46,7 @@
                 db/get-assessments-instruments               (constantly (get-edn "ass-3-instruments"))
                 db/get-administration-completed-instruments  (constantly ())
                 db/get-administration-additional-instruments (constantly ())]
-    (assessments/ongoing-assessments 535899)))
+    (assessment-ongoing/ongoing-assessments 535899)))
 
 (defn get-ass-3-rounds
   [pending]
@@ -69,7 +69,7 @@
                 db/get-assessments-instruments               (constantly (get-edn "ass-4-instruments"))
                 db/get-administration-completed-instruments  (constantly ())
                 db/get-administration-additional-instruments (constantly ())]
-    (assessments/ongoing-assessments 536048)))
+    (assessment-ongoing/ongoing-assessments 536048)))
 
 (defn get-ass-4-rounds
   [pending]
@@ -92,7 +92,7 @@
                 db/get-assessments-instruments               (constantly (get-edn "ass-5-instruments"))
                 db/get-administration-completed-instruments  (constantly '({:administration-id 536049, :instrument-id 286}))
                 db/get-administration-additional-instruments (constantly ())]
-    (assessments/ongoing-assessments 536048)))
+    (assessment-ongoing/ongoing-assessments 536048)))
 
 (defn get-ass-5-rounds
   [pending]
@@ -108,7 +108,7 @@
 (defn get-ass-6-pending
   []
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (sort-by :assessment-id (assessments/ongoing-assessments 536124))))
+    (sort-by :assessment-id (assessment-ongoing/ongoing-assessments 536124))))
 
 (defn get-ass-6-rounds
   [pending]
@@ -124,7 +124,7 @@
 (defn get-ass-7-pending
   []
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (sort-by :assessment-id (assessments/ongoing-assessments 536140))))
+    (sort-by :assessment-id (assessment-ongoing/ongoing-assessments 536140))))
 
 (defn get-ass-7-rounds
   [pending]
@@ -140,7 +140,7 @@
 (defn get-ass-8-pending
   []
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 12 33 0))]
-    (assessments/ongoing-assessments 535899)))
+    (assessment-ongoing/ongoing-assessments 535899)))
 
 (defn get-ass-8-rounds
   [pending]
@@ -214,7 +214,7 @@
 
 (defn ongoing-assessments
   [user-id]
-  (let [res (assessments/ongoing-assessments user-id)]
+  (let [res (assessment-ongoing/ongoing-assessments user-id)]
     (into #{} (mapv #(vector (:assessment-id %) (:assessment-index %)) res))))
 
 (deftest group-assessment
@@ -384,7 +384,7 @@
     ; Today
     (create-group-administration!
       group-id ass-group-single 1 {:date (midnight)})
-    (let [res (first (assessments/ongoing-assessments user-id))]
+    (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
       ; Tomorrow
       (is (= #{:thank-you-text
               :repetition-type
@@ -422,7 +422,7 @@
     ; Today
     (create-participant-administration!
       user-id ass-individual-single 1 {:date (midnight)})
-    (let [res (first (assessments/ongoing-assessments user-id))]
+    (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
       ; Tomorrow
       (is (= #{:thank-you-text
                :repetition-type

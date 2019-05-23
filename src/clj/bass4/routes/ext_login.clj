@@ -10,7 +10,7 @@
             [clojure.string :as string]
             [bass4.db-config :as db-config]
             [bass4.responses.auth :as auth-response]
-            [bass4.assessment.services :as assessments]
+            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
@@ -109,7 +109,7 @@
           (not (privacy-service/privacy-notice-exists? (:project-id user))))
         (logged-response "0 Privacy notice missing in DB")
 
-        (zero? (count (assessments/ongoing-assessments (:user-id user))))
+        (zero? (count (assessment-ongoing/ongoing-assessments (:user-id user))))
         (logged-response "0 No pending administrations")
 
         :else

@@ -1,4 +1,4 @@
-(ns bass4.assessment.services
+(ns bass4.assessment.ongoing
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
@@ -11,16 +11,6 @@
 ;; ------------------------
 ;; GET ONGOING ASSESSMENTS
 ;; ------------------------
-
-(defn- user-assessments
-  [user-id assessment-series-id]
-  (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
-    (key-map-list assessments :assessment-id)))
-
-(defn- user-administrations
-  [user-id group-id assessment-series-id]
-  (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
-    (group-by #(:assessment-id %) administrations)))
 
 
 (defn- get-time-limit
@@ -158,6 +148,17 @@
                                     (get additional-instruments (:participant-administration-id %)))
                                   (get completed-instruments (:participant-administration-id %))))
          assessments)))
+
+
+(defn- user-assessments
+  [user-id assessment-series-id]
+  (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
+    (key-map-list assessments :assessment-id)))
+
+(defn- user-administrations
+  [user-id group-id assessment-series-id]
+  (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
+    (group-by #(:assessment-id %) administrations)))
 
 (defn ongoing-assessments
   [user-id]

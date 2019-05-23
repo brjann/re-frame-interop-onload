@@ -1,5 +1,5 @@
 (ns bass4.assessment.administration
-  (:require [bass4.assessment.services :as assessments]
+  (:require [bass4.assessment.ongoing :as assessment-ongoing]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [bass4.db.core :as db]
@@ -136,7 +136,7 @@
 (defn create-assessment-round-entries!
   "Returns number of round entries created"
   [user-id]
-  (let [pending-assessments (assessments/ongoing-assessments user-id)
+  (let [pending-assessments (assessment-ongoing/ongoing-assessments user-id)
         round-count         (when (seq pending-assessments)
                               (complete-empty-administrations! user-id pending-assessments)
                               (let [round (generate-assessment-round user-id pending-assessments)]
