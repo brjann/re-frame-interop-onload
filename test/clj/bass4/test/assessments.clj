@@ -351,7 +351,23 @@
     (create-participant-administration!
       user-id ass-individual-manual-repeat 2 {:date (midnight+d -3)})
     ; Only last assessment active - even if it has lower start date
-    (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id)))))
+    (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id))))
+
+  (let [user-id (user-service/create-user! ass-project-id)]
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight)})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 3 {:date (midnight)})
+    ; Only last assessment active - even if one is skipped
+    (is (= #{[ass-individual-manual-repeat 3]} (ongoing-assessments user-id))))
+
+  (let [user-id (user-service/create-user! ass-project-id)]
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight)})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 3 {:date (midnight) :active 0})
+    ; First assessment active - even later is inactive
+    (is (= #{[ass-individual-manual-repeat 1]} (ongoing-assessments user-id)))))
 
 (deftest clinician-assessment
   (let [user-id (user-service/create-user! ass-project-id)]
@@ -363,7 +379,9 @@
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
       user-id ass-hour-8 1 {:date (midnight)})
-    (is (= #{} (ongoing-assessments user-id)))
+    (let [hour0 (bass/local-midnight)]
+      (with-redefs [t/now (constantly hour0)]
+        (is (= #{} (ongoing-assessments user-id)))))
     (let [hour7 (t/plus (bass/local-midnight) (t/hours 7))]
       (with-redefs [t/now (constantly hour7)]
         (is (= #{} (ongoing-assessments user-id)))))

@@ -6,13 +6,6 @@
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.tools.logging :as log]))
 
-
-
-;; ------------------------
-;; GET ONGOING ASSESSMENTS
-;; ------------------------
-
-
 (defn- get-time-limit
   [{:keys [time-limit is-record repetition-interval repetition-type]}]
   (when
@@ -26,12 +19,13 @@
                                (:group-activation-date administration))]
     (t/plus activation-date (t/hours (:activation-hour assessment)))))
 
-(defn- check-next-status
+(defn- next-manual-ongoing?
   [{:keys [repetition-type]} next-administration-status]
   (if (nil? next-administration-status)
     false
-    (and (= repetition-type "MANUAL")
-         (and (not= next-administration-status ::as-no-date) (not= next-administration-status ::as-inactive)))))
+    (and (= "MANUAL" repetition-type)
+         (not= next-administration-status ::as-no-date)
+         (not= next-administration-status ::as-inactive))))
 
 
 (defn- get-administration-status
@@ -60,7 +54,7 @@
                        (not (:active? administration))
                        ::as-inactive
 
-                       (check-next-status assessment next-administration-status)
+                       (next-manual-ongoing? assessment next-administration-status)
                        ::as-date-passed
 
                        :else
@@ -89,13 +83,13 @@
           current-assessment     (get assessments (:assessment-id current-administration))]
       (when (nil? current-assessment)
         (throw (Exception. (str "Assessment ID: " (:assessment-id current-administration) " does not exist."))))
-      (cons (get-administration-status current-administration (last (first next-administrations)) current-assessment) next-administrations))))
+      (cons (get-administration-status current-administration (:status (first next-administrations)) current-assessment) next-administrations))))
 
 
-(defn- filter-pending-assessments
+(defn- filter-ongoing-assessments
   [assessment-statuses]
   (filter #(and
-             (= (:status %) ::as-ongoing)
+             (= ::as-ongoing (:status %))
              (not (:is-record? %))
              (not (:clinician-rated? %)))
           assessment-statuses))
@@ -178,8 +172,8 @@
                                (map #(get-assessment-statuses % assessments))
                                ;; Remove lists within list
                                (flatten)
-                               ;; Keep the assessments that are AS_PENDING
-                               (filter-pending-assessments)
+                               ;; Keep the assessments that are ::as-ongoing
+                               (filter-ongoing-assessments)
                                ;; Find corresponding administrations
                                (collect-assessment-administrations administrations)
                                ;; Add any missing administrations
