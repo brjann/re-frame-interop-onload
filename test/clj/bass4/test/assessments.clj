@@ -332,6 +332,7 @@
     (is (= #{} (ongoing-assessments user-id)))))
 
 (deftest manual-assessment
+  ;; Create administrations in reverse order to check sorting of them
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
       user-id ass-individual-manual-repeat 1 {:date (midnight+d -3)})
@@ -339,33 +340,33 @@
 
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight+d -3)})
-    (create-participant-administration!
       user-id ass-individual-manual-repeat 2 {:date (midnight+d -2)})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight+d -3)})
     ; Only last assessment active
     (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight+d -2)})
-    (create-participant-administration!
       user-id ass-individual-manual-repeat 2 {:date (midnight+d -3)})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight+d -2)})
     ; Only last assessment active - even if it has lower start date
     (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight)})
-    (create-participant-administration!
       user-id ass-individual-manual-repeat 3 {:date (midnight)})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight)})
     ; Only last assessment active - even if one is skipped
     (is (= #{[ass-individual-manual-repeat 3]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! ass-project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight)})
-    (create-participant-administration!
       user-id ass-individual-manual-repeat 3 {:date (midnight) :active 0})
+    (create-participant-administration!
+      user-id ass-individual-manual-repeat 1 {:date (midnight)})
     ; First assessment active - even later is inactive
     (is (= #{[ass-individual-manual-repeat 1]} (ongoing-assessments user-id)))))
 
