@@ -174,6 +174,9 @@
 (def ass-individual-manual-repeat 653634)
 (def ass-clinician 654215)
 (def ass-hour-8 654411)
+(def ass-custom-participant 654412)
+(def ass-custom-administration 654430)
+(def ass-custom-assessment 654429)
 
 (defn create-group!
   []
@@ -366,6 +369,13 @@
     (let [hour8 (t/plus (bass/local-midnight) (t/hours 8))]
       (with-redefs [t/now (constantly hour8)]
         (is (= #{[ass-hour-8 1]} (ongoing-assessments user-id)))))))
+
+(deftest custom-assessment
+  (db/update-object-properties! {:table-name "c_participantadministration"
+                                 :object-id  ass-custom-administration
+                                 :updates    {:date (midnight)}})
+  (is (= #{[ass-custom-assessment 1]}
+         (ongoing-assessments ass-custom-participant))))
 
 (deftest full-return-assessment-group-assessment
   (let [group-id (create-group!)

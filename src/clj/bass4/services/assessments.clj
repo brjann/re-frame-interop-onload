@@ -90,34 +90,40 @@
 ;; GET PENDING ASSESSMENTS
 ;; ------------------------
 
-(defn- user-assessments+administrations
-  [user-id]
-  (let [group-id             (:group-id (db/get-user-group {:user-id user-id}))
-        assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-        assessments          (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})
-        administrations      (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
-    [(group-by #(:assessment-id %) administrations) (key-map-list assessments :assessment-id)]))
+(defn- user-assessments
+  [user-id assessment-series-id]
+  (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
+    (key-map-list assessments :assessment-id)))
+
+(defn- user-administrations
+  [user-id group-id assessment-series-id]
+  (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
+    (group-by #(:assessment-id %) administrations)))
 
 
-(defn- get-time-limit [{:keys [time-limit is-record repetition-interval repetition-type]}]
+(defn- get-time-limit
+  [{:keys [time-limit is-record repetition-interval repetition-type]}]
   (when
     (or (> time-limit 0) (and (not is-record) (= repetition-type "INTERVAL")))
     (apply min (filter (complement zero?) [time-limit repetition-interval]))))
 
-(defn- get-activation-date [administration assessment]
+(defn- get-activation-date
+  [administration assessment]
   (when-let [activation-date (if (= (:scope assessment) 0)
                                (:participant-activation-date administration)
                                (:group-activation-date administration))]
     (t/plus activation-date (t/hours (:activation-hour assessment)))))
 
-(defn- check-next-status [{:keys [repetition-type]} next-administration-status]
+(defn- check-next-status
+  [{:keys [repetition-type]} next-administration-status]
   (if (nil? next-administration-status)
     false
     (and (= repetition-type "MANUAL")
          (and (not= next-administration-status ::as-no-date) (not= next-administration-status ::as-inactive)))))
 
 
-(defn- get-administration-status [administration next-administration-status assessment]
+(defn- get-administration-status
+  [administration next-administration-status assessment]
   {:assessment-id    (:assessment-id assessment)
    :assessment-index (:assessment-index administration)
    :is-record?       (:is-record? assessment)
@@ -163,7 +169,8 @@
 
                            :else ::as-ongoing)))})
 
-(defn- get-assessment-statuses [administrations assessments]
+(defn- get-assessment-statuses
+  [administrations assessments]
   (when (seq administrations)
     (let [next-administrations   (get-assessment-statuses (rest administrations) assessments)
           current-administration (first administrations)
@@ -173,7 +180,8 @@
       (cons (get-administration-status current-administration (last (first next-administrations)) current-assessment) next-administrations))))
 
 
-(defn- filter-pending-assessments [assessment-statuses]
+(defn- filter-pending-assessments
+  [assessment-statuses]
   (filter #(and
              (= (:status %) ::as-ongoing)
              (not (:is-record? %))
@@ -236,22 +244,25 @@
     ;; administrations within one assessment battery
     ;;
     ;; Amazingly enough, this all works even with no pending administrations
-    [[administrations assessments] (user-assessments+administrations user-id)
-     pending-assessments (->> (vals administrations)
-                              ;; Sort administrations by their assessment-index
-                              (map #(sort-by :assessment-index %))
-                              ;; Return assessment (!) statuses
-                              (map #(get-assessment-statuses % assessments))
-                              ;; Remove lists within list
-                              (flatten)
-                              ;; Keep the assessments that are AS_PENDING
-                              (filter-pending-assessments)
-                              ;; Find corresponding administrations
-                              (collect-assessment-administrations administrations)
-                              ;; Add any missing administrations
-                              (add-missing-administrations user-id)
-                              ;; Merge assessment and administration info into one map
-                              (map #(merge % (get assessments (:assessment-id %)))))]
+    [group-id             (:group-id (db/get-user-group {:user-id user-id}))
+     assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
+     administrations      (user-administrations user-id group-id assessment-series-id)
+     assessments          (user-assessments user-id assessment-series-id)
+     pending-assessments  (->> (vals administrations)
+                               ;; Sort administrations by their assessment-index
+                               (map #(sort-by :assessment-index %))
+                               ;; Return assessment (!) statuses
+                               (map #(get-assessment-statuses % assessments))
+                               ;; Remove lists within list
+                               (flatten)
+                               ;; Keep the assessments that are AS_PENDING
+                               (filter-pending-assessments)
+                               ;; Find corresponding administrations
+                               (collect-assessment-administrations administrations)
+                               ;; Add any missing administrations
+                               (add-missing-administrations user-id)
+                               ;; Merge assessment and administration info into one map
+                               (map #(merge % (get assessments (:assessment-id %)))))]
     (when (seq pending-assessments)
       (add-instruments pending-assessments))))
 
