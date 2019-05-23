@@ -141,12 +141,12 @@
          assessments)))
 
 
-(defn- user-assessments
+(defn- assessments
   [user-id assessment-series-id]
   (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
     (key-map-list assessments :assessment-id)))
 
-(defn- user-administrations
+(defn- administrations-by-assessment
   [user-id group-id assessment-series-id]
   ;; TODO: When EDN-tests have been removed, SQL sorting no longer needed
   (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
@@ -161,15 +161,12 @@
     ;; Amazingly enough, this all works even with no pending administrations
     [group-id             (:group-id (db/get-user-group {:user-id user-id}))
      assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-     administrations      (user-administrations user-id group-id assessment-series-id)
-     assessments          (user-assessments user-id assessment-series-id)
-     pending-assessments  (->> (vals administrations)
-                               ;; Sort administrations by their assessment-index
-                               (map #(sort-by :assessment-index %))
-                               ;; Return assessment (!) statuses
-                               (map #(get-assessment-statuses % assessments))
-                               ;; Remove lists within list
-                               (flatten)
+     administrations      (administrations-by-assessment user-id group-id assessment-series-id)
+     assessments'         (assessments user-id assessment-series-id)
+     assessment-statuses  (flatten (map (comp #(get-assessment-statuses % assessments')
+                                              #(sort-by :assessment-index %))
+                                        (vals administrations)))
+     pending-assessments  (->> assessment-statuses
                                ;; Keep the assessments that are ::as-ongoing
                                (filter-ongoing-assessments)
                                ;; Find corresponding administrations
@@ -177,7 +174,7 @@
                                ;; Add any missing administrations
                                (missing/add-missing-administrations! user-id)
                                ;; Merge assessment and administration info into one map
-                               (map #(merge % (get assessments (:assessment-id %)))))]
+                               (map #(merge % (get assessments' (:assessment-id %)))))]
     (when (seq pending-assessments)
       (add-instruments pending-assessments))))
 
