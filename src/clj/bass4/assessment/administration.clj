@@ -5,7 +5,8 @@
             [bass4.db.core :as db]
             [bass4.services.bass :as bass]
             [bass4.instrument.answers-services :as instrument-answers]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.assessment.create-missing :as missing]))
 
 
 
@@ -25,7 +26,7 @@
                          (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
                                                         (start-date-representation)))))]
     (when (seq assessments)
-      (->> (assessments/create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments))
+      (->> (missing/create-missing-administrations! user-id (map #(assoc % :assessment-index 1) assessments))
            (map #(utils/select-values % [:participant-administration-id :start-time]))
            (assoc {} :dates)
            (db/set-administration-dates!)))))
