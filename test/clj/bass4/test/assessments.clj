@@ -2,6 +2,7 @@
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.services :as assessments]
+            [bass4.assessment.administration :as administration]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [clojure.tools.logging :as log]
@@ -27,7 +28,7 @@
 (defn get-ass-1-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 1986 10 14))]
-    (doall (assessments/generate-assessment-round 234 pending))))
+    (doall (administration/generate-assessment-round 234 pending))))
 
 (deftest ass-1
   (let [pending (get-ass-1-pending)]
@@ -50,7 +51,7 @@
 (defn get-ass-3-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 535899 pending))))
+    (doall (administration/generate-assessment-round 535899 pending))))
 
 (deftest ass-3
   (let [pending (get-ass-3-pending)]
@@ -73,7 +74,7 @@
 (defn get-ass-4-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 536048 pending))))
+    (doall (administration/generate-assessment-round 536048 pending))))
 
 (deftest ass-4
   (let [pending (get-ass-4-pending)]
@@ -96,7 +97,7 @@
 (defn get-ass-5-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 536048 pending))))
+    (doall (administration/generate-assessment-round 536048 pending))))
 
 (deftest ass-5
   (let [pending (get-ass-5-pending)]
@@ -112,7 +113,7 @@
 (defn get-ass-6-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 536124 pending))))
+    (doall (administration/generate-assessment-round 536124 pending))))
 
 (deftest ass-6-group
   (let [pending (get-ass-6-pending)]
@@ -128,7 +129,7 @@
 (defn get-ass-7-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 536140 pending))))
+    (doall (administration/generate-assessment-round 536140 pending))))
 
 (deftest ass-7-group-some-done
   (let [pending (get-ass-7-pending)]
@@ -144,7 +145,7 @@
 (defn get-ass-8-rounds
   [pending]
   (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
-    (doall (assessments/generate-assessment-round 535899 pending))))
+    (doall (administration/generate-assessment-round 535899 pending))))
 
 (deftest ass-8-no-text
   (let [pending (get-ass-8-pending)]
