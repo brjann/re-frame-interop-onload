@@ -30,50 +30,47 @@
 
 (defn- get-administration-status
   [administration next-administration-status assessment]
-  {:assessment-id    (:assessment-id assessment)
-   :assessment-index (:assessment-index administration)
-   :is-record?       (:is-record? assessment)
-   :assessment-name  (:assessment-name assessment)
-   :clinician-rated? (:clinician-rated? assessment)
-   :status           (cond
-                       (= (:participant-administration-id administration) (:group-administration-id administration) nil)
-                       ::as-all-missing
+  (merge (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated?])
+         {:assessment-index (:assessment-index administration)
+          :status           (cond
+                              (= (:participant-administration-id administration) (:group-administration-id administration) nil)
+                              ::as-all-missing
 
-                       (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration)))
-                       ::as-own-missing
+                              (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration)))
+                              ::as-own-missing
 
-                       (and (= (:scope assessment) 1) (nil? (:group-administration-id administration)))
-                       ::as-group-missing
+                              (and (= (:scope assessment) 1) (nil? (:group-administration-id administration)))
+                              ::as-group-missing
 
-                       (> (:date-completed administration) 0)
-                       ::as-completed
+                              (> (:date-completed administration) 0)
+                              ::as-completed
 
-                       (> (:assessment-index administration) (:repetitions assessment))
-                       ::as-superfluous
+                              (> (:assessment-index administration) (:repetitions assessment))
+                              ::as-superfluous
 
-                       (not (:active? administration))
-                       ::as-inactive
+                              (not (:active? administration))
+                              ::as-inactive
 
-                       (next-manual-ongoing? assessment next-administration-status)
-                       ::as-date-passed
+                              (next-manual-ongoing? assessment next-administration-status)
+                              ::as-date-passed
 
-                       :else
-                       (let [activation-date (get-activation-date administration assessment)
-                             time-limit      (get-time-limit assessment)]
-                         (cond
-                           ;; REMEMBER:
-                           ;; activation-date is is UTC time of activation,
-                           ;; NOT local time. Thus, it is sufficient to compare
-                           ;; to t/now which returns UTC time
-                           (nil? activation-date) ::as-no-date
+                              :else
+                              (let [activation-date (get-activation-date administration assessment)
+                                    time-limit      (get-time-limit assessment)]
+                                (cond
+                                  ;; REMEMBER:
+                                  ;; activation-date is is UTC time of activation,
+                                  ;; NOT local time. Thus, it is sufficient to compare
+                                  ;; to t/now which returns UTC time
+                                  (nil? activation-date) ::as-no-date
 
-                           (t/before? (t/now) activation-date)
-                           ::as-waiting
+                                  (t/before? (t/now) activation-date)
+                                  ::as-waiting
 
-                           (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit))))
-                           ::as-date-passed
+                                  (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit))))
+                                  ::as-date-passed
 
-                           :else ::as-ongoing)))})
+                                  :else ::as-ongoing)))}))
 
 (defn- get-assessment-statuses
   [administrations assessments]
