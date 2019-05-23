@@ -1,11 +1,11 @@
 (ns bass4.responses.assessments
   (:require [ring.util.http-response :as http-response]
-            [bass4.services.assessments :as assessments-service]
+            [bass4.assessment.services :as assessments-service]
             [bass4.utils :refer [json-safe]]
             [bass4.instrument.services :as instruments]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
-            [bass4.services.assessments :as administrations]
+            [bass4.assessment.services :as administrations]
             [bass4.session.utils :as session-utils]
             [bass4.middleware.request-logger :as request-logger]))
 

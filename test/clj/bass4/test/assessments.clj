@@ -1,7 +1,7 @@
 (ns bass4.test.assessments
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
-            [bass4.services.assessments :as assessments]
+            [bass4.assessment.services :as assessments]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [clojure.tools.logging :as log]

@@ -10,7 +10,7 @@
             [clojure.string :as string]
             [bass4.db-config :as db-config]
             [bass4.responses.auth :as auth-response]
-            [bass4.services.assessments :as assessments]
+            [bass4.assessment.services :as assessments]
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]

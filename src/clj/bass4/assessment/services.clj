@@ -1,4 +1,4 @@
-(ns bass4.services.assessments
+(ns bass4.assessment.services
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]

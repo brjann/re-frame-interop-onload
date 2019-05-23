@@ -17,7 +17,7 @@
             [bass4.sms-sender :as sms]
             [bass4.email :as mail]
             [bass4.services.bass :as bass]
-            [bass4.services.assessments :as assessments]
+            [bass4.assessment.services :as assessments]
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
             [bass4.db-config :as db-config]
