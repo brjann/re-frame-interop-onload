@@ -4,7 +4,9 @@
             [bass4.services.assessments :as assessments]
             [bass4.test.core :refer [get-edn test-fixtures]]
             [clojure.test :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.bass :as bass]
+            [bass4.services.user :as user-service]))
 
 (use-fixtures
   :once
@@ -27,10 +29,10 @@
     (doall (assessments/generate-assessment-round 234 pending))))
 
 (deftest ass-1
-         (let [pending (get-ass-1-pending)]
-           (is (= (get-edn "ass-1-res") pending))
-           (is (= (get-ass-1-rounds pending)
-                  (get-edn "ass-1-rounds")))))
+  (let [pending (get-ass-1-pending)]
+    (is (= (get-edn "ass-1-res") pending))
+    (is (= (get-ass-1-rounds pending)
+           (get-edn "ass-1-rounds")))))
 
 (defn get-ass-3-pending
   []
@@ -148,3 +150,49 @@
     (is (= (get-edn "ass-8-res") pending))
     (is (= (get-edn "ass-8-rounds")
            (get-ass-8-rounds pending)))))
+
+
+;; -----------------------
+;;   NEW "DYNAMIC" TESTS
+;; -----------------------
+
+(def ass-project-id 653627)
+(def ass-group-single 653630)
+(def ass-group-weekly 653631)
+(def ass-individual-single 653632)
+(def ass-individual-weekly 653633)
+(def ass-individual-manual-repeat 653634)
+
+(defn today
+  []
+  ())
+
+(defn create-group!
+  []
+  (:objectid (db/create-bass-object! {:class-name    "cGroup"
+                                      :parent-id     ass-project-id
+                                      :property-name "Groups"})))
+
+(defn create-group-administration!
+  [group-id assessment-id assessment-index & [properties]]
+  (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cGroupAdministration"
+                                                              :parent-id     group-id
+                                                              :property-name "Administrations"}))]
+    (when properties
+      (db/update-object-properties! {:table-name "c_groupadministration"
+                                     :object-id  administration-id
+                                     :updates    (merge properties
+                                                        {:assessment      assessment-id
+                                                         :assessmentindex assessment-index
+                                                         :active          1})}))))
+
+(defn ongoing-assessments
+  [user-id]
+  (let [res (assessments/get-pending-assessments user-id)]
+    (into #{} (mapv #(vector (:assessment-id %) (:assessment-index %)) res))))
+
+(deftest group-assessment
+  (let [group-id (create-group!)
+        user-id  (user-service/create-user! ass-project-id {:group group-id})]
+    (create-group-administration! group-id ass-group-single 1 {:date 1000000})
+    (is (= #{[ass-group-single 1]}) (ongoing-assessments user-id))))
