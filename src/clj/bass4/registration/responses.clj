@@ -126,7 +126,7 @@
   [project-id :- api/->int session :- [:? map?] reg-params]
   (let [reg-session (:registration session)]
     (if-let [user-id (get-in reg-session [:credentials :user-id])]
-      (let [ongoing-assessments? (pos? (count (assessments/get-pending-assessments user-id)))
+      (let [ongoing-assessments? (pos? (count (assessments/ongoing-assessments user-id)))
             credentials?         (contains? (:credentials reg-session) :username)]
         (cond
           (and (:resume? reg-session) ongoing-assessments?)
@@ -165,7 +165,7 @@
                       :password     (:password credentials)
                       :login-url    (h-utils/get-host-address request)
                       :project-id   project-id
-                      :assessments? (assessments/get-pending-assessments (:user-id credentials))}))
+                      :assessments? (assessments/ongoing-assessments (:user-id credentials))}))
       ;; Wrong place - redirect
       (http-response/found (str "/registration/" project-id)))))
 

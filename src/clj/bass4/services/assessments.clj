@@ -90,13 +90,13 @@
 ;; GET PENDING ASSESSMENTS
 ;; ------------------------
 
-(defn- get-user-administrations
+(defn- user-assessments+administrations
   [user-id]
   (let [group-id             (:group-id (db/get-user-group {:user-id user-id}))
         assessment-series-id (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
         assessments          (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})
         administrations      (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
-    {:administrations (group-by #(:assessment-id %) administrations) :assessments (key-map-list assessments :assessment-id)}))
+    [(group-by #(:assessment-id %) administrations) (key-map-list assessments :assessment-id)]))
 
 
 (defn- get-time-limit [{:keys [time-limit is-record repetition-interval repetition-type]}]
@@ -114,7 +114,7 @@
   (if (nil? next-administration-status)
     false
     (and (= repetition-type "MANUAL")
-         (and (not= next-administration-status "AS_NO_DATE") (not= next-administration-status "AS_INACTIVE")))))
+         (and (not= next-administration-status ::as-no-date) (not= next-administration-status ::as-inactive)))))
 
 
 (defn- get-administration-status [administration next-administration-status assessment]
@@ -124,24 +124,44 @@
    :assessment-name  (:assessment-name assessment)
    :clinician-rated? (:clinician-rated? assessment)
    :status           (cond
-                       (= (:participant-administration-id administration) (:group-administration-id administration) nil) "AS_ALL_MISSING"
-                       (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration))) "AS_OWN_MISSING"
-                       (and (= (:scope assessment) 1) (nil? (:group-administration-id administration))) "AS_GROUP_MISSING"
-                       (> (:date-completed administration) 0) "AS_COMPLETED"
-                       (> (:assessment-index administration) (:repetitions assessment)) "AS_SUPERFLUOUS"
-                       (zero? (:active administration)) "AS_INACTIVE"
-                       (check-next-status assessment next-administration-status) "AS_DATE_PASSED"
-                       :else (let [activation-date (get-activation-date administration assessment)
-                                   time-limit (get-time-limit assessment)]
-                               (cond
-                                 ;; REMEMBER:
-                                 ;; activation-date is is UTC time of activation,
-                                 ;; NOT local time. Thus, it is sufficient to compare
-                                 ;; to t/now which returns UTC time
-                                 (nil? activation-date) "AS_NO_DATE"
-                                 (t/before? (t/now) activation-date) "AS_WAITING"
-                                 (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit)))) "AS_DATE_PASSED"
-                                 :else "AS_PENDING")))})
+                       (= (:participant-administration-id administration) (:group-administration-id administration) nil)
+                       ::as-all-missing
+
+                       (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration)))
+                       ::as-own-missing
+
+                       (and (= (:scope assessment) 1) (nil? (:group-administration-id administration)))
+                       ::as-group-missing
+
+                       (> (:date-completed administration) 0)
+                       ::as-completed
+
+                       (> (:assessment-index administration) (:repetitions assessment))
+                       ::as-superfluous
+
+                       (zero? (:active administration))
+                       ::as-inactive
+
+                       (check-next-status assessment next-administration-status)
+                       ::as-date-passed
+
+                       :else
+                       (let [activation-date (get-activation-date administration assessment)
+                             time-limit      (get-time-limit assessment)]
+                         (cond
+                           ;; REMEMBER:
+                           ;; activation-date is is UTC time of activation,
+                           ;; NOT local time. Thus, it is sufficient to compare
+                           ;; to t/now which returns UTC time
+                           (nil? activation-date) ::as-no-date
+
+                           (t/before? (t/now) activation-date)
+                           ::as-waiting
+
+                           (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit))))
+                           ::as-date-passed
+
+                           :else ::as-ongoing)))})
 
 (defn- get-assessment-statuses [administrations assessments]
   (when (seq administrations)
@@ -155,7 +175,7 @@
 
 (defn- filter-pending-assessments [assessment-statuses]
   (filter #(and
-             (= (:status %) "AS_PENDING")
+             (= (:status %) ::as-ongoing)
              (not (:is-record? %))
              (not (:clinician-rated? %)))
           assessment-statuses))
@@ -189,15 +209,15 @@
       pending-assessments)))
 
 (defn- add-instruments [assessments]
-  (let [administration-ids (map :participant-administration-id assessments)
+  (let [administration-ids     (map :participant-administration-id assessments)
         assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
                                     (db/get-assessments-instruments)
                                     (group-by :assessment-id)
                                     (map-map #(map :instrument-id %)))
-        completed-instruments (->> {:administration-ids administration-ids}
-                                   (db/get-administration-completed-instruments)
-                                   (group-by :administration-id)
-                                   (map-map #(map :instrument-id %)))
+        completed-instruments  (->> {:administration-ids administration-ids}
+                                    (db/get-administration-completed-instruments)
+                                    (group-by :administration-id)
+                                    (map-map #(map :instrument-id %)))
         additional-instruments (->> {:administration-ids administration-ids}
                                     (db/get-administration-additional-instruments)
                                     (group-by :administration-id)
@@ -209,13 +229,14 @@
                                   (get completed-instruments (:participant-administration-id %))))
          assessments)))
 
-(defn get-pending-assessments [user-id]
+(defn ongoing-assessments
+  [user-id]
   (let
     ;; NOTE that administrations is a map of lists
     ;; administrations within one assessment battery
     ;;
     ;; Amazingly enough, this all works even with no pending administrations
-    [{:keys [administrations assessments]} (get-user-administrations user-id)
+    [[administrations assessments] (user-assessments+administrations user-id)
      pending-assessments (->> (vals administrations)
                               ;; Sort administrations by their assessment-index
                               (map #(sort-by :assessment-index %))
@@ -233,6 +254,8 @@
                               (map #(merge % (get assessments (:assessment-id %)))))]
     (when (seq pending-assessments)
       (add-instruments pending-assessments))))
+
+
 
 
 
@@ -279,17 +302,17 @@
     (concat coll (list (list val)))))
 
 (defn- batch-texts
-    [text-name]
-    (fn
-      [batch]
-      (let [texts (remove
-                    #(some (partial = %) [nil ""])
-                    (map-indexed
-                      (fn [idx assessment] (when (or (zero? idx) (:show-texts-if-swallowed? assessment)) (get assessment text-name)))
-                      batch))]
-        (when (seq texts)
-          ;; Since these are saved to a table, they are converted to text representation
-          {:texts (pr-str texts)}))))
+  [text-name]
+  (fn
+    [batch]
+    (let [texts (remove
+                  #(some (partial = %) [nil ""])
+                  (map-indexed
+                    (fn [idx assessment] (when (or (zero? idx) (:show-texts-if-swallowed? assessment)) (get assessment text-name)))
+                    batch))]
+      (when (seq texts)
+        ;; Since these are saved to a table, they are converted to text representation
+        {:texts (pr-str texts)}))))
 
 (defn- assessment-instruments
   [assessment]
@@ -304,12 +327,12 @@
          batch)))
 
 (defn- batch-steps
-    [idx batch]
-    (let [welcome ((batch-texts :welcome-text) batch)
-          thank-you ((batch-texts :thank-you-text) batch)
-          instruments (batch-instruments batch)]
-      ;; Does not handle empty stuff? Use concat instead of list
-      (map #(merge {:batch-id idx} %) (flatten (remove empty? (list welcome instruments thank-you))))))
+  [idx batch]
+  (let [welcome     ((batch-texts :welcome-text) batch)
+        thank-you   ((batch-texts :thank-you-text) batch)
+        instruments (batch-instruments batch)]
+    ;; Does not handle empty stuff? Use concat instead of list
+    (map #(merge {:batch-id idx} %) (flatten (remove empty? (list welcome instruments thank-you))))))
 
 (defn- step-row
   [user-id]
@@ -346,7 +369,7 @@
 (defn create-assessment-round-entries!
   "Returns number of round entries created"
   [user-id]
-  (let [pending-assessments (get-pending-assessments user-id)
+  (let [pending-assessments (ongoing-assessments user-id)
         round-count         (when (seq pending-assessments)
                               (complete-empty-administrations! user-id pending-assessments)
                               (let [round (generate-assessment-round user-id pending-assessments)]
@@ -426,10 +449,10 @@
 
 (defn check-completed-administrations!
   [user-id round completed-instrument-id]
-  (let [non-empty (->> round
-                       (remove #(= completed-instrument-id (:instrument-id %)))
-                       (map :administration-id)
-                       (distinct))
+  (let [non-empty                (->> round
+                                      (remove #(= completed-instrument-id (:instrument-id %)))
+                                      (map :administration-id)
+                                      (distinct))
         empty-administration-ids (diff (map :administration-id round) non-empty)]
     (when (seq empty-administration-ids)
       (set-administrations-completed! user-id empty-administration-ids))))

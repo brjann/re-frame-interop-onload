@@ -109,7 +109,7 @@
           (not (privacy-service/privacy-notice-exists? (:project-id user))))
         (logged-response "0 Privacy notice missing in DB")
 
-        (zero? (count (assessments/get-pending-assessments (:user-id user))))
+        (zero? (count (assessments/ongoing-assessments (:user-id user))))
         (logged-response "0 No pending administrations")
 
         :else
