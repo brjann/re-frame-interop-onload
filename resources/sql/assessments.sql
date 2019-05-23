@@ -68,9 +68,6 @@ WHERE cp.ObjectId = :user-id;
 
 -- :name get-user-administrations :? :*
 -- :doc Gets the participant and group administrations for a user.
---  NOTE that ghost administrations are included and need to be filtered out.
---  Always select the administration with the highest combination of
---  participant_administration_id and group_administration_id
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
@@ -351,3 +348,128 @@ VALUES :t*:dates
 ON DUPLICATE KEY UPDATE
   ObjectId = VALUES(ObjectId),
   Date = VALUES(Date);
+
+
+-- ----------------------------------
+-- ------ ASSESSMENTS REMINDER ------
+-- ----------------------------------
+
+-- :name get-activated-participant-administrations :? :*
+-- :doc
+
+SELECT
+	cp.ObjectId AS `user-id`,
+  cp.Group AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+	cpa.Assessment AS `participant-assessment-id`,
+  cpa.AssessmentIndex AS `participant-administration-index`,
+  cga.ObjectId AS `group-administration-id`,
+	cga.Assessment AS `group-assessment-id`,
+  cga.AssessmentIndex AS `group-administration-index`
+FROM
+	c_participant AS cp
+    JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid
+	LEFT JOIN c_groupadministration as cga
+		ON
+			cp.Group = cga.ParentId AND
+			((cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex))
+	JOIN c_assessment AS ca
+		ON cpa.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 0
+  AND ca.ActivationHour >= :hour
+  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
+	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
+	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
+  AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
+
+-- :name get-activated-group-administrations :? :*
+-- :doc
+
+SELECT
+	cp.ObjectId AS `user-id`,
+  cp.Group AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+	cpa.Assessment AS `participant-assessment-id`,
+  cpa.AssessmentIndex AS `participant-administration-index`,
+  cga.ObjectId AS `group-administration-id`,
+	cga.Assessment AS `group-assessment-id`,
+  cga.AssessmentIndex AS `group-administration-index`
+FROM
+	c_participant AS cp
+  JOIN c_groupadministration as cga
+		ON cp.Group = cga.ParentId
+  LEFT JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid AND
+			cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex
+	JOIN c_assessment AS ca
+		ON cga.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 1
+  AND ca.ActivationHour >= :hour
+  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
+	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
+	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
+	AND cga.Date >= :date-min AND cga.Date <= :date-max;
+
+-- :name get-multiple-users-administrations :? :*
+-- :doc
+
+SELECT
+    ca.ObjectId AS `assessment-id`,
+    cpa.ObjectId AS `participant-administration-id`,
+
+  (CASE
+     WHEN cpa.AssessmentIndex IS NULL
+         THEN cga.AssessmentIndex
+     ELSE cpa.AssessmentIndex
+     END) AS `assessment-index`,
+
+  (CASE
+     WHEN cpa.Active IS NULL AND cga.Active IS NULL
+         THEN NULL
+     ELSE
+         (CASE
+          WHEN cpa.Active = 0 OR cga.Active = 0
+              THEN 0
+          ELSE 1
+          END)
+     END) AS `active`,
+
+  (CASE
+     WHEN cpa.DateCompleted IS NULL
+         THEN 0
+     ELSE cpa.DateCompleted
+     END ) AS `date-completed`,
+
+  (CASE
+   WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cpa.`Date`)
+   END) AS `participant-activation-date`,
+
+  cga.ObjectId AS `group-administration-id`,
+
+  (CASE
+   WHEN cga.Date IS NULL OR cga.Date = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cga.Date)
+   END) AS `group-activation-date`
+
+FROM c_assessment as ca
+    LEFT JOIN (c_participantadministration as cpa)
+        ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
+    LEFT JOIN (c_groupadministration AS cga)
+        ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id
+            AND (cpa.AssessmentIndex IS NULL OR cpa.AssessmentIndex = cga.AssessmentIndex))
+WHERE
+    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id) ORDER BY ca.ObjectId, cga.AssessmentIndex, cpa.ObjectId, cga.ObjectId;

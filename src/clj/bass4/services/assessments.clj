@@ -234,6 +234,31 @@
     (when (seq pending-assessments)
       (add-instruments pending-assessments))))
 
+(defn get-pending-assessments [user-id]
+  (let
+    ;; NOTE that administrations is a map of lists
+    ;; administrations within one assessment battery
+    ;;
+    ;; Amazingly enough, this all works even with no pending administrations
+    [{:keys [administrations assessments]} (get-user-administrations user-id)
+     pending-assessments (->> (vals administrations)
+                              ;; Sort administrations by their assessment-index
+                              (map #(sort-by :assessment-index %))
+                              ;; Return assessment (!) statuses
+                              (map #(get-assessment-statuses % assessments))
+                              ;; Remove lists within list
+                              (flatten)
+                              ;; Keep the assessments that are AS_PENDING
+                              (filter-pending-assessments)
+                              ;; Find corresponding administrations
+                              (collect-assessment-administrations administrations)
+                              ;; Add any missing administrations
+                              (add-missing-administrations user-id)
+                              ;; Merge assessment and administration info into one map
+                              (map #(merge % (get assessments (:assessment-id %)))))]
+    (when (seq pending-assessments)
+      (add-instruments pending-assessments))))
+
 
 
 ;; ------------------------------
