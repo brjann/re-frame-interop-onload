@@ -12,7 +12,7 @@
                                      *s*
                                      pass-by
                                      ->!
-                                     sub-map?]]
+                                     json-sub-map?]]
             [bass4.test.bankid.mock-collect :as mock-collect :refer [analyze-mock-log]]
             [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer [wait
                                                                         collect+wait
@@ -37,9 +37,9 @@
 
 (deftest test-some-map?-macro
   (-> {:response {:body (json/write-str {"x" "y" "w" "z"})}}
-      (has (sub-map? {"x" "y" "w" "z"}))
+      (has (json-sub-map? {"x" "y" "w" "z"}))
       (assoc-in [:response :body] (json/write-str {"x" "z" "w" "y"}))
-      (has (sub-map? {"x" "z" "w" "y"}))))
+      (has (json-sub-map? {"x" "z" "w" "y"}))))
 
 
 (defn test-bankid-auth
@@ -56,19 +56,19 @@
       (follow-redirect)
       (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+      (has (json-sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
+      (has (json-sub-map? {"status" "pending" "hint-code" "outstanding-transaction"}))
       (user-opens-app! pnr)
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
+      (has (json-sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (user-authenticates! pnr)
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
       (follow-redirect)
-      (has (sub-map? {"personnummer" pnr}))))
+      (has (json-sub-map? {"personnummer" pnr}))))
 
 (defn test-bankid-cancels
   [pnr]
@@ -84,19 +84,19 @@
       (follow-redirect)
       (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+      (has (json-sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
+      (has (json-sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (user-cancels! pnr)
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "failed" "hint-code" "user-cancel"}))
+      (has (json-sub-map? {"status" "failed" "hint-code" "user-cancel"}))
       (visit "/e-auth/bankid/reset")
       (follow-redirect)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "error" "hint-code" "No uid in session"}))
+      (has (json-sub-map? {"status" "error" "hint-code" "No uid in session"}))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
       (follow-redirect)
@@ -120,15 +120,15 @@
       (follow-redirect)
       (wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+      (has (json-sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
       (user-opens-app! pnr)
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "pending" "hint-code" "user-sign"}))
+      (has (json-sub-map? {"status" "pending" "hint-code" "user-sign"}))
       (visit "/e-auth/bankid/cancel")
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "error" "hint-code" "No uid in session"}))
+      (has (json-sub-map? {"status" "error" "hint-code" "No uid in session"}))
       (visit "/e-auth/bankid/status")
       (has (status? 302))
       (follow-redirect)
@@ -151,11 +151,11 @@
          (follow-redirect)
          (wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
+         (has (json-sub-map? {"status" "starting" "hint-code" "contacting-bankid"}))
          (user-opens-app! pnr)
          (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "pending" "hint-code" "user-sign"})))
+         (has (json-sub-map? {"status" "pending" "hint-code" "user-sign"})))
     (binding [bankid-utils/collect-chan collect-chan2
               bankid-session/wait-fn    (fn [] bankid-utils/collect-chan)
               bankid-session/debug-chan (chan)]
@@ -171,13 +171,13 @@
            (follow-redirect)
            (wait)
            (visit "/e-auth/bankid/collect" :request-method :post)
-           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))
+           (has (json-sub-map? {"status" "error" "error-code" "already-in-progress"}))
            (visit "/e-auth/bankid/collect" :request-method :post)
-           (has (sub-map? {"status" "error" "error-code" "already-in-progress"}))))
+           (has (json-sub-map? {"status" "error" "error-code" "already-in-progress"}))))
     (->! s1
          (collect+wait)
          (visit "/e-auth/bankid/collect" :request-method :post)
-         (has (sub-map? {"status" "failed" "hint-code" "cancelled"})))))
+         (has (json-sub-map? {"status" "failed" "hint-code" "cancelled"})))))
 
 (defn test-bankid-ongoing
   [pnr]
@@ -199,7 +199,7 @@
       (visit "/e-auth/bankid/cancel")
       (collect+wait)
       (visit "/e-auth/bankid/collect" :request-method :post)
-      (has (sub-map? {"status" "error" "hint-code" "No uid in session"})))
+      (has (json-sub-map? {"status" "error" "hint-code" "No uid in session"})))
   (-> *s*
       (visit "/debug/bankid-launch"
              :request-method
