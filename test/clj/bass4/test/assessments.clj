@@ -371,6 +371,11 @@
       (with-redefs [t/now (constantly hour8)]
         (is (= #{[ass-hour-8 1]} (ongoing-assessments user-id)))))))
 
+(deftest no-administrations
+  (let [group-id (create-group!)
+        user-id  (user-service/create-user! ass-project-id {:group group-id})]
+    (is (= #{} (ongoing-assessments user-id)))))
+
 (deftest custom-assessment
   (db/update-object-properties! {:table-name "c_participantadministration"
                                  :object-id  ass-custom-administration
