@@ -151,21 +151,21 @@
     ;;
     ;; Amazingly enough, this all works even with no ongoing administrations
     ;;
-    [group-id                (:group-id (db/get-user-group {:user-id user-id}))
-     assessment-series-id    (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-     administrations-map     (administrations-by-assessment
-                               user-id group-id assessment-series-id)
-     assessments'            (assessments user-id assessment-series-id)
-     ongoing-adminstrations' (flatten (map (fn [[assessment-id administrations]]
-                                             (if-let [assessment (get assessments' assessment-id)]
-                                               (ongoing-administrations administrations assessment)
-                                               (throw
-                                                 (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
-                                           administrations-map))]
-    (when (seq ongoing-adminstrations')
-      (->> ongoing-adminstrations'
+    [group-id                 (:group-id (db/get-user-group {:user-id user-id}))
+     assessment-series-id     (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
+     administrations-map      (administrations-by-assessment
+                                user-id group-id assessment-series-id)
+     assessments-map          (assessments user-id assessment-series-id)
+     ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
+                                              (if-let [assessment (get assessments-map assessment-id)]
+                                                (ongoing-administrations administrations assessment)
+                                                (throw
+                                                  (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
+                                            administrations-map))]
+    (when (seq ongoing-administrations')
+      (->> ongoing-administrations'
            ;; Add any missing administrations
            (missing/add-missing-administrations! user-id)
            ;; Merge assessment and administration info into one map
-           (map #(merge % (get assessments' (:assessment-id %))))
+           (map #(merge % (get assessments-map (:assessment-id %))))
            (add-instruments)))))
