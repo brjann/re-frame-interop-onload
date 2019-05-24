@@ -23,21 +23,31 @@
           (try
             ;; Try to update the placeholder with the assessment and index
             (db/update-new-participant-administration!
-              {:administration-id administration-id :user-id user-id :assessment-id assessment-id :assessment-index assessment-index})
-            (db/update-objectlist-parent! {:object-id administration-id :parent-id user-id})
-            (db/link-property-reverse! {:linkee-id administration-id :property-name "Assessment" :linker-class "cParticipantAdministration"})
+              {:administration-id administration-id
+               :user-id           user-id
+               :assessment-id     assessment-id
+               :assessment-index  assessment-index})
+            (db/update-objectlist-parent!
+              {:object-id administration-id
+               :parent-id user-id})
+            (db/link-property-reverse!
+              {:linkee-id     administration-id
+               :property-name "Assessment"
+               :linker-class  "cParticipantAdministration"})
             administration-id
             ;; If that fails, then delete the placeholder and return instead the
             ;; duplicate administration's id.
             (catch Exception e
               (delete-administration! administration-id)
-              (:administration-id (db/get-administration-by-assessment-and-index {:user-id user-id :assessment-id assessment-id :assessment-index assessment-index})))))
+              (:administration-id (db/get-administration-by-assessment-and-index
+                                    {:user-id          user-id
+                                     :assessment-id    assessment-id
+                                     :assessment-index assessment-index})))))
         new-object-ids
         missing-administrations))
 
 (defn create-missing-administrations!
-  "user-id
-  [{:assessment-id 666 :assessment-index 0}]"
+  "user-id [{:assessment-id 666 :assessment-index 0}]"
   [user-id missing-administrations]
   (let [new-object-ids
         (update-created-administrations!
@@ -71,5 +81,7 @@
   [user-id matching-administrations]
   (let [missing-administrations (get-missing-administrations matching-administrations)]
     (if (> (count missing-administrations) 0)
-      (insert-new-into-old (create-missing-administrations! user-id missing-administrations) matching-administrations)
+      (insert-new-into-old
+        (create-missing-administrations! user-id missing-administrations)
+        matching-administrations)
       matching-administrations)))

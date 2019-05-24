@@ -8,7 +8,8 @@
             [clojure.tools.logging :as log]
             [bass4.services.bass :as bass]
             [bass4.services.user :as user-service]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [clojure.pprint :as pprint]))
 
 (use-fixtures
   :once
@@ -32,7 +33,6 @@
 
 (deftest ass-1
   (let [pending (get-ass-1-pending)]
-    (is (= (get-edn "ass-1-res") pending))
     (is (= (get-ass-1-rounds pending)
            (get-edn "ass-1-rounds")))))
 
@@ -55,7 +55,6 @@
 
 (deftest ass-3
   (let [pending (get-ass-3-pending)]
-    (is (= (get-edn "ass-3-res") pending))
     (is (= (get-edn "ass-3-rounds")
            (get-ass-3-rounds pending)))))
 
@@ -78,7 +77,6 @@
 
 (deftest ass-4
   (let [pending (get-ass-4-pending)]
-    (is (= (get-edn "ass-4-res") pending))
     (is (= (get-ass-4-rounds pending)
            (get-edn "ass-4-rounds")))))
 
@@ -101,7 +99,6 @@
 
 (deftest ass-5
   (let [pending (get-ass-5-pending)]
-    (is (= (get-edn "ass-5-res") pending))
     (is (= (get-ass-5-rounds pending)
            (get-edn "ass-5-rounds")))))
 
@@ -117,7 +114,6 @@
 
 (deftest ass-6-group
   (let [pending (get-ass-6-pending)]
-    #_(is (= (get-edn "ass-6-res") pending))
     (is (= (get-ass-6-rounds pending)
            (get-edn "ass-6-rounds")))))
 
@@ -133,7 +129,6 @@
 
 (deftest ass-7-group-some-done
   (let [pending (get-ass-7-pending)]
-    #_(is (= (get-edn "ass-7-res") pending))
     (is (= (get-ass-7-rounds pending)
            (get-edn "ass-7-rounds")))))
 
@@ -149,7 +144,6 @@
 
 (deftest ass-8-no-text
   (let [pending (get-ass-8-pending)]
-    #_(is (= (get-edn "ass-8-res") pending))
     (is (= (get-edn "ass-8-rounds")
            (get-ass-8-rounds pending)))))
 
@@ -255,7 +249,6 @@
 (deftest individual-assessment-in-group
   (let [group-id (create-group!)
         user-id  (user-service/create-user! ass-project-id {:group group-id})]
-    (log/debug user-id)
     ; Today
     (create-participant-administration!
       user-id ass-individual-single 1 {:date (midnight)})
@@ -411,28 +404,29 @@
     (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
       ; Tomorrow
       (is (= #{:thank-you-text
-              :repetition-type
-              :assessment-index
-              :show-texts-if-swallowed?
-              :date-completed
-              :assessment-id
-              :participant-activation-date
-              :repetition-interval
-              :scope
-              :instruments
-              :welcome-text
-              :shuffle-instruments
-              :priority
-              :group-administration-id
+               :repetition-type
+               :assessment-index
+               :show-texts-if-swallowed?
+               :date-completed
+               :assessment-id
+               :participant-activation-date
+               :repetition-interval
+               :scope
+               :instruments
+               :welcome-text
+               :shuffle-instruments
+               :priority
+               :group-administration-id
                :active?
-              :clinician-rated?
-              :repetitions
-              :group-activation-date
-              :time-limit
-              :is-record?
-              :participant-administration-id
-              :allow-swallow?
-              :assessment-name
+               :status
+               :clinician-rated?
+               :repetitions
+               :group-activation-date
+               :time-limit
+               :is-record?
+               :participant-administration-id
+               :allow-swallow?
+               :assessment-name
                :activation-hour}
              (into #{} (keys res))))
       (is (= true (sub-map? {:thank-you-text "thankyou"
@@ -446,7 +440,6 @@
     (create-participant-administration!
       user-id ass-individual-single 1 {:date (midnight)})
     (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
-      ; Tomorrow
       (is (= #{:thank-you-text
                :repetition-type
                :assessment-index
@@ -462,6 +455,7 @@
                :priority
                :group-administration-id
                :active?
+               :status
                :clinician-rated?
                :repetitions
                :group-activation-date
