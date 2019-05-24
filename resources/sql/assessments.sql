@@ -124,9 +124,7 @@ FROM c_assessment as ca
         ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id
             AND (cpa.AssessmentIndex IS NULL OR cpa.AssessmentIndex = cga.AssessmentIndex))
 WHERE
-    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id)
-ORDER BY ca.ObjectId, cga.AssessmentIndex, cpa.ObjectId, cga.ObjectId;
--- TODO: The ordering should not be there but removing it breaks the damn EDN-tests in assessments tests
+    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
 
 
 -- :name create-participant-administrations! :! :1

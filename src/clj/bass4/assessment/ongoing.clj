@@ -4,7 +4,8 @@
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
             [bass4.assessment.create-missing :as missing]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.utils :as utils]))
 
 (defn- get-time-limit
   [{:keys [time-limit is-record repetition-interval repetition-type]}]
@@ -72,17 +73,16 @@
                         :else ::as-ongoing)))}))
 
 (defn- get-administration-statuses
-  [administrations assessments]
+  [administrations assessment]
   (when (seq administrations)
-    (let [next-administrations   (get-administration-statuses (rest administrations) assessments)
-          current-administration (first administrations)
-          current-assessment     (get assessments (:assessment-id current-administration))]
-      (when (nil? current-assessment)
+    (let [next-administrations   (get-administration-statuses (rest administrations) assessment)
+          current-administration (first administrations)]
+      (when (nil? assessment)
         (throw (Exception. (str "Assessment ID: " (:assessment-id current-administration) " does not exist."))))
       (cons (get-administration-status
               current-administration
               (:status (first next-administrations))
-              current-assessment)
+              assessment)
             next-administrations))))
 
 
@@ -119,11 +119,10 @@
 (defn- assessments
   [user-id assessment-series-id]
   (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
-    (key-map-list assessments :assessment-id)))
+    (into {} (map #(vector (:assessment-id %) %)) assessments)))
 
 (defn- administrations-by-assessment
   [user-id group-id assessment-series-id]
-  ;; TODO: When EDN-tests have been removed, SQL sorting no longer needed
   (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
     (group-by #(:assessment-id %) administrations)))
 ;
@@ -137,30 +136,36 @@
 ;
 
 
+(defn- ongoing-administrations
+  [administrations assessment]
+  (-> administrations
+      (#(sort-by :assessment-index %))
+      (#(get-administration-statuses % assessment))
+      (filter-ongoing-assessments)))
+
 (defn ongoing-assessments
   [user-id]
   (let
     ;; NOTE that administrations is a map of lists
     ;; administrations within one assessment battery
     ;;
-    ;; Amazingly enough, this all works even with no pending administrations
+    ;; Amazingly enough, this all works even with no ongoing administrations
     ;;
     [group-id                (:group-id (db/get-user-group {:user-id user-id}))
      assessment-series-id    (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-     administrations         (administrations-by-assessment
+     administrations-map     (administrations-by-assessment
                                user-id group-id assessment-series-id)
      assessments'            (assessments user-id assessment-series-id)
-     administration-statuses (->> (vals administrations)
-                                  (map (comp #(get-administration-statuses % assessments')
-                                             #(sort-by :assessment-index %)))
-                                  (flatten))
-     pending-assessments     (->> administration-statuses
-                                  ;; Keep the assessments that are ::as-ongoing
-                                  (filter-ongoing-assessments)
-                                  ;; Add any missing administrations
-                                  (missing/add-missing-administrations! user-id)
-                                  ;; Merge assessment and administration info into one map
-                                  (map #(merge % (get assessments' (:assessment-id %)))))]
-    (when (seq pending-assessments)
-      (add-instruments pending-assessments))))
-
+     ongoing-adminstrations' (flatten (map (fn [[assessment-id administrations]]
+                                             (if-let [assessment (get assessments' assessment-id)]
+                                               (ongoing-administrations administrations assessment)
+                                               (throw
+                                                 (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
+                                           administrations-map))]
+    (when (seq ongoing-adminstrations')
+      (->> ongoing-adminstrations'
+           ;; Add any missing administrations
+           (missing/add-missing-administrations! user-id)
+           ;; Merge assessment and administration info into one map
+           (map #(merge % (get assessments' (:assessment-id %))))
+           (add-instruments)))))
