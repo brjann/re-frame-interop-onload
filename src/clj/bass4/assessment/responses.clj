@@ -1,11 +1,10 @@
-(ns bass4.responses.assessments
+(ns bass4.assessment.responses
   (:require [ring.util.http-response :as http-response]
-            [bass4.services.assessments :as assessments-service]
             [bass4.utils :refer [json-safe]]
             [bass4.instrument.services :as instruments]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
-            [bass4.services.assessments :as administrations]
+            [bass4.assessment.administration :as administration]
             [bass4.session.utils :as session-utils]
             [bass4.middleware.request-logger :as request-logger]))
 
@@ -22,7 +21,7 @@
       false
 
       :else
-      (< 0 (administrations/create-assessment-round-entries! user-id)))))
+      (< 0 (administration/create-assessment-round-entries! user-id)))))
 
 (defn check-assessments-mw
   [handler]
@@ -55,8 +54,8 @@
                  :assessments-pending? false})))
         (session-utils/assoc-out-session (handler request)
                                          session-in
-                                         {:assessments-checked?  true
-                                           :assessments-pending? false})))))
+                                         {:assessments-checked? true
+                                          :assessments-pending? false})))))
 
 ;; --------------------------
 ;;         RESPONSES
@@ -65,7 +64,7 @@
 (defn- text-page
   [step]
   (request-logger/add-to-state-key! :info "Assessment text")
-  (assessments-service/step-completed! step)
+  (administration/step-completed! step)
   (bass4.layout/render "assessment-text.html"
                        {:texts (try (clojure.edn/read-string (:texts step))
                                     (catch Exception _ ""))}))
@@ -82,7 +81,7 @@
                             :count         (:instrument-count step)})
       (do
         ;; Could not find instrument - record error and mark step as completed
-        (assessments-service/step-completed! step)
+        (administration/step-completed! step)
         (request-logger/record-error! (str "Instrument " instrument-id " not found when doing assessment"))
         (http-response/found "/user")))))
 
@@ -91,7 +90,7 @@
   (let [step (first round)]
     ;; This makes sure that the thank-you text is shown.
     ;; Bad separation of concern but difficult to place elsewhere
-    (assessments-service/batch-must-show-texts! step)
+    (administration/batch-must-show-texts! step)
     (if (nil? (:instrument-id step))
       ;; TODO: The pre-checking of whether the assessment is completed should be done here.
       (text-page step)
@@ -109,8 +108,8 @@
       (do
         (validation/validate-answers instrument items specifications)
         (let [answers-map (instruments/score-instrument instrument-id items specifications)]
-          (assessments-service/instrument-completed! user-id administration-ids instrument-id answers-map)
-          (assessments-service/check-completed-administrations! user-id round instrument-id)
+          (administration/instrument-completed! user-id administration-ids instrument-id answers-map)
+          (administration/check-completed-administrations! user-id round instrument-id)
           (-> (http-response/found "/user/assessments"))))
       (do
         (request-logger/record-error! (str "Instrument " instrument-id " does not exist."))
@@ -127,14 +126,14 @@
 
 (defapi handle-assessments
   [user-id :- integer? session :- [:? map?]]
-  (let [round (assessments-service/get-assessment-round user-id)]
+  (let [round (administration/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       (assessment-page round))))
 
 (defapi post-instrument-answers
   [user-id :- integer? session :- [:? map?] instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
-  (let [round (assessments-service/get-assessment-round user-id)]
+  (let [round (administration/get-assessment-round user-id)]
     (if-not (seq round)
       (assessments-completed session)
       (instrument-completed user-id round instrument-id items specifications))))

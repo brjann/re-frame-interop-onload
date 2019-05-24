@@ -88,7 +88,7 @@ SELECT
               THEN 0
           ELSE 1
           END)
-     END) AS `active`,
+     END) AS `active?`,
 
   (CASE
      WHEN cpa.DateCompleted IS NULL
@@ -121,7 +121,8 @@ FROM c_assessment as ca
         ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id
             AND (cpa.AssessmentIndex IS NULL OR cpa.AssessmentIndex = cga.AssessmentIndex))
 WHERE
-    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id) ORDER BY ca.ObjectId, cga.AssessmentIndex, cpa.ObjectId, cga.ObjectId;
+    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
+
 
 -- :name create-participant-administrations! :! :1
 -- :doc Update created administration placeholders with assessmentindex some defaults

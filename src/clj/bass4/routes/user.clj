@@ -9,7 +9,7 @@
             [bass4.config :refer [env]]
             [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.auth :as auth-response]
-            [bass4.responses.assessments :as assessments-response]
+            [bass4.assessment.responses :as assessments-response]
             [bass4.i18n :as i18n]
             [bass4.route-rules :as route-rules]
             [bass4.middleware.core :as middleware]

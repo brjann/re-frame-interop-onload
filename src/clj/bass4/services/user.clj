@@ -52,7 +52,7 @@
     (db/update-user-properties! {:user-id user-id :updates properties})))
 
 (defn create-user!
-  ([project-id] (create-user! [project-id nil]))
+  ([project-id] (create-user! project-id nil))
   ([project-id properties]
    (let [collection-id (:collection-id (db/get-project-participant-collection {:project-id project-id}))
          user-id       (:objectid (db/create-bass-object! {:class-name    "cParticipant"

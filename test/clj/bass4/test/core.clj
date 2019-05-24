@@ -173,7 +173,7 @@
                                 :message  "Message not found"
                                 :expected msg-pred#}))))
 
-(defmacro sub-map?
+(defmacro json-sub-map?
   [expected]
   `(fn [response# msg#]
      (let [body#         (get-in response# [:response :body])
@@ -181,6 +181,11 @@
            sub-map#      (select-keys response-map# (keys ~expected))]
        (is (= ~expected sub-map#) msg#))
      response#))
+
+(defn sub-map?
+  [sub-map m]
+  (let [sub-map* (select-keys m (keys sub-map))]
+    (= sub-map* sub-map)))
 
 (defn api-response
   [s]
