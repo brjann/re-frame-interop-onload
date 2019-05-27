@@ -4,6 +4,28 @@
             [bass4.utils :as utils]
             [bass4.db.core :as db]))
 
+(defn activated-participant-administrations
+  [db date-min date-max hour]
+  (db/get-activated-participant-administrations db {:date-min date-min
+                                                    :date-max date-max
+                                                    :hour     hour}))
+
+(defn activated-group-administrations
+  [db date-min date-max hour]
+  (db/get-activated-group-administrations db {:date-min date-min
+                                              :date-max date-max
+                                              :hour     hour}))
+
+(defn participant-administrations-by-user+assessment
+  [db user+assessments]
+  (db/get-participant-administrations-by-user+assessment
+    db
+    {:user-ids+assessment-ids user+assessments}))
+
+(defn group-administrations-by-group+assessment
+  [db groups+assessments]
+  (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments}))
+
 (def tz (t/time-zone-for-id "Asia/Tokyo"))
 
 (defn today-midnight
@@ -22,11 +44,11 @@
 
 (defn potential-activation-reminders
   [db now tz hour]
-  (let [args                        {:date-min (today-midnight now tz)
-                                     :date-max (today-last-second now tz)
-                                     :hour     hour}
-        participant-administrations (db/get-activated-participant-administrations db args)
-        group-administrations       (db/get-activated-group-administrations db args)]
+  (let [
+        date-min                    (today-midnight now tz)
+        date-max                    (today-last-second now tz)
+        participant-administrations (activated-participant-administrations db date-min date-max hour)
+        group-administrations       (activated-group-administrations db date-min date-max hour)]
     (concat participant-administrations
             group-administrations)))
 
@@ -35,9 +57,7 @@
   (let [user+assessments (into #{} (map #(vector (:user-id %)
                                                  (:assessment-id %))
                                         potential-assessments))
-        administrations  (db/get-participant-administrations-by-user+assessment
-                           db
-                           {:user-ids+assessment-ids user+assessments})]
+        administrations  (participant-administrations-by-user+assessment db user+assessments)]
     (group-by #(vector (:user-id %) (:assessment-id %)) administrations)))
 
 (defn group-administrations-from-potential-assessments
@@ -45,14 +65,12 @@
   (let [groups+assessments (into #{} (map #(vector (:group-id %)
                                                    (:assessment-id %))
                                           potential-assessments))
-        administrations    (db/get-group-administrations-by-group+assessment
-                             db
-                             {:group-ids+assessment-ids groups+assessments})]
+        administrations    (group-administrations-by-group+assessment db groups+assessments)]
     (group-by #(vector (:group-id %) (:assessment-id %)) administrations)))
 
 (defn xx
   []
-  (let [potential (potential-activation-reminders db/*db* (t/plus (t/now) (t/days -1)) tz 0)]
+  (let [potential (potential-activation-reminders db/*db* (t/now) tz 0)]
     (when (seq potential)
       (let [user-groups                         (into {} (map #(vector (:user-id %) (:group-id %)) potential))
             user-assessments                    (into {} (map #(vector (:user-id %) (:assessment-id %)) potential))
