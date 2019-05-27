@@ -49,7 +49,7 @@ $(document).ready(function () {
          .html(sprintf('<p>%s</p><p><a href="%s">%s</a></p>',
             text_session_no_session,
             logout_path,
-            text_go_to_login));
+            logout_path_text));
    };
 
    var session_checker_success = function (timeouts, status_user_id) {
