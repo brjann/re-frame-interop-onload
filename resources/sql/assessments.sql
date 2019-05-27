@@ -59,12 +59,15 @@ SELECT
 FROM c_assessment
 WHERE parentid = :assessment-series-id OR parentid = :user-id;
 
--- :name get-user-assessment-series :? :1
+-- :name get-user-assessment-series :? :*
 -- :doc Get the assessment series that the user's project uses
-SELECT cti.Assessments as `assessment-series-id` FROM c_participant AS cp
+SELECT
+  cp.ObjectId as `user-id`,
+  cti.Assessments as `assessment-series-id`
+FROM c_participant AS cp
     JOIN c_treatmentinterface AS cti
         ON cp.ParentInterface = cti.ObjectId
-WHERE cp.ObjectId = :user-id;
+WHERE cp.ObjectId IN (:v*:user-ids);
 
 -- :name get-user-administrations :? :*
 -- :doc Gets the participant and group administrations for a user.

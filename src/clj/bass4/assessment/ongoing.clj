@@ -14,7 +14,8 @@
 
 (defn- user-assessment-series-id
   [db user-id]
-  (:assessment-series-id (db/get-user-assessment-series db {:user-id user-id})))
+  (when user-id
+    (:assessment-series-id (first (db/get-user-assessment-series db {:user-ids [user-id]})))))
 
 (defn- user-administrations
   [db user-id group-id assessment-series-id]
