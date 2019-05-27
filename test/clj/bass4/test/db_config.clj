@@ -53,7 +53,6 @@
                                    :test        false
                                    :debug-mode  false
                                    :db-settings {(test-db) {:debug-mode true}}})]
-    (log/debug (config/env :db-settings))
     (is (= true (db-config/debug-mode?)))))
 
 (deftest db-settings

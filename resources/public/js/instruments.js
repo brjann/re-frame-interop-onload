@@ -35,7 +35,7 @@ $(document).ready(function () {
          $(this).find(".instrument-show-name").html('<h2>' + show_name + '</h2>');
          $(this).addClass('instrument');
 
-         // TODO: Remove debug
+         // TODO: Remove debug - NOT SURE WHAT THIS TODO IS.
          var $responsive_toggler = $("#responsive-toggler");
          if ($responsive_toggler.length) {
             if (!instrument.responsive) {
@@ -157,12 +157,12 @@ function init_instrument($instrument) {
    }
 
    var pages = $instrument.find('.page');
-   pages.each(init_pages(pages));
+   pages.each(init_pages(pages, $instrument));
 
    $instrument.addClass('form').areYouSure();
 }
 
-function init_pages(pages) {
+function init_pages(pages, $instrument) {
 
    var page_count_updater = function (index) {
       if (pages.length > 1) {
@@ -175,6 +175,7 @@ function init_pages(pages) {
       pages.hide();
       var page = pages.eq(index);
       page.show();
+      paint_instrument($instrument);
       page_count_updater(index);
       if (page.data('page-button')) {
          $('.page-button').removeClass('active');
