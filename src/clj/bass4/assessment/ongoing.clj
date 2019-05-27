@@ -8,6 +8,34 @@
             [bass4.utils :as utils]
             [bass4.db-config :as db-config]))
 
+(defn- user-group
+  [db user-id]
+  (:group-id (db/get-user-group db {:user-id user-id})))
+
+(defn- user-assessment-series-id
+  [db user-id]
+  (:assessment-series-id (db/get-user-assessment-series db {:user-id user-id})))
+
+(defn- user-administrations
+  [db user-id group-id assessment-series-id]
+  (db/get-user-administrations db {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id}))
+
+(defn user-assessments
+  [db user-id assessment-series-id]
+  (db/get-user-assessments db {:assessment-series-id assessment-series-id :user-id user-id}))
+
+(defn assessment-instruments
+  [db assessment-ids]
+  (db/get-assessments-instruments db {:assessment-ids assessment-ids}))
+
+(defn administration-completed-instruments
+  [db administration-ids]
+  (db/get-administration-completed-instruments db {:administration-ids administration-ids}))
+
+(defn administration-additional-instruments
+  [db administration-ids]
+  (db/get-administration-additional-instruments db {:administration-ids administration-ids}))
+
 (defn- get-time-limit
   [{:keys [time-limit is-record repetition-interval repetition-type]}]
   (when
@@ -98,16 +126,15 @@
 
 (defn- add-instruments [db assessments]
   (let [administration-ids     (map :participant-administration-id assessments)
-        assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
-                                    (db/get-assessments-instruments db)
+        assessment-instruments (->> assessments
+                                    (map :assessment-id)
+                                    (assessment-instruments db)
                                     (group-by :assessment-id)
                                     (map-map #(map :instrument-id %)))
-        completed-instruments  (->> {:administration-ids administration-ids}
-                                    (db/get-administration-completed-instruments db)
+        completed-instruments  (->> (administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))
-        additional-instruments (->> {:administration-ids administration-ids}
-                                    (db/get-administration-additional-instruments db)
+        additional-instruments (->> (administration-additional-instruments db {:administration-ids administration-ids})
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))]
     (map #(assoc % :instruments (diff
@@ -120,13 +147,14 @@
 
 (defn- assessments
   [db user-id assessment-series-id]
-  (let [assessments (db/get-user-assessments db {:assessment-series-id assessment-series-id :user-id user-id})]
-    (into {} (map #(vector (:assessment-id %) %)) assessments)))
+  (->> (user-assessments db user-id assessment-series-id)
+       (map #(vector (:assessment-id %) %))
+       (into {})))
 
 (defn- administrations-by-assessment
   [db user-id group-id assessment-series-id]
-  (let [administrations (db/get-user-administrations db {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
-    (group-by #(:assessment-id %) administrations)))
+  (->> (user-administrations db user-id group-id assessment-series-id)
+       (group-by #(:assessment-id %))))
 ;
 ; Plan:
 ; Break out function that accepts one user's administrations by assessment
@@ -136,7 +164,6 @@
 ; Write two SQL functions for groups / participants and merge them
 ; to produce identical values as administrations-by-assessment
 ;
-
 
 (defn- ongoing-administrations
   [now administrations assessment]
@@ -153,8 +180,8 @@
     ;;
     ;; Amazingly enough, this all works even with no ongoing administrations
     ;;
-    [group-id                 (:group-id (db/get-user-group db {:user-id user-id}))
-     assessment-series-id     (:assessment-series-id (db/get-user-assessment-series db {:user-id user-id}))
+    [group-id                 (user-group db user-id)
+     assessment-series-id     (user-assessment-series-id db user-id)
      administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
      assessments-map          (assessments db user-id assessment-series-id)
      ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
