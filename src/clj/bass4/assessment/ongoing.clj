@@ -5,7 +5,36 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.services.bass :refer [create-bass-objects-without-parent!]]
             [clojure.tools.logging :as log]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.db-config :as db-config]))
+
+(defn- user-group
+  [db user-id]
+  (:group-id (db/get-user-group db {:user-id user-id})))
+
+(defn- user-assessment-series-id
+  [db user-id]
+  (:assessment-series-id (db/get-user-assessment-series db {:user-id user-id})))
+
+(defn- user-administrations
+  [db user-id group-id assessment-series-id]
+  (db/get-user-administrations db {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id}))
+
+(defn user-assessments
+  [db user-id assessment-series-id]
+  (db/get-user-assessments db {:assessment-series-id assessment-series-id :user-id user-id}))
+
+(defn assessment-instruments
+  [db assessment-ids]
+  (db/get-assessments-instruments db {:assessment-ids assessment-ids}))
+
+(defn administration-completed-instruments
+  [db administration-ids]
+  (db/get-administration-completed-instruments db {:administration-ids administration-ids}))
+
+(defn administration-additional-instruments
+  [db administration-ids]
+  (db/get-administration-additional-instruments db {:administration-ids administration-ids}))
 
 (defn- get-time-limit
   [{:keys [time-limit is-record repetition-interval repetition-type]}]
@@ -29,7 +58,7 @@
          (not= next-administration-status ::as-inactive))))
 
 (defn- get-administration-status
-  [administration next-administration-status assessment]
+  [now administration next-administration-status assessment]
   (merge administration
          (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated?])
          {:status (cond
@@ -64,22 +93,23 @@
                         ;; to t/now which returns UTC time
                         (nil? activation-date) ::as-no-date
 
-                        (t/before? (t/now) activation-date)
+                        (t/before? now activation-date)
                         ::as-waiting
 
-                        (and (some? time-limit) (t/after? (t/now) (t/plus activation-date (t/days time-limit))))
+                        (and (some? time-limit) (t/after? now (t/plus activation-date (t/days time-limit))))
                         ::as-date-passed
 
                         :else ::as-ongoing)))}))
 
 (defn- get-administration-statuses
-  [administrations assessment]
+  [now administrations assessment]
   (when (seq administrations)
-    (let [next-administrations   (get-administration-statuses (rest administrations) assessment)
+    (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)
           current-administration (first administrations)]
       (when (nil? assessment)
         (throw (Exception. (str "Assessment ID: " (:assessment-id current-administration) " does not exist."))))
       (cons (get-administration-status
+              now
               current-administration
               (:status (first next-administrations))
               assessment)
@@ -94,18 +124,17 @@
              (not (:clinician-rated? %)))
           assessment-statuses))
 
-(defn- add-instruments [assessments]
+(defn- add-instruments [db assessments]
   (let [administration-ids     (map :participant-administration-id assessments)
-        assessment-instruments (->> {:assessment-ids (map :assessment-id assessments)}
-                                    (db/get-assessments-instruments)
+        assessment-instruments (->> assessments
+                                    (map :assessment-id)
+                                    (assessment-instruments db)
                                     (group-by :assessment-id)
                                     (map-map #(map :instrument-id %)))
-        completed-instruments  (->> {:administration-ids administration-ids}
-                                    (db/get-administration-completed-instruments)
+        completed-instruments  (->> (administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))
-        additional-instruments (->> {:administration-ids administration-ids}
-                                    (db/get-administration-additional-instruments)
+        additional-instruments (->> (administration-additional-instruments db {:administration-ids administration-ids})
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))]
     (map #(assoc % :instruments (diff
@@ -117,14 +146,15 @@
 
 
 (defn- assessments
-  [user-id assessment-series-id]
-  (let [assessments (db/get-user-assessments {:assessment-series-id assessment-series-id :user-id user-id})]
-    (into {} (map #(vector (:assessment-id %) %)) assessments)))
+  [db user-id assessment-series-id]
+  (->> (user-assessments db user-id assessment-series-id)
+       (map #(vector (:assessment-id %) %))
+       (into {})))
 
 (defn- administrations-by-assessment
-  [user-id group-id assessment-series-id]
-  (let [administrations (db/get-user-administrations {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id})]
-    (group-by #(:assessment-id %) administrations)))
+  [db user-id group-id assessment-series-id]
+  (->> (user-administrations db user-id group-id assessment-series-id)
+       (group-by #(:assessment-id %))))
 ;
 ; Plan:
 ; Break out function that accepts one user's administrations by assessment
@@ -135,30 +165,28 @@
 ; to produce identical values as administrations-by-assessment
 ;
 
-
 (defn- ongoing-administrations
-  [administrations assessment]
+  [now administrations assessment]
   (-> administrations
       (#(sort-by :assessment-index %))
-      (#(get-administration-statuses % assessment))
+      (#(get-administration-statuses now % assessment))
       (filter-ongoing-assessments)))
 
-(defn ongoing-assessments
-  [user-id]
+(defn ongoing-assessments*
+  [db now user-id]
   (let
     ;; NOTE that administrations is a map of lists
     ;; administrations within one assessment battery
     ;;
     ;; Amazingly enough, this all works even with no ongoing administrations
     ;;
-    [group-id                 (:group-id (db/get-user-group {:user-id user-id}))
-     assessment-series-id     (:assessment-series-id (db/get-user-assessment-series {:user-id user-id}))
-     administrations-map      (administrations-by-assessment
-                                user-id group-id assessment-series-id)
-     assessments-map          (assessments user-id assessment-series-id)
+    [group-id                 (user-group db user-id)
+     assessment-series-id     (user-assessment-series-id db user-id)
+     administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
+     assessments-map          (assessments db user-id assessment-series-id)
      ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
                                               (if-let [assessment (get assessments-map assessment-id)]
-                                                (ongoing-administrations administrations assessment)
+                                                (ongoing-administrations now administrations assessment)
                                                 (throw
                                                   (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
                                             administrations-map))]
@@ -168,4 +196,8 @@
            (missing/add-missing-administrations! user-id)
            ;; Merge assessment and administration info into one map
            (map #(merge % (get assessments-map (:assessment-id %))))
-           (add-instruments)))))
+           (add-instruments db)))))
+
+(defn ongoing-assessments
+  [user-id]
+  (ongoing-assessments* db/*db* (t/now) user-id))

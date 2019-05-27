@@ -109,35 +109,36 @@
                                                   (:user-id session)
                                                   (not (:external-login? session)))
                                          (max 0 (- re-auth-timeout-at now)))})]
-    (h-utils/json-response res)))
+    res))
 
 (defn session-api
   "Please note that these methods should be declared in the API"
   [request hard-timeout-at hard-timeout?]
   (let [response (case (:uri request)
                    "/api/session/user-id"
-                   (h-utils/json-response
+                   (http-response/ok
                      (when-let [user-id (get-in request [:session :user-id])]
                        {:user-id user-id}))
 
                    "/api/session/status"
-                   (session-status request hard-timeout-at hard-timeout?)
+                   (http-response/ok
+                     (session-status request hard-timeout-at hard-timeout?))
 
                    "/api/session/timeout-re-auth"
-                   (-> (h-utils/json-response {:result "ok"})
+                   (-> (http-response/ok {:result "ok"})
                        (assoc :session
                               (merge (:session request)
                                      {::re-auth-timeout-at (utils/current-time)})))
 
                    "/api/session/timeout-hard"
-                   (-> (h-utils/json-response {:result "ok"})
+                   (-> (http-response/ok {:result "ok"})
                        (assoc :session
                               (merge (:session request)
                                      {::hard-timeout-at (utils/current-time)})))
 
                    "/api/session/timeout-hard-soon"
                    (let [re-auth-timeout-at (get-in request [:session ::re-auth-timeout-at])]
-                     (-> (h-utils/json-response {:result "ok"})
+                     (-> (http-response/ok {:result "ok"})
                          (assoc :session
                                 (merge (:session request)
                                        {::hard-timeout-at (+ (utils/current-time)
@@ -153,7 +154,7 @@
                        (http-response/bad-request "Renew can only be used for non-user or external-login sessions")
 
                        :else
-                       (-> (h-utils/json-response {:result "ok"})
+                       (-> (http-response/ok {:result "ok"})
                            (assoc :session
                                   (merge (:session request)
                                          {::hard-timeout-at (+ (utils/current-time)
@@ -161,9 +162,25 @@
 
                    ;default
                    (http-response/not-found))]
-    (if-not (= 404 (:status response))
-      (assoc response ::request-logger/no-log? true)
-      response)))
+    (let [body     (:body response)
+          response (cond
+                     (and (or (map? body) (nil? body))
+                          (h-utils/ajax? request))
+                     (-> response
+                         (assoc :body (json/write-str body))
+                         (http-response/content-type "application/json"))
+
+                     (map? (:body response))
+                     (-> response
+                         (assoc :body (json/write-str body))
+                         (http-response/content-type "text/plain"))
+
+                     :else
+                     (-> response
+                         (http-response/content-type "text/plain")))]
+      (if-not (= 404 (:status response))
+        (assoc response ::request-logger/no-log? true)
+        response))))
 
 ;; -------------------
 ;;    HARD TIMEOUT
