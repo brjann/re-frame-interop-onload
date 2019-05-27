@@ -189,11 +189,12 @@
 
 (defn api-response
   [s]
-  (-> s
-      :enlive
-      (enlive/texts)
-      (first)
-      (json/read-str :key-fn keyword)))
+  (let [str (-> s
+                :enlive
+                (enlive/texts)
+                (first))]
+    (when str
+      (json/read-str str :key-fn keyword))))
 
 (defmacro api-response?
   ([expected]
