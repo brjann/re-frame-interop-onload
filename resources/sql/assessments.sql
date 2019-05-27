@@ -360,13 +360,16 @@ ON DUPLICATE KEY UPDATE
 
 SELECT
 	cp.ObjectId AS `user-id`,
-  cp.Group AS `group-id`,
+ (CASE
+   WHEN `Group` IS NULL OR `Group` = 0
+     THEN NULL
+   ELSE
+     `Group`
+   END) AS `group-id`,
   cpa.ObjectId AS `participant-administration-id`,
-	cpa.Assessment AS `participant-assessment-id`,
-  cpa.AssessmentIndex AS `participant-administration-index`,
   cga.ObjectId AS `group-administration-id`,
-	cga.Assessment AS `group-assessment-id`,
-  cga.AssessmentIndex AS `group-administration-index`
+	cpa.Assessment AS `assessment-id`,
+  cpa.AssessmentIndex AS `administration-index`
 FROM
 	c_participant AS cp
     JOIN c_participantadministration AS cpa
@@ -392,13 +395,11 @@ WHERE
 
 SELECT
 	cp.ObjectId AS `user-id`,
-  cp.Group AS `group-id`,
+  `Group` AS `group-id`,
   cpa.ObjectId AS `participant-administration-id`,
-	cpa.Assessment AS `participant-assessment-id`,
-  cpa.AssessmentIndex AS `participant-administration-index`,
   cga.ObjectId AS `group-administration-id`,
-	cga.Assessment AS `group-assessment-id`,
-  cga.AssessmentIndex AS `group-administration-index`
+	cga.Assessment AS `assessment-id`,
+  cga.AssessmentIndex AS `administration-index`
 FROM
 	c_participant AS cp
   JOIN c_groupadministration as cga
@@ -418,59 +419,49 @@ WHERE
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= :date-min AND cga.Date <= :date-max;
 
--- :name get-multiple-users-administrations :? :*
+-- :name get-participant-administrations-by-user+assessment :? :*
 -- :doc
 
 SELECT
-    ca.ObjectId AS `assessment-id`,
-    cpa.ObjectId AS `participant-administration-id`,
+	cpa.ParentId AS `user-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  ca.ObjectId AS `assessment-id`,
+	cpa.AssessmentIndex AS `assessment-index`,
+  cpa.Active AS `participant-administration-active?`,
 
   (CASE
-     WHEN cpa.AssessmentIndex IS NULL
-         THEN cga.AssessmentIndex
-     ELSE cpa.AssessmentIndex
-     END) AS `assessment-index`,
+    WHEN cpa.DateCompleted IS NULL
+      THEN 0
+    ELSE cpa.DateCompleted
+  END ) AS `date-completed`,
 
   (CASE
-     WHEN cpa.Active IS NULL AND cga.Active IS NULL
-         THEN NULL
-     ELSE
-         (CASE
-          WHEN cpa.Active = 0 OR cga.Active = 0
-              THEN 0
-          ELSE 1
-          END)
-     END) AS `active`,
+    WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
+      THEN NULL
+    ELSE from_unixtime(cpa.`Date`)
+  END) AS `participant-activation-date`
 
-  (CASE
-     WHEN cpa.DateCompleted IS NULL
-         THEN 0
-     ELSE cpa.DateCompleted
-     END ) AS `date-completed`,
+FROM c_participantadministration as cpa
+    JOIN c_assessment AS ca
+        ON (ca.ObjectId = cpa.Assessment AND cpa.Deleted = 0)
+WHERE (cpa.ParentId, cpa.Assessment) IN (:t*:user-ids+assessment-ids)
 
-  (CASE
-   WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
-     THEN
-       NULL
-   ELSE
-     from_unixtime(cpa.`Date`)
-   END) AS `participant-activation-date`,
+-- :name get-group-administrations-by-group+assessment :? :*
+-- :doc
 
+SELECT
+	cga.ParentId AS `group-id`,
   cga.ObjectId AS `group-administration-id`,
-
+  ca.ObjectId AS `assessment-id`,
+	cga.AssessmentIndex AS `assessment-index`,
+  cga.Active AS `group-administration-active?`,
   (CASE
-   WHEN cga.Date IS NULL OR cga.Date = 0
-     THEN
-       NULL
-   ELSE
-     from_unixtime(cga.Date)
-   END) AS `group-activation-date`
+    WHEN cga.`Date` IS NULL OR cga.`Date` = 0
+      THEN NULL
+    ELSE from_unixtime(cga.`Date`)
+  END) AS `group-activation-date`
 
-FROM c_assessment as ca
-    LEFT JOIN (c_participantadministration as cpa)
-        ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
-    LEFT JOIN (c_groupadministration AS cga)
-        ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id
-            AND (cpa.AssessmentIndex IS NULL OR cpa.AssessmentIndex = cga.AssessmentIndex))
-WHERE
-    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id) ORDER BY ca.ObjectId, cga.AssessmentIndex, cpa.ObjectId, cga.ObjectId;
+FROM c_groupadministration as cga
+    JOIN c_assessment AS ca
+        ON (ca.ObjectId = cga.Assessment)
+WHERE (cga.ParentId, cga.Assessment) IN (:t*:group-ids+assessment-ids)
