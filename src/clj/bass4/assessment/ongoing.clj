@@ -63,16 +63,20 @@
   (merge administration
          (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated?])
          {:status (cond
-                    (= (:participant-administration-id administration) (:group-administration-id administration) nil)
+                    (= (:participant-administration-id administration)
+                       (:group-administration-id administration) nil)
                     ::as-all-missing
 
-                    (and (= (:scope assessment) 0) (nil? (:participant-administration-id administration)))
+                    (and (= (:scope assessment) 0)
+                         (nil? (:participant-administration-id administration)))
                     ::as-own-missing
 
-                    (and (= (:scope assessment) 1) (nil? (:group-administration-id administration)))
+                    (and (= (:scope assessment) 1)
+                         (nil? (:group-administration-id administration)))
                     ::as-group-missing
 
-                    (> (:date-completed administration) 0)
+                    (and (some? (:date-completed administration))
+                         (> (:date-completed administration) 0))
                     ::as-completed
 
                     (> (:assessment-index administration) (:repetitions assessment))
@@ -166,7 +170,7 @@
 ; to produce identical values as administrations-by-assessment
 ;
 
-(defn- ongoing-administrations
+(defn ongoing-administrations
   [now administrations assessment]
   (-> administrations
       (#(sort-by :assessment-index %))

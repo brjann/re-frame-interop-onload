@@ -3,6 +3,7 @@
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.administration :as administration]
+            [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [clojure.tools.logging :as log]

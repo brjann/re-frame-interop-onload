@@ -69,6 +69,16 @@ FROM c_participant AS cp
         ON cp.ParentInterface = cti.ObjectId
 WHERE cp.ObjectId IN (:v*:user-ids);
 
+-- :name get-group-assessment-series :? :*
+-- :doc Get the assessment series that the group's project uses
+SELECT
+  cg.ObjectId as `group-id`,
+  cti.Assessments as `assessment-series-id`
+FROM c_group AS cg
+    JOIN c_treatmentinterface AS cti
+        ON cg.ParentInterface = cti.ObjectId
+WHERE cg.ObjectId IN (:v*:group-ids);
+
 -- :name get-user-administrations :? :*
 -- :doc Gets the participant and group administrations for a user.
 SELECT
@@ -360,7 +370,6 @@ ON DUPLICATE KEY UPDATE
 
 -- :name get-activated-participant-administrations :? :*
 -- :doc
-
 SELECT
 	cp.ObjectId AS `user-id`,
  (CASE
@@ -386,19 +395,19 @@ FROM
 		ON cpa.Assessment = ca.ObjectId
 WHERE
 	ca.Scope = 0
-  AND ca.ActivationHour >= :hour
+  AND ca.ActivationHour <= :hour
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
   AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
 
+
 -- :name get-activated-group-administrations :? :*
 -- :doc
-
 SELECT
 	cp.ObjectId AS `user-id`,
-  `Group` AS `group-id`,
+  cp.`Group` AS `group-id`,
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cga.Assessment AS `assessment-id`,
@@ -415,16 +424,16 @@ FROM
 		ON cga.Assessment = ca.ObjectId
 WHERE
 	ca.Scope = 1
-  AND ca.ActivationHour >= :hour
+  AND ca.ActivationHour <= :hour
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= :date-min AND cga.Date <= :date-max;
 
+
 -- :name get-participant-administrations-by-user+assessment :? :*
 -- :doc
-
 SELECT
 	cpa.ParentId AS `user-id`,
   cpa.ObjectId AS `participant-administration-id`,
@@ -447,11 +456,11 @@ SELECT
 FROM c_participantadministration as cpa
     JOIN c_assessment AS ca
         ON (ca.ObjectId = cpa.Assessment AND cpa.Deleted = 0)
-WHERE (cpa.ParentId, cpa.Assessment) IN (:t*:user-ids+assessment-ids)
+WHERE (cpa.ParentId, cpa.Assessment, ca.ParentId) IN (:t*:user-ids+assessment-ids);
+
 
 -- :name get-group-administrations-by-group+assessment :? :*
 -- :doc
-
 SELECT
 	cga.ParentId AS `group-id`,
   cga.ObjectId AS `group-administration-id`,
@@ -467,4 +476,46 @@ SELECT
 FROM c_groupadministration as cga
     JOIN c_assessment AS ca
         ON (ca.ObjectId = cga.Assessment)
-WHERE (cga.ParentId, cga.Assessment) IN (:t*:group-ids+assessment-ids)
+WHERE (cga.ParentId, cga.Assessment, ca.ParentId) IN (:t*:group-ids+assessment-ids);
+
+-- :name get-assessments :? :*
+-- :doc
+SELECT
+    ObjectId AS `assessment-id`,
+    scope,
+    (CASE
+     WHEN RepetitionType = 2 OR Type = "PUNKT"
+         THEN "MANUAL"
+     ELSE
+         (CASE
+          WHEN RepetitionType = 0 AND Type <> "WEEK"
+              THEN "NONE"
+          ELSE "INTERVAL"
+          END)
+     END) AS `repetition-type`,
+    (CASE
+     WHEN repetitions = 0
+         THEN 1
+     ELSE
+         (CASE
+          WHEN (RepetitionType = 0 AND Type <> "WEEK" AND Type <> "CUSTOM")
+              THEN 1
+          ELSE repetitions
+          END)
+     END) AS repetitions,
+    TimeLimit AS `time-limit`,
+    (CASE
+     WHEN ActivationHour > 23
+         THEN 0
+     ELSE ActivationHour
+     END ) AS `activation-hour`,
+    (CASE
+     WHEN RepetitionType = 1 OR Type = "WEEK"
+         THEN 7
+     ELSE CustomRepetitionInterval
+     END) AS `repetition-interval`,
+    IsRecord AS `is-record?`,
+    ClinicianAssessment AS `clinician-rated?`,
+    CompetingAssessmentsPriority AS `priority`
+FROM c_assessment
+WHERE ObjectId IN(:v*:assessment-ids);
