@@ -113,7 +113,7 @@
        (if sub-path
          (get-sub-path full-base-path sub-path)
          full-base-path))
-     (catch Exception e))))
+     (catch Exception _))))
 
 (defn- check-file-age
   [file max-age-sec]
@@ -125,13 +125,15 @@
 (defn read-session-file
   ([filename] (read-session-file filename false nil))
   ([filename delete? max-age-sec]
-   (when-not (or (nil? filename) (s/includes? filename "/"))
+   (when-not (or (empty? filename) (s/includes? filename "/"))
      (when-let [file (db-dir "sessiondata" filename)]
-       (when (and (.exists file) (check-file-age file max-age-sec))
-         (let [info (json-safe (slurp file) keyword)]
-           (when delete?
-             (io/delete-file file))
-           info))))))
+       (when (and (.exists file) (.isFile file) (check-file-age file max-age-sec))
+         (try
+           (let [info (json-safe (slurp file) keyword)]
+             (when delete?
+               (io/delete-file file))
+             info)
+           (catch Exception _)))))))
 
 (defn write-session-file
   ([contents] (write-session-file contents nil))
