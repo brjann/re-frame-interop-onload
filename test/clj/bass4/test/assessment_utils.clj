@@ -10,28 +10,19 @@
   :once
   test-fixtures)
 
-(defn midnight
-  ([] (midnight (t/now)))
-  ([now] (utils/to-unix (bass/local-midnight now))))
-
-(defn midnight+d
-  ([plus-days] (midnight+d plus-days (t/now)))
-  ([plus-days now]
-   (utils/to-unix (t/plus (bass/local-midnight now) (t/days plus-days)))))
-
 (def project-id 653627)
 (def group-single 653630)
 
 (def ass-group-weekly 653631)
 (def ass-individual-single 653632)
-(def ass-individual-weekly 653633)
+(def ass-individual-weekly-no-remind 653633)
 (def ass-individual-manual-repeat 653634)
 (def ass-clinician 654215)
 (def ass-hour-8 654411)
 
 (def assessment-ids [ass-group-weekly
                      ass-individual-single
-                     ass-individual-weekly
+                     ass-individual-weekly-no-remind
                      ass-individual-manual-repeat
                      ass-clinician
                      ass-hour-8])
@@ -53,7 +44,8 @@
                                      :updates    (merge {:assessment      assessment-id
                                                          :assessmentindex assessment-index
                                                          :active          1}
-                                                        properties)}))))
+                                                        properties)}))
+    administration-id))
 
 (defn create-participant-administration!
   [user-id assessment-id assessment-index & [properties]]
@@ -67,4 +59,5 @@
                                                          :assessmentindex assessment-index
                                                          :active          1
                                                          :deleted         0}
-                                                        properties)}))))
+                                                        properties)}))
+    administration-id))

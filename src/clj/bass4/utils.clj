@@ -211,7 +211,7 @@
   (-> now
       (tc/to-long)
       (/ 1000)
-      (int)))
+      (long)))
 
 (defn ^:dynamic current-time
   []

@@ -178,26 +178,26 @@
                                                   merged-by-user+assessment)]
     (flatten ongoing-assessments)))
 
-(defn administrations-activated-today*
+(defn ongoing-reminder-assessments
+  [db now potentials]
+  (when (seq potentials)
+    (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
+          potential-by+user+assessment+index (->> potentials
+                                                  (map #(vector [(:user-id %) (:assessment-id %) (:assessment-index %)] %))
+                                                  (into {}))
+          filtered-ongoing-potentials        (->> ongoing-assessments
+                                                  (map (fn [ongoing]
+                                                         (let [potential (get potential-by+user+assessment+index
+                                                                              [(:user-id ongoing)
+                                                                               (:assessment-id ongoing)
+                                                                               (:assessment-index ongoing)])]
+                                                           (assoc ongoing ::remind-type (::remind-type potential)))))
+                                                  (filter ::remind-type))]
+      filtered-ongoing-potentials)))
+
+(defn activation-reminders*
   [db now tz]
   (let [potentials (potential-activation-reminders db now tz)]
-    (when (seq potentials)
-      (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
-            potential-by+user+assessment+index (->> potentials
-                                                    (map #(vector [(:user-id %) (:assessment-id %) (:assessment-index %)] %))
-                                                    (into {}))
-            filtered-ongoing-potentials        (->> ongoing-assessments
-                                                    (map (fn [ongoing]
-                                                           (let [potential (get potential-by+user+assessment+index
-                                                                                [(:user-id ongoing)
-                                                                                 (:assessment-id ongoing)
-                                                                                 (:assessment-index ongoing)])]
-                                                             (assoc ongoing ::remind-type (::remind-type potential)))))
-                                                    (filter ::remind-type))]
-        filtered-ongoing-potentials))))
+    (ongoing-reminder-assessments db now potentials)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))
-
-(defn administrations-activated-today
-  []
-  (administrations-activated-today* db/*db* (t/now) tz))

@@ -6,7 +6,8 @@
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.bass :as bass]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.utils :as utils]))
 
 (use-fixtures
   :once
@@ -15,6 +16,15 @@
 (def custom-participant-id 654412)
 (def custom-administration-id 654430)
 (def custom-assessment-id 654429)
+
+(defn midnight
+  ([] (midnight (t/now)))
+  ([now] (utils/to-unix (bass/local-midnight now))))
+
+(defn midnight+d
+  ([plus-days] (midnight+d plus-days (t/now)))
+  ([plus-days now]
+   (utils/to-unix (t/plus (bass/local-midnight now) (t/days plus-days)))))
 
 (defn ongoing-assessments
   [user-id]
@@ -63,14 +73,14 @@
     (create-participant-administration!
       user-id ass-individual-single 1 {:date (midnight)})
     (create-participant-administration!
-      user-id ass-individual-weekly 4 {:date (midnight)})
+      user-id ass-individual-weekly-no-remind 4 {:date (midnight)})
     ; Wrong scope
     (create-participant-administration!
       user-id group-single 1 {:date (midnight)})
     ; Tomorrow
     (create-participant-administration!
-      user-id ass-individual-weekly 1 {:date (+ (midnight+d 1))})
-    (is (= #{[ass-individual-single 1] [ass-individual-weekly 4]}
+      user-id ass-individual-weekly-no-remind 1 {:date (+ (midnight+d 1))})
+    (is (= #{[ass-individual-single 1] [ass-individual-weekly-no-remind 4]}
            (ongoing-assessments user-id)))))
 
 (deftest individual-assessment-no-group
@@ -79,14 +89,14 @@
     (create-participant-administration!
       user-id ass-individual-single 1 {:date (midnight)})
     (create-participant-administration!
-      user-id ass-individual-weekly 4 {:date (midnight)})
+      user-id ass-individual-weekly-no-remind 4 {:date (midnight)})
     ; Wrong scope
     (create-participant-administration!
       user-id group-single 1 {:date (midnight)})
     ; Tomorrow
     (create-participant-administration!
-      user-id ass-individual-weekly 1 {:date (+ (midnight+d 1))})
-    (is (= #{[ass-individual-single 1] [ass-individual-weekly 4]} (ongoing-assessments user-id)))))
+      user-id ass-individual-weekly-no-remind 1 {:date (+ (midnight+d 1))})
+    (is (= #{[ass-individual-single 1] [ass-individual-weekly-no-remind 4]} (ongoing-assessments user-id)))))
 
 (deftest individual+group-assessment
   ; In group
@@ -103,7 +113,7 @@
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-id {:group group-id})]
     (create-participant-administration!
-      user-id ass-individual-weekly 5 {:date (midnight)})
+      user-id ass-individual-weekly-no-remind 5 {:date (midnight)})
     (create-group-administration!
       group-id ass-group-weekly 5 {:date (midnight)})
     (is (= #{} (ongoing-assessments user-id)))))
