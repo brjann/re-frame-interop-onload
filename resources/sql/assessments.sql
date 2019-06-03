@@ -381,7 +381,7 @@ SELECT
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cpa.Assessment AS `assessment-id`,
-  cpa.AssessmentIndex AS `administration-index`
+  cpa.AssessmentIndex AS `assessment-index`
 FROM
 	c_participant AS cp
     JOIN c_participantadministration AS cpa
@@ -411,7 +411,7 @@ SELECT
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cga.Assessment AS `assessment-id`,
-  cga.AssessmentIndex AS `administration-index`
+  cga.AssessmentIndex AS `assessment-index`
 FROM
 	c_participant AS cp
   JOIN c_groupadministration as cga

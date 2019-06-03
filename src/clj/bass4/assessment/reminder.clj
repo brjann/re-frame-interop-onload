@@ -48,8 +48,6 @@
          (map #(vector (:assessment-id %) %))
          (into {}))))
 
-(def tz (t/time-zone-for-id "Asia/Tokyo"))
-
 (defn today-midnight
   [now tz]
   (-> (t/to-time-zone now tz)
@@ -65,14 +63,23 @@
       (- 1)))
 
 (defn potential-activation-reminders
+  "Returns list of potentially active assessments for users
+  {:user-id 653692,
+   :group-id 653637,
+   :participant-administration-id nil,
+   :group-administration-id 653640,
+   :assessment-id 653636,
+   :assessment-index 1,
+   ::remind-type :activation}"
   [db now tz]
   (let [hour                        (t/hour (t/to-time-zone now tz))
         date-min                    (today-midnight now tz)
         date-max                    (today-last-second now tz)
         participant-administrations (activated-participant-administrations db date-min date-max hour)
         group-administrations       (activated-group-administrations db date-min date-max hour)]
-    (concat participant-administrations
-            group-administrations)))
+    (->> (concat participant-administrations
+                 group-administrations)
+         (map #(assoc % ::remind-type ::activation)))))
 
 (defn participant-administrations-from-potential-assessments
   "Returns all administrations for user-assessment combo,
@@ -140,36 +147,56 @@
                                     (or (:participant-administration-active? %) true))
                       :user-id user-id))))
 
+(defn- ongoing-from-potentials
+  "Returns list of ALL ongoing assessments based on list of potentials.
+  Note, ALL means that ongoing assessment that are not part of potentials may be returned"
+  [db now potentials]
+  (let [user-groups                         (->> potentials
+                                                 (map #(vector (:user-id %) (:group-id %)))
+                                                 (into {}))
+        participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
+        group-administrations-grouped       (group-administrations-from-potential-assessments db potentials)
+        assessments'                        (assessments (->> potentials
+                                                              (map :assessment-id)
+                                                              (into #{})))
+        merged-by-user+assessment           (->> potentials
+                                                 (map #(vector (:user-id %) (:assessment-id %)))
+                                                 (map (fn [[user-id assessment-id]]
+                                                        (let [group-id                    (get user-groups user-id)
+                                                              participant-administrations (get participant-administrations-grouped [user-id assessment-id])
+                                                              group-administrations       (when group-id
+                                                                                            (get group-administrations-grouped [group-id assessment-id]))
+                                                              merged-administrations      (merge-participant-group-administrations
+                                                                                            user-id
+                                                                                            participant-administrations
+                                                                                            group-administrations)]
+                                                          [[user-id assessment-id] merged-administrations])))
+                                                 (into {}))
+        ongoing-assessments                 (mapv (fn [[[_ assessment-id] administrations]]
+                                                    (assessment-ongoing/ongoing-administrations
+                                                      now administrations (get assessments' assessment-id)))
+                                                  merged-by-user+assessment)]
+    (flatten ongoing-assessments)))
+
 (defn administrations-activated-today*
   [db now tz]
-  (let [potential (potential-activation-reminders db now tz)]
-    (when (seq potential)
-      (let [user-groups                         (->> potential
-                                                     (map #(vector (:user-id %) (:group-id %)))
-                                                     (into {}))
-            participant-administrations-grouped (participant-administrations-from-potential-assessments db potential)
-            group-administrations-grouped       (group-administrations-from-potential-assessments db potential)
-            assessments'                        (assessments (->> potential
-                                                                  (map :assessment-id)
-                                                                  (into #{})))
-            merged-by-user+assessment           (->> potential
-                                                     (map #(vector (:user-id %) (:assessment-id %)))
-                                                     (map (fn [[user-id assessment-id]]
-                                                            (let [group-id                    (get user-groups user-id)
-                                                                  participant-administrations (get participant-administrations-grouped [user-id assessment-id])
-                                                                  group-administrations       (when group-id
-                                                                                                (get group-administrations-grouped [group-id assessment-id]))
-                                                                  merged-administrations      (merge-participant-group-administrations
-                                                                                                user-id
-                                                                                                participant-administrations
-                                                                                                group-administrations)]
-                                                              [[user-id assessment-id] merged-administrations])))
-                                                     (into {}))
-            ongoing                             (mapv (fn [[[_ assessment-id] administrations]]
-                                                        (assessment-ongoing/ongoing-administrations
-                                                          now administrations (get assessments' assessment-id)))
-                                                      merged-by-user+assessment)]
-        ongoing))))
+  (let [potentials (potential-activation-reminders db now tz)]
+    (when (seq potentials)
+      (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
+            potential-by+user+assessment+index (->> potentials
+                                                    (map #(vector [(:user-id %) (:assessment-id %) (:assessment-index %)] %))
+                                                    (into {}))
+            filtered-ongoing-potentials        (->> ongoing-assessments
+                                                    (map (fn [ongoing]
+                                                           (let [potential (get potential-by+user+assessment+index
+                                                                                [(:user-id ongoing)
+                                                                                 (:assessment-id ongoing)
+                                                                                 (:assessment-index ongoing)])]
+                                                             (assoc ongoing ::remind-type (::remind-type potential)))))
+                                                    (filter ::remind-type))]
+        filtered-ongoing-potentials))))
+
+(def tz (t/time-zone-for-id "Asia/Tokyo"))
 
 (defn administrations-activated-today
   []
