@@ -41,6 +41,12 @@
                (::assessment-reminder/remind-type %)))
        (into #{})))
 
+(defn midnight-joda
+  [now]
+  (-> now
+      (t/to-time-zone *tz*)
+      (t/with-time-at-start-of-day)))
+
 (defn midnight
   [now]
   (-> now
@@ -56,7 +62,7 @@
                          (t/days plus-days))))
 
 (defn random-date
-  [tz]
+  []
   (-> (long (rand 2147483647))
       (tc/from-epoch)))
 
@@ -65,10 +71,14 @@
   (fn [f]
     (clear-administrations!)
     (let [tz  (t/time-zone-for-id (rand-nth (seq (t/available-ids))))
-          now (random-date tz)]
+          now (random-date)]
       (binding [*tz*  tz
                 *now* now]
         (f)))))
+
+;; -------------------------
+;;  SIMPLE ACTIVATION TESTS
+;; -------------------------
 
 (deftest group
   (let [group1-id (create-group!)
@@ -178,3 +188,22 @@
              [user2-id true ass-individual-single 1 ::assessment-reminder/activation]
              [user2-id true ass-individual-manual-repeat 3 ::assessment-reminder/activation]}
            (activation-reminders *now*)))))
+
+;;
+;; No need to test clinician assessments because they cannot have reminders
+;;
+
+(deftest start-hour
+  (let [user-id (user-service/create-user! project-id)]
+    (create-participant-administration!
+      user-id ass-hour-8 1 {:date (midnight *now*)})
+    (let [hour0 (midnight-joda *now*)]
+      (binding [*now* hour0]
+        (is (= #{} (activation-reminders *now*)))))
+    (let [hour7 (t/plus (midnight-joda *now*) (t/hours 7))]
+      (binding [*now* hour7]
+        (is (= #{} (activation-reminders *now*)))))
+    (let [hour8 (t/plus (midnight-joda *now*) (t/hours 8))]
+      (binding [*now* hour8]
+        (is (= #{[user-id true ass-hour-8 1 ::assessment-reminder/activation]}
+               (activation-reminders *now*)))))))
