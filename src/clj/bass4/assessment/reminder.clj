@@ -236,7 +236,6 @@
         remind-activation (filter #(= (::remind-type %) ::activation)
                                   ongoing-reminders)
         remind-late       (filter #(= (::remind-type %) ::late)
-                                  ongoing-reminders)]
-    ongoing-reminders))
+                                  ongoing-reminders)]))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))
