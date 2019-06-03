@@ -1,43 +1,56 @@
 # Version 4.2
-Version 4.2 will be released on XXXX-XX-XX.
+Version 4.2 will be released on 2019-06-03.
 (Changes marked with **NOTE** may require your action after the upgrade)
 
 ## Registration
-- Resume registration possible
-    - Before, if registration was interrupted and you tried to re-register, you would be informed that you
-    already exist in the database and it was impossible to resume. 
-    - Now, if certain conditions are met, the user can continue their registration if they give the exact
+### Resume registration possible
+- Before, if registration was interrupted and you tried to re-register, you would be informed that you
+  already exist in the database and it was impossible to resume. 
+- Now, if certain conditions are met, the user can continue their registration if they give the exact
     same contact information (SMS/email/BankID-personnummer) as before.
-    - **NOTE** If you don't want participants to be able to resume registration, you need to uncheck the 
-    "Allow participants to resume registration"
+- When a participant registers, they are notified that they can resume registration at a later point. 
+- **NOTE** If you don't want participants to be able to resume registration, you need to uncheck the 
+    "Allow participants to resume registration".
 
 ## Session
-- Sessions are now persistent.
-    - Before, whenever the app or server needed to be restarted (usually because of upgrades), all participants
+### Sessions are now persistent.
+- Before, whenever the app or server needed to be restarted (usually because of upgrades), all participants
     were logged out and any registration was interrupted.
-    - Now, participants are still logged in even if the app or server is restarted. However, the platform will 
+- Now, participants are still logged in even if the app or server is restarted. However, the platform will 
     be unresponsive for a while during restart.
-- Participants are informed if they are about to be logged out
-    - Before, if a participant started to write something and left the computer for a long while 
+### Participants are informed if they are about to be logged out.
+- Before, if a participant started to write something and left the computer for a long while 
     (2 hours) and then continued to write and tried to save, they would be logged out and what they wrote was lost.
     We received many complaints about this.
-    - Now, participants are warned when there is 1 hour until they are logged out. If they are away for too long, 
+- Now, participants are warned when there is 1 hour until they are logged out. If they are away for too long, 
     they are informed that they have been logged out and that any unsaved data has been lost. Even if data is lost, 
     they are at least given an explanation.
     
 ## Treatment
-- New user data handling functions in modules
-    - Data names and data importing between different treatment contents can now be configured on module-level instead 
+### New user data handling functions in modules
+- Data names and data importing between different treatment contents can now be configured on module-level instead 
     of content level. 
-    - Module-level data imports can also be aliased.
-    - These changes mean that one content can be reused in multiple modules without having to have multiple copies of
+- Module-level data imports can also be aliased.
+- These changes mean that one content can be reused in multiple modules without having to have multiple copies of
     it. By using aliases, content can also import data from the same content within another module.
+- More information about datanames/namespaces and the relationship between modules and content is shown in the
+  treatment editor overview.
     
+## Logout
+### On logout, participants are directed to correct location
+- Before, when user completed a registration, they were directed to the login page.
+- Now, they are directed back to the registration. 
+
+## Misc
+- Previewing an instrument or a user's worksheet does not lead to a participant session in the same browser
+  being destroyed.
+- BankID now works in Firefox ES
     
 ## Under the hood
 - A new API has been implemented to serve future single page application functionality
 - Major refactoring of namespaces for better code separation
- 
+- Each db has it's own session cookie name to eliminate the risk of cross-db session hacking
+- Incorrect /embedded/create-session uid does not throw exception
 
 
 # Version 4.1
