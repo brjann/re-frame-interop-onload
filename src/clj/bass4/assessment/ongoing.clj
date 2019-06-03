@@ -198,6 +198,7 @@
     (when (seq ongoing-administrations')
       (->> ongoing-administrations'
            ;; Add any missing administrations
+           (map #(assoc % :user-id user-id))
            (missing/add-missing-administrations! user-id)
            ;; Merge assessment and administration info into one map
            (map #(merge % (get assessments-map (:assessment-id %))))

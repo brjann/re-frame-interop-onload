@@ -18,27 +18,29 @@
 
 (defn- update-created-administrations!
   [user-id new-object-ids missing-administrations]
+  (log/debug missing-administrations)
   ;; mapv because not lazy
-  (mapv (fn [administration-id {:keys [assessment-index assessment-id]}]
+  (mapv (fn [new-administration-id {:keys [assessment-index assessment-id user-id]}]
+          (log/debug user-id)
           (try
             ;; Try to update the placeholder with the assessment and index
             (db/update-new-participant-administration!
-              {:administration-id administration-id
+              {:administration-id new-administration-id
                :user-id           user-id
                :assessment-id     assessment-id
                :assessment-index  assessment-index})
             (db/update-objectlist-parent!
-              {:object-id administration-id
+              {:object-id new-administration-id
                :parent-id user-id})
             (db/link-property-reverse!
-              {:linkee-id     administration-id
+              {:linkee-id     new-administration-id
                :property-name "Assessment"
                :linker-class  "cParticipantAdministration"})
-            administration-id
+            new-administration-id
             ;; If that fails, then delete the placeholder and return instead the
             ;; duplicate administration's id.
             (catch Exception e
-              (delete-administration! administration-id)
+              (delete-administration! new-administration-id)
               (:administration-id (db/get-administration-by-assessment-and-index
                                     {:user-id          user-id
                                      :assessment-id    assessment-id
@@ -78,10 +80,11 @@
       (filter #(nil? (:participant-administration-id %)) matching-administrations)))
 
 (defn add-missing-administrations!
-  [user-id matching-administrations]
-  (let [missing-administrations (remove :participant-administration-id matching-administrations)]
-    (if (> (count missing-administrations) 0)
+  "Requires :user-id key to be present for all administrations"
+  [user-id administrations]
+  (let [missing-administrations (remove :participant-administration-id administrations)]
+    (if (< 0 (count missing-administrations))
       (insert-new-into-old
         (create-missing-administrations! user-id missing-administrations)
-        matching-administrations)
-      matching-administrations)))
+        administrations)
+      administrations)))

@@ -213,7 +213,8 @@
       group-id ass-group-single-2-3 1 {:date (midnight *now*)})
     (let [res (first (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id))]
       ; Tomorrow
-      (is (= #{:thank-you-text
+      (is (= #{:user-id
+               :thank-you-text
                :repetition-type
                :assessment-index
                :show-texts-if-swallowed?
@@ -239,7 +240,8 @@
                :assessment-name
                :activation-hour}
              (into #{} (keys res))))
-      (is (= true (sub-map? {:thank-you-text "thankyou"
+      (is (= true (sub-map? {:user-id        user-id
+                             :thank-you-text "thankyou"
                              :welcome-text   "welcome"
                              :instruments    [4743 286]}
                             res))))))
@@ -250,7 +252,8 @@
     (create-participant-administration!
       user-id ass-individual-single-0 1 {:date (midnight *now*)})
     (let [res (first (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id))]
-      (is (= #{:thank-you-text
+      (is (= #{:user-id
+               :thank-you-text
                :repetition-type
                :assessment-index
                :show-texts-if-swallowed?
@@ -276,7 +279,8 @@
                :assessment-name
                :activation-hour}
              (into #{} (keys res))))
-      (is (= true (sub-map? {:thank-you-text "thankyou1"
+      (is (= true (sub-map? {:user-id        user-id
+                             :thank-you-text "thankyou1"
                              :welcome-text   "welcome1"
                              ; Clinician instrument removed
                              :instruments    [4458 1609]}
