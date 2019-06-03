@@ -70,12 +70,6 @@
       )
     old-administrations))
 
-#_(defn- get-missing-administrations
-    [matching-administrations]
-    (map
-      #(select-keys % [:assessment-id :assessment-index])
-      (filter #(nil? (:participant-administration-id %)) matching-administrations)))
-
 (defn add-missing-administrations!
   "Requires :user-id key to be present for all administrations"
   [administrations]
