@@ -5,9 +5,7 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.bass :as bass]
-            [bass4.services.user :as user-service]
-            [bass4.utils :as utils]))
+            [bass4.services.user :as user-service]))
 
 (use-fixtures
   :once

@@ -3,7 +3,6 @@
             [bass4.db.core :refer [*db*] :as db]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.bass :as bass]
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]))
