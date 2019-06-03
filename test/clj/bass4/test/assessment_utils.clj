@@ -4,7 +4,9 @@
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.bass :as bass]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :as tc]))
 
 (use-fixtures
   :once
@@ -61,3 +63,50 @@
                                                        :deleted         0}
                                                       properties)})
     administration-id))
+
+(defn clear-administrations!
+  []
+  (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
+    (jdbc/execute! db/*db*
+                   (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
+                         assessment-ids))
+    (jdbc/execute! db/*db*
+                   (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
+                         assessment-ids))))
+
+(def ^:dynamic *now*)
+(def ^:dynamic *tz*)
+
+(defn midnight-joda
+  [now]
+  (-> now
+      (t/to-time-zone *tz*)
+      (t/with-time-at-start-of-day)))
+
+(defn midnight
+  [now]
+  (-> now
+      (t/to-time-zone *tz*)
+      (t/with-time-at-start-of-day)
+      (utils/to-unix)))
+
+(defn midnight+d
+  [plus-days now]
+  (utils/to-unix (t/plus (-> now
+                             (t/to-time-zone *tz*)
+                             (t/with-time-at-start-of-day))
+                         (t/days plus-days))))
+
+(defn random-date
+  []
+  (-> (long (rand 2147483647))
+      (tc/from-epoch)))
+
+(defn random-date-tz-fixture
+  [f]
+  (clear-administrations!)
+  (let [tz  (t/time-zone-for-id (rand-nth (seq (t/available-ids))))
+        now (random-date)]
+    (binding [*tz*  tz
+              *now* now]
+      (f))))

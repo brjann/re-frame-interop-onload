@@ -11,26 +11,16 @@
             [clojure.tools.logging :as log]
             [clj-time.coerce :as tc]
             [clojure.pprint :as pprint]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.assessment.ongoing :as assessment-ongoing]))
 
 (use-fixtures
   :once
   test-fixtures)
 
-(defn clear-administrations!
-  []
-  (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
-    (log/debug
-      (jdbc/execute! db/*db*
-                     (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                           assessment-ids)))
-    (log/debug
-      (jdbc/execute! db/*db*
-                     (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                           assessment-ids)))))
-
-(def ^:dynamic *now*)
-(def ^:dynamic *tz*)
+(use-fixtures
+  :each
+  random-date-tz-fixture)
 
 (defn activation-reminders
   [now]
@@ -53,41 +43,6 @@
                (:assessment-index %)
                (::assessment-reminder/remind-type %)))
        (into #{})))
-
-(defn midnight-joda
-  [now]
-  (-> now
-      (t/to-time-zone *tz*)
-      (t/with-time-at-start-of-day)))
-
-(defn midnight
-  [now]
-  (-> now
-      (t/to-time-zone *tz*)
-      (t/with-time-at-start-of-day)
-      (utils/to-unix)))
-
-(defn midnight+d
-  [plus-days now]
-  (utils/to-unix (t/plus (-> now
-                             (t/to-time-zone *tz*)
-                             (t/with-time-at-start-of-day))
-                         (t/days plus-days))))
-
-(defn random-date
-  []
-  (-> (long (rand 2147483647))
-      (tc/from-epoch)))
-
-(use-fixtures
-  :each
-  (fn [f]
-    (clear-administrations!)
-    (let [tz  (t/time-zone-for-id (rand-nth (seq (t/available-ids))))
-          now (random-date)]
-      (binding [*tz*  tz
-                *now* now]
-        (f)))))
 
 ;; -------------------------
 ;;  SIMPLE ACTIVATION TESTS
@@ -211,15 +166,12 @@
     (create-participant-administration!
       user-id ass-hour8-2-20 1 {:date (midnight *now*)})
     (let [hour0 (midnight-joda *now*)]
-      (binding [*now* hour0]
-        (is (= #{} (activation-reminders *now*)))))
+      (is (= #{} (activation-reminders hour0))))
     (let [hour7 (t/plus (midnight-joda *now*) (t/hours 7))]
-      (binding [*now* hour7]
-        (is (= #{} (activation-reminders *now*)))))
+      (is (= #{} (activation-reminders hour7))))
     (let [hour8 (t/plus (midnight-joda *now*) (t/hours 8))]
-      (binding [*now* hour8]
-        (is (= #{[user-id true ass-hour8-2-20 1 ::assessment-reminder/activation]}
-               (activation-reminders *now*)))))))
+      (is (= #{[user-id true ass-hour8-2-20 1 ::assessment-reminder/activation]}
+             (activation-reminders hour8))))))
 
 ;; -------------------------
 ;;    SIMPLE LATE TESTS
