@@ -38,14 +38,14 @@
     (create-group-administration!
       group-id ass-group-single-2-3 1 {:date (midnight)})
     (create-group-administration!
-      group-id ass-group-weekly 4 {:date (midnight)})
+      group-id ass-group-weekly-3-4 4 {:date (midnight)})
     ; Wrong scope
     (create-group-administration!
       group-id ass-individual-single-0 1 {:date (midnight)})
     ; Tomorrow
     (create-group-administration!
-      group-id ass-group-weekly 1 {:date (+ (midnight+d 1))})
-    (is (= #{[ass-group-single-2-3 1] [ass-group-weekly 4]} (ongoing-assessments user-id)))))
+      group-id ass-group-weekly-3-4 1 {:date (+ (midnight+d 1))})
+    (is (= #{[ass-group-single-2-3 1] [ass-group-weekly-3-4 4]} (ongoing-assessments user-id)))))
 
 (deftest group-assessment-timelimit
   ; Timelimit within
@@ -115,7 +115,7 @@
     (create-participant-administration!
       user-id ass-individual-weekly-no-remind 5 {:date (midnight)})
     (create-group-administration!
-      group-id ass-group-weekly 5 {:date (midnight)})
+      group-id ass-group-weekly-3-4 5 {:date (midnight)})
     (is (= #{} (ongoing-assessments user-id)))))
 
 (deftest individual-assessment-timelimit
@@ -192,7 +192,7 @@
 (deftest start-hour-assessment
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-hour-8 1 {:date (midnight)})
+      user-id ass-hour8-2-20 1 {:date (midnight)})
     (let [hour0 (bass/local-midnight)]
       (with-redefs [t/now (constantly hour0)]
         (is (= #{} (ongoing-assessments user-id)))))
@@ -201,7 +201,10 @@
         (is (= #{} (ongoing-assessments user-id)))))
     (let [hour8 (t/plus (bass/local-midnight) (t/hours 8))]
       (with-redefs [t/now (constantly hour8)]
-        (is (= #{[ass-hour-8 1]} (ongoing-assessments user-id)))))))
+        (is (= #{[ass-hour8-2-20 1]} (ongoing-assessments user-id)))))
+    (let [tomorrow (t/plus (bass/local-midnight) (t/days 1))]
+      (with-redefs [t/now (constantly tomorrow)]
+        (is (= #{[ass-hour8-2-20 1]} (ongoing-assessments user-id)))))))
 
 (deftest no-administrations
   (let [group-id (create-group!)
