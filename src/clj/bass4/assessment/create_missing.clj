@@ -17,11 +17,10 @@
   (db/delete-participant-administration! {:administration-id administration-id}))
 
 (defn- update-created-administrations!
-  [user-id new-object-ids missing-administrations]
+  [new-object-ids missing-administrations]
   (log/debug missing-administrations)
   ;; mapv because not lazy
   (mapv (fn [new-administration-id {:keys [assessment-index assessment-id user-id]}]
-          (log/debug user-id)
           (try
             ;; Try to update the placeholder with the assessment and index
             (db/update-new-participant-administration!
@@ -49,13 +48,11 @@
         missing-administrations))
 
 (defn create-missing-administrations!
-  "user-id [{:assessment-id 666 :assessment-index 0}]"
-  [user-id missing-administrations]
-  (let [new-object-ids
-        (update-created-administrations!
-          user-id
-          (create-administrations-objects! missing-administrations)
-          missing-administrations)]
+  "Requires :user-id key to be present for all administrations"
+  [missing-administrations]
+  (let [new-object-ids (update-created-administrations!
+                         (create-administrations-objects! missing-administrations)
+                         missing-administrations)]
     (map #(assoc %1 :participant-administration-id %2) missing-administrations new-object-ids)))
 
 
@@ -81,10 +78,10 @@
 
 (defn add-missing-administrations!
   "Requires :user-id key to be present for all administrations"
-  [user-id administrations]
+  [administrations]
   (let [missing-administrations (remove :participant-administration-id administrations)]
     (if (< 0 (count missing-administrations))
       (insert-new-into-old
-        (create-missing-administrations! user-id missing-administrations)
+        (create-missing-administrations! missing-administrations)
         administrations)
       administrations)))

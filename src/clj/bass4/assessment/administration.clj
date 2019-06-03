@@ -26,7 +26,7 @@
                          (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
                                                         (start-date-representation)))))]
     (when (seq assessments)
-      (->> (missing/create-missing-administrations! user-id (map #(assoc %
+      (->> (missing/create-missing-administrations! (map #(assoc %
                                                                     :assessment-index 1
                                                                     :user-id user-id) assessments))
            (map #(utils/select-values % [:participant-administration-id :start-time]))
