@@ -36,16 +36,16 @@
         user-id  (user-service/create-user! project-id {:group group-id})]
     ; Today
     (create-group-administration!
-      group-id group-single 1 {:date (midnight)})
+      group-id ass-group-single-2-3 1 {:date (midnight)})
     (create-group-administration!
       group-id ass-group-weekly 4 {:date (midnight)})
     ; Wrong scope
     (create-group-administration!
-      group-id ass-individual-single 1 {:date (midnight)})
+      group-id ass-individual-single-0 1 {:date (midnight)})
     ; Tomorrow
     (create-group-administration!
       group-id ass-group-weekly 1 {:date (+ (midnight+d 1))})
-    (is (= #{[group-single 1] [ass-group-weekly 4]} (ongoing-assessments user-id)))))
+    (is (= #{[ass-group-single-2-3 1] [ass-group-weekly 4]} (ongoing-assessments user-id)))))
 
 (deftest group-assessment-timelimit
   ; Timelimit within
@@ -53,16 +53,16 @@
         user-id  (user-service/create-user! project-id {:group group-id})]
     ; Today
     (create-group-administration!
-      group-id group-single 1 {:date (midnight+d -3)})
+      group-id ass-group-single-2-3 1 {:date (midnight+d -3)})
     ; Tomorrow
-    (is (= #{[group-single 1]} (ongoing-assessments user-id))))
+    (is (= #{[ass-group-single-2-3 1]} (ongoing-assessments user-id))))
 
   ; Timelimit too late
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-id {:group group-id})]
     ; Today
     (create-group-administration!
-      group-id group-single 1 {:date (midnight+d -4)})
+      group-id ass-group-single-2-3 1 {:date (midnight+d -40)})
     ; Tomorrow
     (is (= #{} (ongoing-assessments user-id)))))
 
@@ -71,42 +71,42 @@
         user-id  (user-service/create-user! project-id {:group group-id})]
     ; Today
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight)})
+      user-id ass-individual-single-0 1 {:date (midnight)})
     (create-participant-administration!
       user-id ass-individual-weekly-no-remind 4 {:date (midnight)})
     ; Wrong scope
     (create-participant-administration!
-      user-id group-single 1 {:date (midnight)})
+      user-id ass-group-single-2-3 1 {:date (midnight)})
     ; Tomorrow
     (create-participant-administration!
       user-id ass-individual-weekly-no-remind 1 {:date (+ (midnight+d 1))})
-    (is (= #{[ass-individual-single 1] [ass-individual-weekly-no-remind 4]}
+    (is (= #{[ass-individual-single-0 1] [ass-individual-weekly-no-remind 4]}
            (ongoing-assessments user-id)))))
 
 (deftest individual-assessment-no-group
   (let [user-id (user-service/create-user! project-id)]
     ; Today
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight)})
+      user-id ass-individual-single-0 1 {:date (midnight)})
     (create-participant-administration!
       user-id ass-individual-weekly-no-remind 4 {:date (midnight)})
     ; Wrong scope
     (create-participant-administration!
-      user-id group-single 1 {:date (midnight)})
+      user-id ass-group-single-2-3 1 {:date (midnight)})
     ; Tomorrow
     (create-participant-administration!
       user-id ass-individual-weekly-no-remind 1 {:date (+ (midnight+d 1))})
-    (is (= #{[ass-individual-single 1] [ass-individual-weekly-no-remind 4]} (ongoing-assessments user-id)))))
+    (is (= #{[ass-individual-single-0 1] [ass-individual-weekly-no-remind 4]} (ongoing-assessments user-id)))))
 
 (deftest individual+group-assessment
   ; In group
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-id {:group group-id})]
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight)})
+      user-id ass-individual-single-0 1 {:date (midnight)})
     (create-group-administration!
-      group-id group-single 1 {:date (midnight)})
-    (is (= #{[ass-individual-single 1] [group-single 1]} (ongoing-assessments user-id)))))
+      group-id ass-group-single-2-3 1 {:date (midnight)})
+    (is (= #{[ass-individual-single-0 1] [ass-group-single-2-3 1]} (ongoing-assessments user-id)))))
 
 (deftest index-overflow-assessment
   ; In group
@@ -122,66 +122,66 @@
   ; Timelimit within
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight+d -3)})
-    (is (= #{[ass-individual-single 1]} (ongoing-assessments user-id))))
+      user-id ass-individual-single-0 1 {:date (midnight+d -3)})
+    (is (= #{[ass-individual-single-0 1]} (ongoing-assessments user-id))))
 
   ; Timelimit too late
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight+d -4)})
+      user-id ass-individual-single-0 1 {:date (midnight+d -4)})
     (is (= #{} (ongoing-assessments user-id)))))
 
 (deftest individual+group-inactive-assessment
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-id {:group group-id})]
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight)})
+      user-id ass-individual-single-0 1 {:date (midnight)})
     (create-group-administration!
-      group-id ass-individual-single 1 {:active 0})
+      group-id ass-individual-single-0 1 {:active 0})
     (create-group-administration!
-      group-id group-single 1 {:date (midnight)})
+      group-id ass-group-single-2-3 1 {:date (midnight)})
     (create-participant-administration!
-      user-id group-single 1 {:active 0})
+      user-id ass-group-single-2-3 1 {:active 0})
     (is (= #{} (ongoing-assessments user-id)))))
 
 (deftest manual-assessment
   ;; Create administrations in reverse order to check sorting of them
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight+d -3)})
-    (is (= #{[ass-individual-manual-repeat 1]} (ongoing-assessments user-id))))
+      user-id ass-individual-manual-5-10 1 {:date (midnight+d -3)})
+    (is (= #{[ass-individual-manual-5-10 1]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 2 {:date (midnight+d -2)})
+      user-id ass-individual-manual-5-10 2 {:date (midnight+d -2)})
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight+d -3)})
+      user-id ass-individual-manual-5-10 1 {:date (midnight+d -3)})
     ; Only last assessment active
-    (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id))))
+    (is (= #{[ass-individual-manual-5-10 2]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 2 {:date (midnight+d -3)})
+      user-id ass-individual-manual-5-10 2 {:date (midnight+d -3)})
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight+d -2)})
+      user-id ass-individual-manual-5-10 1 {:date (midnight+d -2)})
     ; Only last assessment active - even if it has lower start date
-    (is (= #{[ass-individual-manual-repeat 2]} (ongoing-assessments user-id))))
+    (is (= #{[ass-individual-manual-5-10 2]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 3 {:date (midnight)})
+      user-id ass-individual-manual-5-10 3 {:date (midnight)})
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight)})
+      user-id ass-individual-manual-5-10 1 {:date (midnight)})
     ; Only last assessment active - even if one is skipped
-    (is (= #{[ass-individual-manual-repeat 3]} (ongoing-assessments user-id))))
+    (is (= #{[ass-individual-manual-5-10 3]} (ongoing-assessments user-id))))
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 3 {:date (midnight) :active 0})
+      user-id ass-individual-manual-5-10 3 {:date (midnight) :active 0})
     (create-participant-administration!
-      user-id ass-individual-manual-repeat 1 {:date (midnight)})
+      user-id ass-individual-manual-5-10 1 {:date (midnight)})
     ; First assessment active - even later is inactive
-    (is (= #{[ass-individual-manual-repeat 1]} (ongoing-assessments user-id)))))
+    (is (= #{[ass-individual-manual-5-10 1]} (ongoing-assessments user-id)))))
 
 (deftest clinician-assessment
   (let [user-id (user-service/create-user! project-id)]
@@ -220,7 +220,7 @@
         user-id  (user-service/create-user! project-id {:group group-id})]
     ; Today
     (create-group-administration!
-      group-id group-single 1 {:date (midnight)})
+      group-id ass-group-single-2-3 1 {:date (midnight)})
     (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
       ; Tomorrow
       (is (= #{:thank-you-text
@@ -258,7 +258,7 @@
   (let [user-id (user-service/create-user! project-id)]
     ; Today
     (create-participant-administration!
-      user-id ass-individual-single 1 {:date (midnight)})
+      user-id ass-individual-single-0 1 {:date (midnight)})
     (let [res (first (assessment-ongoing/ongoing-assessments user-id))]
       (is (= #{:thank-you-text
                :repetition-type

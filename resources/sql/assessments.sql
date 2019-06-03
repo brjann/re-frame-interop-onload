@@ -365,8 +365,15 @@ ON DUPLICATE KEY UPDATE
 
 
 -- ----------------------------------
+-- ----------------------------------
 -- ------ ASSESSMENTS REMINDER ------
 -- ----------------------------------
+-- ----------------------------------
+
+
+-- -------------------------
+--   ACTIVATED ASSESSMENTS
+-- -------------------------
 
 -- :name get-activated-participant-administrations :? :*
 -- :doc
@@ -431,6 +438,79 @@ WHERE
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= :date-min AND cga.Date <= :date-max;
 
+
+-- -------------------------
+--     LATE ASSESSMENTS
+-- -------------------------
+
+-- :name get-late-participant-administrations :? :*
+-- :doc
+SELECT
+	cp.ObjectId AS `user-id`,
+ (CASE
+   WHEN `Group` IS NULL OR `Group` = 0
+     THEN NULL
+   ELSE
+     `Group`
+   END) AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  cga.ObjectId AS `group-administration-id`,
+	cpa.Assessment AS `assessment-id`,
+  cpa.AssessmentIndex AS `assessment-index`
+FROM
+	c_participant AS cp
+    JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid
+	LEFT JOIN c_groupadministration as cga
+		ON
+			cp.Group = cga.ParentId AND
+			((cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex))
+	JOIN c_assessment AS ca
+		ON cpa.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 0
+  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+  AND (ca.RemindParticipantsWhenLate = 1)
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
+	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
+  AND cpa.Date >= 0
+  AND date_add(from_unixtime(cpa.`date`), INTERVAL ca.RemindInterval DAY) <= :date
+	AND date_add(from_unixtime(cpa.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
+
+
+-- :name get-late-group-administrations :? :*
+-- :doc
+SELECT
+	cp.ObjectId AS `user-id`,
+  cp.`Group` AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  cga.ObjectId AS `group-administration-id`,
+	cga.Assessment AS `assessment-id`,
+  cga.AssessmentIndex AS `assessment-index`
+FROM
+	c_participant AS cp
+  JOIN c_groupadministration as cga
+		ON cp.Group = cga.ParentId
+  LEFT JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid AND
+			cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex
+	JOIN c_assessment AS ca
+		ON cga.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 1
+  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+  AND (ca.RemindParticipantsWhenLate = 1)
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
+	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
+	AND cga.Date >= 0
+  AND date_add(from_unixtime(cga.`date`), INTERVAL ca.RemindInterval DAY) <= :date
+	AND date_add(from_unixtime(cga.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
+
+-- ----------------------------------
+--   MASS ADMINISTRATIONS RETRIEVER
+-- ----------------------------------
 
 -- :name get-participant-administrations-by-user+assessment :? :*
 -- :doc

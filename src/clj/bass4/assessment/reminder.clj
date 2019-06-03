@@ -7,37 +7,45 @@
             [clojure.pprint :as pprint]
             [bass4.assessment.ongoing :as assessment-ongoing]))
 
-(defn- users-assessment-series-id
-  [db user-ids]
-  (when user-ids
-    (let [res (db/get-user-assessment-series db {:user-ids user-ids})]
-      (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
-
-(defn- groups-assessment-series-id
-  [db group-ids]
-  (when group-ids
-    (let [res (db/get-group-assessment-series db {:group-ids group-ids})]
-      (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res))))
-
-(defn- activated-participant-administrations
+(defn- db-activated-participant-administrations
   [db date-min date-max hour]
   (db/get-activated-participant-administrations db {:date-min date-min
                                                     :date-max date-max
                                                     :hour     hour}))
 
-(defn- activated-group-administrations
+(defn- db-activated-group-administrations
   [db date-min date-max hour]
   (db/get-activated-group-administrations db {:date-min date-min
                                               :date-max date-max
                                               :hour     hour}))
 
-(defn- participant-administrations-by-user+assessment+series
+(defn- db-late-participant-administrations
+  [db date]
+  (db/get-late-participant-administrations db {:date date}))
+
+(defn- db-late-group-administrations
+  [db date]
+  (db/get-late-group-administrations db {:date date}))
+
+(defn- db-users-assessment-series-id
+  [db user-ids]
+  (when user-ids
+    (let [res (db/get-user-assessment-series db {:user-ids user-ids})]
+      (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
+
+(defn- db-groups-assessment-series-id
+  [db group-ids]
+  (when group-ids
+    (let [res (db/get-group-assessment-series db {:group-ids group-ids})]
+      (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res))))
+
+(defn- db-participant-administrations-by-user+assessment+series
   [db user+assessments+series]
   (db/get-participant-administrations-by-user+assessment
     db
     {:user-ids+assessment-ids user+assessments+series}))
 
-(defn group-administrations-by-group+assessment+series
+(defn db-group-administrations-by-group+assessment+series
   [db groups+assessments+series]
   (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
 
@@ -63,7 +71,7 @@
       (- 1)))
 
 (defn potential-activation-reminders
-  "Returns list of potentially active assessments for users
+  "Returns list of potentially activated assessments for users
   {:user-id 653692,
    :group-id 653637,
    :participant-administration-id nil,
@@ -75,42 +83,58 @@
   (let [hour                        (t/hour (t/to-time-zone now tz))
         date-min                    (today-midnight now tz)
         date-max                    (today-last-second now tz)
-        participant-administrations (activated-participant-administrations db date-min date-max hour)
-        group-administrations       (activated-group-administrations db date-min date-max hour)]
+        participant-administrations (db-activated-participant-administrations db date-min date-max hour)
+        group-administrations       (db-activated-group-administrations db date-min date-max hour)]
     (->> (concat participant-administrations
                  group-administrations)
          (map #(assoc % ::remind-type ::activation)))))
 
-(defn participant-administrations-from-potential-assessments
+(defn- potential-late-reminders
+  "Returns list of potentially late assessments for users
+  {:user-id 653692,
+   :group-id 653637,
+   :participant-administration-id nil,
+   :group-administration-id 653640,
+   :assessment-id 653636,
+   :assessment-index 1,
+   ::remind-type :late}"
+  [db now]
+  (let [participant-administrations (db-late-participant-administrations db now)
+        group-administration        (db-late-group-administrations db now)]
+    (->> (concat participant-administrations
+                 group-administration)
+         (map #(assoc % ::remind-type ::late)))))
+
+(defn- participant-administrations-from-potential-assessments
   "Returns all administrations for user-assessment combo,
   grouped by [user-id assessment-id"
   [db potential-assessments]
   (let [assessment-series       (->> potential-assessments
                                      (map :user-id)
-                                     (users-assessment-series-id db))
+                                     (db-users-assessment-series-id db))
         user+assessments+series (->> potential-assessments
                                      (map #(vector (:user-id %)
                                                    (:assessment-id %)
                                                    (get assessment-series (:user-id %))))
                                      (into #{}))
-        administrations         (participant-administrations-by-user+assessment+series
+        administrations         (db-participant-administrations-by-user+assessment+series
                                   db user+assessments+series)]
     (group-by #(vector (:user-id %) (:assessment-id %)) administrations)))
 
-(defn group-administrations-from-potential-assessments
+(defn- group-administrations-from-potential-assessments
   "Returns all administrations for group-assessment combo,
   grouped by [group-id assessment-id"
   [db potential-assessments]
   (let [potential-assessments     (filter :group-id potential-assessments)
         assessment-series         (->> potential-assessments
                                        (map :group-id)
-                                       (groups-assessment-series-id db))
+                                       (db-groups-assessment-series-id db))
         groups+assessments+series (->> potential-assessments
                                        (map #(vector (:group-id %)
                                                      (:assessment-id %)
                                                      (get assessment-series (:group-id %))))
                                        (into #{}))
-        administrations           (group-administrations-by-group+assessment+series
+        administrations           (db-group-administrations-by-group+assessment+series
                                     db groups+assessments+series)]
     (group-by #(vector (:group-id %) (:assessment-id %)) administrations)))
 
@@ -156,7 +180,6 @@
                                                  (filter #(second %))
                                                  (into {}))
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
-        _                                   (log/debug user-groups)
         group-administrations-grouped       (when-not (empty? user-groups)
                                               (group-administrations-from-potential-assessments db potentials))
         assessments'                        (assessments (->> potentials
@@ -201,6 +224,11 @@
 (defn activation-reminders*
   [db now tz]
   (let [potentials (potential-activation-reminders db now tz)]
+    (ongoing-reminder-assessments db now potentials)))
+
+(defn late-reminders*
+  [db now]
+  (let [potentials (potential-late-reminders db now)]
     (ongoing-reminder-assessments db now potentials)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

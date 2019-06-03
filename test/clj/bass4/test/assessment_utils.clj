@@ -11,19 +11,20 @@
   test-fixtures)
 
 (def project-id 653627)
-(def group-single 653630)
 
+(def ass-group-single-2-3 653630)
 (def ass-group-weekly 653631)
-(def ass-individual-single 653632)
+(def ass-individual-single-0 653632)
 (def ass-individual-weekly-no-remind 653633)
-(def ass-individual-manual-repeat 653634)
+(def ass-individual-manual-5-10 653634)
 (def ass-clinician 654215)
 (def ass-hour-8 654411)
 
-(def assessment-ids [ass-group-weekly
-                     ass-individual-single
+(def assessment-ids [ass-group-single-2-3
+                     ass-group-weekly
+                     ass-individual-single-0
                      ass-individual-weekly-no-remind
-                     ass-individual-manual-repeat
+                     ass-individual-manual-5-10
                      ass-clinician
                      ass-hour-8])
 
