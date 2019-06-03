@@ -160,23 +160,14 @@
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (session-storage/wrap-db-session)
-      #_(ring-session/wrap-session
-        {:cookie-attrs {:http-only true}
-         :store        (session-storage/jdbc-store #'db/db-common)})
       (wrap-mw-fn #'db-middleware/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
       wrap-webjars
       (wrap-defaults
-        (->
-          ;; TODO: Remove (env :ssl) if everything seems to be working
-          ;; https://github.com/ring-clojure/ring-defaults#proxies
-          #_(if (env :ssl)
-            (assoc secure-site-defaults :proxy (env :proxy))
-            site-defaults)
-          site-defaults
-          (assoc-in [:security :anti-forgery] false)
-          (dissoc :session)))
+        (-> site-defaults
+            (assoc-in [:security :anti-forgery] false)
+            (dissoc :session)))
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
       (wrap-mw-fn #'errors-mw/catch-internal-error-mw)
       (wrap-mw-fn #'request-logger/wrap-logger)))
