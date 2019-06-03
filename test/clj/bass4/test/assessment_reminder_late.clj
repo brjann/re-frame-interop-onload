@@ -1,10 +1,13 @@
 (ns bass4.test.assessment-reminder-late
   (:require [clj-time.core :as t]
+            [clojure.core.async :refer [chan alts!! timeout]]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.assessment.create-missing :as missing]
+            [bass4.db.core :as db]))
 
 (use-fixtures
   :once
@@ -163,3 +166,21 @@
              [user2x-id false ass-group-single-2-3 1 ::assessment-reminder/activation]
              [user2x-id false ass-group-weekly-3-4 4 ::assessment-reminder/activation]}
            (reminders *now*)))))
+
+(deftest late-group-remind!
+  (let [group1-id (create-group!)
+        group2-id (create-group!)
+        _         (user-service/create-user! project-id {:group group1-id})
+        _         (user-service/create-user! project-id {:group group2-id})]
+    (create-group-administration!
+      group1-id ass-group-single-2-3 1 {:date (midnight+d -2 *now*)})
+    (create-group-administration!
+      group1-id ass-group-weekly-3-4 2 {:date (midnight+d -3 *now*)})
+    (create-group-administration!
+      group2-id ass-group-single-2-3 1 {:date (midnight+d -2 *now*)})
+    (create-group-administration!
+      group2-id ass-group-weekly-3-4 4 {:date (midnight+d -3 *now*)})
+    (binding [missing/*create-count-chan* (chan)]
+      (assessment-reminder/remind! db/*db* *now* *tz*)
+      (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
+        (is (= 4 create-count))))))

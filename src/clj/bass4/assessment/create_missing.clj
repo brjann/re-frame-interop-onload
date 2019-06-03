@@ -1,14 +1,20 @@
 (ns bass4.assessment.create-missing
   (:require [bass4.services.bass :as bass]
             [bass4.db.core :as db]
+            [clojure.core.async :refer [put!]]
             [clojure.tools.logging :as log]))
+
+(def ^:dynamic *create-count-chan* nil)
 
 (defn- create-administrations-objects!
   [missing-administrations]
-  (bass/create-bass-objects-without-parent!
-    "cParticipantAdministration"
-    "Administrations"
-    (count missing-administrations)))
+  (let [created-ids (bass/create-bass-objects-without-parent!
+                      "cParticipantAdministration"
+                      "Administrations"
+                      (count missing-administrations))]
+    (when *create-count-chan*
+      (put! *create-count-chan* (count created-ids)))
+    created-ids))
 
 (defn- delete-administration!
   [administration-id]
@@ -18,7 +24,6 @@
 
 (defn- update-created-administrations!
   [new-object-ids missing-administrations]
-  (log/debug missing-administrations)
   ;; mapv because not lazy
   (mapv (fn [new-administration-id {:keys [assessment-index assessment-id user-id]}]
           (try
@@ -75,7 +80,8 @@
   [administrations]
   (let [missing-administrations (remove :participant-administration-id administrations)]
     (if (< 0 (count missing-administrations))
-      (insert-new-into-old
-        (create-missing-administrations! missing-administrations)
-        administrations)
+      (do
+        (insert-new-into-old
+          (create-missing-administrations! missing-administrations)
+          administrations))
       administrations)))

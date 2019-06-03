@@ -5,7 +5,8 @@
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
-            [bass4.assessment.ongoing :as assessment-ongoing]))
+            [bass4.assessment.ongoing :as assessment-ongoing]
+            [bass4.assessment.create-missing :as missing]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -231,10 +232,11 @@
 (defn remind!
   [db now tz]
   (let [ongoing-reminders (reminders db now tz)
+        ongoing-reminders (missing/add-missing-administrations! ongoing-reminders)
         remind-activation (filter #(= (::remind-type %) ::activation)
                                   ongoing-reminders)
         remind-late       (filter #(= (::remind-type %) ::late)
                                   ongoing-reminders)]
-    ))
+    ongoing-reminders))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))
