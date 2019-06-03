@@ -71,15 +71,15 @@
       )
     old-administrations))
 
-(defn- get-missing-administrations
-  [matching-administrations]
-  (map
-    #(select-keys % [:assessment-id :assessment-index])
-    (filter #(nil? (:participant-administration-id %)) matching-administrations)))
+#_(defn- get-missing-administrations
+    [matching-administrations]
+    (map
+      #(select-keys % [:assessment-id :assessment-index])
+      (filter #(nil? (:participant-administration-id %)) matching-administrations)))
 
 (defn add-missing-administrations!
   [user-id matching-administrations]
-  (let [missing-administrations (get-missing-administrations matching-administrations)]
+  (let [missing-administrations (remove :participant-administration-id matching-administrations)]
     (if (> (count missing-administrations) 0)
       (insert-new-into-old
         (create-missing-administrations! user-id missing-administrations)
