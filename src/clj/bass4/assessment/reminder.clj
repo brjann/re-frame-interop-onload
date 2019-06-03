@@ -153,9 +153,12 @@
   [db now potentials]
   (let [user-groups                         (->> potentials
                                                  (map #(vector (:user-id %) (:group-id %)))
+                                                 (filter #(second %))
                                                  (into {}))
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
-        group-administrations-grouped       (group-administrations-from-potential-assessments db potentials)
+        _                                   (log/debug user-groups)
+        group-administrations-grouped       (when-not (empty? user-groups)
+                                              (group-administrations-from-potential-assessments db potentials))
         assessments'                        (assessments (->> potentials
                                                               (map :assessment-id)
                                                               (into #{})))
