@@ -1,6 +1,5 @@
 (ns bass4.test.assessment-reminder-activation
   (:require [clj-time.core :as t]
-            [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]

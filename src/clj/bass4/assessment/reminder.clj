@@ -221,16 +221,11 @@
                                                   (filter ::remind-type))]
       filtered-ongoing-potentials)))
 
-(defn activation-reminders*
+(defn reminders*
   [db now tz]
   (let [potential-activations (potential-activation-reminders db now tz)
         potential-late        (potential-late-reminders db now)]
     (ongoing-reminder-assessments db now (concat potential-activations
                                                  potential-late))))
-
-(defn late-reminders*
-  [db now]
-  (let [potentials (potential-late-reminders db now)]
-    (ongoing-reminder-assessments db now potentials)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

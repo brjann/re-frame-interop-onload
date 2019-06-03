@@ -1,12 +1,10 @@
 (ns bass4.test.assessment-reminder-late
   (:require [clj-time.core :as t]
-            [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.user :as user-service]
-            [clojure.pprint :as pprint]))
+            [bass4.services.user :as user-service]))
 
 (use-fixtures
   :once

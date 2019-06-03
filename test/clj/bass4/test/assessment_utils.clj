@@ -113,7 +113,7 @@
 
 (defn reminders
   [now]
-  (->> (assessment-reminder/activation-reminders* db/*db* now *tz*)
+  (->> (assessment-reminder/reminders* db/*db* now *tz*)
        (map #(vector
                (:user-id %)
                (some? (:participant-administration-id %))
