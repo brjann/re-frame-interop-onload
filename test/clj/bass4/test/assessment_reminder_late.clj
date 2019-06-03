@@ -7,7 +7,8 @@
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
             [bass4.assessment.create-missing :as missing]
-            [bass4.db.core :as db]))
+            [bass4.db.core :as db]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -98,9 +99,13 @@
       user3-id ass-individual-manual-5-10 3 {:date (midnight+d -50 *now*)})
     (create-participant-administration!
       user4-id ass-individual-manual-5-10 4 {:date (midnight+d -51 *now*)})
-    (is (= #{[user2-id true ass-individual-manual-5-10 2 ::assessment-reminder/late]
-             [user3-id true ass-individual-manual-5-10 3 ::assessment-reminder/late]}
-           (reminders *now*)))))
+    ;; This occasionally fails (-51 is included) and therefore added logging
+    (let [reminders' (reminders *now*)
+          expected   #{[user2-id true ass-individual-manual-5-10 2 ::assessment-reminder/late]
+                       [user3-id true ass-individual-manual-5-10 3 ::assessment-reminder/late]}]
+      (is (= expected reminders'))
+      (when-not (= expected reminders')
+        (log/error "Time was " *now* " and timezone was " *tz*)))))
 
 (deftest late-group-participant-inactive
   (let [group1-id (create-group!)
