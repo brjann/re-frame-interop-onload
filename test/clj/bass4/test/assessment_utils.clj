@@ -5,7 +5,8 @@
             [clojure.test :refer :all]
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [bass4.assessment.reminder :as assessment-reminder]))
 
 (use-fixtures
   :once
@@ -109,3 +110,14 @@
     (binding [*tz*  tz
               *now* now]
       (f))))
+
+(defn reminders
+  [now]
+  (->> (assessment-reminder/activation-reminders* db/*db* now *tz*)
+       (map #(vector
+               (:user-id %)
+               (some? (:participant-administration-id %))
+               (:assessment-id %)
+               (:assessment-index %)
+               (::assessment-reminder/remind-type %)))
+       (into #{})))

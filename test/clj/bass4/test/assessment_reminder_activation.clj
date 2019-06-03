@@ -15,17 +15,6 @@
   :each
   random-date-tz-fixture)
 
-(defn activation-reminders
-  [now]
-  (->> (assessment-reminder/activation-reminders* db/*db* now *tz*)
-       (map #(vector
-               (:user-id %)
-               (some? (:participant-administration-id %))
-               (:assessment-id %)
-               (:assessment-index %)
-               (::assessment-reminder/remind-type %)))
-       (into #{})))
-
 ;; -------------------------
 ;;  SIMPLE ACTIVATION TESTS
 ;; -------------------------
@@ -60,7 +49,7 @@
              [user3-id false ass-group-weekly-3-4 3 ::assessment-reminder/activation]
              [user4-id false ass-group-single-2-3 1 ::assessment-reminder/activation]
              [user4-id false ass-group-weekly-3-4 3 ::assessment-reminder/activation]}
-           (activation-reminders *now*)))))
+           (reminders *now*)))))
 
 (deftest activation-group-individual-inactive
   (let [group1-id (create-group!)
@@ -89,7 +78,7 @@
              [user3-id false ass-group-single-2-3 1 ::assessment-reminder/activation]
              [user3-id false ass-group-weekly-3-4 3 ::assessment-reminder/activation]
              [user4-id false ass-group-weekly-3-4 3 ::assessment-reminder/activation]}
-           (activation-reminders *now*)))))
+           (reminders *now*)))))
 
 (deftest activation-individual
   (let [user1-id (user-service/create-user! project-id)
@@ -117,7 +106,7 @@
              [user1-id true ass-individual-manual-5-10 3 ::assessment-reminder/activation]
              [user2-id true ass-individual-single-0 1 ::assessment-reminder/activation]
              [user2-id true ass-individual-manual-5-10 4 ::assessment-reminder/activation]}
-           (activation-reminders *now*)))))
+           (reminders *now*)))))
 
 (deftest activation-individual-group-inactive
   (let [group-id (create-group!)
@@ -137,7 +126,7 @@
     (is (= #{[user1-id true ass-individual-single-0 1 ::assessment-reminder/activation]
              [user2-id true ass-individual-single-0 1 ::assessment-reminder/activation]
              [user2-id true ass-individual-manual-5-10 3 ::assessment-reminder/activation]}
-           (activation-reminders *now*)))))
+           (reminders *now*)))))
 
 ;;
 ;; No need to test clinician assessments because they cannot have reminders
@@ -148,9 +137,9 @@
     (create-participant-administration!
       user-id ass-hour8-2-20 1 {:date (midnight *now*)})
     (let [hour0 (midnight-joda *now*)]
-      (is (= #{} (activation-reminders hour0))))
+      (is (= #{} (reminders hour0))))
     (let [hour7 (t/plus (midnight-joda *now*) (t/hours 7))]
-      (is (= #{} (activation-reminders hour7))))
+      (is (= #{} (reminders hour7))))
     (let [hour8 (t/plus (midnight-joda *now*) (t/hours 8))]
       (is (= #{[user-id true ass-hour8-2-20 1 ::assessment-reminder/activation]}
-             (activation-reminders hour8))))))
+             (reminders hour8))))))

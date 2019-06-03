@@ -223,8 +223,10 @@
 
 (defn activation-reminders*
   [db now tz]
-  (let [potentials (potential-activation-reminders db now tz)]
-    (ongoing-reminder-assessments db now potentials)))
+  (let [potential-activations (potential-activation-reminders db now tz)
+        potential-late        (potential-late-reminders db now)]
+    (ongoing-reminder-assessments db now (concat potential-activations
+                                                 potential-late))))
 
 (defn late-reminders*
   [db now]
