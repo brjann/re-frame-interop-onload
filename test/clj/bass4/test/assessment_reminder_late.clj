@@ -186,6 +186,6 @@
     (create-group-administration!
       group2-id ass-group-weekly-3-4 4 {:date (midnight+d -3 *now*)})
     (binding [missing/*create-count-chan* (chan)]
-      (assessment-reminder/remind! db/*db* *now* *tz*)
+      (log/debug (assessment-reminder/remind! db/*db* *now* *tz*))
       (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
         (is (= 4 create-count))))))

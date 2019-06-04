@@ -51,9 +51,9 @@
   (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
 
 (defn assessments
-  [assessment-ids]
+  [db assessment-ids]
   (when assessment-ids
-    (->> (db/get-assessments {:assessment-ids assessment-ids})
+    (->> (db/get-remind-assessments db {:assessment-ids assessment-ids})
          (map #(vector (:assessment-id %) %))
          (into {}))))
 
@@ -183,9 +183,9 @@
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
         group-administrations-grouped       (when-not (empty? user-groups)
                                               (group-administrations-from-potential-assessments db potentials))
-        assessments'                        (assessments (->> potentials
-                                                              (map :assessment-id)
-                                                              (into #{})))
+        assessments'                        (assessments db (->> potentials
+                                                                 (map :assessment-id)
+                                                                 (into #{})))
         merged-by-user+assessment           (->> potentials
                                                  (map #(vector (:user-id %) (:assessment-id %)))
                                                  (map (fn [[user-id assessment-id]]
@@ -199,11 +199,13 @@
                                                                                             group-administrations)]
                                                           [[user-id assessment-id] merged-administrations])))
                                                  (into {}))
-        ongoing-assessments                 (mapv (fn [[[_ assessment-id] administrations]]
-                                                    (assessment-ongoing/ongoing-administrations
-                                                      now administrations (get assessments' assessment-id)))
-                                                  merged-by-user+assessment)]
-    (flatten ongoing-assessments)))
+        ongoing-assessments                 (->> merged-by-user+assessment
+                                                 (mapv (fn [[[_ assessment-id] administrations]]
+                                                         (assessment-ongoing/ongoing-administrations
+                                                           now administrations (get assessments' assessment-id))))
+                                                 (flatten)
+                                                 (map #(merge % (get assessments' (:assessment-id %)))))]
+    ongoing-assessments))
 
 (defn ongoing-reminder-assessments
   [db now potentials]
@@ -225,17 +227,60 @@
 (defn reminders
   [db now tz]
   (let [potential-activations (potential-activation-reminders db now tz)
-        potential-late        (potential-late-reminders db now)]
-    (ongoing-reminder-assessments db now (concat potential-activations
-                                                 potential-late))))
+        potential-late        (potential-late-reminders db now)
+        reminders'            (ongoing-reminder-assessments db now (concat potential-activations
+                                                                           potential-late))
+        remind-activation     (filter #(= (::remind-type %) ::activation)
+                                      reminders')
+        remind-late           (->> reminders'
+                                   (filter #(= (::remind-type %) ::late))
+                                   (map (add-late-remind-number-fn now))
+                                   (filter :remind-number))]
+    (concat remind-)))
+
+(defn assessment-messages
+  [remind-assessment]
+  (let [email (when (:activation-email? remind-assessment)
+                {:type :email})]))
+
+(defn add-late-remind-number-fn
+  [now]
+  (fn [remind-assessment]
+    (log/debug (class remind-assessment))
+    (let [activation-date       (if (= 0 (:scope remind-assessment))
+                                  (:participant-activation-date remind-assessment)
+                                  (:group-activation-date remind-assessment))
+          days-since-activation (t/in-days (t/interval activation-date now))
+          remind-interval       (:late-remind-interval remind-assessment)
+          remind-count          (:late-remind-count remind-assessment)
+          max-days              (* remind-interval remind-count)
+          remind-number         (int (/ days-since-activation remind-interval))
+          reminders-sent        (or (:late-reminders-sent remind-assessment) 0)]
+      (assoc remind-assessment :remind-number (cond
+                                                (< max-days days-since-activation)
+                                                nil
+
+                                                (= 0 remind-number)
+                                                nil
+
+                                                (> remind-number remind-count)
+                                                nil
+
+                                                (>= reminders-sent remind-number)
+                                                nil
+
+                                                :else
+                                                remind-number)))))
 
 (defn remind!
   [db now tz]
-  (let [ongoing-reminders (reminders db now tz)
-        ongoing-reminders (missing/add-missing-administrations! ongoing-reminders)
-        remind-activation (filter #(= (::remind-type %) ::activation)
-                                  ongoing-reminders)
-        remind-late       (filter #(= (::remind-type %) ::late)
-                                  ongoing-reminders)]))
+  (let [remind-assessments (reminders db now tz)
+        remind-activation  (filter #(= (::remind-type %) ::activation)
+                                   remind-assessments)
+        remind-late        (->> remind-assessments
+                                (filter #(= (::remind-type %) ::late))
+                                (map (add-late-remind-number-fn now))
+                                (filter :remind-number))]
+    (concat remind-activation remind-late)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

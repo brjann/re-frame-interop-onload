@@ -6,7 +6,8 @@
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]
-            [bass4.assessment.reminder :as assessment-reminder]))
+            [bass4.assessment.reminder :as assessment-reminder]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once

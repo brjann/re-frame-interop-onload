@@ -7,7 +7,8 @@
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
             [bass4.db.core :as db]
-            [bass4.assessment.create-missing :as missing]))
+            [bass4.assessment.create-missing :as missing]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -167,6 +168,5 @@
     (create-group-administration!
       group2-id ass-group-weekly-3-4 3 {:date (midnight *now*)})
     (binding [missing/*create-count-chan* (chan)]
-      (assessment-reminder/remind! db/*db* *now* *tz*)
       (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
         (is (= 8 create-count))))))

@@ -520,6 +520,8 @@ SELECT
   ca.ObjectId AS `assessment-id`,
 	cpa.AssessmentIndex AS `assessment-index`,
   cpa.Active AS `participant-administration-active?`,
+  cpa.EmailSent AS `activation-reminder-sent?`,
+  cpa.RemindersSent AS `late-reminders-sent`,
 
   (CASE
     WHEN cpa.DateCompleted IS NULL
@@ -558,7 +560,7 @@ FROM c_groupadministration as cga
         ON (ca.ObjectId = cga.Assessment)
 WHERE (cga.ParentId, cga.Assessment, ca.ParentId) IN (:t*:group-ids+assessment-ids);
 
--- :name get-assessments :? :*
+-- :name get-remind-assessments :? :*
 -- :doc
 SELECT
     ObjectId AS `assessment-id`,
@@ -596,6 +598,23 @@ SELECT
      END) AS `repetition-interval`,
     IsRecord AS `is-record?`,
     ClinicianAssessment AS `clinician-rated?`,
-    CompetingAssessmentsPriority AS `priority`
+    CompetingAssessmentsPriority AS `priority`,
+    SendSMSWhenActivated AS `activation-sms?`,
+    SendEmailWhenActivated AS `activation-email?`,
+    RemindParticipantsWhenLate AS `late-remind?`,
+    RemindInterval AS `late-remind-interval`,
+    MaxRemindCount AS `late-remind-count`,
+    CustomReminderMessage AS `remind-message`,
+    ActivatedEmailSubject AS `activation-email-subject`,
+    ReminderEmailSubject AS `late-email-subject`,
+    CreateNewQuickLoginOnActivation AS `generate-quicklogin?`
 FROM c_assessment
 WHERE ObjectId IN(:v*:assessment-ids);
+
+# $RemindParticipantsWhenLate = 0;
+#
+# 	/** property integer */
+# 	public $RemindInterval = 1;
+#
+# 	/** property integer */
+# 	public $MaxRemindCount = 0;
