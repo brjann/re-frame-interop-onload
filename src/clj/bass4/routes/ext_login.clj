@@ -91,7 +91,9 @@
 (defn- uid-url
   [user-id request]
   (let [host     (h-utils/get-host request)
-        scheme   (name (:scheme request))
+        scheme   (if (config/env :ssl)
+                   "https"
+                   (name (:scheme request)))
         filename (bass/write-session-file user-id "extlogin")]
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
