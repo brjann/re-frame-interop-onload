@@ -6,7 +6,8 @@
             [bass4.instrument.validation :as validation]
             [bass4.assessment.administration :as administration]
             [bass4.session.utils :as session-utils]
-            [bass4.middleware.request-logger :as request-logger]))
+            [bass4.middleware.request-logger :as request-logger]
+            [bass4.layout :as layout]))
 
 
 ;; --------------------------
@@ -65,8 +66,8 @@
   [step]
   (request-logger/add-to-state-key! :info "Assessment text")
   (administration/step-completed! step)
-  (bass4.layout/render "assessment-text.html"
-                       {:texts (try (clojure.edn/read-string (:texts step))
+  (layout/render "assessment-text.html"
+                 {:texts (try (clojure.edn/read-string (:texts step))
                                     (catch Exception _ ""))}))
 
 (defn- instrument-page
@@ -74,8 +75,8 @@
   (let [instrument-id (:instrument-id step)]
     (request-logger/add-to-state-key! :info (str "Instrument " instrument-id))
     (if-let [instrument (instruments/get-instrument instrument-id)]
-      (bass4.layout/render "assessment-instrument.html"
-                           {:instrument    instrument
+      (layout/render "assessment-instrument.html"
+                     {:instrument    instrument
                             :instrument-id instrument-id
                             :order         (:instrument-order step)
                             :count         (:instrument-count step)})
