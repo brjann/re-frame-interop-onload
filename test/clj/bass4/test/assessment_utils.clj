@@ -15,21 +15,21 @@
 
 (def project-id 653627)
 
-(def ass-group-single-2-3 653630)
-(def ass-group-weekly-3-4 653631)
-(def ass-individual-single-0 653632)
-(def ass-individual-weekly-no-remind 653633)
-(def ass-individual-manual-5-10 653634)
-(def ass-clinician 654215)
-(def ass-hour8-2-20 654411)
+(def ass-G-s-2-3-p0 653630)
+(def ass-G-week-e+s-3-4-p10 653631)
+(def ass-I-s-0-p100-message 653632)
+(def ass-I-week-noremind 653633)
+(def ass-I-manual-s-5-10-q 653634)
+(def ass-I-clinician 654215)
+(def ass-I-hour8-2-20 654411)
 
-(def assessment-ids [ass-group-single-2-3
-                     ass-group-weekly-3-4
-                     ass-individual-single-0
-                     ass-individual-weekly-no-remind
-                     ass-individual-manual-5-10
-                     ass-clinician
-                     ass-hour8-2-20])
+(def assessment-ids [ass-G-s-2-3-p0
+                     ass-G-week-e+s-3-4-p10
+                     ass-I-s-0-p100-message
+                     ass-I-week-noremind
+                     ass-I-manual-s-5-10-q
+                     ass-I-clinician
+                     ass-I-hour8-2-20])
 
 (defn create-group!
   []
@@ -122,4 +122,17 @@
                (:assessment-index %)
                (::assessment-reminder/remind-type %)
                (::assessment-reminder/remind-number %)))
+       (into #{})))
+
+(defn- message-vec
+  [message type]
+  (when message
+    [(:user-id message) (:assessment-id message) type]))
+
+(defn messages
+  [now]
+  (->> (assessment-reminder/reminders db/*db* now *tz*)
+       (assessment-reminder/remind-messages)
+       (mapcat #(filterv identity [(message-vec (:email %) :email)
+                                   (message-vec (:sms %) :sms)]))
        (into #{})))

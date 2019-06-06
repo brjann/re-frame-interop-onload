@@ -273,7 +273,6 @@
 ;; -1 if x comes before y,
 ;; 1 if x comes after y, or
 ;; 0 if they are equal
-;; Comparison rules
 
 (defn quick-url?
   [assessment]
@@ -311,10 +310,25 @@
     :else
     0))
 
-(defn assessment-messages
+(defn- user-messages
+  [assessments]
+  (let [email (->> assessments
+                   (filter :activation-email?)
+                   (sort assessment-comparator)
+                   (first))
+        sms   (->> assessments
+                   (filter :activation-sms?)
+                   (sort assessment-comparator)
+                   (first))]
+    {:email email :sms sms}))
+
+(defn remind-messages
   [remind-assessment]
-  (let [email (when (:activation-email? remind-assessment)
-                {:type :email})]))
+  (log/debug remind-assessment)
+  (->> remind-assessment
+       (group-by :user-id)
+       (vals)
+       (map user-messages)))
 
 (defn remind!
   [db now tz]
