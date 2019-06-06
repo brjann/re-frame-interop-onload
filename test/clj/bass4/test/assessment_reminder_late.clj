@@ -35,10 +35,10 @@
       group2-id ass-group-single-2-3 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
       group2-id ass-group-weekly-3-4 4 {:date (midnight+d -3 *now*)})
-    (is (= #{[user1-id false ass-group-single-2-3 1 ::assessment-reminder/late]
-             [user1-id false ass-group-weekly-3-4 2 ::assessment-reminder/late]
-             [user2-id false ass-group-single-2-3 1 ::assessment-reminder/late]
-             [user2-id false ass-group-weekly-3-4 4 ::assessment-reminder/late]}
+    (is (= #{[user1-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]
+             [user1-id false ass-group-weekly-3-4 2 ::assessment-reminder/late 1]
+             [user2-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]
+             [user2-id false ass-group-weekly-3-4 4 ::assessment-reminder/late 1]}
            (reminders *now*)))))
 
 (deftest late-participant
@@ -57,9 +57,9 @@
     ;; Activation but no late
     (create-participant-administration!
       user1-id ass-individual-single-0 1 {:date (midnight+d -1 *now*)})
-    (is (= #{[user1-id true ass-individual-manual-5-10 2 ::assessment-reminder/late]
-             [user1-id true ass-hour8-2-20 1 ::assessment-reminder/late]
-             [user2-id true ass-individual-manual-5-10 4 ::assessment-reminder/late]}
+    (is (= #{[user1-id true ass-individual-manual-5-10 2 ::assessment-reminder/late 1]
+             [user1-id true ass-hour8-2-20 1 ::assessment-reminder/late 10]
+             [user2-id true ass-individual-manual-5-10 4 ::assessment-reminder/late 1]}
            (reminders *now*)))))
 
 (deftest late-group-boundaries
@@ -82,8 +82,8 @@
     ;; User 3 has administration
     (create-participant-administration!
       user3-id ass-group-single-2-3 1)
-    (is (= #{[user2-id false ass-group-single-2-3 1 ::assessment-reminder/late]
-             [user3-id true ass-group-single-2-3 1 ::assessment-reminder/late]}
+    (is (= #{[user2-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]
+             [user3-id true ass-group-single-2-3 1 ::assessment-reminder/late 3]}
            (reminders *now*)))))
 
 (deftest late-individual-boundaries
@@ -101,8 +101,8 @@
       user4-id ass-individual-manual-5-10 4 {:date (midnight+d -51 *now*)})
     ;; This occasionally fails (-51 is included) and therefore added logging
     (let [reminders' (reminders *now*)
-          expected   #{[user2-id true ass-individual-manual-5-10 2 ::assessment-reminder/late]
-                       [user3-id true ass-individual-manual-5-10 3 ::assessment-reminder/late]}]
+          expected   #{[user2-id true ass-individual-manual-5-10 2 ::assessment-reminder/late 1]
+                       [user3-id true ass-individual-manual-5-10 3 ::assessment-reminder/late 10]}]
       (is (= expected reminders'))
       (when-not (= expected reminders')
         (log/error "Time was " *now* " and timezone was " *tz*)))))
@@ -118,7 +118,7 @@
       group2-id ass-group-single-2-3 1 {:date (midnight+d -2 *now*)})
     (create-participant-administration!
       user1-id ass-group-single-2-3 1 {:active 0})
-    (is (= #{[user2-id false ass-group-single-2-3 1 ::assessment-reminder/late]}
+    (is (= #{[user2-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]}
            (reminders *now*)))))
 
 (deftest late-participant-group-inactive
@@ -132,7 +132,7 @@
       user2-id ass-individual-manual-5-10 4 {:date (midnight+d -6 *now*)})
     (create-group-administration!
       group1-id ass-individual-manual-5-10 4 {:active 0})
-    (is (= #{[user2-id true ass-individual-manual-5-10 4 ::assessment-reminder/late]}
+    (is (= #{[user2-id true ass-individual-manual-5-10 4 ::assessment-reminder/late 1]}
            (reminders *now*)))))
 
 (deftest late+activation
@@ -161,15 +161,15 @@
       group1x-id ass-group-weekly-3-4 4 {:date (midnight *now*)})
     (create-participant-administration!
       user1x-id ass-individual-single-0 1 {:date (midnight *now*)})
-    (is (= #{[user1-id true ass-individual-manual-5-10 2 ::assessment-reminder/late]
-             [user1-id false ass-group-single-2-3 1 ::assessment-reminder/late]
-             [user1-id false ass-group-weekly-3-4 2 ::assessment-reminder/late]
-             [user2-id false ass-group-single-2-3 1 ::assessment-reminder/late]
-             [user1x-id true ass-individual-single-0 1 ::assessment-reminder/activation]
-             [user1x-id false ass-group-single-2-3 1 ::assessment-reminder/activation]
-             [user1x-id false ass-group-weekly-3-4 4 ::assessment-reminder/activation]
-             [user2x-id false ass-group-single-2-3 1 ::assessment-reminder/activation]
-             [user2x-id false ass-group-weekly-3-4 4 ::assessment-reminder/activation]}
+    (is (= #{[user1-id true ass-individual-manual-5-10 2 ::assessment-reminder/late 1]
+             [user1-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]
+             [user1-id false ass-group-weekly-3-4 2 ::assessment-reminder/late 1]
+             [user2-id false ass-group-single-2-3 1 ::assessment-reminder/late 1]
+             [user1x-id true ass-individual-single-0 1 ::assessment-reminder/activation nil]
+             [user1x-id false ass-group-single-2-3 1 ::assessment-reminder/activation nil]
+             [user1x-id false ass-group-weekly-3-4 4 ::assessment-reminder/activation nil]
+             [user2x-id false ass-group-single-2-3 1 ::assessment-reminder/activation nil]
+             [user2x-id false ass-group-weekly-3-4 4 ::assessment-reminder/activation nil]}
            (reminders *now*)))))
 
 (deftest late-group-remind!

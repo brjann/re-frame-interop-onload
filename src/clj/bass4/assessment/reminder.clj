@@ -224,29 +224,9 @@
                                                   (filter ::remind-type))]
       filtered-ongoing-potentials)))
 
-(defn reminders
-  [db now tz]
-  (let [potential-activations (potential-activation-reminders db now tz)
-        potential-late        (potential-late-reminders db now)
-        reminders'            (ongoing-reminder-assessments db now (concat potential-activations
-                                                                           potential-late))
-        remind-activation     (filter #(= (::remind-type %) ::activation)
-                                      reminders')
-        remind-late           (->> reminders'
-                                   (filter #(= (::remind-type %) ::late))
-                                   (map (add-late-remind-number-fn now))
-                                   (filter :remind-number))]
-    (concat remind-)))
-
-(defn assessment-messages
-  [remind-assessment]
-  (let [email (when (:activation-email? remind-assessment)
-                {:type :email})]))
-
-(defn add-late-remind-number-fn
+(defn- add-late-remind-number-fn
   [now]
   (fn [remind-assessment]
-    (log/debug (class remind-assessment))
     (let [activation-date       (if (= 0 (:scope remind-assessment))
                                   (:participant-activation-date remind-assessment)
                                   (:group-activation-date remind-assessment))
@@ -256,7 +236,7 @@
           max-days              (* remind-interval remind-count)
           remind-number         (int (/ days-since-activation remind-interval))
           reminders-sent        (or (:late-reminders-sent remind-assessment) 0)]
-      (assoc remind-assessment :remind-number (cond
+      (assoc remind-assessment ::remind-number (cond
                                                 (< max-days days-since-activation)
                                                 nil
 
@@ -272,15 +252,30 @@
                                                 :else
                                                 remind-number)))))
 
+(defn reminders
+  [db now tz]
+  (let [potential-activations (potential-activation-reminders db now tz)
+        potential-late        (potential-late-reminders db now)
+        reminders-by-type     (->> (concat potential-activations
+                                           potential-late)
+                                   (ongoing-reminder-assessments db now)
+                                   (group-by ::remind-type))
+        remind-activation     (::activation reminders-by-type)
+        remind-late           (->> (::late reminders-by-type)
+                                   (map (add-late-remind-number-fn now))
+                                   (filter ::remind-number))]
+    (concat remind-activation remind-late)))
+
+(defn assessment-messages
+  [remind-assessment]
+  (let [email (when (:activation-email? remind-assessment)
+                {:type :email})]))
+
+
+
 (defn remind!
   [db now tz]
-  (let [remind-assessments (reminders db now tz)
-        remind-activation  (filter #(= (::remind-type %) ::activation)
-                                   remind-assessments)
-        remind-late        (->> remind-assessments
-                                (filter #(= (::remind-type %) ::late))
-                                (map (add-late-remind-number-fn now))
-                                (filter :remind-number))]
-    (concat remind-activation remind-late)))
+  (-> (reminders db now tz)
+      (missing/add-missing-administrations!)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

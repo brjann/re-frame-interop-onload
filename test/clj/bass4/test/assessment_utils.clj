@@ -120,5 +120,6 @@
                (some? (:participant-administration-id %))
                (:assessment-id %)
                (:assessment-index %)
-               (::assessment-reminder/remind-type %)))
+               (::assessment-reminder/remind-type %)
+               (::assessment-reminder/remind-number %)))
        (into #{})))
