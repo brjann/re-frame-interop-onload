@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
             [bass4.assessment.ongoing :as assessment-ongoing]
-            [bass4.assessment.create-missing :as missing]))
+            [bass4.assessment.create-missing :as missing]
+            [clojure.string :as str]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -237,20 +238,20 @@
           remind-number         (int (/ days-since-activation remind-interval))
           reminders-sent        (or (:late-reminders-sent remind-assessment) 0)]
       (assoc remind-assessment ::remind-number (cond
-                                                (< max-days days-since-activation)
-                                                nil
+                                                 (< max-days days-since-activation)
+                                                 nil
 
-                                                (= 0 remind-number)
-                                                nil
+                                                 (= 0 remind-number)
+                                                 nil
 
-                                                (> remind-number remind-count)
-                                                nil
+                                                 (> remind-number remind-count)
+                                                 nil
 
-                                                (>= reminders-sent remind-number)
-                                                nil
+                                                 (>= reminders-sent remind-number)
+                                                 nil
 
-                                                :else
-                                                remind-number)))))
+                                                 :else
+                                                 remind-number)))))
 
 (defn reminders
   [db now tz]
@@ -266,12 +267,54 @@
                                    (filter ::remind-number))]
     (concat remind-activation remind-late)))
 
+
+;; https://clojure.org/guides/comparators
+;; A 3-way comparator takes 2 values, x and y, and returns
+;; -1 if x comes before y,
+;; 1 if x comes after y, or
+;; 0 if they are equal
+;; Comparison rules
+
+(defn quick-url?
+  [assessment]
+  (when (:remind-message assessment)
+    (str/includes? (:remind-message assessment) "{QUICKURL}")))
+
+(defn- assessment-comparator
+  [x y]
+  (cond
+    ;; {QUICKURL} wins
+    (and (quick-url? (:remind-message x))
+         (not (quick-url? (:remind-message y))))
+    -1
+
+    (and (quick-url? (:remind-message y))
+         (not (quick-url? (:remind-message x))))
+    1
+
+    ;; Custom message wins
+    (and (not (str/blank? (:remind-message x)))
+         (str/blank? (:remind-message y)))
+    -1
+
+    (and (not (str/blank? (:remind-message y)))
+         (str/blank? (:remind-message x)))
+    1
+
+    ;; Priority wins
+    (< (:priority x) (:priority y))
+    -1
+
+    (< (:priority y) (:priority x))
+    1
+
+    :else
+    0))
+
 (defn assessment-messages
   [remind-assessment]
   (let [email (when (:activation-email? remind-assessment)
                 {:type :email})]))
-
-
 
 (defn remind!
   [db now tz]
