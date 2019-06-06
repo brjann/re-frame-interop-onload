@@ -320,15 +320,15 @@
                    (filter :activation-sms?)
                    (sort assessment-comparator)
                    (first))]
-    {:email email :sms sms}))
+    (filter identity [(when email (assoc email ::message-type :email))
+                      (when sms (assoc sms ::message-type :sms))])))
 
 (defn remind-messages
   [remind-assessment]
-  (log/debug remind-assessment)
   (->> remind-assessment
        (group-by :user-id)
        (vals)
-       (map user-messages)))
+       (mapcat user-messages)))
 
 (defn remind!
   [db now tz]

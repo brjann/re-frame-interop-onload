@@ -133,6 +133,8 @@
   [now]
   (->> (assessment-reminder/reminders db/*db* now *tz*)
        (assessment-reminder/remind-messages)
-       (mapcat #(filterv identity [(message-vec (:email %) :email)
-                                   (message-vec (:sms %) :sms)]))
+       (map #(vector
+               (:user-id %)
+               (:assessment-id %)
+               (::assessment-reminder/message-type %)))
        (into #{})))
