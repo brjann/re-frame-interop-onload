@@ -196,7 +196,7 @@
       (user-service/update-user-properties! user-id {:username user-id :password user-id :participantid user-id})
       (-> *s*
           (visit (str "/ext-login/check-pending/" user-id))
-          (has (some-text? "http://"))))))
+          (has (some-text? "do-login?uid="))))))
 
 (deftest api-privacy-notice
   (with-redefs [privacy-service/privacy-notice-exists? (constantly true)]
