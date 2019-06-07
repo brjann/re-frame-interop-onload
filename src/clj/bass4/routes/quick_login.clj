@@ -74,12 +74,12 @@
   [db now users]
   (when (seq users)
     (let [expiration-days (:expiration-days (db-quick-login-settings db))
-          by-quick-login  (group-by #(recent-quick-login? now % expiration-days) users)
-          update-users    (mapv #(merge % {:quick-login-id        (quicklogin-id (:user-id %))
-                                           :quick-login-timestamp (utils/to-unix now)})
-                                (get by-quick-login false))]
+          update-users    (->> users
+                               (remove #(recent-quick-login? now % expiration-days))
+                               (mapv #(merge % {:quick-login-id        (quicklogin-id (:user-id %))
+                                                :quick-login-timestamp (utils/to-unix now)})))]
       (db-update-users-quick-login! db update-users)
-      (concat update-users (get by-quick-login true)))))
+      update-users)))
 
 (defmacro log-msg
   [& msgs]

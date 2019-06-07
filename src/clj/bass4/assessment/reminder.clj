@@ -358,12 +358,19 @@
         reminders-by-type   (group-by ::remind-type remind-assessments)
         message-assessments (remind-messages remind-assessments)
         users-info          (db-users-info db (map :user-id message-assessments))
-        users-info          (->> remind-assessments
-                                 (filter :generate-quick-login?)
-                                 (map :user-id)
-                                 (select-keys users-info)
-                                 (vals)
-                                 (quick-login/update-users-quick-login! db now))]
+        users-info          (merge users-info
+                                   (->> remind-assessments
+                                        (filter :generate-quick-login?)
+                                        (map :user-id)
+                                        (select-keys users-info)
+                                        (vals)
+                                        (quick-login/update-users-quick-login! db now)
+                                        (map #(vector (:user-id %) %))
+                                        (into {})))]
+    ;; Generate emails and messages to be sent
+    ;; Send them
+    ;; Implement mailqueue
+    ;; Implement task handler
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))))
 
