@@ -68,6 +68,7 @@
       (if (nil? (:participant-administration-id old))
         (conj old (first (filter
                            #(and
+                              (= (:user-id old) (:user-id %1))
                               (= (:assessment-id old) (:assessment-id %1))
                               (= (:assessment-index old) (:assessment-index %1)))
                            new-administrations)))
