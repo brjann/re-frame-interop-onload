@@ -148,11 +148,6 @@
       (let [[quick-login-user-ids _] (alts!! [c (timeout 1000)])]
         quick-login-user-ids))))
 
-(defn- message-vec
-  [message type]
-  (when message
-    [(:user-id message) (:assessment-id message) type]))
-
 (defn messages
   [now]
   (->> (assessment-reminder/reminders db/*db* now *tz*)
