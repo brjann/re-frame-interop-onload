@@ -209,11 +209,7 @@
       group2-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
       group2-id ass-G-week-e+s-3-4-p10 4 {:date (midnight+d -3 *now*)})
-    (is (= 4 (remind!-created *now*)))
-    #_(binding [missing/*create-count-chan* (chan)]
-        (remind! *now*)
-        (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
-          ))))
+    (is (= 4 (remind!-created *now*)))))
 
 (deftest late+activation-reminders-sent!
   (let [group1-id  (create-group!)
