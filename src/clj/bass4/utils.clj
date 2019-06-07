@@ -213,6 +213,10 @@
       (/ 1000)
       (long)))
 
+(defn from-unix
+  [timestamp]
+  (tc/from-long (* 1000 timestamp)))
+
 (defn ^:dynamic current-time
   []
   (quot (System/currentTimeMillis) 1000))

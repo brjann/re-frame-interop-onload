@@ -68,6 +68,13 @@
                                                                (::remind-number %))
                                                       administrations)})))
 
+(defn db-users-contact-info
+  [db user-ids]
+  (when (seq user-ids)
+    (->> (db/get-users-contact-info db {:user-ids user-ids})
+         (map #(vector (:user-id %) %))
+         (into {}))))
+
 (defn today-midnight
   [now tz]
   (-> (t/to-time-zone now tz)
@@ -340,12 +347,16 @@
        (vals)
        (mapcat user-messages)))
 
+(defn smses
+  [sms-assessments ])
+
 (defn remind!
   [db now tz]
   (let [remind-assessments  (-> (reminders db now tz)
                                 (missing/add-missing-administrations!))
+        reminders-by-type   (group-by ::remind-type remind-assessments)
         message-assessments (remind-messages remind-assessments)
-        reminders-by-type   (group-by ::remind-type remind-assessments)]
+        contact-info        (db-users-contact-info db (map :user-id message-assessments))]
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))))
 

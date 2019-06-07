@@ -617,7 +617,7 @@ WHERE ObjectId IN(:v*:assessment-ids);
 -- :doc
 UPDATE c_participantadministration
 SET EmailSent = 1
-WHERE ObjectId IN(:v*:administration-ids);
+WHERE ObjectId IN (:v*:administration-ids);
 
 
 -- :name late-reminders-sent! :! :1
@@ -627,3 +627,13 @@ INSERT INTO c_participantadministration
 VALUES :t*:remind-numbers
 ON DUPLICATE KEY UPDATE
     RemindersSent = VALUES(RemindersSent);
+
+
+-- :name get-users-contact-info :? :*
+-- :doc
+SELECT
+  ObjectId as `user-id`,
+  Email AS `email`,
+  SMSNumber AS `sms-number`
+FROM c_participant
+WHERE ObjectId IN (:v*:user-ids);

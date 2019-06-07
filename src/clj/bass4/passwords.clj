@@ -8,12 +8,13 @@
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
 (defn letters-digits
-  [length]
-  (clojure.string/join
-    ""
-    (map
-      #(get password-chars %1)
-      (repeatedly length #(rand-int (- (count password-chars) 1))))))
+  ([length] (letters-digits length password-chars))
+  ([length chars]
+   (clojure.string/join
+     ""
+     (map
+       #(get chars %1)
+       (repeatedly length #(rand-int (- (count chars) 1)))))))
 
 (defn words
   [lang]

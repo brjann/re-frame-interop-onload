@@ -1,17 +1,20 @@
 (ns bass4.routes.quick-login
-  (:require [bass4.layout :as layout]
+  (:require [ring.util.http-response :as http-response]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
-            [bass4.db.core :as db]
             [ring.util.codec :refer [url-encode]]
+            [clojure.tools.logging :as log]
+            [clj-time.core :as t]
+            [bass4.layout :as layout]
+            [bass4.db.core :as db]
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [bass4.responses.auth :as auth-response]
             [bass4.services.bass :as bass]
-            [clojure.tools.logging :as log]
             [bass4.time :as b-time]
-            [ring.util.http-response :as http-response]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.config :as config])
+            [bass4.config :as config]
+            [bass4.passwords :as passwords]
+            [bass4.utils :as utils])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -22,6 +25,54 @@
 (defn db-quick-login-settings
   [db]
   (db/get-quick-login-settings db))
+
+(defn db-update-users-quicklogin
+  [db users]
+  (let [updates (map #(vector (:user-id %) (:quick-login-id %) (:quick-login-timestamp %))
+             users)]
+    (db/update-users-quicklogin! db {:quick-logins updates})))
+
+(def quicklogin-chars
+  (vec "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"))
+
+(defn quicklogin-id
+  [user-id]
+  (let [base64-id (->> (Integer/toBinaryString user-id)
+                       (partition 6 6 [])
+                       (map (comp #(Integer/parseInt % 2) #(apply str %)))
+                       (map #(get quicklogin-chars %))
+                       (apply str))
+        rest      (passwords/letters-digits (- 11 (count base64-id)) quicklogin-chars)]
+    (subs (str base64-id "." rest) 0 11)))
+
+(defn recent-quicklogin?
+  [now user expiration-days]
+  (let [timestamp (when (:quick-login-timestamp user)
+                    (utils/from-unix (:quick-login-timestamp user)))]
+    (cond
+      (or (not (:quick-login-id user))
+          (not timestamp))
+      false
+
+      (t/after? timestamp now)
+      false
+
+      (let [day-diff (t/in-days (t/interval timestamp now))]
+        (>= (- expiration-days 7) day-diff))
+      true
+
+      :else
+      false)))
+
+(defn update-users-quicklogin!
+  [db now users]
+  (let [expiration-days (:expiration-days (db-quick-login-settings db))
+        by-quicklogin   (group-by #(recent-quicklogin? now % expiration-days) users)
+        update-users    (mapv #(merge % {:quick-login-id        (quicklogin-id (:user-id %))
+                                         :quick-login-timestamp (utils/to-unix now)})
+                              (get by-quicklogin false))]
+    (db-update-users-quicklogin db update-users)
+    (concat update-users (get by-quicklogin true))))
 
 (defmacro log-msg
   [& msgs]
