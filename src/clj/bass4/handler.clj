@@ -8,7 +8,7 @@
             [bass4.routes.embedded :refer [embedded-routes]]
             [bass4.routes.registration :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
-            [bass4.routes.quick-login :refer [quick-login-routes]]
+            [bass4.routes.quick-login :as quick-login]
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
             [bass4.routes.lost-password :as lost-password]
@@ -59,7 +59,7 @@
     #'registration-routes
     (-> #'ext-login-routes
         (wrap-routes #(middleware/wrap-mw-fn % ext-login/check-ip-mw)))
-    #'quick-login-routes
+    #'quick-login/quick-login-routes
     ;; Replacement for route/not-found
     (fn [request]
       (http-response/not-found)

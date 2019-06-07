@@ -8,7 +8,8 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [bass4.utils :as utils]))
 
 (use-fixtures
   :once
@@ -209,7 +210,7 @@
       group2-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
       group2-id ass-G-week-e+s-3-4-p10 4 {:date (midnight+d -3 *now*)})
-    (is (= 4 (remind!-created *now*)))))
+    (is (= 4 (remind!-administrations-created *now*)))))
 
 (deftest late+activation-reminders-sent!
   (let [group1-id  (create-group!)
@@ -273,12 +274,12 @@
     (is (= #{[user2-id false ass-G-s-2-3-p0 1 ::assessment-reminder/late 1]
              [user3-id true ass-G-s-2-3-p0 1 ::assessment-reminder/late 3]}
            (reminders *now*)))
-    (is (= 1 (remind!-created *now*)))
+    (is (= 1 (remind!-administrations-created *now*)))
     (is (= #{} (reminders *now*)))
     (let [now+ (t/plus *now* (t/days 1))]
       (is (= #{[user1-id false ass-G-s-2-3-p0 1 ::assessment-reminder/late 1]}
              (reminders now+)))
-      (is (= 1 (remind!-created now+))))
+      (is (= 1 (remind!-administrations-created now+))))
     (let [now+ (t/plus *now* (t/days 3))]
       (is (= #{[user1-id true ass-G-s-2-3-p0 1 ::assessment-reminder/late 2]
                [user2-id true ass-G-s-2-3-p0 1 ::assessment-reminder/late 2]}
@@ -291,3 +292,21 @@
       (remind! now+)
       (is (= #{} (reminders now+))))))
 
+(deftest quick-login
+  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 14})]
+    (let [user1-id (user-service/create-user! project-id)
+          user2-id (user-service/create-user! project-id {"QuickLoginPassword"  "xxx"
+                                                          "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 7)))})
+          user3-id (user-service/create-user! project-id {"QuickLoginPassword"  "xxx"
+                                                          "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 8)))})
+          user4-id (user-service/create-user! project-id)]
+
+      (create-participant-administration!
+        user1-id ass-I-manual-s-5-10-q 1 {:date (midnight *now*)})
+      (create-participant-administration!
+        user2-id ass-I-manual-s-5-10-q 1 {:date (midnight *now*)})
+      (create-participant-administration!
+        user3-id ass-I-manual-s-5-10-q 1 {:date (midnight *now*)})
+      (create-participant-administration!
+        user4-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
+      (is (= #{user1-id user3-id} (remind!-quick-logins-created *now*))))))

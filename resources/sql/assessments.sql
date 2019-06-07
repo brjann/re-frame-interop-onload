@@ -607,7 +607,7 @@ SELECT
     CustomReminderMessage AS `remind-message`,
     ActivatedEmailSubject AS `activation-email-subject`,
     ReminderEmailSubject AS `late-email-subject`,
-    CreateNewQuickLoginOnActivation AS `generate-quicklogin?`,
+    CreateNewQuickLoginOnActivation AS `generate-quick-login?`,
     SortOrder AS `sort-order`
 FROM c_assessment
 WHERE ObjectId IN(:v*:assessment-ids);
@@ -629,11 +629,17 @@ ON DUPLICATE KEY UPDATE
     RemindersSent = VALUES(RemindersSent);
 
 
--- :name get-users-contact-info :? :*
+-- :name get-users-info :? :*
 -- :doc
 SELECT
   ObjectId as `user-id`,
   Email AS `email`,
-  SMSNumber AS `sms-number`
+  SMSNumber AS `sms-number`,
+  QuickLoginPassword AS `quick-login-id`,
+  QuickLoginTimestamp AS `quick-login-timestamp`,
+  FirstName AS `first-name`,
+  LastName AS `last-name`,
+  UserName,
+  Email
 FROM c_participant
 WHERE ObjectId IN (:v*:user-ids);

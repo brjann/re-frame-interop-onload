@@ -39,7 +39,8 @@
 
 (defn update-user-properties!
   [user-id properties]
-  (let [properties (merge properties
+  (let [properties (into {} (map (fn [[k v]] [(if (keyword? k) k (keyword k)) v]) properties))
+        properties (merge properties
                           (->> (select-keys properties [:FirstName :LastName :Email :SMSNumber :Personnummer])
                                (utils/map-map utils/remove-html)))
         properties (into {} (map (fn [[k v]] [((comp keyword str/lower-case name) k) v]) properties))

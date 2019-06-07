@@ -167,4 +167,4 @@
       group2-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     (create-group-administration!
       group2-id ass-G-week-e+s-3-4-p10 3 {:date (midnight *now*)})
-    (is (= 8 (remind!-created *now*)))))
+    (is (= 8 (remind!-administrations-created *now*)))))

@@ -10,7 +10,8 @@
             [bass4.assessment.reminder :as assessment-reminder]
             [clojure.tools.logging :as log]
             [bass4.assessment.create-missing :as missing]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [bass4.routes.quick-login :as quick-login]))
 
 (use-fixtures
   :once
@@ -131,12 +132,21 @@
   [now]
   (assessment-reminder/remind! db/*db* now *tz*))
 
-(defn remind!-created
+(defn remind!-administrations-created
   [now]
-  (binding [missing/*create-count-chan* (chan)]
-    (remind! now)
-    (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
-      create-count)))
+  (let [c (chan)]
+    (binding [missing/*create-count-chan* c]
+      (remind! now)
+      (let [[create-count _] (alts!! [c (timeout 1000)])]
+        create-count))))
+
+(defn remind!-quick-logins-created
+  [now]
+  (let [c (chan)]
+    (binding [quick-login/*quick-login-updates-chan* c]
+      (remind! now)
+      (let [[quick-login-user-ids _] (alts!! [c (timeout 1000)])]
+        quick-login-user-ids))))
 
 (defn- message-vec
   [message type]

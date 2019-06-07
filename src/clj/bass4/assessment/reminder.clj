@@ -5,7 +5,8 @@
             [clojure.tools.logging :as log]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.create-missing :as missing]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.routes.quick-login :as quick-login]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -68,10 +69,10 @@
                                                                (::remind-number %))
                                                       administrations)})))
 
-(defn db-users-contact-info
+(defn db-users-info
   [db user-ids]
   (when (seq user-ids)
-    (->> (db/get-users-contact-info db {:user-ids user-ids})
+    (->> (db/get-users-info db {:user-ids user-ids})
          (map #(vector (:user-id %) %))
          (into {}))))
 
@@ -348,7 +349,7 @@
        (mapcat user-messages)))
 
 (defn smses
-  [sms-assessments ])
+  [sms-assessments])
 
 (defn remind!
   [db now tz]
@@ -356,7 +357,13 @@
                                 (missing/add-missing-administrations!))
         reminders-by-type   (group-by ::remind-type remind-assessments)
         message-assessments (remind-messages remind-assessments)
-        contact-info        (db-users-contact-info db (map :user-id message-assessments))]
+        users-info          (db-users-info db (map :user-id message-assessments))
+        users-info          (->> remind-assessments
+                                 (filter :generate-quick-login?)
+                                 (map :user-id)
+                                 (select-keys users-info)
+                                 (vals)
+                                 (quick-login/update-users-quick-login! db now))]
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))))
 

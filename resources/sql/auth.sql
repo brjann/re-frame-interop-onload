@@ -72,7 +72,7 @@ FROM c_participant
 WHERE QuickLoginPassword = :quick-login-id;
 
 
--- :name update-users-quicklogin! :! :1
+-- :name update-users-quick-login! :! :1
 -- :doc
 INSERT INTO c_participant
 (ObjectId, QuickLoginPassword, QuickLoginTimestamp)
@@ -80,3 +80,4 @@ VALUES :t*:quick-logins
 ON DUPLICATE KEY UPDATE
     QuickLoginPassword = VALUES(QuickLoginPassword),
     QuickLoginTimestamp = VALUES(QuickLoginTimestamp);
+
