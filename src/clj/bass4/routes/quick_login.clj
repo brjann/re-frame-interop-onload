@@ -14,6 +14,15 @@
             [bass4.config :as config])
   (:import (clojure.lang ExceptionInfo)))
 
+
+;; ------------
+;;   SERVICES
+;; ------------
+
+(defn db-quick-login-settings
+  [db]
+  (db/get-quick-login-settings db))
+
 (defmacro log-msg
   [& msgs]
   `(when-not config/test-mode?
@@ -27,7 +36,7 @@
 
 (defn- quick-login-settings
   []
-  (let [{:keys [expiration-days allowed?]} (db/get-quick-login-settings)]
+  (let [{:keys [expiration-days allowed?]} (db-quick-login-settings db/*db*)]
     (when (not allowed?)
       (log-msg "Quick login not allowed")
       (throw (ex-info "Quick login is not allowed" {:type ::quick-login-error})))

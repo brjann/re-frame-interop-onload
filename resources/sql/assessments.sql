@@ -607,14 +607,23 @@ SELECT
     CustomReminderMessage AS `remind-message`,
     ActivatedEmailSubject AS `activation-email-subject`,
     ReminderEmailSubject AS `late-email-subject`,
-    CreateNewQuickLoginOnActivation AS `generate-quicklogin?`
+    CreateNewQuickLoginOnActivation AS `generate-quicklogin?`,
+    SortOrder AS `sort-order`
 FROM c_assessment
 WHERE ObjectId IN(:v*:assessment-ids);
 
-# $RemindParticipantsWhenLate = 0;
-#
-# 	/** property integer */
-# 	public $RemindInterval = 1;
-#
-# 	/** property integer */
-# 	public $MaxRemindCount = 0;
+
+-- :name activation-reminders-sent! :! :1
+-- :doc
+UPDATE c_participantadministration
+SET EmailSent = 1
+WHERE ObjectId IN(:v*:administration-ids);
+
+
+-- :name late-reminders-sent! :! :1
+-- :doc
+INSERT INTO c_participantadministration
+(ObjectId, RemindersSent)
+VALUES :t*:remind-numbers
+ON DUPLICATE KEY UPDATE
+    RemindersSent = VALUES(RemindersSent);

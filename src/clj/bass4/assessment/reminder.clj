@@ -1,10 +1,8 @@
 (ns bass4.assessment.reminder
-  (:require [clj-time.coerce :as tc]
-            [clj-time.core :as t]
+  (:require [clj-time.core :as t]
             [bass4.utils :as utils]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [clojure.pprint :as pprint]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.create-missing :as missing]
             [clojure.string :as str]))
@@ -31,13 +29,13 @@
 
 (defn- db-users-assessment-series-id
   [db user-ids]
-  (when user-ids
+  (when (seq user-ids)
     (let [res (db/get-user-assessment-series db {:user-ids user-ids})]
       (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
 
 (defn- db-groups-assessment-series-id
   [db group-ids]
-  (when group-ids
+  (when (seq group-ids)
     (let [res (db/get-group-assessment-series db {:group-ids group-ids})]
       (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res))))
 
@@ -51,12 +49,24 @@
   [db groups+assessments+series]
   (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
 
-(defn assessments
+(defn db-assessments
   [db assessment-ids]
   (when assessment-ids
     (->> (db/get-remind-assessments db {:assessment-ids assessment-ids})
          (map #(vector (:assessment-id %) %))
          (into {}))))
+
+(defn db-activation-reminders-sent!
+  [db administrations]
+  (when (seq administrations)
+    (db/activation-reminders-sent! db {:administration-ids (map :participant-administration-id administrations)})))
+
+(defn db-late-reminders-sent!
+  [db administrations]
+  (when (seq administrations)
+    (db/late-reminders-sent! db {:remind-numbers (map #(vector (:participant-administration-id %)
+                                                               (::remind-number %))
+                                                      administrations)})))
 
 (defn today-midnight
   [now tz]
@@ -184,9 +194,9 @@
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
         group-administrations-grouped       (when-not (empty? user-groups)
                                               (group-administrations-from-potential-assessments db potentials))
-        assessments'                        (assessments db (->> potentials
-                                                                 (map :assessment-id)
-                                                                 (into #{})))
+        assessments'                        (db-assessments db (->> potentials
+                                                                    (map :assessment-id)
+                                                                    (into #{})))
         merged-by-user+assessment           (->> potentials
                                                  (map #(vector (:user-id %) (:assessment-id %)))
                                                  (map (fn [[user-id assessment-id]]
@@ -281,34 +291,34 @@
 
 (defn- assessment-comparator
   [x y]
-  (cond
-    ;; {QUICKURL} wins
-    (and (quick-url? (:remind-message x))
-         (not (quick-url? (:remind-message y))))
-    -1
+  (let [quick-url-x? (quick-url? (:remind-message x))
+        quick-url-y? (quick-url? (:remind-message y))]
+    (cond
+      ;; {QUICKURL} wins
+      (and quick-url-x?
+           (not quick-url-y?))
+      -1
 
-    (and (quick-url? (:remind-message y))
-         (not (quick-url? (:remind-message x))))
-    1
+      (and quick-url-y?
+           (not quick-url-x?))
+      1
 
-    ;; Custom message wins
-    (and (not (str/blank? (:remind-message x)))
-         (str/blank? (:remind-message y)))
-    -1
+      ;; Custom message wins
+      (and (not (str/blank? (:remind-message x)))
+           (str/blank? (:remind-message y)))
+      -1
 
-    (and (not (str/blank? (:remind-message y)))
-         (str/blank? (:remind-message x)))
-    1
+      (and (not (str/blank? (:remind-message y)))
+           (str/blank? (:remind-message x)))
+      1
 
-    ;; Priority wins
-    (< (:priority x) (:priority y))
-    -1
+      ;; Priority wins
+      (not= (:priority x) (:priority y))
+      (compare (:priority x) (:priority y))
 
-    (< (:priority y) (:priority x))
-    1
-
-    :else
-    0))
+      ;; Lastly by sort order
+      :else
+      (compare (:sort-order x) (:sort-order y)))))
 
 (defn- user-messages
   [assessments]
@@ -324,15 +334,19 @@
                       (when sms (assoc sms ::message-type :sms))])))
 
 (defn remind-messages
-  [remind-assessment]
-  (->> remind-assessment
+  [remind-assessments]
+  (->> remind-assessments
        (group-by :user-id)
        (vals)
        (mapcat user-messages)))
 
 (defn remind!
   [db now tz]
-  (-> (reminders db now tz)
-      (missing/add-missing-administrations!)))
+  (let [remind-assessments  (-> (reminders db now tz)
+                                (missing/add-missing-administrations!))
+        message-assessments (remind-messages remind-assessments)
+        reminders-by-type   (group-by ::remind-type remind-assessments)]
+    (db-activation-reminders-sent! db (::activation reminders-by-type))
+    (db-late-reminders-sent! db (::late reminders-by-type))))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

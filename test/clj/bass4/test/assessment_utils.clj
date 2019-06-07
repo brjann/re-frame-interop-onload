@@ -1,13 +1,16 @@
 (ns bass4.test.assessment-utils
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
+            [clojure.core.async :refer [chan alts!! timeout]]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]
             [bass4.assessment.reminder :as assessment-reminder]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.assessment.create-missing :as missing]
+            [clojure.pprint :as pprint]))
 
 (use-fixtures
   :once
@@ -123,6 +126,17 @@
                (::assessment-reminder/remind-type %)
                (::assessment-reminder/remind-number %)))
        (into #{})))
+
+(defn remind!
+  [now]
+  (assessment-reminder/remind! db/*db* now *tz*))
+
+(defn remind!-created
+  [now]
+  (binding [missing/*create-count-chan* (chan)]
+    (remind! now)
+    (let [[create-count _] (alts!! [missing/*create-count-chan* (timeout 1000)])]
+      create-count)))
 
 (defn- message-vec
   [message type]
