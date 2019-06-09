@@ -48,51 +48,51 @@
     db
     {:user-ids+assessment-ids user+assessments+series}))
 
-(defn db-group-administrations-by-group+assessment+series
+(defn- db-group-administrations-by-group+assessment+series
   [db groups+assessments+series]
   (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
 
-(defn db-assessments
+(defn- db-assessments
   [db assessment-ids]
   (when assessment-ids
     (->> (db/get-remind-assessments db {:assessment-ids assessment-ids})
          (map #(vector (:assessment-id %) %))
          (into {}))))
 
-(defn db-activation-reminders-sent!
+(defn- db-activation-reminders-sent!
   [db administrations]
   (when (seq administrations)
     (db/activation-reminders-sent! db {:administration-ids (map :participant-administration-id administrations)})))
 
-(defn db-late-reminders-sent!
+(defn- db-late-reminders-sent!
   [db administrations]
   (when (seq administrations)
     (db/late-reminders-sent! db {:remind-numbers (map #(vector (:participant-administration-id %)
                                                                (::remind-number %))
                                                       administrations)})))
 
-(defn db-users-info
+(defn- db-users-info
   [db user-ids]
   (when (seq user-ids)
     (->> (db/get-users-info db {:user-ids user-ids})
          (map #(vector (:user-id %) %))
          (into {}))))
 
-(defn db-standard-messages
+(defn- db-standard-messages
   [db]
   (db/get-standard-messages db))
 
-(defn db-url
+(defn- db-url
   [db]
   (:url (db/get-db-url db)))
 
-(defn today-midnight
+(defn- today-midnight
   [now tz]
   (-> (t/to-time-zone now tz)
       (t/with-time-at-start-of-day)
       (utils/to-unix)))
 
-(defn today-last-second
+(defn- today-last-second
   [now tz]
   (-> (t/to-time-zone now tz)
       (t/with-time-at-start-of-day)
@@ -100,7 +100,7 @@
       (utils/to-unix)
       (- 1)))
 
-(defn potential-activation-reminders
+(defn- potential-activation-reminders
   "Returns list of potentially activated assessments for users
   {:user-id 653692,
    :group-id 653637,
@@ -236,7 +236,7 @@
                                                  (map #(merge % (get assessments' (:assessment-id %)))))]
     ongoing-assessments))
 
-(defn ongoing-reminder-assessments
+(defn- ongoing-reminder-assessments
   [db now potentials]
   (when (seq potentials)
     (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
@@ -364,7 +364,7 @@
           str
           replacements))
 
-(defn insert-user-fields
+(defn- insert-user-fields
   [template user-info db-url]
   (when-not (str/blank? template)                           ;; WARNING
     (let [message (replace-tokens template {"{LOGIN}"     (:username user-info)
@@ -449,9 +449,9 @@
         users-info           (->> (db-users-info db (map :user-id message-assessments'))
                                   (generate-quick-login! db now remind-assessments))
         messages             (messages db message-assessments' users-info)]
-    ;; Send them
     ;; Implement task handler
     ;; Implement mailqueue
+    ;; Implement reminder task
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))
     (email-queuer! (:email messages))
