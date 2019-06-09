@@ -6,7 +6,9 @@
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.create-missing :as missing]
             [clojure.string :as str]
-            [bass4.routes.quick-login :as quick-login]))
+            [bass4.routes.quick-login :as quick-login]
+            [bass4.email :as email]
+            [bass4.sms-sender :as sms]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -75,6 +77,14 @@
     (->> (db/get-users-info db {:user-ids user-ids})
          (map #(vector (:user-id %) %))
          (into {}))))
+
+(defn db-standard-messages
+  [db]
+  (db/get-standard-messages db))
+
+(defn db-url
+  [db]
+  (:url (db/get-db-url db)))
 
 (defn today-midnight
   [now tz]
@@ -331,11 +341,11 @@
 (defn- user-messages
   [assessments]
   (let [email (->> assessments
-                   (filter :activation-email?)
+                   (filter :remind-by-email?)
                    (sort assessment-comparator)
                    (first))
         sms   (->> assessments
-                   (filter :activation-sms?)
+                   (filter :remind-by-sms?)
                    (sort assessment-comparator)
                    (first))]
     (filter identity [(when email (assoc email ::message-type :email))
@@ -348,14 +358,61 @@
        (vals)
        (mapcat user-messages)))
 
-(defn smses
-  [sms-assessments])
+(defn- replace-tokens
+  [str replacements]
+  (reduce (fn [s [a b]]
+            (str/replace s a (or b "")))
+          str
+          replacements))
+
+(defn insert-user-fields
+  [template user-info db-url]
+  (when-not (str/blank? template)                           ;; WARNING
+    (let [message (replace-tokens template {"{LOGIN}"     (:username user-info)
+                                            "{FIRSTNAME}" (:first-name user-info)
+                                            "{LASTNAME}"  (:last-name user-info)
+                                            "{EMAIL}"     (:email user-info)
+                                            "{URL}"       db-url
+                                            "{QUICKURL}"  (str db-url "/q/" (:quick-login-id user-info))})]
+      (when-not (str/blank? message)
+        message))))
+
+(defn- email
+  [assessment user-info standard-message db-url]
+  (assert (not (nil? user-info)))
+  (when (email/is-email? (:email user-info))                ;; WARNING
+    (let [subject  (let [subject (if (= ::activation (::remind-type assessment))
+                                   (:activation-email-subject assessment)
+                                   (:late-email-subject assessment))]
+                     (if-not (empty? subject)               ;; WARNING
+                       subject
+                       "Information"))
+          template (if-not (empty? (:remind-message assessment))
+                     (:remind-message assessment)
+                     standard-message)]
+      (when-let [message (insert-user-fields template user-info db-url)]
+        (when-not (str/blank? message)
+          {:user-id (:user-id user-info)
+           :to      (:email user-info)
+           :subject subject
+           :message message})))))
+
+(defn- sms
+  [assessment user-info standard-message db-url]
+  (assert (not (nil? user-info)))
+  (when (sms/is-sms-number? (:sms-number user-info))        ; WARNING
+    (let [template (if-not (empty? (:remind-message assessment))
+                     (:remind-message assessment)
+                     standard-message)]
+      (when-let [message (insert-user-fields template user-info db-url)]
+        {:user-id (:user-id user-info)
+         :to      (:sms-number user-info)
+         :message message}))))
 
 (defn remind!
-  [db now tz]
+  [db now tz email-queuer! sms-queuer!]
   (let [remind-assessments  (-> (reminders db now tz)
                                 (missing/add-missing-administrations!))
-        reminders-by-type   (group-by ::remind-type remind-assessments)
         message-assessments (remind-messages remind-assessments)
         users-info          (db-users-info db (map :user-id message-assessments))
         users-info          (merge users-info
@@ -364,14 +421,33 @@
                                         (map :user-id)
                                         (select-keys users-info)
                                         (vals)
-                                        (quick-login/update-users-quick-login! db now)
+                                        (quick-login/update-users-quick-login! db now) ;; WARNING if not allowed
                                         (map #(vector (:user-id %) %))
-                                        (into {})))]
-    ;; Generate emails and messages to be sent
+                                        (into {})))
+        reminders-by-type   (group-by ::remind-type remind-assessments)
+        standard-messages   (db-standard-messages db)
+        db-url              (-> (db-url db)
+                                (str/replace #"/$" ""))
+        emails              (->> message-assessments
+                                 (filter #(= :email (::message-type %)))
+                                 (map #(email %
+                                              (get users-info (:user-id %))
+                                              (:email standard-messages)
+                                              db-url))
+                                 (filter identity))
+        smses               (->> message-assessments
+                                 (filter #(= :sms (::message-type %)))
+                                 (map #(sms %
+                                            (get users-info (:user-id %))
+                                            (:sms standard-messages)
+                                            db-url))
+                                 (filter identity))]
     ;; Send them
-    ;; Implement mailqueue
     ;; Implement task handler
+    ;; Implement mailqueue
     (db-activation-reminders-sent! db (::activation reminders-by-type))
-    (db-late-reminders-sent! db (::late reminders-by-type))))
+    (db-late-reminders-sent! db (::late reminders-by-type))
+    (email-queuer! emails)
+    (sms-queuer! smses)))
 
 (def tz (t/time-zone-for-id "Asia/Tokyo"))

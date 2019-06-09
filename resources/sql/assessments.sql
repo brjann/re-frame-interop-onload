@@ -599,8 +599,8 @@ SELECT
     IsRecord AS `is-record?`,
     ClinicianAssessment AS `clinician-rated?`,
     CompetingAssessmentsPriority AS `priority`,
-    SendSMSWhenActivated AS `activation-sms?`,
-    SendEmailWhenActivated AS `activation-email?`,
+    SendEmailWhenActivated AS `remind-by-email?`,
+    SendSMSWhenActivated AS `remind-by-sms?`,
     RemindParticipantsWhenLate AS `late-remind?`,
     RemindInterval AS `late-remind-interval`,
     MaxRemindCount AS `late-remind-count`,
@@ -643,3 +643,18 @@ SELECT
   Email
 FROM c_participant
 WHERE ObjectId IN (:v*:user-ids);
+
+
+-- :name get-standard-messages :? :1
+-- :doc
+SELECT
+ StandardSMSReminderMessage AS `sms`,
+ StandardEmailReminderMessage AS `email`
+FROM c_project WHERE ObjectId = 100;
+
+
+-- :name get-db-url :? :1
+-- :doc
+SELECT
+ BASS4_URL AS `url`
+FROM c_project WHERE ObjectId = 100;

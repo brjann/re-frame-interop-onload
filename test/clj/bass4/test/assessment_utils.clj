@@ -1,7 +1,7 @@
 (ns bass4.test.assessment-utils
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
-            [clojure.core.async :refer [chan alts!! timeout]]
+            [clojure.core.async :refer [chan alts!! timeout put!]]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.utils :as utils]
@@ -130,7 +130,7 @@
 
 (defn remind!
   [now]
-  (assessment-reminder/remind! db/*db* now *tz*))
+  (assessment-reminder/remind! db/*db* now *tz* (constantly true) (constantly true)))
 
 (defn remind!-administrations-created
   [now]
@@ -147,6 +147,16 @@
       (remind! now)
       (let [[quick-login-user-ids _] (alts!! [c (timeout 1000)])]
         quick-login-user-ids))))
+
+(defn remind!-messages-sent
+  [now]
+  (let [email-chan (chan)
+        sms-chan   (chan)]
+    (assessment-reminder/remind! db/*db* now *tz* #(put! email-chan %) #(put! sms-chan %))
+    (let [[emails _] (alts!! [email-chan (timeout 1000)])
+          [smses _] (alts!! [sms-chan (timeout 1000)])]
+      (into #{} (concat (map #(vector (:user-id %) :email (:to %) (:subject %) (:message %)) emails)
+                        (map #(vector (:user-id %) :sms (:to %) (:message %)) smses))))))
 
 (defn messages
   [now]

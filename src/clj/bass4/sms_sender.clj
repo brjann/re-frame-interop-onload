@@ -118,7 +118,7 @@
 
 (defn is-sms-number?
   [number]
-  (re-matches #"^\+{0,1}[0-9()./\- ]*$" number))
+  (re-matches #"^\+{0,1}[0-9()./\- ]+$" number))
 
 (defn get-sender []
   (if db/*db*
