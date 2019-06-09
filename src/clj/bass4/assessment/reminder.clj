@@ -296,18 +296,17 @@
     (concat remind-activation remind-late)))
 
 
-;; https://clojure.org/guides/comparators
-;; A 3-way comparator takes 2 values, x and y, and returns
-;; -1 if x comes before y,
-;; 1 if x comes after y, or
-;; 0 if they are equal
-
-(defn quick-url?
+(defn- quick-url?
   [assessment]
   (when (:remind-message assessment)
     (str/includes? (:remind-message assessment) "{QUICKURL}")))
 
 (defn- assessment-comparator
+  ;; https://clojure.org/guides/comparators
+  ;; A 3-way comparator takes 2 values, x and y, and returns
+  ;; -1 if x comes before y,
+  ;; 1 if x comes after y, or
+  ;; 0 if they are equal
   [x y]
   (let [quick-url-x? (quick-url? (:remind-message x))
         quick-url-y? (quick-url? (:remind-message y))]
@@ -351,7 +350,7 @@
     (filter identity [(when email (assoc email ::message-type :email))
                       (when sms (assoc sms ::message-type :sms))])))
 
-(defn remind-messages
+(defn message-assessments
   [remind-assessments]
   (->> remind-assessments
        (group-by :user-id)
@@ -384,18 +383,17 @@
     (let [subject  (let [subject (if (= ::activation (::remind-type assessment))
                                    (:activation-email-subject assessment)
                                    (:late-email-subject assessment))]
-                     (if-not (empty? subject)               ;; WARNING
+                     (if-not (str/blank? subject)           ;; WARNING
                        subject
                        "Information"))
           template (if-not (empty? (:remind-message assessment))
                      (:remind-message assessment)
                      standard-message)]
       (when-let [message (insert-user-fields template user-info db-url)]
-        (when-not (str/blank? message)
-          {:user-id (:user-id user-info)
-           :to      (:email user-info)
-           :subject subject
-           :message message})))))
+        {:user-id (:user-id user-info)
+         :to      (:email user-info)
+         :subject subject
+         :message message}))))
 
 (defn- sms
   [assessment user-info standard-message db-url]
@@ -421,7 +419,7 @@
               (map #(vector (:user-id %) %))
               (into {}))))
 
-(defn- generate-messages
+(defn- messages
   [db message-assessments users-info]
   (let [standard-messages (db-standard-messages db)
         db-url            (-> (db-url db)
@@ -444,13 +442,13 @@
 
 (defn remind!
   [db now tz email-queuer! sms-queuer!]
-  (let [remind-assessments  (-> (reminders db now tz)
-                                (missing/add-missing-administrations!))
-        reminders-by-type   (group-by ::remind-type remind-assessments)
-        message-assessments (remind-messages remind-assessments)
-        users-info          (->> (db-users-info db (map :user-id message-assessments))
-                                 (generate-quick-login! db now remind-assessments))
-        messages            (generate-messages db message-assessments users-info)]
+  (let [remind-assessments   (-> (reminders db now tz)
+                                 (missing/add-missing-administrations!))
+        reminders-by-type    (group-by ::remind-type remind-assessments)
+        message-assessments' (message-assessments remind-assessments)
+        users-info           (->> (db-users-info db (map :user-id message-assessments'))
+                                  (generate-quick-login! db now remind-assessments))
+        messages             (messages db message-assessments' users-info)]
     ;; Send them
     ;; Implement task handler
     ;; Implement mailqueue

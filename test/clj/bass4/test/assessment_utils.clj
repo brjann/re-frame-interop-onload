@@ -161,7 +161,7 @@
 (defn messages
   [now]
   (->> (assessment-reminder/reminders db/*db* now *tz*)
-       (assessment-reminder/remind-messages)
+       (assessment-reminder/message-assessments)
        (map #(vector
                (:user-id %)
                (:assessment-id %)
