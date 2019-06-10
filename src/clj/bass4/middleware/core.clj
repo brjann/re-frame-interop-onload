@@ -152,13 +152,13 @@
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
       debug-mw/wrap-prone-debug-exceptions
-      (wrap-mw-fn #'file-php/File-php)
       (wrap-mw-fn #'request-state-session-info)
       (wrap-mw-fn #'auth/session-user-id-mw)
       debug-mw/wrap-session-modification
       (wrap-mw-fn #'transform/transform-mw)
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
+      (wrap-mw-fn #'file-php/File-php)                      ; Must be directly after db resolve so path restrictions (e.g., /embedded) are not applied
       (session-storage/wrap-db-session)
       #_(ring-session/wrap-session
         {:cookie-attrs {:http-only true}
