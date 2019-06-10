@@ -10,16 +10,7 @@
 
 (defn mail-request-error!
   [req-state]
-  (try
-    (email/async-email!
-      nil
-      (env :error-email)
-      "Error in BASS4"
-      (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))
-    (catch Exception x
-      (log/error "Could not send error email to: " (env :error-email)
-                 "\nError message" (:error-messages req-state)
-                 "\nMail error: " x))))
+  (email/send-error-email! (:name req-state) (:error-messages req-state)))
 
 (defn catch-request-error
   [handler req]

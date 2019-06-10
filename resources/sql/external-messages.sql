@@ -37,3 +37,27 @@ WHERE `status` = "queued" FOR UPDATE;
 UPDATE external_message_email
 SET `status` = "sending"
 WHERE `id` IN(:v*:ids);
+
+
+-- :name external-message-emails-sent! :! :1
+-- :doc
+UPDATE external_message_email
+SET `status` = "sent",
+    `status-time` = :time
+WHERE `id` IN(:v*:ids);
+
+
+-- :name external-message-emails-update-fail-count! :! :1
+-- :doc
+UPDATE external_message_email
+SET `fail-count` = `fail-count` + 1,
+    `status` = "queued",
+    `status-time` = :time
+WHERE `id` IN(:v*:ids);
+
+
+-- :name external-message-emails-final-failed! :! :1
+-- :doc
+UPDATE external_message_email
+SET `status` = "failed"
+WHERE `fail-count` >= :max-failures;

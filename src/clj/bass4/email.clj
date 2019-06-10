@@ -149,3 +149,17 @@
              (log/info "No DB selected for email count update.")))
          ;; Res is result of go block
          res)))))
+
+
+(defn send-error-email!
+  [sender-name message]
+  (try
+    (async-email!
+      nil
+      (env :error-email)
+      "Error in BASS4"
+      (str "Sent by " sender-name "\n" message))
+    (catch Exception x
+      (log/error "Could not send error email to: " (env :error-email)
+                 "\nError message" message
+                 "\nMail error: " x))))
