@@ -61,14 +61,24 @@
 (defmethod send-email! :redirect
   [to subject message & reply-to]
   (let [reroute-email (or *email-reroute* (env :dev-reroute-email))]
-    (send-email*! reroute-email subject (str "To: " to "\n" message) (first reply-to) false)))
+    (send-email*! reroute-email subject (str "To: " to "\n" message) (first reply-to) (config/env :no-reply-address) false)))
 
 (defmethod send-email! :void
-  [& _])
+  [& _]
+  true)
 
 (defmethod send-email! :out
   [& more]
-  (println (apply str (interpose "\n" (conj more "email")))))
+  (println (apply str (interpose "\n" (conj more "email"))))
+  true)
+
+(defmethod send-email! :fail
+  [& more]
+  false)
+
+(defmethod send-email! :exception
+  [& more]
+  (throw (Exception. "An exception")))
 
 (defmethod send-email! :default
   ([to subject message sender]
@@ -115,11 +125,12 @@
    (let [sender (if db
                   (db-no-reply-address db)
                   (config/env :no-reply-address))]
-     (send-email! to subject message sender reply-to))
-   (if db
-     (bass/inc-email-count! db)
-     (log/info "No DB selected for email count update."))
-   true))
+     (let [res (send-email! to subject message sender reply-to)]
+       (assert (boolean? res))
+       (if (and res db)
+         (bass/inc-email-count! db)
+         (log/info "No DB selected for email count update."))
+       res))))
 
 (defn async-email!
   "Throws if to is not valid email address.

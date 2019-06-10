@@ -24,7 +24,6 @@
                       (str "Async error in BASS4: " (.getMessage exception)
                            "\nSee log for details."
                            "\nSent by " db-name))
-                    true
                     (catch Exception e
                       e))]
     (log/error "ASYNC ERROR")

@@ -14,7 +14,8 @@
     [bass4.external-messages.async :as external-messages]
     [bass4.external-messages.email-sender :as email]
     [clojure.string :as str]
-    [bass4.utils :as utils]))
+    [bass4.utils :as utils]
+    [bass4.config :as config]))
 
 
 ;; ---------------------
@@ -84,20 +85,31 @@
 
 (defmethod send-sms! :redirect-sms
   [recipient message sender]
-  (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms) :default)]
+  (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms))]
     (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender)))
 
 (defmethod send-sms! :redirect-email
   [recipient message _]
-  (let [reroute-email (or *sms-reroute* (env :dev-reroute-sms) :default)]
-    (email/send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) nil false)))
+  (let [reroute-email (or *sms-reroute* (env :dev-reroute-sms))]
+    (email/send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) (config/env :no-reply-address) nil false)))
 
 (defmethod send-sms! :void
-  [& _])
+  [& _]
+  true)
 
 (defmethod send-sms! :out
   [& more]
-  (println (apply str (interpose "\n" (conj more "SMS")))))
+  (println (apply str (interpose "\n" (conj more "SMS"))))
+  true)
+
+(defmethod send-sms! :fail
+  [& more]
+  false)
+
+(defmethod send-sms! :exception
+  [& more]
+  (throw (Exception. "An exception"))
+  true)
 
 (defmethod send-sms! :default
   [to message sender]
@@ -130,11 +142,12 @@
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender (get-sender)]
-    (send-sms! to message sender)
-    (if db
-      (bass/inc-sms-count! db)
-      (log/info "No DB selected for SMS count update."))
-    true))
+    (let [res (send-sms! to message sender)]
+      (assert (boolean? res))
+      (if (and res db)
+        (bass/inc-sms-count! db)
+        (log/info "No DB selected for SMS count update."))
+      res)))
 
 (defn async-sms!
   "Throws if to is not valid mobile phone number.
