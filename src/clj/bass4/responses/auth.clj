@@ -15,7 +15,8 @@
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
-            [bass4.session.create :as session-create])
+            [bass4.session.create :as session-create]
+            [bass4.db.core :as db])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -119,7 +120,7 @@
     (sms/queue-sms! user-sms code)
 
     (:email send-methods)
-    (mail/queue-email! user-email (i18n/tr [:login/code]) code)
+    (mail/async-email! db/*db* user-email (i18n/tr [:login/code]) code)
 
     :else
     (throw (Exception. "No sending method"))))

@@ -24,7 +24,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service]
             [bass4.services.user :as user-service]
-            [bass4.http-errors :as http-errors])
+            [bass4.http-errors :as http-errors]
+            [bass4.db.core :as db])
   (:import (java.util UUID)))
 
 (defn render-page
@@ -427,7 +428,10 @@
 
 (defn send-email!
   [email code]
-  (mail/queue-email! email (i18n/tr [:registration/validation-code]) (str (i18n/tr [:registration/validation-code]) " " code)))
+  (mail/async-email! db/*db*
+                     email
+                     (i18n/tr [:registration/validation-code])
+                     (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- send-sms!
   [sms-number code]

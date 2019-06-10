@@ -8,7 +8,8 @@
             [bass4.services.lost-password :as lpw-service]
             [bass4.email :as mailer]
             [bass4.i18n :as i18n]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.db.core :as db]))
 
 
 ;; -------------------
@@ -29,7 +30,7 @@
             url    (str (h-utils/get-host-address request) "/lpw-uid/" uid)
             mail   (i18n/tr [:lost-password/request-email-text] [url (:email (bass-service/db-contact-info))])
             header (i18n/tr [:lost-password/request-email-header])]
-        (mailer/queue-email! (:email user) header mail))
+        (mailer/async-email! db/*db* (:email user) header mail))
       ;; If user has no email address - then flag anyway but act as if email was sent.
       (lpw-service/create-flag! user)))
   (http-response/found "/lost-password/request-email/sent"))

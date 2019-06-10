@@ -75,7 +75,8 @@
     (when error?
       (throw val))
     (when (< 1 tries)
-      (email/queue-email!
+      (email/async-email!
+        db/*db*
         (config/env :error-email)
         "SQL required more than 1 try to succeed"
         (str "DB: " (db-config/db-name) "\n"

@@ -23,7 +23,7 @@
   (let [email-count (get-message-count "email")
         res-a       (atom nil)
         out-str     (with-out-str (binding [email/*email-reroute* :out]
-                                    (reset! res-a (<!! (email/queue-email! "brjann@gmail.com" "XXX" "YYY")))))]
+                                    (reset! res-a (<!! (email/async-email! db/*db* "brjann@gmail.com" "XXX" "YYY")))))]
     (messages-are? [[:email "YYY"]] [(:message @res-a)])
     (is (str/includes? out-str "email"))
     (is (str/includes? out-str "brjann@gmail.com"))
@@ -45,7 +45,7 @@
 (deftest send-email-out-now
   (let [email-count (get-message-count "email")
         res         (with-out-str (binding [email/*email-reroute* :out]
-                                    (email/send-email-now! "brjann@gmail.com" "XXX" "YYY")))]
+                                    (email/send-email-now! db/*db* "brjann@gmail.com" "XXX" "YYY")))]
     (is (str/includes? res "email"))
     (is (str/includes? res "brjann@gmail.com"))
     (is (str/includes? res "XXX"))

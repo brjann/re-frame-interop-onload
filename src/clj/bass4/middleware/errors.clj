@@ -11,7 +11,8 @@
 (defn mail-request-error!
   [req-state]
   (try
-    (email/queue-email!
+    (email/async-email!
+      nil
       (env :error-email)
       "Error in BASS4"
       (str "Sent by " (:name req-state) "\n" (:error-messages req-state)))

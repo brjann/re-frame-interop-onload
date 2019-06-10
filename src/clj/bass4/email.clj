@@ -9,21 +9,33 @@
             [bass4.db-config :as db-config]
             [bass4.services.bass :as bass]
             [bass4.db.core :as db]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.config :as config]))
+
+
+
+(defn- db-no-reply-address
+  [db]
+  (:no-reply-address (db/external-message-no-reply-address db)))
 
 ;; ---------------------
 ;;  ACTUAL EMAIL SENDER
 ;; ---------------------
 
 (defn send-email*!
-  ([to subject message reply-to debug?]
+  ([to subject message sender reply-to debug?]
    (when (env :dev)
      (log/info (str "Sent mail to " to)))
    (let [mailer-path (io/file (env :bass-path) "system/ExternalMailer.php")
          args        (into {}
                            ;; Removes nil elements
                            (filter second
-                                   {"to" to "subject" subject "message" message "reply-to" reply-to "debug" debug?}))
+                                   {"to"       to
+                                    "subject"  subject
+                                    "message"  message
+                                    "sender"   sender
+                                    "reply-to" reply-to
+                                    "debug"    debug?}))
          res         (shell/sh "php" (str mailer-path) :in (clj->php args))]
      res
      (when (not= 0 (:exit res))
@@ -59,18 +71,18 @@
   (println (apply str (interpose "\n" (conj more "email")))))
 
 (defmethod send-email! :default
-  ([to subject message]
-    (send-email*! to subject message nil false))
-  ([to subject message reply-to]
-    (send-email*! to subject message reply-to false)))
+  ([to subject message sender]
+    (send-email*! to subject message sender nil false))
+  ([to subject message sender reply-to]
+    (send-email*! to subject message sender reply-to false)))
 
 ;; -------------------------------------
 ;;   EXTERNAL MESSAGE METHOD FOR EMAIL
 ;; -------------------------------------
 
 (defmethod external-messages/external-message-sender :email
-  [{:keys [to subject message reply-to]}]
-  (send-email! to subject message reply-to))
+  [{:keys [to subject message sender reply-to]}]
+  (send-email! to subject message sender reply-to))
 
 ;; ---------------------
 ;;    ERROR EMAIL
@@ -95,38 +107,45 @@
     (utils/match-regex? input #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")))
 
 (defn send-email-now!
-  ([to subject message]
-   (send-email-now! to subject message nil))
-  ([to subject message reply-to]
+  ([db to subject message]
+   (send-email-now! db to subject message nil))
+  ([db to subject message reply-to]
    (when-not (is-email? to)
      (throw (Exception. (str "Not valid email address: " to))))
-   (send-email! to subject message reply-to)
-   (if db/*db*
-     (bass/inc-email-count! db/*db*)
+   (let [sender (if db
+                  (db-no-reply-address db)
+                  (config/env :no-reply-address))]
+     (send-email! to subject message sender reply-to))
+   (if db
+     (bass/inc-email-count! db)
      (log/info "No DB selected for email count update."))
    true))
 
-(defn queue-email!
+(defn async-email!
   "Throws if to is not valid email address.
   Returns channel on which send result will be put.
   Guarantees that update of external message count is done before putting result"
-  ([to subject message]
-   (queue-email! to subject message nil))
-  ([to subject message reply-to]
+  ([db to subject message]
+   (async-email! db to subject message nil))
+  ([db to subject message reply-to]
    (when-not (is-email? to)
      (throw (Exception. (str "Not valid email address: " to))))
-   (let [error-chan (external-messages/async-error-chan error-sender (db-config/db-name))
+   (let [sender     (if db
+                      (db-no-reply-address db)
+                      (config/env :no-reply-address))
+         error-chan (external-messages/async-error-chan error-sender (db-config/db-name))
          own-chan   (external-messages/queue-message! {:type       :email
                                                        :to         to
                                                        :subject    subject
                                                        :message    message
+                                                       :sender     sender
                                                        :reply-to   reply-to
                                                        :error-chan error-chan})]
      (go
        (let [res (<! own-chan)]
          (when-not (= :error (:result res))
-           (if db/*db*
-             (bass/inc-email-count! db/*db*)
+           (if db
+             (bass/inc-email-count! db)
              (log/info "No DB selected for email count update.")))
          ;; Res is result of go block
          res)))))

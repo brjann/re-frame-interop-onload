@@ -95,12 +95,6 @@ CALL create_bass_link(:linker-id, :linkee-id, :link-property, :linker-class, :li
 SELECT @@session.time_zone AS `time-zone`;
 
 
--- :name inc-external-message-count! :! :1
--- :doc
-INSERT INTO external_message_count (`type`, `day`, `count`)
-				VALUES (:type, :day, 1)
-				ON DUPLICATE KEY UPDATE `count` = `count` + 1;
-
 -- :name get-quick-login-settings :? :1
 -- :doc
 SELECT

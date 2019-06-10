@@ -120,7 +120,8 @@
                         "sql/instrument-answers.sql"
                         "sql/registration.sql"
                         "sql/lost-password.sql"
-                        "sql/privacy.sql")
+                        "sql/privacy.sql"
+                        "sql/external-messages.sql")
 ;(conman/bind-connection *db* "sql/bass.sql")
 ;(conman/bind-connection *db* "sql/auth.sql")
 ;(conman/bind-connection *db* "sql/messages.sql")
