@@ -25,9 +25,6 @@
         filename (str (System/getProperty "user.dir") "/local" ".edn")]
     [:merge (conj config (merge defaults
                                 (when (.exists (io/file filename))
-                                  (source/from-file filename))))
-     #_(if (.exists (io/file filename))
-         (conj config (source/from-file filename))
-         config)]))
+                                  (source/from-file filename))))]))
 
 (defstate env :start (apply load-config (merge-args)))
