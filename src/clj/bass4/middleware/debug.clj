@@ -1,6 +1,6 @@
 (ns bass4.middleware.debug
   (:require [bass4.config :refer [env]]
-            [bass4.email :refer [send-email! send-email*! is-email?]]
+            [bass4.external-messages.email-sender :refer [send-email! send-email*! is-email?]]
             [prone.middleware :as prone]
             [clojure.tools.logging :as log]
             [bass4.db-config :as db-config]

@@ -2,9 +2,9 @@
   (:require [clojure.test :refer :all]
             [bass4.test.core :refer [test-fixtures messages-are?]]
             [clojure.core.async :refer [chan dropping-buffer <!!]]
-            [bass4.email :as email]
+            [bass4.external-messages.email-sender :as email]
             [clojure.string :as str]
-            [bass4.sms-sender :as sms]
+            [bass4.external-messages.sms-sender :as sms]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]))
 

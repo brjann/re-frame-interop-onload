@@ -26,7 +26,7 @@
             [clj-time.core :as t]
             [bass4.services.attack-detector :as a-d]
             [bass4.services.user :as user-service]
-            [bass4.external-messages :as external-messages :refer [*debug-chan*]]
+            [bass4.external-messages.async :as external-messages :refer [*debug-chan*]]
             [bass4.config :as config]))
 
 

@@ -11,7 +11,7 @@
                                      pass-by
                                      messages-are?
                                      poll-message-chan]]
-            [bass4.external-messages :refer [*debug-chan*]]
+            [bass4.external-messages.async :refer [*debug-chan*]]
             [kerodon.test :refer :all]
             [clojure.tools.logging :as log]))
 

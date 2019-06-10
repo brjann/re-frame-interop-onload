@@ -1,10 +1,10 @@
-(ns bass4.email
+(ns bass4.external-messages.email-sender
   (:require [bass4.config :refer [env]]
             [clojure.java.io :as io]
             [bass4.php_clj.core :refer [clj->php]]
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
-            [bass4.external-messages :as external-messages]
+            [bass4.external-messages.async :as external-messages]
             [clojure.core.async :refer [chan go <!]]
             [bass4.db-config :as db-config]
             [bass4.services.bass :as bass]

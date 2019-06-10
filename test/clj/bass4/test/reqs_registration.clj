@@ -28,7 +28,7 @@
             [clj-time.core :as t]
             [clojure.string :as string]
             [bass4.registration.services :as reg-service]
-            [bass4.external-messages :refer [*debug-chan*]]
+            [bass4.external-messages.async :refer [*debug-chan*]]
             [bass4.passwords :as passwords]
             [net.cgrand.enlive-html :as enlive]
             [bass4.services.privacy :as privacy-service]

@@ -17,7 +17,7 @@
                                      poll-message-chan]]
             [clojure.string :as string]
             [bass4.services.bass :as bass]
-            [bass4.external-messages :refer [*debug-chan*]]
+            [bass4.external-messages.async :refer [*debug-chan*]]
             [clojure.tools.logging :as log]
             [bass4.time :as b-time]
             [clj-time.core :as t]

@@ -1,7 +1,7 @@
 (ns bass4.middleware.errors
   (:require [bass4.config :refer [env]]
             [bass4.utils :refer [nil-zero?]]
-            [bass4.email :as email]
+            [bass4.external-messages.email-sender :as email]
             [clojure.tools.logging :as log]
             [bass4.error-pages :as error-pages]
             [bass4.api-coercion :as api]

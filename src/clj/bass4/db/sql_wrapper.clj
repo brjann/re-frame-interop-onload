@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [hugsql.core :as hugsql]
             [clojure.java.jdbc :as jdbc]
-            [bass4.email :as email]
+            [bass4.external-messages.email-sender :as email]
             [clj-time.coerce :as tc]
             [clj-time.core :as t]
             [bass4.db-config :as db-config]

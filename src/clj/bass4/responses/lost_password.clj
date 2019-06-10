@@ -6,7 +6,7 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
             [bass4.services.lost-password :as lpw-service]
-            [bass4.email :as mailer]
+            [bass4.external-messages.email-sender :as mailer]
             [bass4.i18n :as i18n]
             [bass4.http-utils :as h-utils]
             [bass4.db.core :as db]))

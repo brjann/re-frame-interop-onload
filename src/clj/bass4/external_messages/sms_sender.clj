@@ -1,4 +1,4 @@
-(ns bass4.sms-sender
+(ns bass4.external-messages.sms-sender
   (:require
     [clojure.core.async :refer [go <! chan]]
     [bass4.config :refer [env]]
@@ -11,8 +11,8 @@
     [clojure.tools.logging :as log]
     [bass4.services.bass :as bass]
     [bass4.time :as b-time]
-    [bass4.external-messages :as external-messages]
-    [bass4.email :as email]
+    [bass4.external-messages.async :as external-messages]
+    [bass4.external-messages.email-sender :as email]
     [clojure.string :as str]
     [bass4.utils :as utils]))
 

@@ -7,8 +7,8 @@
             [bass4.assessment.create-missing :as missing]
             [clojure.string :as str]
             [bass4.routes.quick-login :as quick-login]
-            [bass4.email :as email]
-            [bass4.sms-sender :as sms]))
+            [bass4.external-messages.email-sender :as email]
+            [bass4.external-messages.sms-sender :as sms]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]

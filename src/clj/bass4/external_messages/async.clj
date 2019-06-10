@@ -1,4 +1,4 @@
-(ns bass4.external-messages
+(ns bass4.external-messages.async
   (:require [clojure.core.async :refer [go chan <! alt!! >!! timeout dropping-buffer put!]]
             [clojure.tools.logging :as log]
             [mount.core :refer [defstate]]

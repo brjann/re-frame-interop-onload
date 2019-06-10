@@ -1,12 +1,12 @@
-(ns bass4.bass4.email.queue
+(ns bass4.external-messages.email-queue
   (:require [bass4.db.core :as db]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [thread <!!]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
-            [bass4.email :as mailer]
-            [bass4.email :as email]
+            [bass4.external-messages.email-sender :as mailer]
+            [bass4.external-messages.email-sender :as email]
             [clojure.string :as str])
   (:import (java.util UUID)))
 
