@@ -435,7 +435,7 @@
 
 (defn- send-sms!
   [sms-number code]
-  (sms/queue-sms! sms-number (str (i18n/tr [:registration/validation-code]) " " code)))
+  (sms/async-sms! db/*db* sms-number (str (i18n/tr [:registration/validation-code]) " " code)))
 
 (defn- code-map
   [code-key field-key send-fn! field-values fixed-fields validation-codes]

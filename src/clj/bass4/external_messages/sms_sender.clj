@@ -126,21 +126,21 @@
     "BASS4"))
 
 (defn send-sms-now!
-  [to message]
+  [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender (get-sender)]
     (send-sms! to message sender)
-    (if db/*db*
-      (bass/inc-sms-count! db/*db*)
+    (if db
+      (bass/inc-sms-count! db)
       (log/info "No DB selected for SMS count update."))
     true))
 
-(defn queue-sms!
+(defn async-sms!
   "Throws if to is not valid mobile phone number.
   Returns channel on which send result will be put.
   Guarantees that update of external message count is done before putting result"
-  [to message]
+  [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender     (get-sender)
@@ -153,8 +153,8 @@
     (go
       (let [res (<! own-chan)]
         (when-not (= :error (:result res))
-          (if db/*db*
-            (bass/inc-sms-count! db/*db*)
+          (if db
+            (bass/inc-sms-count! db)
             (log/info "No DB selected for SMS count update.")))
         ;; Res is result of go block
         res))))

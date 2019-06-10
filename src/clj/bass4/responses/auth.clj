@@ -117,7 +117,7 @@
   [code send-methods user-sms user-email]
   (cond
     (:sms send-methods)
-    (sms/queue-sms! user-sms code)
+    (sms/async-sms! db/*db* user-sms code)
 
     (:email send-methods)
     (mail/async-email! db/*db* user-email (i18n/tr [:login/code]) code)

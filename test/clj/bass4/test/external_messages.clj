@@ -35,7 +35,7 @@
   (let [sms-count (get-message-count "sms")
         res-a     (atom nil)
         out-str   (with-out-str (binding [sms/*sms-reroute* :out]
-                                  (reset! res-a (<!! (sms/queue-sms! "666" "ZZZ")))))]
+                                  (reset! res-a (<!! (sms/async-sms! db/*db* "666" "ZZZ")))))]
     (messages-are? [[:sms "ZZZ"]] [(:message @res-a)])
     (is (str/includes? out-str "SMS"))
     (is (str/includes? out-str "666"))
@@ -55,7 +55,7 @@
 (deftest send-sms-out-now
   (let [sms-count (get-message-count "sms")
         res       (with-out-str (binding [sms/*sms-reroute* :out]
-                                  (sms/send-sms-now! "666" "ZZZ")))]
+                                  (sms/send-sms-now! db/*db* "666" "ZZZ")))]
     (is (str/includes? res "SMS"))
     (is (str/includes? res "666"))
     (is (str/includes? res "ZZZ"))

@@ -3,12 +3,10 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [thread <!!]]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [bass4.external-messages.email-sender :as mailer]
             [bass4.external-messages.email-sender :as email]
-            [clojure.string :as str])
-  (:import (java.util UUID)))
+            [clojure.string :as str]))
 
 (defn- db-queue-emails!
   [db email-vector]
@@ -20,17 +18,13 @@
     (map #(assoc % :status-time now) res)))
 
 (defn db-update-fail-count!
-  [email-reses]
-  (db/external-message-emails-failed! {:ids (map :id email-reses)}))
-
-(defn db-update-fail-count!
   [db now email-reses]
   (db/external-message-emails-update-fail-count! db {:ids  (map :id email-reses)
                                                      :time now}))
 
 (defn db-final-failed!
   [db]
-  (db/external-message-emails-final-failed! db {:max-failures 5}))
+  (db/external-message-emails-final-failed! db {:max-failures 20}))
 
 (defn db-emails-sent!
   [db now email-reses]
