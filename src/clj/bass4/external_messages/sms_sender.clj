@@ -57,6 +57,7 @@
                  to
                  message
                  sender
+                 ;; TODO: Implement return-url
                  (:smsteknik-status-return-url config))]
     (try
       (let [res     (:body (http/post url {:body xml}))
