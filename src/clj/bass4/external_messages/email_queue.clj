@@ -14,8 +14,15 @@
 
 (defn- db-queued-emails
   [db now]
-  (let [res (jdbc/query db ["CALL queued_emails (?);" (tc/to-sql-date now)])]
-    (map #(assoc % :status-time now) res)))
+  (jdbc/with-db-connection [db db]
+    (jdbc/with-db-transaction [db db]
+      (let [res (jdbc/query db (str "SELECT * FROM external_message_email "
+                                    "WHERE `status` = 'queued' FOR UPDATE;"))]
+        (jdbc/execute! db [(str "UPDATE external_message_email "
+                                "SET `status` = 'sending', `status-time` = ?"
+                                "WHERE `status` = 'queued';")
+                           (tc/to-sql-date now)])
+        res))))
 
 (defn db-update-fail-count!
   [db now email-reses]
