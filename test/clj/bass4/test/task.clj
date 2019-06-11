@@ -21,7 +21,7 @@
   [c v]
   (let [runs (atom 0)]
     (fn [& _]
-      (if (= 2 (swap! runs inc))
+      (if (= 3 (swap! runs inc))
         (close! c)
         (put! c v))
       {})))
@@ -45,6 +45,9 @@
     (task-adder/add-by-millisecond-task! task4 10)
     (task-adder/add-by-millisecond-task! task5 10)
     (task-adder/add-by-millisecond-task! task6 10)
-    (is (= [1 2 3 4 5 6] (first (alts!! [(a/map (fn [& more] more) [c1 c2 c3 c4 c5 c6]) (timeout 5000)]))))
+    (let [c (a/map (fn [& more] more) [c1 c2 c3 c4 c5 c6])]
+      (is (= [1 2 3 4 5 6] (first (alts!! [c (timeout 5000)]))))
+      (is (= [1 2 3 4 5 6] (first (alts!! [c (timeout 5000)]))))
+      (is (nil? (first (alts!! [c (timeout 5000)])))))
     (scheduler/cancel-all!)))
 
