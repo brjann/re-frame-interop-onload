@@ -5,12 +5,13 @@
             [clojure.java.shell :as shell]
             [clojure.tools.logging :as log]
             [bass4.external-messages.async :as external-messages]
-            [clojure.core.async :refer [chan go <!]]
+            [clojure.core.async :refer [chan go <! put!]]
             [bass4.db-config :as db-config]
             [bass4.services.bass :as bass]
             [bass4.db.core :as db]
             [bass4.utils :as utils]
-            [bass4.config :as config]))
+            [bass4.config :as config])
+  (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
 
@@ -54,8 +55,14 @@
 
 (defmulti send-email! (fn [& more]
                         (let [re-route (or *email-reroute* (env :dev-reroute-email) :default)]
-                          (if (string? re-route)
+                          (cond
+                            (string? re-route)
                             :redirect
+
+                            (instance? ManyToManyChannel re-route)
+                            :chan
+
+                            :else
                             re-route))))
 
 (defmethod send-email! :redirect
@@ -79,6 +86,12 @@
 (defmethod send-email! :exception
   [& more]
   (throw (Exception. "An exception")))
+
+(defmethod send-email! :chan
+  [& more]
+  (let [c *email-reroute*]
+    (put! c more))
+  true)
 
 (defmethod send-email! :default
   ([to subject message sender]
@@ -127,9 +140,10 @@
                   (config/env :no-reply-address))]
      (let [res (send-email! to subject message sender reply-to)]
        (assert (boolean? res))
-       (if (and res db)
-         (bass/inc-email-count! db)
-         (log/info "No DB selected for email count update."))
+       (when res
+         (if db
+           (bass/inc-email-count! db)
+           (log/info "No DB selected for email count update.")))
        res))))
 
 (defn async-email!

@@ -1,6 +1,6 @@
 (ns bass4.external-messages.sms-sender
   (:require
-    [clojure.core.async :refer [go <! chan]]
+    [clojure.core.async :refer [go <! chan put!]]
     [bass4.config :refer [env]]
     [clj-http.client :as http]
     [ring.util.codec :as codec]
@@ -15,7 +15,8 @@
     [bass4.external-messages.email-sender :as email]
     [clojure.string :as str]
     [bass4.utils :as utils]
-    [bass4.config :as config]))
+    [bass4.config :as config])
+  (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
 ;; ---------------------
@@ -77,10 +78,16 @@
 
 (defmulti send-sms! (fn [& _]
                       (let [re-route (or *sms-reroute* (env :dev-reroute-sms) :default)]
-                        (if (string? re-route)
+                        (cond
+                          (string? re-route)
                           (if (str/includes? re-route "@")
                             :redirect-email
                             :redirect-sms)
+
+                          (instance? ManyToManyChannel re-route)
+                          :chan
+
+                          :else
                           re-route))))
 
 
@@ -110,6 +117,12 @@
 (defmethod send-sms! :exception
   [& more]
   (throw (Exception. "An exception"))
+  true)
+
+(defmethod send-sms! :chan
+  [& more]
+  (let [c *sms-reroute*]
+    (put! c more))
   true)
 
 (defmethod send-sms! :default
@@ -145,9 +158,10 @@
   (let [sender (get-sender)]
     (let [res (send-sms! to message sender)]
       (assert (boolean? res))
-      (if (and res db)
-        (bass/inc-sms-count! db)
-        (log/info "No DB selected for SMS count update."))
+      (when res
+        (if db
+          (bass/inc-sms-count! db)
+          (log/info "No DB selected for SMS count update.")))
       res)))
 
 (defn async-sms!

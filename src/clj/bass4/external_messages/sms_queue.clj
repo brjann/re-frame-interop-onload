@@ -29,16 +29,17 @@
   (db/external-message-smses-update-fail-count! db {:ids  (map :id sms-reses)
                                                     :time now}))
 
+(def ^:dynamic max-fails 20)
 (defn db-final-failed!
   [db]
-  (db/external-message-smses-final-failed! db {:max-failures 20}))
+  (db/external-message-smses-final-failed! db {:max-fails max-fails}))
 
 (defn db-smses-sent!
   [db now sms-reses]
   (db/external-message-smses-sent! db {:ids  (map :id sms-reses)
                                        :time now}))
 
-(defn queue-smses!
+(defn add!
   [db now smses]
   (let [sms-vector (map #(vector (:user-id %)
                                  now
@@ -49,7 +50,7 @@
                         smses)]
     (db-queue-smses! db sms-vector)))
 
-(defn send-queued-smses!
+(defn send!
   [db-name now]
   (let [db    @(get db/db-connections db-name)
         smses (db-queued-smses db now)

@@ -1,16 +1,28 @@
 (ns bass4.test.external-messages
   (:require [clojure.test :refer :all]
             [bass4.test.core :refer [test-fixtures messages-are?]]
-            [clojure.core.async :refer [chan dropping-buffer <!!]]
+            [clojure.core.async :refer [chan dropping-buffer <!! poll!]]
             [bass4.external-messages.email-sender :as email]
             [clojure.string :as str]
             [bass4.external-messages.sms-sender :as sms]
             [clojure.java.jdbc :as jdbc]
-            [bass4.db.core :as db]))
+            [bass4.db.core :as db]
+            [bass4.external-messages.email-queue :as email-queue]
+            [bass4.external-messages.sms-queue :as sms-queue]
+            [clj-time.core :as t]
+            [bass4.config :as config]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
   test-fixtures)
+
+(use-fixtures
+  :each
+  (fn [f]
+    (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_email")
+    (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_sms")
+    (f)))
 
 (defn get-message-count
   [type]
@@ -19,7 +31,11 @@
       vals
       first))
 
-(deftest send-email-out-queue
+;; -------------
+;;  SEND ASYNC
+;; -------------
+
+(deftest send-email-out-async
   (let [email-count (get-message-count "email")
         res-a       (atom nil)
         out-str     (with-out-str (binding [email/*email-reroute* :out]
@@ -31,7 +47,7 @@
     (is (str/includes? out-str "YYY"))
     (is (== (inc email-count) (get-message-count "email")))))
 
-(deftest send-sms-out-queue
+(deftest send-sms-out-async
   (let [sms-count (get-message-count "sms")
         res-a     (atom nil)
         out-str   (with-out-str (binding [sms/*sms-reroute* :out]
@@ -41,6 +57,10 @@
     (is (str/includes? out-str "666"))
     (is (str/includes? out-str "ZZZ"))
     (is (== (inc sms-count) (get-message-count "sms")))))
+
+;; -------------
+;;   SEND NOW
+;; -------------
 
 (deftest send-email-out-now
   (let [email-count (get-message-count "email")
@@ -60,3 +80,61 @@
     (is (str/includes? res "666"))
     (is (str/includes? res "ZZZ"))
     (is (== (inc sms-count) (get-message-count "sms")))))
+
+;; -------------
+;;  EMAIL QUEUE
+;; -------------
+
+(deftest email-queue
+  (let [c (chan 3)]
+    (binding [email/*email-reroute* c]
+      (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
+                                         {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
+                                         {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
+      (email-queue/send! (config/env :test-db) (t/now))
+      (is (= #{["mail1@example.com" "s1" "m1"]
+               ["mail2@example.com" "s2" "m2"]
+               ["mail3@example.com" "s3" "m3"]}
+             (into #{} (map #(butlast (butlast (into [] (poll! %)))) [c c c]))))
+      (email-queue/send! (config/env :test-db) (t/now))
+      (is (nil? (poll! c))))))
+
+(deftest email-fail
+  (binding [email/*email-reroute* :fail
+            email-queue/max-fails 5]
+    (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
+                                       {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
+                                       {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
+    (doseq [res (repeatedly 5 #(email-queue/send! (config/env :test-db) (t/now)))]
+      (is (= {:exception 0 :fail 3 :success 0} res)))
+    (is (= {:exception 0 :fail 0 :success 0}
+           (email-queue/send! (config/env :test-db) (t/now))))))
+
+;; -------------
+;;   SMS QUEUE
+;; -------------
+
+(deftest sms-queue
+  (let [c (chan 3)]
+    (binding [sms/*sms-reroute* c]
+      (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
+                                       {:user-id 2 :to "2" :message "m2"}
+                                       {:user-id 3 :to "3" :message "m3"}])
+      (sms-queue/send! (config/env :test-db) (t/now))
+      (is (= #{["1" "m1"]
+               ["2" "m2"]
+               ["3" "m3"]}
+             (into #{} (map #(butlast (into [] (poll! %))) [c c c]))))
+      (sms-queue/send! (config/env :test-db) (t/now))
+      (is (nil? (poll! c))))))
+
+(deftest sms-fail
+  (binding [sms/*sms-reroute*   :fail
+            sms-queue/max-fails 5]
+    (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
+                                     {:user-id 2 :to "2" :message "m2"}
+                                     {:user-id 3 :to "3" :message "m3"}])
+    (doseq [res (repeatedly 5 #(sms-queue/send! (config/env :test-db) (t/now)))]
+      (is (= {:exception 0 :fail 3 :success 0} res)))
+    (is (= {:exception 0 :fail 0 :success 0}
+           (sms-queue/send! (config/env :test-db) (t/now))))))

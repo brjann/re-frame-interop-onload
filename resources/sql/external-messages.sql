@@ -51,7 +51,7 @@ WHERE `id` IN(:v*:ids);
 -- :doc
 UPDATE external_message_email
 SET `status` = "failed"
-WHERE `fail-count` >= :max-failures;
+WHERE `fail-count` >= :max-fails;
 
 ## ---------------
 ##    SMS QUEUE
@@ -90,4 +90,4 @@ WHERE `id` IN(:v*:ids);
 -- :doc
 UPDATE external_message_sms
 SET `status` = "failed"
-WHERE `fail-count` >= :max-failures;
+WHERE `fail-count` >= :max-fails;

@@ -12,7 +12,7 @@
   test-fixtures)
 
 (use-fixtures
-  :each
+  :once
   (fn [f]
     (binding [task-log/*log?* false]
       (f))))

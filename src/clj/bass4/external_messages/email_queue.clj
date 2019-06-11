@@ -29,16 +29,17 @@
   (db/external-message-emails-update-fail-count! db {:ids  (map :id email-reses)
                                                      :time now}))
 
+(def ^:dynamic max-fails 20)
 (defn db-final-failed!
   [db]
-  (db/external-message-emails-final-failed! db {:max-failures 20}))
+  (db/external-message-emails-final-failed! db {:max-fails max-fails}))
 
 (defn db-emails-sent!
   [db now email-reses]
   (db/external-message-emails-sent! db {:ids  (map :id email-reses)
                                         :time now}))
 
-(defn queue-emails!
+(defn add!
   [db now emails]
   (let [email-vector (map #(vector (:user-id %)
                                    now
@@ -51,7 +52,7 @@
                           emails)]
     (db-queue-emails! db email-vector)))
 
-(defn send-queued-emails!
+(defn send!
   [db-name now]
   (let [db     @(get db/db-connections db-name)
         emails (db-queued-emails db now)
