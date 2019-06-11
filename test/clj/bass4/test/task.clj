@@ -19,12 +19,9 @@
 
 (defn task-fn
   [c v]
-  (let [runs (atom 0)]
-    (fn [& _]
-      (if (= 3 (swap! runs inc))
-        (close! c)
-        (put! c v))
-      {})))
+  (fn [& _]
+    (put! c v)
+    {}))
 
 (deftest schedule-many
   (let [c1    (chan 2)
@@ -45,9 +42,12 @@
     (task-adder/add-by-millisecond-task! task4 10)
     (task-adder/add-by-millisecond-task! task5 10)
     (task-adder/add-by-millisecond-task! task6 10)
-    (let [c (a/map (fn [& more] more) [c1 c2 c3 c4 c5 c6])]
-      (is (= [1 2 3 4 5 6] (first (alts!! [c (timeout 5000)]))))
-      (is (= [1 2 3 4 5 6] (first (alts!! [c (timeout 5000)]))))
-      (is (nil? (first (alts!! [c (timeout 5000)])))))
+    (let [c  (a/map (fn [& more] more) [c1 c2 c3 c4 c5 c6])
+          r1 (alts!! [c (timeout 5000)])
+          r2 (alts!! [c (timeout 5000)])]
+      (is (= c (second r1)))
+      (is (= c (second r2)))
+      (is (= [1 2 3 4 5 6] (first r1)))
+      (is (= [1 2 3 4 5 6] (first r2))))
     (scheduler/cancel-all!)))
 

@@ -5,12 +5,11 @@
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.assessment.create-missing :as missing]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [clojure.pprint :as pprint]
             [bass4.utils :as utils]
-            [bass4.routes.quick-login :as quick-login]))
+            [bass4.routes.quick-login :as quick-login]
+            [clj-time.coerce :as tc]))
 
 (use-fixtures
   :once
@@ -365,3 +364,14 @@
                        [user5-id :sms "555" "First5 Last5"]}]
         (is (= expected
                messages))))))
+
+(deftest late-tz-malta-dst
+  (let [m (tc/from-string "2019-10-29T00:00:00.000Z")]      ;"1971-10-13T00:00:00.000Z"
+    (binding [*now* (t/plus m (t/hours 22))
+              *tz*  (t/time-zone-for-id "Europe/Malta")]
+      (let [user3-id (user-service/create-user! project-id)]
+        (create-participant-administration!
+          user3-id ass-I-manual-s-5-10-q 3 {:date (midnight+d -50 *now*)})
+        (let [reminders' (reminders *now*)
+              expected   #{[user3-id true ass-I-manual-s-5-10-q 3 ::assessment-reminder/late 10]}]
+          (is (= expected reminders')))))))

@@ -1,16 +1,14 @@
 (ns bass4.test.assessment-utils
   (:require [clj-time.core :as t]
-            [bass4.db.core :refer [*db*] :as db]
             [clojure.core.async :refer [chan alts!! timeout put!]]
-            [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]
+            [bass4.test.core :refer :all]
+            [bass4.utils :as utils]
+            [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.reminder :as assessment-reminder]
-            [clojure.tools.logging :as log]
             [bass4.assessment.create-missing :as missing]
-            [clojure.pprint :as pprint]
             [bass4.routes.quick-login :as quick-login]))
 
 (use-fixtures
@@ -72,6 +70,7 @@
 (defn clear-administrations!
   []
   (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
+    (jdbc/with-db-transaction [db db/*db*])
     (jdbc/execute! db/*db*
                    (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
                          assessment-ids))
@@ -97,10 +96,10 @@
 
 (defn midnight+d
   [plus-days now]
-  (utils/to-unix (t/plus (-> now
-                             (t/to-time-zone *tz*)
-                             (t/with-time-at-start-of-day))
-                         (t/days plus-days))))
+  (utils/to-unix (-> (t/plus now
+                             (t/days plus-days))
+                     (t/to-time-zone *tz*)
+                     (t/with-time-at-start-of-day))))
 
 (defn random-date
   []
