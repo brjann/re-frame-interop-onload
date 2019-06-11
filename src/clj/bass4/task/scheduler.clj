@@ -49,7 +49,8 @@
                                                (second scheduling)
                                                TimeUnit/MILLISECONDS])
           handle (.scheduleAtFixedRate schedule-pool
-                                       #(runner/run-task-for-dbs! task task-name task-id)
+                                       (bound-fn*
+                                         #(runner/run-task-for-dbs! task task-name task-id))
                                        (long minutes-left)
                                        interval
                                        time-unit)]

@@ -38,6 +38,6 @@
 (defn run-task-for-dbs!
   [task task-name task-id]
   (doseq [db-name (keys db/db-connections)]
-    (log/debug "Running task " task-name "with id" task-id "for" db-name)
-    (.execute task-pool
-              #(run-db-task! db-name task task-name))))
+    #_(log/debug "Running task " task-name "with id" task-id "for" db-name)
+    (.execute task-pool (bound-fn*
+                          #(run-db-task! db-name task task-name)))))
