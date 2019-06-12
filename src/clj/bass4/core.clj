@@ -9,7 +9,8 @@
             [clojure.tools.logging :as log]
             [clj-logging-config.log4j :as log-config]
             [mount.core :as mount]
-            [bass4.db.sql-wrapper])
+            [bass4.db.sql-wrapper]
+            [bass4.external-messages.tasks])
   (:gen-class))
 
 (def cli-options

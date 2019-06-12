@@ -1,8 +1,10 @@
 (ns bass4.task.scheduler
   (:require [clojure.tools.logging :as log]
             [clj-time.core :as t]
+            [clojure.repl :as repl]
             [bass4.task.runner :as runner])
-  (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]))
+  (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
+           (clojure.lang Var)))
 
 (defonce schedule-pool ^ScheduledExecutorService (Executors/newScheduledThreadPool 4))
 
@@ -28,30 +30,36 @@
 (defonce task-counter (atom 0))
 
 (defn schedule!
-  [task task-name & scheduling]
-  (when (contains? @tasks task-name)
-    (cancel-task*! task-name))
-  (let [task-id (swap! task-counter inc)]
-    (log/info "Adding task" task-name "with id" task-id)
-    (let [[minutes-left interval time-unit] (case (first scheduling)
-                                              :hourly
-                                              [(- 60 (t/minute (t/now)))
-                                               60
-                                               TimeUnit/MINUTES]
+  [task & scheduling]
+  (assert (or (instance? Var task)
+              (fn? task)))
+  (let [task-name (if (instance? Var task)
+                    (subs (str task) 2)
+                    (repl/demunge (str task)))]
+    (when (contains? @tasks task-name)
+      (cancel-task*! task-name))
+    (let [task-id (swap! task-counter inc)]
+      (log/info "Adding task" task-name "with id" task-id)
+      (let [[minutes-left interval time-unit] (case (first scheduling)
+                                                ::hourly
+                                                [(- 60 (t/minute (t/now)))
+                                                 60
+                                                 TimeUnit/MINUTES]
 
-                                              :by-minute
-                                              [0
-                                               (second scheduling)
-                                               TimeUnit/MINUTES]
+                                                ::by-minute
+                                                [0
+                                                 (second scheduling)
+                                                 TimeUnit/MINUTES]
 
-                                              :by-millisecond
-                                              [0
-                                               (second scheduling)
-                                               TimeUnit/MILLISECONDS])
-          handle (.scheduleAtFixedRate schedule-pool
-                                       (bound-fn*
-                                         #(runner/run-task-for-dbs! task task-name task-id))
-                                       (long minutes-left)
-                                       interval
-                                       time-unit)]
-      (swap! tasks #(assoc % task-name [task-id handle])))))
+                                                ::by-millisecond
+                                                [0
+                                                 (second scheduling)
+                                                 TimeUnit/MILLISECONDS])
+            handle (.scheduleAtFixedRate schedule-pool
+                                         (bound-fn*
+                                           #(runner/run-task-for-dbs! task task-name task-id))
+                                         (long minutes-left)
+                                         interval
+                                         time-unit)]
+        (swap! tasks #(assoc % task-name [task-id handle]))
+        task-id))))
