@@ -21,8 +21,8 @@
             [clojure.string :as s]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
-            [bass4.services.lost-password :as lpw-service]
-            [bass4.responses.lost-password :as lpw-response]
+            [bass4.lost-password.services :as lpw-service]
+            [bass4.lost-password.responses :as lpw-response]
             [bass4.external-messages.async :refer [*debug-chan*]]))
 
 

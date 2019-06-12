@@ -1,10 +1,10 @@
-(ns bass4.routes.lost-password
+(ns bass4.lost-password.routes
   (:require [compojure.core :refer [defroutes context GET POST routes]]
-            [bass4.responses.lost-password :as lpw-res]
+            [bass4.lost-password.responses :as lpw-res]
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [clojure.tools.logging :as log]
-            [bass4.services.lost-password :as lpw-service]
+            [bass4.lost-password.services :as lpw-service]
             [bass4.route-rules :as route-rules]))
 
 (def rules

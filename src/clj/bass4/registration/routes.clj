@@ -1,4 +1,4 @@
-(ns bass4.routes.registration
+(ns bass4.registration.routes
   (:require [bass4.layout :as layout]
             [bass4.registration.services :as reg-service]
             [bass4.registration.responses :as reg-response]

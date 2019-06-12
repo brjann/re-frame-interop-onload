@@ -1,4 +1,4 @@
-(ns bass4.services.lost-password
+(ns bass4.lost-password.services
   (:require [bass4.db.core :as db]
             [bass4.services.bass :as bass-service]
             [clj-time.format :as f]
