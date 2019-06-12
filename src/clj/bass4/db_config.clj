@@ -27,9 +27,24 @@
   (->> (.listFiles (io/file bass-path))
        (filter #(clojure.string/starts-with? (.getName %) "local_"))))
 
+(defn db-setting*
+  [db-name setting-keys default]
+  (let [setting (let [x (get-in config/env (into [:db-settings db-name] setting-keys))]
+                  (if-not (nil? x)
+                    x
+                    (let [x (get-in config/env setting-keys)]
+                      (if-not (nil? x)
+                        x
+                        default))))]
+    (when (nil? setting)
+      (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
+    setting))
+
+
 ;; Please note that :db-name and :name are not the same!
 ;; :db-name is the name of MySQL database
 ;; :name    is the name of the BASS database/client, i.e. local_xxx.php <- xxx = name
+;; And thus, this function has a very confusing name.
 (defn db-name
   []
   (:name *local-config*))
@@ -37,17 +52,7 @@
 (defn db-setting
   ([setting-keys] (db-setting setting-keys nil))
   ([setting-keys default]
-   (let [db-name (keyword (db-name))
-         setting (let [x (get-in config/env (into [:db-settings db-name] setting-keys))]
-                   (if-not (nil? x)
-                     x
-                     (let [x (get-in config/env setting-keys)]
-                       (if-not (nil? x)
-                         x
-                         default))))]
-     (when (nil? setting)
-       (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
-     setting)))
+   (db-setting* (keyword (db-name)) setting-keys default)))
 
 (defn debug-mode?
   []
