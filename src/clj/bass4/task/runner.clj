@@ -2,7 +2,8 @@
   (:require [bass4.task.log :as task-log]
             [clj-time.core :as t]
             [bass4.db.core :as db]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [bass4.db-config :as db-config])
   (:import [java.util.concurrent Executors ScheduledExecutorService]))
 
 
@@ -37,7 +38,8 @@
 
 (defn run-task-for-dbs!
   [task task-name task-id]
-  (doseq [db-name (keys db/db-connections)]
-    (log/debug "Running task " task-name "with id" task-id "for" db-name)
-    (.execute task-pool (bound-fn*
-                          #(run-db-task! db-name task task-name)))))
+  (let [db-names (remove #(db-config/db-setting* % [:no-tasks?] false) (keys db/db-connections))]
+    (doseq [db-name db-names]
+      #_(log/debug "Running task " task-name "with id" task-id "for" db-name)
+      (.execute task-pool (bound-fn*
+                            #(run-db-task! db-name task task-name))))))
