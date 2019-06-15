@@ -12,7 +12,9 @@
             [clj-time.coerce :as tc]
             [clojure.java.jdbc :as jdbc]
             [bass4.task.runner :as task-runner]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.external-messages.queue-tasks :as queue-tasks])
+  (:import (org.joda.time.tz CachedDateTimeZone)))
 
 (use-fixtures
   :once
@@ -339,7 +341,7 @@
           user4-id  (user-service/create-user! project-id {:group      group2-id
                                                            :email      "user4@example.com"
                                                            "SMSNumber" "444"})
-          ;; 4 gets no email because not valid address
+          ;; 5 gets no email because not valid address
           user5-id  (user-service/create-user! project-id {:group      group2-id
                                                            :email      "xxx"
                                                            "SMSNumber" "555"
@@ -379,62 +381,87 @@
               expected   #{[user3-id true ass-I-manual-s-5-10-q 3 ::assessment-reminder/late 10]}]
           (is (= expected reminders')))))))
 
-#_(deftest reminder+mailer-tasks
-    (with-redefs [db/get-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
-                  db/get-reminder-start-and-stop (constantly {:start-hour 8 :stop-hour 20})
-                  quick-login/quicklogin-id      (constantly "xxx")]
-      (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_email")
-      (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_sms")
-      (let [run-db-task! @#'task-runner/run-db-task!
+(deftest reminder+queue-tasks
+  (with-redefs [db/get-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
+                db/get-reminder-start-and-stop (constantly {:start-hour 0 :stop-hour 25})
+                quick-login/quicklogin-id      (constantly "xxx")]
 
-            group1-id    (create-group!)
-            user1-id     (user-service/create-user! project-id {:group      group1-id
-                                                                :email      "user1@example.com"
-                                                                "SMSNumber" "111"
-                                                                "FirstName" "First1"
-                                                                "LastName"  "Last1"})
-            user2-id     (user-service/create-user! project-id {:group      group1-id
-                                                                :email      "user2@example.com"
-                                                                "SMSNumber" "222"
-                                                                "FirstName" "First2"
-                                                                "LastName"  "Last2"})
-            group2-id    (create-group!)
-            ;; 3 gets no sms because not valid number
-            user3-id     (user-service/create-user! project-id {:group      group2-id
-                                                                :email      "user3@example.com"
-                                                                "SMSNumber" "xxx"
-                                                                "FirstName" "First3"
-                                                                "LastName"  "Last3"})
-            ;; 4 gets no sms because no first or last name
-            user4-id     (user-service/create-user! project-id {:group      group2-id
-                                                                :email      "user4@example.com"
-                                                                "SMSNumber" "444"})
-            ;; 4 gets no email because not valid address
-            user5-id     (user-service/create-user! project-id {:group      group2-id
-                                                                :email      "xxx"
-                                                                "SMSNumber" "555"
-                                                                "FirstName" "First5"
-                                                                "LastName"  "Last5"})]
+    (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_email")
+    (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_sms")
+    (let [run-db-task! (fn [task]
+                         (let [f @#'task-runner/run-db-task!]
+                           (f db/*db*
+                              *now*
+                              (config/env :test-db)
+                              {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
+                              task
+                              (subs (str task) 2))))
+          cycles       (fn [exec-id] (-> (jdbc/query db/db-common ["SELECT cycles FROM common_log_tasks WHERE ExecId = ?" exec-id])
+                                         (first)
+                                         (:cycles)))
 
-        ;; LATE
-        (create-participant-administration!
-          user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
-        (create-group-administration!
-          group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
-        (create-group-administration!
-          group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
+          group1-id    (create-group!)
+          user1-id     (user-service/create-user! project-id {:group      group1-id
+                                                              :email      "user1@example.com"
+                                                              "SMSNumber" "111"
+                                                              "FirstName" "First1"
+                                                              "LastName"  "Last1"})
+          _            (user-service/create-user! project-id {:group      group1-id
+                                                              :email      "user2@example.com"
+                                                              "SMSNumber" "222"
+                                                              "FirstName" "First2"
+                                                              "LastName"  "Last2"})
+          group2-id    (create-group!)
+          _            (user-service/create-user! project-id {:group      group2-id
+                                                              :email      "user3@example.com"
+                                                              "SMSNumber" "222"
+                                                              "FirstName" "First3"
+                                                              "LastName"  "Last3"})]
 
-        ;; ACTIVATION
-        (create-group-administration!
-          group2-id ass-G-week-e+s-3-4-p10 1 {:date (midnight *now*)})
-        (run-db-task! (config/env :test-db))
-        #_(let [messages (remind!-messages-sent *now*)
-                expected #{[user1-id :sms "111" "https://test.bass4.com/q/xxx"]
-                           [user2-id :sms "222" "First2 Last2"]
-                           [user1-id :email "user1@example.com" "Reminder" "user1@example.com https://test.bass4.com"]
-                           [user2-id :email "user2@example.com" "Reminder" "user2@example.com https://test.bass4.com"]
-                           [user3-id :email "user3@example.com" "Information" "user3@example.com https://test.bass4.com"]
-                           [user4-id :email "user4@example.com" "Information" "user4@example.com https://test.bass4.com"]
-                           [user5-id :sms "555" "First5 Last5"]}]
-            (is (= expected
-                   messages))))))
+      ;; LATE
+      (create-participant-administration!
+        user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
+      (create-group-administration!
+        group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
+      (create-group-administration!
+        group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
+
+      ;; ACTIVATION
+      (create-group-administration!
+        group2-id ass-G-week-e+s-3-4-p10 1 {:date (midnight *now*)})
+      (is (= 6 (cycles (run-db-task! #'assessment-reminder/reminder-task))))
+      (is (= 3 (cycles (run-db-task! #'queue-tasks/email-task))))
+      (is (= 3 (cycles (run-db-task! #'queue-tasks/sms-task))))
+      (is (= 0 (cycles (run-db-task! #'assessment-reminder/reminder-task))))
+      (is (= 0 (cycles (run-db-task! #'queue-tasks/email-task))))
+      (is (= 0 (cycles (run-db-task! #'queue-tasks/sms-task)))))))
+
+(deftest reminder-task-start-hour
+  (with-redefs [db/get-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
+                db/get-reminder-start-and-stop (constantly {:start-hour 8 :stop-hour 20})
+                quick-login/quicklogin-id      (constantly "xxx")]
+    (let [reminder-task (fn [now]
+                          (:cycles (assessment-reminder/reminder-task db/*db*
+                                                                      {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
+                                                                      now)))
+          group1-id     (create-group!)]
+      (user-service/create-user! project-id {:group      group1-id
+                                             :email      "user1@example.com"
+                                             "SMSNumber" "111"
+                                             "FirstName" "First1"
+                                             "LastName"  "Last1"})
+
+      ;; LATE
+      (create-group-administration!
+        group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
+      (create-group-administration!
+        group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
+
+      ;; ACTIVATION
+
+      (let [now (t/plus (midnight-joda *now*) (t/hours 7))]
+        (is (= nil (reminder-task now))))
+      (let [now (t/plus (midnight-joda *now*) (t/hours 20))]
+        (is (= nil (reminder-task now))))
+      (let [now (t/plus (midnight-joda *now*) (t/hours 8))]
+        (is (= 2 (reminder-task now)))))))

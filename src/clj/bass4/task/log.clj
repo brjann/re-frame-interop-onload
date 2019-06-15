@@ -35,4 +35,5 @@
                            (or (:cycles response) 0)
                            (if (:exception response) 1 0)
                            (if (:exception response) (str (:exception response)) "")
-                           db-id])))))
+                           db-id]))))
+  db-id)
