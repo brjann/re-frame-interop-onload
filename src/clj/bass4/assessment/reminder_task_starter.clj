@@ -4,4 +4,4 @@
             [bass4.assessment.reminder :as assessment-reminder]))
 
 (defstate reminder-task-starter
-  :start (task-scheduler/schedule! #'assessment-reminder/reminder-task ::task-scheduler/by-minute 1))
+  :start (task-scheduler/schedule! #'assessment-reminder/reminder-task ::task-scheduler/hourly))

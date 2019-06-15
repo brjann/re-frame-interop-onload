@@ -10,8 +10,7 @@
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.email-queue :as email-queue]
-            [bass4.external-messages.sms-queue :as sms-queue]
-            [bass4.db-config :as db-config]))
+            [bass4.external-messages.sms-queue :as sms-queue]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -83,15 +82,15 @@
 
 (defn- db-standard-messages
   [db]
-  (db/get-standard-messages db))
+  (db/get-standard-messages db {}))
 
 (defn- db-url
   [db]
-  (:url (db/get-db-url db)))
+  (:url (db/get-db-url db {})))
 
 (defn db-reminder-start-and-stop
   [db]
-  (db/get-reminder-start-and-stop db))
+  (db/get-reminder-start-and-stop db {}))
 
 (defn- today-midnight
   [now tz]
@@ -456,9 +455,6 @@
         users-info           (->> (db-users-info db (map :user-id message-assessments'))
                                   (generate-quick-login! db now remind-assessments))
         messages             (messages db message-assessments' users-info)]
-    ;; Implement task handler
-    ;; Implement mailqueue
-    ;; Implement reminder task
     (email-queuer! (:email messages))
     (sms-queuer! (:sms messages))
     (db-activation-reminders-sent! db (::activation reminders-by-type))

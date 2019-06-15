@@ -48,5 +48,7 @@
       #_(log/debug "Running task " task-name "with id" task-id "for" db-name)
       (let [db        @(get db/db-connections db-name)
             db-config (get db-config/local-configs db-name)]
-        (.execute task-pool (bound-fn*
-                              #(run-db-task! db (t/now) db-name db-config task task-name)))))))
+        (binding [db/*db*                  nil
+                  db-config/*local-config* nil]
+          (.execute task-pool (bound-fn*
+                                #(run-db-task! db (t/now) db-name db-config task task-name))))))))
