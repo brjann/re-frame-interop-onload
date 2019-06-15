@@ -41,16 +41,17 @@
 
 (defn add!
   [db now emails]
-  (let [email-vector (map #(vector (:user-id %)
-                                   now
-                                   "queued"
-                                   now
-                                   (:to %)
-                                   (:subject %)
-                                   (:message %)
-                                   (or (:reply-to %) ""))
-                          emails)]
-    (db-queue-emails! db email-vector)))
+  (when (seq emails)
+    (let [email-vector (map #(vector (:user-id %)
+                                     now
+                                     "queued"
+                                     now
+                                     (:to %)
+                                     (:subject %)
+                                     (:message %)
+                                     (or (:reply-to %) ""))
+                            emails)]
+      (db-queue-emails! db email-vector))))
 
 (defn send!
   [db-name now]
@@ -83,6 +84,6 @@
       (db-final-failed! db))
     (when (:success res)
       (db-emails-sent! db now (:success res)))
-    {:exception (count (:exception res))
+    {:exception (when (:exception res) (:exception res))
      :fail      (count (:fail res))
      :success   (count (:success res))}))

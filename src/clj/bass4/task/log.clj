@@ -13,7 +13,7 @@
       (let [unix-now (utils/to-unix now)]
         (jdbc/execute! db ["INSERT INTO common_log_tasks (`DB`, `TaskName`, `StillRunning`, `StartTime`, `LastActivity`) VALUES(?, ?, 1, ?, ?)"
                            (name db-name)
-                           (str "clj-" task-name)
+                           task-name
                            unix-now
                            unix-now]))
       (-> (jdbc/query db "SELECT LAST_INSERT_ID() AS id")

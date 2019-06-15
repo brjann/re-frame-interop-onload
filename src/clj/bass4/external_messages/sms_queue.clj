@@ -41,14 +41,15 @@
 
 (defn add!
   [db now smses]
-  (let [sms-vector (map #(vector (:user-id %)
-                                 now
-                                 "queued"
-                                 now
-                                 (:to %)
-                                 (:message %))
-                        smses)]
-    (db-queue-smses! db sms-vector)))
+  (when (seq smses)
+    (let [sms-vector (map #(vector (:user-id %)
+                                   now
+                                   "queued"
+                                   now
+                                   (:to %)
+                                   (:message %))
+                          smses)]
+      (db-queue-smses! db sms-vector))))
 
 (defn send!
   [db-name now]

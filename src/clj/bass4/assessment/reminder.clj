@@ -452,9 +452,8 @@
     ;; Implement task handler
     ;; Implement mailqueue
     ;; Implement reminder task
+    (email-queuer! (:email messages))
+    (sms-queuer! (:sms messages))
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))
-    (email-queuer! (:email messages))
-    (sms-queuer! (:sms messages))))
-
-(def tz (t/time-zone-for-id "Asia/Tokyo"))
+    (count remind-assessments)))

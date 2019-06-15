@@ -10,7 +10,8 @@
             [clj-logging-config.log4j :as log-config]
             [mount.core :as mount]
             [bass4.db.sql-wrapper]
-            [bass4.external-messages.tasks])
+            [bass4.external-messages.queue-tasks]
+            [bass4.assessment.reminder-task])
   (:gen-class))
 
 (def cli-options
