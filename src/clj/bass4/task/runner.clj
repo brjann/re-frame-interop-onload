@@ -29,17 +29,19 @@
   (if (running?! task-name db-name)
     (-> (task-log/open-db-entry! db-name task-name (t/now))
         (task-log/close-db-entry! (t/now) {} "already running"))
-    (let [db-id (task-log/open-db-entry! db-name task-name (t/now))
-          res   (try (task
-                       db
-                       db-config
-                       db-now)
-                     (catch Exception e
-                       (log/debug e)
-                       {:exception e}))]
-      (task-log/close-db-entry! db-id (t/now) res "finished")
-      (finished! task-name db-name)
-      db-id)))
+    (binding [db/*db*                  nil
+              db-config/*local-config* nil]
+      (let [db-id (task-log/open-db-entry! db-name task-name (t/now))
+            res   (try (task
+                         db
+                         db-config
+                         db-now)
+                       (catch Exception e
+                         (log/debug e)
+                         {:exception e}))]
+        (task-log/close-db-entry! db-id (t/now) res "finished")
+        (finished! task-name db-name)
+        db-id))))
 
 (defn run-task-for-dbs!
   [task task-name task-id]
@@ -48,7 +50,5 @@
       #_(log/debug "Running task " task-name "with id" task-id "for" db-name)
       (let [db        @(get db/db-connections db-name)
             db-config (get db-config/local-configs db-name)]
-        (binding [db/*db*                  nil
-                  db-config/*local-config* nil]
-          (.execute task-pool (bound-fn*
-                                #(run-db-task! db (t/now) db-name db-config task task-name))))))))
+        (.execute task-pool (bound-fn*
+                              #(run-db-task! db (t/now) db-name db-config task task-name)))))))

@@ -25,7 +25,7 @@
 
 (defn db-quick-login-settings
   [db]
-  (db/get-quick-login-settings db))
+  (db/get-quick-login-settings db {}))
 
 (def ^:dynamic *quick-login-updates-chan* nil)
 

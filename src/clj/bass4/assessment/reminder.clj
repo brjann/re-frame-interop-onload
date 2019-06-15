@@ -448,18 +448,19 @@
 
 (defn remind!
   [db now tz email-queuer! sms-queuer!]
-  (let [remind-assessments   (-> (reminders db now tz)
-                                 (missing/add-missing-administrations!))
-        reminders-by-type    (group-by ::remind-type remind-assessments)
-        message-assessments' (message-assessments remind-assessments)
-        users-info           (->> (db-users-info db (map :user-id message-assessments'))
-                                  (generate-quick-login! db now remind-assessments))
-        messages             (messages db message-assessments' users-info)]
-    (email-queuer! (:email messages))
-    (sms-queuer! (:sms messages))
-    (db-activation-reminders-sent! db (::activation reminders-by-type))
-    (db-late-reminders-sent! db (::late reminders-by-type))
-    (count remind-assessments)))
+  (binding [db/*db* nil]
+    (let [remind-assessments   (->> (reminders db now tz)
+                                    (missing/add-missing-administrations! db))
+          reminders-by-type    (group-by ::remind-type remind-assessments)
+          message-assessments' (message-assessments remind-assessments)
+          users-info           (->> (db-users-info db (map :user-id message-assessments'))
+                                    (generate-quick-login! db now remind-assessments))
+          messages             (messages db message-assessments' users-info)]
+      (email-queuer! (:email messages))
+      (sms-queuer! (:sms messages))
+      (db-activation-reminders-sent! db (::activation reminders-by-type))
+      (db-late-reminders-sent! db (::late reminders-by-type))
+      (count remind-assessments))))
 
 (defn reminder-task
   [db local-config now]

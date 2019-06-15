@@ -22,8 +22,10 @@
     (put! c v)
     {}))
 
+;; FAILS IN BAT-TEST, PROBABLY BECAUSE defstate IS NOT USED
+
 (deftest schedule-many
-  (let [n  32
+  (let [n  33
         cs (repeatedly n #(chan 2))
         fs (for [i (range n)]
              (task-fn (nth cs i) i))]

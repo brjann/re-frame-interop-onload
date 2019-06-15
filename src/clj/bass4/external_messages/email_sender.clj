@@ -17,7 +17,7 @@
 
 (defn- db-no-reply-address
   [db]
-  (:no-reply-address (db/external-message-no-reply-address db)))
+  (:no-reply-address (db/external-message-no-reply-address db {})))
 
 ;; ---------------------
 ;;  ACTUAL EMAIL SENDER

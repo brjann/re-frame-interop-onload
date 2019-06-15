@@ -73,8 +73,6 @@
                                  emails))
                      (group-by :result))]
     (when (:exception res)
-      (log/error (:exception res))
-      (log/debug (map :id (:exception res)))
       (email/send-error-email! (str "Mailer task for " db-name) (str "Could not send email with ids "
                                                                      (str/join " " (map :id (:exception res)))))
       (db-update-fail-count! db now (:exception res))

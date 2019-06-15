@@ -7,8 +7,9 @@
 (def ^:dynamic *create-count-chan* nil)
 
 (defn- create-administrations-objects!
-  [missing-administrations]
-  (let [created-ids (bass/create-bass-objects-without-parent!
+  [db missing-administrations]
+  (let [created-ids (bass/create-bass-objects-without-parent*!
+                      db
                       "cParticipantAdministration"
                       "Administrations"
                       (count missing-administrations))]
@@ -17,26 +18,29 @@
     created-ids))
 
 (defn- delete-administration!
-  [administration-id]
+  [db administration-id]
   (log/info "Deleting surplus administrations " administration-id)
-  (db/delete-object-from-objectlist! {:object-id administration-id})
-  (db/delete-participant-administration! {:administration-id administration-id}))
+  (db/delete-object-from-objectlist! db {:object-id administration-id})
+  (db/delete-participant-administration! db {:administration-id administration-id}))
 
 (defn- update-created-administrations!
-  [new-object-ids missing-administrations]
+  [db new-object-ids missing-administrations]
   ;; mapv because not lazy
   (mapv (fn [new-administration-id {:keys [assessment-index assessment-id user-id]}]
           (try
             ;; Try to update the placeholder with the assessment and index
             (db/update-new-participant-administration!
+              db
               {:administration-id new-administration-id
                :user-id           user-id
                :assessment-id     assessment-id
                :assessment-index  assessment-index})
             (db/update-objectlist-parent!
+              db
               {:object-id new-administration-id
                :parent-id user-id})
             (db/link-property-reverse!
+              db
               {:linkee-id     new-administration-id
                :property-name "Assessment"
                :linker-class  "cParticipantAdministration"})
@@ -44,21 +48,27 @@
             ;; If that fails, then delete the placeholder and return instead the
             ;; duplicate administration's id.
             (catch Exception e
-              (delete-administration! new-administration-id)
+              (delete-administration! db new-administration-id)
               (:administration-id (db/get-administration-by-assessment-and-index
+                                    db
                                     {:user-id          user-id
                                      :assessment-id    assessment-id
                                      :assessment-index assessment-index})))))
         new-object-ids
         missing-administrations))
 
+(defn create-missing-administrations*!
+  "Requires :user-id key to be present for all administrations"
+  [db missing-administrations]
+  (let [new-object-ids (update-created-administrations! db
+                                                        (create-administrations-objects! db missing-administrations)
+                                                        missing-administrations)]
+    (map #(assoc %1 :participant-administration-id %2) missing-administrations new-object-ids)))
+
 (defn create-missing-administrations!
   "Requires :user-id key to be present for all administrations"
   [missing-administrations]
-  (let [new-object-ids (update-created-administrations!
-                         (create-administrations-objects! missing-administrations)
-                         missing-administrations)]
-    (map #(assoc %1 :participant-administration-id %2) missing-administrations new-object-ids)))
+  (create-missing-administrations*! db/*db* missing-administrations))
 
 
 (defn- insert-new-into-old
@@ -78,11 +88,11 @@
 
 (defn add-missing-administrations!
   "Requires :user-id key to be present for all administrations"
-  [administrations]
+  [db administrations]
   (let [missing-administrations (remove :participant-administration-id administrations)]
     (if (< 0 (count missing-administrations))
       (do
         (insert-new-into-old
-          (create-missing-administrations! missing-administrations)
+          (create-missing-administrations*! db missing-administrations)
           administrations))
       administrations)))

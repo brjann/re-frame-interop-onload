@@ -179,30 +179,31 @@
 
 (defn ongoing-assessments*
   [db now user-id]
-  (let
-    ;; NOTE that administrations is a map of lists
-    ;; administrations within one assessment battery
-    ;;
-    ;; Amazingly enough, this all works even with no ongoing administrations
-    ;;
-    [group-id                 (user-group db user-id)
-     assessment-series-id     (user-assessment-series-id db user-id)
-     administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
-     assessments-map          (assessments db user-id assessment-series-id)
-     ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
-                                              (if-let [assessment (get assessments-map assessment-id)]
-                                                (ongoing-administrations now administrations assessment)
-                                                (throw
-                                                  (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
-                                            administrations-map))]
-    (when (seq ongoing-administrations')
-      (->> ongoing-administrations'
-           ;; Add any missing administrations
-           (map #(assoc % :user-id user-id))
-           (missing/add-missing-administrations!)
-           ;; Merge assessment and administration info into one map
-           (map #(merge % (get assessments-map (:assessment-id %))))
-           (add-instruments db)))))
+  (binding [db/*db* nil]
+    (let
+      ;; NOTE that administrations is a map of lists
+      ;; administrations within one assessment battery
+      ;;
+      ;; Amazingly enough, this all works even with no ongoing administrations
+      ;;
+      [group-id                 (user-group db user-id)
+       assessment-series-id     (user-assessment-series-id db user-id)
+       administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
+       assessments-map          (assessments db user-id assessment-series-id)
+       ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
+                                                (if-let [assessment (get assessments-map assessment-id)]
+                                                  (ongoing-administrations now administrations assessment)
+                                                  (throw
+                                                    (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
+                                              administrations-map))]
+      (when (seq ongoing-administrations')
+        (->> ongoing-administrations'
+             ;; Add any missing administrations
+             (map #(assoc % :user-id user-id))
+             (missing/add-missing-administrations! db)
+             ;; Merge assessment and administration info into one map
+             (map #(merge % (get assessments-map (:assessment-id %))))
+             (add-instruments db))))))
 
 (defn ongoing-assessments
   [user-id]
