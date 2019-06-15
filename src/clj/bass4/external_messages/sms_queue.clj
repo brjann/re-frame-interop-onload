@@ -52,22 +52,23 @@
       (db-queue-smses! db sms-vector))))
 
 (defn send!
-  [db-name now]
-  (let [db    @(get db/db-connections db-name)
-        smses (db-queued-smses db now)
-        res   (->> (doall (map (fn [sms]
-                                 (try
-                                   (let [res (sms/send-sms-now! db
-                                                                (:to sms)
-                                                                (:message sms))]
-                                     {:id     (:id sms)
-                                      :result (if res :success :fail)})
-                                   (catch Exception e
-                                     {:id        (:id sms)
-                                      :result    :exception
-                                      :exception e})))
-                               smses))
-                   (group-by :result))]
+  [db local-config now]
+  (let [db-name (:name local-config)
+        _       (log/debug db-name)
+        smses   (db-queued-smses db now)
+        res     (->> (doall (map (fn [sms]
+                                   (try
+                                     (let [res (sms/send-sms-now! db
+                                                                  (:to sms)
+                                                                  (:message sms))]
+                                       {:id     (:id sms)
+                                        :result (if res :success :fail)})
+                                     (catch Exception e
+                                       {:id        (:id sms)
+                                        :result    :exception
+                                        :exception e})))
+                                 smses))
+                     (group-by :result))]
     (when (:exception res)
       (log/error (:exception res))
       (log/debug (map :id (:exception res)))
@@ -80,6 +81,6 @@
       (db-final-failed! db))
     (when (:success res)
       (db-smses-sent! db now (:success res)))
-    {:exception (count (:exception res))
+    {:exception (when (:exception res) (:exception res))
      :fail      (count (:fail res))
      :success   (count (:success res))}))

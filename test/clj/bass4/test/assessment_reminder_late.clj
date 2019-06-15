@@ -9,7 +9,10 @@
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [bass4.routes.quick-login :as quick-login]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [clojure.java.jdbc :as jdbc]
+            [bass4.task.runner :as task-runner]
+            [bass4.config :as config]))
 
 (use-fixtures
   :once
@@ -375,3 +378,63 @@
         (let [reminders' (reminders *now*)
               expected   #{[user3-id true ass-I-manual-s-5-10-q 3 ::assessment-reminder/late 10]}]
           (is (= expected reminders')))))))
+
+#_(deftest reminder+mailer-tasks
+    (with-redefs [db/get-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
+                  db/get-reminder-start-and-stop (constantly {:start-hour 8 :stop-hour 20})
+                  quick-login/quicklogin-id      (constantly "xxx")]
+      (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_email")
+      (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_sms")
+      (let [run-db-task! @#'task-runner/run-db-task!
+
+            group1-id    (create-group!)
+            user1-id     (user-service/create-user! project-id {:group      group1-id
+                                                                :email      "user1@example.com"
+                                                                "SMSNumber" "111"
+                                                                "FirstName" "First1"
+                                                                "LastName"  "Last1"})
+            user2-id     (user-service/create-user! project-id {:group      group1-id
+                                                                :email      "user2@example.com"
+                                                                "SMSNumber" "222"
+                                                                "FirstName" "First2"
+                                                                "LastName"  "Last2"})
+            group2-id    (create-group!)
+            ;; 3 gets no sms because not valid number
+            user3-id     (user-service/create-user! project-id {:group      group2-id
+                                                                :email      "user3@example.com"
+                                                                "SMSNumber" "xxx"
+                                                                "FirstName" "First3"
+                                                                "LastName"  "Last3"})
+            ;; 4 gets no sms because no first or last name
+            user4-id     (user-service/create-user! project-id {:group      group2-id
+                                                                :email      "user4@example.com"
+                                                                "SMSNumber" "444"})
+            ;; 4 gets no email because not valid address
+            user5-id     (user-service/create-user! project-id {:group      group2-id
+                                                                :email      "xxx"
+                                                                "SMSNumber" "555"
+                                                                "FirstName" "First5"
+                                                                "LastName"  "Last5"})]
+
+        ;; LATE
+        (create-participant-administration!
+          user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
+        (create-group-administration!
+          group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
+        (create-group-administration!
+          group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
+
+        ;; ACTIVATION
+        (create-group-administration!
+          group2-id ass-G-week-e+s-3-4-p10 1 {:date (midnight *now*)})
+        (run-db-task! (config/env :test-db))
+        #_(let [messages (remind!-messages-sent *now*)
+                expected #{[user1-id :sms "111" "https://test.bass4.com/q/xxx"]
+                           [user2-id :sms "222" "First2 Last2"]
+                           [user1-id :email "user1@example.com" "Reminder" "user1@example.com https://test.bass4.com"]
+                           [user2-id :email "user2@example.com" "Reminder" "user2@example.com https://test.bass4.com"]
+                           [user3-id :email "user3@example.com" "Information" "user3@example.com https://test.bass4.com"]
+                           [user4-id :email "user4@example.com" "Information" "user4@example.com https://test.bass4.com"]
+                           [user5-id :sms "555" "First5 Last5"]}]
+            (is (= expected
+                   messages))))))

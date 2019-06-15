@@ -54,24 +54,25 @@
       (db-queue-emails! db email-vector))))
 
 (defn send!
-  [db-name now]
-  (let [db     @(get db/db-connections db-name)
-        emails (db-queued-emails db now)
-        res    (->> (doall (map (fn [email]
-                                  (try
-                                    (let [res (mailer/send-email-now! db
-                                                                      (:to email)
-                                                                      (:subject email)
-                                                                      (:message email)
-                                                                      (:reply-to email))]
-                                      {:id     (:id email)
-                                       :result (if res :success :fail)})
-                                    (catch Exception e
-                                      {:id        (:id email)
-                                       :result    :exception
-                                       :exception e})))
-                                emails))
-                    (group-by :result))]
+  [db local-config now]
+  (let [db-name (:name local-config)
+        _       (log/debug db-name)
+        emails  (db-queued-emails db now)
+        res     (->> (doall (map (fn [email]
+                                   (try
+                                     (let [res (mailer/send-email-now! db
+                                                                       (:to email)
+                                                                       (:subject email)
+                                                                       (:message email)
+                                                                       (:reply-to email))]
+                                       {:id     (:id email)
+                                        :result (if res :success :fail)})
+                                     (catch Exception e
+                                       {:id        (:id email)
+                                        :result    :exception
+                                        :exception e})))
+                                 emails))
+                     (group-by :result))]
     (when (:exception res)
       (log/error (:exception res))
       (log/debug (map :id (:exception res)))

@@ -2,7 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [clojure.repl :as repl]
-            [bass4.task.runner :as runner])
+            [bass4.task.runner :as task-runner])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -57,7 +57,7 @@
                                                  TimeUnit/MILLISECONDS])
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
-                                           #(runner/run-task-for-dbs! task task-name task-id))
+                                           #(task-runner/run-task-for-dbs! task task-name task-id))
                                          (long minutes-left)
                                          interval
                                          time-unit)]

@@ -91,12 +91,12 @@
       (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
                                          {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
                                          {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
-      (email-queue/send! (config/env :test-db) (t/now))
+      (email-queue/send! db/*db* {:name :test} (t/now))
       (is (= #{["mail1@example.com" "s1" "m1"]
                ["mail2@example.com" "s2" "m2"]
                ["mail3@example.com" "s3" "m3"]}
              (into #{} (map #(butlast (butlast (into [] (poll! %)))) [c c c]))))
-      (email-queue/send! (config/env :test-db) (t/now))
+      (email-queue/send! db/*db* {:name :test} (t/now))
       (is (nil? (poll! c))))))
 
 (deftest email-fail
@@ -105,10 +105,10 @@
     (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
                                        {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
                                        {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
-    (doseq [res (repeatedly 5 #(email-queue/send! (config/env :test-db) (t/now)))]
-      (is (= {:exception 0 :fail 3 :success 0} res)))
-    (is (= {:exception 0 :fail 0 :success 0}
-           (email-queue/send! (config/env :test-db) (t/now))))))
+    (doseq [res (repeatedly 5 #(email-queue/send! db/*db* {:name :test} (t/now)))]
+      (is (= {:exception nil :fail 3 :success 0} res)))
+    (is (= {:exception nil :fail 0 :success 0}
+           (email-queue/send! db/*db* {:name :test} (t/now))))))
 
 ;; -------------
 ;;   SMS QUEUE
@@ -120,12 +120,12 @@
       (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
                                        {:user-id 2 :to "2" :message "m2"}
                                        {:user-id 3 :to "3" :message "m3"}])
-      (sms-queue/send! (config/env :test-db) (t/now))
+      (sms-queue/send! db/*db* {:name :test} (t/now))
       (is (= #{["1" "m1"]
                ["2" "m2"]
                ["3" "m3"]}
              (into #{} (map #(butlast (into [] (poll! %))) [c c c]))))
-      (sms-queue/send! (config/env :test-db) (t/now))
+      (sms-queue/send! db/*db* {:name :test} (t/now))
       (is (nil? (poll! c))))))
 
 (deftest sms-fail
@@ -134,7 +134,7 @@
     (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
                                      {:user-id 2 :to "2" :message "m2"}
                                      {:user-id 3 :to "3" :message "m3"}])
-    (doseq [res (repeatedly 5 #(sms-queue/send! (config/env :test-db) (t/now)))]
-      (is (= {:exception 0 :fail 3 :success 0} res)))
-    (is (= {:exception 0 :fail 0 :success 0}
-           (sms-queue/send! (config/env :test-db) (t/now))))))
+    (doseq [res (repeatedly 5 #(sms-queue/send! db/*db* {:name :test} (t/now)))]
+      (is (= {:exception nil :fail 3 :success 0} res)))
+    (is (= {:exception nil :fail 0 :success 0}
+           (sms-queue/send! db/*db* {:name :test} (t/now))))))

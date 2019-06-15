@@ -8,7 +8,10 @@
             [clojure.string :as str]
             [bass4.routes.quick-login :as quick-login]
             [bass4.external-messages.email-sender :as email]
-            [bass4.external-messages.sms-sender :as sms]))
+            [bass4.external-messages.sms-sender :as sms]
+            [bass4.external-messages.email-queue :as email-queue]
+            [bass4.external-messages.sms-queue :as sms-queue]
+            [bass4.db-config :as db-config]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -85,6 +88,10 @@
 (defn- db-url
   [db]
   (:url (db/get-db-url db)))
+
+(defn db-reminder-start-and-stop
+  [db]
+  (db/get-reminder-start-and-stop db))
 
 (defn- today-midnight
   [now tz]
@@ -457,3 +464,19 @@
     (db-activation-reminders-sent! db (::activation reminders-by-type))
     (db-late-reminders-sent! db (::late reminders-by-type))
     (count remind-assessments)))
+
+(defn reminder-task
+  [db local-config now]
+  (let [tz               (-> (:time-zone local-config "Europe/Stockholm")
+                             (t/time-zone-for-id))
+        start+stop-hours (db-reminder-start-and-stop db)
+        hour             (t/hour (t/to-time-zone now tz))]
+    (if (and (>= hour (:start-hour start+stop-hours))
+             (< hour (:stop-hour start+stop-hours)))
+      (let [res (remind! db
+                         now
+                         tz
+                         #(email-queue/add! db now %)
+                         #(sms-queue/add! db now %))]
+        {:cycles res})
+      {})))

@@ -30,8 +30,11 @@
     (-> (task-log/open-db-entry! db-name task-name (t/now))
         (task-log/close-db-entry! (t/now) {} "already running"))
     (let [db-id (task-log/open-db-entry! db-name task-name (t/now))
-          res   (try (task db-name (t/now))
+          res   (try (task @(get db/db-connections db-name)
+                           (get db-config/local-configs db-name)
+                           (t/now))
                      (catch Exception e
+                       (log/debug e)
                        {:exception e}))]
       (task-log/close-db-entry! db-id (t/now) res "finished")
       (finished! task-name db-name))))
