@@ -54,7 +54,6 @@
 (defn send!
   [db local-config now]
   (let [db-name (:name local-config)
-        _       (log/debug db-name)
         smses   (db-queued-smses db now)
         res     (->> (doall (map (fn [sms]
                                    (try
