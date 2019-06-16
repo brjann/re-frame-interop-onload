@@ -61,7 +61,7 @@
                                                                   (:to sms)
                                                                   (:message sms))]
                                        {:id     (:id sms)
-                                        :result (if res :success :fail)})
+                                        :result :success})
                                      (catch Exception e
                                        {:id        (:id sms)
                                         :result    :exception
@@ -75,11 +75,7 @@
                                                                       (str/join " " (map :id (:exception res)))))
       (db-update-fail-count! db now (:exception res))
       (db-final-failed! db))
-    (when (:fail res)
-      (db-update-fail-count! db now (:fail res))
-      (db-final-failed! db))
     (when (:success res)
       (db-smses-sent! db now (:success res)))
     {:exception (when (:exception res) (:exception res))
-     :fail      (count (:fail res))
      :success   (count (:success res))}))

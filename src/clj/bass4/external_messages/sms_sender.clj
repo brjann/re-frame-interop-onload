@@ -65,7 +65,7 @@
             res-int (utils/str->int (subs res 0 1))]
         (if (zero? res-int)
           (throw (ex-info "SMS service returned zero" {:res res}))
-          true))
+          res))
       (catch Exception e
         (throw (ex-info "SMS sending error" {:exception e}))))))
 
@@ -103,27 +103,22 @@
 
 (defmethod send-sms! :void
   [& _]
-  true)
+  666)
 
 (defmethod send-sms! :out
   [& more]
   (println (apply str (interpose "\n" (conj more "SMS"))))
-  true)
-
-(defmethod send-sms! :fail
-  [& more]
-  false)
+  666)
 
 (defmethod send-sms! :exception
   [& more]
-  (throw (Exception. "An exception"))
-  true)
+  (throw (Exception. "An exception")))
 
 (defmethod send-sms! :chan
   [& more]
   (let [c *sms-reroute*]
     (put! c more))
-  true)
+  666)
 
 (defmethod send-sms! :default
   [to message sender]
@@ -157,7 +152,7 @@
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender (get-sender)]
     (let [res (send-sms! to message sender)]
-      (assert (boolean? res))
+      (assert (integer? res))
       (when res
         (if db
           (bass/inc-sms-count! db)

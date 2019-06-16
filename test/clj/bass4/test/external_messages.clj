@@ -100,14 +100,16 @@
       (is (nil? (poll! c))))))
 
 (deftest email-fail
-  (binding [email/*email-reroute* :fail
+  (binding [email/*email-reroute* :exception
             email-queue/max-fails 5]
     (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
                                        {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
                                        {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
     (doseq [res (repeatedly 5 #(email-queue/send! db/*db* {:name :test} (t/now)))]
-      (is (= {:exception nil :fail 3 :success 0} res)))
-    (is (= {:exception nil :fail 0 :success 0}
+      (is (= 3 (count (:exception res))))
+      (is (= 0 (:success res)))
+      #_(is (= {:exception nil :fail 3 :success 0} res)))
+    (is (= {:exception nil :success 0}
            (email-queue/send! db/*db* {:name :test} (t/now))))))
 
 ;; -------------
@@ -129,12 +131,13 @@
       (is (nil? (poll! c))))))
 
 (deftest sms-fail
-  (binding [sms/*sms-reroute*   :fail
+  (binding [sms/*sms-reroute*   :exception
             sms-queue/max-fails 5]
     (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
                                      {:user-id 2 :to "2" :message "m2"}
                                      {:user-id 3 :to "3" :message "m3"}])
     (doseq [res (repeatedly 5 #(sms-queue/send! db/*db* {:name :test} (t/now)))]
-      (is (= {:exception nil :fail 3 :success 0} res)))
-    (is (= {:exception nil :fail 0 :success 0}
+      (is (= 3 (count (:exception res))))
+      (is (= 0 (:success res))))
+    (is (= {:exception nil :success 0}
            (sms-queue/send! db/*db* {:name :test} (t/now))))))

@@ -5,7 +5,7 @@
 
 (defn task-res
   [res]
-  (assoc res :cycles (+ (:fail res) (:success res))))
+  (assoc res :cycles (+ (count (:exception res)) (:success res))))
 
 (defn email-task
   [db local-config now]

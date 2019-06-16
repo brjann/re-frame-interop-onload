@@ -79,12 +79,8 @@
   (println (apply str (interpose "\n" (conj more "email"))))
   true)
 
-(defmethod send-email! :fail
-  [& more]
-  false)
-
 (defmethod send-email! :exception
-  [& more]
+  [& _]
   (throw (Exception. "An exception")))
 
 (defmethod send-email! :chan

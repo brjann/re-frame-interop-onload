@@ -61,16 +61,12 @@
                                  (try
                                    {:result (external-message-sender message)}
                                    (catch Exception e
-                                     {:result    :error
+                                     {:result    :exception
                                       :exception e})))]
                   (when channels
                     (doseq [c channels]
-                      (put! c res)
-                      #_(let [result (alt!! (timeout 1000) :timeout
-                                            [[c res]] :chan)]
-                          (when (= :timeout result)
-                            (log/info "Channel timed out")))))
-                  (when (= :error (:result res))
+                      (put! c res)))
+                  (when (= :exception (:result res))
                     (>!! err-chan res)))))
     nil))
 
