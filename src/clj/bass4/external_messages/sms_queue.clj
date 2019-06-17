@@ -36,8 +36,13 @@
 
 (defn db-smses-sent!
   [db now sms-reses]
-  (db/external-message-smses-sent! db {:ids  (map :id sms-reses)
-                                       :time now}))
+  (when (seq sms-reses)
+    (let [sms-statuses (map #(vector (:id %)
+                                     "sent"
+                                     now
+                                     (:provider-id %))
+                            sms-reses)]
+      (db/external-message-smses-sent! db {:sms-statuses sms-statuses}))))
 
 (defn add!
   [db now smses]
@@ -60,8 +65,9 @@
                                      (let [res (sms/send-sms-now! db
                                                                   (:to sms)
                                                                   (:message sms))]
-                                       {:id     (:id sms)
-                                        :result :success})
+                                       {:id          (:id sms)
+                                        :result      :success
+                                        :provider-id res})
                                      (catch Exception e
                                        {:id        (:id sms)
                                         :result    :exception
@@ -70,7 +76,6 @@
                      (group-by :result))]
     (when (:exception res)
       (log/error (:exception res))
-      (log/debug (map :id (:exception res)))
       (mailer/send-error-email! (str "Mailer task for " db-name) (str "Could not send sms with ids "
                                                                       (str/join " " (map :id (:exception res)))))
       (db-update-fail-count! db now (:exception res))

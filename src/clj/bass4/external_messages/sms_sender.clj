@@ -10,7 +10,6 @@
     [bass4.db-config :as db-config]
     [clojure.tools.logging :as log]
     [bass4.services.bass :as bass]
-    [bass4.time :as b-time]
     [bass4.external-messages.async :as external-messages]
     [bass4.external-messages.email-sender :as email]
     [clojure.string :as str]
@@ -45,6 +44,21 @@
 ;;   ACTUAL SMS SENDER
 ;; ---------------------
 
+; SMS-teknik return values
+; 0:Access denied                 		No customer of the service or wrong id, username or password.
+; 0:Parse error, [cause]			      	Parse error or no valid XML-data.
+; 0:The required XML-tag <udmessage> is missing	The required xml-tag <udmessage> is missing.
+; 0:Message could’t be empty			The message could’nt be empty
+; 0:No SMS Left				      	The account are out of SMS.
+; 0:Invalid phonenumber			        The number is not correct (eg. <8 or >16 numbers incl. leading +).
+; 0:Invalid phonenumber (e164)			The number range is not defined in E164.
+; 0:Number is blocked			        The number is blocked by SMS Teknik AB
+; [SMSID] 					        SMS is a unique ID for every message that’s been queued. Use SMSID for
+; remove scheduled message and matching delivery status.
+;
+; (The system will leave separate SMSID for every recipient in the request
+;     and format the response with semicolon as delimiter)
+
 (defn send-sms*!
   [to message sender]
   (when (env :dev)
@@ -65,7 +79,7 @@
             res-int (utils/str->int (subs res 0 1))]
         (if (zero? res-int)
           (throw (ex-info "SMS service returned zero" {:res res}))
-          res))
+          (utils/str->int res)))
       (catch Exception e
         (throw (ex-info "SMS sending error" {:exception e}))))))
 

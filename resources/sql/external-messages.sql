@@ -71,11 +71,13 @@ VALUES :t*:smses;
 
 -- :name external-message-smses-sent! :! :1
 -- :doc
-UPDATE external_message_sms
-SET `status` = "sent",
-    `status-time` = :time
-WHERE `id` IN(:v*:ids);
-
+INSERT INTO external_message_sms
+(`id`, `status`, `status-time`, `provider-id`)
+VALUES :t*:sms-statuses
+ON DUPLICATE KEY UPDATE
+  `status` = VALUES(`status`),
+  `status-time` = VALUES(`status-time`),
+  `provider-id` = VALUES(`provider-id`);
 
 -- :name external-message-smses-update-fail-count! :! :1
 -- :doc
