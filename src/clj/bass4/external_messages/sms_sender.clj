@@ -24,6 +24,11 @@
 ;; ---------------------
 
 
+;; Supporting UTF-8 charset
+;; Set operationstype = 5 in XML
+;; Characters that do not need escaping https://stackoverflow.com/questions/15866068/regex-to-match-gsm-character-set
+;; Seems to work: #"^[\w@?£!1$\"¥#è?¤é%ù&ì\\ò(Ç)*:Ø+;ÄäøÆ,<LÖlöæ\-=ÑñÅß.>ÜüåÉ/§à¡¿\']+$"
+
 (defn smsteknik-url
   [id user password]
   (str "https://www.smsteknik.se/Member/SMSConnectDirect/SendSMSv3.asp"
@@ -164,6 +169,7 @@
       "BASS4")))
 
 (defn send-sms-now!
+  "Throws if to is not valid mobile phone number."
   [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
@@ -180,7 +186,7 @@
 (defn async-sms!
   "Throws if to is not valid mobile phone number.
   Returns channel on which send result will be put.
-  Guarantees that update of external message count is done before putting result"
+  Update of external message count is done before putting result."
   [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
