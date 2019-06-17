@@ -14,7 +14,8 @@
     [bass4.external-messages.email-sender :as email]
     [clojure.string :as str]
     [bass4.utils :as utils]
-    [bass4.config :as config])
+    [bass4.config :as config]
+    [bass4.external-messages.sms-status :as sms-status])
   (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
@@ -60,28 +61,29 @@
 ;     and format the response with semicolon as delimiter)
 
 (defn send-sms*!
-  [to message sender]
-  (when (env :dev)
-    (log/info (str "Sent sms to " to)))
-  (let [config db-config/common-config
-        url    (smsteknik-url
-                 (:smsteknik-id config)
-                 (:smsteknik-user config)
-                 (:smsteknik-password config))
-        xml    (smsteknik-xml
-                 to
-                 message
-                 sender
-                 ;; TODO: Implement return-url
-                 (:smsteknik-status-return-url config))]
-    (try
-      (let [res     (:body (http/post url {:body xml}))
-            res-int (utils/str->int (subs res 0 1))]
-        (if (zero? res-int)
-          (throw (ex-info "SMS service returned zero" {:res res}))
-          (utils/str->int res)))
-      (catch Exception e
-        (throw (ex-info "SMS sending error" {:exception e}))))))
+  ([to message sender] (send-sms*! to message sender ""))
+  ([to message sender status-url]
+   (when (env :dev)
+     (log/info (str "Sent sms to " to)))
+   (let [config db-config/common-config
+         url    (smsteknik-url
+                  (:smsteknik-id config)
+                  (:smsteknik-user config)
+                  (:smsteknik-password config))
+         xml    (smsteknik-xml
+                  to
+                  message
+                  sender
+                  status-url)]
+     (log/debug xml)
+     (try
+       (let [res     (:body (http/post url {:body xml}))
+             res-int (utils/str->int (subs res 0 1))]
+         (if (zero? res-int)
+           (throw (ex-info "SMS service returned zero" {:res res}))
+           (utils/str->int res)))
+       (catch Exception e
+         (throw (ex-info "SMS sending error" {:exception e})))))))
 
 
 ;; ----------------------
@@ -106,12 +108,12 @@
 
 
 (defmethod send-sms! :redirect-sms
-  [recipient message sender]
+  [recipient message sender status-url]
   (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms))]
-    (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender)))
+    (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender status-url)))
 
 (defmethod send-sms! :redirect-email
-  [recipient message _]
+  [recipient message & _]
   (let [reroute-email (or *sms-reroute* (env :dev-reroute-sms))]
     (email/send-email*! reroute-email "SMS" (str "To: " recipient "\n" message) (config/env :no-reply-address) nil false)))
 
@@ -125,7 +127,7 @@
   666)
 
 (defmethod send-sms! :exception
-  [& more]
+  [& _]
   (throw (Exception. "An exception")))
 
 (defmethod send-sms! :chan
@@ -135,16 +137,16 @@
   666)
 
 (defmethod send-sms! :default
-  [to message sender]
-  (send-sms*! to message sender))
+  [to message sender status-url]
+  (send-sms*! to message sender status-url))
 
 ;; -------------------------------------
-;;    EXTERNAL MESSAGE METHOD FOR SMS
+;;       ASYNC SEND METHOD FOR SMS
 ;; -------------------------------------
 
-(defmethod external-messages/external-message-sender :sms
-  [{:keys [to message sender]}]
-  (send-sms! to message sender))
+(defmethod external-messages/async-message-sender :sms
+  [{:keys [to message sender status-url]}]
+  (send-sms! to message sender status-url))
 
 
 ;; ----------------------
@@ -155,23 +157,25 @@
   [number]
   (re-matches #"^\+{0,1}[0-9()./\- ]+$" number))
 
-(defn get-sender []
-  (if db/*db*
-    (bass-service/db-sms-sender)
-    "BASS4"))
+(defn get-sender [db]
+  (let [sender (when db (bass-service/db-sms-sender db))]
+    (if-not (zero? (count sender))
+      sender
+      "BASS4")))
 
 (defn send-sms-now!
   [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
-  (let [sender (get-sender)]
-    (let [res (send-sms! to message sender)]
-      (assert (integer? res))
-      (when res
-        (if db
-          (bass/inc-sms-count! db)
-          (log/info "No DB selected for SMS count update.")))
-      res)))
+  (let [sender     (get-sender db)
+        status-url (sms-status/status-url db)
+        res        (send-sms! to message sender status-url)]
+    (assert (integer? res))
+    (when res
+      (if db
+        (bass/inc-sms-count! db)
+        (log/info "No DB selected for SMS count update.")))
+    res))
 
 (defn async-sms!
   "Throws if to is not valid mobile phone number.
@@ -180,12 +184,14 @@
   [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
-  (let [sender     (get-sender)
+  (let [sender     (get-sender db)
+        status-url (sms-status/status-url db)
         error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
         own-chan   (external-messages/queue-message! {:type       :sms
                                                       :to         to
                                                       :message    message
                                                       :sender     sender
+                                                      :status-url status-url
                                                       :error-chan error-chan})]
     (go
       (let [res (<! own-chan)]

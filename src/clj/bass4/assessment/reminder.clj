@@ -10,7 +10,8 @@
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.email-queue :as email-queue]
-            [bass4.external-messages.sms-queue :as sms-queue]))
+            [bass4.external-messages.sms-queue :as sms-queue]
+            [bass4.services.bass :as bass]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -83,10 +84,6 @@
 (defn- db-standard-messages
   [db]
   (db/get-standard-messages db {}))
-
-(defn- db-url
-  [db]
-  (:url (db/get-db-url db {})))
 
 (defn db-reminder-start-and-stop
   [db]
@@ -428,7 +425,7 @@
 (defn- messages
   [db message-assessments users-info]
   (let [standard-messages (db-standard-messages db)
-        db-url            (-> (db-url db)
+        db-url            (-> (bass/db-url db)
                               (str/replace #"/$" ""))
         emails            (->> message-assessments
                                (filter #(= :email (::message-type %)))

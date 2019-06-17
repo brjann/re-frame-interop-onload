@@ -99,7 +99,7 @@
 ;;   EXTERNAL MESSAGE METHOD FOR EMAIL
 ;; -------------------------------------
 
-(defmethod external-messages/external-message-sender :email
+(defmethod external-messages/async-message-sender :email
   [{:keys [to subject message sender reply-to]}]
   (send-email! to subject message sender reply-to))
 
@@ -112,7 +112,8 @@
   (send-email!
     (env :error-email)
     subject
-    message))
+    message
+    (env :no-reply-address)))
 
 ;; ---------------------
 ;;     EMAIL API

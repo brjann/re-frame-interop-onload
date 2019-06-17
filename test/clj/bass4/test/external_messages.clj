@@ -10,8 +10,7 @@
             [bass4.external-messages.email-queue :as email-queue]
             [bass4.external-messages.sms-queue :as sms-queue]
             [clj-time.core :as t]
-            [bass4.config :as config]
-            [clojure.tools.logging :as log]))
+            [bass4.external-messages.sms-status :as sms-status]))
 
 (use-fixtures
   :once
@@ -117,16 +116,18 @@
 ;; -------------
 
 (deftest sms-queue
-  (let [c (chan 3)]
+  (let [c          (chan 3)
+        sender     (sms/get-sender db/*db*)
+        status-url (sms-status/status-url db/*db*)]
     (binding [sms/*sms-reroute* c]
       (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
                                        {:user-id 2 :to "2" :message "m2"}
                                        {:user-id 3 :to "3" :message "m3"}])
       (sms-queue/send! db/*db* {:name :test} (t/now))
-      (is (= #{["1" "m1"]
-               ["2" "m2"]
-               ["3" "m3"]}
-             (into #{} (map #(butlast (into [] (poll! %))) [c c c]))))
+      (is (= #{["1" "m1" sender status-url]
+               ["2" "m2" sender status-url]
+               ["3" "m3" sender status-url]}
+             (into #{} (map #(into [] (poll! %)) [c c c]))))
       (sms-queue/send! db/*db* {:name :test} (t/now))
       (is (nil? (poll! c))))))
 

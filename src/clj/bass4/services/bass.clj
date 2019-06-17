@@ -16,8 +16,12 @@
 (defn db-title []
   (:title (db/get-db-title)))
 
-(defn db-sms-sender []
-  (:sms-sender (db/get-sms-sender)))
+(defn db-sms-sender [db]
+  (:sms-sender (db/get-sms-sender db {})))
+
+(defn db-url
+  [db]
+  (:url (db/get-db-url db {})))
 
 (defn db-contact-info
   ([] (db-contact-info 0))

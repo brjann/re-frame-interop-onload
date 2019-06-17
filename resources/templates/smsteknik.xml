@@ -7,7 +7,7 @@
     <compresstext>0</compresstext>
     <udh/>
     <smssender>{{sender}}</smssender>
-    <deliverystatustype>2</deliverystatustype>
+    <deliverystatustype>3</deliverystatustype>
     <deliverystatusaddress>{{delivery-status-address}}</deliverystatusaddress>
     <usereplynumber>0</usereplynumber>
     <usereplyforwardtype>0</usereplyforwardtype>

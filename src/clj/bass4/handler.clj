@@ -12,6 +12,7 @@
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
             [bass4.lost-password.routes :as lost-password]
+            [bass4.external-messages.sms-status :as sms-status]
             [bass4.env :refer [defaults]]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
             [bass4.routes.api :as api]))
@@ -42,6 +43,7 @@
 (def app-routes
   ;; All routes were wrapped in wrap-formats. I moved that to wrap-base
   (routes
+    #'sms-status/route
     #'api/api-routes
     #'auth-routes
     #'lost-password/lost-password-routes

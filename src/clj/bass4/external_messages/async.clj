@@ -6,9 +6,9 @@
   (:import (java.util.concurrent Executors Executor)))
 
 
-(defmulti external-message-sender :type)
+(defmulti async-message-sender :type)
 
-(defmethod external-message-sender :debug
+(defmethod async-message-sender :debug
   [message]
   #_(http/get "https://httpbin.org/delay/0.1"))
 
@@ -59,7 +59,7 @@
               (bound-fn []
                 (let [res (merge {:message message}
                                  (try
-                                   {:result (external-message-sender message)}
+                                   {:result (async-message-sender message)}
                                    (catch Exception e
                                      {:result    :exception
                                       :exception e})))]
