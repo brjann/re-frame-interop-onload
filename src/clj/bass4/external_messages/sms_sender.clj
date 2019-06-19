@@ -80,7 +80,6 @@
                   message
                   sender
                   status-url)]
-     (log/debug xml)
      (try
        (let [res     (:body (http/post url {:body xml}))
              res-int (utils/str->int (subs res 0 1))]

@@ -1,6 +1,8 @@
 (ns bass4.test.external-messages
   (:require [clojure.test :refer :all]
-            [bass4.test.core :refer [test-fixtures messages-are?]]
+            [bass4.test.core :refer [test-fixtures messages-are? *s*]]
+            [kerodon.core :refer :all]
+            [kerodon.test :refer :all]
             [clojure.core.async :refer [chan dropping-buffer <!! poll!]]
             [bass4.external-messages.email-sender :as email]
             [clojure.string :as str]
@@ -142,3 +144,16 @@
       (is (= 0 (:success res))))
     (is (= {:exception nil :success 0}
            (sms-queue/send! db/*db* {:name :test} (t/now))))))
+
+;; -------------
+;;   SMS STATUS
+;; -------------
+
+(deftest sms-status
+  (-> *s*
+      (visit "/sms-status" :request-method :post :params {:ref 666 :state "delivrd" :datetime "2017-01-01 10:00:00"})
+      (has (status? 200))
+      (visit "/sms-status" :request-method :post :params {})
+      (has (status? 400))
+      (visit "/sms-status" :request-method :post :params {:ref 666 :state "delivrd" :datetime "2017-01-0110:00:00"})
+      (has (status? 400))))
