@@ -1,6 +1,8 @@
 # Version 4.3
 Version 4.2 will be released on 2019-06-23.
 
+(Changes marked with **NOTE** may require your action after the upgrade)
+
 This release focuses on one thing, to improve the performance and timing of the assessment reminders 
 by SMS and email.
 
@@ -14,6 +16,10 @@ The reminder function has been completely rewritten to use as little server reso
 get a new quick login ID in every new assessment reminder.
 - Administrators can now customize when reminders are actually sent, for example 8 am instead of 12pm.
 This is configured under "External messages".
+- **NOTE** The reminder function is very complex and although it has been thoroughly tested, it is 
+difficult to predict how it will behave with the large number of databases in BASS (>40). Therefore, 
+please check if reminders are sent as planned for your project. This can be done when editing a 
+participant, under External messages -> Sent messages.
 
 # Version 4.2
 Version 4.2 will be released on 2019-06-03.
