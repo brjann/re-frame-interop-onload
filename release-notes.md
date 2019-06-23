@@ -1,3 +1,20 @@
+# Version 4.3
+Version 4.2 will be released on 2019-06-23.
+
+This release focuses on one thing, to improve the performance and timing of the assessment reminders 
+by SMS and email.
+
+## Assessment reminders
+- Before, reminders were sent "sometime after 12pm", and could in reality anywhere between 12 and 5 pm. 
+The exact time of when reminders varied from day to day and between databases. 
+Furthermore, the reminder function was slow and used much server resources.
+- Now, reminders as sent within minutes of 12 pm (or at another time point, see below) for all databases. 
+The reminder function has been completely rewritten to use as little server resources as possible.
+- Quick login IDs are only re-generated if they will expire within 7 days, i.e., participants do not
+get a new quick login ID in every new assessment reminder.
+- Administrators can now customize when reminders are actually sent, for example 8 am instead of 12pm.
+This is configured under "External messages".
+
 # Version 4.2
 Version 4.2 will be released on 2019-06-03.
 (Changes marked with **NOTE** may require your action after the upgrade)
