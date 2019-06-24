@@ -29,6 +29,11 @@
     "auth/no-activities.html"
     {:in-session? false}))
 
+(defapi activities-finished-page []
+  (layout/render
+    "auth/activities-finished.html"
+    {:in-session? false}))
+
 ;; -------------
 ;;    LOGOUT
 ;; -------------

@@ -23,6 +23,12 @@ difficult to predict how it will behave with the large number of databases in BA
 please check if reminders are sent as planned for your project. This can be done when editing a 
 participant, under External messages -> Sent messages.
 
+## Registration and assessments
+- Before, users were automatically redirected to the login screening after completing a registration 
+or assessments. This was confusing for many who thought that they needed to login.
+- Now, they are instead presented with a more helpful message that all activities are finished and 
+they can close their browser window.
+
 # Version 4.2
 Version 4.2 will be released on 2019-06-03.
 (Changes marked with **NOTE** may require your action after the upgrade)

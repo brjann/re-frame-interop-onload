@@ -33,8 +33,8 @@
   bankid-utils/reqs-fixtures)
 
 (deftest registration-flow-bankid
-  (let [pnr "191212121212"]
-    (with-redefs [reg-service/registration-params (constantly {:allowed?                true
+    (let [pnr "191212121212"]
+        (with-redefs [reg-service/registration-params (constantly {:allowed?                true
                                                                :fields                  #{:email
                                                                                           :sms-number
                                                                                           :pid-number
@@ -49,55 +49,49 @@
                                                                :bankid-change-names?    false
                                                                :allow-duplicate-bankid? true})
                   passwords/letters-digits        (constantly "METALLICA")]
-      (-> *s*
-          (visit "/registration/564610/")
-          (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/registration/564610/form")
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "BankID"))
-          (visit "/registration/564610/bankid" :request-method :post :params {:personnummer pnr})
-          (follow-redirect)
-          (has (some-text? "Contacting"))
-          (user-authenticates! pnr)
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Who is collecting the data"))
-          (visit "/registration/564610/privacy" :request-method :post :params {})
-          (has (status? 400))
-          (visit "/registration/564610/form")
-          (has (status? 302))
-          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-          (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
+            (-> *s*
+                (visit "/registration/564610/")
+                (follow-redirect)
+                (has (some-text? "Welcome"))
+                (visit "/registration/564610/form")
+                (follow-redirect)
+                (follow-redirect)
+                (has (some-text? "BankID"))
+                (visit "/registration/564610/bankid" :request-method :post :params {:personnummer pnr})
+                (follow-redirect)
+                (has (some-text? "Contacting"))
+                (user-authenticates! pnr)
+                (collect+wait)
+                (visit "/e-auth/bankid/collect" :request-method :post)
+                (follow-redirect)
+                (follow-redirect)
+                (has (some-text? "Who is collecting the data"))
+                (visit "/registration/564610/privacy" :request-method :post :params {})
+                (has (status? 400))
+                (visit "/registration/564610/form")
+                (has (status? 302))
+                (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+                (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
                                                                             :sms-number "+46070717652"})
-          (has (status? 302))
-          (follow-redirect)
-          (has (some-text? "Validate"))
-          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-          (has (status? 200))
-          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-          (has (status? 302))
-          ;; Redirect to finish
-          (follow-redirect)
-          ;; Session created
-          (follow-redirect)
-          ;; Redirect to pending assessments
-          (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/user/assessments")
-          (has (some-text? "AAQ"))
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-          (follow-redirect)
-          (has (some-text? "Thanks"))
-          (visit "/user/assessments")
-          ;; Assessments completed
-          (follow-redirect)
-          ;; Redirect to finish screen
-          (follow-redirect)
-          (has (some-text? "Login"))))))
+                (has (status? 302))
+                (follow-redirect)
+                (has (some-text? "Validate"))
+                (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+                (has (status? 200))
+                (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+                (has (status? 302))
+                ;; Redirect to finish
+                (follow-redirect)
+                ;; Session created
+                (follow-redirect)
+                ;; Redirect to pending assessments
+                (follow-redirect)
+                (has (some-text? "Welcome"))
+                (visit "/user/assessments")
+                (has (some-text? "AAQ"))
+                (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+                (follow-redirect)
+                (has (some-text? "Thanks"))))))
 
 (deftest registration-flow-bankid-no-name-change
   (let [pnr "191212121212"]

@@ -20,11 +20,7 @@
                                      messages-are?
                                      pass-by]]
             [bass4.services.auth :as auth-service]
-            [bass4.middleware.debug :as debug]
             [clojure.core.async :refer [chan]]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [bass4.services.attack-detector :as a-d]
             [bass4.services.user :as user-service]
             [bass4.external-messages.async :as external-messages :refer [*debug-chan*]]
             [bass4.config :as config]))
@@ -139,12 +135,15 @@
       (visit "/user/tx/messages")
       (has (status? 200))))
 
-(deftest request-no-double-authentication
+(deftest request-no-double-authentication-needed
   (-> *s*
       (modify-session {:user-id 536821})
       (visit "/user/")
       (follow-redirect)
-      (has (some-text? "activities"))))
+      (follow-redirect)
+      (has (some-text? "activities"))
+      (visit "/user/")
+      (has (status? 403))))
 
 (deftest request-no-double-authentication-visit
   (is (= true (-> *s*

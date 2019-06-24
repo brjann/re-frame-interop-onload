@@ -169,9 +169,11 @@
             (visit "/user/assessments")
             ;; Assessments completed
             (follow-redirect)
-            ;; Redirect to finish screen
+            ;; Redirect to activities finished redirect
             (follow-redirect)
-            (has (some-text? "Login")))))))
+            ;; Redirect to activities finished screen
+            (follow-redirect)
+            (has (some-text? "finished")))))))
 
 (deftest registration-no-study-consent
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -278,48 +280,6 @@
         (has (some-text? "Welcome"))
         (visit "/user/assessments")
         (has (some-text? "AAQ")))))
-
-;; This was a test of the old Always show finish screen property.
-;; Probably not needed anymore but keeping anyway.
-(deftest registration-flow-no-finish
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-        (has (status? 200))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {::code-sms "METALLICA"})
-        (has (status? 302))
-        ;; Redirect to finish
-        (follow-redirect)
-        ;; Session created
-        (follow-redirect)
-        ;; Redirect to pending assessments
-        (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/user/assessments")
-        (has (some-text? "AAQ"))
-        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-        (follow-redirect)
-        (has (some-text? "Thanks"))
-        (visit "/user/assessments")
-        ;; Assessments completed
-        (follow-redirect)
-        ;; Redirect to login screen
-        (follow-redirect)
-        (has (some-text? "Login")))))
 
 (deftest registration-back-to-registration-at-validation
   (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -1308,13 +1268,7 @@
         (has (some-text? "AAQ"))
         (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
         (follow-redirect)
-        (has (some-text? "Thanks"))
-        (visit "/user/assessments")
-        ;; Assessments completed
-        (follow-redirect)
-        ;; Redirect to finish screen
-        (follow-redirect)
-        (has (some-text? "Login")))))
+        (has (some-text? "Thanks")))))
 
 (deftest registration-all-fields-sql-query-no-assessments
   (let [email (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
@@ -1358,7 +1312,8 @@
           (has (status? 302))
           (follow-redirect)
           (follow-redirect)
-          (has (some-text? "no active tasks"))))))
+          (follow-redirect)
+          (has (some-text? "No activities"))))))
 
 (deftest already-logged-in
   (-> *s*

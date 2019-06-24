@@ -157,9 +157,13 @@
             (visit "/user/assessments")
             ;; The assessment is now marked as completed and user is redirected...
             (follow-redirect)
-            ;; ...to the user page, which redirects to the login because user is not in treatment
+            ;; ...to the user page, which redirects to the to-finished page
             (follow-redirect)
-            (has (some-text? "Login")))))))
+            ;; ...which clears the session and redirects to activities-finished page
+            (follow-redirect)
+            (has (some-text? "finished"))
+            (visit "/user")
+            (has (status? 403)))))))
 
 
 (deftest swallow-texts

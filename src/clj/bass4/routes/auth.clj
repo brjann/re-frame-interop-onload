@@ -34,6 +34,15 @@
   (POST "/re-auth-ajax" [password :as request]
     (auth-response/check-re-auth-ajax (:session request) password))
 
+  (GET "/to-activities-finished" []
+    (-> (http-response/found "/activities-finished")
+        (assoc :session nil)))
+  (GET "/activities-finished" []
+    (auth-response/activities-finished-page))
+
+  (GET "/to-no-activities" []
+    (-> (http-response/found "/no-activities")
+        (assoc :session nil)))
   (GET "/no-activities" []
     (auth-response/no-activities-page))
 

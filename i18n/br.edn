@@ -166,8 +166,6 @@
                    :password-error          "Senha errada"
                    :please-re-auth          "Por favor, forneça sua senha para continuar a usar o sistema."
                    :please-re-auth-form     "Sua senha é necessária antes de você enviar seus dados."
-                   :no-activities           "Nenhuma atividade"
-                   :no-activities-info      "Não há tarefas ativas para este usuário. Você foi desconectado."
                    :lost-password           "Eu perdi minha senha"
                    :password-needed         "Senha necessária"}
  :lost-password   {:title                   "Senha perdida"

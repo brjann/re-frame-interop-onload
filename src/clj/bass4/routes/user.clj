@@ -101,8 +101,8 @@
     (route-rules/wrap-rules [{:uri   "*"
                               :rules [[#'consent-needed? "/user/privacy/consent" :ok]
                                       [#'assessments-pending? "/user/assessments" :ok]
-                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
-                                      [#'no-treatment-but-assessments? "/login" :ok]
+                                      [#'no-treatment-no-assessments? "/to-no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/to-activities-finished" :ok]
                                       [#'limited-access? "/escalate" :ok]]}
                              {:uri   "/user/tx/message*"
                               :rules tx-message-rules}])
@@ -133,8 +133,8 @@
     (route-rules/wrap-rules [{:uri   "*"
                               :rules [[#'consent-needed? "/user/privacy/consent" :ok]
                                       [#'assessments-pending? "/user/assessments" :ok]
-                                      [#'no-treatment-no-assessments? "/no-activities" :ok]
-                                      [#'no-treatment-but-assessments? "/login" :ok]]}])
+                                      [#'no-treatment-no-assessments? "/to-no-activities" :ok]
+                                      [#'no-treatment-but-assessments? "/to-activities-finished" :ok]]}])
     #'user-response/treatment-mw))
 
 ; -----------------------
