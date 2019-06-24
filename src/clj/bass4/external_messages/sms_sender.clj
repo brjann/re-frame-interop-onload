@@ -28,6 +28,8 @@
 ;; Set operationstype = 5 in XML
 ;; Characters that do not need escaping https://stackoverflow.com/questions/15866068/regex-to-match-gsm-character-set
 ;; Seems to work: #"^[\w@?£!1$\"¥#è?¤é%ù&ì\\ò(Ç)*:Ø+;ÄäøÆ,<LÖlöæ\-=ÑñÅß.>ÜüåÉ/§à¡¿\']+$"
+;; SMS-teknik recommends the following regex
+;; https://frightanic.com/software-development/regex-for-gsm-03-38-7bit-character-set/
 
 (defn smsteknik-url
   [id user password]
