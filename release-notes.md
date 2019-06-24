@@ -7,11 +7,13 @@ This release focuses on one thing, to improve the performance and timing of the 
 by SMS and email.
 
 ## Assessment reminders
-- Before, reminders were sent "sometime after 12pm", and could in reality anywhere between 12 and 5 pm. 
-The exact time of when reminders varied from day to day and between databases. 
-Furthermore, the reminder function was slow and used much server resources.
-- Now, reminders as sent within minutes of 12 pm (or at another time point, see below) for all databases. 
-The reminder function has been completely rewritten to use as little server resources as possible.
+- Before, reminders were handled by PHP and ran sequentially for all databases on the server. Reminders
+were sent "sometime after 12pm", and could in reality be sent anywhere between 12 and 5 pm. The exact 
+time of when reminders were sent varied from day to day and between databases. Furthermore, the reminder 
+function was sometimes slow and used much server resources.
+- Now, reminders are handled by Clojure and sent within minutes of 12 pm (or at another time point, 
+see below) for all databases. The reminder function has been completely rewritten in Clojure to work with 
+the databases in parallel and use as little server resources as possible.
 - Quick login IDs are only re-generated if they will expire within 7 days, i.e., participants do not
 get a new quick login ID in every new assessment reminder.
 - Administrators can now customize when reminders are actually sent, for example 8 am instead of 12pm.
