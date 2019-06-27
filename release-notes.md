@@ -1,5 +1,5 @@
 # Version 4.3
-Version 4.2 will be released on 2019-06-23.
+Version 4.3 will be released on 2019-06-23.
 
 (Changes marked with **NOTE** may require your action after the upgrade)
 
