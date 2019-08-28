@@ -36,7 +36,7 @@
                       (if-not (nil? x)
                         x
                         default))))]
-    (when (nil? setting)
+    #_(when (nil? setting)
       (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
     setting))
 

@@ -72,6 +72,11 @@
   [{:keys [session]} _]
   (:limited-access? session))
 
+(defn pluggable-ui?
+  [_ _]
+  (and (some? (db-config/db-setting [:pluggable-ui-path]))
+       (db-config/db-setting [:use-pluggable-ui?])))
+
 
 ; -----------------------
 ;    ROUTES MIDDLEWARE
@@ -103,7 +108,8 @@
                                       [#'assessments-pending? "/user/assessments" :ok]
                                       [#'no-treatment-no-assessments? "/to-no-activities" :ok]
                                       [#'no-treatment-but-assessments? "/to-activities-finished" :ok]
-                                      [#'limited-access? "/escalate" :ok]]}
+                                      [#'limited-access? "/escalate" :ok]
+                                      [#'pluggable-ui? "/user/ui/" :ok]]}
                              {:uri   "/user/tx/message*"
                               :rules tx-message-rules}])
     #'user-response/treatment-mw))
@@ -143,16 +149,17 @@
 
 (defroutes pluggable-ui
   (context "/user/ui" [:as request]
-    (GET "*" [] (let [uri      (:uri request)
-                      path     (subs uri (count "/user/ui"))
-                      ui-path  (db-config/db-setting [:pluggable-ui-path])
-                      _        (when-not ui-path
-                                 (throw (Exception. "No :pluggable-ui-path in config")))
-                      response (or (http-response/file-response path {:root ui-path})
-                                   (http-response/file-response "" {:root ui-path}))]
-                  (if (= 200 (:status response))
-                    (file/file-headers response)
-                    response)))
+    (GET "*" [] (let [path (subs (:uri request) (count "/user/ui"))]
+                  (if (= "" path)
+                    (http-response/found "/user/ui/")
+                    (let [ui-path  (db-config/db-setting [:pluggable-ui-path])
+                          _        (when-not ui-path
+                                     (throw (Exception. "No :pluggable-ui-path in config")))
+                          response (or (http-response/file-response path {:root ui-path})
+                                       (http-response/file-response "" {:root ui-path}))]
+                      (if (= 200 (:status response))
+                        (file/file-headers response)
+                        response)))))
     (POST "*" [] (http-response/bad-request "Cannot post to pluggable ui"))))
 
 (defroutes root-reroute
