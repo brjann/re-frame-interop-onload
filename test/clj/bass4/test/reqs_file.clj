@@ -17,5 +17,5 @@
       (visit "/File.php?uploadedfile=xx")
       (has (status? 404))
       (visit (str "/File.php?uploadedfile=" (str/join (repeat 1e4 "x"))))
-      (log-status)
-      (has (status? 404))))
+      (has (status? 404))
+      (visit "/File.php?uploadedfile=xx")))                 ; Check if it includes proper header

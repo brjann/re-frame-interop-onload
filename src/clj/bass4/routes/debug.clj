@@ -78,6 +78,8 @@
           (http-response/forbidden "Sorry!"))
         (GET "/403" [& params :as request]
           (http-response/forbidden "Sorry!"))
+        (GET "/404" [& params :as request]
+          (http-response/not-found "Not found"))
         (GET "/404!" [& params :as request]
           (http-response/not-found!))
 

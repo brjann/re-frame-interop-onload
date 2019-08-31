@@ -155,7 +155,7 @@
       (wrap-mw-fn #'request-state-session-info)
       (wrap-mw-fn #'auth/session-user-id-mw)
       debug-mw/wrap-session-modification
-      (wrap-mw-fn #'transform/transform-mw)
+      (wrap-mw-fn #'transform/transform-mw)                 ; This is a mess. See ns for info
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (wrap-mw-fn #'file-php/File-php)                      ; Must be directly after db resolve so path restrictions (e.g., /embedded) are not applied

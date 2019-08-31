@@ -2,11 +2,20 @@
   (:require [bass4.http-utils :as h-utils]
             [bass4.error-pages :as error-pages]
             [bass4.utils :as utils]
-            [bass4.layout :as layout]
-            [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]))
 
 
+;; ----------------
+;;  THIS IS A MESS
+;; ----------------
+
+;; This file adds content-type headers to e.g., 404 responses so they're not
+;; illegal to the browser. However, there is middleware after this that also
+;; returns 404 (file-php, db-middleware) which is not handled by this mw.
+;; But if if is moved downstream, tests fail (unsure why).
+;;
+;; I need to figure out another solution to sugar upstream responses so that
+;; they are legal.
 
 ;; ----------------
 ;;  AJAX POST
