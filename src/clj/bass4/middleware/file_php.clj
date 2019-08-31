@@ -22,13 +22,16 @@
                     (< 8 length)
                     (= "File.php" (subs uri (- length 8))))]
     (if file-php?
-      (let [response (->> (cond
-                            (:uploadedfile params)
-                            (let [upload-dir (str (bass/db-dir "upload"))]
-                              (http-response/file-response (:uploadedfile params) {:root upload-dir}))
+      (let [response (try
+                       (cond
+                         (:uploadedfile params)
+                         (let [upload-dir (str (bass/db-dir "upload"))]
+                           (http-response/file-response (:uploadedfile params) {:root upload-dir}))
 
-                            (:uid params)
-                            (http-response/file-response (str (bass/uid-file (:uid params))))))]
+                         (:uid params)
+                         (http-response/file-response (str (bass/uid-file (:uid params)))))
+
+                       (catch Exception _))]
         (if response
           (file/file-headers response)
           (http-response/not-found "File not found")))
