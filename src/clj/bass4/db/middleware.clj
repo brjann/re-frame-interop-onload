@@ -36,4 +36,6 @@
               db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
       (request-logger/set-state! :name (name db-name))
       (handler request))
-    (http-response/not-found "No such DB")))
+    (->
+      (http-response/not-found "No such DB")
+      (http-response/content-type "text/plain; charset=utf-8"))))

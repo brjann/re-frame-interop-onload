@@ -34,5 +34,7 @@
                        (catch Exception _))]
         (if response
           (file/file-headers response)
-          (http-response/not-found "File not found")))
+          (->
+            (http-response/not-found "File not found")
+            (http-response/content-type "text/plain; charset=utf-8"))))
       (handler request))))
