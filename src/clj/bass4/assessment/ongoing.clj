@@ -139,7 +139,8 @@
         completed-instruments  (->> (administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))
-        additional-instruments (->> (administration-additional-instruments db {:administration-ids administration-ids})
+        _                      (log/debug administration-ids)
+        additional-instruments (->> (administration-additional-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))]
     (map #(assoc % :instruments (diff
