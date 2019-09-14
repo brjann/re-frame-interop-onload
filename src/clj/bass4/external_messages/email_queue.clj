@@ -75,7 +75,7 @@
       (let [final-failed (filter #(<= (dec max-fails) (:fail-count %)) (:exception res))]
         (when (seq final-failed)
           (email/send-error-email! (str "Mailer task for " db-name) (str "Send email with ids "
-                                                                         ;; TODO: Should be `final-failed` instead of `(:exception res)` 
+                                                                         ;; TODO: Should be `final-failed` instead of `(:exception res)`
                                                                          (str/join " " (map :id (:exception res)))
                                                                          " failed after " max-fails " tries."))))
       #_(email/send-error-email! (str "Mailer task for " db-name) (str "Could not send email with ids "
