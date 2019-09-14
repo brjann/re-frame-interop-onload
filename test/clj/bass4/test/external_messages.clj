@@ -3,7 +3,7 @@
             [bass4.test.core :refer [test-fixtures messages-are? *s*]]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [clojure.core.async :refer [chan dropping-buffer <!! poll!]]
+            [clojure.core.async :refer [chan dropping-buffer <!! poll! put!]]
             [bass4.external-messages.email-sender :as email]
             [clojure.string :as str]
             [bass4.external-messages.sms-sender :as sms]
@@ -101,17 +101,23 @@
       (is (nil? (poll! c))))))
 
 (deftest email-fail
-  (binding [email/*email-reroute* :exception
-            email-queue/max-fails 5]
-    (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
-                                       {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
-                                       {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
-    (doseq [res (repeatedly 5 #(email-queue/send! db/*db* {:name :test} (t/now)))]
-      (is (= 3 (count (:exception res))))
-      (is (= 0 (:success res)))
-      #_(is (= {:exception nil :fail 3 :success 0} res)))
-    (is (= {:exception nil :success 0}
-           (email-queue/send! db/*db* {:name :test} (t/now))))))
+  (let [c (chan)]
+    (binding [email/*email-reroute*   :exception
+              email-queue/max-fails   5
+              email/send-error-email! #(put! c %2)]
+      (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
+                                         {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
+                                         {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
+      (doseq [n (range 5)]
+        (let [res (email-queue/send! db/*db* {:name :test} (t/now))]
+          (is (= 3 (count (:exception res))))
+          (is (= 0 (:success res)))
+          (if (= 4 n)
+            (is (string? (poll! c)))
+            (is (nil? (poll! c)))))
+        #_(is (= {:exception nil :fail 3 :success 0} res)))
+      (is (= {:exception nil :success 0}
+             (email-queue/send! db/*db* {:name :test} (t/now)))))))
 
 ;; -------------
 ;;   SMS QUEUE

@@ -64,16 +64,21 @@
                                                                        (:subject email)
                                                                        (:message email)
                                                                        (:reply-to email))]
-                                       {:id     (:id email)
-                                        :result :success})
+                                       (assoc email :result :success))
                                      (catch Exception e
-                                       {:id        (:id email)
-                                        :result    :exception
-                                        :exception e})))
+                                       (merge email
+                                              {:result    :exception
+                                               :exception e}))))
                                  emails))
                      (group-by :result))]
     (when (:exception res)
-      (email/send-error-email! (str "Mailer task for " db-name) (str "Could not send email with ids "
+      (let [final-failed (filter #(<= (dec max-fails) (:fail-count %)) (:exception res))]
+        (when (seq final-failed)
+          (email/send-error-email! (str "Mailer task for " db-name) (str "Send email with ids "
+                                                                         ;; TODO: Should be `final-failed` instead of `(:exception res)` 
+                                                                         (str/join " " (map :id (:exception res)))
+                                                                         " failed after " max-fails " tries."))))
+      #_(email/send-error-email! (str "Mailer task for " db-name) (str "Could not send email with ids "
                                                                      (str/join " " (map :id (:exception res)))))
       (db-update-fail-count! db now (:exception res))
       (db-final-failed! db))

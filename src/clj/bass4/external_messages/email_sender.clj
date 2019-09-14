@@ -173,7 +173,7 @@
          res)))))
 
 
-(defn send-error-email!
+(defn ^:dynamic send-error-email!
   [sender-name message]
   (try
     (async-email!
