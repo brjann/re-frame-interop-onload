@@ -15,10 +15,10 @@
                                      *s*]]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user-service]
+            [bass4.test.assessment-utils :refer :all]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [bass4.services.attack-detector :as a-d]
             [bass4.instrument.validation :as i-validation]))
 
 (use-fixtures
@@ -28,7 +28,7 @@
 
 (deftest active-assessment
   (with-redefs [auth-service/double-auth-code (constantly "666777")
-                t/now (constantly (t/date-time 2017 8 2 0 0 0))]
+                t/now                         (constantly (t/date-time 2017 8 2 0 0 0))]
     (-> *s*
         (visit "/login" :request-method :post :params {:username "one-assessment" :password "one-assessment"})
         (has (status? 302))
@@ -192,3 +192,23 @@
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302)))))
+
+(deftest custom-assessment
+  (let [user-id (user-service/create-user! 572594 {:Group "572598" :firstname "custom-assessment"})]
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
+    (create-custom-assessment! user-id [286 4743] (t/date-time 2017 8 2 0 0 0))
+    (-> *s*
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 302))
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "AAQ"))
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+        (follow-redirect)
+        (has (some-text? "Agoraphobic"))
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
+        (follow-redirect)
+        (follow-redirect)
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "no more activities")))))

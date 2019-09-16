@@ -3,10 +3,7 @@
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
             [bass4.assessment.create-missing :as missing]
-            [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [clojure.tools.logging :as log]
-            [bass4.utils :as utils]
-            [bass4.db-config :as db-config]))
+            [bass4.services.bass :refer [create-bass-objects-without-parent!]]))
 
 (defn- user-group
   [db user-id]
@@ -139,7 +136,7 @@
         completed-instruments  (->> (administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))
-        additional-instruments (->> (administration-additional-instruments db {:administration-ids administration-ids})
+        additional-instruments (->> (administration-additional-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (map-map #(map :instrument-id %)))]
     (map #(assoc % :instruments (diff

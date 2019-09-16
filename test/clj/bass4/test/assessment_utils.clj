@@ -9,7 +9,8 @@
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.assessment.create-missing :as missing]
-            [bass4.routes.quick-login :as quick-login]))
+            [bass4.routes.quick-login :as quick-login]
+            [bass4.services.bass :as bass]))
 
 (use-fixtures
   :once
@@ -39,6 +40,15 @@
                                       :parent-id     project-id
                                       :property-name "Groups"})))
 
+(defn additional-instruments!
+  [administration-id instruments-ids]
+  (doseq [instrument-id instruments-ids]
+    (db/create-bass-link! {:linker-id     administration-id
+                           :linkee-id     instrument-id
+                           :link-property "AdditionalInstruments"
+                           :linker-class  "cParticipantAdministration"
+                           :linkee-class  "cInstrument"})))
+
 (defn create-group-administration!
   [group-id assessment-id assessment-index & [properties]]
   (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cGroupAdministration"
@@ -66,6 +76,33 @@
                                                        :deleted         0}
                                                       properties)})
     administration-id))
+
+(defn create-custom-assessment*!
+  [user-id]
+  (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
+                                                          :parent-id     user-id
+                                                          :property-name "AdHocAssessments"}))]
+    (bass/update-object-properties! "c_assessment"
+                                    assessment-id
+                                    {"scope"                            0
+                                     "repetitions"                      1
+                                     "repetitiontype"                   0
+                                     "type"                             ""
+                                     "customlabel"                      "ADHOC"
+                                     "activationhour"                   0
+                                     "timelimit"                        0
+                                     "customrepetitioninterval"         0
+                                     "isrecord"                         0
+                                     "competingassessmentspriority"     0
+                                     "competingassessmentsallowswallow" 0
+                                     "clinicianassessment"              0})
+    assessment-id))
+
+(defn create-custom-assessment!
+  [user-id instrument-ids date]
+  (let [assessment-id     (create-custom-assessment*! user-id)
+        administration-id (create-participant-administration! user-id assessment-id 1 {:date date})]
+    (additional-instruments! administration-id instrument-ids)))
 
 (defn clear-administrations!
   []
