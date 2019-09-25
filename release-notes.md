@@ -1,3 +1,14 @@
+## Version 4.3.2
+Bugfix release. Version 4.3.2 will be released on 2019-09-25.
+
+- Broken links in dashboard now fixed.
+
+## Version 4.3.1
+Bugfix release. Version 4.3.1 will be released on 2019-09-16.
+
+- SMS containing "--" can now be sent
+- Custom assessments now work again (stopped working in 4.3)
+
 # Version 4.3
 Version 4.3 will be released on 2019-06-23.
 
