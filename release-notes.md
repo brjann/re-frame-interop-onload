@@ -1,3 +1,8 @@
+## Version 4.3.3
+Bugfix release. Version 4.3.3 will be released on 2019-10-03.
+
+- Tabbed worksheets now work on iOS.
+
 ## Version 4.3.2
 Bugfix release. Version 4.3.2 will be released on 2019-09-25.
 
