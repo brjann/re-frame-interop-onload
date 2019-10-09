@@ -17,7 +17,7 @@ SELECT
     Name AS `assessment-name`,
     scope,
     (CASE
-     WHEN RepetitionType = 2 OR Type = "PUNKT"
+     WHEN (RepetitionType = 2 AND Type <> "WEEK") OR Type = "PUNKT"
          THEN "MANUAL"
      ELSE
          (CASE
