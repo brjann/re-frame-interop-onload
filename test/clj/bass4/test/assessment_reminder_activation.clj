@@ -5,10 +5,7 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.user :as user-service]
-            [bass4.db.core :as db]
-            [bass4.assessment.create-missing :as missing]
-            [clojure.tools.logging :as log]))
+            [bass4.services.user :as user-service]))
 
 (use-fixtures
   :once

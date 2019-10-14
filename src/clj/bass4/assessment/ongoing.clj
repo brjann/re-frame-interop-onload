@@ -14,9 +14,26 @@
   (when user-id
     (:assessment-series-id (first (db/get-user-assessment-series db {:user-ids [user-id]})))))
 
+(defn- merge-participant-group-administrations
+  [user-id participant-administrations group-administrations]
+  (->> (concat participant-administrations group-administrations) ;; From https://stackoverflow.com/a/20808420
+       (sort-by (juxt :assessment-id :assessment-index))
+       (partition-by (juxt :assessment-id :assessment-index))
+       (map (partial apply merge))
+       (map #(assoc % :active? (and (if (contains? % :group-administration-active?)
+                                      (:group-administration-active? %)
+                                      true)
+                                    (if (contains? % :participant-administration-active?)
+                                      (:participant-administration-active? %)
+                                      true))
+                      :user-id user-id))))
+
 (defn- user-administrations
   [db user-id group-id assessment-series-id]
-  (db/get-user-administrations db {:user-id user-id :group-id group-id :assessment-series-id assessment-series-id}))
+  (let [group-administrations       (when group-id
+                                      (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id}))
+        participant-administrations (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})]
+    (merge-participant-group-administrations user-id participant-administrations group-administrations)))
 
 (defn user-assessments
   [db user-id assessment-series-id]

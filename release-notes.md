@@ -1,3 +1,8 @@
+## Version 4.3.4
+Bugfix release. Version 4.3.4 will be released on 2019-10-14.
+
+- Missing participant administrations of repeated group-level assessments do not cause trouble. 
+
 ## Version 4.3.3
 Bugfix release. Version 4.3.3 will be released on 2019-10-03.
 
