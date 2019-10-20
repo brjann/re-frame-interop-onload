@@ -23,12 +23,12 @@
                            :draft      draft}))))
 
 (defapi save-message
-  [user-id :- integer? text :- [[api/str? 1 5000]]]
+  [user-id :- integer? text :- [[api/str? 1 50000]]]
   (messages-service/save-message! user-id text)
   (http-response/found "messages"))
 
 (defapi save-draft
-  [user-id :- integer? text :- [[api/str? 0 5000]]]
+  [user-id :- integer? text :- [[api/str? 0 50000]]]
   (messages-service/save-draft! user-id text)
   (http-response/ok "ok"))
 
@@ -43,7 +43,7 @@
   (http-response/ok {:result "ok"}))
 
 (defapi api-save-message
-  [user-id :- integer? text :- [[api/str? 1 5000]]]
+  [user-id :- integer? text :- [[api/str? 1 50000]]]
   (messages-service/save-message! user-id text)
   (http-response/ok {:result "ok"}))
 

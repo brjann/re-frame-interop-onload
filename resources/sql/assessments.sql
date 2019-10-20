@@ -79,30 +79,15 @@ FROM c_group AS cg
         ON cg.ParentInterface = cti.ObjectId
 WHERE cg.ObjectId IN (:v*:group-ids);
 
--- :name get-user-administrations :? :*
--- :doc Gets the participant and group administrations for a user.
+
+-- :name get-participant-administrations :? :*
+-- :doc
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
     cpa.ObjectId AS `participant-administration-id`,
-
-  (CASE
-     WHEN cpa.AssessmentIndex IS NULL
-         THEN cga.AssessmentIndex
-     ELSE cpa.AssessmentIndex
-     END) AS `assessment-index`,
-
-  (CASE
-     WHEN cpa.Active IS NULL AND cga.Active IS NULL
-         THEN NULL
-     ELSE
-         (CASE
-          WHEN cpa.Active = 0 OR cga.Active = 0
-              THEN 0
-          ELSE 1
-          END)
-     END) AS `active?`,
-
+    cpa.AssessmentIndex AS `assessment-index`,
+    cpa.Active AS `participant-administration-active?`,
   (CASE
      WHEN cpa.DateCompleted IS NULL
          THEN 0
@@ -115,9 +100,23 @@ SELECT
        NULL
    ELSE
      from_unixtime(cpa.`Date`)
-   END) AS `participant-activation-date`,
+   END) AS `participant-activation-date`
 
-  cga.ObjectId AS `group-administration-id`,
+FROM c_assessment as ca
+    JOIN (c_participantadministration as cpa)
+        ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
+WHERE
+    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
+
+
+-- :name get-group-administrations :? :*
+-- :doc
+SELECT
+    ca.Name AS `assessment-name`,
+    ca.ObjectId AS `assessment-id`,
+    cga.AssessmentIndex AS `assessment-index`,
+	cga.Active AS `group-administration-active?`,
+    cga.ObjectId AS `group-administration-id`,
 
   (CASE
    WHEN cga.Date IS NULL OR cga.Date = 0
@@ -128,13 +127,10 @@ SELECT
    END) AS `group-activation-date`
 
 FROM c_assessment as ca
-    LEFT JOIN (c_participantadministration as cpa)
-        ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
     LEFT JOIN (c_groupadministration AS cga)
-        ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id
-            AND (cpa.AssessmentIndex IS NULL OR cpa.AssessmentIndex = cga.AssessmentIndex))
+        ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id)
 WHERE
-    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
+    ca.ParentId = :assessment-series-id;
 
 
 -- :name create-participant-administrations! :! :1
