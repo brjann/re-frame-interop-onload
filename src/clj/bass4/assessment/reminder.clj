@@ -2,7 +2,6 @@
   (:require [clj-time.core :as t]
             [bass4.utils :as utils]
             [bass4.db.core :as db]
-            [clojure.tools.logging :as log]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.create-missing :as missing]
             [clojure.string :as str]
@@ -200,8 +199,12 @@
        (sort-by :assessment-index)
        (partition-by :assessment-index)
        (map (partial apply merge))
-       (map #(assoc % :active? (and (or (:group-administration-active? %) true)
-                                    (or (:participant-administration-active? %) true))
+       (map #(assoc % :active? (and (if (contains? % :group-administration-active?)
+                                      (:group-administration-active? %)
+                                      true)
+                                    (if (contains? % :participant-administration-active?)
+                                      (:participant-administration-active? %)
+                                      true))
                       :user-id user-id))))
 
 (defn- ongoing-from-potentials

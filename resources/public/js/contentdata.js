@@ -78,6 +78,9 @@ $(document).ready(function () {
       var ContentTabTab = function (tab_id, label, on_click) {
          var tab = $(sprintf("<li class='nav-item'><a class='nav-link' id ='tab_%s' data-target='#%s' data-toggle='tab'>%s</a></li>", tab_id, tab_id, label));
          tab.on('show.bs.tab', on_click);
+         // https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#Safari_Mobile
+         tab.find('a').click(function () {
+         });
          return tab;
       };
 
