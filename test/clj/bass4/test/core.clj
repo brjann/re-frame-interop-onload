@@ -277,3 +277,12 @@
      (let [new-a# (-> @~a ~@forms)]
        (reset! ~a new-a#))))
 
+
+
+;; Exploring creating a new database for every test run
+#_(let [db-name (str (UUID/randomUUID))]
+    (shell/sh "/Applications/MAMP/Library/bin/mysql" "-uroot" "-proot" :in (str "create database `" db-name "`;"))
+    (shell/sh "/Applications/MAMP/Library/bin/mysql" "-uroot" "-proot" db-name :in (clojure.java.io/file "/Users/brjljo/Box Sync/BASS Platform/databases/TEST-structure-dump-reduced.sql"))
+    (jdbc/with-db-connection [conn {:dbtype "mysql" :port 3300 :dbname db-name :user "root" :password "root" "serverTimezone" "UTC"}]
+                             (binding [db/*db* conn]
+                               (db/create-bass-object! {:class-name "cParticipant" :property-name "XXX" :parent-id 666}))))
