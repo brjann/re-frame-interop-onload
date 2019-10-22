@@ -2,11 +2,11 @@
   (:require [bass4.db.core :as db]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [thread <!!]]
-            [clojure.tools.logging :as log]
             [clj-time.coerce :as tc]
             [bass4.external-messages.sms-sender :as sms]
             [clojure.string :as str]
-            [bass4.external-messages.email-sender :as mailer]))
+            [bass4.external-messages.email-sender :as email]
+            [clojure.tools.logging :as log]))
 
 (defn- db-queue-smses!
   [db sms-vector]
@@ -65,19 +65,21 @@
                                      (let [res (sms/send-sms-now! db
                                                                   (:to sms)
                                                                   (:message sms))]
-                                       {:id          (:id sms)
-                                        :result      :success
-                                        :provider-id res})
+                                       (merge sms
+                                              {:result      :success
+                                               :provider-id res}))
                                      (catch Exception e
-                                       {:id        (:id sms)
-                                        :result    :exception
-                                        :exception e})))
+                                       (merge sms
+                                              {:result    :exception
+                                               :exception e}))))
                                  smses))
                      (group-by :result))]
     (when (:exception res)
-      (log/error (:exception res))
-      (mailer/send-error-email! (str "Mailer task for " db-name) (str "Could not send sms with ids "
-                                                                      (str/join " " (map :id (:exception res)))))
+      (let [final-failed (filter #(<= (dec max-fails) (:fail-count %)) (:exception res))]
+        (when (seq final-failed)
+          (email/send-error-email! (str "SMS task for " db-name) (str "Send SMS with ids "
+                                                                      (str/join " " (map :id final-failed))
+                                                                      " failed after " max-fails " tries."))))
       (db-update-fail-count! db now (:exception res))
       (db-final-failed! db))
     (when (:success res)

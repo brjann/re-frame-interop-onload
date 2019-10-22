@@ -59,11 +59,11 @@
         emails  (db-queued-emails db now)
         res     (->> (doall (map (fn [email]
                                    (try
-                                     (let [res (mailer/send-email-now! db
-                                                                       (:to email)
-                                                                       (:subject email)
-                                                                       (:message email)
-                                                                       (:reply-to email))]
+                                     (let [_ (mailer/send-email-now! db
+                                                                     (:to email)
+                                                                     (:subject email)
+                                                                     (:message email)
+                                                                     (:reply-to email))]
                                        (assoc email :result :success))
                                      (catch Exception e
                                        (merge email
@@ -75,11 +75,8 @@
       (let [final-failed (filter #(<= (dec max-fails) (:fail-count %)) (:exception res))]
         (when (seq final-failed)
           (email/send-error-email! (str "Mailer task for " db-name) (str "Send email with ids "
-                                                                         ;; TODO: Should be `final-failed` instead of `(:exception res)`
-                                                                         (str/join " " (map :id (:exception res)))
+                                                                         (str/join " " (map :id final-failed))
                                                                          " failed after " max-fails " tries."))))
-      #_(email/send-error-email! (str "Mailer task for " db-name) (str "Could not send email with ids "
-                                                                     (str/join " " (map :id (:exception res)))))
       (db-update-fail-count! db now (:exception res))
       (db-final-failed! db))
     (when (:success res)
