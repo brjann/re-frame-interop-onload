@@ -1,3 +1,10 @@
+## Version 4.3.5
+Bugfix release. Version 4.3.5 will be released on 2019-10-23.
+
+- Currently, the database cannot store emojis and posts including emojis (instrument answers, messages,
+worksheet answers) can become corrupted. Emojis are therefore removed from all data transmitted to the 
+platform. A fix to allow for emojis is planned.  ``
+
 ## Version 4.3.4
 Bugfix release. Version 4.3.4 will be released on 2019-10-14.
 
