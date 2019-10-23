@@ -11,6 +11,7 @@
             [cprop.tools]
             [bass4.db.middleware :as db-middleware]
             [bass4.config :refer [env]]
+            [bass4.middleware.emoticon-remover :as emoticons]
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-logger :as request-logger]
             [bass4.middleware.response-transformation :as transform]
@@ -46,7 +47,6 @@
 ;;
 ;;
 ;; ----------------
-
 
 (defn wrap-mw-fn
   [handler middleware]
@@ -145,6 +145,7 @@
   (-> ((:middleware defaults) handler)
       ;wrap-exceptions
       ;wrap-auth-re-auth
+      (wrap-mw-fn #'emoticons/remove-emoticons-mw)
       wrap-formats                                          ; This used to be in def-routes.
       (wrap-mw-fn #'errors-mw/wrap-api-error)
       (wrap-mw-fn #'auth-response/privacy-notice-error-mw)
