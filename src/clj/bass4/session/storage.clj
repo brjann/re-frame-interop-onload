@@ -80,7 +80,8 @@
                               (get @db-session-handlers cookie-name)
                               (let [sh (ring-session/wrap-session
                                          handler
-                                         {:cookie-attrs {:http-only true}
+                                         {:cookie-attrs {:http-only true
+                                                         :secure    true}
                                           :cookie-name  cookie-name
                                           :store        (jdbc-store #'db/db-common)})]
                                 (swap! db-session-handlers #(assoc % cookie-name sh))
