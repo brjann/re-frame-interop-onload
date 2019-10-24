@@ -76,6 +76,8 @@
       (let [conn (conman/connect! {:jdbc-url            (str url
                                                              "&serverTimezone=UTC"
                                                              "&jdbcCompliantTruncation=false"
+                                                             "&useUnicode=true"
+                                                             "&characterEncoding=utf8"
                                                              "&useSSL=false")
                                    :pool-name           (:name local-config)
                                    ;:metric-registry   metrics-reg

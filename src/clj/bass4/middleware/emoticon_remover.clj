@@ -5,6 +5,8 @@
 
 (defn remove-emoticons-s
   [s]
+  ;; Replacement should be "\uFFFD" but production and test servers
+  ;; do not accept that. Need to figure out what is going on.
   (str/replace s #"[^\u0000-\uFFFF]" "\uFFFD"))
 
 (defn remove-emoticons-m
