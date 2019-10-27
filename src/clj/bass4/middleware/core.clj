@@ -62,6 +62,17 @@
                                "Expires" "Wed, 12 Jul 1978 08:00:00 GMT"
                                "Pragma" "no-cache")))))
 
+(defn security-headers-mw
+  [handler request]
+  (let [response (handler request)]
+    (update-in response
+               [:headers] #(merge %1
+                                  {"Content-Security-Policy"   (str "default-src 'self';"
+                                                                    "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
+                                                                    "style-src 'self' 'unsafe-inline';"
+                                                                    "img-src * data:;")
+                                   "Strict-Transport-Security" "max-age=7776000; includeSubDomains"}))))
+
 
 
 ;; -----------------
@@ -164,6 +175,7 @@
       (wrap-mw-fn #'db-middleware/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
+      (wrap-mw-fn #'security-headers-mw)
       wrap-webjars
       (wrap-defaults
         (-> site-defaults
