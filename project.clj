@@ -15,7 +15,7 @@
 
                  ; Web server libraries
                  [luminus-immutant "0.2.5"]                 ; https://github.com/luminus-framework/luminus-immutant
-                 [metosin/compojure-api "2.0.0-alpha28"]    ; https://github.com/metosin/compojure-api
+                 [metosin/compojure-api "2.0.0-alpha30"]    ; https://github.com/metosin/compojure-api
                  [compojure "1.6.1"                         ; https://github.com/weavejester/compojure
                   :exclusions [ring/ring-codec]]
                  [ring-middleware-format "0.7.3"]           ; https://github.com/ngrunwald/ring-middleware-format
@@ -49,9 +49,9 @@
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
 
                  ; Webjars
-                 [org.webjars/bootstrap "4.1.2"]            ; https://github.com/twbs/bootstrap
+                 [org.webjars/bootstrap "4.3.1"]            ; https://github.com/twbs/bootstrap
                  [org.webjars/font-awesome "4.7.0"]         ; https://fontawesome.com/
-                 [org.webjars/jquery "3.3.1"]               ; https://jquery.com/
+                 ;[org.webjars/jquery "3.3.1"]               ; https://jquery.com/
                  [org.webjars/jquery-ui "1.12.1"]           ; https://jqueryui.com/
                  [org.webjars.bower/jquery-color "2.1.2"]   ; https://github.com/jquery/jquery-color
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]]
