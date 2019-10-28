@@ -71,6 +71,7 @@
                                                                     "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
                                                                     "style-src 'self' 'unsafe-inline';"
                                                                     "img-src * data:;")
+                                   "Server"                    ""
                                    "Strict-Transport-Security" "max-age=7776000; includeSubDomains"}))))
 
 
