@@ -57,7 +57,7 @@ SELECT
    ShuffleInstruments AS `shuffle-instruments`
 
 FROM c_assessment
-WHERE parentid = :assessment-series-id OR parentid = :user-id;
+WHERE parentid = :assessment-series-id OR parentid = :parent-id;
 
 -- :name get-user-assessment-series :? :*
 -- :doc Get the assessment series that the user's project uses

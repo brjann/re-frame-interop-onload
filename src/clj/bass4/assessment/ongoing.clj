@@ -37,7 +37,7 @@
 
 (defn user-assessments
   [db user-id assessment-series-id]
-  (db/get-user-assessments db {:assessment-series-id assessment-series-id :user-id user-id}))
+  (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id user-id}))
 
 (defn assessment-instruments
   [db assessment-ids]
@@ -110,7 +110,8 @@
                         ;; activation-date is is UTC time of activation,
                         ;; NOT local time. Thus, it is sufficient to compare
                         ;; to t/now which returns UTC time
-                        (nil? activation-date) ::as-no-date
+                        (nil? activation-date)
+                        ::as-no-date
 
                         (t/before? now activation-date)
                         ::as-waiting
@@ -118,9 +119,10 @@
                         (and (some? time-limit) (t/after? now (t/plus activation-date (t/days time-limit))))
                         ::as-date-passed
 
-                        :else ::as-ongoing)))}))
+                        :else
+                        ::as-ongoing)))}))
 
-(defn- get-administration-statuses
+(defn get-administration-statuses
   [now administrations assessment]
   (when (seq administrations)
     (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)
