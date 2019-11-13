@@ -9,7 +9,8 @@
             [ring.middleware.session :as ring-session]
             [bass4.db.core :as db]
             [clojure.string :as str]
-            [bass4.db-config :as db-config])
+            [bass4.db-config :as db-config]
+            [bass4.config :as config])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -76,14 +77,19 @@
                                  (db-config/db-name)
                                  (when (str/starts-with? (:uri request) "/embedded")
                                    "-embedded"))
-            session-handler (if (contains? @db-session-handlers cookie-name)
-                              (get @db-session-handlers cookie-name)
+            ;; Need to dynamically handle ssl mode to be able to run tests within IDE
+            ssl?            (if config/test-mode?
+                              false
+                              (config/env :ssl))
+            key             [cookie-name ssl?]
+            session-handler (if (contains? @db-session-handlers key)
+                              (get @db-session-handlers key)
                               (let [sh (ring-session/wrap-session
                                          handler
                                          {:cookie-attrs {:http-only true
-                                                         :secure    true}
+                                                         :secure    ssl?}
                                           :cookie-name  cookie-name
                                           :store        (jdbc-store #'db/db-common)})]
-                                (swap! db-session-handlers #(assoc % cookie-name sh))
+                                (swap! db-session-handlers #(assoc % key sh))
                                 sh))]
         (session-handler request)))))
