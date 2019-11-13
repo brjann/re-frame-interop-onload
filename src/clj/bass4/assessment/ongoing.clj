@@ -20,13 +20,7 @@
        (sort-by (juxt :assessment-id :assessment-index))
        (partition-by (juxt :assessment-id :assessment-index))
        (map (partial apply merge))
-       (map #(assoc % :active? (and (if (contains? % :group-administration-active?)
-                                      (:group-administration-active? %)
-                                      true)
-                                    (if (contains? % :participant-administration-active?)
-                                      (:participant-administration-active? %)
-                                      true))
-                      :user-id user-id))))
+       (map #(assoc % :user-id user-id))))
 
 (defn- user-administrations
   [db user-id group-id assessment-series-id]
@@ -96,7 +90,12 @@
                     (> (:assessment-index administration) (:repetitions assessment))
                     ::as-superfluous
 
-                    (not (:active? administration))
+                    (not (and (if (contains? administration :group-administration-active?)
+                                (:group-administration-active? administration)
+                                true)
+                              (if (contains? administration :participant-administration-active?)
+                                (:participant-administration-active? administration)
+                                true)))
                     ::as-inactive
 
                     (next-manual-ongoing? assessment next-administration-status)

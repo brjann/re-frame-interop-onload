@@ -19,6 +19,7 @@
                                                     :hour     hour}))
 
 (defn- db-activated-group-administrations
+  "Returns participants in groups that have potential activated administrations"
   [db date-min date-max hour]
   (db/get-activated-group-administrations db {:date-min date-min
                                               :date-max date-max
@@ -29,6 +30,7 @@
   (db/get-late-participant-administrations db {:date date}))
 
 (defn- db-late-group-administrations
+  "Returns participants in groups that have potential late administrations"
   [db date]
   (db/get-late-group-administrations db {:date date}))
 
@@ -199,13 +201,7 @@
        (sort-by :assessment-index)
        (partition-by :assessment-index)
        (map (partial apply merge))
-       (map #(assoc % :active? (and (if (contains? % :group-administration-active?)
-                                      (:group-administration-active? %)
-                                      true)
-                                    (if (contains? % :participant-administration-active?)
-                                      (:participant-administration-active? %)
-                                      true))
-                      :user-id user-id))))
+       (map #(assoc % :user-id user-id))))
 
 (defn- ongoing-from-potentials
   "Returns list of ALL ongoing assessments based on list of potentials.
