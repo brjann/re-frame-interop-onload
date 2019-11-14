@@ -2,8 +2,7 @@
   (:require [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
-            [bass4.assessment.create-missing :as missing]
-            [bass4.services.bass :refer [create-bass-objects-without-parent!]]))
+            [bass4.assessment.create-missing :as missing]))
 
 (defn- user-group
   [db user-id]
@@ -121,7 +120,7 @@
                         :else
                         ::as-ongoing)))}))
 
-(defn get-administration-statuses
+(defn- get-administration-statuses
   [now administrations assessment]
   (when (seq administrations)
     (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)
@@ -223,3 +222,30 @@
 (defn ongoing-assessments
   [user-id]
   (ongoing-assessments* db/*db* (t/now) user-id))
+
+(defn group-administrations-statuses
+  [db group-id]
+  (let [assessment-series-id (-> (db/get-group-assessment-series db {:group-ids [group-id]})
+                                 (first)
+                                 :assessment-series-id)
+        administrations      (->> (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id})
+                                  (group-by :assessment-id))
+        assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id group-id})]
+    (map (fn [assessment] (get-administration-statuses
+                            (t/now)
+                            (get administrations (:assessment-id assessment))
+                            assessment))
+         assessments)))
+
+(defn participant-administrations-statuses
+  [db user-id]
+  (let [assessment-series-id (user-assessment-series-id db user-id)
+        administrations      (->> (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})
+                                  (group-by :assessment-id))
+        assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id user-id})]
+    (->> assessments
+         (map (fn [assessment] (get-administration-statuses
+                                 (t/now)
+                                 (get administrations (:assessment-id assessment))
+                                 assessment)))
+         (filter identity))))
