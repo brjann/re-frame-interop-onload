@@ -81,7 +81,7 @@ WHERE cg.ObjectId IN (:v*:group-ids);
 
 
 -- :name get-participant-administrations :? :*
--- :doc
+-- :doc TODO: Why is this join but get-group-administrations is left join
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
@@ -110,7 +110,7 @@ WHERE
 
 
 -- :name get-group-administrations :? :*
--- :doc
+-- :doc TODO: Why is this left join but get-participant-administrations is not
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,

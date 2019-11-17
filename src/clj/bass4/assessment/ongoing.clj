@@ -1,7 +1,7 @@
 (ns bass4.assessment.ongoing
-  (:require [bass4.db.core :as db]
-            [clj-time.core :as t]
-            [bass4.utils :refer [key-map-list map-map indices fnil+ diff in? select-values]]
+  (:require [clj-time.core :as t]
+            [bass4.db.core :as db]
+            [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]))
 
 (defn- user-group
@@ -149,14 +149,14 @@
                                     (map :assessment-id)
                                     (assessment-instruments db)
                                     (group-by :assessment-id)
-                                    (map-map #(map :instrument-id %)))
+                                    (utils/map-map #(map :instrument-id %)))
         completed-instruments  (->> (administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
-                                    (map-map #(map :instrument-id %)))
+                                    (utils/map-map #(map :instrument-id %)))
         additional-instruments (->> (administration-additional-instruments db administration-ids)
                                     (group-by :administration-id)
-                                    (map-map #(map :instrument-id %)))]
-    (map #(assoc % :instruments (diff
+                                    (utils/map-map #(map :instrument-id %)))]
+    (map #(assoc % :instruments (utils/diff
                                   (concat
                                     (get assessment-instruments (:assessment-id %))
                                     (get additional-instruments (:participant-administration-id %)))
@@ -224,28 +224,34 @@
   (ongoing-assessments* db/*db* (t/now) user-id))
 
 (defn group-administrations-statuses
-  [db group-id]
+  [db now group-id]
   (let [assessment-series-id (-> (db/get-group-assessment-series db {:group-ids [group-id]})
                                  (first)
                                  :assessment-series-id)
         administrations      (->> (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id})
+                                  ;; get-group-administrations uses LEFT JOIN,
+                                  ;; returning assessments without group administrations
+                                  (filter :group-administration-id)
                                   (group-by :assessment-id))
         assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id group-id})]
-    (map (fn [assessment] (get-administration-statuses
-                            (t/now)
-                            (get administrations (:assessment-id assessment))
-                            assessment))
-         assessments)))
+    (->> assessments
+         (map (fn [assessment] (get-administration-statuses
+                                 now
+                                 (get administrations (:assessment-id assessment))
+                                 assessment)))
+         (flatten)
+         (filter identity))))
 
 (defn participant-administrations-statuses
-  [db user-id]
+  [db now user-id]
   (let [assessment-series-id (user-assessment-series-id db user-id)
         administrations      (->> (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})
                                   (group-by :assessment-id))
         assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id user-id})]
     (->> assessments
          (map (fn [assessment] (get-administration-statuses
-                                 (t/now)
+                                 now
                                  (get administrations (:assessment-id assessment))
                                  assessment)))
+         (flatten)
          (filter identity))))
