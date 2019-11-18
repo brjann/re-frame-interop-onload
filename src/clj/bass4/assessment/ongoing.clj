@@ -191,7 +191,7 @@
       (#(get-administration-statuses now % assessment))
       (filter-ongoing-assessments)))
 
-(defn ongoing-assessments*
+(defn ongoing-assessments**
   [db now user-id]
   (binding [db/*db* nil]
     (let
@@ -204,20 +204,30 @@
        assessment-series-id     (user-assessment-series-id db user-id)
        administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
        assessments-map          (assessments db user-id assessment-series-id)
-       ongoing-administrations' (flatten (map (fn [[assessment-id administrations]]
+       administrations-statuses (flatten (map (fn [[assessment-id administrations]]
                                                 (if-let [assessment (get assessments-map assessment-id)]
-                                                  (ongoing-administrations now administrations assessment)
+                                                  (-> administrations
+                                                      (#(sort-by :assessment-index %))
+                                                      (#(get-administration-statuses now % assessment)))
                                                   (throw
                                                     (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
                                               administrations-map))]
-      (when (seq ongoing-administrations')
-        (->> ongoing-administrations'
+      [administrations-statuses assessments-map])))
+
+(defn ongoing-assessments*
+  [db now user-id]
+  (binding [db/*db* nil]
+    (let [[administrations-statuses assessments-map] (ongoing-assessments** db now user-id)
+          ongoing (filter-ongoing-assessments administrations-statuses)]
+      (when (seq ongoing)
+        (->> ongoing
              ;; Add any missing administrations
              (map #(assoc % :user-id user-id))
              (missing/add-missing-administrations! db)
              ;; Merge assessment and administration info into one map
              (map #(merge % (get assessments-map (:assessment-id %))))
              (add-instruments db))))))
+
 
 (defn ongoing-assessments
   [user-id]

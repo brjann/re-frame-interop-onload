@@ -6,7 +6,8 @@
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -39,7 +40,10 @@
     ; Tomorrow
     (create-group-administration!
       group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
-    (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]} (ongoing-assessments *now* user-id)))))
+    (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
+           (ongoing-assessments *now* user-id)))
+    (log/debug (participant-statuses *now* user-id))
+    #_(is (= (group-statuses *now* group-id)))))
 
 (deftest group-assessment-mysql-join-fail
   (let [group-id (create-group!)
