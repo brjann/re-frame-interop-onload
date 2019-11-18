@@ -71,7 +71,8 @@
          (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated? :scope])
          {:status (cond
                     (= (:participant-administration-id administration)
-                       (:group-administration-id administration) nil)
+                       (:group-administration-id administration)
+                       nil)
                     ::as-both-missing
 
                     (not (and (if (contains? administration :group-administration-active?)

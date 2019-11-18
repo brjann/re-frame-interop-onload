@@ -137,7 +137,7 @@
     (create-participant-administration!
       user2-id ass-I-manual-s-5-10-q 4 {:date (midnight+d -6 *now*)})
     (create-group-administration!
-      group1-id ass-I-manual-s-5-10-q 4 {:active 0})
+      group1-id ass-I-manual-s-5-10-q 2 {:active 0})
     (is (= #{[user2-id true ass-I-manual-s-5-10-q 4 ::assessment-reminder/late 1]}
            (reminders *now*)))))
 

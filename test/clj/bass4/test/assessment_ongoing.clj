@@ -181,13 +181,23 @@
     ; Only last assessment active - even if one is skipped
     (is (= #{[ass-I-manual-s-5-10-q 3]} (ongoing-assessments *now* user-id))))
 
+  ; Later inactive assessment does not inactivate manual assessment
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
-      user-id ass-I-manual-s-5-10-q 3 {:date (midnight *now*) :active 0})
-    (create-participant-administration!
       user-id ass-I-manual-s-5-10-q 1 {:date (midnight *now*)})
+    (create-participant-administration!
+      user-id ass-I-manual-s-5-10-q 3 {:date (midnight *now*) :active 0})
     ; First assessment active - even later is inactive
-    (is (= #{[ass-I-manual-s-5-10-q 1]} (ongoing-assessments *now* user-id)))))
+    (is (= #{[ass-I-manual-s-5-10-q 1]} (ongoing-assessments *now* user-id))))
+
+  ; Later inactive group assessment does not inactivate manual assessment
+  (let [group1-id (create-group!)
+        user1-id  (user-service/create-user! project-id {:group group1-id})]
+    (create-participant-administration!
+      user1-id ass-I-manual-s-5-10-q 2 {:date (midnight *now*)})
+    (create-group-administration!
+      group1-id ass-I-manual-s-5-10-q 4 {:active 0})
+    (is (= #{[ass-I-manual-s-5-10-q 2]} (ongoing-assessments *now* user1-id)))))
 
 (deftest clinician-assessment
   (let [user-id (user-service/create-user! project-id)]
