@@ -81,7 +81,7 @@ WHERE cg.ObjectId IN (:v*:group-ids);
 
 
 -- :name get-participant-administrations :? :*
--- :doc TODO: Why is this join but get-group-administrations is left join
+-- :doc
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
@@ -110,7 +110,7 @@ WHERE
 
 
 -- :name get-group-administrations :? :*
--- :doc TODO: Why is this left join but get-participant-administrations is not
+-- :doc
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
@@ -127,8 +127,8 @@ SELECT
    END) AS `group-activation-date`
 
 FROM c_assessment as ca
-    LEFT JOIN (c_groupadministration AS cga)
-        ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id)
+  JOIN (c_groupadministration AS cga)
+    ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id)
 WHERE
     ca.ParentId = :assessment-series-id;
 
