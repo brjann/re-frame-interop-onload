@@ -62,8 +62,8 @@
   (if (nil? next-administration-status)
     false
     (and (= "MANUAL" repetition-type)
-         (not= next-administration-status ::as-no-date)
-         (not= next-administration-status ::as-inactive))))
+         (or (= next-administration-status ::as-waiting)
+             (= next-administration-status ::as-ongoing)))))
 
 (defn- get-administration-status
   [now administration next-administration-status assessment]
@@ -73,7 +73,7 @@
                     (= (:participant-administration-id administration)
                        (:group-administration-id administration)
                        nil)
-                    ::as-both-missing
+                    (throw (ex-info "No valid administration" administration))
 
                     (not (and (if (contains? administration :group-administration-active?)
                                 (:group-administration-active? administration)

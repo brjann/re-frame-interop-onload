@@ -177,7 +177,7 @@
 ;; --------------
 ;; Premise:
 ;;   - I can't manage to figure out if it is possible to execute a single SQL statement
-;;     to get all active group and participant administrations.
+;;     to get all active group and participant administrations. Probably not.
 ;;   - All administrations belonging to an assessment are needed to determine if one
 ;;     administration is ongoing (because of manual repetition - but interval repetition
 ;;     should also be modified to only allow one administrations to be active
