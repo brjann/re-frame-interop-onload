@@ -214,6 +214,14 @@
         user-id  (user-service/create-user! project-id {:group group-id})]
     (is (= #{} (ongoing-assessments *now* user-id)))))
 
+(deftest unlinked-administration
+  (let [user-id (user-service/create-user! project-id)]
+    ; Today
+    (create-participant-administration!
+      user-id 666 1 {:date (midnight *now*)})
+    ;; Does not crash
+    (is (= #{} (ongoing-assessments *now* user-id)))))
+
 (deftest custom-assessment
   (db/update-object-properties! {:table-name "c_participantadministration"
                                  :object-id  custom-administration-id

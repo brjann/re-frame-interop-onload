@@ -120,7 +120,7 @@
                         :else
                         ::as-ongoing)))}))
 
-(defn- get-administration-statuses
+(defn get-administration-statuses
   [now administrations assessment]
   (when (seq administrations)
     (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)
@@ -135,7 +135,7 @@
             next-administrations))))
 
 
-(defn- filter-ongoing-assessments
+(defn filter-ongoing-assessments
   [assessment-statuses]
   (filter #(and
              (= ::as-ongoing (:status %))
@@ -174,50 +174,31 @@
   [db user-id group-id assessment-series-id]
   (->> (user-administrations db user-id group-id assessment-series-id)
        (group-by #(:assessment-id %))))
-;
-; Plan:
-; Break out function that accepts one user's administrations by assessment
-; and a map of assessments and returns the ongoing assessments
-; This function can then be used on multiple users in the reminder task
-;
-; Write two SQL functions for groups / participants and merge them
-; to produce identical values as administrations-by-assessment
-;
 
-(defn ongoing-administrations
-  [now administrations assessment]
-  (-> administrations
-      (#(sort-by :assessment-index %))
-      (#(get-administration-statuses now % assessment))
-      (filter-ongoing-assessments)))
-
-(defn ongoing-assessments**
+(defn user-administration-statuses+assessments
   [db now user-id]
-  (binding [db/*db* nil]
-    (let
-      ;; NOTE that administrations is a map of lists
-      ;; administrations within one assessment battery
-      ;;
-      ;; Amazingly enough, this all works even with no ongoing administrations
-      ;;
-      [group-id                 (user-group db user-id)
-       assessment-series-id     (user-assessment-series-id db user-id)
-       administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
-       assessments-map          (assessments db user-id assessment-series-id)
-       administrations-statuses (flatten (map (fn [[assessment-id administrations]]
-                                                (if-let [assessment (get assessments-map assessment-id)]
-                                                  (-> administrations
-                                                      (#(sort-by :assessment-index %))
-                                                      (#(get-administration-statuses now % assessment)))
-                                                  (throw
-                                                    (Exception. (str "Assessment ID: " assessment-id " does not exist.")))))
-                                              administrations-map))]
-      [administrations-statuses assessments-map])))
+  (let
+    ;; NOTE that administrations is a map of lists
+    ;; administrations within one assessment battery
+    ;;
+    ;; Amazingly enough, this all works even with no ongoing administrations
+    ;;
+    [group-id                 (user-group db user-id)
+     assessment-series-id     (user-assessment-series-id db user-id)
+     administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
+     assessments-map          (assessments db user-id assessment-series-id)
+     administrations-statuses (->> administrations-map
+                                   (map (fn [[assessment-id administrations]]
+                                          (-> administrations
+                                              (#(sort-by :assessment-index %))
+                                              (#(get-administration-statuses now % (get assessments-map assessment-id))))))
+                                   (flatten))]
+    [administrations-statuses assessments-map]))
 
 (defn ongoing-assessments*
   [db now user-id]
   (binding [db/*db* nil]
-    (let [[administrations-statuses assessments-map] (ongoing-assessments** db now user-id)
+    (let [[administrations-statuses assessments-map] (user-administration-statuses+assessments db now user-id)
           ongoing (filter-ongoing-assessments administrations-statuses)]
       (when (seq ongoing)
         (->> ongoing

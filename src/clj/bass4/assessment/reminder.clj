@@ -203,6 +203,13 @@
        (map (partial apply merge))
        (map #(assoc % :user-id user-id))))
 
+(defn- ongoing-administrations
+  [now administrations assessment]
+  (-> administrations
+      (#(sort-by :assessment-index %))
+      (#(assessment-ongoing/get-administration-statuses now % assessment))
+      (assessment-ongoing/filter-ongoing-assessments)))
+
 (defn- ongoing-from-potentials
   "Returns list of ALL ongoing assessments based on list of potentials.
   Note, ALL means that ongoing assessment that are not part of potentials may be returned"
@@ -232,7 +239,7 @@
                                                  (into {}))
         ongoing-assessments                 (->> merged-by-user+assessment
                                                  (mapv (fn [[[_ assessment-id] administrations]]
-                                                         (assessment-ongoing/ongoing-administrations
+                                                         (ongoing-administrations
                                                            now administrations (get assessments' assessment-id))))
                                                  (flatten)
                                                  (map #(merge % (get assessments' (:assessment-id %)))))]
