@@ -214,4 +214,4 @@
 (defn participant-statuses
   [now user-id]
   (into #{} (map #(vector (:assessment-id %) (:assessment-index %) (:status %))
-                 (assessment-ongoing/participant-administrations-statuses db/*db* now user-id))))
+                 (assessment-ongoing/user-administrations-statuses db/*db* now user-id))))

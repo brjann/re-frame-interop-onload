@@ -68,15 +68,23 @@
 (defn- get-administration-status
   [now administration next-administration-status assessment]
   (merge administration
-         (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated?])
+         (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated? :scope])
          {:status (cond
                     (= (:participant-administration-id administration)
                        (:group-administration-id administration) nil)
-                    ::as-all-missing
+                    ::as-both-missing
+
+                    (not (and (if (contains? administration :group-administration-active?)
+                                (:group-administration-active? administration)
+                                true)
+                              (if (contains? administration :participant-administration-active?)
+                                (:participant-administration-active? administration)
+                                true)))
+                    ::as-inactive
 
                     (and (= (:scope assessment) 0)
                          (nil? (:participant-administration-id administration)))
-                    ::as-own-missing
+                    ::as-user-missing
 
                     (and (= (:scope assessment) 1)
                          (nil? (:group-administration-id administration)))
@@ -88,14 +96,6 @@
 
                     (> (:assessment-index administration) (:repetitions assessment))
                     ::as-superfluous
-
-                    (not (and (if (contains? administration :group-administration-active?)
-                                (:group-administration-active? administration)
-                                true)
-                              (if (contains? administration :participant-administration-active?)
-                                (:participant-administration-active? administration)
-                                true)))
-                    ::as-inactive
 
                     (next-manual-ongoing? assessment next-administration-status)
                     ::as-date-passed
@@ -177,22 +177,22 @@
 
 (defn user-administration-statuses+assessments
   [db now user-id]
-  (let
-    ;; NOTE that administrations is a map of lists
-    ;; administrations within one assessment battery
-    ;;
-    ;; Amazingly enough, this all works even with no ongoing administrations
-    ;;
-    [group-id                 (user-group db user-id)
-     assessment-series-id     (user-assessment-series-id db user-id)
-     administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
-     assessments-map          (assessments db user-id assessment-series-id)
-     administrations-statuses (->> administrations-map
-                                   (map (fn [[assessment-id administrations]]
-                                          (-> administrations
-                                              (#(sort-by :assessment-index %))
-                                              (#(get-administration-statuses now % (get assessments-map assessment-id))))))
-                                   (flatten))]
+  (let [group-id                 (user-group db user-id)
+        assessment-series-id     (user-assessment-series-id db user-id)
+        administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
+        assessments-map          (assessments db user-id assessment-series-id)
+        administrations-statuses (->> administrations-map
+                                      (map (fn [[assessment-id administrations]]
+                                             (-> administrations
+                                                 (#(sort-by :assessment-index %))
+                                                 (#(get-administration-statuses now % (get assessments-map assessment-id))))))
+                                      (flatten))
+        administrations-statuses (if group-id
+                                   administrations-statuses
+                                   (map #(if (= 1 (:scope %))
+                                           (assoc % :status ::as-not-in-group)
+                                           %)
+                                        administrations-statuses))]
     [administrations-statuses assessments-map]))
 
 (defn ongoing-assessments*
@@ -233,16 +233,7 @@
          (flatten)
          (filter identity))))
 
-(defn participant-administrations-statuses
+(defn user-administrations-statuses
   [db now user-id]
-  (let [assessment-series-id (user-assessment-series-id db user-id)
-        administrations      (->> (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})
-                                  (group-by :assessment-id))
-        assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id user-id})]
-    (->> assessments
-         (map (fn [assessment] (get-administration-statuses
-                                 now
-                                 (get administrations (:assessment-id assessment))
-                                 assessment)))
-         (flatten)
-         (filter identity))))
+  (let [[administration-statuses _] (user-administration-statuses+assessments db now user-id)]
+    (filter #(not= ::as-both-missing (:status %)) administration-statuses)))
