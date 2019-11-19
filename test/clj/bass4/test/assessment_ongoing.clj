@@ -159,11 +159,13 @@
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!
+      user-id ass-I-manual-s-5-10-q 1 {:date (midnight+d -3 *now*)})
+    (create-participant-administration!
       user-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -2 *now*)})
     (create-participant-administration!
-      user-id ass-I-manual-s-5-10-q 1 {:date (midnight+d -3 *now*)})
+      user-id ass-I-manual-s-5-10-q 3 {:date (midnight+d -1 *now*)})
     ; Only last assessment active
-    (is (= #{[ass-I-manual-s-5-10-q 2]} (ongoing-assessments *now* user-id))))
+    (is (= #{[ass-I-manual-s-5-10-q 3]} (ongoing-assessments *now* user-id))))
 
   (let [user-id (user-service/create-user! project-id)]
     (create-participant-administration!

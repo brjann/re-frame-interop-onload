@@ -63,7 +63,8 @@
     false
     (and (= "MANUAL" repetition-type)
          (or (= next-administration-status ::as-waiting)
-             (= next-administration-status ::as-ongoing)))))
+             (= next-administration-status ::as-ongoing)
+             (= next-administration-status ::as-date-passed)))))
 
 (defn- get-administration-status
   [now administration next-administration-status assessment]
