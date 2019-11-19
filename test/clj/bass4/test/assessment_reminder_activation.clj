@@ -21,11 +21,11 @@
 
 (deftest activation-group
   (let [group1-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group1-id})
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group1-id})
         group2-id (create-group!)
-        user3-id  (user-service/create-user! project-id {:group group2-id})
-        user4-id  (user-service/create-user! project-id {:group group2-id})]
+        user3-id  (user-service/create-user! project-ass1-id {:group group2-id})
+        user4-id  (user-service/create-user! project-ass1-id {:group group2-id})]
     ; Today
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
@@ -53,11 +53,11 @@
 
 (deftest activation-group-individual-inactive
   (let [group1-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group1-id})
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group1-id})
         group2-id (create-group!)
-        user3-id  (user-service/create-user! project-id {:group group2-id})
-        user4-id  (user-service/create-user! project-id {:group group2-id})]
+        user3-id  (user-service/create-user! project-ass1-id {:group group2-id})
+        user4-id  (user-service/create-user! project-ass1-id {:group group2-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     (create-group-administration!
@@ -81,8 +81,8 @@
            (reminders *now*)))))
 
 (deftest activation-individual
-  (let [user1-id (user-service/create-user! project-id)
-        user2-id (user-service/create-user! project-id)]
+  (let [user1-id (user-service/create-user! project-ass1-id)
+        user2-id (user-service/create-user! project-ass1-id)]
     (create-participant-administration!
       user1-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!
@@ -110,8 +110,8 @@
 
 (deftest activation-individual-group-inactive
   (let [group-id (create-group!)
-        user1-id (user-service/create-user! project-id {:group group-id})
-        user2-id (user-service/create-user! project-id)]
+        user1-id (user-service/create-user! project-ass1-id {:group group-id})
+        user2-id (user-service/create-user! project-ass1-id)]
     (create-participant-administration!
       user1-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!
@@ -133,7 +133,7 @@
 ;;
 
 (deftest activation-start-hour
-  (let [user-id (user-service/create-user! project-id)]
+  (let [user-id (user-service/create-user! project-ass1-id)]
     (create-participant-administration!
       user-id ass-I-hour8-2-20 1 {:date (midnight *now*)})
     (let [hour0 (midnight-joda *now*)]
@@ -150,11 +150,11 @@
 
 (deftest activation-group-remind!
   (let [group1-id (create-group!)
-        _         (user-service/create-user! project-id {:group group1-id})
-        _         (user-service/create-user! project-id {:group group1-id})
+        _         (user-service/create-user! project-ass1-id {:group group1-id})
+        _         (user-service/create-user! project-ass1-id {:group group1-id})
         group2-id (create-group!)
-        _         (user-service/create-user! project-id {:group group2-id})
-        _         (user-service/create-user! project-id {:group group2-id})]
+        _         (user-service/create-user! project-ass1-id {:group group2-id})
+        _         (user-service/create-user! project-ass1-id {:group group2-id})]
     ; Today
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})

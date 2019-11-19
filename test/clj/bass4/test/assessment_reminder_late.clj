@@ -31,8 +31,8 @@
 (deftest late-group
   (let [group1-id (create-group!)
         group2-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group2-id})]
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group2-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
@@ -48,8 +48,8 @@
            (reminders *now*)))))
 
 (deftest late-participant
-  (let [user1-id (user-service/create-user! project-id)
-        user2-id (user-service/create-user! project-id)]
+  (let [user1-id (user-service/create-user! project-ass1-id)
+        user2-id (user-service/create-user! project-ass1-id)]
     (create-participant-administration!
       user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
     ; Hour does not matter when late
@@ -73,10 +73,10 @@
         group2-id (create-group!)
         group3-id (create-group!)
         group4-id (create-group!)
-        _         (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group2-id})
-        user3-id  (user-service/create-user! project-id {:group group3-id})
-        _         (user-service/create-user! project-id {:group group4-id})]
+        _         (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group2-id})
+        user3-id  (user-service/create-user! project-ass1-id {:group group3-id})
+        _         (user-service/create-user! project-ass1-id {:group group4-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -1 *now*)})
     (create-group-administration!
@@ -93,10 +93,10 @@
            (reminders *now*)))))
 
 (deftest late-individual-boundaries
-  (let [user1-id (user-service/create-user! project-id)
-        user2-id (user-service/create-user! project-id)
-        user3-id (user-service/create-user! project-id)
-        user4-id (user-service/create-user! project-id)]
+  (let [user1-id (user-service/create-user! project-ass1-id)
+        user2-id (user-service/create-user! project-ass1-id)
+        user3-id (user-service/create-user! project-ass1-id)
+        user4-id (user-service/create-user! project-ass1-id)]
     (create-participant-administration!
       user1-id ass-I-manual-s-5-10-q 1 {:date (midnight+d -4 *now*)})
     (create-participant-administration!
@@ -116,8 +116,8 @@
 (deftest late-group-participant-inactive
   (let [group1-id (create-group!)
         group2-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group2-id})]
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group2-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
@@ -130,8 +130,8 @@
 (deftest late-participant-group-inactive
   (let [group1-id (create-group!)
         group2-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group2-id})]
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group2-id})]
     (create-participant-administration!
       user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
     (create-participant-administration!
@@ -144,11 +144,11 @@
 (deftest late+activation
   (let [group1-id  (create-group!)
         group2-id  (create-group!)
-        user1-id   (user-service/create-user! project-id {:group group1-id})
-        user2-id   (user-service/create-user! project-id {:group group2-id})
+        user1-id   (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id   (user-service/create-user! project-ass1-id {:group group2-id})
         group1x-id (create-group!)
-        user1x-id  (user-service/create-user! project-id {:group group1x-id})
-        user2x-id  (user-service/create-user! project-id {:group group1x-id})]
+        user1x-id  (user-service/create-user! project-ass1-id {:group group1x-id})
+        user2x-id  (user-service/create-user! project-ass1-id {:group group1x-id})]
 
     ;; LATE
     (create-participant-administration!
@@ -180,9 +180,9 @@
 
 (deftest late+activation-email
   (let [group1-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group1-id})
-        user3-id  (user-service/create-user! project-id {:group group1-id})]
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user3-id  (user-service/create-user! project-ass1-id {:group group1-id})]
 
     (create-group-administration!
       group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
@@ -205,8 +205,8 @@
 (deftest late-group-remind!
   (let [group1-id (create-group!)
         group2-id (create-group!)
-        _         (user-service/create-user! project-id {:group group1-id})
-        _         (user-service/create-user! project-id {:group group2-id})]
+        _         (user-service/create-user! project-ass1-id {:group group1-id})
+        _         (user-service/create-user! project-ass1-id {:group group2-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -2 *now*)})
     (create-group-administration!
@@ -220,11 +220,11 @@
 (deftest late+activation-reminders-sent!
   (let [group1-id  (create-group!)
         group2-id  (create-group!)
-        user1-id   (user-service/create-user! project-id {:group group1-id})
-        user2-id   (user-service/create-user! project-id {:group group2-id})
+        user1-id   (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id   (user-service/create-user! project-ass1-id {:group group2-id})
         group1x-id (create-group!)
-        user1x-id  (user-service/create-user! project-id {:group group1x-id})
-        user2x-id  (user-service/create-user! project-id {:group group1x-id})]
+        user1x-id  (user-service/create-user! project-ass1-id {:group group1x-id})
+        user2x-id  (user-service/create-user! project-ass1-id {:group group1x-id})]
 
     ;; LATE
     (create-participant-administration!
@@ -261,10 +261,10 @@
         group2-id (create-group!)
         group3-id (create-group!)
         group4-id (create-group!)
-        user1-id  (user-service/create-user! project-id {:group group1-id})
-        user2-id  (user-service/create-user! project-id {:group group2-id})
-        user3-id  (user-service/create-user! project-id {:group group3-id})
-        _         (user-service/create-user! project-id {:group group4-id})]
+        user1-id  (user-service/create-user! project-ass1-id {:group group1-id})
+        user2-id  (user-service/create-user! project-ass1-id {:group group2-id})
+        user3-id  (user-service/create-user! project-ass1-id {:group group3-id})
+        _         (user-service/create-user! project-ass1-id {:group group4-id})]
     (create-group-administration!
       group1-id ass-G-s-2-3-p0 1 {:date (midnight+d -1 *now*)})
     (create-group-administration!
@@ -299,12 +299,12 @@
 
 (deftest quick-login
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 14})]
-    (let [user1-id (user-service/create-user! project-id)
-          user2-id (user-service/create-user! project-id {"QuickLoginPassword"  "xxx"
-                                                          "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 7)))})
-          user3-id (user-service/create-user! project-id {"QuickLoginPassword"  "xxx"
-                                                          "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 8)))})
-          user4-id (user-service/create-user! project-id)]
+    (let [user1-id (user-service/create-user! project-ass1-id)
+          user2-id (user-service/create-user! project-ass1-id {"QuickLoginPassword"  "xxx"
+                                                               "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 7)))})
+          user3-id (user-service/create-user! project-ass1-id {"QuickLoginPassword"  "xxx"
+                                                               "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 8)))})
+          user4-id (user-service/create-user! project-ass1-id)]
 
       (create-participant-administration!
         user1-id ass-I-manual-s-5-10-q 1 {:date (midnight *now*)})
@@ -320,29 +320,29 @@
   (with-redefs [db/get-standard-messages  (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
                 quick-login/quicklogin-id (constantly "xxx")]
     (let [group1-id (create-group!)
-          user1-id  (user-service/create-user! project-id {:group      group1-id
+          user1-id  (user-service/create-user! project-ass1-id {:group group1-id
                                                            :email      "user1@example.com"
                                                            "SMSNumber" "111"
                                                            "FirstName" "First1"
                                                            "LastName"  "Last1"})
-          user2-id  (user-service/create-user! project-id {:group      group1-id
+          user2-id  (user-service/create-user! project-ass1-id {:group group1-id
                                                            :email      "user2@example.com"
                                                            "SMSNumber" "222"
                                                            "FirstName" "First2"
                                                            "LastName"  "Last2"})
           group2-id (create-group!)
           ;; 3 gets no sms because not valid number
-          user3-id  (user-service/create-user! project-id {:group      group2-id
+          user3-id  (user-service/create-user! project-ass1-id {:group group2-id
                                                            :email      "user3@example.com"
                                                            "SMSNumber" "xxx"
                                                            "FirstName" "First3"
                                                            "LastName"  "Last3"})
           ;; 4 gets no sms because no first or last name
-          user4-id  (user-service/create-user! project-id {:group      group2-id
+          user4-id  (user-service/create-user! project-ass1-id {:group group2-id
                                                            :email      "user4@example.com"
                                                            "SMSNumber" "444"})
           ;; 5 gets no email because not valid address
-          user5-id  (user-service/create-user! project-id {:group      group2-id
+          user5-id  (user-service/create-user! project-ass1-id {:group group2-id
                                                            :email      "xxx"
                                                            "SMSNumber" "555"
                                                            "FirstName" "First5"
@@ -374,7 +374,7 @@
   (let [m (tc/from-string "2019-10-29T00:00:00.000Z")]      ;"1971-10-13T00:00:00.000Z"
     (binding [*now* (t/plus m (t/hours 22))
               *tz*  (t/time-zone-for-id "Europe/Malta")]
-      (let [user3-id (user-service/create-user! project-id)]
+      (let [user3-id (user-service/create-user! project-ass1-id)]
         (create-participant-administration!
           user3-id ass-I-manual-s-5-10-q 3 {:date (midnight+d -50 *now*)})
         (let [reminders' (reminders *now*)
@@ -401,18 +401,18 @@
                                          (:cycles)))
 
           group1-id    (create-group!)
-          user1-id     (user-service/create-user! project-id {:group      group1-id
+          user1-id     (user-service/create-user! project-ass1-id {:group group1-id
                                                               :email      "user1@example.com"
                                                               "SMSNumber" "111"
                                                               "FirstName" "First1"
                                                               "LastName"  "Last1"})
-          _            (user-service/create-user! project-id {:group      group1-id
+          _            (user-service/create-user! project-ass1-id {:group group1-id
                                                               :email      "user2@example.com"
                                                               "SMSNumber" "222"
                                                               "FirstName" "First2"
                                                               "LastName"  "Last2"})
           group2-id    (create-group!)
-          _            (user-service/create-user! project-id {:group      group2-id
+          _            (user-service/create-user! project-ass1-id {:group group2-id
                                                               :email      "user3@example.com"
                                                               "SMSNumber" "222"
                                                               "FirstName" "First3"
@@ -445,7 +445,7 @@
                                                                       {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
                                                                       now)))
           group1-id     (create-group!)]
-      (user-service/create-user! project-id {:group      group1-id
+      (user-service/create-user! project-ass1-id {:group group1-id
                                              :email      "user1@example.com"
                                              "SMSNumber" "111"
                                              "FirstName" "First1"

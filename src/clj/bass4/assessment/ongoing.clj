@@ -222,9 +222,6 @@
                                  (first)
                                  :assessment-series-id)
         administrations      (->> (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id})
-                                  ;; get-group-administrations uses LEFT JOIN,
-                                  ;; returning assessments without group administrations
-                                  (filter :group-administration-id)
                                   (group-by :assessment-id))
         assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id group-id})]
     (->> assessments

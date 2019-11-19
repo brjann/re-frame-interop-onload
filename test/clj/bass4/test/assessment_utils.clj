@@ -18,7 +18,10 @@
   :once
   test-fixtures)
 
-(def project-id 653627)
+(def project-ass1-id 653627)
+(def project-ass1-pcollection-id 653628)
+(def project-ass2-id 658098)
+(def project-ass2-pcollection-id 658099)
 
 (def ass-G-s-2-3-p0 653630)
 (def ass-G-week-e+s-3-4-p10 653631)
@@ -27,6 +30,12 @@
 (def ass-I-manual-s-5-10-q 653634)
 (def ass-I-clinician 654215)
 (def ass-I-hour8-2-20 654411)
+
+(def p2-ass-I1 658101)
+(def p2-ass-I2 658106)
+(def p2-ass-G 658102)
+
+653628
 
 (def assessment-ids [ass-G-s-2-3-p0
                      ass-G-week-e+s-3-4-p10
@@ -39,7 +48,7 @@
 (defn create-group!
   []
   (:objectid (db/create-bass-object! {:class-name    "cGroup"
-                                      :parent-id     project-id
+                                      :parent-id     project-ass1-id
                                       :property-name "Groups"})))
 
 (defn additional-instruments!
