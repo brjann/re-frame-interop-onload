@@ -64,7 +64,8 @@
     (and (= "MANUAL" repetition-type)
          (or (= next-administration-status ::as-waiting)
              (= next-administration-status ::as-ongoing)
-             (= next-administration-status ::as-date-passed)))))
+             (= next-administration-status ::as-date-passed)
+             (= next-administration-status ::as-completed)))))
 
 (defn- get-administration-status
   [now administration next-administration-status assessment]
@@ -76,25 +77,31 @@
                        nil)
                     (throw (ex-info "No valid administration" administration))
 
-                    (not (and (if (contains? administration :group-administration-active?)
-                                (:group-administration-active? administration)
-                                true)
-                              (if (contains? administration :participant-administration-active?)
-                                (:participant-administration-active? administration)
-                                true)))
-                    ::as-inactive
-
-                    (and (= (:scope assessment) 0)
-                         (nil? (:participant-administration-id administration)))
-                    ::as-user-missing
-
-                    (and (= (:scope assessment) 1)
-                         (nil? (:group-administration-id administration)))
-                    ::as-group-missing
-
                     (and (some? (:date-completed administration))
                          (> (:date-completed administration) 0))
                     ::as-completed
+
+                    (false? (:participant-administration-active? administration))
+                    ::as-user-inactive
+
+                    (false? (:group-administration-active? administration))
+                    ::as-group-inactive
+
+                    ;(not (and (if (contains? administration :group-administration-active?)
+                    ;            (:group-administration-active? administration)
+                    ;            true)
+                    ;          (if (contains? administration :participant-administration-active?)
+                    ;            (:participant-administration-active? administration)
+                    ;            true)))
+                    ;::as-inactive
+
+                    (and (= (:scope assessment) 0)
+                         (nil? (:participant-administration-id administration)))
+                    ::as-scoped-missing
+
+                    (and (= (:scope assessment) 1)
+                         (nil? (:group-administration-id administration)))
+                    ::as-scoped-missing
 
                     (> (:assessment-index administration) (:repetitions assessment))
                     ::as-superfluous
@@ -230,9 +237,10 @@
                                  (get administrations (:assessment-id assessment))
                                  assessment)))
          (flatten)
-         (filter identity))))
+         (filter identity)
+         (filter #(not= ::as-scoped-missing (:status %))))))
 
 (defn user-administrations-statuses
   [db now user-id]
   (let [[administration-statuses _] (user-administration-statuses+assessments db now user-id)]
-    (filter #(not= ::as-both-missing (:status %)) administration-statuses)))
+    (filter #(not= ::as-scoped-missing (:status %)) administration-statuses)))

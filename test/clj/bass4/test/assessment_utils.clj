@@ -66,12 +66,12 @@
                                                               :parent-id     group-id
                                                               :property-name "Administrations"}))]
     (when properties
-      (db/update-object-properties! {:table-name "c_groupadministration"
-                                     :object-id  administration-id
-                                     :updates    (merge {:assessment      assessment-id
-                                                         :assessmentindex assessment-index
-                                                         :active          1}
-                                                        properties)}))
+      (bass/update-object-properties! "c_groupadministration"
+                                      administration-id
+                                      (merge {"assessment"      assessment-id
+                                              "assessmentindex" assessment-index
+                                              "active"          1}
+                                             properties)))
     administration-id))
 
 (defn create-participant-administration!
@@ -79,13 +79,13 @@
   (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cParticipantAdministration"
                                                               :parent-id     user-id
                                                               :property-name "Administrations"}))]
-    (db/update-object-properties! {:table-name "c_participantadministration"
-                                   :object-id  administration-id
-                                   :updates    (merge {:assessment      assessment-id
-                                                       :assessmentindex assessment-index
-                                                       :active          1
-                                                       :deleted         0}
-                                                      properties)})
+    (bass/update-object-properties! "c_participantadministration"
+                                    administration-id
+                                    (merge {"assessment"      assessment-id
+                                            "assessmentindex" assessment-index
+                                            "active"          1
+                                            "deleted"         0}
+                                           properties))
     administration-id))
 
 (defn create-custom-assessment*!

@@ -43,10 +43,16 @@
       group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
     (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
            (ongoing-assessments *now* user-id)))
-    (log/debug (participant-statuses *now* user-id))
-    #_(is (= (group-statuses *now* group-id)))))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
+             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
+             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
+           (participant-statuses *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
+             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
+             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
+           (group-statuses *now* group-id)))))
 
-(deftest group-assessment-mysql-join-fail
+(deftest group-assessment-mysql-old-super-join-fail
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-ass1-id {:group group-id})]
     (create-group-administration!
@@ -55,7 +61,14 @@
       group-id ass-G-week-e+s-3-4-p10 4 {:date (midnight *now*)})
     (create-participant-administration!
       user-id ass-G-week-e+s-3-4-p10 3)
-    (is (= #{[ass-G-week-e+s-3-4-p10 4]} (ongoing-assessments *now* user-id)))))
+    (is (= #{[ass-G-week-e+s-3-4-p10 4]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
+             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
+           (participant-statuses *now* user-id)))
+    (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
+             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
+           (group-statuses *now* group-id)))))
 
 (deftest group-assessment-timelimit
   ; Timelimit within
@@ -63,14 +76,22 @@
         user-id  (user-service/create-user! project-ass1-id {:group group-id})]
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -3 *now*)})
-    (is (= #{[ass-G-s-2-3-p0 1]} (ongoing-assessments *now* user-id))))
+    (is (= #{[ass-G-s-2-3-p0 1]} (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+           (participant-statuses *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+           (group-statuses *now* group-id))))
 
   ; Timelimit too late
   (let [group-id (create-group!)
         user-id  (user-service/create-user! project-ass1-id {:group group-id})]
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -40 *now*)})
-    (is (= #{} (ongoing-assessments *now* user-id)))))
+    (is (= #{} (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
+           (participant-statuses *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
+           (group-statuses *now* group-id)))))
 
 (deftest individual-assessment-in-group
   (let [group-id (create-group!)
@@ -79,15 +100,22 @@
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!
-      user-id ass-I-week-noremind 4 {:date (midnight *now*)})
+      user-id ass-I-week-noremind 1 {:date (midnight *now*)})
     ; Wrong scope
     (create-participant-administration!
       user-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     ; Tomorrow
     (create-participant-administration!
-      user-id ass-I-week-noremind 1 {:date (+ (midnight+d 1 *now*))})
-    (is (= #{[ass-I-s-0-p100-message 1] [ass-I-week-noremind 4]}
-           (ongoing-assessments *now* user-id)))))
+      user-id ass-I-week-noremind 4 {:date (+ (midnight+d 1 *now*))})
+    (is (= #{[ass-I-s-0-p100-message 1]
+             [ass-I-week-noremind 1]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
+             [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
+             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
+           (participant-statuses *now* user-id)))
+    (is (= #{}
+           (group-statuses *now* group-id)))))
 
 (deftest individual-assessment-no-group
   (let [user-id (user-service/create-user! project-ass1-id)]
@@ -95,15 +123,21 @@
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!
-      user-id ass-I-week-noremind 4 {:date (midnight *now*)})
+      user-id ass-I-week-noremind 1 {:date (midnight *now*)})
     ; Wrong scope
     (create-participant-administration!
       user-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     ; Tomorrow
     (create-participant-administration!
-      user-id ass-I-week-noremind 1 {:date (midnight+d 1 *now*)})
-    (is (= #{[ass-I-s-0-p100-message 1] [ass-I-week-noremind 4]}
-           (ongoing-assessments *now* user-id)))))
+      user-id ass-I-week-noremind 4 {:date (midnight+d 1 *now*)})
+    (is (= #{[ass-I-s-0-p100-message 1]
+             [ass-I-week-noremind 1]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
+             [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
+             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]
+             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-not-in-group]}
+           (participant-statuses *now* user-id)))))
 
 (deftest individual+group-assessment
   ; In group
@@ -113,7 +147,16 @@
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
-    (is (= #{[ass-I-s-0-p100-message 1] [ass-G-s-2-3-p0 1]} (ongoing-assessments *now* user-id)))))
+    (create-group-administration!
+      group-id ass-I-s-0-p100-message 1)
+    (is (= #{[ass-I-s-0-p100-message 1]
+             [ass-G-s-2-3-p0 1]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
+             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+           (participant-statuses *now* user-id)))
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+           (group-statuses *now* group-id)))))
 
 (deftest index-overflow-assessment
   ; In group
