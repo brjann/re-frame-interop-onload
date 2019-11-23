@@ -135,8 +135,7 @@
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
-             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]
-             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-not-in-group]}
+             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
            (participant-statuses *now* user-id)))))
 
 (deftest individual+group-assessment

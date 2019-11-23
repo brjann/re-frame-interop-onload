@@ -21,9 +21,10 @@
        (map (partial apply merge))
        (map #(assoc % :user-id user-id))))
 
-(defn- user-administrations
-  [db user-id group-id assessment-series-id]
-  (let [group-administrations       (when group-id
+(defn- user+group-administrations
+  [db user-id assessment-series-id]
+  (let [group-id                    (user-group db user-id)
+        group-administrations       (when group-id
                                       (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id}))
         participant-administrations (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})]
     (merge-participant-group-administrations user-id participant-administrations group-administrations)))
@@ -180,28 +181,21 @@
        (into {})))
 
 (defn- administrations-by-assessment
-  [db user-id group-id assessment-series-id]
-  (->> (user-administrations db user-id group-id assessment-series-id)
+  [db user-id assessment-series-id]
+  (->> (user+group-administrations db user-id assessment-series-id)
        (group-by #(:assessment-id %))))
 
 (defn user-administration-statuses+assessments
   [db now user-id]
-  (let [group-id                 (user-group db user-id)
-        assessment-series-id     (user-assessment-series-id db user-id)
-        administrations-map      (administrations-by-assessment db user-id group-id assessment-series-id)
+  (let [assessment-series-id     (user-assessment-series-id db user-id)
+        administrations-map      (administrations-by-assessment db user-id assessment-series-id)
         assessments-map          (assessments db user-id assessment-series-id)
         administrations-statuses (->> administrations-map
                                       (map (fn [[assessment-id administrations]]
                                              (-> administrations
                                                  (#(sort-by :assessment-index %))
                                                  (#(get-administration-statuses now % (get assessments-map assessment-id))))))
-                                      (flatten))
-        administrations-statuses (if group-id
-                                   administrations-statuses
-                                   (map #(if (= 1 (:scope %))
-                                           (assoc % :status ::as-not-in-group)
-                                           %)
-                                        administrations-statuses))]
+                                      (flatten))]
     [administrations-statuses assessments-map]))
 
 (defn ongoing-assessments*
