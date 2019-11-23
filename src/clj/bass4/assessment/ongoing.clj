@@ -8,7 +8,7 @@
   [db user-id]
   (:group-id (db/get-user-group db {:user-id user-id})))
 
-(defn- user-assessment-series-id
+(defn user-assessment-series-id
   [db user-id]
   (when user-id
     (:assessment-series-id (first (db/get-user-assessment-series db {:user-ids [user-id]})))))
@@ -174,13 +174,13 @@
          assessments)))
 
 
-(defn- assessments
+(defn assessments
   [db user-id assessment-series-id]
   (->> (user-assessments db user-id assessment-series-id)
        (map #(vector (:assessment-id %) %))
        (into {})))
 
-(defn- administrations-by-assessment
+(defn administrations-by-assessment
   [db user-id assessment-series-id]
   (->> (user+group-administrations db user-id assessment-series-id)
        (group-by #(:assessment-id %))))
@@ -216,25 +216,3 @@
 (defn ongoing-assessments
   [user-id]
   (ongoing-assessments* db/*db* (t/now) user-id))
-
-(defn group-administrations-statuses
-  [db now group-id]
-  (let [assessment-series-id (-> (db/get-group-assessment-series db {:group-ids [group-id]})
-                                 (first)
-                                 :assessment-series-id)
-        administrations      (->> (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id})
-                                  (group-by :assessment-id))
-        assessments          (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id group-id})]
-    (->> assessments
-         (map (fn [assessment] (get-administration-statuses
-                                 now
-                                 (get administrations (:assessment-id assessment))
-                                 assessment)))
-         (flatten)
-         (filter identity)
-         (filter #(not= ::as-scoped-missing (:status %))))))
-
-(defn user-administrations-statuses
-  [db now user-id]
-  (let [[administration-statuses _] (user-administration-statuses+assessments db now user-id)]
-    (filter #(not= ::as-scoped-missing (:status %)) administration-statuses)))

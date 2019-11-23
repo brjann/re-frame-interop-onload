@@ -12,6 +12,7 @@
             [bass4.routes.quick-login :as quick-login]
             [bass4.services.bass :as bass]
             [bass4.assessment.ongoing :as assessment-ongoing]
+            [bass4.assessment.statuses :as assessment-statuses]
             [clojure.tools.logging :as log]))
 
 (use-fixtures
@@ -218,9 +219,9 @@
 (defn group-statuses
   [now group-id]
   (into #{} (map #(vector (:assessment-id %) (:assessment-index %) (:status %))
-                 (assessment-ongoing/group-administrations-statuses db/*db* now group-id))))
+                 (assessment-statuses/group-administrations-statuses db/*db* now group-id))))
 
 (defn participant-statuses
   [now user-id]
   (into #{} (map #(vector (:assessment-id %) (:assessment-index %) (:status %))
-                 (assessment-ongoing/user-administrations-statuses db/*db* now user-id))))
+                 (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
