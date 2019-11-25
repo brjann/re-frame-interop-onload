@@ -46,7 +46,7 @@
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
@@ -65,7 +65,7 @@
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
            (group-statuses *now* group-id)))))
@@ -78,7 +78,7 @@
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -3 *now*)})
     (is (= #{[ass-G-s-2-3-p0 1]} (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
            (group-statuses *now* group-id))))
 
@@ -89,7 +89,7 @@
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -40 *now*)})
     (is (= #{} (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
            (group-statuses *now* group-id)))))
 
@@ -113,7 +113,7 @@
     (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{}
            (group-statuses *now* group-id)))))
 
@@ -136,7 +136,7 @@
     (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
-           (participant-statuses *now* user-id)))))
+           (user-statuses *now* user-id)))))
 
 (deftest individual+group-assessment
   ; In group
@@ -153,7 +153,7 @@
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
-           (participant-statuses *now* user-id)))
+           (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
            (group-statuses *now* group-id)))))
 
@@ -288,7 +288,9 @@
                                                              "parentinterface" project-ass1-id})
     (bass/update-object-properties! "c_participantadministration" adm1-id {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
-    (participant-statuses *now* user-id)))
+    (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-wrong-series]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
+           (user-statuses *now* user-id)))))
 
 (deftest custom-assessment
   (db/update-object-properties! {:table-name "c_participantadministration"
@@ -303,35 +305,6 @@
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     (let [res (first (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id))]
-      #_(is (= #{:user-id
-                 :thank-you-text
-                 :repetition-type
-                 :assessment-index
-                 :show-texts-if-swallowed?
-                 :date-completed
-                 :assessment-id
-                 :participant-activation-date
-                 :repetition-interval
-                 :scope
-                 :instruments
-                 :welcome-text
-                 :shuffle-instruments
-                 :priority
-                 :group-administration-id
-                 :participant-administration-active?
-                 :group-administration-active?
-                 :active?
-                 :status
-                 :clinician-rated?
-                 :repetitions
-                 :group-activation-date
-                 :time-limit
-                 :is-record?
-                 :participant-administration-id
-                 :allow-swallow?
-                 :assessment-name
-                 :activation-hour}
-               (into #{} (keys res))))
       (is (= true (sub-map? {:user-id        user-id
                              :thank-you-text "thankyou"
                              :welcome-text   "welcome"
@@ -344,33 +317,6 @@
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (let [res (first (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id))]
-      #_(is (= #{:user-id
-                 :thank-you-text
-                 :repetition-type
-                 :assessment-index
-                 :show-texts-if-swallowed?
-                 :date-completed
-                 :assessment-id
-                 :participant-activation-date
-                 :repetition-interval
-                 :scope
-                 :instruments
-                 :welcome-text
-                 :shuffle-instruments
-                 :priority
-                 :group-administration-id
-                 :active?
-                 :status
-                 :clinician-rated?
-                 :repetitions
-                 :group-activation-date
-                 :time-limit
-                 :is-record?
-                 :participant-administration-id
-                 :allow-swallow?
-                 :assessment-name
-                 :activation-hour}
-               (into #{} (keys res))))
       (is (= true (sub-map? {:user-id        user-id
                              :thank-you-text "thankyou1"
                              :welcome-text   "welcome1"

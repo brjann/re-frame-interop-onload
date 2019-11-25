@@ -76,6 +76,7 @@
              (= next-administration-status ::as-completed)))))
 
 (defn- get-administration-status
+  "Does not know about assessment series"
   [now administration next-administration-status assessment]
   (merge administration
          (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated? :scope])
@@ -138,6 +139,7 @@
                         ::as-ongoing)))}))
 
 (defn get-administration-statuses
+  "Does not know about assessment series"
   [now administrations assessment]
   (when (seq administrations)
     (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)

@@ -221,7 +221,9 @@
   (into #{} (map #(vector (:assessment-id %) (:assessment-index %) (:status %))
                  (assessment-statuses/group-administrations-statuses db/*db* now group-id))))
 
-(defn participant-statuses
+(defn user-statuses
   [now user-id]
-  (into #{} (map #(vector (:assessment-id %) (:assessment-index %) (:status %))
+  (into #{} (map #(utils/select-values % [:assessment-id
+                                          :assessment-index
+                                          :status])
                  (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
