@@ -1,14 +1,13 @@
 (ns bass4.test.assessment-ongoing
   (:require [clj-time.core :as t]
+            [clojure.test :refer :all]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
-            [clojure.test :refer :all]
             [bass4.services.user :as user-service]
-            [clojure.set :as set]
-            [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [bass4.time :as b-time]))
 
 (use-fixtures
   :once
@@ -93,14 +92,13 @@
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
            (group-statuses *now* group-id)))))
 
-(deftest individual-assessment-in-group
+(deftest individual-assessment-in-group-completed
   (let [group-id (create-group!)
-        user-id  (user-service/create-user! project-ass1-id {:group group-id})]
-    ; Today
-    (create-participant-administration!
-      user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
-    (create-participant-administration!
-      user-id ass-I-week-noremind 1 {:date (midnight *now*)})
+        user-id  (user-service/create-user! project-ass1-id {:group group-id})
+        adm1     (create-participant-administration!
+                   user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
+        adm2     (create-participant-administration!
+                   user-id ass-I-week-noremind 1 {:date (midnight *now*)})]
     ; Wrong scope
     (create-participant-administration!
       user-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
@@ -115,7 +113,15 @@
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
            (user-statuses *now* user-id)))
     (is (= #{}
-           (group-statuses *now* group-id)))))
+           (group-statuses *now* group-id)))
+    (bass/update-object-properties! "c_participantadministration" adm1 {"datecompleted" (b-time/to-unix *now*)})
+    (bass/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (b-time/to-unix *now*)})
+    (is (= #{}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-completed]
+             [ass-I-week-noremind 1 ::assessment-ongoing/as-completed]
+             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
+           (user-statuses *now* user-id)))))
 
 (deftest individual-assessment-no-group
   (let [user-id (user-service/create-user! project-ass1-id)]
@@ -289,6 +295,10 @@
     (bass/update-object-properties! "c_participantadministration" adm1-id {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-wrong-series]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
+           (user-statuses *now* user-id)))
+    (bass/update-object-properties! "c_participantadministration" adm1-id {"datecompleted" (b-time/to-unix *now*)})
+    (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-completed]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))))
 
