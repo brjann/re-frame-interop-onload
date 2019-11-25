@@ -57,7 +57,7 @@ SELECT
    ShuffleInstruments AS `shuffle-instruments`
 
 FROM c_assessment
-WHERE parentid = :assessment-series-id OR parentid = :parent-id;
+WHERE parentid IN(:v*:assessment-series-ids) OR parentid = :parent-id;
 
 -- :name get-user-assessment-series :? :*
 -- :doc Get the assessment series that the user's project uses
@@ -80,7 +80,7 @@ FROM c_group AS cg
 WHERE cg.ObjectId IN (:v*:group-ids);
 
 
--- :name get-participant-administrations :? :*
+-- :name get-participant-administrations-by-assessment-series :? :*
 -- :doc
 SELECT
     ca.Name AS `assessment-name`,
@@ -109,11 +109,41 @@ WHERE
     (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
 
 
+-- :name get-all-participant-administrations :? :*
+-- :doc
+SELECT
+    ca.Name AS `assessment-name`,
+    ca.ObjectId AS `assessment-id`,
+    ca.ParentId AS `assessment-series-id`,
+    cpa.ObjectId AS `participant-administration-id`,
+    cpa.AssessmentIndex AS `assessment-index`,
+    cpa.Active AS `participant-administration-active?`,
+  (CASE
+     WHEN cpa.DateCompleted IS NULL
+         THEN 0
+     ELSE cpa.DateCompleted
+     END ) AS `date-completed`,
+
+  (CASE
+   WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cpa.`Date`)
+   END) AS `participant-activation-date`
+
+FROM c_assessment as ca
+    JOIN (c_participantadministration as cpa)
+        ON (ca.ObjectId = cpa.Assessment)
+
+WHERE cpa.ParentId = :user-id AND cpa.Deleted = 0;
+
 -- :name get-group-administrations :? :*
 -- :doc
 SELECT
     ca.Name AS `assessment-name`,
     ca.ObjectId AS `assessment-id`,
+    ca.ParentId AS `assessment-series-id`,
     cga.AssessmentIndex AS `assessment-index`,
 	cga.Active AS `group-administration-active?`,
     cga.ObjectId AS `group-administration-id`,

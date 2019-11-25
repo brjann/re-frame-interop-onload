@@ -4,7 +4,7 @@
             [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]))
 
-(defn- user-group
+(defn user-group
   [db user-id]
   (:group-id (db/get-user-group db {:user-id user-id})))
 
@@ -13,7 +13,7 @@
   (when user-id
     (:assessment-series-id (first (db/get-user-assessment-series db {:user-ids [user-id]})))))
 
-(defn- merge-participant-group-administrations
+(defn merge-participant-group-administrations
   [user-id participant-administrations group-administrations]
   (->> (concat participant-administrations group-administrations) ;; From https://stackoverflow.com/a/20808420
        (sort-by (juxt :assessment-id :assessment-index))
@@ -25,13 +25,20 @@
   [db user-id assessment-series-id]
   (let [group-id                    (user-group db user-id)
         group-administrations       (when group-id
-                                      (db/get-group-administrations db {:group-id group-id :assessment-series-id assessment-series-id}))
-        participant-administrations (db/get-participant-administrations db {:user-id user-id :assessment-series-id assessment-series-id})]
+                                      (db/get-group-administrations
+                                        db
+                                        {:group-id             group-id
+                                         :assessment-series-id assessment-series-id}))
+        participant-administrations (db/get-participant-administrations-by-assessment-series
+                                      db
+                                      {:user-id              user-id
+                                       :assessment-series-id assessment-series-id})]
     (merge-participant-group-administrations user-id participant-administrations group-administrations)))
 
 (defn user-assessments
-  [db user-id assessment-series-id]
-  (db/get-user-assessments db {:assessment-series-id assessment-series-id :parent-id user-id}))
+  [db user-id assessment-series-ids]
+  (when (seq assessment-series-ids)
+    (db/get-user-assessments db {:assessment-series-ids assessment-series-ids :parent-id user-id})))
 
 (defn assessment-instruments
   [db assessment-ids]
@@ -175,8 +182,8 @@
 
 
 (defn assessments
-  [db user-id assessment-series-id]
-  (->> (user-assessments db user-id assessment-series-id)
+  [db user-id assessment-series-ids]
+  (->> (user-assessments db user-id assessment-series-ids)
        (map #(vector (:assessment-id %) %))
        (into {})))
 
@@ -189,7 +196,7 @@
   [db now user-id]
   (let [assessment-series-id     (user-assessment-series-id db user-id)
         administrations-map      (administrations-by-assessment db user-id assessment-series-id)
-        assessments-map          (assessments db user-id assessment-series-id)
+        assessments-map          (assessments db user-id [assessment-series-id])
         administrations-statuses (->> administrations-map
                                       (map (fn [[assessment-id administrations]]
                                              (-> administrations

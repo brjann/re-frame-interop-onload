@@ -287,7 +287,8 @@
     (bass/update-object-properties! "c_participant" user-id {"parentid"        project-ass2-pcollection-id
                                                              "parentinterface" project-ass1-id})
     (bass/update-object-properties! "c_participantadministration" adm1-id {"parentinterface" project-ass1-id})
-    (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))))
+    (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
+    (participant-statuses *now* user-id)))
 
 (deftest custom-assessment
   (db/update-object-properties! {:table-name "c_participantadministration"

@@ -99,7 +99,7 @@
 (defn in?
   "true if coll contains m"
   [coll m]
-  (some #(= m %) coll))
+  (true? (some #(= m %) coll)))
 
 ;; http://blog.jayfields.com/2011/01/clojure-select-keys-select-values-and.html
 (defn select-values [map ks]
