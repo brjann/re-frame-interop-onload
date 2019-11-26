@@ -119,6 +119,7 @@
                         "sql/treatments.sql"
                         "sql/instruments.sql"
                         "sql/assessments.sql"
+                        "sql/assessment-reminder.sql"
                         "sql/instrument-answers.sql"
                         "sql/registration.sql"
                         "sql/lost-password.sql"
