@@ -8,7 +8,8 @@
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -24,16 +25,36 @@
 (deftest db-flag-participant-administration
   (let [user-id1      (user-service/create-user! project-ass1-id)
         user-id2      (user-service/create-user! project-ass1-id)
+        user-id3      (user-service/create-user! project-ass1-id)
         assessment-id (create-assessment! {"FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})]
     (create-participant-administration!
       user-id1 assessment-id 1 {"Date" (midnight+d -5 *now*)})
     (create-participant-administration!
-      user-id2 assessment-id 1 {"Date"          (midnight+d -5 *now*)
+      user-id2 assessment-id 1 {"Date" (midnight+d -5 *now*)})
+    (create-participant-administration!
+      user-id3 assessment-id 1 {"Date"          (midnight+d -5 *now*)
                                 "DateCompleted" 1})
-    (is (= 1 (count (db-late-flag-participant *db* *now*))))))
+    (is (= 2 (count (db-late-flag-participant *db* *now*))))))
 
 (deftest db-flag-group-administration
+  (let [group-id1     (create-group!)
+        group-id2     (create-group!)
+        user-id1      (user-service/create-user! project-ass1-id {:group group-id1})
+        user-id2      (user-service/create-user! project-ass1-id {:group group-id1})
+        user-id3      (user-service/create-user! project-ass1-id {:group group-id2})
+        assessment-id (create-assessment! {"Scope"                   1
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5})]
+    (create-group-administration!
+      group-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (create-group-administration!
+      group-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (create-participant-administration!
+      user-id2 assessment-id 1 {"DateCompleted" 1})
+    (is (= 2 (count (db-late-flag-group *db* *now*))))))
+
+(deftest flag-group-administration
   (let [group-id      (create-group!)
         user-id1      (user-service/create-user! project-ass1-id {:group group-id})
         user-id2      (user-service/create-user! project-ass1-id {:group group-id})
@@ -42,6 +63,8 @@
                                            "DayCountUntilLate"       5})]
     (create-group-administration!
       group-id assessment-id 1 {:date (midnight+d -5 *now*)})
-    (create-participant-administration!
-      user-id2 assessment-id 1 {"DateCompleted" 1})
-    (is (= 1 (count (db-late-flag-group *db* *now*))))))
+    #_(create-participant-administration!
+        user-id2 assessment-id 1 {"DateCompleted" 1})
+    (is (= #{[user-id1 assessment-id 1]
+             [user-id2 assessment-id 1]}
+           (flag!-flags-created *now*)))))

@@ -13,7 +13,8 @@
             [bass4.services.bass :as bass]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.statuses :as assessment-statuses]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.assessment.flagger :as assessment-flagger]))
 
 (use-fixtures
   :once
@@ -154,15 +155,15 @@
     (additional-instruments! administration-id instrument-ids)))
 
 #_(defn clear-administrations!
-  []
-  (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
-    (jdbc/with-db-transaction [db db/*db*])
-    (jdbc/execute! db/*db*
-                   (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                         assessment-ids))
-    (jdbc/execute! db/*db*
-                   (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                         assessment-ids))))
+    []
+    (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
+      (jdbc/with-db-transaction [db db/*db*])
+      (jdbc/execute! db/*db*
+                     (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
+                           assessment-ids))
+      (jdbc/execute! db/*db*
+                     (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
+                           assessment-ids))))
 
 (defn clear-administrations!
   []
@@ -273,3 +274,10 @@
                                           :assessment-index
                                           :status])
                  (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
+
+(defn flag!-flags-created
+  [now]
+  (into #{} (map #(utils/select-values % [:user-id
+                                          :assessment-id
+                                          :assessment-index])
+                 (assessment-flagger/flag-late-assessments! *db* now))))

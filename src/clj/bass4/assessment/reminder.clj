@@ -245,7 +245,7 @@
                                                  (map #(merge % (get assessments' (:assessment-id %)))))]
     ongoing-assessments))
 
-(defn- ongoing-reminder-assessments
+(defn ongoing-reminder-assessments
   [db now potentials]
   (when (seq potentials)
     (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
