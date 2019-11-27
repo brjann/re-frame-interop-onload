@@ -18,13 +18,23 @@
   :each
   random-date-tz-fixture)
 
-(def db-late-flag @#'assessment-flagger/db-late-flag-participant-administrations)
+(def db-late-flag-participant @#'assessment-flagger/db-late-flag-participant-administrations)
+(def db-late-flag-group @#'assessment-flagger/db-late-flag-group-administrations)
 
-(deftest flag-participant-administration
+(deftest db-flag-participant-administration
+  (let [user-id       (user-service/create-user! project-ass1-id)
+        assessment-id (create-assessment! {"FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5})]
+    (create-participant-administration!
+      user-id assessment-id 1 {:date (midnight+d -5 *now*)})
+    (is (= 1 (count (db-late-flag-participant *db* *now*))))))
+
+(deftest db-flag-group-administration
   (let [group-id      (create-group!)
         user-id       (user-service/create-user! project-ass1-id {:group group-id})
-        assessment-id (create-assessment! {"FlagParticipantWhenLate" 1
-                                           "DayCountUntilLate"       50})]
-    (create-participant-administration!
-      user-id assessment-id 1 {:date (midnight+d -60 *now*)})
-    (is (= 1 (count (db-late-flag *db* *now*))))))
+        assessment-id (create-assessment! {"Scope"                   1
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5})]
+    (create-group-administration!
+      group-id assessment-id 1 {:date (midnight+d -5 *now*)})
+    (is (= 1 (count (db-late-flag-group *db* *now*))))))

@@ -137,8 +137,7 @@ WHERE
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
   AND from_unixtime(cga.Date) >= :oldest-allowed
-  AND date_add(from_unixtime(cga.`date`), INTERVAL ca.RemindInterval DAY) <= :date
-	AND date_add(from_unixtime(cga.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
+  AND date_add(from_unixtime(cga.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date;
 
 -- ----------------------------------
 --   MASS ADMINISTRATIONS RETRIEVER
