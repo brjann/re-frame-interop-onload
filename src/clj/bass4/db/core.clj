@@ -120,6 +120,7 @@
                         "sql/instruments.sql"
                         "sql/assessments.sql"
                         "sql/assessment-reminder.sql"
+                        "sql/assessment-flagger.sql"
                         "sql/instrument-answers.sql"
                         "sql/registration.sql"
                         "sql/lost-password.sql"

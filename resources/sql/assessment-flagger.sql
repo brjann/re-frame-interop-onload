@@ -78,7 +78,7 @@ WHERE
 --     LATE ASSESSMENTS
 -- -------------------------
 
--- :name get-flag-late-participant-administrations :? :*
+-- :name get-late-flag-participant-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -108,11 +108,11 @@ WHERE
   AND (ca.FlagParticipantWhenLate = 1)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
-  AND cpa.Date >= :oldest-allowed
+  AND from_unixtime(cpa.Date) >= :oldest-allowed
   AND date_add(from_unixtime(cpa.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date;
 
 
--- :name XXXget-late-group-administrations :? :*
+-- :name get-late-flag-group-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -133,11 +133,10 @@ FROM
 		ON cga.Assessment = ca.ObjectId
 WHERE
 	ca.Scope = 1
-  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
-  AND (ca.RemindParticipantsWhenLate = 1)
+  AND (ca.FlagParticipantWhenLate = 1)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
-	AND cga.Date >= 0
+  AND from_unixtime(cga.Date) >= :oldest-allowed
   AND date_add(from_unixtime(cga.`date`), INTERVAL ca.RemindInterval DAY) <= :date
 	AND date_add(from_unixtime(cga.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
 

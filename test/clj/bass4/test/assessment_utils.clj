@@ -36,7 +36,7 @@
 (def p2-ass-I2 658106)
 (def p2-ass-G 658102)
 
-653628
+(def ass-flag-assessment-series 653629)
 
 (def assessment-ids [ass-G-s-2-3-p0
                      ass-G-week-e+s-3-4-p10
@@ -51,6 +51,43 @@
   (:objectid (db/create-bass-object! {:class-name    "cGroup"
                                       :parent-id     project-ass1-id
                                       :property-name "Groups"})))
+
+(defn create-assessment!
+  [properties]
+  (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
+                                                          :parent-id     ass-flag-assessment-series
+                                                          :property-name "Assessments"}))]
+    (bass/update-object-properties! "c_assessment"
+                                    assessment-id
+                                    (merge {"ShuffleInstruments"                       0
+                                            "Scope"                                    0
+                                            "Type"                                     ""
+                                            "RepetitionType"                           0
+                                            "Repetitions"                              0
+                                            "TimeLimit"                                0
+                                            "SendSMSWhenActivated"                     0
+                                            "SendEmailWhenActivated"                   0
+                                            "RemindParticipantsWhenLate"               0
+                                            "RemindInterval"                           1
+                                            "MaxRemindCount"                           0
+                                            "CustomReminderMessage"                    ""
+                                            "ActivatedEmailSubject"                    "Information"
+                                            "ReminderEmailSubject"                     "Reminder"
+                                            "UseStandardMessage"                       1
+                                            "FlagParticipantWhenActivated"             0
+                                            "FlagParticipantWhenLate"                  0
+                                            "DayCountUntilLate"                        0
+                                            "CustomRepetitionInterval"                 0
+                                            "IsRecord"                                 0
+                                            "CompetingAssessmentsPriority"             10
+                                            "CompetingAssessmentsAllowSwallow"         1
+                                            "CompetingAssessmentsShowTextsIfSwallowed" 0
+                                            "CreateNewQuickLoginOnActivation"          0
+                                            "ClinicianAssessment"                      0
+                                            "ActivationHour"                           0
+                                            "Deleted"                                  0}
+                                           properties))
+    assessment-id))
 
 (defn additional-instruments!
   [administration-id instruments-ids]
@@ -116,7 +153,7 @@
         administration-id (create-participant-administration! user-id assessment-id 1 {:date date})]
     (additional-instruments! administration-id instrument-ids)))
 
-(defn clear-administrations!
+#_(defn clear-administrations!
   []
   (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
     (jdbc/with-db-transaction [db db/*db*])
@@ -126,6 +163,15 @@
     (jdbc/execute! db/*db*
                    (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
                          assessment-ids))))
+
+(defn clear-administrations!
+  []
+  (jdbc/execute! db/*db*
+                 (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE ParentInterface IN(?, ?)")
+                       [project-ass1-id project-ass2-id]))
+  (jdbc/execute! db/*db*
+                 (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (?, ?)")
+                       [project-ass1-id project-ass2-id])))
 
 (def ^:dynamic *now*)
 (def ^:dynamic *tz*)
