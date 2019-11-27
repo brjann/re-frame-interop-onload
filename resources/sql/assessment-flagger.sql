@@ -113,7 +113,12 @@ WHERE
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
   AND from_unixtime(cpa.Date) >= :oldest-allowed
   AND date_add(from_unixtime(cpa.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date
-  AND (cf.ObjectId IS NULL);
+  AND
+    (cf.ObjectId IS NULL
+    OR
+      (cf.ReflagPossible = 1
+      AND cf.ClosedAt > 0
+      AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
 
 -- :name get-late-flag-group-administrations :? :*
@@ -144,4 +149,9 @@ WHERE
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
   AND from_unixtime(cga.Date) >= :oldest-allowed
   AND date_add(from_unixtime(cga.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date
-  AND (cf.ObjectId IS NULL);
+  AND
+    (cf.ObjectId IS NULL
+    OR
+      (cf.ReflagPossible = 1
+      AND cf.ClosedAt > 0
+      AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));

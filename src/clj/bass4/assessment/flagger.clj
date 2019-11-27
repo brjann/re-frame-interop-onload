@@ -10,6 +10,7 @@
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
+(def reflag-delay 7)
 
 (defn- db-late-flag-participant-administrations
   [db date]
@@ -58,7 +59,7 @@
                                       "CustomIcon"     "flag-administration-late.gif"
                                       "Open"           1
                                       "ReflagPossible" 1
-                                      "ReflagDelay"    7
+                                      "ReflagDelay"    reflag-delay
                                       "Issuer"         flag-issuer
                                       "ReferenceId"    administration-id
                                       "ClosedAt"       0})))

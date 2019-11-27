@@ -11,7 +11,8 @@
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
             [clojure.tools.logging :as log]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.services.bass :as bass-service]))
 
 (use-fixtures
   :once
@@ -57,7 +58,8 @@
     (is (= 2 (count (db-late-flag-group *db* *now*))))))
 
 (deftest flag-participant-administration
-  (let [user-id1      (user-service/create-user! project-ass1-id)
+  (let [created-flags (atom {})
+        user-id1      (user-service/create-user! project-ass1-id)
         user-id2      (user-service/create-user! project-ass1-id)
         assessment-id (create-assessment! {"Scope"                   0
                                            "FlagParticipantWhenLate" 1
@@ -68,30 +70,38 @@
       user-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
+           (flag!-flags-created *now* created-flags)))
+    (is (= #{}
+           (flag!-flags-created *now*)))
+    (let [flag1-id (first (get @created-flags user-id1))]
+      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)}))
+    (is (= #{}
            (flag!-flags-created *now*)))
     (is (= #{}
-           (flag!-flags-created *now*)))))
+           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))
 
 (deftest flag-group-administration
-  (let [c             (chan)
-        created-flags (atom {})
+  (let [created-flags (atom {})
         group-id      (create-group!)
         user-id1      (user-service/create-user! project-ass1-id {:group group-id})
         user-id2      (user-service/create-user! project-ass1-id {:group group-id})
         assessment-id (create-assessment! {"Scope"                   1
                                            "FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})]
-    (go-loop [[user-id flag-id] (<! c)]
-      (utils/swap-key!
-        created-flags
-        user-id
-        #(conj % flag-id)
-        [flag-id]))
     (create-group-administration!
       group-id assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
-           (flag!-flags-created *now*)))
+           (flag!-flags-created *now* created-flags)))
     (is (= #{}
            (flag!-flags-created *now*)))
-    (log/debug @created-flags)))
+    (let [flag1-id (first (get @created-flags user-id1))]
+      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)}))
+    (is (= #{}
+           (flag!-flags-created *now*)))
+    (is (= #{}
+           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))

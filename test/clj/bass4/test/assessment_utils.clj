@@ -1,6 +1,6 @@
 (ns bass4.test.assessment-utils
   (:require [clj-time.core :as t]
-            [clojure.core.async :refer [chan alts!! timeout put!]]
+            [clojure.core.async :refer [chan alts!! timeout put! <! go-loop]]
             [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]
@@ -277,8 +277,21 @@
                  (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
 
 (defn flag!-flags-created
-  [now]
-  (into #{} (map #(utils/select-values % [:user-id
-                                          :assessment-id
-                                          :assessment-index])
-                 (assessment-flagger/flag-late-assessments! *db* now))))
+  ([now] (flag!-flags-created now nil))
+  ([now created-atom]
+   (into #{} (map #(utils/select-values % [:user-id
+                                           :assessment-id
+                                           :assessment-index])
+                  (if created-atom
+                    (let [c (chan)]
+                      (go-loop []
+                        (let [[user-id flag-id] (<! c)]
+                          (utils/swap-key!
+                            created-atom
+                            user-id
+                            #(conj % flag-id)
+                            []))
+                        (recur))
+                      (binding [assessment-flagger/*create-flag-chan* c]
+                        (assessment-flagger/flag-late-assessments! *db* now)))
+                    (assessment-flagger/flag-late-assessments! *db* now))))))
