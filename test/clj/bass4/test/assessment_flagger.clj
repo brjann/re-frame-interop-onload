@@ -57,13 +57,17 @@
       user-id2 assessment-id 1 {"DateCompleted" 1})
     (is (= 2 (count (db-late-flag-group *db* *now*))))))
 
-(deftest flag-participant-administration
+(deftest flag-participant-administration+reflag
   (let [created-flags (atom {})
         user-id1      (user-service/create-user! project-ass1-id)
         user-id2      (user-service/create-user! project-ass1-id)
         assessment-id (create-assessment! {"Scope"                   0
                                            "FlagParticipantWhenLate" 1
-                                           "DayCountUntilLate"       5})]
+                                           "DayCountUntilLate"       5})
+        now+1delay-1  (t/plus *now* (t/days (dec assessment-flagger/reflag-delay)))
+        now+1delay    (t/plus *now* (t/days assessment-flagger/reflag-delay))
+        now+2delay-1  (t/plus *now* (t/days (dec (* 2 assessment-flagger/reflag-delay))))
+        now+2delay    (t/plus *now* (t/days (* 2 assessment-flagger/reflag-delay)))]
     (create-participant-administration!
       user-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
     (create-participant-administration!
@@ -74,34 +78,74 @@
     (is (= #{}
            (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)}))
-    (is (= #{}
-           (flag!-flags-created *now*)))
-    (is (= #{}
-           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
-    (is (= #{[user-id1 assessment-id 1]}
-           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))
+      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
+      (is (= #{}
+             (flag!-flags-created *now*)))
+      (is (= #{}
+             (flag!-flags-created now+1delay-1)))
+      (reset! created-flags {})
+      (is (= #{[user-id1 assessment-id 1]}
+             (flag!-flags-created
+               (t/plus *now* (t/days assessment-flagger/reflag-delay))
+               created-flags)))
+      (is (= #{}
+             (flag!-flags-created
+               now+1delay)))
+      (let [flag2-id (first (get @created-flags user-id1))]
+        (bass-service/update-object-properties!
+          "c_flag"
+          flag2-id
+          {"ClosedAt" (b-time/to-unix now+1delay)}))
+      (is (zero? (count (db-late-flag-participant *db* now+2delay-1))))
+      (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
+      (bass-service/update-object-properties!
+        "c_flag"
+        flag1-id
+        {"ClosedAt" 0})
+      (is (zero? (count (db-late-flag-participant *db* now+2delay)))))))
 
-(deftest flag-group-administration
+(deftest flag-participant-administration+reflag
   (let [created-flags (atom {})
-        group-id      (create-group!)
-        user-id1      (user-service/create-user! project-ass1-id {:group group-id})
-        user-id2      (user-service/create-user! project-ass1-id {:group group-id})
+        group         (create-group!)
+        user-id1      (user-service/create-user! project-ass1-id {:group group})
+        user-id2      (user-service/create-user! project-ass1-id {:group group})
         assessment-id (create-assessment! {"Scope"                   1
                                            "FlagParticipantWhenLate" 1
-                                           "DayCountUntilLate"       5})]
+                                           "DayCountUntilLate"       5})
+        now+1delay-1  (t/plus *now* (t/days (dec assessment-flagger/reflag-delay)))
+        now+1delay    (t/plus *now* (t/days assessment-flagger/reflag-delay))
+        now+2delay-1  (t/plus *now* (t/days (dec (* 2 assessment-flagger/reflag-delay))))
+        now+2delay    (t/plus *now* (t/days (* 2 assessment-flagger/reflag-delay)))]
     (create-group-administration!
-      group-id assessment-id 1 {:date (midnight+d -5 *now*)})
+      group assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now* created-flags)))
     (is (= #{}
            (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)}))
-    (is (= #{}
-           (flag!-flags-created *now*)))
-    (is (= #{}
-           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
-    (is (= #{[user-id1 assessment-id 1]}
-           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))
+      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
+      (is (= #{}
+             (flag!-flags-created *now*)))
+      (is (= #{}
+             (flag!-flags-created now+1delay-1)))
+      (reset! created-flags {})
+      (is (= #{[user-id1 assessment-id 1]}
+             (flag!-flags-created
+               (t/plus *now* (t/days assessment-flagger/reflag-delay))
+               created-flags)))
+      (is (= #{}
+             (flag!-flags-created
+               now+1delay)))
+      (let [flag2-id (first (get @created-flags user-id1))]
+        (bass-service/update-object-properties!
+          "c_flag"
+          flag2-id
+          {"ClosedAt" (b-time/to-unix now+1delay)}))
+      (is (zero? (count (db-late-flag-group *db* now+2delay-1))))
+      (is (= 1 (count (db-late-flag-group *db* now+2delay))))
+      (bass-service/update-object-properties!
+        "c_flag"
+        flag1-id
+        {"ClosedAt" 0})
+      (is (zero? (count (db-late-flag-group *db* now+2delay)))))))

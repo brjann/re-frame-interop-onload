@@ -92,7 +92,7 @@ SELECT
   cga.ObjectId AS `group-administration-id`,
 	cpa.Assessment AS `assessment-id`,
   cpa.AssessmentIndex AS `assessment-index`,
-  cf.ObjectId
+  cf.ObjectId AS `flag-id`
 FROM
 	c_participant AS cp
     JOIN c_participantadministration AS cpa
@@ -105,7 +105,11 @@ FROM
 	JOIN c_assessment AS ca
 		ON cpa.Assessment = ca.ObjectId
 	LEFT JOIN c_flag AS cf
-	  ON (cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer)
+	  ON cf.ObjectId =
+	    (SELECT ObjectId
+	    FROM c_flag AS cfx
+	    WHERE (cpa.ObjectId = cfx.ReferenceId AND cfx.Issuer = :issuer)
+	    ORDER BY cfx.ClosedAt > 0, cfx.ClosedAt DESC LIMIT 1)
 WHERE
 	ca.Scope = 0
   AND (ca.FlagParticipantWhenLate = 1)
@@ -141,7 +145,11 @@ FROM
 	JOIN c_assessment AS ca
 		ON cga.Assessment = ca.ObjectId
 	LEFT JOIN c_flag AS cf
-	  ON (cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer)
+	  ON cf.ObjectId =
+	    (SELECT ObjectId
+	    FROM c_flag AS cfx
+	    WHERE (cpa.ObjectId = cfx.ReferenceId AND cfx.Issuer = :issuer)
+	    ORDER BY cfx.ClosedAt > 0, cfx.ClosedAt DESC LIMIT 1)
 WHERE
 	ca.Scope = 1
   AND (ca.FlagParticipantWhenLate = 1)
