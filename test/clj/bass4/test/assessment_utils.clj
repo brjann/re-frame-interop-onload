@@ -172,7 +172,7 @@
                  (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE ParentInterface IN(?, ?)")
                        [project-ass1-id project-ass2-id]))
   (jdbc/execute! db/*db*
-                 (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (?, ?)")
+                 (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE ParentInterface IN (?, ?)")
                        [project-ass1-id project-ass2-id])))
 
 (def ^:dynamic *now*)

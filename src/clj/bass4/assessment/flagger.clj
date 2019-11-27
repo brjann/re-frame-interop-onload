@@ -12,7 +12,8 @@
 (defn- db-late-flag-participant-administrations
   [db date]
   (db/get-late-flag-participant-administrations db {:date           date
-                                                    :oldest-allowed (t/minus date (t/days oldest-allowed))}))
+                                                    :oldest-allowed (t/minus date (t/days oldest-allowed))
+                                                    :issuer         flag-issuer}))
 
 (defn- db-late-flag-group-administrations
   [db date]
@@ -64,11 +65,12 @@
   (let [potentials (->> (potential-flag-assessments db now)
                         (map #(assoc % ::assessment-reminder/remind-type ::flag)))
         ongoing    (when (seq potentials)
-                     (assessment-reminder/ongoing-reminder-assessments db now potentials))
-        flag-ids   (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count ongoing))]
-    (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
-      (create-flag! db
-                    now
-                    flag-id
-                    assessment))
+                     (assessment-reminder/ongoing-reminder-assessments db now potentials))]
+    (when (seq ongoing)
+      (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count ongoing))]
+        (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
+          (create-flag! db
+                        now
+                        flag-id
+                        assessment))))
     ongoing))

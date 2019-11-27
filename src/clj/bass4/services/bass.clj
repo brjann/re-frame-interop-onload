@@ -33,12 +33,13 @@
 
 (defn create-bass-objects-without-parent*!
   [db class-name property-name count]
-  (let [last-object-id (:objectid (db/create-bass-objects-without-parent!
-                                    db
-                                    {:class-name    class-name
-                                     :property-name property-name
-                                     :count         count}))]
-    (range (inc (- last-object-id count)) (inc last-object-id))))
+  (when (not (utils/nil-zero? count))
+    (let [last-object-id (:objectid (db/create-bass-objects-without-parent!
+                                      db
+                                      {:class-name    class-name
+                                       :property-name property-name
+                                       :count         count}))]
+      (range (inc (- last-object-id count)) (inc last-object-id)))))
 
 ;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!

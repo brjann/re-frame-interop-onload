@@ -54,6 +54,22 @@
       user-id2 assessment-id 1 {"DateCompleted" 1})
     (is (= 2 (count (db-late-flag-group *db* *now*))))))
 
+(deftest flag-participant-administration
+  (let [user-id1      (user-service/create-user! project-ass1-id)
+        user-id2      (user-service/create-user! project-ass1-id)
+        assessment-id (create-assessment! {"Scope"                   0
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5})]
+    (create-participant-administration!
+      user-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (create-participant-administration!
+      user-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (is (= #{[user-id1 assessment-id 1]
+             [user-id2 assessment-id 1]}
+           (flag!-flags-created *now*)))
+    (is (= #{}
+           (flag!-flags-created *now*)))))
+
 (deftest flag-group-administration
   (let [group-id      (create-group!)
         user-id1      (user-service/create-user! project-ass1-id {:group group-id})
@@ -67,4 +83,6 @@
         user-id2 assessment-id 1 {"DateCompleted" 1})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
-           (flag!-flags-created *now*)))))
+           (flag!-flags-created *now*)))
+    #_(is (= #{}
+             (flag!-flags-created *now*)))))
