@@ -1,6 +1,7 @@
 (ns bass4.test.assessment-flagger
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
+            [clojure.core.async :refer [chan go-loop <!]]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.flagger :as assessment-flagger]
@@ -9,7 +10,8 @@
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.utils :as utils]))
 
 (use-fixtures
   :once
@@ -71,16 +73,25 @@
            (flag!-flags-created *now*)))))
 
 (deftest flag-group-administration
-  (let [group-id      (create-group!)
+  (let [c             (chan)
+        created-flags (atom {})
+        group-id      (create-group!)
         user-id1      (user-service/create-user! project-ass1-id {:group group-id})
         user-id2      (user-service/create-user! project-ass1-id {:group group-id})
         assessment-id (create-assessment! {"Scope"                   1
                                            "FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})]
+    (go-loop [[user-id flag-id] (<! c)]
+      (utils/swap-key!
+        created-flags
+        user-id
+        #(conj % flag-id)
+        [flag-id]))
     (create-group-administration!
       group-id assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now*)))
     (is (= #{}
-           (flag!-flags-created *now*)))))
+           (flag!-flags-created *now*)))
+    (log/debug @created-flags)))
