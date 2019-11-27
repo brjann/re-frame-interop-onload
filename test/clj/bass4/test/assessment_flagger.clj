@@ -149,3 +149,21 @@
         flag1-id
         {"ClosedAt" 0})
       (is (zero? (count (db-late-flag-group *db* now+2delay)))))))
+
+(deftest db-flag-manual-group-administration
+  (let [group-id1     (create-group!)
+        user-id1      (user-service/create-user! project-ass1-id {:group group-id1})
+        user-id2      (user-service/create-user! project-ass1-id {:group group-id1})
+        assessment-id (create-assessment! {"RepetitionType"          2
+                                           "Repetitions"             2
+                                           "Scope"                   1
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5})]
+    (create-group-administration!
+      group-id1 assessment-id 1 {:date (midnight+d -10 *now*)})
+    (create-group-administration!
+      group-id1 assessment-id 2 {:date (midnight+d -5 *now*)})
+    (log/debug (map :user-id (db-late-flag-group *db* *now*)))
+    (is (= #{[user-id1 assessment-id 2]
+             [user-id2 assessment-id 2]}
+           (flag!-flags-created *now*)))))
