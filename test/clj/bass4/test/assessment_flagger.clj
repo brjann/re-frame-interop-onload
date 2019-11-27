@@ -79,10 +79,8 @@
                                            "DayCountUntilLate"       5})]
     (create-group-administration!
       group-id assessment-id 1 {:date (midnight+d -5 *now*)})
-    #_(create-participant-administration!
-        user-id2 assessment-id 1 {"DateCompleted" 1})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now*)))
-    #_(is (= #{}
-             (flag!-flags-created *now*)))))
+    (is (= #{}
+           (flag!-flags-created *now*)))))

@@ -135,10 +135,13 @@ FROM
 			cpa.AssessmentIndex = cga.AssessmentIndex
 	JOIN c_assessment AS ca
 		ON cga.Assessment = ca.ObjectId
+	LEFT JOIN c_flag AS cf
+	  ON (cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer)
 WHERE
 	ca.Scope = 1
   AND (ca.FlagParticipantWhenLate = 1)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
   AND from_unixtime(cga.Date) >= :oldest-allowed
-  AND date_add(from_unixtime(cga.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date;
+  AND date_add(from_unixtime(cga.`date`), INTERVAL ca.DayCountUntilLate DAY) <= :date
+  AND (cf.ObjectId IS NULL);

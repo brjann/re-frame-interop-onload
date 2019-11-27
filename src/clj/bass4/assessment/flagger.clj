@@ -4,7 +4,8 @@
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
             [clojure.tools.logging :as log]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.assessment.create-missing :as missing]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
@@ -18,7 +19,8 @@
 (defn- db-late-flag-group-administrations
   [db date]
   (db/get-late-flag-group-administrations db {:date           date
-                                              :oldest-allowed (t/minus date (t/days oldest-allowed))}))
+                                              :oldest-allowed (t/minus date (t/days oldest-allowed))
+                                              :issuer         flag-issuer}))
 
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
@@ -65,7 +67,8 @@
   (let [potentials (->> (potential-flag-assessments db now)
                         (map #(assoc % ::assessment-reminder/remind-type ::flag)))
         ongoing    (when (seq potentials)
-                     (assessment-reminder/ongoing-reminder-assessments db now potentials))]
+                     (->> (assessment-reminder/ongoing-reminder-assessments db now potentials)
+                          (missing/add-missing-administrations! db)))]
     (when (seq ongoing)
       (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count ongoing))]
         (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
