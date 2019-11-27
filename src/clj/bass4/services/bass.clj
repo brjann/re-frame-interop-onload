@@ -45,15 +45,22 @@
   [class-name property-name count]
   (create-bass-objects-without-parent*! db/*db* class-name property-name count))
 
-(defn update-object-properties!
+(defn update-object-properties*!
   "Allows for updating object properties using strings as field names to
   avoid cluttering the keyword namespace."
-  [table-name object-id updates]
-  (db/update-object-properties! {:table-name table-name
+  [db table-name object-id updates]
+  (db/update-object-properties! db
+                                {:table-name table-name
                                  :object-id  object-id
                                  :updates    (into {}
                                                    (map (fn [[k v]] [(keyword k) v])
                                                         updates))}))
+
+(defn update-object-properties!
+  "Allows for updating object properties using strings as field names to
+  avoid cluttering the keyword namespace."
+  [table-name object-id updates]
+  (update-object-properties*! db/*db* table-name object-id updates))
 
 (defn create-flag!
   ([user-id issuer flag-text] (create-flag! user-id issuer flag-text ""))

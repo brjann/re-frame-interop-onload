@@ -60,7 +60,8 @@
                                                           :property-name "Assessments"}))]
     (bass/update-object-properties! "c_assessment"
                                     assessment-id
-                                    (merge {"ShuffleInstruments"                       0
+                                    (merge {"Name"                                     (str "Assessment " assessment-id)
+                                            "ShuffleInstruments"                       0
                                             "Scope"                                    0
                                             "Type"                                     ""
                                             "RepetitionType"                           0

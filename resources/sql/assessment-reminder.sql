@@ -199,6 +199,7 @@ WHERE (cga.ParentId, cga.Assessment, ca.ParentId) IN (:t*:group-ids+assessment-i
 -- :doc
 SELECT
     ObjectId AS `assessment-id`,
+    `Name` AS `assessment-name`,
     scope,
     (CASE
      WHEN RepetitionType = 2 OR Type = "PUNKT"
