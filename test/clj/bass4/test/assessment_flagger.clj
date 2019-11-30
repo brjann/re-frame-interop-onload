@@ -87,8 +87,8 @@
       (is (= #{[user-id1 assessment-id 1]}
              (flag!-flags-created
                now+1delay
-               #_created-flags
-               #_1)))
+               created-flags
+               1)))
       (is (= #{}
              (flag!-flags-created
                now+1delay)))
@@ -121,7 +121,7 @@
       group assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
-           (flag!-flags-created *now* created-flags)))
+           (flag!-flags-created *now* created-flags 2)))
     (is (= #{}
            (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
@@ -133,8 +133,9 @@
       (reset! created-flags {})
       (is (= #{[user-id1 assessment-id 1]}
              (flag!-flags-created
-               (t/plus *now* (t/days assessment-flagger/reflag-delay))
-               created-flags)))
+               now+1delay
+               created-flags
+               1)))
       (is (= #{}
              (flag!-flags-created
                now+1delay)))
@@ -164,7 +165,6 @@
       group-id1 assessment-id 1 {:date (midnight+d -10 *now*)})
     (create-group-administration!
       group-id1 assessment-id 2 {:date (midnight+d -5 *now*)})
-    (log/debug (map :user-id (db-late-flag-group *db* *now*)))
     (is (= #{[user-id1 assessment-id 2]
              [user-id2 assessment-id 2]}
            (flag!-flags-created *now*)))))

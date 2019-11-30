@@ -287,10 +287,9 @@
                           res (binding [assessment-flagger/*create-flag-chan* c]
                                 (assessment-flagger/flag-late-assessments! *db* now))]
                       (dotimes [n flag-count]
-                        (let [[user-id flag-id] (alts!! [c (timeout 1000)])]
-                          (if (nil? user-id)
-                            (log/debug (str "Timeout " n))
-                            (log/debug (str "OK " n)))
+                        (let [[[user-id flag-id] _] (alts!! [c (timeout 1000)])]
+                          (when (nil? user-id)
+                            (throw (Exception. (str "Flag " n " timed out"))))
                           (utils/swap-key!
                             created-atom
                             user-id
