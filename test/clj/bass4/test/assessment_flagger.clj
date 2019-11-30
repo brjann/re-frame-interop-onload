@@ -74,7 +74,7 @@
       user-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
-           (flag!-flags-created *now* created-flags)))
+           (flag!-flags-created *now* created-flags 2)))
     (is (= #{}
            (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
@@ -86,8 +86,9 @@
       (reset! created-flags {})
       (is (= #{[user-id1 assessment-id 1]}
              (flag!-flags-created
-               (t/plus *now* (t/days assessment-flagger/reflag-delay))
-               created-flags)))
+               now+1delay
+               #_created-flags
+               #_1)))
       (is (= #{}
              (flag!-flags-created
                now+1delay)))
@@ -104,7 +105,7 @@
         {"ClosedAt" 0})
       (is (zero? (count (db-late-flag-participant *db* now+2delay)))))))
 
-(deftest flag-participant-administration+reflag
+(deftest flag-group-administration+reflag
   (let [created-flags (atom {})
         group         (create-group!)
         user-id1      (user-service/create-user! project-ass1-id {:group group})

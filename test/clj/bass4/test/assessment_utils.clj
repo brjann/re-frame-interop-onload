@@ -277,21 +277,24 @@
                  (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
 
 (defn flag!-flags-created
-  ([now] (flag!-flags-created now nil))
-  ([now created-atom]
+  ([now] (flag!-flags-created now nil nil))
+  ([now created-atom flag-count]
    (into #{} (map #(utils/select-values % [:user-id
                                            :assessment-id
                                            :assessment-index])
                   (if created-atom
-                    (let [c (chan)]
-                      (go-loop []
-                        (let [[user-id flag-id] (<! c)]
+                    (let [c   (chan flag-count)
+                          res (binding [assessment-flagger/*create-flag-chan* c]
+                                (assessment-flagger/flag-late-assessments! *db* now))]
+                      (dotimes [n flag-count]
+                        (let [[user-id flag-id] (alts!! [c (timeout 1000)])]
+                          (if (nil? user-id)
+                            (log/debug (str "Timeout " n))
+                            (log/debug (str "OK " n)))
                           (utils/swap-key!
                             created-atom
                             user-id
                             #(conj % flag-id)
-                            []))
-                        (recur))
-                      (binding [assessment-flagger/*create-flag-chan* c]
-                        (assessment-flagger/flag-late-assessments! *db* now)))
+                            [])))
+                      res)
                     (assessment-flagger/flag-late-assessments! *db* now))))))

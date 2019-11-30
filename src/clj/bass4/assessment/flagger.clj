@@ -73,6 +73,7 @@
         ongoing    (when (seq potentials)
                      (->> (assessment-reminder/ongoing-reminder-assessments db now potentials)
                           (missing/add-missing-administrations! db)))]
+    (log/debug "Ongoing" (count ongoing))
     (when (seq ongoing)
       (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count ongoing))]
         (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
