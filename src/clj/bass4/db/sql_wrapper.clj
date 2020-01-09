@@ -55,7 +55,7 @@
 
 (defn sql-wrapper
   [f this db sqlvec options]
-  (let [max-tries 5
+  (let [max-tries 10
         query     #(apply f [this db sqlvec options])
         {:keys [val time]} (utils/time+ (try
                                           (try-query query max-tries)
@@ -82,7 +82,7 @@
       (log/info (pr-str val)))
     (when error?
       (throw val))
-    (when (and (< 1 tries) *email-deadlock*)
+    (when (and (< 5 tries) *email-deadlock*)
       (email/async-email!
         db/*db*
         (config/env :error-email)
