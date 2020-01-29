@@ -80,7 +80,7 @@
             ;; Need to dynamically handle ssl mode to be able to run tests within IDE
             ssl?            (if config/test-mode?
                               false
-                              (config/env :ssl))
+                              (true? (config/env :ssl)))
             key             [cookie-name ssl?]
             session-handler (if (contains? @db-session-handlers key)
                               (get @db-session-handlers key)
