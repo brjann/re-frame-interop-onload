@@ -95,8 +95,9 @@
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
       (bass-service/update-object-properties! "c_flag"
                                               flag1-id
-                                              {"ClosedAt" 0})
-      (is (zero? (count (db-late-flag-participant *db* now+2delay)))))))
+                                              {"ReflagDelay" (dec assessment-flagger/reflag-delay)})
+      (is (= 1 (count (flag!-flags-created now+2delay-1))))
+      (is (= 2 (flag-comment-count flag1-id))))))
 
 (deftest flag-group-administration+reflag
   (let [created-flags (atom {})
@@ -138,8 +139,9 @@
       (is (= 1 (count (db-late-flag-group *db* now+2delay))))
       (bass-service/update-object-properties! "c_flag"
                                               flag1-id
-                                              {"ClosedAt" 0})
-      (is (zero? (count (db-late-flag-group *db* now+2delay)))))))
+                                              {"ReflagDelay" (dec assessment-flagger/reflag-delay)})
+      (is (= 1 (count (flag!-flags-created now+2delay-1))))
+      (is (= 2 (flag-comment-count flag1-id))))))
 
 (deftest db-flag-manual-group-administration
   (let [group-id1     (create-group!)
