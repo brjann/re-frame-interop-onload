@@ -8,7 +8,7 @@
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
-(def flag-reopen-text "Flag reopened by Flagger")
+(def flag-reopen-text "Automatically reopened by Flagger")
 (def reflag-delay 7)
 
 (defn- db-late-flag-participant-administrations
