@@ -24,6 +24,11 @@
                                               :oldest-allowed (t/minus date (t/days oldest-allowed))
                                               :issuer         flag-issuer}))
 
+(defn- db-reopen-flags!
+  [db flag-ids]
+  (when (seq flag-ids)
+    (db/reopen-flags db {:flag-ids flag-ids})))
+
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
   {:user-id 653692,
@@ -35,6 +40,7 @@
   [db now]
   (let [participant-administrations (db-late-flag-participant-administrations db now)
         group-administration        (db-late-flag-group-administrations db now)]
+    (log/debug "BEFORE" (map (juxt :flag-id :participant-administration-id) participant-administrations))
     (concat participant-administrations
             group-administration)))
 
@@ -71,15 +77,21 @@
   (let [potentials (->> (potential-flag-assessments db now)
                         (map #(assoc % ::assessment-reminder/remind-type ::flag)))
         ongoing    (when (seq potentials)
-                     (->> (assessment-reminder/ongoing-reminder-assessments db now potentials)
+                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                           (missing/add-missing-administrations! db)))]
-    (when (seq ongoing)
-      (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count ongoing))]
-        (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
-          (when *create-flag-chan*
-            (put! *create-flag-chan* [(:user-id assessment) flag-id]))
-          (create-flag! db
-                        now
-                        flag-id
-                        assessment))))
+    (let [[have-flags need-flags] (split-with :flag-id ongoing)]
+      (when (seq need-flags)
+        (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count need-flags))]
+          (doseq [[assessment flag-id] (partition 2 (interleave need-flags flag-ids))]
+            (when *create-flag-chan*
+              (put! *create-flag-chan* [(:user-id assessment) flag-id]))
+            (create-flag! db
+                          now
+                          flag-id
+                          assessment))))
+      (when (seq have-flags)
+        (db-reopen-flags! db (map :flag-id have-flags))
+        (when *create-flag-chan*
+          (doseq [{:keys [flag-id user-id]} have-flags]
+            (put! *create-flag-chan* [user-id flag-id])))))
     ongoing))

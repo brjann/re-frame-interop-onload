@@ -133,7 +133,8 @@ SELECT
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cga.Assessment AS `assessment-id`,
-  cga.AssessmentIndex AS `assessment-index`
+  cga.AssessmentIndex AS `assessment-index`,
+  cf.ObjectId AS `flag-id`
 FROM
 	c_participant AS cp
   JOIN c_groupadministration as cga
@@ -163,3 +164,12 @@ WHERE
       (cf.ReflagPossible = 1
       AND cf.ClosedAt > 0
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
+
+
+-- :name reopen-flags! :! :*
+-- :doc
+UPDATE c_flag
+SET
+  `Open` = 1,
+  `ClosedAt` = 0
+WHERE ObjectId IN(:v*:flag-ids);

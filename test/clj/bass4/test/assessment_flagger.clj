@@ -92,11 +92,10 @@
       (is (= #{}
              (flag!-flags-created
                now+1delay)))
-      (let [flag2-id (first (get @created-flags user-id1))]
-        (bass-service/update-object-properties!
-          "c_flag"
-          flag2-id
-          {"ClosedAt" (b-time/to-unix now+1delay)}))
+      (bass-service/update-object-properties!
+        "c_flag"
+        flag1-id
+        {"ClosedAt" (b-time/to-unix now+1delay)})
       (is (zero? (count (db-late-flag-participant *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
       (bass-service/update-object-properties!

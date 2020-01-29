@@ -245,7 +245,9 @@
                                                  (map #(merge % (get assessments' (:assessment-id %)))))]
     ongoing-assessments))
 
-(defn ongoing-reminder-assessments
+(defn filter-ongoing-assessments
+  "Receives a sequence of potentially ongoing assessments
+  and returns the ones that are actually ongoing."
   [db now potentials]
   (when (seq potentials)
     (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
@@ -258,8 +260,9 @@
                                                                               [(:user-id ongoing)
                                                                                (:assessment-id ongoing)
                                                                                (:assessment-index ongoing)])]
-                                                           (assoc ongoing ::remind-type (::remind-type potential)))))
-                                                  (filter ::remind-type))]
+                                                           (when potential
+                                                             (merge ongoing potential)))))
+                                                  (filter identity))]
       filtered-ongoing-potentials)))
 
 (defn- add-late-remind-number-fn
@@ -296,7 +299,7 @@
         potential-late        (potential-late-reminders db now)
         reminders-by-type     (->> (concat potential-activations
                                            potential-late)
-                                   (ongoing-reminder-assessments db now)
+                                   (filter-ongoing-assessments db now)
                                    (group-by ::remind-type))
         remind-activation     (::activation reminders-by-type)
         remind-late           (->> (::late reminders-by-type)
