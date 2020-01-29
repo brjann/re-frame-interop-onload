@@ -177,3 +177,50 @@
     (is (= #{[user-id1 assessment-id 2]
              [user-id2 assessment-id 2]}
            (flag!-flags-created *now*)))))
+
+(deftest flag-participant-administration+deflag
+  (let [created-flags (atom {})
+        user-id1      (user-service/create-user! project-ass1-id)
+        user-id2      (user-service/create-user! project-ass1-id)
+        assessment-id (create-assessment! {"Scope"                   0
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5
+                                           "TimeLimit"               20})]
+    (create-participant-administration!
+      user-id1 assessment-id 1 {:date (midnight+d -6 *now*)})
+    (create-participant-administration!
+      user-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (is (= #{[user-id1 assessment-id 1]
+             [user-id2 assessment-id 1]}
+           (flag!-flags-created *now* created-flags 2)))
+    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))
+    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))))
+
+(deftest flag-participant-administration+deflag-inactive
+  (let [created-flags     (atom {})
+        user-id1          (user-service/create-user! project-ass1-id)
+        assessment-id     (create-assessment! {"Scope"                   0
+                                               "FlagParticipantWhenLate" 1
+                                               "DayCountUntilLate"       5
+                                               "TimeLimit"               20})
+        administration-id (create-participant-administration!
+                            user-id1 assessment-id 1 {:date (midnight+d -6 *now*)})]
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag!-flags-created *now* created-flags 1)))
+    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
+    (bass/update-object-properties*! *db*
+                                     "c_participantadministration"
+                                     administration-id
+                                     {"active" 0})
+    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
+    (bass/update-object-properties*! *db*
+                                     "c_participantadministration"
+                                     administration-id
+                                     {"active" 1})
+    (is (= #{}
+           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))

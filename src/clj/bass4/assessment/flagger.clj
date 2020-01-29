@@ -40,9 +40,12 @@
                                   :comment-text    comment-text})))
 
 (defn db-close-administration-late-flags!
-  [db now administration-ids]
+  [db now administration-ids reflag-possible?]
   (when (seq administration-ids)
-    (db/close-administration-late-flags! db {:administration-ids administration-ids :issuer flag-issuer :now now})))
+    (db/close-administration-late-flags! db {:administration-ids administration-ids
+                                             :issuer             flag-issuer
+                                             :now                now
+                                             :reflag-possible?   reflag-possible?})))
 
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
@@ -120,9 +123,7 @@
 
 (defn flag-late-assessments!
   [db now]
-  (let [potentials (->> (potential-flag-assessments db now)
-                        ;; TODO: Remove this line
-                        (map #(assoc % ::assessment-reminder/remind-type ::flag)))
+  (let [potentials (potential-flag-assessments db now)
         ongoing    (when (seq potentials)
                      (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                           (missing/add-missing-administrations! db)))]
@@ -144,5 +145,8 @@
                              (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
-    (db-close-administration-late-flags! db now (map :participant-administration-id inactive))
+    (db-close-administration-late-flags! db
+                                         now
+                                         (map :participant-administration-id inactive)
+                                         true)
     inactive))

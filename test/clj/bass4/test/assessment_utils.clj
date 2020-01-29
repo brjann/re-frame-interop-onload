@@ -173,7 +173,8 @@
                        [project-ass1-id project-ass2-id]))
   (jdbc/execute! db/*db*
                  (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE ParentInterface IN (?, ?)")
-                       [project-ass1-id project-ass2-id])))
+                       [project-ass1-id project-ass2-id]))
+  (jdbc/execute! db/*db* [(str "TRUNCATE c_flag")]))
 
 (def ^:dynamic *now*)
 (def ^:dynamic *tz*)

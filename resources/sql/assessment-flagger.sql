@@ -223,5 +223,5 @@ ON DUPLICATE KEY UPDATE
 UPDATE c_flag SET
   ClosedAt = unix_timestamp(:now),
   Open = 0,
-  ReflagPossible = 0
+  ReflagPossible = :reflag-possible?
 WHERE Issuer = :issuer AND ReferenceId IN(:v*:administration-ids)
