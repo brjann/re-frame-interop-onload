@@ -75,7 +75,7 @@ WHERE
 
 
 -- -------------------------
---     LATE ASSESSMENTS
+--   LATE FLAG ASSESSMENTS
 -- -------------------------
 
 -- :name get-late-flag-participant-administrations :? :*
@@ -166,7 +166,7 @@ WHERE
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
 
--- :name reopen-flags! :! :*
+-- :name reopen-flags! :! :n
 -- :doc
 INSERT INTO c_flag
 (`ObjectId`, `FlagText`)
@@ -177,7 +177,7 @@ ON DUPLICATE KEY UPDATE
   `FlagText` = VALUES(`FlagText`);
 
 
--- :name reopen-flag-comments! :! :*
+-- :name reopen-flag-comments! :! :n
 -- :doc
 INSERT INTO c_comment
 (`ObjectId`, `ParentId`)
@@ -185,3 +185,12 @@ VALUES :t*:comment-parents
 ON DUPLICATE KEY UPDATE
   `Text` = :comment-text,
   `ParentId` = VALUES(`ParentId`);
+
+
+-- :name close-administration-late-flags! :! :n
+-- :doc
+UPDATE c_flag SET
+  ClosedAt = unix_timestamp(:now),
+  Open = 0,
+  ReflagPossible = 0
+WHERE Issuer = :issuer AND ReferenceId IN(:v*:administration-ids)

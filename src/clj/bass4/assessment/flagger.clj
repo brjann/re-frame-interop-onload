@@ -34,6 +34,11 @@
     (db/reopen-flag-comments! db {:comment-parents flag-parents
                                   :comment-text    comment-text})))
 
+(defn db-close-administration-late-flags!
+  [db now administration-ids]
+  (when (seq administration-ids)
+    (db/close-administration-late-flags! db {:administration-ids administration-ids :issuer flag-issuer :now now})))
+
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
   {:user-id 653692,

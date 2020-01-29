@@ -13,7 +13,8 @@
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [bass4.services.bass :as bass-service]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [bass4.assessment.administration :as administration]))
 
 (use-fixtures
   :once
@@ -40,6 +41,23 @@
       user-id3 assessment-id 1 {"Date"          (midnight+d -5 *now*)
                                 "DateCompleted" 1})
     (is (= 2 (count (db-late-flag-participant *db* *now*))))))
+
+(deftest db-flag-participant-administration-completed
+  (let [created-flags     (atom {})
+        user-id1          (user-service/create-user! project-ass1-id)
+        assessment-id     (create-assessment! {"FlagParticipantWhenLate" 1
+                                               "DayCountUntilLate"       5})
+        administration-id (create-participant-administration!
+                            user-id1 assessment-id 1 {"Date" (midnight+d -5 *now*)})]
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag!-flags-created *now* created-flags 1)))
+    (administration/set-administrations-completed! user-id1 [administration-id])
+    (is (< 0 (-> (jdbc/query *db* ["SELECT ClosedAt FROM c_flag WHERE ObjectId = ?" (-> @created-flags
+                                                                                        (vals)
+                                                                                        (ffirst))])
+                 (first)
+                 (vals)
+                 (first))))))
 
 (deftest db-flag-group-administration
   (let [group-id1     (create-group!)
