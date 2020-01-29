@@ -175,3 +175,13 @@ ON DUPLICATE KEY UPDATE
   `Open` = 1,
   `ClosedAt` = 0,
   `FlagText` = VALUES(`FlagText`);
+
+
+-- :name reopen-flag-comments! :! :*
+-- :doc
+INSERT INTO c_comment
+(`ObjectId`, `ParentId`)
+VALUES :t*:comment-parents
+ON DUPLICATE KEY UPDATE
+  `Text` = :comment-text,
+  `ParentId` = VALUES(`ParentId`);

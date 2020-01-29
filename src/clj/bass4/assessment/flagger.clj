@@ -4,12 +4,11 @@
             [bass4.db.core :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
-            [clojure.tools.logging :as log]
-            [bass4.time :as b-time]
             [bass4.assessment.create-missing :as missing]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
+(def flag-reopen-text "Flag reopened by Flagger")
 (def reflag-delay 7)
 
 (defn- db-late-flag-participant-administrations
@@ -28,6 +27,12 @@
   [db flag-texts]
   (when (seq flag-texts)
     (db/reopen-flags! db {:flag-texts flag-texts})))
+
+(defn- db-reopen-flag-comments!
+  [db flag-parents comment-text]
+  (when (seq flag-parents)
+    (db/reopen-flag-comments! db {:comment-parents flag-parents
+                                  :comment-text    comment-text})))
 
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
@@ -101,7 +106,9 @@
                                                                      "cComment"
                                                                      "Comments"
                                                                      (count have-flags))]
-          )
+          (db-reopen-flag-comments! db
+                                    (map #(vector %1 (:flag-id %2)) comment-ids have-flags)
+                                    flag-reopen-text))
         (when *create-flag-chan*
           (doseq [{:keys [flag-id user-id]} have-flags]
             (put! *create-flag-chan* [user-id flag-id])))))

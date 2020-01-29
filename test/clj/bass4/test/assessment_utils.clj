@@ -297,3 +297,10 @@
                             [])))
                       res)
                     (assessment-flagger/flag-late-assessments! *db* now))))))
+
+(defn flag-comment-count
+  [flag-id]
+  (-> (jdbc/query *db* ["SELECT count(*) FROM c_comment WHERE ParentId = ?" flag-id])
+      (first)
+      (vals)
+      (first)))

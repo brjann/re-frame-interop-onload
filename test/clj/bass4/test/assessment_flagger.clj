@@ -12,7 +12,8 @@
             [bass4.time :as b-time]
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
-            [bass4.services.bass :as bass-service]))
+            [bass4.services.bass :as bass-service]
+            [clojure.java.jdbc :as jdbc]))
 
 (use-fixtures
   :once
@@ -85,6 +86,7 @@
              (flag!-flags-created now+1delay
                                   created-flags
                                   1)))
+      (is (= 1 (flag-comment-count flag1-id)))
       (is (= #{} (flag!-flags-created now+1delay)))
       (bass-service/update-object-properties! "c_flag"
                                               flag1-id
@@ -126,6 +128,7 @@
              (flag!-flags-created now+1delay
                                   created-flags
                                   1)))
+      (is (= 1 (flag-comment-count flag1-id)))
       (is (= #{} (flag!-flags-created now+1delay)))
       (let [flag2-id (first (get @created-flags user-id1))]
         (bass-service/update-object-properties! "c_flag"
