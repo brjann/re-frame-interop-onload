@@ -80,6 +80,34 @@
 
 (def ^:dynamic *create-flag-chan* nil)
 
+(defn reopen-flags!
+  [db now have-flags]
+  (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) have-flags))
+  (let [comment-ids (bass/create-bass-objects-without-parent*! db
+                                                               "cComment"
+                                                               "Comments"
+                                                               (count have-flags))]
+    (db-reopen-flag-comments! db
+                              (map #(vector %1 (:flag-id %2)) comment-ids have-flags)
+                              flag-reopen-text))
+  (when *create-flag-chan*
+    (doseq [{:keys [flag-id user-id]} have-flags]
+      (put! *create-flag-chan* [user-id flag-id]))))
+
+(defn- new-flags!
+  [db now need-flags]
+  (let [flag-ids (bass/create-bass-objects-without-parent*! db
+                                                            "cFlag"
+                                                            "Flags"
+                                                            (count need-flags))]
+    (doseq [[assessment flag-id] (partition 2 (interleave need-flags flag-ids))]
+      (create-flag! db
+                    now
+                    flag-id
+                    assessment)
+      (when *create-flag-chan*
+        (put! *create-flag-chan* [(:user-id assessment) flag-id])))))
+
 (defn flag-late-assessments!
   [db now]
   (let [potentials (->> (potential-flag-assessments db now)
@@ -88,28 +116,8 @@
                      (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                           (missing/add-missing-administrations! db)))]
     (let [[have-flags need-flags] (split-with :flag-id ongoing)]
-      (when (seq need-flags)
-        (let [flag-ids (bass/create-bass-objects-without-parent*! db
-                                                                  "cFlag"
-                                                                  "Flags"
-                                                                  (count need-flags))]
-          (doseq [[assessment flag-id] (partition 2 (interleave need-flags flag-ids))]
-            (when *create-flag-chan*
-              (put! *create-flag-chan* [(:user-id assessment) flag-id]))
-            (create-flag! db
-                          now
-                          flag-id
-                          assessment))))
       (when (seq have-flags)
-        (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) have-flags))
-        (let [comment-ids (bass/create-bass-objects-without-parent*! db
-                                                                     "cComment"
-                                                                     "Comments"
-                                                                     (count have-flags))]
-          (db-reopen-flag-comments! db
-                                    (map #(vector %1 (:flag-id %2)) comment-ids have-flags)
-                                    flag-reopen-text))
-        (when *create-flag-chan*
-          (doseq [{:keys [flag-id user-id]} have-flags]
-            (put! *create-flag-chan* [user-id flag-id])))))
+        (reopen-flags! db now have-flags))
+      (when (seq need-flags)
+        (new-flags! db now need-flags)))
     ongoing))
