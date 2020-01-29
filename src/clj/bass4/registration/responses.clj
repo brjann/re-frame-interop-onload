@@ -350,14 +350,16 @@
                                     :captcha-tries     0}))))
 
 (defn- captcha-page
-  [project-id filename]
+  [project-id filename digits]
   (let [content (reg-service/captcha-content project-id)]
     (render-page project-id
                  "registration-captcha.html"
                  (merge
                    content
                    {:project-id project-id
-                    :filename   filename}))))
+                    :filename   filename}
+                   (when (db-config/debug-mode?)
+                     {:digits digits})))))
 
 (def ^:const const-captcha-tries 5)
 (def ^:const const-captcha-timeout 60)
@@ -389,7 +391,7 @@
     (http-response/found (str "/registration/" project-id))
     (let [{:keys [filename digits]} (current-captcha session)]
       (if (and filename digits)
-        (captcha-page project-id filename)
+        (captcha-page project-id filename digits)
         (captcha-session project-id session)))))
 
 (defn- inc-tries

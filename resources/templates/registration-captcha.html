@@ -8,6 +8,9 @@
 {{content|safe}}
 {% endif %}
 <p><img src="File.php?uid={{filename}}"></p>
+{% if digits %}
+<p id="captcha-digits">{{digits}}</p>
+{% endif %}
 <form class="form" action="" method="post">
     <div class="alert alert-danger hidden" data-show-on="error" role="alert">
         {%tr registration/captcha-error %}

@@ -69,8 +69,9 @@
                [:headers] #(merge %1
                                   {"Content-Security-Policy"   (str "default-src 'self';"
                                                                     "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
-                                                                    "style-src 'self' 'unsafe-inline';"
-                                                                    "img-src * data:;")
+                                                                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"
+                                                                    "img-src * data:;"
+                                                                    "font-src 'self' https://fonts.gstatic.com;")
                                    "Server"                    ""
                                    "Strict-Transport-Security" "max-age=7776000; includeSubDomains"}))))
 
