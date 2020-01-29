@@ -166,6 +166,37 @@ WHERE
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
 
+-- :name get-open-late-administration-flags :? :*
+-- :doc
+SELECT
+	cp.ObjectId AS `user-id`,
+ (CASE
+   WHEN `Group` IS NULL OR `Group` = 0
+     THEN NULL
+   ELSE
+     `Group`
+   END) AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  cga.ObjectId AS `group-administration-id`,
+	cpa.Assessment AS `assessment-id`,
+  cpa.AssessmentIndex AS `assessment-index`,
+  cf.ObjectId AS `flag-id`
+FROM
+	c_participant AS cp
+    JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid
+	LEFT JOIN c_groupadministration as cga
+		ON
+			cp.Group = cga.ParentId AND
+			((cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex))
+	JOIN c_assessment AS ca
+		ON cpa.Assessment = ca.ObjectId
+	JOIN c_flag AS cf
+	  ON(cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer)
+WHERE
+	cf.ClosedAt = 0;
+
 -- :name reopen-flags! :! :n
 -- :doc
 INSERT INTO c_flag

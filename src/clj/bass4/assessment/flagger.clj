@@ -4,7 +4,8 @@
             [bass4.db.core :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
-            [bass4.assessment.create-missing :as missing]))
+            [bass4.assessment.create-missing :as missing]
+            [clojure.tools.logging :as log]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
@@ -22,6 +23,10 @@
   (db/get-late-flag-group-administrations db {:date           date
                                               :oldest-allowed (t/minus date (t/days oldest-allowed))
                                               :issuer         flag-issuer}))
+
+(defn- db-open-late-administration-flags
+  [db]
+  (db/get-open-late-administration-flags db {:issuer flag-issuer}))
 
 (defn- db-reopen-flags!
   [db flag-texts]
@@ -116,6 +121,7 @@
 (defn flag-late-assessments!
   [db now]
   (let [potentials (->> (potential-flag-assessments db now)
+                        ;; TODO: Remove this line
                         (map #(assoc % ::assessment-reminder/remind-type ::flag)))
         ongoing    (when (seq potentials)
                      (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
@@ -126,3 +132,17 @@
       (when (seq need-flags)
         (new-flags! db now need-flags)))
     ongoing))
+
+(defn deflag-inactive-assessments!
+  [db now]
+  (let [potentials         (->> (db-open-late-administration-flags db)
+                                ;; An administration can have multiple flags. Keep only one.
+                                (map (juxt :participant-administration-id identity))
+                                (into {})
+                                (vals))
+        ongoing-by-flag-id (when (seq potentials)
+                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
+                                  (group-by :flag-id)))
+        inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
+    (db-close-administration-late-flags! db now (map :participant-administration-id inactive))
+    inactive))
