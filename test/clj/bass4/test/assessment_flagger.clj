@@ -75,33 +75,25 @@
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now* created-flags 2)))
-    (is (= #{}
-           (flag!-flags-created *now*)))
+    (is (= #{} (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
       (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
-      (is (= #{}
-             (flag!-flags-created *now*)))
-      (is (= #{}
-             (flag!-flags-created now+1delay-1)))
+      (is (= #{} (flag!-flags-created *now*)))
+      (is (= #{} (flag!-flags-created now+1delay-1)))
       (reset! created-flags {})
       (is (= #{[user-id1 assessment-id 1]}
-             (flag!-flags-created
-               now+1delay
-               created-flags
-               1)))
-      (is (= #{}
-             (flag!-flags-created
-               now+1delay)))
-      (bass-service/update-object-properties!
-        "c_flag"
-        flag1-id
-        {"ClosedAt" (b-time/to-unix now+1delay)})
+             (flag!-flags-created now+1delay
+                                  created-flags
+                                  1)))
+      (is (= #{} (flag!-flags-created now+1delay)))
+      (bass-service/update-object-properties! "c_flag"
+                                              flag1-id
+                                              {"ClosedAt" (b-time/to-unix now+1delay)})
       (is (zero? (count (db-late-flag-participant *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
-      (bass-service/update-object-properties!
-        "c_flag"
-        flag1-id
-        {"ClosedAt" 0})
+      (bass-service/update-object-properties! "c_flag"
+                                              flag1-id
+                                              {"ClosedAt" 0})
       (is (zero? (count (db-late-flag-participant *db* now+2delay)))))))
 
 (deftest flag-group-administration+reflag
@@ -121,38 +113,29 @@
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now* created-flags 2)))
-    (is (= #{}
-           (flag!-flags-created *now*)))
+    (is (= #{} (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties!
-        "c_flag"
-        flag1-id
-        {"ClosedAt"
-         (b-time/to-unix *now*)})
-      (is (= #{}
-             (flag!-flags-created *now*)))
-      (is (= #{}
-             (flag!-flags-created now+1delay-1)))
+      (bass-service/update-object-properties! "c_flag"
+                                              flag1-id
+                                              {"ClosedAt"
+                                               (b-time/to-unix *now*)})
+      (is (= #{} (flag!-flags-created *now*)))
+      (is (= #{} (flag!-flags-created now+1delay-1)))
       (reset! created-flags {})
       (is (= #{[user-id1 assessment-id 1]}
-             (flag!-flags-created
-               now+1delay
-               created-flags
-               1)))
-      (is (= #{}
-             (flag!-flags-created
-               now+1delay)))
+             (flag!-flags-created now+1delay
+                                  created-flags
+                                  1)))
+      (is (= #{} (flag!-flags-created now+1delay)))
       (let [flag2-id (first (get @created-flags user-id1))]
-        (bass-service/update-object-properties!
-          "c_flag"
-          flag2-id
-          {"ClosedAt" (b-time/to-unix now+1delay)}))
+        (bass-service/update-object-properties! "c_flag"
+                                                flag2-id
+                                                {"ClosedAt" (b-time/to-unix now+1delay)}))
       (is (zero? (count (db-late-flag-group *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-group *db* now+2delay))))
-      (bass-service/update-object-properties!
-        "c_flag"
-        flag1-id
-        {"ClosedAt" 0})
+      (bass-service/update-object-properties! "c_flag"
+                                              flag1-id
+                                              {"ClosedAt" 0})
       (is (zero? (count (db-late-flag-group *db* now+2delay)))))))
 
 (deftest db-flag-manual-group-administration

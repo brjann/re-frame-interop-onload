@@ -84,7 +84,10 @@
                           (missing/add-missing-administrations! db)))]
     (let [[have-flags need-flags] (split-with :flag-id ongoing)]
       (when (seq need-flags)
-        (let [flag-ids (bass/create-bass-objects-without-parent*! db "cFlag" "Flags" (count need-flags))]
+        (let [flag-ids (bass/create-bass-objects-without-parent*! db
+                                                                  "cFlag"
+                                                                  "Flags"
+                                                                  (count need-flags))]
           (doseq [[assessment flag-id] (partition 2 (interleave need-flags flag-ids))]
             (when *create-flag-chan*
               (put! *create-flag-chan* [(:user-id assessment) flag-id]))
@@ -94,6 +97,11 @@
                           assessment))))
       (when (seq have-flags)
         (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) have-flags))
+        (let [comment-ids (bass/create-bass-objects-without-parent*! db
+                                                                     "cComment"
+                                                                     "Comments"
+                                                                     (count have-flags))]
+          )
         (when *create-flag-chan*
           (doseq [{:keys [flag-id user-id]} have-flags]
             (put! *create-flag-chan* [user-id flag-id])))))
