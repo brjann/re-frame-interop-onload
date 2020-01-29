@@ -25,9 +25,9 @@
                                               :issuer         flag-issuer}))
 
 (defn- db-reopen-flags!
-  [db flag-ids]
-  (when (seq flag-ids)
-    (db/reopen-flags db {:flag-ids flag-ids})))
+  [db flag-texts]
+  (when (seq flag-texts)
+    (db/reopen-flags! db {:flag-texts flag-texts})))
 
 (defn- potential-flag-assessments
   "Returns list of potentially flag assessments for users
@@ -40,21 +40,24 @@
   [db now]
   (let [participant-administrations (db-late-flag-participant-administrations db now)
         group-administration        (db-late-flag-group-administrations db now)]
-    (log/debug "BEFORE" (map (juxt :flag-id :participant-administration-id) participant-administrations))
     (concat participant-administrations
             group-administration)))
 
+(defn flag-text
+  [now assessment]
+  (let [activation-date (if (= 0 (:scope assessment))
+                          (:participant-activation-date assessment)
+                          (:group-activation-date assessment))]
+    (str "Completion of assessment "
+         (:assessment-name assessment)
+         " is late by "
+         (t/in-days
+           (t/interval activation-date now))
+         " days")))
+
 (defn create-flag!
   [db now flag-id assessment]
-  (let [activation-date   (if (= 0 (:scope assessment))
-                            (:participant-activation-date assessment)
-                            (:group-activation-date assessment))
-        text              (str "Completion of assessment "
-                               (:assessment-name assessment)
-                               " is late by "
-                               (t/in-days
-                                 (t/interval activation-date now))
-                               " days")
+  (let [text              (flag-text now assessment)
         user-id           (:user-id assessment)
         administration-id (:participant-administration-id assessment)]
     (bass/update-object-properties*! db
@@ -90,7 +93,7 @@
                           flag-id
                           assessment))))
       (when (seq have-flags)
-        (db-reopen-flags! db (map :flag-id have-flags))
+        (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) have-flags))
         (when *create-flag-chan*
           (doseq [{:keys [flag-id user-id]} have-flags]
             (put! *create-flag-chan* [user-id flag-id])))))

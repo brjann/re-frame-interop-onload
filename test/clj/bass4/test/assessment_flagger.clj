@@ -124,7 +124,11 @@
     (is (= #{}
            (flag!-flags-created *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
+      (bass-service/update-object-properties!
+        "c_flag"
+        flag1-id
+        {"ClosedAt"
+         (b-time/to-unix *now*)})
       (is (= #{}
              (flag!-flags-created *now*)))
       (is (= #{}

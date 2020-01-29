@@ -168,8 +168,10 @@ WHERE
 
 -- :name reopen-flags! :! :*
 -- :doc
-UPDATE c_flag
-SET
+INSERT INTO c_flag
+(`ObjectId`, `FlagText`)
+VALUES :t*:flag-texts
+ON DUPLICATE KEY UPDATE
   `Open` = 1,
-  `ClosedAt` = 0
-WHERE ObjectId IN(:v*:flag-ids);
+  `ClosedAt` = 0,
+  `FlagText` = VALUES(`FlagText`);
