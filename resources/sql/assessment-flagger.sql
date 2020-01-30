@@ -1,79 +1,3 @@
-
--- ----------------------------------
--- ----------------------------------
--- ------ ASSESSMENTS REMINDER ------
--- ----------------------------------
--- ----------------------------------
-
-
--- -------------------------
---   ACTIVATED ASSESSMENTS
--- -------------------------
-
--- :name XXXget-activated-participant-administrations :? :*
--- :doc
-SELECT
-	cp.ObjectId AS `user-id`,
- (CASE
-   WHEN `Group` IS NULL OR `Group` = 0
-     THEN NULL
-   ELSE
-     `Group`
-   END) AS `group-id`,
-  cpa.ObjectId AS `participant-administration-id`,
-  cga.ObjectId AS `group-administration-id`,
-	cpa.Assessment AS `assessment-id`,
-  cpa.AssessmentIndex AS `assessment-index`
-FROM
-	c_participant AS cp
-    JOIN c_participantadministration AS cpa
-		ON cp.ObjectId = cpa.Parentid
-	LEFT JOIN c_groupadministration as cga
-		ON
-			cp.Group = cga.ParentId AND
-			((cpa.Assessment = cga.Assessment AND
-			cpa.AssessmentIndex = cga.AssessmentIndex))
-	JOIN c_assessment AS ca
-		ON cpa.Assessment = ca.ObjectId
-WHERE
-	ca.Scope = 0
-  AND ca.ActivationHour <= :hour
-  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
-	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
-	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
-	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
-  AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
-
-
--- :name XXXget-activated-group-administrations :? :*
--- :doc
-SELECT
-	cp.ObjectId AS `user-id`,
-  cp.`Group` AS `group-id`,
-  cpa.ObjectId AS `participant-administration-id`,
-  cga.ObjectId AS `group-administration-id`,
-	cga.Assessment AS `assessment-id`,
-  cga.AssessmentIndex AS `assessment-index`
-FROM
-	c_participant AS cp
-  JOIN c_groupadministration as cga
-		ON cp.Group = cga.ParentId
-  LEFT JOIN c_participantadministration AS cpa
-		ON cp.ObjectId = cpa.Parentid AND
-			cpa.Assessment = cga.Assessment AND
-			cpa.AssessmentIndex = cga.AssessmentIndex
-	JOIN c_assessment AS ca
-		ON cga.Assessment = ca.ObjectId
-WHERE
-	ca.Scope = 1
-  AND ca.ActivationHour <= :hour
-  AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
-	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
-	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
-	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
-	AND cga.Date >= :date-min AND cga.Date <= :date-max;
-
-
 -- -------------------------
 --   LATE FLAG ASSESSMENTS
 -- -------------------------
@@ -225,3 +149,66 @@ UPDATE c_flag SET
   Open = 0,
   ReflagPossible = :reflag-possible?
 WHERE Issuer = :issuer AND ReferenceId IN(:v*:administration-ids)
+
+-- ------------------------------
+--   ACTIVATED ASSESSMENTS FLAG
+-- ------------------------------
+
+-- :name get-flagging-activated-participant-administrations :? :*
+-- :doc
+SELECT
+	cp.ObjectId AS `user-id`,
+ (CASE
+   WHEN `Group` IS NULL OR `Group` = 0
+     THEN NULL
+   ELSE
+     `Group`
+   END) AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  cga.ObjectId AS `group-administration-id`,
+	cpa.Assessment AS `assessment-id`,
+  cpa.AssessmentIndex AS `assessment-index`
+FROM
+	c_participant AS cp
+    JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid
+	LEFT JOIN c_groupadministration as cga
+		ON
+			cp.Group = cga.ParentId AND
+			((cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex))
+	JOIN c_assessment AS ca
+		ON cpa.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 0
+	AND ca.FlagParticipantWhenActivated = 1
+	AND cpa.ActivationFlagSet = 0
+	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
+  AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
+
+
+-- :name get-flagging-activated-group-administrations :? :*
+-- :doc
+SELECT
+	cp.ObjectId AS `user-id`,
+  cp.`Group` AS `group-id`,
+  cpa.ObjectId AS `participant-administration-id`,
+  cga.ObjectId AS `group-administration-id`,
+	cga.Assessment AS `assessment-id`,
+  cga.AssessmentIndex AS `assessment-index`
+FROM
+	c_participant AS cp
+  JOIN c_groupadministration as cga
+		ON cp.Group = cga.ParentId
+  LEFT JOIN c_participantadministration AS cpa
+		ON cp.ObjectId = cpa.Parentid AND
+			cpa.Assessment = cga.Assessment AND
+			cpa.AssessmentIndex = cga.AssessmentIndex
+	JOIN c_assessment AS ca
+		ON cga.Assessment = ca.ObjectId
+WHERE
+	ca.Scope = 1
+	AND ca.FlagParticipantWhenActivated = 1
+	AND (cpa.ActivationFlagSet = 0 OR cpa.ActivationFlagSet IS NULL)
+	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
+	AND cga.Date >= :date-min AND cga.Date <= :date-max;

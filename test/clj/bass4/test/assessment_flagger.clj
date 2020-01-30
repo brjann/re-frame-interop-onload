@@ -20,8 +20,8 @@
   :each
   random-date-tz-fixture)
 
-(def db-late-flag-participant @#'late-flagger/db-late-flag-participant-administrations)
-(def db-late-flag-group @#'late-flagger/db-late-flag-group-administrations)
+(def db-late-flag-participant @#'late-flagger/db-participant-administrations)
+(def db-late-flag-group @#'late-flagger/db-group-administrations)
 
 (deftest db-flag-participant-administration
   (let [user-id1      (user-service/create-user! project-ass1-id)
@@ -189,11 +189,11 @@
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now* created-flags 2)))
-    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
-    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
-    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
-    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))
-    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))))
+    (is (= 0 (count (late-flagger/deflag-assessments! *db* *now*))))
+    (is (= 1 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 0 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 1 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 15))))))
+    (is (= 0 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 15))))))))
 
 (deftest flag-participant-administration+deflag-inactive
   (let [created-flags     (atom {})
@@ -206,12 +206,12 @@
                             user-id1 assessment-id 1 {:date (midnight+d -6 *now*)})]
     (is (= #{[user-id1 assessment-id 1]}
            (flag!-flags-created *now* created-flags 1)))
-    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 0 (count (late-flagger/deflag-assessments! *db* *now*))))
     (bass/update-object-properties*! *db*
                                      "c_participantadministration"
                                      administration-id
                                      {"active" 0})
-    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 1 (count (late-flagger/deflag-assessments! *db* *now*))))
     (bass/update-object-properties*! *db*
                                      "c_participantadministration"
                                      administration-id

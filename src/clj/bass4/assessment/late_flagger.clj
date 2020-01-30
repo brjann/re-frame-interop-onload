@@ -12,19 +12,19 @@
 (def flag-reopen-text "Automatically reopened by Flagger")
 (def reflag-delay 7)
 
-(defn- db-late-flag-participant-administrations
+(defn- db-participant-administrations
   [db date]
   (db/get-late-flag-participant-administrations db {:date           date
                                                     :oldest-allowed (t/minus date (t/days oldest-allowed))
                                                     :issuer         flag-issuer}))
 
-(defn- db-late-flag-group-administrations
+(defn- db-group-administrations
   [db date]
   (db/get-late-flag-group-administrations db {:date           date
                                               :oldest-allowed (t/minus date (t/days oldest-allowed))
                                               :issuer         flag-issuer}))
 
-(defn- db-open-late-administration-flags
+(defn- db-open-flags
   [db]
   (db/get-open-late-administration-flags db {:issuer flag-issuer}))
 
@@ -33,13 +33,13 @@
   (when (seq flag-texts)
     (db/reopen-flags! db {:flag-texts flag-texts})))
 
-(defn- db-reopen-flag-comments!
+(defn- db-comment-reopened-flags!
   [db flag-parents comment-text]
   (when (seq flag-parents)
     (db/reopen-flag-comments! db {:comment-parents flag-parents
                                   :comment-text    comment-text})))
 
-(defn db-close-administration-late-flags!
+(defn db-close-flags!
   [db now administration-ids reflag-possible?]
   (when (seq administration-ids)
     (db/close-administration-late-flags! db {:administration-ids administration-ids
@@ -47,7 +47,7 @@
                                              :now                now
                                              :reflag-possible?   reflag-possible?})))
 
-(defn- potential-flag-assessments
+(defn- potential-assessments
   "Returns list of potentially flag assessments for users
   {:user-id 653692,
    :group-id 653637,
@@ -56,8 +56,8 @@
    :assessment-id 653636,
    :assessment-index 1,}"
   [db now]
-  (let [participant-administrations (db-late-flag-participant-administrations db now)
-        group-administration        (db-late-flag-group-administrations db now)]
+  (let [participant-administrations (db-participant-administrations db now)
+        group-administration        (db-group-administrations db now)]
     (concat participant-administrations
             group-administration)))
 
@@ -94,26 +94,26 @@
 (def ^:dynamic *create-flag-chan* nil)
 
 (defn reopen-flags!
-  [db now have-flags]
-  (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) have-flags))
+  [db now reopen-flags]
+  (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) reopen-flags))
   (let [comment-ids (bass/create-bass-objects-without-parent*! db
                                                                "cComment"
                                                                "Comments"
-                                                               (count have-flags))]
-    (db-reopen-flag-comments! db
-                              (map #(vector %1 (:flag-id %2)) comment-ids have-flags)
-                              flag-reopen-text))
+                                                               (count reopen-flags))]
+    (db-comment-reopened-flags! db
+                                (map #(vector %1 (:flag-id %2)) comment-ids reopen-flags)
+                                flag-reopen-text))
   (when *create-flag-chan*
-    (doseq [{:keys [flag-id user-id]} have-flags]
+    (doseq [{:keys [flag-id user-id]} reopen-flags]
       (put! *create-flag-chan* [user-id flag-id]))))
 
 (defn- new-flags!
-  [db now need-flags]
+  [db now new-flags]
   (let [flag-ids (bass/create-bass-objects-without-parent*! db
                                                             "cFlag"
                                                             "Flags"
-                                                            (count need-flags))]
-    (doseq [[assessment flag-id] (partition 2 (interleave need-flags flag-ids))]
+                                                            (count new-flags))]
+    (doseq [[assessment flag-id] (partition 2 (interleave new-flags flag-ids))]
       (create-flag! db
                     now
                     flag-id
@@ -121,9 +121,9 @@
       (when *create-flag-chan*
         (put! *create-flag-chan* [(:user-id assessment) flag-id])))))
 
-(defn flag-late-assessments!
+(defn flag-assessments!
   [db now]
-  (let [potentials (potential-flag-assessments db now)
+  (let [potentials (potential-assessments db now)
         ongoing    (when (seq potentials)
                      (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                           (missing/add-missing-administrations! db)))]
@@ -134,9 +134,9 @@
         (new-flags! db now need-flags)))
     ongoing))
 
-(defn deflag-inactive-assessments!
+(defn deflag-assessments!
   [db now]
-  (let [potentials         (->> (db-open-late-administration-flags db)
+  (let [potentials         (->> (db-open-flags db)
                                 ;; An administration can have multiple flags. Keep only one.
                                 (map (juxt :participant-administration-id identity))
                                 (into {})
@@ -145,8 +145,8 @@
                              (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
-    (db-close-administration-late-flags! db
-                                         now
-                                         (map :participant-administration-id inactive)
-                                         true)
+    (db-close-flags! db
+                     now
+                     (map :participant-administration-id inactive)
+                     true)
     inactive))

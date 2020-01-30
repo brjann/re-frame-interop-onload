@@ -285,7 +285,7 @@
                   (if created-atom
                     (let [c   (chan flag-count)
                           res (binding [late-flagger/*create-flag-chan* c]
-                                (late-flagger/flag-late-assessments! *db* now))]
+                                (late-flagger/flag-assessments! *db* now))]
                       (dotimes [n flag-count]
                         (let [[[user-id flag-id] _] (alts!! [c (timeout 1000)])]
                           (when (nil? user-id)
@@ -296,7 +296,7 @@
                             #(conj % flag-id)
                             [])))
                       res)
-                    (late-flagger/flag-late-assessments! *db* now))))))
+                    (late-flagger/flag-assessments! *db* now))))))
 
 (defn flag-comment-count
   [flag-id]

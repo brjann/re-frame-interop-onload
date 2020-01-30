@@ -35,7 +35,7 @@
 (defn set-administrations-completed!
   [user-id administration-ids]
   (db/set-administration-complete! {:administration-ids administration-ids})
-  (late-flagger/db-close-administration-late-flags! db/*db* (t/now) administration-ids false)
+  (late-flagger/db-close-flags! db/*db* (t/now) administration-ids false)
   (db/set-last-assessment! {:administration-id (first administration-ids)})
   (dependent-assessments! user-id administration-ids))
 
