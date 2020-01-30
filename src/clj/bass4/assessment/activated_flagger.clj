@@ -55,7 +55,7 @@
                                      flag-id
                                      {"ParentId"       user-id
                                       "FlagText"       text
-                                      "CustomIcon"     "flag-administration-late.gif"
+                                      "CustomIcon"     "flag-administration-activated.gif"
                                       "Open"           1
                                       "ReflagPossible" 0
                                       "ReflagDelay"    0
@@ -94,3 +94,10 @@
                         flag-id
                         assessment))))
     ongoing))
+
+(defn activated-flag-task
+  [db local-config now]
+  (let [tz (-> (:time-zone local-config "Europe/Stockholm")
+               (t/time-zone-for-id))]
+    (let [res (flag-assessments! db now tz)]
+      {:cycles (count res)})))

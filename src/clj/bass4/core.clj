@@ -11,7 +11,7 @@
             [mount.core :as mount]
             [bass4.db.sql-wrapper]
             [bass4.external-messages.queue-tasks-starter]
-            [bass4.assessment.reminder-task-starter]
+            [bass4.assessment.assessment-tasks-starter]
             [bass4.repl-api])
   (:gen-class))
 

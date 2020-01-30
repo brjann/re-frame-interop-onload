@@ -149,3 +149,13 @@
                      (map :participant-administration-id inactive)
                      true)
     inactive))
+
+(defn late-flag-task
+  [db _ now]
+  (let [res (flag-assessments! db now)]
+    {:cycles (count res)}))
+
+(defn late-deflag-task
+  [db _ now]
+  (let [res (deflag-assessments! db now)]
+    {:cycles (count res)}))
