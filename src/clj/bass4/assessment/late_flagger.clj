@@ -4,8 +4,7 @@
             [bass4.db.core :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
-            [bass4.assessment.create-missing :as missing]
-            [clojure.tools.logging :as log]))
+            [bass4.assessment.create-missing :as missing]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")

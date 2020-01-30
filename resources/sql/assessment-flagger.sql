@@ -179,10 +179,12 @@ FROM
 			cpa.AssessmentIndex = cga.AssessmentIndex))
 	JOIN c_assessment AS ca
 		ON cpa.Assessment = ca.ObjectId
+	LEFT JOIN c_flag as cf
+	  ON cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer
 WHERE
 	ca.Scope = 0
 	AND ca.FlagParticipantWhenActivated = 1
-	AND cpa.ActivationFlagSet = 0
+	AND cf.ObjectId IS NULL
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
   AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
 
@@ -206,9 +208,11 @@ FROM
 			cpa.AssessmentIndex = cga.AssessmentIndex
 	JOIN c_assessment AS ca
 		ON cga.Assessment = ca.ObjectId
+	LEFT JOIN c_flag as cf
+	  ON cpa.ObjectId = cf.ReferenceId AND cf.Issuer = :issuer
 WHERE
 	ca.Scope = 1
 	AND ca.FlagParticipantWhenActivated = 1
-	AND (cpa.ActivationFlagSet = 0 OR cpa.ActivationFlagSet IS NULL)
+	AND cf.ObjectId IS NULL
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= :date-min AND cga.Date <= :date-max;

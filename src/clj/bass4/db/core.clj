@@ -126,22 +126,10 @@
                         "sql/lost-password.sql"
                         "sql/privacy.sql"
                         "sql/external-messages.sql")
-;(conman/bind-connection *db* "sql/bass.sql")
-;(conman/bind-connection *db* "sql/auth.sql")
-;(conman/bind-connection *db* "sql/messages.sql")
-;(conman/bind-connection *db* "sql/treatments.sql")
-;(conman/bind-connection *db* "sql/instruments.sql")
-;(conman/bind-connection *db* "sql/assessments.sql")
-;(conman/bind-connection *db* "sql/instrument-answers.sql")
-;(conman/bind-connection *db* "sql/registration.sql")
-;(conman/bind-connection *db* "sql/lost-password.sql")
-;(conman/bind-connection *db* "sql/privacy.sql")
 
 (conman/bind-connection db-common
                         "sql/common.sql"
                         "sql/attack-detector.sql")
-;(conman/bind-connection db-common "sql/common.sql")
-;(conman/bind-connection db-common "sql/attack-detector.sql")
 
 ;; clj-time.jdbc registers protocol extensions,
 ;; so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
