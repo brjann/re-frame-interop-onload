@@ -7,7 +7,7 @@
             [bass4.instrument.answers-services :as instrument-answers]
             [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]
-            [bass4.assessment.flagger :as assessment-flagger]))
+            [bass4.assessment.late-flagger :as late-flagger]))
 
 
 ;; ------------------------------
@@ -35,7 +35,7 @@
 (defn set-administrations-completed!
   [user-id administration-ids]
   (db/set-administration-complete! {:administration-ids administration-ids})
-  (assessment-flagger/db-close-administration-late-flags! db/*db* (t/now) administration-ids false)
+  (late-flagger/db-close-administration-late-flags! db/*db* (t/now) administration-ids false)
   (db/set-last-assessment! {:administration-id (first administration-ids)})
   (dependent-assessments! user-id administration-ids))
 

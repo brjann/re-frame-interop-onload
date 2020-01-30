@@ -11,10 +11,9 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.routes.quick-login :as quick-login]
             [bass4.services.bass :as bass]
-            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.statuses :as assessment-statuses]
             [clojure.tools.logging :as log]
-            [bass4.assessment.flagger :as assessment-flagger]))
+            [bass4.assessment.late-flagger :as late-flagger]))
 
 (use-fixtures
   :once
@@ -285,8 +284,8 @@
                                            :assessment-index])
                   (if created-atom
                     (let [c   (chan flag-count)
-                          res (binding [assessment-flagger/*create-flag-chan* c]
-                                (assessment-flagger/flag-late-assessments! *db* now))]
+                          res (binding [late-flagger/*create-flag-chan* c]
+                                (late-flagger/flag-late-assessments! *db* now))]
                       (dotimes [n flag-count]
                         (let [[[user-id flag-id] _] (alts!! [c (timeout 1000)])]
                           (when (nil? user-id)
@@ -297,7 +296,7 @@
                             #(conj % flag-id)
                             [])))
                       res)
-                    (assessment-flagger/flag-late-assessments! *db* now))))))
+                    (late-flagger/flag-late-assessments! *db* now))))))
 
 (defn flag-comment-count
   [flag-id]

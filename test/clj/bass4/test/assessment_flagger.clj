@@ -2,16 +2,12 @@
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan go-loop <!]]
-            [bass4.db.core :refer [*db*] :as db]
-            [bass4.assessment.ongoing :as assessment-ongoing]
-            [bass4.assessment.flagger :as assessment-flagger]
+            [bass4.assessment.late-flagger :as late-flagger]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
             [bass4.services.bass :as bass]
             [bass4.time :as b-time]
-            [clojure.tools.logging :as log]
-            [bass4.utils :as utils]
             [bass4.services.bass :as bass-service]
             [clojure.java.jdbc :as jdbc]
             [bass4.assessment.administration :as administration]))
@@ -24,8 +20,8 @@
   :each
   random-date-tz-fixture)
 
-(def db-late-flag-participant @#'assessment-flagger/db-late-flag-participant-administrations)
-(def db-late-flag-group @#'assessment-flagger/db-late-flag-group-administrations)
+(def db-late-flag-participant @#'late-flagger/db-late-flag-participant-administrations)
+(def db-late-flag-group @#'late-flagger/db-late-flag-group-administrations)
 
 (deftest db-flag-participant-administration
   (let [user-id1      (user-service/create-user! project-ass1-id)
@@ -83,10 +79,10 @@
         assessment-id (create-assessment! {"Scope"                   0
                                            "FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})
-        now+1delay-1  (t/plus *now* (t/days (dec assessment-flagger/reflag-delay)))
-        now+1delay    (t/plus *now* (t/days assessment-flagger/reflag-delay))
-        now+2delay-1  (t/plus *now* (t/days (dec (* 2 assessment-flagger/reflag-delay))))
-        now+2delay    (t/plus *now* (t/days (* 2 assessment-flagger/reflag-delay)))]
+        now+1delay-1  (t/plus *now* (t/days (dec late-flagger/reflag-delay)))
+        now+1delay    (t/plus *now* (t/days late-flagger/reflag-delay))
+        now+2delay-1  (t/plus *now* (t/days (dec (* 2 late-flagger/reflag-delay))))
+        now+2delay    (t/plus *now* (t/days (* 2 late-flagger/reflag-delay)))]
     (create-participant-administration!
       user-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
     (create-participant-administration!
@@ -113,7 +109,7 @@
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
       (bass-service/update-object-properties! "c_flag"
                                               flag1-id
-                                              {"ReflagDelay" (dec assessment-flagger/reflag-delay)})
+                                              {"ReflagDelay" (dec late-flagger/reflag-delay)})
       (is (= 1 (count (flag!-flags-created now+2delay-1))))
       (is (= 2 (flag-comment-count flag1-id))))))
 
@@ -125,10 +121,10 @@
         assessment-id (create-assessment! {"Scope"                   1
                                            "FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})
-        now+1delay-1  (t/plus *now* (t/days (dec assessment-flagger/reflag-delay)))
-        now+1delay    (t/plus *now* (t/days assessment-flagger/reflag-delay))
-        now+2delay-1  (t/plus *now* (t/days (dec (* 2 assessment-flagger/reflag-delay))))
-        now+2delay    (t/plus *now* (t/days (* 2 assessment-flagger/reflag-delay)))]
+        now+1delay-1  (t/plus *now* (t/days (dec late-flagger/reflag-delay)))
+        now+1delay    (t/plus *now* (t/days late-flagger/reflag-delay))
+        now+2delay-1  (t/plus *now* (t/days (dec (* 2 late-flagger/reflag-delay))))
+        now+2delay    (t/plus *now* (t/days (* 2 late-flagger/reflag-delay)))]
     (create-group-administration!
       group assessment-id 1 {:date (midnight+d -5 *now*)})
     (is (= #{[user-id1 assessment-id 1]
@@ -157,7 +153,7 @@
       (is (= 1 (count (db-late-flag-group *db* now+2delay))))
       (bass-service/update-object-properties! "c_flag"
                                               flag1-id
-                                              {"ReflagDelay" (dec assessment-flagger/reflag-delay)})
+                                              {"ReflagDelay" (dec late-flagger/reflag-delay)})
       (is (= 1 (count (flag!-flags-created now+2delay-1))))
       (is (= 2 (flag-comment-count flag1-id))))))
 
@@ -193,11 +189,11 @@
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]}
            (flag!-flags-created *now* created-flags 2)))
-    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
-    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
-    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
-    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))
-    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))))
+    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 14))))))
+    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))
+    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* (t/plus *now* (t/days 15))))))))
 
 (deftest flag-participant-administration+deflag-inactive
   (let [created-flags     (atom {})
@@ -210,17 +206,17 @@
                             user-id1 assessment-id 1 {:date (midnight+d -6 *now*)})]
     (is (= #{[user-id1 assessment-id 1]}
            (flag!-flags-created *now* created-flags 1)))
-    (is (= 0 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 0 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
     (bass/update-object-properties*! *db*
                                      "c_participantadministration"
                                      administration-id
                                      {"active" 0})
-    (is (= 1 (count (assessment-flagger/deflag-inactive-assessments! *db* *now*))))
+    (is (= 1 (count (late-flagger/deflag-inactive-assessments! *db* *now*))))
     (bass/update-object-properties*! *db*
                                      "c_participantadministration"
                                      administration-id
                                      {"active" 1})
     (is (= #{}
-           (flag!-flags-created (t/plus *now* (t/days (dec assessment-flagger/reflag-delay))))))
+           (flag!-flags-created (t/plus *now* (t/days (dec late-flagger/reflag-delay))))))
     (is (= #{[user-id1 assessment-id 1]}
-           (flag!-flags-created (t/plus *now* (t/days assessment-flagger/reflag-delay)))))))
+           (flag!-flags-created (t/plus *now* (t/days late-flagger/reflag-delay)))))))
