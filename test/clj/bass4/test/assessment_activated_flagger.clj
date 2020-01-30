@@ -41,3 +41,22 @@
       user-id4 assessment-id 1 {"Date"          (midnight+d -5 *now*)
                                 "DateCompleted" 1})
     (is (= 2 (count (db-activated-flag-participant *db* *now* *tz*))))))
+
+(deftest db-flag-group-administration
+  (let [group-id1     (create-group!)
+        group-id2     (create-group!)
+        group-id3     (create-group!)
+        user-id1      (user-service/create-user! project-ass1-id {:group group-id1})
+        user-id2      (user-service/create-user! project-ass1-id {:group group-id2})
+        user-id3      (user-service/create-user! project-ass1-id {:group group-id3})
+        assessment-id (create-assessment! {"Scope"                        1
+                                           "FlagParticipantWhenActivated" 1})]
+    (create-group-administration!
+      group-id1 assessment-id 1 {"Date" (midnight *now*)})
+    (create-participant-administration!
+      user-id1 assessment-id 1 {"Active" 0})
+    (create-group-administration!
+      group-id2 assessment-id 1 {"Date" (midnight+d +1 *now*)})
+    (create-group-administration!
+      group-id3 assessment-id 1 {"Date" (midnight+d -5 *now*)})
+    (is (= 1 (count (db-activated-flag-group *db* *now* *tz*))))))
