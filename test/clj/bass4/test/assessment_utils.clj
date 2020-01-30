@@ -13,7 +13,8 @@
             [bass4.services.bass :as bass]
             [bass4.assessment.statuses :as assessment-statuses]
             [clojure.tools.logging :as log]
-            [bass4.assessment.late-flagger :as late-flagger]))
+            [bass4.assessment.late-flagger :as late-flagger]
+            [bass4.assessment.activated-flagger :as activated-flagger]))
 
 (use-fixtures
   :once
@@ -276,8 +277,8 @@
                                           :status])
                  (assessment-statuses/user-administrations-statuses db/*db* now user-id))))
 
-(defn flag!-flags-created
-  ([now] (flag!-flags-created now nil nil))
+(defn flag-late!
+  ([now] (flag-late! now nil nil))
   ([now created-atom flag-count]
    (into #{} (map #(utils/select-values % [:user-id
                                            :assessment-id
@@ -297,6 +298,13 @@
                             [])))
                       res)
                     (late-flagger/flag-assessments! *db* now))))))
+
+(defn flag-activated!
+  ([now]
+   (into #{} (map #(utils/select-values % [:user-id
+                                           :assessment-id
+                                           :assessment-index])
+                  (activated-flagger/flag-assessments! *db* now *tz*)))))
 
 (defn flag-comment-count
   [flag-id]
