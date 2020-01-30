@@ -1,4 +1,4 @@
-(ns bass4.test.assessment-flagger
+(ns bass4.test.assessment-late-flagger
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan go-loop <!]]
@@ -10,6 +10,7 @@
             [bass4.time :as b-time]
             [bass4.services.bass :as bass-service]
             [clojure.java.jdbc :as jdbc]
+            [bass4.db.core :refer [*db*]]
             [bass4.assessment.administration :as administration]))
 
 (use-fixtures

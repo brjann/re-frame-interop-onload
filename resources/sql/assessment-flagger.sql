@@ -185,8 +185,9 @@ WHERE
 	ca.Scope = 0
 	AND ca.FlagParticipantWhenActivated = 1
 	AND cf.ObjectId IS NULL
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
-  AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
+  AND cpa.Date >= UNIX_TIMESTAMP(:date-min) AND cpa.Date <= UNIX_TIMESTAMP(:date-max);
 
 
 -- :name get-flagging-activated-group-administrations :? :*
@@ -214,5 +215,6 @@ WHERE
 	ca.Scope = 1
 	AND ca.FlagParticipantWhenActivated = 1
 	AND cf.ObjectId IS NULL
+	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= UNIX_TIMESTAMP(:date-min) AND cga.Date <= UNIX_TIMESTAMP(:date-max);
