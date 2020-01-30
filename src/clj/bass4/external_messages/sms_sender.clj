@@ -33,7 +33,7 @@
 
 (defn smsteknik-url
   [id user password]
-  (str "https://www.smsteknik.se/Member/SMSConnectDirect/SendSMSv3.asp"
+  (str "https://api.smsteknik.se/send/xml/"
        "?id=" (codec/url-encode id)
        "&user=" (codec/url-encode user)
        "&pass=" (codec/url-encode password)))
