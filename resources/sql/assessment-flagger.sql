@@ -215,4 +215,4 @@ WHERE
 	AND ca.FlagParticipantWhenActivated = 1
 	AND cf.ObjectId IS NULL
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
-	AND cga.Date >= :date-min AND cga.Date <= :date-max;
+	AND cga.Date >= UNIX_TIMESTAMP(:date-min) AND cga.Date <= UNIX_TIMESTAMP(:date-max);

@@ -109,7 +109,9 @@
 (defn local-midnight
   ([] (local-midnight (t/now)))
   ([date-time]
-   (t/with-time-at-start-of-day (t/to-time-zone date-time (time-zone)))))
+   (local-midnight date-time (time-zone)))
+  ([date-time time-zone]
+   (t/with-time-at-start-of-day (t/to-time-zone date-time time-zone))))
 
 (defn get-php-session
   [php-session-id]
