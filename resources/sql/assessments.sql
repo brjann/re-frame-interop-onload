@@ -145,7 +145,7 @@ SELECT
     ca.ObjectId AS `assessment-id`,
     ca.ParentId AS `assessment-series-id`,
     cga.AssessmentIndex AS `assessment-index`,
-	cga.Active AS `group-administration-active?`,
+	  cga.Active AS `group-administration-active?`,
     cga.ObjectId AS `group-administration-id`,
 
   (CASE

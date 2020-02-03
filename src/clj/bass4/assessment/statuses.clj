@@ -24,8 +24,6 @@
 
 
 (defn- user+group-administrations
-  "Returns all administrations for a user with flag for
-  whether they belong to correct assessment-series or not"
   [db user-id assessment-series-id]
   (let [group-id                    (assessment-ongoing/user-group db user-id)
         group-administrations       (when group-id
@@ -33,7 +31,7 @@
                                         db
                                         {:group-id             group-id
                                          :assessment-series-id assessment-series-id}))
-        participant-administrations (db/get-all-participant-administrations db {:user-id user-id})
+        participant-administrations (db/get-all-participant-administrations db/*db* {:user-id 4770})
         merged                      (assessment-ongoing/merge-participant-group-administrations
                                       user-id participant-administrations group-administrations)]
     merged))
@@ -41,7 +39,7 @@
 (defn user-administrations-statuses
   [db now user-id]
   (let [assessment-series-id     (assessment-ongoing/user-assessment-series-id db user-id)
-        administrations          (->> (user+group-administrations db user-id assessment-series-id))
+        administrations          (user+group-administrations db user-id assessment-series-id)
         assessments-map          (assessment-ongoing/assessments db
                                                                  user-id
                                                                  (into #{} (map :assessment-series-id administrations)))
