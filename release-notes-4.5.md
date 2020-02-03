@@ -1,5 +1,7 @@
 # Version 4.5
 
+Will be released 2020-02-10.
+
 This BASS version has new EXPERIMENTAL feature. BASS consists of two 
 separate applications written in different languages, PHP and Clojure. 
 The PHP app is older and responsible for rendering the admin interface
@@ -17,6 +19,9 @@ bugs, but hopefully not.
  - Assessments that have been flagged for being late are closed 
    immediately after the participant completes them (instead of hours 
    later).
+ - If a late flag is closed and later reflagged (because the participant
+   has still not completed the assessment), a new flag is not created
+   but the original is re-opened.
 
 
 ## Under the hood
