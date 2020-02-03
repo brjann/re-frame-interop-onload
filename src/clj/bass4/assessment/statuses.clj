@@ -20,7 +20,7 @@
                                  assessment)))
          (flatten)
          (filter identity)
-         (filter #(not= ::assessment-ongoing/as-scoped-missing (:status %))))))
+         #_(filter #(not= ::assessment-ongoing/as-scoped-missing (:status %))))))
 
 
 (defn- user+group-administrations
@@ -31,7 +31,7 @@
                                         db
                                         {:group-id             group-id
                                          :assessment-series-id assessment-series-id}))
-        participant-administrations (db/get-all-participant-administrations db/*db* {:user-id 4770})
+        participant-administrations (db/get-all-participant-administrations db {:user-id user-id})
         merged                      (assessment-ongoing/merge-participant-group-administrations
                                       user-id participant-administrations group-administrations)]
     merged))

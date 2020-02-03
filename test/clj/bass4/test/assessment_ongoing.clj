@@ -48,7 +48,8 @@
            (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
-             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
+             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-scoped-missing]}
            (group-statuses *now* group-id)))))
 
 (deftest group-assessment-mysql-old-super-join-fail
