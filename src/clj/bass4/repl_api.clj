@@ -14,7 +14,7 @@
   (let [db (when-let [db- (get db/db-connections (keyword db-name))]
              @db-)]
     (if db
-      (->> (assessment-statuses/user-administrations-statuses db/*db*
+      (->> (assessment-statuses/user-administrations-statuses db
                                                               (t/now)
                                                               user-id)
            (map (fn [assessment]
@@ -29,7 +29,7 @@
   (let [db (when-let [db- (get db/db-connections (keyword db-name))]
              @db-)]
     (if db
-      (->> (assessment-statuses/group-administrations-statuses db/*db*
+      (->> (assessment-statuses/group-administrations-statuses db
                                                                (t/now)
                                                                group-id)
            (map (fn [assessment]
@@ -38,3 +38,7 @@
                    "administration-id" (:group-administration-id assessment)
                    "status"            (name (:status assessment))})))
       "No such DB")))
+
+(defapi mirror
+  [arg :- [[api/str? 0 1000]]]
+  arg)
