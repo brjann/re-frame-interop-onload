@@ -1,3 +1,6 @@
+## Version 4.4.1
+Update SMS-teknik API endpoint. Released on 2019-01-29.
+
 # Version 4.4
 This release fixes some minor security issues in BASS. None of the fixes should have any practical impact on the use of BASS. Version 4.4 will be released on 2020-01-16. 
 
