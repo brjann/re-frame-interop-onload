@@ -295,14 +295,20 @@
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (is (= #{[p2-ass-I1 1]} (ongoing-assessments *now* user-id)))
-    (bass/update-object-properties! "c_participant" user-id {"parentid"        project-ass2-pcollection-id
-                                                             "parentinterface" project-ass1-id})
-    (bass/update-object-properties! "c_participantadministration" adm1-id {"parentinterface" project-ass1-id})
+    (bass/update-object-properties! "c_participant"
+                                    user-id
+                                    {"parentid"        project-ass2-pcollection-id
+                                     "parentinterface" project-ass1-id})
+    (bass/update-object-properties! "c_participantadministration"
+                                    adm1-id
+                                    {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-wrong-series]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))
-    (bass/update-object-properties! "c_participantadministration" adm1-id {"datecompleted" (b-time/to-unix *now*)})
+    (bass/update-object-properties! "c_participantadministration"
+                                    adm1-id
+                                    {"datecompleted" (b-time/to-unix *now*)})
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-completed]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))))
