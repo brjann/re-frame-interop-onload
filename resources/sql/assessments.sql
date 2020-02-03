@@ -118,6 +118,7 @@ SELECT
     cpa.ObjectId AS `participant-administration-id`,
     cpa.AssessmentIndex AS `assessment-index`,
     cpa.Active AS `participant-administration-active?`,
+    cpa.Deleted AS `deleted?`,
   (CASE
      WHEN cpa.DateCompleted IS NULL
          THEN 0
@@ -136,7 +137,7 @@ FROM c_assessment as ca
     JOIN (c_participantadministration as cpa)
         ON (ca.ObjectId = cpa.Assessment)
 
-WHERE cpa.ParentId = :user-id AND cpa.Deleted = 0;
+WHERE cpa.ParentId = :user-id;
 
 -- :name get-group-administrations :? :*
 -- :doc

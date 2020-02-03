@@ -86,6 +86,9 @@
                        nil)
                     (throw (ex-info "No valid administration" administration))
 
+                    (:deleted? administration)
+                    ::as-deleted
+
                     (and (some? (:date-completed administration))
                          (> (:date-completed administration) 0))
                     ::as-completed
