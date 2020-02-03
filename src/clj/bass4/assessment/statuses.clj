@@ -55,4 +55,5 @@
                                                     (= ::assessment-ongoing/as-completed (:status %)))
                                               %
                                               (assoc % :status ::assessment-ongoing/as-wrong-series))))]
-    (filter #(not= ::assessment-ongoing/as-scoped-missing (:status %)) administrations-statuses)))
+    administrations-statuses
+    #_(filter #(not= ::assessment-ongoing/as-scoped-missing (:status %)) administrations-statuses)))

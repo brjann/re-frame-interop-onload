@@ -42,7 +42,8 @@
       group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
     (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
+    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-scoped-missing]
+             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
              [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
            (user-statuses *now* user-id)))
@@ -109,7 +110,8 @@
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-I-week-noremind 1]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
            (user-statuses *now* user-id)))
@@ -119,7 +121,8 @@
     (bass/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (b-time/to-unix *now*)})
     (is (= #{}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-completed]
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-completed]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-completed]
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
            (user-statuses *now* user-id)))))
@@ -140,7 +143,8 @@
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-I-week-noremind 1]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
+    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
+             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
              [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
            (user-statuses *now* user-id)))))
