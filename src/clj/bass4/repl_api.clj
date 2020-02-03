@@ -42,3 +42,12 @@
 (defapi mirror
   [arg :- [[api/str? 0 1000]]]
   arg)
+
+#_(defapi load-test
+    [arg :- [[api/str? 0 1000]]]
+    (log/debug "Start request for" arg)
+    (Thread/sleep (rand-int 5000))
+    (let [x [arg
+             (apply str (repeat (+ 10000 (rand-int 20000)) "X"))]]
+      (log/debug "End request for" arg)
+      x))
