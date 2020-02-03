@@ -5,7 +5,6 @@
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
             [bass4.assessment.create-missing :as missing]
-            [clojure.tools.logging :as log]
             [clj-time.format :as tf]))
 
 (def flag-issuer "tActivatedAdministrationsFlagger")
