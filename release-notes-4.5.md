@@ -1,17 +1,16 @@
 # Version 4.5
 
-Will be released 2020-02-10.
+Version 4.5 will be released on 2020-02-10.
 
-This BASS version has new EXPERIMENTAL feature. BASS consists of two 
+This BASS version has a new experimental feature. BASS consists of two 
 separate applications written in different languages, PHP and Clojure. 
 The PHP app is older and responsible for rendering the admin interface
 and the Clojure app is newer and responsible for the participant 
 interface. The goal is to completely replace PHP with Clojure and this 
-is done step by step. With the new feature, the PHP app can communicate 
+is done stepwise. With the new feature, the PHP app can communicate 
 directly with the Clojure app through a REPL. This means that logic can 
 be moved from PHP to Clojure, which reduces duplication and risk for 
-weird behavior. The communication process is complex and may lead to new 
-bugs, but hopefully not.
+unstable behavior.
 
 ## Assessment flagging
  - The flagging of assessments is now handled by Clojure instead of PHP. 
@@ -29,6 +28,4 @@ bugs, but hopefully not.
    requests = faster.
  - Statuses (e.g., "ongoing", "missed", "waiting") of group and 
    participant assessments shown in the admin interface are retrieved 
-   through the REPL instead of calculated by PHP. Please report if you 
-   notice any unusual behaviors under the "Assessments" tabs when
-   editing Participants or Groups.
+   through the REPL instead of calculated by PHP. 
