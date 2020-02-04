@@ -14,6 +14,7 @@
 (defonce task-counter (atom 0))
 (defonce task-handlers (atom {}))
 (defonce task-list (atom {}))
+(defonce db-tracker (atom nil))
 
 (defn cancel-task-for-dbs
   [task-name db-tasks]
@@ -111,8 +112,6 @@
   (doseq [[task-name [task scheduling]] @task-list]
     (cancel-task! task-name)
     (schedule-db-task*! task task-name scheduling)))
-
-(def db-tracker (atom nil))
 
 (defn db-watcher
   "Watches the DBs for changes in connection. Reschedules all tasks if
