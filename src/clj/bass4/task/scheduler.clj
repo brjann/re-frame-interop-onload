@@ -16,7 +16,7 @@
 (defonce task-list (atom {}))
 (defonce db-tracker (atom nil))
 
-(defn cancel-task-for-dbs
+(defn cancel-task-for-dbs!
   [task-name db-tasks]
   (doseq [[handle db-name task-id] db-tasks]
     (log/info "Cancelling task" task-name "with id" task-id "for db" db-name)
@@ -26,13 +26,13 @@
   [task-name]
   (let [[old new] (swap-vals! task-handlers #(dissoc % task-name))]
     (when (and (contains? old task-name) (not (contains? new task-name)))
-      (cancel-task-for-dbs task-name (get old task-name)))))
+      (cancel-task-for-dbs! task-name (get old task-name)))))
 
 (defn cancel-all!
   []
   (let [[tasks* _] (reset-vals! task-handlers {})]
     (doseq [[task-name db-tasks] tasks*]
-      (cancel-task-for-dbs task-name db-tasks))))
+      (cancel-task-for-dbs! task-name db-tasks))))
 
 (defn interval-params
   [scheduling tz]
@@ -128,3 +128,7 @@
       (log/error "CANNOT RESOLVE DBS"))))
 
 (mount-up/on-up ::db-watcher db-watcher :after)
+
+(comment
+  "This function can be used later to manage scheduled tasks"
+  (map #(.getDelay % TimeUnit/SECONDS) (.getQueue schedule-pool)))
