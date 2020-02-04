@@ -151,7 +151,7 @@
          full-base-path))
      (catch Exception _))))
 
-(defn- check-file-age
+(defn check-file-age
   [file max-age-sec]
   (or (not max-age-sec)
       (> max-age-sec (/ (- (. System (currentTimeMillis))
