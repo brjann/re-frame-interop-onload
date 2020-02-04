@@ -5,7 +5,8 @@
             [bass4.task.runner :as task-runner]
             [bass4.db-config :as db-config]
             [bass4.db.core :as db]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [mount-up.core :as mount-up])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -41,12 +42,12 @@
      TimeUnit/MINUTES]
 
     ::by-minute
-    [0
+    [(second scheduling)
      (second scheduling)
      TimeUnit/MINUTES]
 
     ::by-millisecond
-    [0
+    [(second scheduling)
      (second scheduling)
      TimeUnit/MILLISECONDS]))
 
@@ -59,15 +60,14 @@
   (doseq [db-name (task-dbs)]
     (let [task-id (swap! task-counter inc)]
       (log/info "Adding task" task-name "with id" task-id "for" db-name "")
-      (let [[minutes-left interval time-unit] (interval-params scheduling)
+      (let [[time-left interval time-unit] (interval-params scheduling)
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
                                            (fn []
                                              (let [db        @(get db/db-connections db-name)
                                                    db-config (get db-config/local-configs db-name)]
-                                               (log/debug "Running task" task-name "with id" task-id "for" db-name)
                                                (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
-                                         (long minutes-left)
+                                         (long time-left)
                                          interval
                                          time-unit)]
         (utils/swap-key! task-handlers task-name #(conj % [handle db-name task-id]) [])
@@ -91,11 +91,20 @@
     (cancel-task! task-name)
     (schedule-db-task*! task task-name scheduling)))
 
-(defn db-watcher
-  [_ _ old-state, new-state]
-  (let [old-keys (keys old-state)
-        new-keys (keys new-state)]
-    (when (not= old-keys new-keys)
-      (reschedule-db-tasks!))))
+(def db-tracker (atom nil))
 
-(add-watch db/connected-dbs ::db-watcher db-watcher)
+(defn db-watcher
+  "Watches the DBs for changes in connection. Reschedules all tasks if
+  changes are detected"
+  [{:keys [name]}]
+  (if (= name (str #'bass4.db.core/db-connections))
+    (if (map? db/db-connections)
+      (let [new-dbs (keys db/db-connections)
+            old-dbs @db-tracker]
+        (when-not (or (nil? @db-tracker) (= new-dbs old-dbs))
+          (log/info "DB connections change detected, rescheduling tasks.")
+          (reschedule-db-tasks!))
+        (reset! db-tracker new-dbs))
+      (log/error "CANNOT RESOLVE DBS"))))
+
+(mount-up/on-up ::db-watcher db-watcher :after)
