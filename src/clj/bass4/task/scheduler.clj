@@ -78,5 +78,5 @@
                                            interval
                                            time-unit)]
           (log/info "Adding task" task-name "with id" task-id "for" db-name "")
-          (utils/swap-key! tasks task-name #(conj % [handle db-name task-id]) [[handle db-name task-id]])
+          (utils/swap-key! tasks task-name #(conj % [handle db-name task-id]) [])
           task-id)))))
