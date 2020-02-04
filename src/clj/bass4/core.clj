@@ -12,6 +12,7 @@
             [bass4.db.sql-wrapper]
             [bass4.external-messages.queue-tasks-starter]
             [bass4.assessment.assessment-tasks-starter]
+            [bass4.cleaner.files]
             [bass4.repl-api])
   (:gen-class))
 
