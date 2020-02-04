@@ -10,8 +10,8 @@
            (task-scheduler/schedule! #'assessment-reminder/reminder-task
                                      ::task-scheduler/hourly)
            (task-scheduler/schedule! #'late-flagger/late-flag-task
-                                     ::task-scheduler/by-minute 1)
+                                     ::task-scheduler/hourly)
            (task-scheduler/schedule! #'late-flagger/late-deflag-task
-                                     ::task-scheduler/by-minute 1)
+                                     ::task-scheduler/hourly)
            (task-scheduler/schedule! #'activated-flagger/activated-flag-task
-                                     ::task-scheduler/by-minute 1)))
+                                     ::task-scheduler/hourly)))
