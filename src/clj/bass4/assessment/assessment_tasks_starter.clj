@@ -7,11 +7,11 @@
 
 (defstate assessments-tasks-starter
   :start (do
-           (task-scheduler/schedule! #'assessment-reminder/reminder-task
-                                     ::task-scheduler/hourly)
-           (task-scheduler/schedule! #'late-flagger/late-flag-task
-                                     ::task-scheduler/by-minute 1)
-           (task-scheduler/schedule! #'late-flagger/late-deflag-task
-                                     ::task-scheduler/by-minute 1)
-           (task-scheduler/schedule! #'activated-flagger/activated-flag-task
-                                     ::task-scheduler/by-minute 1)))
+           (task-scheduler/schedule-db-task! #'assessment-reminder/reminder-task
+                                             ::task-scheduler/hourly)
+           (task-scheduler/schedule-db-task! #'late-flagger/late-flag-task
+                                             ::task-scheduler/by-minute 1)
+           (task-scheduler/schedule-db-task! #'late-flagger/late-deflag-task
+                                             ::task-scheduler/by-minute 1)
+           (task-scheduler/schedule-db-task! #'activated-flagger/activated-flag-task
+                                             ::task-scheduler/by-minute 1)))

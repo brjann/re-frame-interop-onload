@@ -20,7 +20,7 @@
   [task-id]
   (swap! tasks-running #(disj % task-id)))
 
-(defn- run-db-task!
+(defn run-db-task!
   [db db-now db-name db-config task task-name task-id]
   (if (running?! task-id)
     (-> (task-log/open-db-entry! db-name task-name (t/now))

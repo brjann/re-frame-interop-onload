@@ -30,7 +30,7 @@
         fs (for [i (range n)]
              (task-fn (nth cs i) i))]
     (doseq [f fs]
-      (task-scheduler/schedule! f ::task-scheduler/by-millisecond 10))
+      (task-scheduler/schedule-db-task! f ::task-scheduler/by-millisecond 10))
     (let [c  (a/map (fn [& more] more) cs)
           r1 (alts!! [c (timeout 5000)])
           r2 (alts!! [c (timeout 5000)])]
