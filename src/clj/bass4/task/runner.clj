@@ -9,24 +9,20 @@
 
 (defonce task-pool ^ScheduledExecutorService (Executors/newFixedThreadPool 8))
 
-(defonce tasks-running (atom {}))
+(defonce tasks-running (atom #{}))
 
 (defn- running?!
-  [task-name db-name]
-  (let [[new old] (swap-vals! tasks-running (fn [a]
-                                              ;; TODO: Could be simplified to assoc
-                                              (if (contains? a [task-name db-name])
-                                                a
-                                                (assoc a [task-name db-name] true))))]
+  [task-id]
+  (let [[new old] (swap-vals! tasks-running #(conj % task-id))]
     (= new old)))
 
 (defn- finished!
-  [task db-name]
-  (swap! tasks-running #(dissoc % [task db-name])))
+  [task-id]
+  (swap! tasks-running #(disj % task-id)))
 
 (defn- run-db-task!
-  [db db-now db-name db-config task task-name]
-  (if (running?! task-name db-name)
+  [db db-now db-name db-config task task-name task-id]
+  (if (running?! task-id)
     (-> (task-log/open-db-entry! db-name task-name (t/now))
         (task-log/close-db-entry! (t/now) {} "already running"))
     (binding [db/*db*                  nil
@@ -40,7 +36,7 @@
                          (log/debug e)
                          {:exception e}))]
         (task-log/close-db-entry! db-id (t/now) res "finished")
-        (finished! task-name db-name)
+        (finished! task-id)
         db-id))))
 
 (defn run-task-for-dbs!
@@ -51,4 +47,4 @@
       (let [db        @(get db/db-connections db-name)
             db-config (get db-config/local-configs db-name)]
         (.execute task-pool (bound-fn*
-                              #(run-db-task! db (t/now) db-name db-config task task-name)))))))
+                              #(run-db-task! db (t/now) db-name db-config task task-name task-id)))))))
