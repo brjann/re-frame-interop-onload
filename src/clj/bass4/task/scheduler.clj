@@ -13,22 +13,23 @@
 
 (defonce tasks (atom {}))
 
+(defn cancel-db-tasks
+  [task-name db-tasks]
+  (doseq [[handle db-name task-id] db-tasks]
+    (log/info "Cancelling task" task-name "with id" task-id "for db" db-name)
+    (.cancel ^ScheduledThreadPoolExecutor$ScheduledFutureTask handle false)))
+
 (defn cancel-task*!
   [task-name]
-  (let [[task-id handle] (get @tasks task-name)]
-    (if handle
-      (do
-        (log/info "Cancelling task" task-name "with id" task-id)
-        (.cancel ^ScheduledThreadPoolExecutor$ScheduledFutureTask handle false)
-        (swap! tasks #(dissoc % task-name))
-        true)
-      false)))
+  (let [[old new] (swap-vals! tasks #(dissoc % task-name))]
+    (when (and (contains? old task-name) (not (contains? new task-name)))
+      (cancel-db-tasks task-name (get old task-name)))))
 
 (defn cancel-all!
   []
-  (doseq [[task-name [_ handle]] @tasks]
-    (.cancel ^ScheduledThreadPoolExecutor$ScheduledFutureTask handle false)
-    (swap! tasks #(dissoc % task-name))))
+  (let [[tasks* _] (reset-vals! tasks {})]
+    (doseq [[task-name db-tasks] tasks*]
+      (cancel-db-tasks task-name db-tasks))))
 
 (defn interval-params
   [scheduling]
@@ -71,7 +72,7 @@
                                              (fn []
                                                (let [db        @(get db/db-connections db-name)
                                                      db-config (get db-config/local-configs db-name)]
-                                                 (log/debug "Running task " task-name "with id" task-id "for" db-name)
+                                                 (log/debug "Running task" task-name "with id" task-id "for" db-name)
                                                  (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
                                            (long minutes-left)
                                            interval
