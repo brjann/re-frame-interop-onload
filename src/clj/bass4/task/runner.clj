@@ -3,11 +3,7 @@
             [clj-time.core :as t]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [bass4.db-config :as db-config])
-  (:import [java.util.concurrent Executors ScheduledExecutorService]))
-
-
-(defonce task-pool ^ScheduledExecutorService (Executors/newFixedThreadPool 8))
+            [bass4.db-config :as db-config]))
 
 (defonce tasks-running (atom #{}))
 

@@ -97,12 +97,15 @@
 ;; to each clients database before executing queries
 (def ^:dynamic *db* nil)
 
+(defonce connected-dbs (atom {}))
+
 (defstate db-connections
   :start (let [x (map-map db-connect!
                           db-config/local-configs)]
            (when (config/env :dev)
              (log/info "Setting *db* to dev database")
              (def ^:dynamic *db* @(get x (config/env :dev-db))))
+           (reset! connected-dbs x)
            x)
   :stop (map-map db-disconnect!
                  db-connections))

@@ -9,9 +9,10 @@
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
-(defonce schedule-pool ^ScheduledExecutorService (Executors/newScheduledThreadPool 4))
-
-(defonce tasks (atom {}))
+(defonce schedule-pool ^ScheduledExecutorService (Executors/newScheduledThreadPool 10))
+(defonce task-counter (atom 0))
+(defonce task-handlers (atom {}))
+(defonce task-list (atom {}))
 
 (defn cancel-task-for-dbs
   [task-name db-tasks]
@@ -21,13 +22,13 @@
 
 (defn cancel-task!
   [task-name]
-  (let [[old new] (swap-vals! tasks #(dissoc % task-name))]
+  (let [[old new] (swap-vals! task-handlers #(dissoc % task-name))]
     (when (and (contains? old task-name) (not (contains? new task-name)))
       (cancel-task-for-dbs task-name (get old task-name)))))
 
 (defn cancel-all!
   []
-  (let [[tasks* _] (reset-vals! tasks {})]
+  (let [[tasks* _] (reset-vals! task-handlers {})]
     (doseq [[task-name db-tasks] tasks*]
       (cancel-task-for-dbs task-name db-tasks))))
 
@@ -53,7 +54,25 @@
   []
   (remove #(db-config/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
 
-(defonce task-counter (atom 0))
+(defn schedule-db-task*!
+  [task task-name scheduling]
+  (doseq [db-name (task-dbs)]
+    (let [task-id (swap! task-counter inc)]
+      (log/info "Adding task" task-name "with id" task-id "for" db-name "")
+      (let [[minutes-left interval time-unit] (interval-params scheduling)
+            handle (.scheduleAtFixedRate schedule-pool
+                                         (bound-fn*
+                                           (fn []
+                                             (let [db        @(get db/db-connections db-name)
+                                                   db-config (get db-config/local-configs db-name)]
+                                               (log/debug "Running task" task-name "with id" task-id "for" db-name)
+                                               (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
+                                         (long minutes-left)
+                                         interval
+                                         time-unit)]
+        (utils/swap-key! task-handlers task-name #(conj % [handle db-name task-id]) [])
+        (swap! task-list #(assoc % task-name [task scheduling]))
+        task-id))))
 
 (defn schedule-db-task!
   [task & scheduling]
@@ -62,21 +81,21 @@
   (let [task-name (if (instance? Var task)
                     (subs (str task) 2)
                     (repl/demunge (str task)))]
-    (when (contains? @tasks task-name)
+    (when (contains? @task-handlers task-name)
       (cancel-task! task-name))
-    (doseq [db-name (task-dbs)]
-      (let [task-id (swap! task-counter inc)]
-        (let [[minutes-left interval time-unit] (interval-params scheduling)
-              handle (.scheduleAtFixedRate schedule-pool
-                                           (bound-fn*
-                                             (fn []
-                                               (let [db        @(get db/db-connections db-name)
-                                                     db-config (get db-config/local-configs db-name)]
-                                                 (log/debug "Running task" task-name "with id" task-id "for" db-name)
-                                                 (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
-                                           (long minutes-left)
-                                           interval
-                                           time-unit)]
-          (log/info "Adding task" task-name "with id" task-id "for" db-name "")
-          (utils/swap-key! tasks task-name #(conj % [handle db-name task-id]) [])
-          task-id)))))
+    (schedule-db-task*! task task-name scheduling)))
+
+(defn- reschedule-db-tasks!
+  []
+  (doseq [[task-name [task scheduling]] @task-list]
+    (cancel-task! task-name)
+    (schedule-db-task*! task task-name scheduling)))
+
+(defn db-watcher
+  [_ _ old-state, new-state]
+  (let [old-keys (keys old-state)
+        new-keys (keys new-state)]
+    (when (not= old-keys new-keys)
+      (reschedule-db-tasks!))))
+
+(add-watch db/connected-dbs ::db-watcher db-watcher)
