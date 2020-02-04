@@ -34,7 +34,7 @@
       (cancel-task-for-dbs task-name db-tasks))))
 
 (defn interval-params
-  [scheduling]
+  [scheduling tz]
   (case (first scheduling)
     ::hourly
     [(- 60 (t/minute (t/now)))
@@ -49,18 +49,34 @@
     ::by-millisecond
     [(second scheduling)
      (second scheduling)
-     TimeUnit/MILLISECONDS]))
+     TimeUnit/MILLISECONDS]
+
+    ::daily-at
+    (let [wait (let [current-tz-hour (t/hour (t/to-time-zone (t/now) tz))
+                     target-tz-hour  (second scheduling)
+                     current-minute  (t/minute (t/now))
+                     minutes-until   (-> (- target-tz-hour current-tz-hour)
+                                         (* 60)
+                                         (- current-minute))]
+                 (if (> target-tz-hour current-tz-hour)
+                   minutes-until
+                   (+ minutes-until (* 24 60))))]
+      [wait
+       (* 24 60)
+       TimeUnit/MINUTES])))
 
 (defn task-dbs
   []
   (remove #(db-config/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
 
-(defn schedule-db-task*!
+(defn- schedule-db-task*!
   [task task-name scheduling]
   (doseq [db-name (task-dbs)]
-    (let [task-id (swap! task-counter inc)]
-      (log/info "Adding task" task-name "with id" task-id "for" db-name "")
-      (let [[time-left interval time-unit] (interval-params scheduling)
+    (let [task-id   (swap! task-counter inc)
+          db-config (get db-config/local-configs db-name)
+          tz        (-> (:time-zone db-config "Europe/Stockholm")
+                        (t/time-zone-for-id))]
+      (let [[time-left interval time-unit] (interval-params scheduling tz)
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
                                            (fn []
@@ -70,9 +86,14 @@
                                          (long time-left)
                                          interval
                                          time-unit)]
+        (log/info "Adding task"
+                  task-name
+                  "with id" task-id
+                  "for" db-name
+                  "Next run in" time-left (str time-unit)
+                  "and then every" interval)
         (utils/swap-key! task-handlers task-name #(conj % [handle db-name task-id]) [])
-        (swap! task-list #(assoc % task-name [task scheduling]))
-        task-id))))
+        (swap! task-list #(assoc % task-name [task scheduling]))))))
 
 (defn schedule-db-task!
   [task & scheduling]

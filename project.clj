@@ -29,7 +29,7 @@
                  [com.taoensso/nippy "2.14.0"]              ; https://github.com/ptaoussanis/nippy
 
                  ; Database and state management libraries
-                 [conman "0.8.3"]                           ; https://github.com/luminus-framework/conman
+                 [conman "0.8.4"]                           ; https://github.com/luminus-framework/conman
                  [mount "0.1.16"]                           ; https://github.com/tolitius/mount
                  [tolitius/mount-up "0.1.2"]                ; https://github.com/tolitius/mount-up
                  [mysql/mysql-connector-java "8.0.15"]      ; https://mvnrepository.com/artifact/mysql/mysql-connector-java
