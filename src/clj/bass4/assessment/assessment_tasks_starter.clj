@@ -10,8 +10,8 @@
            (task-scheduler/schedule-db-task! #'assessment-reminder/reminder-task
                                              ::task-scheduler/hourly)
            (task-scheduler/schedule-db-task! #'late-flagger/late-flag-task
-                                             ::task-scheduler/by-minute 1)
+                                             ::task-scheduler/hourly)
            (task-scheduler/schedule-db-task! #'late-flagger/late-deflag-task
-                                             ::task-scheduler/by-minute 1)
+                                             ::task-scheduler/hourly)
            (task-scheduler/schedule-db-task! #'activated-flagger/activated-flag-task
-                                             ::task-scheduler/by-minute 1)))
+                                             ::task-scheduler/hourly)))
