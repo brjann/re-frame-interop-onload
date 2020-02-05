@@ -9,7 +9,7 @@
             [bass4.config :as config]
             [bass4.db.core :as db]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import (java.sql SQLException)))
 
 
@@ -62,7 +62,7 @@
       (jdbc/execute! db/db-common [(str "INSERT INTO common_log_queries"
                                         "(`platform`, `db`, `time`, `query`, `duration`, `tries`, `error?`, `error`)"
                                         "VALUES ('clj', ?, ?, ?, ?, ?, ?, ?)")
-                                   (client-config/db-setting [:name])
+                                   (clients/db-setting [:name])
                                    unix
                                    (str (first sqlvec))
                                    time
@@ -79,7 +79,7 @@
         db/*db*
         (config/env :error-email)
         "SQL required more than 1 try to succeed"
-        (str "DB: " (client-config/db-setting [:name]) "\n"
+        (str "DB: " (clients/db-setting [:name]) "\n"
              "Time: " unix)))
     val))
 

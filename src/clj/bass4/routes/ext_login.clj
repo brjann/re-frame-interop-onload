@@ -16,7 +16,7 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config]
             [bass4.services.privacy :as privacy-service]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 
 ;; ------------
@@ -26,7 +26,7 @@
 (defn logged-response
   [s]
   (when-not config/test-mode?
-    (log/info (:db-name client-config/*local-config*) s))
+    (log/info (:db-name clients/*local-config*) s))
   (layout/text-response s))
 
 (defn- match-request-ip

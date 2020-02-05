@@ -5,7 +5,7 @@
             [bass4.utils :as utils :refer [map-map]]
             [ring.util.http-response :as http-response]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import (clojure.lang Symbol ExceptionInfo)
            (java.net URL)))
 
@@ -22,7 +22,7 @@
     (log/error msg)
     (log/error data)
     (request-logger/record-error! msg))
-  (http-response/bad-request (when (client-config/debug-mode?)
+  (http-response/bad-request (when (clients/debug-mode?)
                                (.getMessage e))))
 
 (defn url?

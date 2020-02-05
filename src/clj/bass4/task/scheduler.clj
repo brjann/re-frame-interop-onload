@@ -6,7 +6,7 @@
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [mount-up.core :as mount-up]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -68,13 +68,13 @@
 
 (defn task-dbs
   []
-  (remove #(client-config/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
+  (remove #(clients/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
 
 (defn- schedule-db-task*!
   [task task-name scheduling]
   (doseq [db-name (task-dbs)]
     (let [task-id   (swap! task-counter inc)
-          db-config (get client-config/local-configs db-name)
+          db-config (get clients/local-configs db-name)
           tz        (-> (:timezone db-config "Europe/Stockholm")
                         (t/time-zone-for-id))]
       (let [[time-left interval time-unit] (interval-params scheduling tz)
@@ -82,7 +82,7 @@
                                          (bound-fn*
                                            (fn []
                                              (let [db        @(get db/db-connections db-name)
-                                                   db-config (get client-config/local-configs db-name)]
+                                                   db-config (get clients/local-configs db-name)]
                                                (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
                                          (long time-left)
                                          interval

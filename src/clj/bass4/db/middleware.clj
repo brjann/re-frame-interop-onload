@@ -4,7 +4,7 @@
             [ring.util.http-response :as http-response]
             [bass4.http-utils :as h-utils]
             [bass4.config :as config]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 
 ;;-------------------------
@@ -16,7 +16,7 @@
         name-id (some (fn [[k v]]
                         (when (= host (:bass4-host v))
                           k))
-                      client-config/local-configs)]
+                      clients/local-configs)]
     (when (contains? db/db-connections name-id)
       [name-id @(get db/db-connections name-id)]
       #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
@@ -30,8 +30,8 @@
 (defn db-middleware
   [handler request]
   (if-let [[db-name db-conn] (resolve-db request)]
-    (binding [db/*db*                      db-conn
-              client-config/*local-config* (get client-config/local-configs db-name)]
+    (binding [db/*db*                db-conn
+              clients/*local-config* (get clients/local-configs db-name)]
       (request-logger/set-state! :name (name db-name))
       (handler request))
     (->

@@ -10,7 +10,7 @@
                                      disable-attack-detector
                                      *s*]]
             [clojure.tools.logging :as log]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (use-fixtures
   :once
@@ -25,56 +25,56 @@
                                    :test        false
                                    :debug-mode  false
                                    :db-settings {(test-db) {:debug-mode false}}})]
-    (is (= false (client-config/debug-mode?))))
+    (is (= false (clients/debug-mode?))))
 
   (with-redefs [config/env (merge config/env
                                   {:dev         true
                                    :test        false
                                    :debug-mode  false
                                    :db-settings {(test-db) {:debug-mode false}}})]
-    (is (= true (client-config/debug-mode?))))
+    (is (= true (clients/debug-mode?))))
 
   (with-redefs [config/env (merge config/env
                                   {:dev         false
                                    :test        true
                                    :debug-mode  false
                                    :db-settings {(test-db) {:debug-mode false}}})]
-    (is (= false (client-config/debug-mode?))))
+    (is (= false (clients/debug-mode?))))
 
   (with-redefs [config/env (merge config/env
                                   {:dev         false
                                    :test        false
                                    :debug-mode  true
                                    :db-settings {(test-db) {:debug-mode false}}})]
-    (is (= false (client-config/debug-mode?))))
+    (is (= false (clients/debug-mode?))))
 
   (with-redefs [config/env (merge config/env
                                   {:dev         false
                                    :test        false
                                    :debug-mode  false
                                    :db-settings {(test-db) {:debug-mode true}}})]
-    (is (= true (client-config/debug-mode?)))))
+    (is (= true (clients/debug-mode?)))))
 
 (deftest db-settings
   (with-redefs [config/env (merge config/env
                                   {:setting-666 666
                                    :db-settings {(test-db) {}}})]
-    (is (= 666 (client-config/db-setting [:setting-666]))))
+    (is (= 666 (clients/db-setting [:setting-666]))))
 
   (with-redefs [config/env (merge config/env
                                   {:db-settings {(test-db) {}}})]
     #_(is (= :thrown (try
-                       (do (client-config/db-setting [:setting-666])
+                       (do (clients/db-setting [:setting-666])
                            false)
                        (catch Exception _
                        :thrown))))
-    (is (= :default (client-config/db-setting [:setting-666] :default))))
+    (is (= :default (clients/db-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
                                   {:db-settings {(test-db) {:setting-666 666}}})]
-    (is (= 666 (client-config/db-setting [:setting-666] :default))))
+    (is (= 666 (clients/db-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
                                   {:setting-666 333
                                    :db-settings {(test-db) {:setting-666 666}}})]
-    (is (= 666 (client-config/db-setting [:setting-666] :default)))))
+    (is (= 666 (clients/db-setting [:setting-666] :default)))))

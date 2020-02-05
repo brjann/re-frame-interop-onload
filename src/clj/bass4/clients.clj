@@ -1,4 +1,4 @@
-(ns bass4.client-config
+(ns bass4.clients
   (:require [mount.core :refer [defstate]]
             [bass4.db.core :as db]
             [bass4.config :as config]))

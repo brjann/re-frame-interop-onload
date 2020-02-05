@@ -28,7 +28,7 @@
             [net.cgrand.enlive-html :as enlive]
             [bass4.utils :as utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -88,7 +88,7 @@
     #'bass4.db.core/db-common
     #'bass4.db.core/client-db-configs
     #'bass4.db.core/db-connections
-    #'client-config/local-configs
+    #'clients/local-configs
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
@@ -101,7 +101,7 @@
               *s*                              @s
               i-validation/*validate-answers?  false
               request-logger/*request-host*    (config/env :test-host)
-              client-config/*local-config*     (get client-config/local-configs test-db)
+              clients/*local-config*           (get clients/local-configs test-db)
               db/*db*                          @(get db/db-connections test-db)]
       (f))))
 

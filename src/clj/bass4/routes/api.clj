@@ -15,7 +15,7 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.utils :as utils]
             [bass4.i18n :as i18n]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (defn treatment-mw
   [handler]
@@ -45,8 +45,8 @@
   (route-rules/wrap-route-mw
     handler
     ["/swagger*"]
-    (fn [handler] (fn [request] (if (or (client-config/debug-mode?)
-                                        (client-config/db-setting [:expose-swagger?] false))
+    (fn [handler] (fn [request] (if (or (clients/debug-mode?)
+                                        (clients/db-setting [:expose-swagger?] false))
                                   (handler request)
                                   (http-response/not-found))))
     #'treatment-mw))
@@ -170,7 +170,7 @@
 
         (GET "/disable-csrf" []
           :summary "Removes the CSRF requirement for the current session. Can only be used in dev or debug mode."
-          (if (client-config/debug-mode?)
+          (if (clients/debug-mode?)
             (-> (http-response/ok)
                 (assoc :session (assoc (:session request) :csrf-disabled true)))
             (http-response/forbidden "Not in debug or dev mode")))
@@ -188,7 +188,7 @@
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
           :return String
-          (layout/text-response (client-config/db-setting [:timezone])))
+          (layout/text-response (clients/db-setting [:timezone])))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
