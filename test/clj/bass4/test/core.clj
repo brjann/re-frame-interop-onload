@@ -86,9 +86,8 @@
     #'db-common/common-config
     ;#'bass4.db.core/metrics-reg
     #'bass4.db.core/db-common
-    #'bass4.db.core/client-db-configs
-    #'bass4.db.core/db-connections
     #'clients/local-configs
+    #'clients/db-connections
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
@@ -102,7 +101,7 @@
               i-validation/*validate-answers?  false
               request-logger/*request-host*    (config/env :test-host)
               clients/*local-config*           (get clients/local-configs test-db)
-              db/*db*                          @(get db/db-connections test-db)]
+              db/*db*                          @(get clients/db-connections test-db)]
       (f))))
 
 (defn disable-attack-detector [f]

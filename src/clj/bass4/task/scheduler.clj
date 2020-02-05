@@ -68,7 +68,7 @@
 
 (defn task-dbs
   []
-  (remove #(clients/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
+  (remove #(clients/db-setting* % [:no-tasks?] false) (keys clients/db-connections)))
 
 (defn- schedule-db-task*!
   [task task-name scheduling]
@@ -81,7 +81,7 @@
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
                                            (fn []
-                                             (let [db        @(get db/db-connections db-name)
+                                             (let [db        @(get clients/db-connections db-name)
                                                    db-config (get clients/local-configs db-name)]
                                                (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
                                          (long time-left)
@@ -117,9 +117,9 @@
   "Watches the DBs for changes in connection. Reschedules all tasks if
   changes are detected"
   [{:keys [name]}]
-  (if (= name (str #'bass4.db.core/db-connections))
-    (if (map? db/db-connections)
-      (let [new-dbs (keys db/db-connections)
+  (if (= name (str #'bass4.clients/db-connections))
+    (if (map? clients/db-connections)
+      (let [new-dbs (keys clients/db-connections)
             old-dbs @db-tracker]
         (when-not (or (nil? @db-tracker) (= new-dbs old-dbs))
           (log/info "DB connections change detected, rescheduling tasks.")

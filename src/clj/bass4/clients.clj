@@ -1,12 +1,49 @@
 (ns bass4.clients
   (:require [mount.core :refer [defstate]]
             [bass4.db.core :as db]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.utils :as utils]
+            [clojure.tools.logging :as log]))
 
 (def ^:dynamic *local-config* {})
 
+(def local-defaults
+  {:timezone "Europe/Stockholm"
+   :language "en"})
+
 (defstate local-configs
-  :start (do db/client-db-configs))
+  :start (let [configs (db/load-client-db-configs db/db-common)]
+           (->> configs
+                (map #(assoc % :name (:id-name %)))
+                (map #(if (empty? (:timezone %))
+                        (assoc % :timezone (:timezone local-defaults))
+                        %))
+                (map #(if (empty? (:language %))
+                        (assoc % :language (:language local-defaults))
+                        %))
+                (map (juxt (comp keyword :id-name) identity))
+                (into {}))))
+
+(defn- connect-db
+  [db-config]
+  (let [conn (try
+               (db/db-connect! db-config)
+               (catch Throwable e
+                 (log/error "Could not connect to db because of:" (:id-name db-config) (:cause (Throwable->map e)))))]
+    (if conn
+      (delay conn))))
+
+
+(defstate db-connections
+  :start (let [x (->> local-configs
+                      (utils/map-map connect-db)
+                      (utils/filter-map identity))]
+           (when (config/env :dev)
+             (log/info "Setting *db* to dev database")
+             (alter-var-root #'db/*db* (constantly @(get x (config/env :dev-db)))))
+           x)
+  :stop (utils/map-map db/db-disconnect!
+                       db-connections))
 
 (defn db-setting*
   [client-name-kw setting-keys default]
