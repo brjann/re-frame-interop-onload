@@ -6,7 +6,6 @@
             [bass4.external-messages.email-sender :as email]
             [clj-time.coerce :as tc]
             [clj-time.core :as t]
-            [bass4.db-config :as db-config]
             [bass4.config :as config]
             [bass4.db.core :as db]
             [bass4.middleware.request-logger :as request-logger]

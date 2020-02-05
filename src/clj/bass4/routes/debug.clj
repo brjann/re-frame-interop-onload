@@ -6,7 +6,6 @@
             [bass4.utils :refer [map-map str->int]]
             [bass4.config :refer [env]]
             [clojure.java.io :as io]
-            [bass4.db-config :as db-config]
             [clojure.data.json :as json]
             [clojure.pprint]
             [ring.util.codec :as codec]

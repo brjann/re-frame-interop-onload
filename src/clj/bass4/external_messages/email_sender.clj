@@ -6,7 +6,6 @@
             [clojure.tools.logging :as log]
             [bass4.external-messages.async :as external-messages]
             [clojure.core.async :refer [chan go <! put!]]
-            [bass4.db-config :as db-config]
             [bass4.services.bass :as bass]
             [bass4.db.core :as db]
             [bass4.utils :as utils]

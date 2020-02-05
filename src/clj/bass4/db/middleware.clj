@@ -2,7 +2,6 @@
   (:require [bass4.middleware.request-logger :as request-logger]
             [bass4.db.core :as db]
             [ring.util.http-response :as http-response]
-            [bass4.db-config :as db-config]
             [bass4.http-utils :as h-utils]
             [bass4.config :as config]
             [bass4.client-config :as client-config]))

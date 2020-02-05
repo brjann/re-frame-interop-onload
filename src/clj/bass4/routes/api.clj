@@ -5,7 +5,6 @@
             [bass4.layout :as layout]
             [bass4.route-rules :as route-rules]
             [bass4.routes.user :as user-routes]
-            [bass4.db-config :as db-config]
             [bass4.responses.messages :as messages-response]
             [bass4.treatment.responses :as treatment-response]
             [bass4.responses.privacy :as privacy-response]

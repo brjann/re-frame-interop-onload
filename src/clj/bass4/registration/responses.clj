@@ -20,7 +20,6 @@
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.http-utils :as h-utils]
             [bass4.responses.e-auth :as e-auth]
-            [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.privacy :as privacy-service]
             [bass4.services.user :as user-service]

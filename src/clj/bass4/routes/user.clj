@@ -1,7 +1,6 @@
 (ns bass4.routes.user
   (:require [compojure.core :refer [defroutes context GET POST ANY routes]]
             [ring.util.http-response :as http-response]
-            [clojure.tools.logging :as log]
             [bass4.responses.messages :as messages-response]
             [bass4.responses.dashboard :as dashboard]
             [bass4.treatment.responses :as user-response]
@@ -18,7 +17,6 @@
             [bass4.file-response :as file]
             [bass4.responses.privacy :as privacy-response]
             [bass4.session.timeout :as session-timeout]
-            [bass4.db-config :as db-config]
             [bass4.client-config :as client-config]))
 
 

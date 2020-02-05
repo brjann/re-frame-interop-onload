@@ -16,7 +16,7 @@
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
             [clj-time.core :as t]
-            [bass4.db-config :as db-config]
+            [bass4.db-common :as db-common]
             [bass4.middleware.debug :as mw-debug]
             [bass4.config :as config]
             [clojure.string :as str]
@@ -83,7 +83,7 @@
   [f]
   (mount/start
     #'bass4.config/env
-    #'db-config/common-config
+    #'db-common/common-config
     ;#'bass4.db.core/metrics-reg
     #'bass4.db.core/db-common
     #'bass4.db.core/client-db-configs

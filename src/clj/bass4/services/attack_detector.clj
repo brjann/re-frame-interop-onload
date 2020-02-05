@@ -5,7 +5,6 @@
             [bass4.config :refer [env]]
             [bass4.utils :refer [filter-map nil-zero?]]
             [bass4.http-utils :as h-utils]
-            [bass4.db-config :as db-config]
             [bass4.config :as config]
             [bass4.http-errors :as http-errors]
             [bass4.utils :as utils]))

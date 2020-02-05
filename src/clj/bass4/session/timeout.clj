@@ -7,11 +7,8 @@
             [bass4.utils :as utils]
             [ring.util.http-response :as http-response]
             [clojure.data.json :as json]
-            [clojure.tools.logging :as log]
-            [bass4.config :as config]
             [bass4.http-utils :as h-utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.db-config :as db-config]
             [bass4.client-config :as client-config]))
 
 (def ^:dynamic *in-session?* false)

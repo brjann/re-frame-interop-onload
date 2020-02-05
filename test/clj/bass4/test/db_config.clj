@@ -1,7 +1,6 @@
 (ns bass4.test.db-config
   (:require [clojure.test :refer :all]
             [bass4.config :as config]
-            [bass4.db-config :as db-config]
             [bass4.test.core :refer [test-fixtures
                                      fn-not-text?
                                      log-return

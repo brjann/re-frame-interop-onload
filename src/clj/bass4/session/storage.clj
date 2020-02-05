@@ -9,7 +9,6 @@
             [ring.middleware.session :as ring-session]
             [bass4.db.core :as db]
             [clojure.string :as str]
-            [bass4.db-config :as db-config]
             [bass4.config :as config]
             [bass4.client-config :as client-config])
   (:import java.util.UUID))

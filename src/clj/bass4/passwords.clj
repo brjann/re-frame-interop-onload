@@ -3,7 +3,6 @@
             [clojure.string :as string]
             [clojure.math.numeric-tower :as math]
             [bass4.utils :refer [map-map map-map-keys filter-map]]
-            [bass4.db-config :as db-config]
             [bass4.client-config :as client-config]))
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])

@@ -1,7 +1,6 @@
 (ns bass4.i18n
   (:require [taoensso.tempura :as tempura]
             [bass4.utils :refer [map-map map-map-keys filter-map deep-merge in?]]
-            [bass4.db-config :as db-config]
             [bass4.php_clj.reader :as reader]
             [clojure.java.io :as io]
             [clojure.edn :as edn]

@@ -1,6 +1,5 @@
 (ns bass4.services.bass
   (:require [bass4.db.core :as db]
-            [bass4.db-config :as db-config]
             [clj-time.core :as t]
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
