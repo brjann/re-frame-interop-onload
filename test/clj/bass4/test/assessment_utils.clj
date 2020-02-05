@@ -16,7 +16,7 @@
             [bass4.assessment.late-flagger :as late-flagger]
             [bass4.assessment.activated-flagger :as activated-flagger]))
 
-(use-fixtures
+#_(use-fixtures
   :once
   test-fixtures)
 
