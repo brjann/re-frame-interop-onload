@@ -7,7 +7,7 @@
     [bass4.db.core :as db]
     [bass4.services.bass :as bass-service]
     [selmer.parser :as parser]
-    [bass4.db-config :as db-config]
+    [bass4.db-common :as db-common]
     [clojure.tools.logging :as log]
     [bass4.services.bass :as bass]
     [bass4.external-messages.async :as external-messages]
@@ -73,7 +73,7 @@
   ([to message sender status-url]
    (when (env :dev)
      (log/info (str "Sent sms to " to)))
-   (let [config db-config/common-config
+   (let [config db-common/common-config
          url    (smsteknik-url
                   (:smsteknik-id config)
                   (:smsteknik-user config)

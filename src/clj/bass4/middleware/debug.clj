@@ -1,6 +1,5 @@
 (ns bass4.middleware.debug
   (:require [prone.middleware :as prone]
-            [bass4.db-config :as db-config]
             [bass4.http-utils :as h-utils]
             [bass4.client-config :as client-config]))
 

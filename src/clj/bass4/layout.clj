@@ -25,7 +25,6 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.middleware.embedded :as embedded-mw]
-            [bass4.db-config :as db-config]
             [bass4.client-config :as client-config]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]

@@ -1,4 +1,4 @@
-(ns bass4.db-config
+(ns bass4.db-common
   (:require [ring.util.codec :refer [url-encode]]
             [bass4.utils :refer [map-map parse-php-constants filter-map]]
             [clojure.java.io :as io]

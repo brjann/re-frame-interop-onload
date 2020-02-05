@@ -6,7 +6,6 @@
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
-            [bass4.db-config :as db-config]
             [bass4.client-config :as client-config]))
 
 (defn print-status

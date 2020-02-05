@@ -4,7 +4,7 @@
     [bass4.utils :as utils :refer [map-map filter-map time+ val-to-bool]]
     [conman.core :as conman]
     [mount.core :refer [defstate]]
-    [bass4.db-config :as db-config]
+    [bass4.db-common :as db-common]
     [clojure.tools.logging :as log]
     ;; clj-time.jdbc registers protocol extensions so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
     [clj-time.jdbc]
@@ -85,7 +85,7 @@
     (conman/disconnect! @db-conn)))
 
 (defstate db-common
-  :start @(db-connect! db-config/common-config)
+  :start @(db-connect! db-common/common-config)
   :stop (do (log/info "Detaching common")
             (conman/disconnect! db-common)))
 
@@ -131,10 +131,6 @@
 (conman/bind-connection db-common
                         "sql/common.sql"
                         "sql/attack-detector.sql")
-
-;; clj-time.jdbc registers protocol extensions,
-;; so you don’t have to use clj-time.coerce yourself to coerce to and from SQL timestamps.
-
 
 #_(defstate metrics-reg
     :start (let [metrics-reg (metrics/new-registry)

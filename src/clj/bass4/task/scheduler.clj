@@ -3,7 +3,6 @@
             [clj-time.core :as t]
             [clojure.repl :as repl]
             [bass4.task.runner :as task-runner]
-            [bass4.db-config :as db-config]
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [mount-up.core :as mount-up]
