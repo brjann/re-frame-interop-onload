@@ -36,7 +36,7 @@
     (if (or (client-config/debug-mode?))
       (routes
         (GET "/nothing" [] (layout/text-response "nothing"))
-        (GET "/timezone" [:as req] (layout/print-var-response (client-config/time-zone)))
+        (GET "/timezone" [:as req] (layout/print-var-response (client-config/db-setting [:timezone])))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-logger/record-error! "An evil error message")
@@ -118,7 +118,7 @@
         (GET "/i18n-merge/:lang" [lang]
           (layout/text-response (i18n/merge-i18n lang)))
         (GET "/server-time-zone" []
-          (layout/text-response (:time-zone (db/get-time-zone))))
+          (layout/text-response (:timezone (db/get-time-zone))))
         (GET "/markdown-list" [& params]
           (layout/render "render.html"
                          {:text      "1. Foo\n2. Bar\n3. Baz"

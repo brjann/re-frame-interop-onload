@@ -194,7 +194,7 @@
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender     (get-sender db)
         status-url (sms-status/status-url db)
-        error-chan (external-messages/async-error-chan email/error-sender (client-config/client-name))
+        error-chan (external-messages/async-error-chan email/error-sender (client-config/db-setting [:name]))
         own-chan   (external-messages/queue-message! {:type       :sms
                                                       :to         to
                                                       :message    message

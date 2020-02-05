@@ -62,7 +62,7 @@
       (jdbc/execute! db/db-common [(str "INSERT INTO common_log_queries"
                                         "(`platform`, `db`, `time`, `query`, `duration`, `tries`, `error?`, `error`)"
                                         "VALUES ('clj', ?, ?, ?, ?, ?, ?, ?)")
-                                   (client-config/client-name)
+                                   (client-config/db-setting [:name])
                                    unix
                                    (str (first sqlvec))
                                    time
@@ -79,7 +79,7 @@
         db/*db*
         (config/env :error-email)
         "SQL required more than 1 try to succeed"
-        (str "DB: " (client-config/client-name) "\n"
+        (str "DB: " (client-config/db-setting [:name]) "\n"
              "Time: " unix)))
     val))
 

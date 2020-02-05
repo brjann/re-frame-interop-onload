@@ -39,7 +39,7 @@
 (defn password
   ([] (password :word 3 :word))
   ([& config]
-   (let [words (words (client-config/language))]
+   (let [words (words (client-config/db-setting [:language]))]
      (apply str (mapv (fn [x]
                         (if (integer? x)
                           (random-number x)

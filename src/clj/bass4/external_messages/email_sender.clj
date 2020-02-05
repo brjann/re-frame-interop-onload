@@ -155,7 +155,7 @@
    (let [sender     (if db
                       (db-no-reply-address db)
                       (config/env :no-reply-address))
-         error-chan (external-messages/async-error-chan error-sender (client-config/client-name))
+         error-chan (external-messages/async-error-chan error-sender (client-config/db-setting [:name]))
          own-chan   (external-messages/queue-message! {:type       :email
                                                        :to         to
                                                        :subject    subject

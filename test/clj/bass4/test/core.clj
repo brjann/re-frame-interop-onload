@@ -101,7 +101,7 @@
               *s*                              @s
               i-validation/*validate-answers?  false
               request-logger/*request-host*    (config/env :test-host)
-              client-config/*local-config*     (merge client-config/local-defaults (get client-config/local-configs test-db))
+              client-config/*local-config*     (get client-config/local-configs test-db)
               db/*db*                          @(get db/db-connections test-db)]
       (f))))
 

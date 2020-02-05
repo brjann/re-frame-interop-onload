@@ -15,6 +15,10 @@
 ; SETUP DB STATE
 ;----------------
 
+(def local-defaults
+  {:timezone "Europe/Stockholm"
+   :language "en"})
+
 (def sql-user-fields
   "ObjectId,
   ObjectId AS `user-id`,
@@ -97,6 +101,12 @@
   :start (let [configs (load-client-db-configs db-common)]
            (->> configs
                 (map #(assoc % :name (:id-name %)))
+                (map #(if (empty? (:timezone %))
+                        (assoc % :timezone (:timezone local-defaults))
+                        %))
+                (map #(if (empty? (:language %))
+                        (assoc % :language (:language local-defaults))
+                        %))
                 (map (juxt (comp keyword :id-name) identity))
                 (into {}))))
 
