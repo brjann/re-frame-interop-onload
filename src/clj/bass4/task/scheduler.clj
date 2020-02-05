@@ -75,7 +75,7 @@
   (doseq [db-name (task-dbs)]
     (let [task-id   (swap! task-counter inc)
           db-config (get client-config/local-configs db-name)
-          tz        (-> (:time-zone db-config "Europe/Stockholm")
+          tz        (-> (:timezone db-config "Europe/Stockholm")
                         (t/time-zone-for-id))]
       (let [[time-left interval time-unit] (interval-params scheduling tz)
             handle (.scheduleAtFixedRate schedule-pool

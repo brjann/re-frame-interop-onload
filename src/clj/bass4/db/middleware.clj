@@ -33,7 +33,7 @@
   [handler request]
   (if-let [[db-name db-conn] (resolve-db request)]
     (binding [db/*db*                      db-conn
-              client-config/*local-config* (merge client-config/local-defaults (get client-config/local-configs db-name))]
+              client-config/*local-config* (get client-config/local-configs db-name)]
       (request-logger/set-state! :name (name db-name))
       (handler request))
     (->

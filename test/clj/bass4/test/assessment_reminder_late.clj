@@ -393,7 +393,7 @@
                            (f db/*db*
                               *now*
                               (config/env :test-db)
-                              {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
+                              {:name :test :timezone (.getID ^CachedDateTimeZone *tz*)}
                               task
                               (subs (str task) 2)
                               nil)))
@@ -443,7 +443,7 @@
                 quick-login/quicklogin-id      (constantly "xxx")]
     (let [reminder-task (fn [now]
                           (:cycles (assessment-reminder/reminder-task db/*db*
-                                                                      {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
+                                                                      {:name :test :timezone (.getID ^CachedDateTimeZone *tz*)}
                                                                       now)))
           group1-id     (create-group!)]
       (user-service/create-user! project-ass1-id {:group group1-id

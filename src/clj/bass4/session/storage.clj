@@ -74,7 +74,7 @@
   (let [db-session-handlers (atom {})]
     (fn [request]
       (let [cookie-name     (str "BASS-cookie-"
-                                 (client-config/client-name)
+                                 (client-config/db-setting [:name])
                                  (when (str/starts-with? (:uri request) "/embedded")
                                    "-embedded"))
             ;; Need to dynamically handle ssl mode to be able to run tests within IDE

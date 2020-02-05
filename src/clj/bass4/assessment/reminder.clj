@@ -473,7 +473,7 @@
 
 (defn reminder-task
   [db local-config now]
-  (let [tz               (-> (:time-zone local-config "Europe/Stockholm")
+  (let [tz               (-> (:timezone local-config "Europe/Stockholm")
                              (t/time-zone-for-id))
         start+stop-hours (db-reminder-start-and-stop db)
         hour             (t/hour (t/to-time-zone now tz))]

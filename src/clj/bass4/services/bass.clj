@@ -108,9 +108,9 @@
 (defn time-zone
   []
   (try
-    (t/time-zone-for-id (client-config/time-zone))
+    (t/time-zone-for-id (client-config/db-setting [:timezone]))
     (catch Exception e
-      (log/error "Time zone illegal: " (client-config/time-zone))
+      (log/error "Time zone illegal: " (client-config/db-setting [:timezone]))
       (t/default-time-zone))))
 
 (defn local-midnight

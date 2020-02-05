@@ -100,7 +100,7 @@
 
 (defn activated-flag-task
   [db local-config now]
-  (let [tz (-> (:time-zone local-config "Europe/Stockholm")
+  (let [tz (-> (:timezone local-config "Europe/Stockholm")
                (t/time-zone-for-id))]
     (let [res (flag-assessments! db now tz)]
       {:cycles (count res)})))

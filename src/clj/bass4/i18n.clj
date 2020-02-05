@@ -44,7 +44,7 @@
             (fn
               [{:keys [resource-ids]}]
               (str "Missing translation keys: " resource-ids))}
-     [(or (client-config/language) "en")]
+     [(or (client-config/db-setting [:language] "en"))]
      resource-ids
      resource-args)))
 

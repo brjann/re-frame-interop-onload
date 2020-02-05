@@ -3,45 +3,30 @@
             [bass4.db.core :as db]
             [bass4.config :as config]))
 
-(def local-defaults
-  {:time-zone "America/Puerto_Rico"
-   :language  "en"})
-
-(def ^:dynamic *local-config*
-  local-defaults)
+(def ^:dynamic *local-config* {})
 
 (defstate local-configs
   :start (do db/client-db-configs))
 
-(defn time-zone
-  []
-  (:time-zone *local-config*))
-
-(defn language
-  []
-  (:language *local-config*))
-
-(defn client-name
-  []
-  (:name *local-config*))
-
 (defn db-setting*
-  [db-name setting-keys default]
-  (let [setting (let [x (get-in config/env (into [:db-settings db-name] setting-keys))]
-                  (if-not (nil? x)
-                    x
-                    (let [x (get-in config/env setting-keys)]
-                      (if-not (nil? x)
-                        x
-                        default))))]
-    #_(when (nil? setting)
-        (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
-    setting))
+  [client-name-kw setting-keys default]
+  (or
+    (get-in local-configs (concat [client-name-kw] setting-keys))
+    (let [setting (let [x (get-in config/env (into [:db-settings client-name-kw] setting-keys))]
+                    (if-not (nil? x)
+                      x
+                      (let [x (get-in config/env setting-keys)]
+                        (if-not (nil? x)
+                          x
+                          default))))]
+      setting)))
 
 (defn db-setting
   ([setting-keys] (db-setting setting-keys nil))
   ([setting-keys default]
-   (db-setting* (keyword (client-name)) setting-keys default)))
+   (if (= [:name] setting-keys)
+     (:name *local-config*)
+     (db-setting* (keyword (:name *local-config*)) setting-keys default))))
 
 (defn debug-mode?
   []

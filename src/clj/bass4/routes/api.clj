@@ -188,7 +188,7 @@
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
           :return String
-          (layout/text-response (client-config/time-zone)))
+          (layout/text-response (client-config/db-setting [:timezone])))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
