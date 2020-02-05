@@ -1,4 +1,4 @@
-(defproject bass4 "4.5.2"
+(defproject bass4 "4.6-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
