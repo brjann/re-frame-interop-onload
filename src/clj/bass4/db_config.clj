@@ -8,47 +8,6 @@
             [clojure.tools.logging :as log]
             [clojure.set :as set]))
 
-(def local-defaults
-  {:time-zone "America/Puerto_Rico"
-   :language  "en"})
-
-(def ^:dynamic *local-config*
-  local-defaults)
-
-(defn- get-locals [bass-path]
-  (->> (.listFiles (io/file bass-path))
-       (filter #(clojure.string/starts-with? (.getName %) "local_"))))
-
-(defn db-setting*
-  [db-name setting-keys default]
-  (let [setting (let [x (get-in config/env (into [:db-settings db-name] setting-keys))]
-                  (if-not (nil? x)
-                    x
-                    (let [x (get-in config/env setting-keys)]
-                      (if-not (nil? x)
-                        x
-                        default))))]
-    #_(when (nil? setting)
-      (throw (Exception. (str "No setting found for " setting-keys ". No default provided"))))
-    setting))
-
-
-;; Please note that :db-name and :name are not the same!
-;; :db-name is the name of MySQL database
-;; :name    is the name of the BASS database/client, i.e. local_xxx.php <- xxx = name
-;; And thus, this function has a very confusing name.
-(defn client-name
-  []
-  (:name *local-config*))
-
-(defn db-setting
-  ([setting-keys] (db-setting setting-keys nil))
-  ([setting-keys default]
-   (db-setting* (keyword (client-name)) setting-keys default)))
-
-(defn debug-mode?
-  []
-  (or (db-setting [:debug-mode] false) (:dev config/env)))
 
 (defn- check-keys
   [local-config]
@@ -66,21 +25,6 @@
                      keyword)
                 (keys m)) (vals m)))
 
-(defn- parse-local [file]
-  (let [db-name (last (re-find #"local_(.*?).php" (.getName file)))]
-    {(keyword db-name)
-     (-> (slurp file)
-         (parse-php-constants)
-         fix-keys
-         (assoc :name db-name))}))
-
-(defn- load-local-configs
-  [bass-path]
-  (->> (get-locals bass-path)
-       (map parse-local)
-       (reduce merge)
-       (filter-map check-keys)))
-
 (defn- load-common-config
   [bass-path]
   (-> (io/file bass-path "local.php")
@@ -88,9 +32,6 @@
       (parse-php-constants)
       fix-keys
       (assoc :name "common")))
-
-(defstate local-configs
-  :start (load-local-configs (config/env :bass-path)))
 
 (defstate common-config
   :start (load-common-config (config/env :bass-path)))
