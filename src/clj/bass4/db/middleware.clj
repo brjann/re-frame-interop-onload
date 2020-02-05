@@ -11,16 +11,14 @@
 ;; DB RESOLVING MIDDLEWARE
 ;;-------------------------
 
-(defn host-db
-  [host db-mappings]
-  (or (get db-mappings host) (:default db-mappings)))
-
 (defn resolve-db [request]
-  (let [db-mappings (config/env :db-mappings)
-        host        (keyword (h-utils/get-server request))
-        db-name     (host-db host db-mappings)]
-    (when (contains? db/db-connections db-name)
-      [db-name @(get db/db-connections db-name)]
+  (let [host    (h-utils/get-server request)
+        name-id (some (fn [[k v]]
+                        (when (= host (:bass4-host v))
+                          k))
+                      client-config/local-configs)]
+    (when (contains? db/db-connections name-id)
+      [name-id @(get db/db-connections name-id)]
       #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."

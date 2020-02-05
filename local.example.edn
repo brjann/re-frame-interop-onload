@@ -21,5 +21,4 @@
                                                        :trust-store      ""
                                                        :trust-store-pass ""}}}}
  :database-port     3306
- :bass-path         "path-to-BASS4-php-root"
- :db-mappings       {:test.localhost :test}}                ; mapping between domains and client name in PHP (local_test.php in this case)
+ :bass-path         "path-to-BASS4-php-root"}                
