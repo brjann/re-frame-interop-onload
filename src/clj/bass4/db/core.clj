@@ -1,7 +1,6 @@
 (ns bass4.db.core
   (:require
     [ring.util.codec :refer [url-encode]]
-    [bass4.utils :as utils :refer [map-map filter-map time+ val-to-bool]]
     [conman.core :as conman]
     [mount.core :refer [defstate]]
     [bass4.db-common :as db-common]
