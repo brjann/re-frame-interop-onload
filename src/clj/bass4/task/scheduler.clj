@@ -75,7 +75,7 @@
   [task task-name scheduling]
   (doseq [db-name (task-dbs)]
     (let [task-id   (swap! task-counter inc)
-          db-config (get db-config/local-configs db-name)
+          db-config (get client-config/local-configs db-name)
           tz        (-> (:time-zone db-config "Europe/Stockholm")
                         (t/time-zone-for-id))]
       (let [[time-left interval time-unit] (interval-params scheduling tz)
@@ -83,7 +83,7 @@
                                          (bound-fn*
                                            (fn []
                                              (let [db        @(get db/db-connections db-name)
-                                                   db-config (get db-config/local-configs db-name)]
+                                                   db-config (get client-config/local-configs db-name)]
                                                (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
                                          (long time-left)
                                          interval
