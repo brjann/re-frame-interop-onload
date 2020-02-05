@@ -4,7 +4,8 @@
             [ring.util.http-response :as http-response]
             [bass4.db-config :as db-config]
             [bass4.http-utils :as h-utils]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.client-config :as client-config]))
 
 
 ;;-------------------------
@@ -32,8 +33,8 @@
 (defn db-middleware
   [handler request]
   (if-let [[db-name db-conn] (resolve-db request)]
-    (binding [db/*db*                  db-conn
-              db-config/*local-config* (merge db-config/local-defaults (get db-config/local-configs db-name))]
+    (binding [db/*db*                      db-conn
+              client-config/*local-config* (merge client-config/local-defaults (get client-config/local-configs db-name))]
       (request-logger/set-state! :name (name db-name))
       (handler request))
     (->

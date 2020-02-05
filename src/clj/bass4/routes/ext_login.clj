@@ -16,7 +16,8 @@
             [clojure.tools.logging :as log]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config]
-            [bass4.services.privacy :as privacy-service]))
+            [bass4.services.privacy :as privacy-service]
+            [bass4.client-config :as client-config]))
 
 
 ;; ------------
@@ -26,7 +27,7 @@
 (defn logged-response
   [s]
   (when-not config/test-mode?
-    (log/info (:db-name db-config/*local-config*) s))
+    (log/info (:db-name client-config/*local-config*) s))
   (layout/text-response s))
 
 (defn- match-request-ip

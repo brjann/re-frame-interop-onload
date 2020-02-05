@@ -15,14 +15,6 @@
 (def ^:dynamic *local-config*
   local-defaults)
 
-(defn time-zone
-  []
-  (:time-zone *local-config*))
-
-(defn language
-  []
-  (:language *local-config*))
-
 (defn- get-locals [bass-path]
   (->> (.listFiles (io/file bass-path))
        (filter #(clojure.string/starts-with? (.getName %) "local_"))))
@@ -45,14 +37,14 @@
 ;; :db-name is the name of MySQL database
 ;; :name    is the name of the BASS database/client, i.e. local_xxx.php <- xxx = name
 ;; And thus, this function has a very confusing name.
-(defn db-name
+(defn client-name
   []
   (:name *local-config*))
 
 (defn db-setting
   ([setting-keys] (db-setting setting-keys nil))
   ([setting-keys default]
-   (db-setting* (keyword (db-name)) setting-keys default)))
+   (db-setting* (keyword (client-name)) setting-keys default)))
 
 (defn debug-mode?
   []

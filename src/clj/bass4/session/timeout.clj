@@ -11,22 +11,23 @@
             [bass4.config :as config]
             [bass4.http-utils :as h-utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.db-config :as db-config]))
+            [bass4.db-config :as db-config]
+            [bass4.client-config :as client-config]))
 
 (def ^:dynamic *in-session?* false)
 (def ^:dynamic *user-id* false)
 
 (defn timeout-hard-limit
   []
-  (db-config/db-setting [:timeout-hard]))
+  (client-config/db-setting [:timeout-hard]))
 
 (defn timeout-hard-soon-limit
   []
-  (db-config/db-setting [:timeout-hard-soon]))
+  (client-config/db-setting [:timeout-hard-soon]))
 
 (defn timeout-re-auth-limit
   []
-  (db-config/db-setting [:timeout-soft]))
+  (client-config/db-setting [:timeout-soft]))
 
 ;; -------------------
 ;;   RE-AUTH TIMEOUT

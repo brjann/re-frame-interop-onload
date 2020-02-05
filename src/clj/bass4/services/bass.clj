@@ -9,7 +9,8 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clojure.data.json :as json]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [bass4.client-config :as client-config])
   (:import (java.util UUID)
            (java.io File)))
 
@@ -108,9 +109,9 @@
 (defn time-zone
   []
   (try
-    (t/time-zone-for-id (db-config/time-zone))
+    (t/time-zone-for-id (client-config/time-zone))
     (catch Exception e
-      (log/error "Time zone illegal: " (db-config/time-zone))
+      (log/error "Time zone illegal: " (client-config/time-zone))
       (t/default-time-zone))))
 
 (defn local-midnight
@@ -144,7 +145,7 @@
   (^File [base-path] (db-dir base-path nil))
   (^File [base-path sub-path]
    (try
-     (let [db-name        (:name db-config/*local-config*)
+     (let [db-name        (:name client-config/*local-config*)
            full-base-path (io/file (env :bass-path) "projects" db-name base-path)]
        (if sub-path
          (get-sub-path full-base-path sub-path)

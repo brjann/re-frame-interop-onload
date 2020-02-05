@@ -1,6 +1,7 @@
 (ns bass4.services.attack-detector
   (:require [clojure.tools.logging :as log]
             [bass4.db.core :as db]
+            [bass4.client-config :as client-config]
             [bass4.config :refer [env]]
             [bass4.utils :refer [filter-map nil-zero?]]
             [bass4.http-utils :as h-utils]
@@ -66,7 +67,7 @@
          ip-address (h-utils/get-client-ip request)]
      (save-failed-login!
        (name type)
-       (:db-name db-config/*local-config*)
+       (:db-name client-config/*local-config*)
        ip-address
        info
        now)

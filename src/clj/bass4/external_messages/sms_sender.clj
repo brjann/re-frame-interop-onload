@@ -15,7 +15,8 @@
     [clojure.string :as str]
     [bass4.utils :as utils]
     [bass4.config :as config]
-    [bass4.external-messages.sms-status :as sms-status])
+    [bass4.external-messages.sms-status :as sms-status]
+    [bass4.client-config :as client-config])
   (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
@@ -193,7 +194,7 @@
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender     (get-sender db)
         status-url (sms-status/status-url db)
-        error-chan (external-messages/async-error-chan email/error-sender (db-config/db-name))
+        error-chan (external-messages/async-error-chan email/error-sender (client-config/client-name))
         own-chan   (external-messages/queue-message! {:type       :sms
                                                       :to         to
                                                       :message    message

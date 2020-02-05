@@ -10,13 +10,13 @@
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.email-sender :as mail]
             [bass4.i18n :as i18n]
-            [bass4.db-config :as db-config]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.bass :as bass-service]
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.session.create :as session-create]
-            [bass4.db.core :as db])
+            [bass4.db.core :as db]
+            [bass4.client-config :as client-config])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -59,7 +59,7 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    (when (db-config/debug-mode?)
+    (when (client-config/debug-mode?)
       {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]

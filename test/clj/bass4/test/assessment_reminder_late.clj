@@ -395,7 +395,8 @@
                               (config/env :test-db)
                               {:name :test :time-zone (.getID ^CachedDateTimeZone *tz*)}
                               task
-                              (subs (str task) 2))))
+                              (subs (str task) 2)
+                              nil)))
           cycles       (fn [exec-id] (-> (jdbc/query db/db-common ["SELECT cycles FROM common_log_tasks WHERE ExecId = ?" exec-id])
                                          (first)
                                          (:cycles)))
