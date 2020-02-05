@@ -17,8 +17,8 @@
                         (when (= host (:bass4-host v))
                           k))
                       clients/local-configs)]
-    (when (contains? db/db-connections name-id)
-      [name-id @(get db/db-connections name-id)]
+    (when (contains? clients/db-connections name-id)
+      [name-id @(get clients/db-connections name-id)]
       #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."

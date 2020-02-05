@@ -15,10 +15,6 @@
 ; SETUP DB STATE
 ;----------------
 
-(def local-defaults
-  {:timezone "Europe/Stockholm"
-   :language "en"})
-
 (def sql-user-fields
   "ObjectId,
   ObjectId AS `user-id`,
@@ -76,11 +72,10 @@
   ;; And :connection-init-sql only accepts one command.
   ;; Proper SQL mode (e.g. MYSQL40) must therefore be set in my.cnf
   [local-config]
-  (delay
-    (log/info (str "Attaching " (:name local-config)))
-    (let [conn (conman/connect! (jdbc-map local-config))]
-      (log/info (str (:name local-config) " attached"))
-      conn)))
+  (log/info (str "Attaching " (:name local-config)))
+  (let [conn (conman/connect! (jdbc-map local-config))]
+    (log/info (str (:name local-config) " attached"))
+    conn))
 
 (defn db-disconnect!
   [db-conn]
@@ -89,39 +84,17 @@
     (conman/disconnect! @db-conn)))
 
 (defstate db-common
-  :start @(db-connect! db-common/common-config)
+  :start (db-connect! db-common/common-config)
   :stop (do (log/info "Detaching common")
             (conman/disconnect! db-common)))
 
-(defn- load-client-db-configs
+(defn load-client-db-configs
   [db-common]
   (jdbc/query db-common ["SELECT * from client_dbs"]))
-
-(defstate client-db-configs
-  :start (let [configs (load-client-db-configs db-common)]
-           (->> configs
-                (map #(assoc % :name (:id-name %)))
-                (map #(if (empty? (:timezone %))
-                        (assoc % :timezone (:timezone local-defaults))
-                        %))
-                (map #(if (empty? (:language %))
-                        (assoc % :language (:language local-defaults))
-                        %))
-                (map (juxt (comp keyword :id-name) identity))
-                (into {}))))
 
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
 (def ^:dynamic *db* nil)
-
-(defstate db-connections
-  :start (let [x (utils/map-map db-connect! client-db-configs)]
-           (when (config/env :dev)
-             (log/info "Setting *db* to dev database")
-             (def ^:dynamic *db* @(get x (config/env :dev-db))))
-           x)
-  :stop (map-map db-disconnect!
-                 db-connections))
 
 (conman/bind-connection *db*
                         "sql/bass.sql"
