@@ -6,7 +6,8 @@
             [bass4.db-config :as db-config]
             [bass4.db.core :as db]
             [bass4.utils :as utils]
-            [mount-up.core :as mount-up])
+            [mount-up.core :as mount-up]
+            [bass4.client-config :as client-config])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -68,7 +69,7 @@
 
 (defn task-dbs
   []
-  (remove #(db-config/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
+  (remove #(client-config/db-setting* % [:no-tasks?] false) (keys db/db-connections)))
 
 (defn- schedule-db-task*!
   [task task-name scheduling]

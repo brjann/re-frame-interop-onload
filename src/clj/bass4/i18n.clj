@@ -9,7 +9,8 @@
             [flatland.ordered.map :refer [ordered-map]]
             [mount.core :refer [defstate]]
             [clojure.tools.logging :as log]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [bass4.client-config :as client-config])
   (:import (java.io BufferedInputStream File)
            (mount.core DerefableState)))
 
@@ -44,7 +45,7 @@
             (fn
               [{:keys [resource-ids]}]
               (str "Missing translation keys: " resource-ids))}
-     [(or (db-config/language) "en")]
+     [(or (client-config/language) "en")]
      resource-ids
      resource-args)))
 

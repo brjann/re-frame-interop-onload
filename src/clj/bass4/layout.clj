@@ -25,7 +25,8 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.middleware.embedded :as embedded-mw]
-            [bass4.db-config :as db-config]))
+            [bass4.db-config :as db-config]
+            [bass4.client-config :as client-config]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -109,7 +110,7 @@
                   :timeout-hard-soon            (session-timeout/timeout-hard-soon-limit)
                   :title                        (bass-service/db-title)
                   :session-status-poll-interval (* 1000
-                                                   (db-config/db-setting [:session-status-poll-interval] 30))}
+                                                   (client-config/db-setting [:session-status-poll-interval] 30))}
                  params)))
       "text/html; charset=utf-8")))
 

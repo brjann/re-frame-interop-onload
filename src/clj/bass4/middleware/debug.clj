@@ -1,7 +1,8 @@
 (ns bass4.middleware.debug
   (:require [prone.middleware :as prone]
             [bass4.db-config :as db-config]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.client-config :as client-config]))
 
 
 (defn wrap-prone-debug-exceptions
@@ -9,7 +10,7 @@
   Exceptions in ajax post requests are not caught."
   [handler]
   (fn [request]
-    (if (and (db-config/debug-mode?)
+    (if (and (client-config/debug-mode?)
              (not (h-utils/ajax? request)))
       ((prone/wrap-exceptions handler) request)
       (handler request))))
@@ -28,6 +29,6 @@
 (defn wrap-session-modification
   [handler]
   (fn [request]
-    (if (db-config/debug-mode?)
+    (if (client-config/debug-mode?)
       (session-modification-wrapper handler request)
       (handler request))))

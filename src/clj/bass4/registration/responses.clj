@@ -25,7 +25,8 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors]
-            [bass4.db.core :as db])
+            [bass4.db.core :as db]
+            [bass4.client-config :as client-config])
   (:import (java.util UUID)))
 
 (defn render-page
@@ -358,7 +359,7 @@
                    content
                    {:project-id project-id
                     :filename   filename}
-                   (when (db-config/debug-mode?)
+                   (when (client-config/debug-mode?)
                      {:digits digits})))))
 
 (def ^:const const-captcha-tries 5)
@@ -483,7 +484,7 @@
                                  (:sms-number field-values))
                   :project-id  project-id
                   :code-length validation-code-length}
-                 (when (db-config/debug-mode?)
+                 (when (client-config/debug-mode?)
                    codes))))
 
 (defapi validation-page
