@@ -6,6 +6,7 @@
  :dev-reroute-sms   :out                                    ; nil "+00 000 000 00" "email@example.com" :void :out
  :dev-reroute-email :out                                    ; nil "email@example.com" :void :out
  :timeout-soft      6000
+ :nrepl-port        7000
  :db-settings       {}                                      ; client specific overrides for settings
  :password-hash     {:alg        :pbkdf2+sha1               ; quick password hash for dev mode
                      :iterations 1}
@@ -21,4 +22,4 @@
                                                        :trust-store      ""
                                                        :trust-store-pass ""}}}}
  :database-port     3306
- :bass-path         "path-to-BASS4-php-root"}                
+ :bass-path         "path-to-BASS4-php-root"}
