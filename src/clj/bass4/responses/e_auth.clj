@@ -13,7 +13,7 @@
             [clojure.string :as string]
             [clojure.data.json :as json]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 
 
@@ -59,7 +59,7 @@
 
 (defn launch-bankid
   ([request personnummer redirect-success redirect-fail]
-   (let [config-key (client-config/db-setting [:bankid :config-key])]
+   (let [config-key (clients/db-setting [:bankid :config-key])]
      (launch-bankid request personnummer redirect-success redirect-fail config-key)))
   ([request personnummer redirect-success redirect-fail config-key]
    (let [session (:session request)

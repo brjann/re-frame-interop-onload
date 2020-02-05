@@ -6,7 +6,7 @@
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (defn print-status
   [uid & s]
@@ -42,7 +42,7 @@
 (defn bankid-request
   [endpoint form-params config-key]
   #_(log/debug "XXXXXXX XXXXXX running request")
-  (try (let [bankid-config (client-config/db-setting [:bankid :configs config-key])
+  (try (let [bankid-config (clients/db-setting [:bankid :configs config-key])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
              response      (http/post (str url endpoint)

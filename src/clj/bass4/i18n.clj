@@ -9,7 +9,7 @@
             [mount.core :refer [defstate]]
             [clojure.tools.logging :as log]
             [clojure.walk :as walk]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import (java.io BufferedInputStream File)
            (mount.core DerefableState)))
 
@@ -44,7 +44,7 @@
             (fn
               [{:keys [resource-ids]}]
               (str "Missing translation keys: " resource-ids))}
-     [(or (client-config/db-setting [:language] "en"))]
+     [(or (clients/db-setting [:language] "en"))]
      resource-ids
      resource-args)))
 

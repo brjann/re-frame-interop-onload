@@ -16,7 +16,7 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.session.create :as session-create]
             [bass4.db.core :as db]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -59,7 +59,7 @@
 (defn- double-auth-page [double-auth-code]
   (layout/render
     "auth/double-auth.html"
-    (when (client-config/debug-mode?)
+    (when (clients/debug-mode?)
       {:double-auth-code double-auth-code})))
 
 (defn- double-auth-redirect [session]

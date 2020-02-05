@@ -20,7 +20,7 @@
             [bass4.time :as b-time]
             [clojure.string :as s]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (defn check-pending-http
   [participant-id request]
@@ -33,10 +33,10 @@
 
 (def debug-routes
   (context "/debug" [:as request]
-    (if (or (client-config/debug-mode?))
+    (if (or (clients/debug-mode?))
       (routes
         (GET "/nothing" [] (layout/text-response "nothing"))
-        (GET "/timezone" [:as req] (layout/print-var-response (client-config/db-setting [:timezone])))
+        (GET "/timezone" [:as req] (layout/print-var-response (clients/db-setting [:timezone])))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-logger/record-error! "An evil error message")

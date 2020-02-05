@@ -10,7 +10,7 @@
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [bass4.config :as config]
-            [bass4.client-config :as client-config])
+            [bass4.clients :as clients])
   (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
@@ -155,7 +155,7 @@
    (let [sender     (if db
                       (db-no-reply-address db)
                       (config/env :no-reply-address))
-         error-chan (external-messages/async-error-chan error-sender (client-config/db-setting [:name]))
+         error-chan (external-messages/async-error-chan error-sender (clients/db-setting [:name]))
          own-chan   (external-messages/queue-message! {:type       :email
                                                        :to         to
                                                        :subject    subject

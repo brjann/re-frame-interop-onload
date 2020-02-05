@@ -3,7 +3,7 @@
             [clj-time.core :as t]
             [bass4.db.core :as db]
             [clojure.tools.logging :as log]
-            [bass4.client-config :as client-config]))
+            [bass4.clients :as clients]))
 
 (defonce tasks-running (atom #{}))
 
@@ -21,8 +21,8 @@
   (if (and task-id (running?! task-id))
     (-> (task-log/open-db-entry! db-name task-name (t/now))
         (task-log/close-db-entry! (t/now) {} "already running"))
-    (binding [db/*db*                      nil
-              client-config/*local-config* nil]
+    (binding [db/*db*                nil
+              clients/*local-config* nil]
       (let [db-id (task-log/open-db-entry! db-name task-name (t/now))
             res   (try (task
                          db
