@@ -3,17 +3,20 @@
             [bass4.db.core :as db]))
 
 (defn db-lost-password-flags
-  [time-limit]
-  (db/admin-reminder-lost-password-flags {:time-limit (utils/to-unix time-limit)}))
+  [db time-limit]
+  (db/admin-reminder-lost-password-flags db {:time-limit (utils/to-unix time-limit)}))
 
 (defn db-open-flags
-  [time-limit]
-  (db/admin-reminder-open-flags {:time-limit (utils/to-unix time-limit)}))
+  [db time-limit]
+  (db/admin-reminder-open-flags db {:time-limit (utils/to-unix time-limit)}))
 
 (defn db-unread-messages
-  [time-limit]
-  (db/admin-reminder-unread-messages {:time-limit (utils/to-unix time-limit)}))
+  [db time-limit]
+  (db/admin-reminder-unread-messages db {:time-limit (utils/to-unix time-limit)}))
 
 (defn db-unread-homework
-  [time-limit]
-  (db/admin-reminder-unread-homework {:time-limit (utils/to-unix time-limit)}))
+  [db time-limit]
+  (db/admin-reminder-unread-homework db {:time-limit (utils/to-unix time-limit)}))
+
+(defn collect-reminders
+  [])

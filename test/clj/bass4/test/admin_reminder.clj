@@ -50,7 +50,7 @@
 
 (defn check-messages
   [time-limit]
-  (let [res (admin-reminder/db-unread-messages time-limit)]
+  (let [res (admin-reminder/db-unread-messages db/*db* time-limit)]
     (->> res
          (map (juxt :user-id (comp tc/from-epoch :send-time) :count))
          (into #{}))))
@@ -104,7 +104,7 @@
 
 (defn check-open-flags
   [time-limit]
-  (let [res (admin-reminder/db-open-flags time-limit)]
+  (let [res (admin-reminder/db-open-flags db/*db* time-limit)]
     (->> res
          (map (juxt :user-id (comp tc/from-epoch :created-time) :count))
          (into #{}))))
@@ -134,7 +134,7 @@
 
 (defn check-flags
   [time-limit]
-  (let [res (admin-reminder/db-lost-password-flags time-limit)]
+  (let [res (admin-reminder/db-lost-password-flags db/*db* time-limit)]
     (->> res
          (map (juxt :user-id (comp tc/from-epoch :created-time) :count))
          (into #{}))))
@@ -183,7 +183,7 @@
 
 (defn check-homework
   [time-limit]
-  (let [res (admin-reminder/db-unread-homework time-limit)]
+  (let [res (admin-reminder/db-unread-homework db/*db* time-limit)]
     (->> res
          (map (juxt :user-id (comp tc/from-epoch :send-time) :count))
          (into #{}))))
