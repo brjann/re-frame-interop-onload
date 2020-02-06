@@ -33,7 +33,6 @@
     (if conn
       (delay conn))))
 
-
 (defstate db-connections
   :start (let [x (->> local-configs
                       (utils/map-map connect-db)
@@ -42,8 +41,9 @@
              (log/info "Setting *db* to dev database")
              (alter-var-root #'db/*db* (constantly @(get x (config/env :dev-db)))))
            x)
-  :stop (utils/map-map db/db-disconnect!
-                       db-connections))
+  :stop (dorun (map (fn [[name conn]]
+                      (db/db-disconnect! conn name))
+                    db-connections)))
 
 (defn db-setting*
   [client-name-kw setting-keys default]
