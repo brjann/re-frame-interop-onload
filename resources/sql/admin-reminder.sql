@@ -2,7 +2,8 @@
 -- :doc
 SELECT
   cm.ParentId AS `user-id`,
-  min(SendTime) AS `send-time`
+  min(SendTime) AS `send-time`,
+  count(ParentId) AS `count`
 FROM c_message AS cm
 JOIN links_c_message AS pl
   ON pl.PropertyName = 'Sender' AND cm.objectid = pl.LinkerId AND cm.parentid = pl.linkeeid
@@ -17,7 +18,8 @@ GROUP BY cm.ParentId;
 -- :doc
 SELECT
   cta.`ParentId` AS `user-id`,
-  min(cdh.`Time`) AS `send-time`
+  min(cdh.`Time`) AS `send-time`,
+  count(ParentId) AS `count`
 FROM content_data_homework AS cdh
 JOIN c_treatmentaccess AS cta
   ON cdh.Id IN(SELECT Max(Id)
@@ -37,7 +39,8 @@ GROUP BY cdh.ModuleId, `user-id`;
 -- :doc
 SELECT
 	ParentId AS `user-id`,
-    min(Created) AS `send-time`
+  min(Created) AS `created-time`,
+  count(ParentId) AS `count`
 FROM c_flag
 WHERE
 `ClosedAt` = 0
@@ -48,7 +51,8 @@ GROUP BY ParentId;
 -- :doc
 SELECT
 	ParentId AS `user-id`,
-    min(Created) AS `send-time`
+  min(Created) AS `created-time`,
+  count(ParentId) AS `count`
 FROM c_flag
 WHERE
 	`ClosedAt` = 0

@@ -46,6 +46,12 @@
   [class-name property-name count]
   (create-bass-objects-without-parent*! db/*db* class-name property-name count))
 
+(defn create-bass-object*!
+  [db class-name parent-id property-name]
+  (:objectid (db/create-bass-object! db {:class-name    class-name
+                                         :parent-id     parent-id
+                                         :property-name property-name})))
+
 (defn update-object-properties*!
   "Allows for updating object properties using strings as field names to
   avoid cluttering the keyword namespace."
