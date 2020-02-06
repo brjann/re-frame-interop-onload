@@ -165,9 +165,12 @@
                                  :module-accesses     module-accesses-string})))
 
 (defn submit-homework!
-  [treatment-access-id module]
-  (db/submit-homework! {:treatment-access-id treatment-access-id
-                        :module-id           (:module-id module)}))
+  ([treatment-access-id module]
+   (submit-homework! treatment-access-id module (t/now)))
+  ([treatment-access-id module now]
+   (db/submit-homework! {:treatment-access-id treatment-access-id
+                         :module-id           (:module-id module)
+                         :now                 now})))
 
 (defn retract-homework!
   [treatment-access module]

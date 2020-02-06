@@ -19,7 +19,7 @@ GROUP BY cm.ParentId;
 SELECT
   cta.`ParentId` AS `user-id`,
   min(cdh.`Time`) AS `send-time`,
-  count(ParentId) AS `count`
+  count(cta.ParentId) AS `count`
 FROM content_data_homework AS cdh
 JOIN c_treatmentaccess AS cta
   ON cdh.Id IN(SELECT Max(Id)
@@ -33,7 +33,7 @@ JOIN links_c_treatmentaccess AS lca
 JOIN c_treatment AS ct
   ON lca.LinkeeId = ct.ObjectId
   AND ct.UseHomeworkInspection = 1
-GROUP BY cdh.ModuleId, `user-id`;
+GROUP BY `user-id`;
 
 -- :name admin-reminder-open-flags :? :*
 -- :doc
