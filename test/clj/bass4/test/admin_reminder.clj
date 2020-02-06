@@ -157,3 +157,23 @@
     (is (= #{[user1-id now 1]
              [user3-id t45days 2]}
            (check-flags t60days)))))
+
+#_(deftest unread-homework
+    (clear-homework!)
+    (let [user1-id (user-service/create-user! project-ass1-id)
+          user2-id (user-service/create-user! project-ass1-id)
+          user3-id (user-service/create-user! project-ass1-id)
+          user4-id (user-service/create-user! project-ass1-id)
+          t60days  (-ms (t/minus (t/now) (t/days 60)))
+          t45days  (-ms (t/minus (t/now) (t/days 45)))
+          now      (-ms (t/now))]
+      (create-password-flag! db/*db* user1-id t60days true)
+      (create-password-flag! db/*db* user1-id now true)
+      (create-password-flag! db/*db* user2-id t60days true)
+      (create-password-flag! db/*db* user2-id now false)
+      (create-password-flag! db/*db* user3-id t45days true)
+      (create-password-flag! db/*db* user3-id now true)
+      (create-flag! db/*db* user4-id t45days true)
+      (is (= #{[user1-id now 1]
+               [user3-id t45days 2]}
+             (check-flags t60days)))))
