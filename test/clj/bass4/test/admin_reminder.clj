@@ -11,7 +11,8 @@
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [bass4.services.bass :as bass-service]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [bass4.module.services :as module-service]))
 
 (use-fixtures
   :once
@@ -158,22 +159,51 @@
              [user3-id t45days 2]}
            (check-flags t60days)))))
 
-#_(deftest unread-homework
-    (clear-homework!)
-    (let [user1-id (user-service/create-user! project-ass1-id)
-          user2-id (user-service/create-user! project-ass1-id)
-          user3-id (user-service/create-user! project-ass1-id)
-          user4-id (user-service/create-user! project-ass1-id)
-          t60days  (-ms (t/minus (t/now) (t/days 60)))
-          t45days  (-ms (t/minus (t/now) (t/days 45)))
-          now      (-ms (t/now))]
-      (create-password-flag! db/*db* user1-id t60days true)
-      (create-password-flag! db/*db* user1-id now true)
-      (create-password-flag! db/*db* user2-id t60days true)
-      (create-password-flag! db/*db* user2-id now false)
-      (create-password-flag! db/*db* user3-id t45days true)
-      (create-password-flag! db/*db* user3-id now true)
-      (create-flag! db/*db* user4-id t45days true)
-      (is (= #{[user1-id now 1]
-               [user3-id t45days 2]}
-             (check-flags t60days)))))
+
+(defn create-treatment-access!
+  [user-id]
+  (let [treatment-access-id (bass-service/create-bass-object*! db/*db*
+                                                               "cTreatmentAccess"
+                                                               user-id
+                                                               "TreatmentAccesses")]
+    (db/create-bass-link! {:linker-id     treatment-access-id
+                           :linkee-id     642517
+                           :link-property "Treatment"
+                           :linker-class  "cTreatmentAccess"
+                           :linkee-class  "cTreatment"})
+    treatment-access-id))
+
+(defn submit-homework!
+  [treatment-access-id time-sent one-or-two]
+  (module-service/submit-homework! treatment-access-id
+                                   {:module-id (case one-or-two
+                                                 1 642518
+                                                 2 642529)}
+                                   time-sent))
+
+(defn check-homework
+  [time-limit]
+  (let [res (admin-reminder/db-unread-homework time-limit)]
+    (->> res
+         (map (juxt :user-id (comp tc/from-epoch :send-time) :count))
+         (into #{}))))
+
+(deftest unread-homework
+  (clear-homework!)
+  (let [user1-id     (user-service/create-user! project-ass1-id)
+        user2-id     (user-service/create-user! project-ass1-id)
+        user3-id     (user-service/create-user! project-ass1-id)
+        t-access1-id (create-treatment-access! user1-id)
+        t-access2-id (create-treatment-access! user2-id)
+        t-access3-id (create-treatment-access! user3-id)
+        t60days      (-ms (t/minus (t/now) (t/days 60)))
+        t45days      (-ms (t/minus (t/now) (t/days 45)))
+        now          (-ms (t/now))]
+    (submit-homework! t-access1-id t60days 1)
+    (submit-homework! t-access1-id now 1)
+    (submit-homework! t-access2-id t60days 1)
+    (submit-homework! t-access3-id t45days 1)
+    (submit-homework! t-access3-id now 2)
+    (is (= #{[user1-id now 1]
+             [user3-id t45days 2]}
+           (check-homework t60days)))))
