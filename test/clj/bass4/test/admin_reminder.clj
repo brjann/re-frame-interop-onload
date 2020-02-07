@@ -127,12 +127,16 @@
              [user3-id t45days 2]}
            (check-open-flags t60days)))))
 
+;; ------------------------
+;;      PASSWORD FLAGS
+;; ------------------------
+
 
 (defn create-password-flag!
   [db user-id created-time open?]
   (create-flag! db user-id created-time open? "lost-password"))
 
-(defn check-flags
+(defn check-password-flags
   [time-limit]
   (let [res (admin-reminder/db-lost-password-flags db/*db* time-limit)]
     (->> res
@@ -157,8 +161,11 @@
     (create-flag! db/*db* user4-id t45days true)
     (is (= #{[user1-id now 1]
              [user3-id t45days 2]}
-           (check-flags t60days)))))
+           (check-password-flags t60days)))))
 
+;; ------------------------
+;;      UNREAD HOMEWORK
+;; ------------------------
 
 (defn create-treatment-access!
   [user-id]
@@ -219,3 +226,49 @@
                                                  "c_treatment"
                                                  642517
                                                  {"UseHomeworkInspection" 1})))))
+
+;; ------------------------
+;;        CHECK ALL
+;; ------------------------
+
+(defn check-all
+  [time-limit]
+  (->> (admin-reminder/collect-reminders db/*db* time-limit)
+       (utils/map-map (fn [l] (->> l
+                                   (map (juxt :type :time :count))
+                                   (into #{}))))))
+
+(deftest collect-all
+  (clear-flags!)
+  (clear-messages!)
+  (clear-homework!)
+  (let [user1-id     (user-service/create-user! project-ass1-id)
+        user2-id     (user-service/create-user! project-ass1-id)
+        user3-id     (user-service/create-user! project-ass1-id)
+        user4-id     (user-service/create-user! project-ass1-id)
+        t-access1-id (create-treatment-access! user1-id)
+        t-access2-id (create-treatment-access! user2-id)
+        message1     (messages/create-message-placeholder user1-id)
+        message4     (messages/create-message-placeholder user4-id)
+        t60days      (-ms (t/minus (t/now) (t/days 60)))
+        t45days      (-ms (t/minus (t/now) (t/days 45)))
+        now          (-ms (t/now))]
+    (submit-homework! t-access1-id now 1)
+    (submit-homework! t-access1-id t45days 2)
+    (submit-homework! t-access2-id t45days 1)
+    (create-password-flag! db/*db* user3-id now true)
+    (create-password-flag! db/*db* user4-id t45days true)
+    (create-flag! db/*db* user2-id now true)
+    (create-flag! db/*db* user3-id t45days true)
+    (set-message-properties message1 t45days false)
+    (set-message-properties message4 t45days false)
+    (is (= {user1-id #{[::admin-reminder/unread-homework t45days 2]
+                       [::admin-reminder/unread-messages t45days 1]}
+            user2-id #{[::admin-reminder/open-flags now 1]
+                       [::admin-reminder/unread-homework t45days 1]}
+            user3-id #{[::admin-reminder/password-flags now 1]
+                       [::admin-reminder/open-flags t45days 2]}
+            user4-id #{[::admin-reminder/password-flags t45days 1]
+                       [::admin-reminder/open-flags t45days 1]
+                       [::admin-reminder/unread-messages t45days 1]}}
+           (check-all t60days)))))
