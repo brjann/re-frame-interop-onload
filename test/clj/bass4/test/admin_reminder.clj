@@ -293,5 +293,9 @@
     (is (= [{"therapist1@bass4.com" #{user1-id user2-id}
              "therapist2@bass4.com" #{user1-id user3-id}}
             {"project@bass4.com" #{user4-id user5-id}}]
-           (->> (admin-reminder/collect-reminders db/*db* t60days)
-                (admin-reminder/email-recipients db/*db*))))))
+           (let [reminders-by-participants (admin-reminder/collect-reminders db/*db*
+                                                                             t60days)
+                 participant-ids           (into #{} (keys reminders-by-participants))
+                 therapists                (admin-reminder/db-therapists db/*db* participant-ids)]
+             [(admin-reminder/therapist-emails therapists)
+              (admin-reminder/project-emails db/*db* participant-ids therapists)])))))

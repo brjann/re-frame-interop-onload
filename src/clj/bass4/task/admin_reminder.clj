@@ -4,7 +4,14 @@
             [clj-time.core :as t]
             [clojure.set :as set]
             [bass4.services.bass :as bass-service]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clj-time.format :as f]))
+
+(def reminder-names
+  {::password-flags  "Lost password"
+   ::open-flags      "Open flags"
+   ::unread-homework "Unread homework reports"
+   ::unread-messages "Unread message"})
 
 (defn db-lost-password-flags
   [db time-limit]
@@ -28,11 +35,11 @@
 
 (defn db-therapists
   [db participant-ids]
-  (->> (db/admin-reminder-get-therapists db {:participant-ids participant-ids})))
+  (db/admin-reminder-get-therapists db {:participant-ids participant-ids}))
 
 (defn db-projects
   [db participant-ids]
-  (->> (db/admin-reminder-get-projects db {:participant-ids participant-ids})))
+  (db/admin-reminder-get-projects db {:participant-ids participant-ids}))
 
 (defn collect-reminders
   [db time-limit]
@@ -53,33 +60,62 @@
           {}
           project-emails))
 
-(defn email-recipients
-  [db reminders-by-participants]
-  (let [participant-ids      (into #{} (keys reminders-by-participants))
-        therapists           (db-therapists db participant-ids)
-        participant-projects (->> (map :participant-id therapists)
+(defn project-emails
+  [db participant-ids therapists]
+  (let [participant-projects (->> (map :participant-id therapists)
                                   (into #{})
                                   (set/difference participant-ids)
                                   (db-projects db)
                                   (group-by :project-id)
-                                  (utils/map-map (fn [l] (map :participant-id l))))
-        project-emails       (->> (keys participant-projects)
-                                  (map (juxt #(:email (bass-service/db-contact-info* db %)) identity))
-                                  (merge-project-emails)
-                                  (utils/map-map (fn [l] (->> (mapcat #(get participant-projects %) l)
-                                                              (into #{})))))
-        therapist-emails     (->> therapists
-                                  (group-by :email)
-                                  (utils/map-map (fn [l] (->> (map :participant-id l)
-                                                              (into #{})))))]
-    [therapist-emails
-     project-emails]))
+                                  (utils/map-map (fn [l] (map :participant-id l))))]
+    (->> (keys participant-projects)
+         (map (juxt #(:email (bass-service/db-contact-info* db %)) identity))
+         (merge-project-emails)
+         (utils/map-map (fn [l] (->> (mapcat #(get participant-projects %) l)
+                                     (into #{})))))))
+
+(defn therapist-emails
+  [therapists]
+  (->> therapists
+       (group-by :email)
+       (utils/map-map (fn [l] (->> (map :participant-id l)
+                                   (into #{}))))))
+
+(defn insert-reminders
+  [reminders-by-participants emails]
+  (utils/map-map
+    (fn [participant-ids]
+      (->> participant-ids
+           (map (juxt identity #(get reminders-by-participants %)))
+           (into {})))
+    emails))
+
+(defn write-email
+  [tz all-reminders]
+  (apply str (map (fn [[user-id reminders]]
+                    (str "Participant internal ID: " user-id "\n"
+                         (apply str (map (fn [{:keys [count type time]}]
+                                           (str (get reminder-names type)
+                                                " dated "
+                                                (-> (f/formatter "yyyy-MM-dd HH:mm" tz)
+                                                    (f/unparse time))
+                                                (str " count: " count)
+                                                "\n"))
+                                         reminders))
+                         "\n"))
+                  all-reminders)))
 
 (defn remind-admins
-  [db _ now]
-  (let [reminders-by-participants (collect-reminders db (t/minus now (t/days 60)))
-        therapist+projects        (email-recipients db reminders-by-participants)]
-    (map (fn [x] (utils/map-map (fn [participant-ids]
-                                  (map #(get reminders-by-participants %) participant-ids))
-                                x))
-         therapist+projects)))
+  [db local-config now]
+  (let [tz                        (-> (:timezone local-config)
+                                      (t/time-zone-for-id))
+        reminders-by-participants (collect-reminders db (t/minus now (t/days 60)))
+        participant-ids           (into #{} (keys reminders-by-participants))
+        therapists                (db-therapists db participant-ids)
+        therapist-emails'         (->> (therapist-emails therapists)
+                                       (insert-reminders reminders-by-participants)
+                                       (utils/map-map #(write-email tz %)))
+        project-emails'           (->> (project-emails db participant-ids therapists)
+                                       (insert-reminders reminders-by-participants)
+                                       (utils/map-map #(write-email tz %)))]
+    therapist-emails'))
