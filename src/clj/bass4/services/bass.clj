@@ -23,13 +23,17 @@
   [db]
   (:url (db/get-db-url db {})))
 
-(defn db-contact-info
-  ([] (db-contact-info 0))
-  ([project-id]
+(defn db-contact-info*
+  ([db project-id]
    (let [emails (db/get-contact-info {:project-id project-id})]
      (assoc emails :email (if-not (empty? (:project-email emails))
                             (:project-email emails)
                             (:db-email emails))))))
+
+(defn db-contact-info
+  ([] (db-contact-info 0))
+  ([project-id]
+   (db-contact-info* db/*db* project-id)))
 
 (defn create-bass-objects-without-parent*!
   [db class-name property-name count]

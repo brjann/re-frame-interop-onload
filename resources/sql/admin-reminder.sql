@@ -59,3 +59,27 @@ WHERE
     AND `Issuer` = "lost-password"
     AND Created > :time-limit
 GROUP BY ParentId;
+
+-- :name admin-reminder-get-therapists :? :*
+-- :doc
+SELECT
+  ct.ObjectId AS `therapist-id`,
+  ct.email,
+  lt.LinkeeId AS `participant-id`
+FROM c_therapist as ct
+  JOIN links_c_therapist lt
+  ON (ct.ObjectId = lt.LinkerId
+    AND lt.PropertyName = 'myparticipants')
+WHERE ct.Enabled = 1 AND lt.LinkeeId IN(:v*:participant-ids);
+
+-- :name admin-reminder-get-projects :? :*
+-- :doc HOORAY, NO PARENT INTERFACE HERE (but sadly c_participantscollection)
+SELECT
+  cp.ObjectId AS `participant-id`,
+  cti.ObjectId AS `project-id`
+FROM c_participant AS cp
+JOIN c_participantscollection cpc
+  ON cp.ParentId = cpc.ObjectId
+JOIN c_treatmentinterface AS cti
+	ON cpc.ParentId = cti.ObjectId
+WHERE cp.ObjectId IN(:v*:participant-ids);
