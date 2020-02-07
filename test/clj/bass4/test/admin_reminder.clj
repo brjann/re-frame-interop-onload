@@ -52,7 +52,7 @@
   [time-limit]
   (let [res (admin-reminder/db-unread-messages db/*db* time-limit)]
     (->> res
-         (map (juxt :user-id (comp tc/from-epoch :send-time) :count))
+         (map (juxt :user-id :time :count))
          (into #{}))))
 
 (deftest unread-messages
@@ -106,7 +106,7 @@
   [time-limit]
   (let [res (admin-reminder/db-open-flags db/*db* time-limit)]
     (->> res
-         (map (juxt :user-id (comp tc/from-epoch :created-time) :count))
+         (map (juxt :user-id :time :count))
          (into #{}))))
 
 (deftest open-flags
@@ -136,7 +136,7 @@
   [time-limit]
   (let [res (admin-reminder/db-lost-password-flags db/*db* time-limit)]
     (->> res
-         (map (juxt :user-id (comp tc/from-epoch :created-time) :count))
+         (map (juxt :user-id :time :count))
          (into #{}))))
 
 (deftest password-flags
@@ -185,7 +185,7 @@
   [time-limit]
   (let [res (admin-reminder/db-unread-homework db/*db* time-limit)]
     (->> res
-         (map (juxt :user-id (comp tc/from-epoch :send-time) :count))
+         (map (juxt :user-id :time :count))
          (into #{}))))
 
 (deftest unread-homework
@@ -206,4 +206,16 @@
     (submit-homework! t-access3-id now 2)
     (is (= #{[user1-id now 1]
              [user3-id t45days 2]}
-           (check-homework t60days)))))
+           (check-homework t60days)))
+    (try
+      (bass-service/update-object-properties*! db/*db*
+                                               "c_treatment"
+                                               642517
+                                               {"UseHomeworkInspection" 0})
+      (is (= #{}
+             (check-homework t60days)))
+      (finally
+        (bass-service/update-object-properties*! db/*db*
+                                                 "c_treatment"
+                                                 642517
+                                                 {"UseHomeworkInspection" 1})))))
