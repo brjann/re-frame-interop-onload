@@ -2,7 +2,7 @@
 -- :doc
 SELECT
   cm.ParentId AS `user-id`,
-  min(SendTime) AS `send-time`,
+  from_unixtime(min(SendTime)) AS `time`,
   count(ParentId) AS `count`
 FROM c_message AS cm
 JOIN links_c_message AS pl
@@ -18,7 +18,7 @@ GROUP BY cm.ParentId;
 -- :doc
 SELECT
   cta.`ParentId` AS `user-id`,
-  min(cdh.`Time`) AS `send-time`,
+  from_unixtime(min(cdh.`Time`)) AS `time`,
   count(cta.ParentId) AS `count`
 FROM content_data_homework AS cdh
 JOIN c_treatmentaccess AS cta
@@ -39,7 +39,7 @@ GROUP BY `user-id`;
 -- :doc
 SELECT
 	ParentId AS `user-id`,
-  min(Created) AS `created-time`,
+  from_unixtime(min(Created)) AS `time`,
   count(ParentId) AS `count`
 FROM c_flag
 WHERE
@@ -51,7 +51,7 @@ GROUP BY ParentId;
 -- :doc
 SELECT
 	ParentId AS `user-id`,
-  min(Created) AS `created-time`,
+  from_unixtime(min(Created)) AS `time`,
   count(ParentId) AS `count`
 FROM c_flag
 WHERE
