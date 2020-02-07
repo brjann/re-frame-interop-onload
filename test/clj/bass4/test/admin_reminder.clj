@@ -4,7 +4,7 @@
             [clojure.test :refer :all]
             [bass4.task.admin-reminder :as admin-reminder]
             [bass4.services.user :as user-service]
-            [bass4.test.assessment-utils :refer [project-ass1-id]]
+            [bass4.test.assessment-utils :refer [project-ass1-id project-ass2-id]]
             [bass4.db.core :as db]
             [bass4.services.messages :as messages]
             [clojure.tools.logging :as log]
@@ -231,6 +231,17 @@
 ;;        CHECK ALL
 ;; ------------------------
 
+(def therapist1-id 1562)
+(def therapist2-id 1955)
+
+(defn link-to-therapist!
+  [participant-id therapist-id]
+  (db/create-bass-link! {:linker-id     therapist-id
+                         :linkee-id     participant-id
+                         :link-property "MyParticipants"
+                         :linker-class  "cTherapist"
+                         :linkee-class  "cParticipant"}))
+
 (defn check-all
   [time-limit]
   (->> (admin-reminder/collect-reminders db/*db* time-limit)
@@ -246,6 +257,7 @@
         user2-id     (user-service/create-user! project-ass1-id)
         user3-id     (user-service/create-user! project-ass1-id)
         user4-id     (user-service/create-user! project-ass1-id)
+        user5-id     (user-service/create-user! project-ass2-id)
         t-access1-id (create-treatment-access! user1-id)
         t-access2-id (create-treatment-access! user2-id)
         message1     (messages/create-message-placeholder user1-id)
@@ -253,6 +265,10 @@
         t60days      (-ms (t/minus (t/now) (t/days 60)))
         t45days      (-ms (t/minus (t/now) (t/days 45)))
         now          (-ms (t/now))]
+    (link-to-therapist! user1-id therapist1-id)
+    (link-to-therapist! user1-id therapist2-id)
+    (link-to-therapist! user2-id therapist1-id)
+    (link-to-therapist! user3-id therapist2-id)
     (submit-homework! t-access1-id now 1)
     (submit-homework! t-access1-id t45days 2)
     (submit-homework! t-access2-id t45days 1)
@@ -260,6 +276,7 @@
     (create-password-flag! db/*db* user4-id t45days true)
     (create-flag! db/*db* user2-id now true)
     (create-flag! db/*db* user3-id t45days true)
+    (create-flag! db/*db* user5-id t45days true)
     (set-message-properties message1 t45days false)
     (set-message-properties message4 t45days false)
     (is (= {user1-id #{[::admin-reminder/unread-homework t45days 2]
@@ -270,5 +287,11 @@
                        [::admin-reminder/open-flags t45days 2]}
             user4-id #{[::admin-reminder/password-flags t45days 1]
                        [::admin-reminder/open-flags t45days 1]
-                       [::admin-reminder/unread-messages t45days 1]}}
-           (check-all t60days)))))
+                       [::admin-reminder/unread-messages t45days 1]}
+            user5-id #{[::admin-reminder/open-flags t45days 1]}}
+           (check-all t60days)))
+    (is (= [{"therapist1@bass4.com" #{user1-id user2-id}
+             "therapist2@bass4.com" #{user1-id user3-id}}
+            {"project@bass4.com" #{user4-id user5-id}}]
+           (->> (admin-reminder/collect-reminders db/*db* t60days)
+                (admin-reminder/email-recipients db/*db*))))))
