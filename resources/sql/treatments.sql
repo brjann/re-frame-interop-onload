@@ -192,7 +192,7 @@ VALUES :t*:content-data;
 -- :doc
 REPLACE INTO content_data_homework
 (TreatmentAccessId, ModuleId, `Time`, InspectorId, InspectionTime, OK)
-VALUES (:treatment-access-id, :module-id, unix_timestamp(now()), 0, 0, 0);
+VALUES (:treatment-access-id, :module-id, unix_timestamp(:now), 0, 0, 0);
 
 -- :name get-submitted-homeworks :? :*
 -- :doc get the content data

@@ -10,11 +10,13 @@
             [clj-logging-config.log4j :as log-config]
             [mount.core :as mount]
             [bass4.db.sql-wrapper]
+            [bass4.repl-api]
+    ;; Include tasks
             [bass4.external-messages.queue-tasks-starter]
             [bass4.assessment.assessment-tasks-starter]
             [bass4.cleaner.tables]
             [bass4.cleaner.files]
-            [bass4.repl-api])
+            [bass4.task.admin-reminder])
   (:gen-class))
 
 (def cli-options

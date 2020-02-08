@@ -77,10 +77,11 @@
     conn))
 
 (defn db-disconnect!
-  [db-conn]
-  (when (realized? db-conn)
-    (log/info (str "Detaching db"))
-    (conman/disconnect! @db-conn)))
+  [db-conn name]
+  ;; The connection is always realized but for compatibility
+  ;; reasons it is hidden behind a delay
+  (log/info (str "Detaching db " name))
+  (conman/disconnect! @db-conn))
 
 (defstate db-common
   :start (db-connect! db-common/common-config)
@@ -93,7 +94,7 @@
 
 ;; Bind queries to *db* dynamic variable which is bound
 ;; to each clients database before executing queries
-(def ^:dynamic *db* nil)
+(defonce ^:dynamic *db* nil)
 
 (conman/bind-connection *db*
                         "sql/bass.sql"
@@ -108,7 +109,8 @@
                         "sql/registration.sql"
                         "sql/lost-password.sql"
                         "sql/privacy.sql"
-                        "sql/external-messages.sql")
+                        "sql/external-messages.sql"
+                        "sql/admin-reminder.sql")
 
 (conman/bind-connection db-common
                         "sql/common.sql"

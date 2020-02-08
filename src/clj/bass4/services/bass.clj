@@ -23,13 +23,17 @@
   [db]
   (:url (db/get-db-url db {})))
 
-(defn db-contact-info
-  ([] (db-contact-info 0))
-  ([project-id]
+(defn db-contact-info*
+  ([db project-id]
    (let [emails (db/get-contact-info {:project-id project-id})]
      (assoc emails :email (if-not (empty? (:project-email emails))
                             (:project-email emails)
                             (:db-email emails))))))
+
+(defn db-contact-info
+  ([] (db-contact-info 0))
+  ([project-id]
+   (db-contact-info* db/*db* project-id)))
 
 (defn create-bass-objects-without-parent*!
   [db class-name property-name count]
@@ -45,6 +49,12 @@
 (defn create-bass-objects-without-parent!
   [class-name property-name count]
   (create-bass-objects-without-parent*! db/*db* class-name property-name count))
+
+(defn create-bass-object*!
+  [db class-name parent-id property-name]
+  (:objectid (db/create-bass-object! db {:class-name    class-name
+                                         :parent-id     parent-id
+                                         :property-name property-name})))
 
 (defn update-object-properties*!
   "Allows for updating object properties using strings as field names to

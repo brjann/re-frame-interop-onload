@@ -29,7 +29,7 @@
                          db-config
                          db-now)
                        (catch Exception e
-                         (log/debug e)
+                         (log/error e)
                          {:exception e}))]
         (task-log/close-db-entry! db-id (t/now) res "finished")
         (finished! task-id)

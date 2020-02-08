@@ -3,7 +3,8 @@
             [bass4.utils :refer [map-map]]
             [clj-time.core :as t]))
 
-(defn- create-message-placeholder [user-id]
+(defn create-message-placeholder
+  [user-id]
   (let [message-id
         ((keyword "objectid")
           (db/create-bass-object! {:class-name "cMessage"
