@@ -92,18 +92,21 @@
 
 (defn write-email
   [tz all-reminders]
-  (apply str (map (fn [[user-id reminders]]
-                    (str "Participant internal ID: " user-id "\n"
-                         (apply str (map (fn [{:keys [count type time]}]
-                                           (str (get reminder-names type)
-                                                " dated "
-                                                (-> (f/formatter "yyyy-MM-dd HH:mm" tz)
-                                                    (f/unparse time))
-                                                (str " count: " count)
-                                                "\n"))
-                                         reminders))
-                         "\n"))
-                  all-reminders)))
+  (apply str
+         (map (fn [[user-id reminders]]
+                (str "Participant internal ID: "
+                     user-id "\n"
+                     (apply str
+                            (map (fn [{:keys [count type time]}]
+                                   (str (get reminder-names type)
+                                        " dated "
+                                        (-> (f/formatter "yyyy-MM-dd HH:mm" tz)
+                                            (f/unparse time))
+                                        (str " count: " count)
+                                        "\n"))
+                                 reminders))
+                     "\n"))
+              all-reminders)))
 
 (defn remind-admins
   [db local-config now]
