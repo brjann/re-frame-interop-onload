@@ -2,6 +2,12 @@
   (:require [selmer.parser :as parser]
             [bass4.i18n :as i18n]))
 
+;; ---------------------------------------------
+;; DO NOT INVOKE THESE FUNCTIONS DIRECTLY.
+;; USE http-response/xxx
+;; BASS takes care of invoking them if necessary
+;; ---------------------------------------------
+
 (defn error-page
   "error-details should be a map containing the following keys:
    :status - error status
