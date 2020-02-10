@@ -4,8 +4,8 @@
             [bass4.utils :refer [key-map-list map-map indices fnil+]]
             [bass4.php_clj.core :refer [clj->php]]
             [bass4.php-clj.safe :refer [php->clj]]
-            [bass4.services.bass :refer [create-bass-objects-without-parent!]]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.db.orm-classes :as orm]))
 
 ;; ------------------------------
 ;;    CREATE MISSING ANSWERS
@@ -13,10 +13,9 @@
 
 (defn- create-answers-object!
   []
-  (create-bass-objects-without-parent!
-    "cInstrumentAnswers"
-    "InstrumentAnswers"
-    1))
+  (orm/create-bass-objects-without-parent! "cInstrumentAnswers"
+                                           "InstrumentAnswers"
+                                           1))
 
 (defn- delete-answers!
   [answers-id]

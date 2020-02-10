@@ -14,11 +14,12 @@
             [bass4.assessment.statuses :as assessment-statuses]
             [clojure.tools.logging :as log]
             [bass4.assessment.late-flagger :as late-flagger]
-            [bass4.assessment.activated-flagger :as activated-flagger]))
+            [bass4.assessment.activated-flagger :as activated-flagger]
+            [bass4.db.orm-classes :as orm]))
 
 #_(use-fixtures
-  :once
-  test-fixtures)
+    :once
+    test-fixtures)
 
 (def project-ass1-id 653627)
 (def project-ass1-pcollection-id 653628)
@@ -58,37 +59,37 @@
   (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
                                                           :parent-id     ass-flag-assessment-series
                                                           :property-name "Assessments"}))]
-    (bass/update-object-properties! "c_assessment"
-                                    assessment-id
-                                    (merge {"Name"                                     (str "Assessment " assessment-id)
-                                            "ShuffleInstruments"                       0
-                                            "Scope"                                    0
-                                            "Type"                                     ""
-                                            "RepetitionType"                           0
-                                            "Repetitions"                              0
-                                            "TimeLimit"                                0
-                                            "SendSMSWhenActivated"                     0
-                                            "SendEmailWhenActivated"                   0
-                                            "RemindParticipantsWhenLate"               0
-                                            "RemindInterval"                           1
-                                            "MaxRemindCount"                           0
-                                            "CustomReminderMessage"                    ""
-                                            "ActivatedEmailSubject"                    "Information"
-                                            "ReminderEmailSubject"                     "Reminder"
-                                            "UseStandardMessage"                       1
-                                            "FlagParticipantWhenActivated"             0
-                                            "FlagParticipantWhenLate"                  0
-                                            "DayCountUntilLate"                        0
-                                            "CustomRepetitionInterval"                 0
-                                            "IsRecord"                                 0
-                                            "CompetingAssessmentsPriority"             10
-                                            "CompetingAssessmentsAllowSwallow"         1
-                                            "CompetingAssessmentsShowTextsIfSwallowed" 0
-                                            "CreateNewQuickLoginOnActivation"          0
-                                            "ClinicianAssessment"                      0
-                                            "ActivationHour"                           0
-                                            "Deleted"                                  0}
-                                           properties))
+    (orm/update-object-properties! "c_assessment"
+                                   assessment-id
+                                   (merge {"Name"                                     (str "Assessment " assessment-id)
+                                           "ShuffleInstruments"                       0
+                                           "Scope"                                    0
+                                           "Type"                                     ""
+                                           "RepetitionType"                           0
+                                           "Repetitions"                              0
+                                           "TimeLimit"                                0
+                                           "SendSMSWhenActivated"                     0
+                                           "SendEmailWhenActivated"                   0
+                                           "RemindParticipantsWhenLate"               0
+                                           "RemindInterval"                           1
+                                           "MaxRemindCount"                           0
+                                           "CustomReminderMessage"                    ""
+                                           "ActivatedEmailSubject"                    "Information"
+                                           "ReminderEmailSubject"                     "Reminder"
+                                           "UseStandardMessage"                       1
+                                           "FlagParticipantWhenActivated"             0
+                                           "FlagParticipantWhenLate"                  0
+                                           "DayCountUntilLate"                        0
+                                           "CustomRepetitionInterval"                 0
+                                           "IsRecord"                                 0
+                                           "CompetingAssessmentsPriority"             10
+                                           "CompetingAssessmentsAllowSwallow"         1
+                                           "CompetingAssessmentsShowTextsIfSwallowed" 0
+                                           "CreateNewQuickLoginOnActivation"          0
+                                           "ClinicianAssessment"                      0
+                                           "ActivationHour"                           0
+                                           "Deleted"                                  0}
+                                          properties))
     assessment-id))
 
 (defn additional-instruments!
@@ -106,12 +107,12 @@
                                                               :parent-id     group-id
                                                               :property-name "Administrations"}))]
     (when properties
-      (bass/update-object-properties! "c_groupadministration"
-                                      administration-id
-                                      (merge {"assessment"      assessment-id
-                                              "assessmentindex" assessment-index
-                                              "active"          1}
-                                             properties)))
+      (orm/update-object-properties! "c_groupadministration"
+                                     administration-id
+                                     (merge {"assessment"      assessment-id
+                                             "assessmentindex" assessment-index
+                                             "active"          1}
+                                            properties)))
     administration-id))
 
 (defn create-participant-administration!
@@ -119,13 +120,13 @@
   (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cParticipantAdministration"
                                                               :parent-id     user-id
                                                               :property-name "Administrations"}))]
-    (bass/update-object-properties! "c_participantadministration"
-                                    administration-id
-                                    (merge {"assessment"      assessment-id
-                                            "assessmentindex" assessment-index
-                                            "active"          1
-                                            "deleted"         0}
-                                           properties))
+    (orm/update-object-properties! "c_participantadministration"
+                                   administration-id
+                                   (merge {"assessment"      assessment-id
+                                           "assessmentindex" assessment-index
+                                           "active"          1
+                                           "deleted"         0}
+                                          properties))
     administration-id))
 
 (defn create-custom-assessment*!
@@ -133,20 +134,20 @@
   (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
                                                           :parent-id     user-id
                                                           :property-name "AdHocAssessments"}))]
-    (bass/update-object-properties! "c_assessment"
-                                    assessment-id
-                                    {"scope"                            0
-                                     "repetitions"                      1
-                                     "repetitiontype"                   0
-                                     "type"                             ""
-                                     "customlabel"                      "ADHOC"
-                                     "activationhour"                   0
-                                     "timelimit"                        0
-                                     "customrepetitioninterval"         0
-                                     "isrecord"                         0
-                                     "competingassessmentspriority"     0
-                                     "competingassessmentsallowswallow" 0
-                                     "clinicianassessment"              0})
+    (orm/update-object-properties! "c_assessment"
+                                   assessment-id
+                                   {"scope"                            0
+                                    "repetitions"                      1
+                                    "repetitiontype"                   0
+                                    "type"                             ""
+                                    "customlabel"                      "ADHOC"
+                                    "activationhour"                   0
+                                    "timelimit"                        0
+                                    "customrepetitioninterval"         0
+                                    "isrecord"                         0
+                                    "competingassessmentspriority"     0
+                                    "competingassessmentsallowswallow" 0
+                                    "clinicianassessment"              0})
     assessment-id))
 
 (defn create-custom-assessment!

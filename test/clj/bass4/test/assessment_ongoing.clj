@@ -6,8 +6,8 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.services.bass :as bass]
-            [bass4.time :as b-time]))
+            [bass4.time :as b-time]
+            [bass4.db.orm-classes :as orm]))
 
 (use-fixtures
   :once
@@ -117,8 +117,8 @@
            (user-statuses *now* user-id)))
     (is (= #{}
            (group-statuses *now* group-id)))
-    (bass/update-object-properties! "c_participantadministration" adm1 {"datecompleted" (b-time/to-unix *now*)})
-    (bass/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (b-time/to-unix *now*)})
+    (orm/update-object-properties! "c_participantadministration" adm1 {"datecompleted" (b-time/to-unix *now*)})
+    (orm/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (b-time/to-unix *now*)})
     (is (= #{}
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
@@ -295,20 +295,20 @@
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (is (= #{[p2-ass-I1 1]} (ongoing-assessments *now* user-id)))
-    (bass/update-object-properties! "c_participant"
-                                    user-id
-                                    {"parentid"        project-ass2-pcollection-id
-                                     "parentinterface" project-ass1-id})
-    (bass/update-object-properties! "c_participantadministration"
-                                    adm1-id
-                                    {"parentinterface" project-ass1-id})
+    (orm/update-object-properties! "c_participant"
+                                   user-id
+                                   {"parentid"        project-ass2-pcollection-id
+                                    "parentinterface" project-ass1-id})
+    (orm/update-object-properties! "c_participantadministration"
+                                   adm1-id
+                                   {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-wrong-series]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))
-    (bass/update-object-properties! "c_participantadministration"
-                                    adm1-id
-                                    {"datecompleted" (b-time/to-unix *now*)})
+    (orm/update-object-properties! "c_participantadministration"
+                                   adm1-id
+                                   {"datecompleted" (b-time/to-unix *now*)})
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-completed]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))))

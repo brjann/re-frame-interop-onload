@@ -1,6 +1,6 @@
 (ns bass4.assessment.create-missing
-  (:require [bass4.services.bass :as bass]
-            [bass4.db.core :as db]
+  (:require [bass4.db.core :as db]
+            [bass4.db.orm-classes :as orm]
             [clojure.core.async :refer [put!]]
             [clojure.tools.logging :as log]))
 
@@ -8,7 +8,7 @@
 
 (defn- create-administrations-objects!
   [db missing-administrations]
-  (let [created-ids (bass/create-bass-objects-without-parent*!
+  (let [created-ids (orm/create-bass-objects-without-parent*!
                       db
                       "cParticipantAdministration"
                       "Administrations"
