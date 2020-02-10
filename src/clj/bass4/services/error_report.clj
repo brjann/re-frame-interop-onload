@@ -1,10 +1,10 @@
 (ns bass4.services.error-report
   (:require [bass4.db.core :as db]
-            [bass4.services.bass :as bass-service]))
+            [bass4.db.orm-classes :as orm]))
 
 (defn create-error-report-flag!
   [user-id error-description]
-  (let [flag-id (bass-service/create-flag!
+  (let [flag-id (orm/create-flag!
                   user-id
                   "error-report"
                   "User has reported an error"

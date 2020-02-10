@@ -12,7 +12,8 @@
             [clojure.java.jdbc :as jdbc]
             [bass4.services.bass :as bass-service]
             [clj-time.coerce :as tc]
-            [bass4.module.services :as module-service]))
+            [bass4.module.services :as module-service]
+            [bass4.db.orm-classes :as orm]))
 
 (use-fixtures
   :once
@@ -41,12 +42,12 @@
 
 (defn set-message-properties
   [message-id send-time read?]
-  (bass-service/update-object-properties*! db/*db*
-                                           "c_message"
-                                           message-id
-                                           {"SendTime" (utils/to-unix send-time)
-                                            "ReadTime" (if read? 1 0)
-                                            "Draft"    0}))
+  (orm/update-object-properties*! db/*db*
+                                  "c_message"
+                                  message-id
+                                  {"SendTime" (utils/to-unix send-time)
+                                   "ReadTime" (if read? 1 0)
+                                   "Draft"    0}))
 
 (defn check-messages
   [time-limit]
@@ -89,18 +90,18 @@
   ([db user-id created-time open?]
    (create-flag! db user-id created-time open? ""))
   ([db user-id created-time open? issuer]
-   (let [flag-id (bass-service/create-bass-object*! db
-                                                    "cFlag"
-                                                    user-id
-                                                    "Flags")]
-     (bass-service/update-object-properties*! db
-                                              "c_flag"
-                                              flag-id
-                                              {"Created"  (utils/to-unix created-time)
-                                               "ParentId" user-id
-                                               "Issuer"   issuer
-                                               "Open"     (if open? 1 0)
-                                               "ClosedAt" (if open? 0 1)}))))
+   (let [flag-id (orm/create-bass-object*! db
+                                           "cFlag"
+                                           user-id
+                                           "Flags")]
+     (orm/update-object-properties*! db
+                                     "c_flag"
+                                     flag-id
+                                     {"Created"  (utils/to-unix created-time)
+                                      "ParentId" user-id
+                                      "Issuer"   issuer
+                                      "Open"     (if open? 1 0)
+                                      "ClosedAt" (if open? 0 1)}))))
 
 (defn check-open-flags
   [time-limit]
@@ -169,10 +170,10 @@
 
 (defn create-treatment-access!
   [user-id]
-  (let [treatment-access-id (bass-service/create-bass-object*! db/*db*
-                                                               "cTreatmentAccess"
-                                                               user-id
-                                                               "TreatmentAccesses")]
+  (let [treatment-access-id (orm/create-bass-object*! db/*db*
+                                                      "cTreatmentAccess"
+                                                      user-id
+                                                      "TreatmentAccesses")]
     (db/create-bass-link! {:linker-id     treatment-access-id
                            :linkee-id     642517
                            :link-property "Treatment"
@@ -215,17 +216,17 @@
              [user3-id t45days 2]}
            (check-homework t60days)))
     (try
-      (bass-service/update-object-properties*! db/*db*
-                                               "c_treatment"
-                                               642517
-                                               {"UseHomeworkInspection" 0})
+      (orm/update-object-properties*! db/*db*
+                                      "c_treatment"
+                                      642517
+                                      {"UseHomeworkInspection" 0})
       (is (= #{}
              (check-homework t60days)))
       (finally
-        (bass-service/update-object-properties*! db/*db*
-                                                 "c_treatment"
-                                                 642517
-                                                 {"UseHomeworkInspection" 1})))))
+        (orm/update-object-properties*! db/*db*
+                                        "c_treatment"
+                                        642517
+                                        {"UseHomeworkInspection" 1})))))
 
 ;; ------------------------
 ;;        CHECK ALL

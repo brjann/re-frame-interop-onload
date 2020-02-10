@@ -4,7 +4,8 @@
             [bass4.db.core :as db]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
-            [bass4.assessment.create-missing :as missing]))
+            [bass4.assessment.create-missing :as missing]
+            [bass4.db.orm-classes :as orm]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
@@ -77,19 +78,19 @@
   (let [text              (flag-text now assessment)
         user-id           (:user-id assessment)
         administration-id (:participant-administration-id assessment)]
-    (bass/update-object-properties*! db
-                                     "c_flag"
-                                     flag-id
-                                     {"ParentId"       user-id
-                                      "FlagText"       text
-                                      "CustomIcon"     "flag-administration-late.gif"
-                                      "Open"           1
-                                      "ReflagPossible" 1
-                                      "ReflagDelay"    reflag-delay
-                                      "Issuer"         flag-issuer
-                                      "ReferenceId"    administration-id
-                                      "ClosedAt"       0})
-    (bass/set-objectlist-parent! db
+    (orm/update-object-properties*! db
+                                    "c_flag"
+                                    flag-id
+                                    {"ParentId"       user-id
+                                     "FlagText"       text
+                                     "CustomIcon"     "flag-administration-late.gif"
+                                     "Open"           1
+                                     "ReflagPossible" 1
+                                     "ReflagDelay"    reflag-delay
+                                     "Issuer"         flag-issuer
+                                     "ReferenceId"    administration-id
+                                     "ClosedAt"       0})
+    (orm/set-objectlist-parent! db
                                  flag-id
                                  user-id)))
 
@@ -98,10 +99,10 @@
 (defn reopen-flags!
   [db now reopen-flags]
   (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) reopen-flags))
-  (let [comment-ids (bass/create-bass-objects-without-parent*! db
-                                                               "cComment"
-                                                               "Comments"
-                                                               (count reopen-flags))]
+  (let [comment-ids (orm/create-bass-objects-without-parent*! db
+                                                              "cComment"
+                                                              "Comments"
+                                                              (count reopen-flags))]
     (db-comment-reopened-flags! db
                                 (map #(vector %1 (:flag-id %2)) comment-ids reopen-flags)
                                 flag-reopen-text))
@@ -111,10 +112,10 @@
 
 (defn- new-flags!
   [db now new-flags]
-  (let [flag-ids (bass/create-bass-objects-without-parent*! db
-                                                            "cFlag"
-                                                            "Flags"
-                                                            (count new-flags))]
+  (let [flag-ids (orm/create-bass-objects-without-parent*! db
+                                                           "cFlag"
+                                                           "Flags"
+                                                           (count new-flags))]
     (doseq [[assessment flag-id] (partition 2 (interleave new-flags flag-ids))]
       (create-flag! db
                     now
@@ -144,7 +145,7 @@
                                 (into {})
                                 (vals))
         ongoing-by-flag-id (when (seq potentials)
-                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
+                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials false)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
     (db-close-flags! db

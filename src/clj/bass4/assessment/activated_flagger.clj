@@ -5,7 +5,8 @@
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.services.bass :as bass]
             [bass4.assessment.create-missing :as missing]
-            [clj-time.format :as tf]))
+            [clj-time.format :as tf]
+            [bass4.db.orm-classes :as orm]))
 
 (def flag-issuer "tActivatedAdministrationsFlagger")
 (def oldest-allowed 100)
@@ -49,22 +50,22 @@
   (let [text              (flag-text tz assessment)
         user-id           (:user-id assessment)
         administration-id (:participant-administration-id assessment)]
-    (bass/update-object-properties*! db
-                                     "c_flag"
-                                     flag-id
-                                     {"ParentId"       user-id
-                                      "FlagText"       text
-                                      "CustomIcon"     "flag-administration-activated.gif"
-                                      "Open"           1
-                                      "ReflagPossible" 0
-                                      "ReflagDelay"    0
-                                      "Issuer"         flag-issuer
-                                      "ReferenceId"    administration-id
-                                      "ClosedAt"       0})
-    (bass/set-objectlist-parent!
-      db
-      flag-id
-      user-id)))
+    (orm/update-object-properties*! db
+                                    "c_flag"
+                                    flag-id
+                                    {"ParentId"       user-id
+                                     "FlagText"       text
+                                     "CustomIcon"     "flag-administration-activated.gif"
+                                     "Open"           1
+                                     "ReflagPossible" 0
+                                     "ReflagDelay"    0
+                                     "Issuer"         flag-issuer
+                                     "ReferenceId"    administration-id
+                                     "ClosedAt"       0}))
+  (orm/set-objectlist-parent!
+    db
+    flag-id
+    user-id))
 
 (defn- potential-assessments
   "Returns list of potentially flag assessments for users
@@ -87,10 +88,10 @@
                      (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
                           (missing/add-missing-administrations! db)))]
     (when (seq ongoing)
-      (let [flag-ids (bass/create-bass-objects-without-parent*! db
-                                                                "cFlag"
-                                                                "Flags"
-                                                                (count ongoing))]
+      (let [flag-ids (orm/create-bass-objects-without-parent*! db
+                                                               "cFlag"
+                                                               "Flags"
+                                                               (count ongoing))]
         (doseq [[assessment flag-id] (partition 2 (interleave ongoing flag-ids))]
           (create-flag! db
                         tz

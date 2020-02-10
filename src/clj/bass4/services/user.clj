@@ -3,9 +3,9 @@
             [buddy.hashers :as hashers]
             [bass4.config :as config]
             [bass4.time :as b-time]
-            [bass4.services.bass :as bass-service]
             [clojure.string :as str]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.db.orm-classes :as orm]))
 
 (defn get-user
   [user-id]
@@ -92,7 +92,7 @@
 
 (defn create-no-consent-flag!
   [user-id]
-  (bass-service/create-flag!
+  (orm/create-flag!
     user-id
     "no-consent"
     (str "User did not consent to Privacy Notice")

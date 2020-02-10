@@ -11,7 +11,8 @@
             [bass4.services.bass :as bass-service]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :refer [*db*]]
-            [bass4.assessment.administration :as administration]))
+            [bass4.assessment.administration :as administration]
+            [bass4.db.orm-classes :as orm]))
 
 (use-fixtures
   :once
@@ -103,7 +104,7 @@
            (flag-late! *now* created-flags 2)))
     (is (= #{} (flag-late! *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
+      (orm/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
       (is (= #{} (flag-late! *now*)))
       (is (= #{} (flag-late! now+1delay-1)))
       (reset! created-flags {})
@@ -113,14 +114,14 @@
                          1)))
       (is (= 1 (flag-comment-count flag1-id)))
       (is (= #{} (flag-late! now+1delay)))
-      (bass-service/update-object-properties! "c_flag"
-                                              flag1-id
-                                              {"ClosedAt" (b-time/to-unix now+1delay)})
+      (orm/update-object-properties! "c_flag"
+                                     flag1-id
+                                     {"ClosedAt" (b-time/to-unix now+1delay)})
       (is (zero? (count (db-late-flag-participant *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
-      (bass-service/update-object-properties! "c_flag"
-                                              flag1-id
-                                              {"ReflagDelay" (dec late-flagger/reflag-delay)})
+      (orm/update-object-properties! "c_flag"
+                                     flag1-id
+                                     {"ReflagDelay" (dec late-flagger/reflag-delay)})
       (is (= 1 (count (flag-late! now+2delay-1))))
       (is (= 2 (flag-comment-count flag1-id))))))
 
@@ -143,10 +144,10 @@
            (flag-late! *now* created-flags 2)))
     (is (= #{} (flag-late! *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (bass-service/update-object-properties! "c_flag"
-                                              flag1-id
-                                              {"ClosedAt"
-                                               (b-time/to-unix *now*)})
+      (orm/update-object-properties! "c_flag"
+                                     flag1-id
+                                     {"ClosedAt"
+                                      (b-time/to-unix *now*)})
       (is (= #{} (flag-late! *now*)))
       (is (= #{} (flag-late! now+1delay-1)))
       (reset! created-flags {})
@@ -157,14 +158,14 @@
       (is (= 1 (flag-comment-count flag1-id)))
       (is (= #{} (flag-late! now+1delay)))
       (let [flag2-id (first (get @created-flags user-id1))]
-        (bass-service/update-object-properties! "c_flag"
-                                                flag2-id
-                                                {"ClosedAt" (b-time/to-unix now+1delay)}))
+        (orm/update-object-properties! "c_flag"
+                                       flag2-id
+                                       {"ClosedAt" (b-time/to-unix now+1delay)}))
       (is (zero? (count (db-late-flag-group *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-group *db* now+2delay))))
-      (bass-service/update-object-properties! "c_flag"
-                                              flag1-id
-                                              {"ReflagDelay" (dec late-flagger/reflag-delay)})
+      (orm/update-object-properties! "c_flag"
+                                     flag1-id
+                                     {"ReflagDelay" (dec late-flagger/reflag-delay)})
       (is (= 1 (count (flag-late! now+2delay-1))))
       (is (= 2 (flag-comment-count flag1-id))))))
 
@@ -278,15 +279,15 @@
     (is (= #{[user-id1 assessment-id 1]}
            (flag-late! *now* created-flags 1)))
     (is (= 0 (count (late-flagger/deflag-assessments! *db* *now*))))
-    (bass/update-object-properties*! *db*
-                                     "c_participantadministration"
-                                     administration-id
-                                     {"active" 0})
+    (orm/update-object-properties*! *db*
+                                    "c_participantadministration"
+                                    administration-id
+                                    {"active" 0})
     (is (= 1 (count (late-flagger/deflag-assessments! *db* *now*))))
-    (bass/update-object-properties*! *db*
-                                     "c_participantadministration"
-                                     administration-id
-                                     {"active" 1})
+    (orm/update-object-properties*! *db*
+                                    "c_participantadministration"
+                                    administration-id
+                                    {"active" 1})
     (is (= #{}
            (flag-late! (t/plus *now* (t/days (dec late-flagger/reflag-delay))))))
     (is (= #{[user-id1 assessment-id 1]}
