@@ -72,7 +72,7 @@
   (:limited-access? session))
 
 (defn pluggable-ui?
-  [_ _]
+  [& _]
   (and (some? (clients/client-setting [:pluggable-ui-path]))
        (clients/client-setting [:use-pluggable-ui?])))
 
@@ -148,17 +148,19 @@
 
 (defroutes pluggable-ui
   (context "/user/ui" [:as request]
-    (GET "*" [] (let [path (subs (:uri request) (count "/user/ui"))]
-                  (if (= "" path)
-                    (http-response/found "/user/ui/")
-                    (let [ui-path  (clients/client-setting [:pluggable-ui-path])
-                          _        (when-not ui-path
-                                     (throw (Exception. "No :pluggable-ui-path in config")))
-                          response (or (http-response/file-response path {:root ui-path})
-                                       (http-response/file-response "" {:root ui-path}))]
-                      (if (= 200 (:status response))
-                        (file/file-headers response)
-                        response)))))
+    (GET "*" [] (if-not (pluggable-ui?)
+                  (http-response/not-found "This DB does not use pluggable UI.")
+                  (let [path (subs (:uri request) (count "/user/ui"))]
+                    (if (= "" path)
+                      (http-response/found "/user/ui/")
+                      (let [ui-path  (clients/client-setting [:pluggable-ui-path])
+                            _        (when-not ui-path
+                                       (throw (Exception. "No :pluggable-ui-path in config")))
+                            response (or (http-response/file-response path {:root ui-path})
+                                         (http-response/file-response "" {:root ui-path}))]
+                        (if (= 200 (:status response))
+                          (file/file-headers response)
+                          response))))))
     (POST "*" [] (http-response/bad-request "Cannot post to pluggable ui"))))
 
 (defroutes root-reroute
