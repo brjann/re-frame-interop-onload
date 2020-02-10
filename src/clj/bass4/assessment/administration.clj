@@ -3,11 +3,11 @@
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [bass4.db.core :as db]
-            [bass4.services.bass :as bass]
             [bass4.instrument.answers-services :as instrument-answers]
             [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]
-            [bass4.assessment.late-flagger :as late-flagger]))
+            [bass4.assessment.late-flagger :as late-flagger]
+            [bass4.clients.time :as client-time]))
 
 
 ;; ------------------------------
@@ -16,7 +16,7 @@
 
 (defn- start-date-representation
   [date-time]
-  (tc/to-epoch (bass/local-midnight date-time)))
+  (tc/to-epoch (client-time/local-midnight date-time)))
 
 (defn dependent-assessments!
   "Activates any assessments depending on completed assessments (by administration id)"

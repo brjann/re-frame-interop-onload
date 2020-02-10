@@ -7,7 +7,7 @@
             [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [clj-time.core :as t]
             [bass4.php-interop :as php-interop]))
 
@@ -160,7 +160,7 @@
   (let [module-accesses-string (-> (db/get-module-accesses {:treatment-access-id treatment-access-id})
                                    (:module-accesses)
                                    (php->clj)
-                                   (assoc module-id (b-time/to-unix (t/now)))
+                                   (assoc module-id (utils/to-unix (t/now)))
                                    (clj->php))]
     (db/update-module-accesses! {:treatment-access-id treatment-access-id
                                  :module-accesses     module-accesses-string})))

@@ -3,9 +3,10 @@
             [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [bass4.utils :refer [unserialize-key map-map str->int filter-map val-to-bool fnil+]]
-            [bass4.module.services :as module-service]))
+            [bass4.module.services :as module-service]
+            [bass4.utils :as utils]))
 
 ;; TODO: Does not check if treatment is ongoing or other options (disallow send etc)
 ;; TODO: Does probably not handle automatic module accesses
@@ -22,7 +23,7 @@
             (-> treatment-access
                 (unserialize-key :module-accesses #(map-map access-date->int %))
                 (#(assoc % :modules-active (active-modules (:module-accesses %))))
-                (#(assoc % :modules-activation-dates (map-map b-time/from-unix (filter-map (complement zero?) (:module-accesses %)))))
+                (#(assoc % :modules-activation-dates (map-map utils/from-unix (filter-map (complement zero?) (:module-accesses %)))))
                 (#(assoc % :submitted-homeworks (module-service/submitted-homeworks (:treatment-access-id %))))
                 (dissoc :module-accesses)))
           (db/get-treatment-accesses

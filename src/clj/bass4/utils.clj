@@ -204,8 +204,6 @@
 ;;   TIME FUNCTIONS
 ;; ------------------
 
-;; TODO: Move to b-time when cyclic dependency has been removed
-;; Also present in b-time...
 (defn to-unix
   [now]
   (-> now

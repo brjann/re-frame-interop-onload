@@ -16,7 +16,7 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.session.create :as session-create]
             [bass4.db.core :as db]
-            [bass4.clients :as clients])
+            [bass4.clients.core :as clients])
   (:import (clojure.lang ExceptionInfo)))
 
 

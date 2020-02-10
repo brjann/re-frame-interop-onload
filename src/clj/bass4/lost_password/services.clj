@@ -1,10 +1,10 @@
 (ns bass4.lost-password.services
   (:require [bass4.db.core :as db]
             [clj-time.format :as f]
-            [bass4.services.bass :as bass]
             [clj-time.core :as t]
             [bass4.utils :as utils]
-            [bass4.db.orm-classes :as orm])
+            [bass4.db.orm-classes :as orm]
+            [bass4.clients.core :as clients])
   (:import (java.util UUID)))
 
 (defn lost-password-method []
@@ -22,7 +22,7 @@
 
 (defn create-flag!
   [user]
-  (let [date-str (-> (f/formatter "yyyy-MM-dd HH:mm" (bass/time-zone))
+  (let [date-str (-> (f/formatter "yyyy-MM-dd HH:mm" (t/time-zone-for-id (clients/client-setting [:timezone])))
                      (f/unparse (t/now)))]
     (orm/create-flag!
       (:user-id user)

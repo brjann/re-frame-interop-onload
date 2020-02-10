@@ -23,12 +23,11 @@
                                      ->!
                                      log-api-response
                                      pass-by]]
-            [clojure.tools.logging :as log]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [bass4.services.user :as user-service]
-            [bass4.time :as b-time]
+            [bass4.utils :as utils]
             [bass4.module.services :as module-service]
             [bass4.treatment.builder :as treatment-builder]
             [bass4.config :as config])
@@ -339,7 +338,7 @@
                                    :updates    {:MessageText message-text
                                                 :ReadTime    0
                                                 :Draft       0
-                                                :SendTime    (b-time/to-unix (t/now))}})
+                                                :SendTime    (utils/to-unix (t/now))}})
     (db/create-bass-link! {:linker-id     message-id
                            :linkee-id     110
                            :link-property "Sender"

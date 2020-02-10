@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as io]
             [mount.core :refer [defstate]]
             [bass4.task.scheduler :as task-scheduler]
-            [bass4.clients :as clients]
+            [bass4.clients.core :as clients]
             [bass4.php-interop :as php-interop])
   (:import (java.io File)))
 
@@ -14,7 +14,7 @@
 (defn delete-temp-files-task
   [_ local-config _]
   (let [counts (for [dir cleanup-dirs
-                     :let [path (binding [clients/*local-config* local-config]
+                     :let [path (binding [clients/*client-config* local-config]
                                   (php-interop/db-dir dir))]]
                  (if (.isDirectory ^File path)
                    (let [x (filter #(not (php-interop/check-file-age % (* 24 60 60)))

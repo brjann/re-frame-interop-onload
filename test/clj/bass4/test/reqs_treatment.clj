@@ -18,9 +18,7 @@
             [clojure.data.json :as json]
             [bass4.responses.error-report :as error-report-response]
             [bass4.services.user :as user-service]
-            [bass4.services.privacy :as privacy-service]
-            [bass4.services.bass :as bass]
-            [bass4.time :as b-time]
+            [bass4.utils :as utils]
             [bass4.php-interop :as php-interop])
   (:import (java.util UUID)))
 
@@ -159,7 +157,7 @@
       (doseq [[module-id content-id texts] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
           (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
             (doseq [text texts]
               (-> *s*
                   (visit "/embedded/create-session?uid=8")
@@ -236,7 +234,7 @@
       (doseq [[module-id content-id text] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
           (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
             (-> *s*
                 (visit "/embedded/create-session?uid=8")
                 (visit (str "/embedded/" path))

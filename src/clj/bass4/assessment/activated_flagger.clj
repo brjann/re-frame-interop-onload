@@ -6,14 +6,15 @@
             [bass4.services.bass :as bass]
             [bass4.assessment.create-missing :as missing]
             [clj-time.format :as tf]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.clients.time :as client-time]))
 
 (def flag-issuer "tActivatedAdministrationsFlagger")
 (def oldest-allowed 100)
 
 (defn date-intervals
   [now tz]
-  (let [midnight (bass/local-midnight now tz)]
+  (let [midnight (client-time/local-midnight now tz)]
     [(-> midnight
          (t/minus (t/days oldest-allowed)))
      (-> midnight

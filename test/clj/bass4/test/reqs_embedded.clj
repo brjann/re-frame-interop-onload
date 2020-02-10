@@ -15,15 +15,11 @@
                                      log-body
                                      advance-time-s!
                                      poll-message-chan]]
-            [clojure.string :as string]
-            [bass4.services.bass :as bass]
             [bass4.external-messages.async :refer [*debug-chan*]]
-            [clojure.tools.logging :as log]
-            [bass4.time :as b-time]
+            [bass4.utils :as utils]
             [clj-time.core :as t]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
-            [bass4.services.bass :as bass-service]
             [bass4.utils :as utils]
             [bass4.php-interop :as php-interop])
   (:import (java.util UUID)))
@@ -51,7 +47,7 @@
 
 (deftest request-post-answers
   (let [php-session-id (get-php-session-id)
-        now            (b-time/to-unix (t/now))]
+        now            (utils/to-unix (t/now))]
     (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
     (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
       (-> *s*
@@ -72,7 +68,7 @@
 
 (deftest request-wrong-instrument
   (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "instrument/" :php-session-id "xxx"})
-                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
@@ -87,7 +83,7 @@
 
 (deftest embedded-render
   (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "iframe/render" :php-session-id "xxx"})
-                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/iframe/render")
         (has (status? 403))

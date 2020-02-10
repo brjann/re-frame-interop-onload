@@ -25,7 +25,7 @@
             [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors]
             [bass4.db.core :as db]
-            [bass4.clients :as clients])
+            [bass4.clients.core :as clients])
   (:import (java.util UUID)))
 
 (defn render-page

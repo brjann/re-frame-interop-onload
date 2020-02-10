@@ -9,22 +9,22 @@
             [clojure.data.json :as json]
             [bass4.http-utils :as h-utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 (def ^:dynamic *in-session?* false)
 (def ^:dynamic *user-id* false)
 
 (defn timeout-hard-limit
   []
-  (clients/db-setting [:timeout-hard]))
+  (clients/client-setting [:timeout-hard]))
 
 (defn timeout-hard-soon-limit
   []
-  (clients/db-setting [:timeout-hard-soon]))
+  (clients/client-setting [:timeout-hard-soon]))
 
 (defn timeout-re-auth-limit
   []
-  (clients/db-setting [:timeout-soft]))
+  (clients/client-setting [:timeout-soft]))
 
 ;; -------------------
 ;;   RE-AUTH TIMEOUT

@@ -3,7 +3,7 @@
             [clojure.string :as string]
             [clojure.math.numeric-tower :as math]
             [bass4.utils :refer [map-map map-map-keys filter-map]]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
@@ -39,7 +39,7 @@
 (defn password
   ([] (password :word 3 :word))
   ([& config]
-   (let [words (words (clients/db-setting [:language]))]
+   (let [words (words (clients/client-setting [:language]))]
      (apply str (mapv (fn [x]
                         (if (integer? x)
                           (random-number x)

@@ -10,7 +10,7 @@
             [bass4.db.core :as db]
             [clojure.string :as str]
             [bass4.config :as config]
-            [bass4.clients :as clients])
+            [bass4.clients.core :as clients])
   (:import java.util.UUID))
 
 (defn serialize-mysql [value]
@@ -74,7 +74,7 @@
   (let [db-session-handlers (atom {})]
     (fn [request]
       (let [cookie-name     (str "BASS-cookie-"
-                                 (clients/db-setting [:name])
+                                 (clients/client-setting [:name])
                                  (when (str/starts-with? (:uri request) "/embedded")
                                    "-embedded"))
             ;; Need to dynamically handle ssl mode to be able to run tests within IDE

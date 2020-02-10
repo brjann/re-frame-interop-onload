@@ -2,7 +2,7 @@
   (:require [bass4.db.core :as db]
             [clojure.string :as string]
             [clojure.java.io :as io]
-            [bass4.clients :as clients]
+            [bass4.clients.core :as clients]
             [bass4.config :as config]
             [clojure.data.json :as json]
             [bass4.utils :as utils])
@@ -33,7 +33,7 @@
   (^File [base-path] (db-dir base-path nil))
   (^File [base-path sub-path]
    (try
-     (let [db-name        (:name clients/*local-config*)
+     (let [db-name        (:name clients/*client-config*)
            full-base-path (io/file (config/env :bass-path) "projects" db-name base-path)]
        (if sub-path
          (get-sub-path full-base-path sub-path)

@@ -6,7 +6,7 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.time :as b-time]
+            [bass4.utils :as utils]
             [bass4.db.orm-classes :as orm]))
 
 (use-fixtures
@@ -117,8 +117,8 @@
            (user-statuses *now* user-id)))
     (is (= #{}
            (group-statuses *now* group-id)))
-    (orm/update-object-properties! "c_participantadministration" adm1 {"datecompleted" (b-time/to-unix *now*)})
-    (orm/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (b-time/to-unix *now*)})
+    (orm/update-object-properties! "c_participantadministration" adm1 {"datecompleted" (utils/to-unix *now*)})
+    (orm/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (utils/to-unix *now*)})
     (is (= #{}
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
@@ -308,7 +308,7 @@
            (user-statuses *now* user-id)))
     (orm/update-object-properties! "c_participantadministration"
                                    adm1-id
-                                   {"datecompleted" (b-time/to-unix *now*)})
+                                   {"datecompleted" (utils/to-unix *now*)})
     (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-completed]
              [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
            (user-statuses *now* user-id)))))

@@ -6,7 +6,7 @@
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [mount-up.core :as mount-up]
-            [bass4.clients :as clients])
+            [bass4.clients.core :as clients])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -68,21 +68,21 @@
 
 (defn task-dbs
   []
-  (remove #(clients/db-setting* % [:no-tasks?] false) (keys clients/db-connections)))
+  (remove #(clients/client-setting* % [:no-tasks?] false) (keys clients/client-db-connections)))
 
 (defn- schedule-db-task*!
   [task task-name scheduling]
   (doseq [db-name (task-dbs)]
     (let [task-id   (swap! task-counter inc)
-          db-config (get clients/local-configs db-name)
+          db-config (get clients/client-configs db-name)
           tz        (-> (:timezone db-config "Europe/Stockholm")
                         (t/time-zone-for-id))]
       (let [[time-left interval time-unit] (interval-params scheduling tz)
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
                                            (fn []
-                                             (let [db        @(get clients/db-connections db-name)
-                                                   db-config (get clients/local-configs db-name)]
+                                             (let [db        @(get clients/client-db-connections db-name)
+                                                   db-config (get clients/client-configs db-name)]
                                                (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
                                          (long time-left)
                                          interval
@@ -117,9 +117,9 @@
   "Watches the DBs for changes in connection. Reschedules all tasks if
   changes are detected"
   [{:keys [name]}]
-  (if (= name (str #'bass4.clients/db-connections))
-    (if (map? clients/db-connections)
-      (let [new-dbs (keys clients/db-connections)
+  (if (= name (str #'bass4.clients.core/client-db-connections))
+    (if (map? clients/client-db-connections)
+      (let [new-dbs (keys clients/client-db-connections)
             old-dbs @db-tracker]
         (when-not (or (nil? @db-tracker) (= new-dbs old-dbs))
           (log/info "DB connections change detected, rescheduling tasks.")

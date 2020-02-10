@@ -13,13 +13,11 @@
                                      log-status
                                      disable-attack-detector
                                      *s*]]
-            [bass4.services.auth :as auth-service]
             [bass4.services.user :as user-service]
             [bass4.services.privacy :as privacy-service]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log]
-            [bass4.time :as b-time]))
+            [bass4.utils :as utils]))
 
 (use-fixtures
   :once
@@ -110,7 +108,7 @@
                 privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (follow-redirect)
@@ -181,7 +179,7 @@
                 privacy-service/privacy-notice-disabled? (constantly true)]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (follow-redirect)
