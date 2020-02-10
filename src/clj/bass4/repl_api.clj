@@ -40,9 +40,14 @@
                    "status"            (name (:status assessment))})))
       "No such DB")))
 
+(defapi uid-for-data!
+  [data]
+  )
+
 (defapi mirror
   [arg :- [[api/str? 0 1000]]]
   arg)
+
 
 #_(defapi load-test
     [arg :- [[api/str? 0 1000]]]

@@ -1,9 +1,7 @@
 (ns bass4.middleware.file-php
-  (:require [bass4.layout :as layout]
-            [bass4.services.bass :as bass]
-            [bass4.file-response :as file]
+  (:require [bass4.file-response :as file]
             [ring.util.http-response :as http-response]
-            [clojure.tools.logging :as log]))
+            [bass4.php-interop :as php-interop]))
 
 
 
@@ -25,11 +23,11 @@
       (let [response (try
                        (cond
                          (:uploadedfile params)
-                         (let [upload-dir (str (bass/db-dir "upload"))]
+                         (let [upload-dir (str (php-interop/db-dir "upload"))]
                            (http-response/file-response (:uploadedfile params) {:root upload-dir}))
 
                          (:uid params)
-                         (http-response/file-response (str (bass/uid-file (:uid params)))))
+                         (http-response/file-response (str (php-interop/uid-file (:uid params)))))
 
                        (catch Exception _))]
         (if response

@@ -20,7 +20,8 @@
             [bass4.services.user :as user-service]
             [bass4.services.privacy :as privacy-service]
             [bass4.services.bass :as bass]
-            [bass4.time :as b-time])
+            [bass4.time :as b-time]
+            [bass4.php-interop :as php-interop])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -157,8 +158,8 @@
                                        "\"alias\":{\"export\":\"9\"}"]]]]
       (doseq [[module-id content-id texts] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
-          (with-redefs [bass/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+          (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
+                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
             (doseq [text texts]
               (-> *s*
                   (visit "/embedded/create-session?uid=8")
@@ -234,8 +235,8 @@
                        [642529 642527 "\"export-alias-hw\":{\"export\":\"9\"}"]]]
       (doseq [[module-id content-id text] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
-          (with-redefs [bass/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+          (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
+                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
             (-> *s*
                 (visit "/embedded/create-session?uid=8")
                 (visit (str "/embedded/" path))

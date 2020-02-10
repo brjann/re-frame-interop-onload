@@ -8,7 +8,8 @@
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
             [bass4.time :as b-time]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.php-interop :as php-interop]))
 
 
 ;; --------------------------
@@ -56,7 +57,7 @@
 
 (defn- check-file
   [content]
-  (if (bass/uploaded-file (:file-path content))
+  (if (php-interop/uploaded-file (:file-path content))
     content
     (assoc content :file-path nil)))
 
