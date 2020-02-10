@@ -16,7 +16,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config]
             [bass4.services.privacy :as privacy-service]
-            [bass4.clients :as clients]))
+            [bass4.clients :as clients]
+            [bass4.php-interop :as php-interop]))
 
 
 ;; ------------
@@ -94,7 +95,7 @@
         scheme   (if (config/env :ssl)
                    "https"
                    (name (:scheme request)))
-        filename (bass/write-session-file user-id "extlogin")]
+        filename (php-interop/write-session-file user-id "extlogin")]
     (str scheme "://" host "/ext-login/do-login?uid=" (url-encode filename))))
 
 (defapi check-pending
@@ -124,7 +125,7 @@
   [uid :- [[api/str? 1 100]]
    return-url :- [[api/str? 1 2000] api/url?]
    logout-url :- [:? [api/str? 1 2000] api/url?]]
-  (if-let [user (-> (bass/read-session-file uid true 120)
+  (if-let [user (-> (php-interop/read-session-file uid true 120)
                     (user-service/get-user))]
     (-> (http-response/found "/user")
         (assoc :session (auth-response/create-new-session user {:external-login? true

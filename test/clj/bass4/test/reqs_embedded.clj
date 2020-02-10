@@ -24,7 +24,8 @@
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
             [bass4.services.bass :as bass-service]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [bass4.php-interop :as php-interop])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -43,7 +44,7 @@
   (subs (str (UUID/randomUUID)) 0 32))
 
 (deftest wrong-uid
-  (with-redefs [bass/read-session-file (constantly {:user-id nil :path "instrument/1647" :php-session-id nil})]
+  (with-redefs [php-interop/read-session-file (constantly {:user-id nil :path "instrument/1647" :php-session-id nil})]
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (has (some-text? "Wrong uid")))))
@@ -52,7 +53,7 @@
   (let [php-session-id (get-php-session-id)
         now            (b-time/to-unix (t/now))]
     (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
-    (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
+    (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
       (-> *s*
           (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
           (visit "/embedded/instrument/1647")
@@ -70,8 +71,8 @@
 
 
 (deftest request-wrong-instrument
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/" :php-session-id "xxx"})
-                bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+  (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "instrument/" :php-session-id "xxx"})
+                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
         (visit "/embedded/instrument/hell-is-here")
@@ -85,8 +86,8 @@
       (has (status? 403))))
 
 (deftest embedded-render
-  (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "iframe/render" :php-session-id "xxx"})
-                bass/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
+  (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "iframe/render" :php-session-id "xxx"})
+                php-interop/get-php-session   (constantly {:user-id 110 :last-activity (b-time/to-unix (t/now))})]
     (-> *s*
         (visit "/embedded/iframe/render")
         (has (status? 403))
@@ -98,11 +99,11 @@
   (fix-time
     (let [php-session-id   (get-php-session-id)
           now              (utils/to-unix (t/now))
-          timeouts         (bass-service/get-staff-timeouts)
+          timeouts         (php-interop/get-staff-timeouts)
           re-auth-timeout  (:re-auth-timeout timeouts)
           absolute-timeout (:absolute-timeout timeouts)]
       (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
-      (with-redefs [bass/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
+      (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
         (-> *s*
             (visit "/embedded/create-session?uid=8")
             (visit "/embedded/instrument/1647")
@@ -113,7 +114,7 @@
             (follow-redirect)
             (has (some-text? "Timeout"))
             ;; Fake re-auth
-            (pass-by (bass-service/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+            (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
             (visit "/embedded/instrument/1647")
             (has (status? 200))
             ;; Advance time to re-auth-timeout in two steps
@@ -121,7 +122,7 @@
             (advance-time-s! 1)
             (visit "/embedded/instrument/1647")
             (has (status? 302))
-            (pass-by (bass-service/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+            (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
             ;; Advance time to almost re-auth-timeout
             (advance-time-s! (dec re-auth-timeout))
             ;; Reload page (updating last activity)
@@ -138,7 +139,7 @@
             (follow-redirect)
             (has (some-text? "No session"))
             ;; Reload page (updating last activity)
-            (pass-by (bass-service/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+            (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
             (visit "/embedded/instrument/1647")
             ;; Access error - session was destroyed
             (has (status? 403)))))))
@@ -153,7 +154,7 @@
                                   {:user-id 110 :path "instrument/1647" :php-session-id php-session-id-1}])]
       (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id-1 "UserId" 110 "LastActivity" now "SessionStart" now})
       (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id-2 "UserId" 110 "LastActivity" now "SessionStart" now})
-      (with-redefs [bass/read-session-file (fn [_] (utils/queue-pop! session-files))]
+      (with-redefs [php-interop/read-session-file (fn [_] (utils/queue-pop! session-files))]
         (-> *s*
             ;; First session file gives access to 1647
             (visit "/embedded/create-session?uid=8")

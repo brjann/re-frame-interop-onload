@@ -7,11 +7,12 @@
             [bass4.utils :as utils]
             [bass4.session.timeout :as session-timeout]
             [bass4.http-utils :as h-utils]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.php-interop :as php-interop]))
 
 (defn get-session-file
   [uid]
-  (let [info (bass/read-session-file uid)]
+  (let [info (php-interop/read-session-file uid)]
     (assoc info :user-id (utils/str->int (:user-id info)))))
 
 (defn create-session
@@ -51,7 +52,7 @@
 
 (defn check-php-session
   [timeouts {:keys [user-id php-session-id]}]
-  (if-let [php-session (bass-service/get-php-session php-session-id)]
+  (if-let [php-session (php-interop/get-php-session php-session-id)]
     (let [last-activity      (:last-activity php-session)
           php-user-id        (:user-id php-session)
           now-unix           (utils/current-time)
@@ -78,7 +79,7 @@
         session        (:session request)
         embedded-paths (:embedded-paths session)
         php-session-id (:php-session-id session)
-        timeouts       (bass-service/get-staff-timeouts)]
+        timeouts       (php-interop/get-staff-timeouts)]
     (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
       (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
@@ -93,7 +94,7 @@
 
           ::ok
           (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
-            (bass-service/update-php-session-last-activity! php-session-id (utils/current-time))
+            (php-interop/update-php-session-last-activity! php-session-id (utils/current-time))
             (handler request)))
         (http-response/forbidden "No embedded access")))))
 

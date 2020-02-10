@@ -1,9 +1,9 @@
 (ns bass4.cleaner.files
   (:require [clojure.java.io :as io]
-            [bass4.services.bass :as bass-service]
             [mount.core :refer [defstate]]
             [bass4.task.scheduler :as task-scheduler]
-            [bass4.clients :as clients])
+            [bass4.clients :as clients]
+            [bass4.php-interop :as php-interop])
   (:import (java.io File)))
 
 (def cleanup-dirs ["sessiondata"
@@ -15,9 +15,9 @@
   [_ local-config _]
   (let [counts (for [dir cleanup-dirs
                      :let [path (binding [clients/*local-config* local-config]
-                                  (bass-service/db-dir dir))]]
+                                  (php-interop/db-dir dir))]]
                  (if (.isDirectory ^File path)
-                   (let [x (filter #(not (bass-service/check-file-age % (* 24 60 60)))
+                   (let [x (filter #(not (php-interop/check-file-age % (* 24 60 60)))
                                    (file-seq path))]
                      (doseq [file x]
                        (io/delete-file file true))
