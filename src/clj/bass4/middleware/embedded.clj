@@ -1,13 +1,10 @@
 (ns bass4.middleware.embedded
   (:require [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clojure.string :as string]
-            [bass4.services.bass :as bass]
             [ring.util.http-response :as http-response]
-            [bass4.services.bass :as bass-service]
             [bass4.utils :as utils]
             [bass4.session.timeout :as session-timeout]
             [bass4.http-utils :as h-utils]
-            [clojure.tools.logging :as log]
             [bass4.php-interop :as php-interop]))
 
 (defn get-session-file
