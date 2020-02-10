@@ -21,6 +21,29 @@
   []
   (db/get-staff-timeouts))
 
+(defn check-php-session
+  [timeouts {:keys [user-id php-session-id]}]
+  (if-let [php-session (get-php-session php-session-id)]
+    (let [last-activity      (:last-activity php-session)
+          php-user-id        (:user-id php-session)
+          now-unix           (utils/current-time)
+          time-diff-activity (- now-unix last-activity)
+          re-auth-timeout    (:re-auth-timeout timeouts)
+          absolute-timeout   (:absolute-timeout timeouts)]
+      (cond
+        (not= user-id php-user-id)
+        ::user-mismatch
+
+        (>= time-diff-activity absolute-timeout)
+        ::absolute-timeout
+
+        (>= time-diff-activity re-auth-timeout)
+        ::re-auth-timeout
+
+        :else
+        ::ok))
+    ::no-session))
+
 (defn get-sub-path
   "Makes sure that the combination of
   base-path and sub-path is within base-path"

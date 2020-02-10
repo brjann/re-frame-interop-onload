@@ -12,8 +12,8 @@
   (let [info (php-interop/read-session-file uid)]
     (assoc info :user-id (utils/str->int (:user-id info)))))
 
-(defn create-session
-  [handler request uid]
+(defn create-embedded-session
+  [_ request uid]
   (let [{:keys [user-id path php-session-id]} (get-session-file uid)]
     (if (every? identity [user-id path php-session-id])
       (let [session             (:session request)
@@ -47,29 +47,6 @@
             (legal-character (subs current embedded-length (inc embedded-length))))
         true))))
 
-(defn check-php-session
-  [timeouts {:keys [user-id php-session-id]}]
-  (if-let [php-session (php-interop/get-php-session php-session-id)]
-    (let [last-activity      (:last-activity php-session)
-          php-user-id        (:user-id php-session)
-          now-unix           (utils/current-time)
-          time-diff-activity (- now-unix last-activity)
-          re-auth-timeout    (:re-auth-timeout timeouts)
-          absolute-timeout   (:absolute-timeout timeouts)]
-      (cond
-        (not= user-id php-user-id)
-        ::user-mismatch
-
-        (>= time-diff-activity absolute-timeout)
-        ::absolute-timeout
-
-        (>= time-diff-activity re-auth-timeout)
-        ::re-auth-timeout
-
-        :else
-        ::ok))
-    ::no-session))
-
 (defn check-embedded-path
   [handler request]
   (let [current-path   (:uri request)
@@ -80,7 +57,7 @@
     (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
       (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
-        (case (check-php-session timeouts (:session request))
+        (case (php-interop/check-php-session timeouts (:session request))
           (::user-mismatch ::no-session ::absolute-timeout)
           (->
             (http-response/found "/embedded/error/no-session")
@@ -114,7 +91,7 @@
     (let [path (:uri request)
           uid  (get-in request [:params :uid])]
       (if (string/starts-with? path "/embedded/create-session")
-        (create-session handler request uid)
+        (create-embedded-session handler request uid)
         (embedded-request handler request uid)))))
 
 (defn wrap-embedded-request
