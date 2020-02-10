@@ -204,16 +204,16 @@
        (map #(assoc % :user-id user-id))))
 
 (defn- ongoing-administrations
-  [now administrations assessment]
+  [now administrations assessment include-clinician?]
   (-> administrations
       (#(sort-by :assessment-index %))
       (#(assessment-ongoing/get-administration-statuses now % assessment))
-      (assessment-ongoing/filter-ongoing-assessments)))
+      (assessment-ongoing/filter-ongoing-assessments include-clinician?)))
 
 (defn- ongoing-from-potentials
   "Returns list of ALL ongoing assessments based on list of potentials.
   Note, ALL means that ongoing assessment that are not part of potentials may be returned"
-  [db now potentials]
+  [db now potentials include-clinician?]
   (let [user-groups                         (->> potentials
                                                  (map #(vector (:user-id %) (:group-id %)))
                                                  (filter #(second %))
@@ -239,8 +239,10 @@
                                                  (into {}))
         ongoing-assessments                 (->> merged-by-user+assessment
                                                  (mapv (fn [[[_ assessment-id] administrations]]
-                                                         (ongoing-administrations
-                                                           now administrations (get assessments' assessment-id))))
+                                                         (ongoing-administrations now
+                                                                                  administrations
+                                                                                  (get assessments' assessment-id)
+                                                                                  include-clinician?)))
                                                  (flatten)
                                                  (map #(merge % (get assessments' (:assessment-id %)))))]
     ongoing-assessments))
@@ -248,22 +250,23 @@
 (defn filter-ongoing-assessments
   "Receives a sequence of potentially ongoing assessments
   and returns the ones that are actually ongoing."
-  [db now potentials]
-  (when (seq potentials)
-    (let [ongoing-assessments                (ongoing-from-potentials db now potentials)
-          potential-by+user+assessment+index (->> potentials
-                                                  (map #(vector [(:user-id %) (:assessment-id %) (:assessment-index %)] %))
-                                                  (into {}))
-          filtered-ongoing-potentials        (->> ongoing-assessments
-                                                  (map (fn [ongoing]
-                                                         (let [potential (get potential-by+user+assessment+index
-                                                                              [(:user-id ongoing)
-                                                                               (:assessment-id ongoing)
-                                                                               (:assessment-index ongoing)])]
-                                                           (when potential
-                                                             (merge ongoing potential)))))
-                                                  (filter identity))]
-      filtered-ongoing-potentials)))
+  ([db now potentials] (filter-ongoing-assessments db now potentials false))
+  ([db now potentials include-clinician?]
+   (when (seq potentials)
+     (let [ongoing-assessments                (ongoing-from-potentials db now potentials include-clinician?)
+           potential-by+user+assessment+index (->> potentials
+                                                   (map #(vector [(:user-id %) (:assessment-id %) (:assessment-index %)] %))
+                                                   (into {}))
+           filtered-ongoing-potentials        (->> ongoing-assessments
+                                                   (map (fn [ongoing]
+                                                          (let [potential (get potential-by+user+assessment+index
+                                                                               [(:user-id ongoing)
+                                                                                (:assessment-id ongoing)
+                                                                                (:assessment-index ongoing)])]
+                                                            (when potential
+                                                              (merge ongoing potential)))))
+                                                   (filter identity))]
+       filtered-ongoing-potentials))))
 
 (defn- add-late-remind-number-fn
   [now]

@@ -56,6 +56,16 @@
                  (vals)
                  (first))))))
 
+(deftest db-flag-clinician-assessment
+  (let [user-id1      (user-service/create-user! project-ass1-id)
+        assessment-id (create-assessment! {"Scope"                   0
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5
+                                           "ClinicianAssessment"     1})]
+    (create-participant-administration!
+      user-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
+    (is (= 1 (count (db-late-flag-participant *db* *now*))))))
+
 (deftest db-flag-group-administration
   (let [group-id1     (create-group!)
         group-id2     (create-group!)
@@ -195,6 +205,21 @@
     (is (= 0 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 14))))))
     (is (= 1 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 15))))))
     (is (= 0 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 15))))))))
+
+(deftest flag-participant-administration+deflag-clinician-assessment
+  (let [created-flags (atom {})
+        user-id1      (user-service/create-user! project-ass1-id)
+        user-id2      (user-service/create-user! project-ass1-id)
+        assessment-id (create-assessment! {"Scope"                   0
+                                           "FlagParticipantWhenLate" 1
+                                           "DayCountUntilLate"       5
+                                           "TimeLimit"               20
+                                           "ClinicianAssessment"     1})]
+    (create-participant-administration!
+      user-id1 assessment-id 1 {:date (midnight+d -6 *now*)})
+    (is (= #{[user-id1 assessment-id 1]}
+           (flag-late! *now*)))
+    (is (= 1 (count (late-flagger/deflag-assessments! *db* (t/plus *now* (t/days 14))))))))
 
 (deftest flag-participant-administration+deflag-inactive
   (let [created-flags     (atom {})
