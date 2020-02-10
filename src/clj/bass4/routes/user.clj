@@ -17,7 +17,8 @@
             [bass4.file-response :as file]
             [bass4.responses.privacy :as privacy-response]
             [bass4.session.timeout :as session-timeout]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [clojure.tools.logging :as log]))
 
 
 ; -----------------------
