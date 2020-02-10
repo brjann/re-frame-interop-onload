@@ -124,7 +124,7 @@
   [db now]
   (let [potentials (potential-assessments db now)
         ongoing    (when (seq potentials)
-                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
+                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
                           (missing/add-missing-administrations! db)))]
     (let [[have-flags need-flags] (split-with :flag-id ongoing)]
       (when (seq have-flags)
@@ -141,7 +141,7 @@
                                 (into {})
                                 (vals))
         ongoing-by-flag-id (when (seq potentials)
-                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
+                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials false)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
     (db-close-flags! db

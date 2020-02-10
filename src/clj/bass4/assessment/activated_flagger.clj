@@ -80,7 +80,7 @@
   [db now tz]
   (let [potentials (potential-assessments db now tz)
         ongoing    (when (seq potentials)
-                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials)
+                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
                           (missing/add-missing-administrations! db)))]
     (when (seq ongoing)
       (let [flag-ids (bass/create-bass-objects-without-parent*! db

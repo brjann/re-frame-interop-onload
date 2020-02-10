@@ -23,7 +23,9 @@
         user-id3       (user-service/create-user! project-ass1-id)
         user-id4       (user-service/create-user! project-ass1-id)
         assessment-id  (create-assessment! {"FlagParticipantWhenActivated" 1})
-        assessment-id2 (create-assessment! {"FlagParticipantWhenActivated" 0})]
+        assessment-id2 (create-assessment! {"FlagParticipantWhenActivated" 0})
+        assessment-id3 (create-assessment! {"FlagParticipantWhenActivated" 1
+                                            "ClinicianAssessment"          1})]
     (create-participant-administration!
       user-id1 assessment-id 1 {"Date" (midnight+d -5 *now*)})
     (create-participant-administration!
@@ -35,9 +37,12 @@
     (create-participant-administration!
       user-id4 assessment-id 1 {"Date"          (midnight+d -5 *now*)
                                 "DateCompleted" 1})
-    (is (= 2 (count (db-activated-flag-participant *db* *now* *tz*))))
+    (create-participant-administration!
+      user-id4 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
+    (is (= 3 (count (db-activated-flag-participant *db* *now* *tz*))))
     (is (= #{[user-id1 assessment-id 1]
-             [user-id2 assessment-id 1]}
+             [user-id2 assessment-id 1]
+             [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
     (is (= 0 (count (db-activated-flag-participant *db* *now* *tz*))))))
 
@@ -52,7 +57,10 @@
         assessment-id  (create-assessment! {"Scope"                        1
                                             "FlagParticipantWhenActivated" 1})
         assessment-id2 (create-assessment! {"Scope"                        1
-                                            "FlagParticipantWhenActivated" 0})]
+                                            "FlagParticipantWhenActivated" 0})
+        assessment-id3 (create-assessment! {"Scope"                        1
+                                            "FlagParticipantWhenActivated" 1
+                                            "ClinicianAssessment"          1})]
     (create-group-administration!
       group-id1 assessment-id 1 {"Date" (midnight *now*)})
     (create-group-administration!
@@ -63,8 +71,12 @@
       group-id2 assessment-id 1 {"Date" (midnight+d +1 *now*)})
     (create-group-administration!
       group-id3 assessment-id 1 {"Date" (midnight+d -5 *now*)})
-    (is (= 2 (count (db-activated-flag-group *db* *now* *tz*))))
-    (is (= #{[user-id3 assessment-id 1]
-             [user-id4 assessment-id 1]}
+    (create-group-administration!
+      group-id1 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
+    (is (= 4 (count (db-activated-flag-group *db* *now* *tz*))))
+    (is (= #{[user-id1 assessment-id3 1]
+             [user-id3 assessment-id 1]
+             [user-id4 assessment-id 1]
+             [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
     (is (= 0 (count (db-activated-flag-group *db* *now* *tz*))))))
