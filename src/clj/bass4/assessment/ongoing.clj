@@ -158,11 +158,13 @@
 
 
 (defn filter-ongoing-assessments
-  [assessment-statuses]
+  [assessment-statuses include-clinician?]
   (filter #(and
              (= ::as-ongoing (:status %))
              (not (:is-record? %))
-             (not (:clinician-rated? %)))
+             (if include-clinician?
+               true
+               (not (:clinician-rated? %))))
           assessment-statuses))
 
 (defn- add-instruments [db assessments]
@@ -214,7 +216,7 @@
   [db now user-id]
   (binding [db/*db* nil]
     (let [[administrations-statuses assessments-map] (user-administration-statuses+assessments db now user-id)
-          ongoing (filter-ongoing-assessments administrations-statuses)]
+          ongoing (filter-ongoing-assessments administrations-statuses false)]
       (when (seq ongoing)
         (->> ongoing
              ;; Add any missing administrations
