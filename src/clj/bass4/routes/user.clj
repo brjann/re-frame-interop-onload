@@ -17,7 +17,7 @@
             [bass4.file-response :as file]
             [bass4.responses.privacy :as privacy-response]
             [bass4.session.timeout :as session-timeout]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 
 ; -----------------------
@@ -73,8 +73,8 @@
 
 (defn pluggable-ui?
   [_ _]
-  (and (some? (clients/db-setting [:pluggable-ui-path]))
-       (clients/db-setting [:use-pluggable-ui?])))
+  (and (some? (clients/client-setting [:pluggable-ui-path]))
+       (clients/client-setting [:use-pluggable-ui?])))
 
 
 ; -----------------------
@@ -151,7 +151,7 @@
     (GET "*" [] (let [path (subs (:uri request) (count "/user/ui"))]
                   (if (= "" path)
                     (http-response/found "/user/ui/")
-                    (let [ui-path  (clients/db-setting [:pluggable-ui-path])
+                    (let [ui-path  (clients/client-setting [:pluggable-ui-path])
                           _        (when-not ui-path
                                      (throw (Exception. "No :pluggable-ui-path in config")))
                           response (or (http-response/file-response path {:root ui-path})

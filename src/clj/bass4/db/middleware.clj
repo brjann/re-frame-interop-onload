@@ -4,7 +4,7 @@
             [ring.util.http-response :as http-response]
             [bass4.http-utils :as h-utils]
             [bass4.config :as config]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 
 ;;-------------------------
@@ -16,9 +16,9 @@
         name-id (some (fn [[k v]]
                         (when (= host (:bass4-host v))
                           k))
-                      clients/local-configs)]
-    (when (contains? clients/db-connections name-id)
-      [name-id @(get clients/db-connections name-id)]
+                      clients/client-configs)]
+    (when (contains? clients/client-db-connections name-id)
+      [name-id @(get clients/client-db-connections name-id)]
       #_(throw (Exception. (str "No db present for host " host " mappings: " db-mappings))))))
 
 ;; Why does "HikariDataSource HikariDataSource (HikariPool-XX) has been closed."
@@ -30,8 +30,8 @@
 (defn db-middleware
   [handler request]
   (if-let [[db-name db-conn] (resolve-db request)]
-    (binding [db/*db*                db-conn
-              clients/*local-config* (get clients/local-configs db-name)]
+    (binding [db/*db*                 db-conn
+              clients/*client-config* (get clients/client-configs db-name)]
       (request-logger/set-state! :name (name db-name))
       (handler request))
     (->

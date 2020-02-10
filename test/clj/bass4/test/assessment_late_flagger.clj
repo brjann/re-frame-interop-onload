@@ -6,9 +6,7 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.services.bass :as bass]
-            [bass4.time :as b-time]
-            [bass4.services.bass :as bass-service]
+            [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :refer [*db*]]
             [bass4.assessment.administration :as administration]
@@ -104,7 +102,7 @@
            (flag-late! *now* created-flags 2)))
     (is (= #{} (flag-late! *now*)))
     (let [flag1-id (first (get @created-flags user-id1))]
-      (orm/update-object-properties! "c_flag" flag1-id {"ClosedAt" (b-time/to-unix *now*)})
+      (orm/update-object-properties! "c_flag" flag1-id {"ClosedAt" (utils/to-unix *now*)})
       (is (= #{} (flag-late! *now*)))
       (is (= #{} (flag-late! now+1delay-1)))
       (reset! created-flags {})
@@ -116,7 +114,7 @@
       (is (= #{} (flag-late! now+1delay)))
       (orm/update-object-properties! "c_flag"
                                      flag1-id
-                                     {"ClosedAt" (b-time/to-unix now+1delay)})
+                                     {"ClosedAt" (utils/to-unix now+1delay)})
       (is (zero? (count (db-late-flag-participant *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-participant *db* now+2delay))))
       (orm/update-object-properties! "c_flag"
@@ -147,7 +145,7 @@
       (orm/update-object-properties! "c_flag"
                                      flag1-id
                                      {"ClosedAt"
-                                      (b-time/to-unix *now*)})
+                                      (utils/to-unix *now*)})
       (is (= #{} (flag-late! *now*)))
       (is (= #{} (flag-late! now+1delay-1)))
       (reset! created-flags {})
@@ -160,7 +158,7 @@
       (let [flag2-id (first (get @created-flags user-id1))]
         (orm/update-object-properties! "c_flag"
                                        flag2-id
-                                       {"ClosedAt" (b-time/to-unix now+1delay)}))
+                                       {"ClosedAt" (utils/to-unix now+1delay)}))
       (is (zero? (count (db-late-flag-group *db* now+2delay-1))))
       (is (= 1 (count (db-late-flag-group *db* now+2delay))))
       (orm/update-object-properties! "c_flag"

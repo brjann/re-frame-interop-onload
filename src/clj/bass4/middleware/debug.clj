@@ -1,7 +1,7 @@
 (ns bass4.middleware.debug
   (:require [prone.middleware :as prone]
             [bass4.http-utils :as h-utils]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 
 (defn wrap-prone-debug-exceptions

@@ -10,7 +10,7 @@
                                      disable-attack-detector
                                      *s*]]
             [clojure.tools.logging :as log]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 (use-fixtures
   :once
@@ -59,22 +59,22 @@
   (with-redefs [config/env (merge config/env
                                   {:setting-666 666
                                    :db-settings {(test-db) {}}})]
-    (is (= 666 (clients/db-setting [:setting-666]))))
+    (is (= 666 (clients/client-setting [:setting-666]))))
 
   (with-redefs [config/env (merge config/env
                                   {:db-settings {(test-db) {}}})]
     #_(is (= :thrown (try
-                       (do (clients/db-setting [:setting-666])
+                       (do (clients/client-setting [:setting-666])
                            false)
                        (catch Exception _
                        :thrown))))
-    (is (= :default (clients/db-setting [:setting-666] :default))))
+    (is (= :default (clients/client-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
                                   {:db-settings {(test-db) {:setting-666 666}}})]
-    (is (= 666 (clients/db-setting [:setting-666] :default))))
+    (is (= 666 (clients/client-setting [:setting-666] :default))))
 
   (with-redefs [config/env (merge config/env
                                   {:setting-666 333
                                    :db-settings {(test-db) {:setting-666 666}}})]
-    (is (= 666 (clients/db-setting [:setting-666] :default)))))
+    (is (= 666 (clients/client-setting [:setting-666] :default)))))

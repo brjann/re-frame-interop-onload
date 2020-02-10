@@ -17,10 +17,9 @@
             [bass4.responses.e-auth :as e-auth-response]
             [ring.util.http-response :as http-response]
             [clj-time.coerce :as tc]
-            [bass4.time :as b-time]
-            [clojure.string :as s]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.utils :as utils]))
 
 (defn check-pending-http
   [participant-id request]
@@ -36,7 +35,7 @@
     (if (or (clients/debug-mode?))
       (routes
         (GET "/nothing" [] (layout/text-response "nothing"))
-        (GET "/timezone" [:as req] (layout/print-var-response (clients/db-setting [:timezone])))
+        (GET "/timezone" [:as req] (layout/print-var-response (clients/client-setting [:timezone])))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
         (GET "/error" [:as req] (do
                                   (request-logger/record-error! "An evil error message")
@@ -136,6 +135,6 @@
         (GET "/resource" []
           (let [url  (io/resource "public/js/form-ajax.js")
                 data (http-response/resource-data url)]
-            (layout/text-response (b-time/to-unix (tc/from-date (:last-modified data)))))))
+            (layout/text-response (utils/to-unix (tc/from-date (:last-modified data)))))))
       (routes
         (ANY "*" [] "Not in debug mode")))))

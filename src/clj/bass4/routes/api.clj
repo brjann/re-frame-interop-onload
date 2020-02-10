@@ -15,7 +15,7 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.utils :as utils]
             [bass4.i18n :as i18n]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 (defn treatment-mw
   [handler]
@@ -46,7 +46,7 @@
     handler
     ["/swagger*"]
     (fn [handler] (fn [request] (if (or (clients/debug-mode?)
-                                        (clients/db-setting [:expose-swagger?] false))
+                                        (clients/client-setting [:expose-swagger?] false))
                                   (handler request)
                                   (http-response/not-found))))
     #'treatment-mw))
@@ -188,7 +188,7 @@
         (GET "/timezone-name" []
           :summary "Name of the database's timezone."
           :return String
-          (layout/text-response (clients/db-setting [:timezone])))
+          (layout/text-response (clients/client-setting [:timezone])))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db

@@ -11,7 +11,7 @@
             [bass4.config :refer [env]]
             [bass4.responses.auth :as auth-response]
             [bass4.services.bass :as bass]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.config :as config]
             [bass4.passwords :as passwords]
@@ -109,7 +109,7 @@
 
 (defn quick-login-expired?
   [user expiration-days]
-  (let [days-since (b-time/days-since-tz (:quick-login-timestamp user))]
+  (let [days-since (client-time/days-since-tz (:quick-login-timestamp user))]
     (when (<= expiration-days days-since)
       (log-msg "Quick login expired")
       true)))

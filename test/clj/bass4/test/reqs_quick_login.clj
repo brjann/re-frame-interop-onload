@@ -17,8 +17,7 @@
                                      advance-time-s!]]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log]
-            [bass4.time :as b-time]
+            [bass4.utils :as utils]
             [bass4.services.user :as user-service]
             [bass4.config :as config]))
 
@@ -37,7 +36,7 @@
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -69,7 +68,7 @@
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (advance-time-d! 11)
       (-> *s*
           (visit (str "/q/" q-id))
@@ -87,7 +86,7 @@
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 200))
@@ -104,7 +103,7 @@
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -129,10 +128,10 @@
                              :link-property "Treatment"
                              :linker-class  "cTreatmentAccess"
                              :linkee-class  "cTreatment"})
-      (user-service/update-user-properties! user-id {:username    user-id
-                                             :password            user-id
-                                             :QuickLoginPassword  q-id
-                                             :QuickLoginTimestamp (b-time/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:username            user-id
+                                             :password                    user-id
+                                             :QuickLoginPassword          q-id
+                                                     :QuickLoginTimestamp (utils/to-unix (t/now))})
       (fix-time
         (-> *s*
             (visit (str "/q/" q-id))

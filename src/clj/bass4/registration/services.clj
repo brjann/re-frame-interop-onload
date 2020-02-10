@@ -7,7 +7,7 @@
             [clojure.string :as string]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [bass4.services.user :as user-service]
             [bass4.utils :as utils]))
 
@@ -123,10 +123,10 @@
     (user-service/create-user! project-id (merge insert-values
                                                  (when privacy-consent
                                                    {:PrivacyNoticeId          (:notice-id privacy-consent)
-                                                    :PrivacyNoticeConsentTime (b-time/to-unix (:time privacy-consent))})
+                                                    :PrivacyNoticeConsentTime (utils/to-unix (:time privacy-consent))})
                                                  (when study-consent
                                                    {:StudyConsentId   (:consent-id study-consent)
-                                                    :StudyConsentTime (b-time/to-unix (:time study-consent))})
+                                                    :StudyConsentTime (utils/to-unix (:time study-consent))})
                                                  (when username {:username username})
                                                  (when participant-id {:participantid participant-id})
                                                  (when group {:group group})))))

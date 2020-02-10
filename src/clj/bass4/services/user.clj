@@ -2,7 +2,7 @@
   (:require [bass4.db.core :as db]
             [buddy.hashers :as hashers]
             [bass4.config :as config]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [clojure.string :as str]
             [bass4.utils :as utils]
             [bass4.db.orm-classes :as orm]))
@@ -68,7 +68,7 @@
   (update-user-properties!
     user-id
     {:PrivacyNoticeId          privacy-notice-id
-     :PrivacyNoticeConsentTime (b-time/to-unix now)}))
+     :PrivacyNoticeConsentTime (utils/to-unix now)}))
 
 ;; ---------------------
 ;;  NO CONSENT FLAGGING
@@ -86,7 +86,7 @@
                                                     :updates    {:Text "User consented"}})
                      (db/update-object-properties! {:table-name "c_flag"
                                                     :object-id  flag-id
-                                                    :updates    {:ClosedAt (b-time/to-unix now)}})))
+                                                    :updates    {:ClosedAt (utils/to-unix now)}})))
         flag-ids (db/get-no-consent-flags {:user-id user-id})]
     (mapv #(close-fn (:flag-id %)) flag-ids)))
 

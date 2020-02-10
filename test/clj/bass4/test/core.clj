@@ -5,7 +5,7 @@
             [clojure.core.async :refer [alts!! timeout]]
             [bass4.db.core]
             [bass4.db.sql-wrapper]
-            [bass4.utils :refer [map-map]]
+            [bass4.utils :as utils]
             [kerodon.core :refer :all]
             [kerodon.test]
             [bass4.handler :refer :all]
@@ -26,9 +26,8 @@
             [clojure.data.json :as json]
             [bass4.db.core :as db]
             [net.cgrand.enlive-html :as enlive]
-            [bass4.utils :as utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]))
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -76,7 +75,7 @@
                 (slurp)
                 (edn/read-string))]
     (if (list? res)
-      (map (fn [m] (map-map #(if (= java.util.Date (class %)) (tc/from-date %) %) m)) res)
+      (map (fn [m] (utils/map-map #(if (= java.util.Date (class %)) (tc/from-date %) %) m)) res)
       res)))
 
 (defn test-fixtures
@@ -86,8 +85,8 @@
     #'db-common/common-config
     ;#'bass4.db.core/metrics-reg
     #'bass4.db.core/db-common
-    #'clients/local-configs
-    #'clients/db-connections
+    #'clients/client-configs
+    #'clients/client-db-connections
     #'bass4.i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
@@ -100,8 +99,8 @@
               *s*                              @s
               i-validation/*validate-answers?  false
               request-logger/*request-host*    (config/env :test-host)
-              clients/*local-config*           (get clients/local-configs test-db)
-              db/*db*                          @(get clients/db-connections test-db)]
+              clients/*client-config*          (get clients/client-configs test-db)
+              db/*db*                          @(get clients/client-db-connections test-db)]
       (f))))
 
 (defn disable-attack-detector [f]

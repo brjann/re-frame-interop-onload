@@ -6,7 +6,7 @@
             [markdown.lists :refer :all]
             [clojure.data.json :as json]
             [bass4.config :refer [env]]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [ring.util.anti-forgery :refer [anti-forgery-field]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
             [bass4.i18n :as i18n]
@@ -14,9 +14,6 @@
             [clj-time.core :as t]
             [clj-time.format :as f]
             [bass4.services.bass :as bass-service]
-            [clojure.tools.logging :as log]
-            [bass4.services.bass :as bass]
-            [compojure.response :as response]
             [clojure.string :as string]
             [clojure.java.io :as io]
             [ring.util.http-response :refer [content-type ok] :as http-response]
@@ -25,7 +22,8 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
             [bass4.middleware.embedded :as embedded-mw]
-            [bass4.clients :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.utils :as utils]))
 
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
@@ -109,7 +107,7 @@
                   :timeout-hard-soon            (session-timeout/timeout-hard-soon-limit)
                   :title                        (bass-service/db-title)
                   :session-status-poll-interval (* 1000
-                                                   (clients/db-setting [:session-status-poll-interval] 30))}
+                                                   (clients/client-setting [:session-status-poll-interval] 30))}
                  params)))
       "text/html; charset=utf-8")))
 
@@ -130,7 +128,7 @@
 (defn datetime-str
   [val resource-id]
   (-> (i18n/tr [resource-id])
-      (f/formatter (bass/time-zone))
+      (f/formatter (t/time-zone-for-id (clients/client-setting [:timezone])))
       (f/unparse val)))
 
 (defn day-diff-str
@@ -146,7 +144,7 @@
 (defn date-nice-str
   [datetime]
   (let [day-diff (-> datetime
-                     (b-time/days-since-tz))
+                     (client-time/days-since-tz))
         day-str  (day-diff-str day-diff)]
     (or day-str (datetime-str datetime :date-time/date))))
 
@@ -167,7 +165,7 @@
   (if-not (contains? @resource-mtimes path)
     (let [url   (io/resource (str "public" path))
           data  (http-response/resource-data url)
-          mtime (b-time/to-unix (tc/from-date (:last-modified data)))]
+          mtime (utils/to-unix (tc/from-date (:last-modified data)))]
       (swap! resource-mtimes #(assoc % path mtime))))
   (get @resource-mtimes path))
 

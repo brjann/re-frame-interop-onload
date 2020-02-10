@@ -2,7 +2,7 @@
   (:require [clj-time.core :as t]
             [bass4.services.bass :as bass]
             [bass4.layout :as layout]
-            [bass4.time :as b-time]
+            [bass4.clients.time :as client-time]
             [clojure.tools.logging :as log]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]
