@@ -49,12 +49,3 @@
 (defn inc-email-count!
   [db-connection]
   (inc-external-message-count! db-connection "email"))
-
-
-;
-;(defonce uids (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 60 24))))
-;
-;(defn uid-for-data!
-;  [data]
-;  (let [uid (UUID/randomUUID)]
-;    ))

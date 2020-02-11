@@ -9,7 +9,8 @@
 
 (defn get-session-file
   [uid]
-  (let [info (php-interop/read-session-file uid)]
+  (let [info (or (php-interop/data-for-uid! uid)
+                 (php-interop/read-session-file uid))]
     (assoc info :user-id (utils/str->int (:user-id info)))))
 
 (defn create-embedded-session
@@ -58,15 +59,15 @@
       (handler request)
       (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
         (case (php-interop/check-php-session timeouts (:session request))
-          (::user-mismatch ::no-session ::absolute-timeout)
+          (::php-interop/user-mismatch ::php-interop/no-session ::php-interop/absolute-timeout)
           (->
             (http-response/found "/embedded/error/no-session")
             (assoc :session {}))
 
-          ::re-auth-timeout
+          ::php-interop/re-auth-timeout
           (http-response/found "/embedded/error/re-auth")
 
-          ::ok
+          ::php-interop/ok
           (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
             (php-interop/update-php-session-last-activity! php-session-id (utils/current-time))
             (handler request)))
