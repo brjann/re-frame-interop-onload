@@ -5,13 +5,18 @@
             [bass4.utils :as utils]
             [bass4.session.timeout :as session-timeout]
             [bass4.http-utils :as h-utils]
-            [bass4.php-interop :as php-interop]))
+            [bass4.php-interop :as php-interop]
+            [clojure.core.cache :as cache]))
 
 (defn get-session-file
   [uid]
   (let [info (or (php-interop/data-for-uid! uid)
                  (php-interop/read-session-file uid))]
     (assoc info :user-id (utils/str->int (:user-id info)))))
+
+;; Save path for uids so that user is redirected if uid is reused.
+;; Old UIDs are valid for 24 hours
+(defonce old-uids (atom (cache/ttl-cache-factory {} :ttl (* 24 1000 60 60))))
 
 (defn create-embedded-session
   [_ request uid]
@@ -24,12 +29,15 @@
                                   (:embedded-paths session)
                                   #{})
             embedded-paths      (conj prev-embedded-paths path)]
+        (swap! old-uids assoc uid path)
         (-> (http-response/found path)
             (assoc :session {:user-id         user-id
                              :embedded-paths  embedded-paths
                              :php-session-id  php-session-id
                              :external-login? true})))
-      (h-utils/text-response "Wrong uid."))))
+      (if (contains? @old-uids uid)
+        (http-response/found (get @old-uids uid))
+        (h-utils/text-response "Wrong uid.")))))
 
 (defn legal-character
   [c]
