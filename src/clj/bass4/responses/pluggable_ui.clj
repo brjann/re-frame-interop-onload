@@ -9,12 +9,12 @@
        (clients/client-setting [:use-pluggable-ui?])))
 
 (defn pluggable-ui
-  [request]
+  [request base-path]
   (if-not (pluggable-ui?)
     (http-response/not-found "This DB does not use pluggable UI.")
-    (let [path (subs (:uri request) (count "/user/ui"))]
+    (let [path (subs (:uri request) (count base-path))]
       (if (= "" path)
-        (http-response/found "/user/ui/")
+        (http-response/found (str base-path "/"))
         (let [ui-path  (clients/client-setting [:pluggable-ui-path])
               _        (when-not ui-path
                          (throw (Exception. "No :pluggable-ui-path in config")))
