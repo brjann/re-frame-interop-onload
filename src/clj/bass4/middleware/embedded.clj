@@ -8,19 +8,13 @@
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]))
 
-(defn get-session-file
-  [uid]
-  (let [info (or (php-interop/data-for-uid! uid)
-                 (php-interop/read-session-file uid))]
-    (assoc info :user-id (utils/str->int (:user-id info)))))
-
 ;; Save path for uids so that user is redirected if uid is reused.
 ;; Old UIDs are valid for 24 hours
 (defonce old-uids (atom (cache/ttl-cache-factory {} :ttl (* 24 1000 60 60))))
 
 (defn create-embedded-session
   [_ request uid]
-  (let [{:keys [user-id path php-session-id]} (get-session-file uid)]
+  (let [{:keys [user-id path php-session-id]} (php-interop/data-for-uid! uid)]
     (if (every? identity [user-id path php-session-id])
       (let [session             (:session request)
             prev-embedded-paths (if (and (:embedded-paths session)
@@ -56,7 +50,7 @@
             (legal-character (subs current embedded-length (inc embedded-length))))
         true))))
 
-(defn check-embedded-path
+(defn embedded-request
   [handler request]
   (let [current-path   (:uri request)
         session        (:session request)
@@ -81,17 +75,6 @@
             (handler request)))
         (http-response/forbidden "No embedded access")))))
 
-(defn embedded-request [handler request uid]
-  (let [embedded-paths  (get-in request [:session :embedded-paths] #{})
-        url-uid-session (when uid
-                          (let [{:keys [user-id path php-session-id]}
-                                (get-session-file uid)]
-                            {:user-id         user-id
-                             :embedded-paths  (conj embedded-paths path)
-                             :php-session-id  php-session-id
-                             :external-login? true}))]
-    (check-embedded-path handler (update request :session #(merge % url-uid-session)))))
-
 (def ^:dynamic *embedded-request?* false)
 
 (defn handle-embedded
@@ -101,7 +84,7 @@
           uid  (get-in request [:params :uid])]
       (if (string/starts-with? path "/embedded/create-session")
         (create-embedded-session handler request uid)
-        (embedded-request handler request uid)))))
+        (embedded-request handler request)))))
 
 (defn wrap-embedded-request
   [handler request]
