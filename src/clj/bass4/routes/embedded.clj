@@ -7,7 +7,8 @@
             [bass4.utils :refer [str->int json-safe]]
             [bass4.responses.admin-panel :as admin-panel]
             [ring.util.http-response :as http-response]
-            [bass4.responses.pluggable-ui :as pluggable-ui]))
+            [bass4.responses.pluggable-ui :as pluggable-ui]
+            [bass4.http-utils :as h-utils]))
 
 
 ;; TODO: Wrap only user requests in timeout/re-auth
@@ -32,6 +33,9 @@
             (layout/render "render.html"
                            {:text      text
                             :markdown? markdown}))
+          ;; Dummy function to have something to serve after URL has been allowed
+          (GET "/render" []
+            (h-utils/text-response ""))
           (GET "/view-user-content/:treatment-access-id/:module-id/:content-id"
                [treatment-access-id module-id content-id]
             (modules/view-user-content treatment-access-id module-id content-id))))
