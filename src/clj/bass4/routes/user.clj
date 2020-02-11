@@ -141,7 +141,7 @@
 
 (defroutes pluggable-ui
   (context "/user/ui" [:as request]
-    (GET "*" [] (pluggable-ui/pluggable-ui request))
+    (GET "*" [] (pluggable-ui/pluggable-ui request "/user/ui"))
     (POST "*" [] (http-response/bad-request "Cannot post to pluggable ui"))))
 
 (defroutes root-reroute
