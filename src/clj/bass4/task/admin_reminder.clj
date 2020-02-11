@@ -130,32 +130,34 @@
 
 (defn remind-admins
   [db local-config now]
-  (let [tz                          (-> (:timezone local-config)
-                                        (t/time-zone-for-id))
-        reminders-by-participants   (collect-reminders db (t/minus now (t/days 60)))
-        participant-ids             (into #{} (keys reminders-by-participants))
-        therapists-for-participants (db-therapists db participant-ids)
-        therapist-emails            (->> (collapse-therapists therapists-for-participants)
-                                         (insert-reminders reminders-by-participants)
-                                         (utils/map-map #(->> %
-                                                              (write-email tz)
-                                                              (add-signature local-config)
-                                                              (prepend-therapist-notice))))
-        project-emails              (->> (projects-for-participants db participant-ids therapists-for-participants)
-                                         (insert-reminders reminders-by-participants)
-                                         (utils/map-map #(->> %
-                                                              (write-email tz)
-                                                              (add-signature local-config)
-                                                              (prepend-project-notice))))
-        emails                      (->> (concat therapist-emails project-emails)
-                                         (map (fn [[[user-id email] text]]
-                                                {:user-id user-id
-                                                 :to      email
-                                                 :subject "Unhandled participant tasks"
-                                                 :message text}))
-                                         (filter #(email/is-email? (:to %))))]
-    (email-queue/add! db now emails)
-    {:cycles (count emails)}))
+  (let [reminders-by-participants (collect-reminders db (t/minus now (t/days 60)))]
+    (if (seq reminders-by-participants)
+      (let [tz                          (-> (:timezone local-config)
+                                            (t/time-zone-for-id))
+            participant-ids             (into #{} (keys reminders-by-participants))
+            therapists-for-participants (db-therapists db participant-ids)
+            therapist-emails            (->> (collapse-therapists therapists-for-participants)
+                                             (insert-reminders reminders-by-participants)
+                                             (utils/map-map #(->> %
+                                                                  (write-email tz)
+                                                                  (add-signature local-config)
+                                                                  (prepend-therapist-notice))))
+            project-emails              (->> (projects-for-participants db participant-ids therapists-for-participants)
+                                             (insert-reminders reminders-by-participants)
+                                             (utils/map-map #(->> %
+                                                                  (write-email tz)
+                                                                  (add-signature local-config)
+                                                                  (prepend-project-notice))))
+            emails                      (->> (concat therapist-emails project-emails)
+                                             (map (fn [[[user-id email] text]]
+                                                    {:user-id user-id
+                                                     :to      email
+                                                     :subject "Unhandled participant tasks"
+                                                     :message text}))
+                                             (filter #(email/is-email? (:to %))))]
+        (email-queue/add! db now emails)
+        {:cycles (count emails)})
+      {:cycles 0})))
 
 (defstate remind-admins-task-starter
   :start (task-scheduler/schedule-db-task! #'remind-admins ::task-scheduler/daily-at 4))
