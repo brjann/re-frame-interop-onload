@@ -5,7 +5,8 @@
             [bass4.clients.core :as clients]
             [bass4.config :as config]
             [clojure.data.json :as json]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [clojure.core.cache :as cache])
   (:import (java.io File)
            (java.util UUID)))
 
@@ -117,10 +118,22 @@
         (when (.exists file)
           file))
       (catch Exception e))))
-;
-;(defonce uids (atom (cache/ttl-cache-factory {} :ttl (* 1000 60 60 24))))
-;
-;(defn uid-for-data!
-;  [data]
-;  (let [uid (UUID/randomUUID)]
-;    ))
+
+
+;; ---------------
+;;   NEW UID API
+;; ---------------
+
+;; UIDs are valid for 24 hours
+(defonce uids (atom (cache/ttl-cache-factory {} :ttl (* 24 1000 60 60))))
+
+(defn uid-for-data!
+  [data]
+  (let [uid (str (UUID/randomUUID))]
+    (swap! uids assoc uid data)
+    uid))
+
+(defn data-for-uid!
+  [uid]
+  (let [[old _] (swap-vals! uids dissoc uid)]
+    (get old uid)))

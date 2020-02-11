@@ -4,7 +4,8 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.assessment.statuses :as assessment-statuses]
             [clj-time.core :as t]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.php-interop :as php-interop]))
 
 (defapi hash-password
   [password :- [[api/str? 1 100]]]
@@ -42,6 +43,10 @@
 
 (defapi uid-for-data!
   [data]
+  (php-interop/uid-for-data! data))
+
+(defapi create-session!
+  [user-id]
   )
 
 (defapi mirror
