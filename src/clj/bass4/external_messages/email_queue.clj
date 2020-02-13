@@ -38,7 +38,7 @@
   [db now email-reses]
   (db/external-message-emails-sent! db {:ids  (map :id email-reses)
                                         :time now})
-  (db/external-message-emails-redact! db))
+  (db/external-message-emails-redact! db {}))
 
 (defn add!
   [db now emails]

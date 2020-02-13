@@ -43,7 +43,7 @@
                                      (:provider-id %))
                             sms-reses)]
       (db/external-message-smses-sent! db {:sms-statuses sms-statuses})
-      (db/external-message-smses-redact! db {:sms-statuses sms-statuses}))))
+      (db/external-message-smses-redact! db {}))))
 
 (defn add!
   [db now smses]

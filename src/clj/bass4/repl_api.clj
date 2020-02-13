@@ -7,7 +7,9 @@
             [bass4.clients.core :as clients]
             [bass4.php-interop :as php-interop]
             [bass4.external-messages.sms-sender :as sms]
-            [bass4.external-messages.sms-queue :as sms-queue]))
+            [bass4.external-messages.sms-queue :as sms-queue]
+            [bass4.external-messages.email-sender :as email]
+            [bass4.external-messages.email-queue :as email-queue]))
 
 (defonce orig-out *out*)
 
@@ -63,8 +65,8 @@
    user-id :- api/->int
    to :- [[api/str? 1 30]]
    message :- [[api/str? 1 800]]
-   redact-text :- [[api/str? 1 800]]
-   sender-id :- api/->int]
+   redact-text :- [:? [api/str? 1 800]]
+   sender-id :- [:? api/->int]]
   (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
              @db-)]
     (if db
@@ -74,6 +76,38 @@
                                      :message     message
                                      :redact-text redact-text
                                      :sender-id   sender-id}]))
+      "No such DB")))
+
+(defapi send-email!
+  [db-name :- [[api/str? 1 30]]
+   to :- [[api/str? 1 30]]
+   subject :- [[api/str? 1 200]]
+   message :- [[api/str? 1 5000]]]
+  (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
+             @db-)]
+    (if db
+      (binding [*out* orig-out]
+        (boolean (email/send-email-now! db to subject message)))
+      "No such DB")))
+
+(defapi queue-email!
+  [db-name :- [[api/str? 1 30]]
+   user-id :- api/->int
+   to :- [[api/str? 1 30]]
+   subject :- [[api/str? 1 200]]
+   message :- [[api/str? 1 800]]
+   redact-text :- [:? [api/str? 1 800]]
+   sender-id :- [:? api/->int]]
+  (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
+             @db-)]
+    (if db
+      (binding [*out* orig-out]
+        (email-queue/add! db (t/now) [{:user-id     user-id
+                                       :to          to
+                                       :subject     subject
+                                       :message     message
+                                       :redact-text redact-text
+                                       :sender-id   sender-id}]))
       "No such DB")))
 
 (defapi mirror
