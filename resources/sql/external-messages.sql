@@ -26,6 +26,7 @@ INSERT INTO external_message_email
   `to`,
   `subject`,
   `message`,
+  `redact-text`,
   `reply-to`)
 VALUES :t*:emails;
 
@@ -36,6 +37,14 @@ UPDATE external_message_email
 SET `status` = "sent",
     `status-time` = :time
 WHERE `id` IN(:v*:ids);
+
+
+-- :name external-message-emails-redact! :! :1
+-- :doc
+UPDATE external_message_email
+SET `message` = REPLACE(`message`, `redact-text`, '-REDACTED-'),
+`redact-text` = ''
+WHERE `status` = 'sent' AND `redact-text` <> '';
 
 
 -- :name external-message-emails-update-fail-count! :! :1
@@ -65,7 +74,8 @@ INSERT INTO external_message_sms
   `status`,
   `status-time`,
   `to`,
-  `message`)
+  `message`,
+  `redact-text`)
 VALUES :t*:smses;
 
 
@@ -78,6 +88,15 @@ ON DUPLICATE KEY UPDATE
   `status` = VALUES(`status`),
   `status-time` = VALUES(`status-time`),
   `provider-id` = VALUES(`provider-id`);
+
+
+-- :name external-message-smses-redact! :! :1
+-- :doc
+UPDATE external_message_sms
+SET `message` = REPLACE(`message`, `redact-text`, '-REDACTED-'),
+`redact-text` = ''
+WHERE `status` = 'sent' AND `redact-text` <> '';
+
 
 -- :name external-message-smses-update-fail-count! :! :1
 -- :doc
@@ -93,3 +112,4 @@ WHERE `id` IN(:v*:ids);
 UPDATE external_message_sms
 SET `status` = "failed"
 WHERE `fail-count` >= :max-fails;
+

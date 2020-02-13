@@ -42,7 +42,8 @@
                                      now
                                      (:provider-id %))
                             sms-reses)]
-      (db/external-message-smses-sent! db {:sms-statuses sms-statuses}))))
+      (db/external-message-smses-sent! db {:sms-statuses sms-statuses})
+      (db/external-message-smses-redact! db {:sms-statuses sms-statuses}))))
 
 (defn add!
   [db now smses]
@@ -52,7 +53,8 @@
                                    "queued"
                                    now
                                    (:to %)
-                                   (:message %))
+                                   (:message %)
+                                   (:redact-text %))
                           smses)]
       (db-queue-smses! db sms-vector))))
 
