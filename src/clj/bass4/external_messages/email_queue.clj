@@ -37,7 +37,8 @@
 (defn db-emails-sent!
   [db now email-reses]
   (db/external-message-emails-sent! db {:ids  (map :id email-reses)
-                                        :time now}))
+                                        :time now})
+  (db/external-message-emails-redact! db))
 
 (defn add!
   [db now emails]
@@ -49,6 +50,7 @@
                                      (:to %)
                                      (:subject %)
                                      (:message %)
+                                     (:redact-text %)
                                      (or (:reply-to %) ""))
                             emails)]
       (db-queue-emails! db email-vector))))
