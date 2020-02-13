@@ -5,7 +5,10 @@
             [bass4.assessment.statuses :as assessment-statuses]
             [clj-time.core :as t]
             [bass4.clients.core :as clients]
-            [bass4.php-interop :as php-interop]))
+            [bass4.php-interop :as php-interop]
+            [bass4.external-messages.sms-sender :as sms]))
+
+(defonce orig-out *out*)
 
 (defapi hash-password
   [password :- [[api/str? 1 100]]]
@@ -45,9 +48,14 @@
   [data]
   (php-interop/uid-for-data! data))
 
-(defapi create-session!
-  [user-id]
-  )
+(defapi send-sms!
+  [db-name :- [[api/str? 1 30]] to :- [[api/str? 1 30]] message :- [[api/str? 1 800]]]
+  (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
+             @db-)]
+    (if db
+      (binding [*out* orig-out]
+        (boolean (sms/send-sms-now! db to message)))
+      "No such DB")))
 
 (defapi mirror
   [arg :- [[api/str? 0 1000]]]
