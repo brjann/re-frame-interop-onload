@@ -54,7 +54,8 @@
                                    now
                                    (:to %)
                                    (:message %)
-                                   (:redact-text %))
+                                   (:redact-text %)
+                                   (:sender-id %))
                           smses)]
       (db-queue-smses! db sms-vector))))
 
