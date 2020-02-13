@@ -6,7 +6,8 @@
             [clj-time.core :as t]
             [bass4.clients.core :as clients]
             [bass4.php-interop :as php-interop]
-            [bass4.external-messages.sms-sender :as sms]))
+            [bass4.external-messages.sms-sender :as sms]
+            [bass4.external-messages.sms-queue :as sms-queue]))
 
 (defonce orig-out *out*)
 
@@ -55,6 +56,24 @@
     (if db
       (binding [*out* orig-out]
         (boolean (sms/send-sms-now! db to message)))
+      "No such DB")))
+
+(defapi queue-sms!
+  [db-name :- [[api/str? 1 30]]
+   user-id :- api/->int
+   to :- [[api/str? 1 30]]
+   message :- [[api/str? 1 800]]
+   redact-text :- [[api/str? 1 800]]
+   sender-id :- api/->int]
+  (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
+             @db-)]
+    (if db
+      (binding [*out* orig-out]
+        (sms-queue/add! db (t/now) [{:user-id     user-id
+                                     :to          to
+                                     :message     message
+                                     :redact-text redact-text
+                                     :sender-id   sender-id}]))
       "No such DB")))
 
 (defapi mirror

@@ -27,6 +27,7 @@ INSERT INTO external_message_email
   `subject`,
   `message`,
   `redact-text`,
+  `sender-id`,
   `reply-to`)
 VALUES :t*:emails;
 
@@ -75,7 +76,8 @@ INSERT INTO external_message_sms
   `status-time`,
   `to`,
   `message`,
-  `redact-text`)
+  `redact-text`,
+  `sender-id`)
 VALUES :t*:smses;
 
 

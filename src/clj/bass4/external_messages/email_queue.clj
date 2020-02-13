@@ -51,6 +51,7 @@
                                      (:subject %)
                                      (:message %)
                                      (:redact-text %)
+                                     (:sender-id %)
                                      (or (:reply-to %) ""))
                             emails)]
       (db-queue-emails! db email-vector))))
