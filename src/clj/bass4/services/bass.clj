@@ -20,7 +20,7 @@
 
 (defn db-contact-info*
   ([db project-id]
-   (let [emails (db/get-contact-info {:project-id project-id})]
+   (let [emails (db/get-contact-info db {:project-id project-id})]
      (assoc emails :email (if-not (empty? (:project-email emails))
                             (:project-email emails)
                             (:db-email emails))))))
