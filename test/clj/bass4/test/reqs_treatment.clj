@@ -19,7 +19,8 @@
             [bass4.responses.error-report :as error-report-response]
             [bass4.services.user :as user-service]
             [bass4.utils :as utils]
-            [bass4.php-interop :as php-interop])
+            [bass4.php-interop :as php-interop]
+            [clojure.tools.logging :as log])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -155,14 +156,14 @@
                                        "\"export-module-hw\":{\"export\":\"8\"}"
                                        "\"alias\":{\"export\":\"9\"}"]]]]
       (doseq [[module-id content-id texts] view-checks]
-        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
-          (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
-            (doseq [text texts]
-              (-> *s*
-                  (visit "/embedded/create-session?uid=8")
-                  (visit (str "/embedded/" path))
-                  (has (some-text? text))))))))))
+        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
+              uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
+          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+            (let [s (visit *s* (str "/embedded/create-session?uid=" uid))]
+              (doseq [text texts]
+                (-> s
+                    (visit (str "/embedded/" path))
+                    (has (some-text? text)))))))))))
 
 (deftest ns-imports-exports-write-imports
   (let [user-id             (user-service/create-user! 543018 {:firstname "import-export"})
@@ -232,10 +233,10 @@
                        [642529 642526 "\"export-module-hw\":{\"export\":\"8\"}"]
                        [642529 642527 "\"export-alias-hw\":{\"export\":\"9\"}"]]]
       (doseq [[module-id content-id text] view-checks]
-        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)]
-          (with-redefs [php-interop/read-session-file (constantly {:user-id 110 :path path :php-session-id "xxx"})
-                        php-interop/get-php-session   (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+        (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
+              uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
+          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
             (-> *s*
-                (visit "/embedded/create-session?uid=8")
+                (visit (str "/embedded/create-session?uid=" uid))
                 (visit (str "/embedded/" path))
                 (has (some-text? text)))))))))
