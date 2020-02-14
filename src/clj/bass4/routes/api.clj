@@ -92,7 +92,6 @@
                                                   "send times in local date, treatment start and end "
                                                   "dates should be shown in database's timezone.")}}}}
     (context "/api" [:as request]
-
       (context "/session" []
         ;; This is a mock api declaration. session-timeout handles the responses
         (GET "/user-id" []
