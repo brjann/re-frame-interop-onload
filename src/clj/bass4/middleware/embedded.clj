@@ -15,7 +15,7 @@
 
 (defn create-embedded-session
   [_ request uid]
-  (let [{:keys [user-id path php-session-id authorizations]} (php-interop/data-for-uid! uid)]
+  (let [{:keys [user-id path php-session-id authorizations redirect]} (php-interop/data-for-uid! uid)]
     (when-not (or (nil? authorizations) (set? authorizations))
       (throw (Exception. "Authorizations must be a set, if set.")))
     (if (every? identity [user-id path php-session-id])
@@ -27,9 +27,10 @@
                                   #{})
             prev-authorizations (if (and same-session? (::authorizations session))
                                   (::embedded-paths session)
-                                  #{})]
-        (swap! old-uids assoc uid path)
-        (-> (http-response/found path)
+                                  #{})
+            redirect            (str "/embedded/" (or redirect path))]
+        (swap! old-uids assoc uid redirect)
+        (-> (http-response/found redirect)
             (assoc :session {:user-id         user-id
                              ::embedded-paths (conj prev-embedded-paths path)
                              :php-session-id  php-session-id
@@ -43,7 +44,7 @@
   [c]
   (some #(= c %) ["=" "/" "?" "&"]))
 
-(defn matches-embedded
+(defn matches-embedded?
   [current embedded]
   (let [current-length  (count current)
         embedded-length (count embedded)]
@@ -65,7 +66,7 @@
         timeouts       (php-interop/get-staff-timeouts)]
     (if (string/starts-with? current-path "/embedded/error/")
       (handler request)
-      (if (and embedded-paths (some #(matches-embedded current-path (str "/embedded/" %)) embedded-paths))
+      (if (and embedded-paths (some #(matches-embedded? current-path (str "/embedded/" %)) embedded-paths))
         (case (php-interop/check-php-session timeouts (:session request))
           (::php-interop/user-mismatch ::php-interop/no-session ::php-interop/absolute-timeout)
           (->
