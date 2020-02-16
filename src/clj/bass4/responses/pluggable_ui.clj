@@ -3,6 +3,11 @@
             [bass4.clients.core :as clients]
             [bass4.file-response :as file]))
 
+(defn pluggable-ui*?
+  [client-name]
+  (and (some? (clients/client-setting* client-name [:pluggable-ui-path] nil))
+       (clients/client-setting* client-name [:use-pluggable-ui?] false)))
+
 (defn pluggable-ui?
   [& _]
   (and (some? (clients/client-setting [:pluggable-ui-path]))

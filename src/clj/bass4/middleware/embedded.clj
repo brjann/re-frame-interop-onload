@@ -15,20 +15,25 @@
 
 (defn create-embedded-session
   [_ request uid]
-  (let [{:keys [user-id path php-session-id]} (php-interop/data-for-uid! uid)]
+  (let [{:keys [user-id path php-session-id authorizations]} (php-interop/data-for-uid! uid)]
+    (when-not (or (nil? authorizations) (set? authorizations))
+      (throw (Exception. "Authorizations must be a set, if set.")))
     (if (every? identity [user-id path php-session-id])
       (let [session             (:session request)
-            prev-embedded-paths (if (and (:embedded-paths session)
-                                         (= (:user-id session) user-id)
-                                         (= (:php-session-id session) php-session-id))
-                                  (:embedded-paths session)
+            same-session?       (and (= (:user-id session) user-id)
+                                     (= (:php-session-id session) php-session-id))
+            prev-embedded-paths (if (and same-session? (::embedded-paths session))
+                                  (::embedded-paths session)
                                   #{})
-            embedded-paths      (conj prev-embedded-paths path)]
+            prev-authorizations (if (and same-session? (::authorizations session))
+                                  (::embedded-paths session)
+                                  #{})]
         (swap! old-uids assoc uid path)
         (-> (http-response/found path)
             (assoc :session {:user-id         user-id
-                             :embedded-paths  embedded-paths
+                             ::embedded-paths (conj prev-embedded-paths path)
                              :php-session-id  php-session-id
+                             ::authorizations (into prev-authorizations authorizations)
                              :external-login? true})))
       (if (contains? @old-uids uid)
         (http-response/found (get @old-uids uid))
@@ -55,7 +60,7 @@
   [handler request]
   (let [current-path   (:uri request)
         session        (:session request)
-        embedded-paths (:embedded-paths session)
+        embedded-paths (::embedded-paths session)
         php-session-id (:php-session-id session)
         timeouts       (php-interop/get-staff-timeouts)]
     (if (string/starts-with? current-path "/embedded/error/")
