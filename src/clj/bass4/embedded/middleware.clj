@@ -102,7 +102,8 @@
           (handler request)))
 
       :else
-      (http-response/forbidden "No embedded access"))))
+      (-> (http-response/forbidden "No embedded access")
+          (http-response/content-type "text/plain; charset=utf-8")))))
 
 (def ^:dynamic *embedded-request?* false)
 
