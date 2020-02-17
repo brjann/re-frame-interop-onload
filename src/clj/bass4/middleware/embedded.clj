@@ -24,7 +24,7 @@
                                      (= (:php-session-id session) php-session-id))
             prev-embedded-paths (if (and same-session? (::embedded-paths session))
                                   (::embedded-paths session)
-                                  #{})
+                                  #{"api"})                 ; Always grant access to the API
             prev-authorizations (if (and same-session? (::authorizations session))
                                   (::embedded-paths session)
                                   #{})
@@ -105,7 +105,8 @@
   [handler request]
   (let [response (handler request)]
     (if-let [path (:uri request)]
-      (if (string/starts-with? path "/embedded/iframe")
+      (if (or (string/starts-with? path "/embedded/iframe")
+              (string/starts-with? path "/embedded/pluggable-ui"))
         (update-in response [:headers] #(-> %
                                             (dissoc "X-Frame-Options")
                                             (assoc "X-XSS-Protection" "0")))
