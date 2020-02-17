@@ -1,4 +1,4 @@
-(ns bass4.middleware.embedded
+(ns bass4.embedded.middleware
   (:require [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clojure.string :as string]
             [ring.util.http-response :as http-response]

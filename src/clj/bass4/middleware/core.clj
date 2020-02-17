@@ -15,7 +15,7 @@
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-logger :as request-logger]
             [bass4.middleware.response-transformation :as transform]
-            [bass4.middleware.embedded :as embedded-mw]
+            [bass4.embedded.middleware :as embedded-mw]
             [bass4.middleware.errors :as errors-mw]
             [bass4.middleware.file-php :as file-php]
             [bass4.services.attack-detector :as a-d]
