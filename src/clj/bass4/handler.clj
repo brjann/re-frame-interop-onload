@@ -15,7 +15,8 @@
             [bass4.external-messages.sms-status :as sms-status]
             [bass4.env :refer [defaults]]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
-            [bass4.routes.api :as api]))
+            [bass4.routes.api :as api]
+            [bass4.embedded.api :as embedded-api]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) identity))
@@ -24,6 +25,7 @@
 (defn router-middleware
   [handler request]
   ((-> handler
+       embedded-api/api-tx-routes-mw
        api/api-tx-routes-mw
        api/swagger-mw
        user-routes/user-tx-routes-mw

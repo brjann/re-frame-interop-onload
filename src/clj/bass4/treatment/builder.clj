@@ -13,7 +13,7 @@
 ;;    TREATMENT RETRIEVAL
 ;; --------------------------
 
-(defn- treatment-map
+(defn treatment-map
   [treatment-id]
   (let [info    (treatment-service/treatment-info treatment-id)
         modules (module-service/get-treatment-modules treatment-id)]
@@ -62,7 +62,7 @@
       (:access-enabled? treatment-access)
       true)))
 
-(defn- tx-components
+(defn tx-components
   [treatment-access treatment]
   {:modules        (modules-component treatment-access treatment)
    :messaging?     true

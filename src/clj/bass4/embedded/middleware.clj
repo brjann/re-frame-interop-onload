@@ -14,6 +14,12 @@
 ;; Old UIDs are valid for 24 hours
 (defonce old-uids (atom (cache/ttl-cache-factory {} :ttl (* 24 1000 60 60))))
 
+(defn authorized?
+  [request auth-key]
+  (let [authorizations (get-in request [:session ::authorizations])]
+    (or (get-in request [:session ::allow-all?])
+        (contains? authorizations auth-key))))
+
 (defn create-embedded-session
   [_ request uid]
   (let [{:keys [user-id path php-session-id authorizations redirect]}
