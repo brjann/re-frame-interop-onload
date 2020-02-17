@@ -38,7 +38,7 @@
         (or (nil? user-id) (nil? treatment-access-id))
         (http-response/bad-request "Request must include user-id and treatment-request-id as params")
 
-        (not (embedded-mw/authorized? request [:user-id user-id]))
+        (not (embedded-mw/authorized? request [:treatment/user-id user-id]))
         (http-response/forbidden (str "You are not authorized to access user " user-id))
 
         :else
