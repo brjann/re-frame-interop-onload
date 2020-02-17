@@ -52,8 +52,8 @@
             (nil? treatment-access)
             (http-response/not-found (str "Treatment access " treatment-access-id " not found on user " user-id))
 
-            (not (embedded-mw/authorized? request [:treatment-id (:treatment-id treatment-access)]))
-            (http-response/forbidden (str "You are not authorized to access treatment " (:treatment-id treatment-access)))
+            ;(not (embedded-mw/authorized? request [:treatment-id (:treatment-id treatment-access)]))
+            ;(http-response/forbidden (str "You are not authorized to access treatment " (:treatment-id treatment-access)))
 
             :else
             (let [treatment-map  (treatment-builder/treatment-map (:treatment-id treatment-access))
