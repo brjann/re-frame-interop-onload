@@ -15,7 +15,8 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.utils :as utils]
             [bass4.i18n :as i18n]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.embedded.api :as embedded-api]))
 
 (defn treatment-mw
   [handler]
@@ -237,7 +238,7 @@
               (:treatment-access-id treatment-access)))
 
           (GET "/module-worksheet/:module-id/:worksheet-id" []
-            :summary "Homework of module."
+            :summary "Worksheet of module."
             :path-params [module-id :- s/Int
                           worksheet-id :- s/Int]
             :return module-api/Worksheet
@@ -364,4 +365,5 @@
             :summary "Mark message with message id as read."
             :body-params [message-id :- s/Int]
             :return {:result String}
-            (messages-response/api-message-read (:user-id user) message-id)))))))
+            (messages-response/api-message-read (:user-id user) message-id)))))
+    embedded-api/api-routes))
