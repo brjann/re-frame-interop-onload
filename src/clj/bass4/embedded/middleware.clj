@@ -7,7 +7,6 @@
             [bass4.http-utils :as h-utils]
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]
-            [clojure.tools.logging :as log]
             [bass4.clients.core :as clients]))
 
 ;; Save path for uids so that user is redirected if uid is reused.
@@ -34,7 +33,7 @@
                                   (::embedded-paths session)
                                   #{"api"})                 ; Always grant access to the API
             prev-authorizations (if (and same-session? (::authorizations session))
-                                  (::embedded-paths session)
+                                  (::authorizations session)
                                   #{})
             redirect            (str "/embedded/" (or redirect path))]
         (swap! old-uids assoc uid redirect)
