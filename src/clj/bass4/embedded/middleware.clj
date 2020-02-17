@@ -7,7 +7,8 @@
             [bass4.http-utils :as h-utils]
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.clients.core :as clients]))
 
 ;; Save path for uids so that user is redirected if uid is reused.
 ;; Old UIDs are valid for 24 hours
@@ -15,7 +16,8 @@
 
 (defn create-embedded-session
   [_ request uid]
-  (let [{:keys [user-id path php-session-id authorizations redirect]} (php-interop/data-for-uid! uid)]
+  (let [{:keys [user-id path php-session-id authorizations redirect]}
+        (php-interop/data-for-uid! uid)]
     (when-not (or (nil? authorizations) (set? authorizations))
       (throw (Exception. "Authorizations must be a set, if set.")))
     (if (every? identity [user-id path php-session-id])
@@ -64,23 +66,37 @@
         embedded-paths (::embedded-paths session)
         php-session-id (:php-session-id session)
         timeouts       (php-interop/get-staff-timeouts)]
-    (if (string/starts-with? current-path "/embedded/error/")
+    (cond
+      (and (= current-path "/embedded/api/unlock-api")
+           (clients/debug-mode?))
       (handler request)
-      (if (and embedded-paths (some #(matches-embedded? current-path (str "/embedded/" %)) embedded-paths))
-        (case (php-interop/check-php-session timeouts (:session request))
-          (::php-interop/user-mismatch ::php-interop/no-session ::php-interop/absolute-timeout)
-          (->
-            (http-response/found "/embedded/error/no-session")
-            (assoc :session {}))
 
-          ::php-interop/re-auth-timeout
-          (http-response/found "/embedded/error/re-auth")
+      (and (or
+             (= current-path "/embedded/api")
+             (string/starts-with? current-path "/embedded/api/"))
+           (::debug-api? session))
+      (handler request)
 
-          ::php-interop/ok
-          (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
-            (php-interop/update-php-session-last-activity! php-session-id (utils/current-time))
-            (handler request)))
-        (http-response/forbidden "No embedded access")))))
+      (string/starts-with? current-path "/embedded/error/")
+      (handler request)
+
+      (and embedded-paths (some #(matches-embedded? current-path (str "/embedded/" %)) embedded-paths))
+      (case (php-interop/check-php-session timeouts (:session request))
+        (::php-interop/user-mismatch ::php-interop/no-session ::php-interop/absolute-timeout)
+        (->
+          (http-response/found "/embedded/error/no-session")
+          (assoc :session {}))
+
+        ::php-interop/re-auth-timeout
+        (http-response/found "/embedded/error/re-auth")
+
+        ::php-interop/ok
+        (binding [session-timeout/*timeout-hard-override* (:absolute-timeout timeouts)]
+          (php-interop/update-php-session-last-activity! php-session-id (utils/current-time))
+          (handler request)))
+
+      :else
+      (http-response/forbidden "No embedded access"))))
 
 (def ^:dynamic *embedded-request?* false)
 
