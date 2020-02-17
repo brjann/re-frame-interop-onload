@@ -21,7 +21,7 @@
             [selmer.tags :as tags]
             [bass4.services.privacy :as privacy-service]
             [bass4.session.timeout :as session-timeout]
-            [bass4.middleware.embedded :as embedded-mw]
+            [bass4.embedded.middleware :as embedded-mw]
             [bass4.clients.core :as clients]
             [bass4.utils :as utils]))
 

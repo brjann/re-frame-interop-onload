@@ -5,7 +5,7 @@
             [ring.util.http-response :as http-response]
             [bass4.routes.auth :refer [auth-routes]]
             [bass4.routes.user :as user-routes]
-            [bass4.routes.embedded :refer [embedded-routes]]
+            [bass4.embedded.routes :refer [embedded-routes]]
             [bass4.registration.routes :refer [registration-routes] :as reg-routes]
             [bass4.routes.ext-login :refer [ext-login-routes] :as ext-login]
             [bass4.routes.quick-login :as quick-login]

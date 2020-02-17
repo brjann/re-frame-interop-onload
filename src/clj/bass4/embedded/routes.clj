@@ -1,4 +1,4 @@
-(ns bass4.routes.embedded
+(ns bass4.embedded.routes
   (:require [bass4.layout :as layout]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
             [bass4.instrument.preview :as instruments]
