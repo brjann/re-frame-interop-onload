@@ -2,7 +2,8 @@
   (:require [bass4.http-utils :as h-utils]
             [bass4.error-pages :as error-pages]
             [bass4.utils :as utils]
-            [ring.util.http-response :as http-response]))
+            [ring.util.http-response :as http-response]
+            [clojure.string :as str]))
 
 
 ;; ----------------
@@ -42,7 +43,8 @@
 (defn transform-mw
   [handler request]
   (let [ajax?      (h-utils/ajax? request)
-        api?       (= "/api/" (utils/subs+ (:uri request) 0 5))
+        api?       (or (= "/api/" (utils/subs+ (:uri request) 0 5))
+                       (str/starts-with? (:uri request) "/embedded/api"))
         get?       (= :get (:request-method request))
         post?      (= :post (:request-method request))
         ajax-post? (and ajax? post?)
