@@ -204,7 +204,7 @@
           uid2    (php-interop/uid-for-data! {:user-id        110
                                               :php-session-id "xxx"
                                               :path           ""
-                                              :authorizations #{[:user-id user-id]}})
+                                              :authorizations #{[:treatment/user-id user-id]}})
           api-url (fn [url] (str url "?user-id=" user-id "&treatment-access-id=" treatment-access-id))]
       (let [s           (-> *s*
                             (visit "/embedded/api/user-tx/modules")
@@ -245,7 +245,7 @@
           uid     (php-interop/uid-for-data! {:user-id        110
                                               :php-session-id "xxx"
                                               :path           ""
-                                              :authorizations #{[:user-id user-id]}})]
+                                              :authorizations #{[:treatment/user-id user-id]}})]
       (-> *s*
           (modify-session {:user-id user-id :double-authed? true})
           (visit "/api/user/tx/module-content-data/642518/642528" :request-method :put :body-params {:data {:export-content-ws {:export "1"}
