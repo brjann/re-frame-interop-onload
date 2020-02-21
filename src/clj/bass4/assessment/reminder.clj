@@ -10,7 +10,8 @@
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.email-queue :as email-queue]
             [bass4.external-messages.sms-queue :as sms-queue]
-            [bass4.services.bass :as bass]))
+            [bass4.services.bass :as bass]
+            [bass4.assessment.db :as assessment-db]))
 
 (defn- db-activated-participant-administrations
   [db date-min date-max hour]
@@ -37,7 +38,7 @@
 (defn- db-users-assessment-series-id
   [db user-ids]
   (when (seq user-ids)
-    (let [res (db/get-user-assessment-series db {:user-ids user-ids})]
+    (let [res (assessment-db/users-assessment-series db user-ids)]
       (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
 
 (defn- db-groups-assessment-series-id

@@ -40,3 +40,7 @@
   (db/get-late-flag-group-administrations db {:date           date
                                               :oldest-allowed (t/minus date (t/days oldest-allowed))
                                               :issuer         flag-issuer}))
+
+(defn users-assessment-series
+  [db user-ids]
+  (db/get-user-assessment-series db {:user-ids user-ids}))
