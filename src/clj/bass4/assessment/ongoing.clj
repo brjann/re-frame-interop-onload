@@ -26,15 +26,14 @@
   [db user-id assessment-series-id]
   (let [group-id                    (user-group db user-id)
         group-administrations       (when group-id
-                                      (db/get-group-administrations
-                                        db
-                                        {:group-id             group-id
-                                         :assessment-series-id assessment-series-id}))
-        participant-administrations (db/get-participant-administrations-by-assessment-series
+                                      (assessment-db/group-administrations db group-id assessment-series-id))
+        participant-administrations (assessment-db/participant-administrations-by-assessment-series
                                       db
-                                      {:user-id              user-id
-                                       :assessment-series-id assessment-series-id})]
-    (merge-participant-group-administrations user-id participant-administrations group-administrations)))
+                                      user-id
+                                      assessment-series-id)]
+    (merge-participant-group-administrations user-id
+                                             participant-administrations
+                                             group-administrations)))
 
 (defn user-assessments
   [db user-id assessment-series-ids]
