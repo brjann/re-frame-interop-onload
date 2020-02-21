@@ -4,6 +4,10 @@
             [clj-time.core :as t]
             [clojure.tools.logging :as log]))
 
+;; ------------------
+;;  ACTIVATED FLAGS
+;; ------------------
+
 (defn date-intervals
   [now tz oldest-allowed]
   (let [midnight (client-time/local-midnight now tz)]
@@ -29,6 +33,10 @@
                                                                :date-min date-min
                                                                :issuer   flag-issuer})))
 
+;; ------------------
+;;     LATE FLAGS
+;; ------------------
+
 (defn db-participant-administrations
   [db date flag-issuer oldest-allowed]
   (db/get-late-flag-participant-administrations db {:date           date
@@ -41,6 +49,24 @@
                                               :oldest-allowed (t/minus date (t/days oldest-allowed))
                                               :issuer         flag-issuer}))
 
+;; ------------------
+;;       ONGOING
+;; ------------------
+
 (defn users-assessment-series
   [db user-ids]
   (db/get-user-assessment-series db {:user-ids user-ids}))
+
+(defn group-administrations
+  [db group-id assessment-series-id]
+  (db/get-group-administrations
+    db
+    {:group-id             group-id
+     :assessment-series-id assessment-series-id}))
+
+(defn participant-administrations-by-assessment-series
+  [db user-id assessment-series-id]
+  (db/get-participant-administrations-by-assessment-series
+    db
+    {:user-id              user-id
+     :assessment-series-id assessment-series-id}))
