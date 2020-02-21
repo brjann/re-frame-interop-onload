@@ -3,26 +3,15 @@
             [clojure.core.async :refer [put!]]
             [bass4.db.core :as db]
             [bass4.assessment.reminder :as assessment-reminder]
-            [bass4.services.bass :as bass]
+            [bass4.assessment.db :as assessment-db]
             [bass4.assessment.create-missing :as missing]
             [bass4.db.orm-classes :as orm]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
+
 (def flag-reopen-text "Automatically reopened by Flagger")
 (def reflag-delay 7)
-
-(defn- db-participant-administrations
-  [db date]
-  (db/get-late-flag-participant-administrations db {:date           date
-                                                    :oldest-allowed (t/minus date (t/days oldest-allowed))
-                                                    :issuer         flag-issuer}))
-
-(defn- db-group-administrations
-  [db date]
-  (db/get-late-flag-group-administrations db {:date           date
-                                              :oldest-allowed (t/minus date (t/days oldest-allowed))
-                                              :issuer         flag-issuer}))
 
 (defn- db-open-flags
   [db]
@@ -56,8 +45,8 @@
    :assessment-id 653636,
    :assessment-index 1,}"
   [db now]
-  (let [participant-administrations (db-participant-administrations db now)
-        group-administration        (db-group-administrations db now)]
+  (let [participant-administrations (assessment-db/db-participant-administrations db now flag-issuer oldest-allowed)
+        group-administration        (assessment-db/db-group-administrations db now flag-issuer oldest-allowed)]
     (concat participant-administrations
             group-administration)))
 
