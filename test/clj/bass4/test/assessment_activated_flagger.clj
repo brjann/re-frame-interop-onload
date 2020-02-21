@@ -4,7 +4,8 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.db.core :refer [*db*]]))
+            [bass4.db.core :refer [*db*]]
+            [bass4.assessment.db :as assessment-db]))
 
 (use-fixtures
   :once
@@ -13,9 +14,6 @@
 (use-fixtures
   :each
   random-date-tz-fixture)
-
-(def db-activated-flag-participant @#'activated-flagger/db-participant-administrations)
-(def db-activated-flag-group @#'activated-flagger/db-group-administrations)
 
 (deftest db-flag-participant-administration
   (let [user-id1       (user-service/create-user! project-ass1-id)
@@ -39,12 +37,22 @@
                                 "DateCompleted" 1})
     (create-participant-administration!
       user-id4 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
-    (is (= 3 (count (db-activated-flag-participant *db* *now* *tz*))))
+    (is (= 3 (count (assessment-db/activated-flag-participant-administrations
+                      *db*
+                      *now*
+                      *tz*
+                      activated-flagger/flag-issuer
+                      activated-flagger/oldest-allowed))))
     (is (= #{[user-id1 assessment-id 1]
              [user-id2 assessment-id 1]
              [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
-    (is (= 0 (count (db-activated-flag-participant *db* *now* *tz*))))))
+    (is (= 0 (count (assessment-db/activated-flag-participant-administrations
+                      *db*
+                      *now*
+                      *tz*
+                      activated-flagger/flag-issuer
+                      activated-flagger/oldest-allowed))))))
 
 (deftest db-flag-group-administration
   (let [group-id1      (create-group!)
@@ -73,10 +81,20 @@
       group-id3 assessment-id 1 {"Date" (midnight+d -5 *now*)})
     (create-group-administration!
       group-id1 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
-    (is (= 4 (count (db-activated-flag-group *db* *now* *tz*))))
+    (is (= 4 (count (assessment-db/activated-flag-group-administrations
+                      *db*
+                      *now*
+                      *tz*
+                      activated-flagger/flag-issuer
+                      activated-flagger/oldest-allowed))))
     (is (= #{[user-id1 assessment-id3 1]
              [user-id3 assessment-id 1]
              [user-id4 assessment-id 1]
              [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
-    (is (= 0 (count (db-activated-flag-group *db* *now* *tz*))))))
+    (is (= 0 (count (assessment-db/activated-flag-group-administrations
+                      *db*
+                      *now*
+                      *tz*
+                      activated-flagger/flag-issuer
+                      activated-flagger/oldest-allowed))))))
