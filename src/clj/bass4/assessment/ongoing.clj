@@ -2,7 +2,8 @@
   (:require [clj-time.core :as t]
             [bass4.db.core :as db]
             [bass4.utils :as utils]
-            [bass4.assessment.create-missing :as missing]))
+            [bass4.assessment.create-missing :as missing]
+            [bass4.assessment.db :as assessment-db]))
 
 (defn user-group
   [db user-id]
@@ -11,7 +12,7 @@
 (defn user-assessment-series-id
   [db user-id]
   (when user-id
-    (:assessment-series-id (first (db/get-user-assessment-series db {:user-ids [user-id]})))))
+    (:assessment-series-id (first (assessment-db/users-assessment-series db [user-id])))))
 
 (defn merge-participant-group-administrations
   [user-id participant-administrations group-administrations]
