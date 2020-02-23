@@ -13,57 +13,6 @@
             [bass4.services.bass :as bass]
             [bass4.assessment.db :as assessment-db]))
 
-(defn- db-activated-participant-administrations
-  [db date-min date-max hour]
-  (db/get-activated-participant-administrations db {:date-min date-min
-                                                    :date-max date-max
-                                                    :hour     hour}))
-
-(defn- db-activated-group-administrations
-  "Returns participants in groups that have potential activated administrations"
-  [db date-min date-max hour]
-  (db/get-activated-group-administrations db {:date-min date-min
-                                              :date-max date-max
-                                              :hour     hour}))
-
-(defn- db-late-participant-administrations
-  [db date]
-  (db/get-late-participant-administrations db {:date date}))
-
-(defn- db-late-group-administrations
-  "Returns participants in groups that have potential late administrations"
-  [db date]
-  (db/get-late-group-administrations db {:date date}))
-
-(defn- db-users-assessment-series-id
-  [db user-ids]
-  (when (seq user-ids)
-    (let [res (assessment-db/users-assessment-series db user-ids)]
-      (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
-
-(defn- db-groups-assessment-series-id
-  [db group-ids]
-  (when (seq group-ids)
-    (let [res (db/get-group-assessment-series db {:group-ids group-ids})]
-      (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res))))
-
-(defn- db-participant-administrations-by-user+assessment+series
-  [db user+assessments+series]
-  (db/get-participant-administrations-by-user+assessment
-    db
-    {:user-ids+assessment-ids user+assessments+series}))
-
-(defn- db-group-administrations-by-group+assessment+series
-  [db groups+assessments+series]
-  (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
-
-(defn- db-assessments
-  [db assessment-ids]
-  (when assessment-ids
-    (->> (db/get-remind-assessments db {:assessment-ids assessment-ids})
-         (map #(vector (:assessment-id %) %))
-         (into {}))))
-
 (defn- db-activation-reminders-sent!
   [db administrations]
   (when (seq administrations)
@@ -118,8 +67,8 @@
   (let [hour                        (t/hour (t/to-time-zone now tz))
         date-min                    (today-midnight now tz)
         date-max                    (today-last-second now tz)
-        participant-administrations (db-activated-participant-administrations db date-min date-max hour)
-        group-administrations       (db-activated-group-administrations db date-min date-max hour)]
+        participant-administrations (assessment-db/db-activated-participant-administrations db date-min date-max hour)
+        group-administrations       (assessment-db/db-activated-group-administrations db date-min date-max hour)]
     (->> (concat participant-administrations
                  group-administrations)
          (map #(assoc % ::remind-type ::activation)))))
@@ -134,8 +83,8 @@
    :assessment-index 1,
    ::remind-type :late}"
   [db now]
-  (let [participant-administrations (db-late-participant-administrations db now)
-        group-administration        (db-late-group-administrations db now)]
+  (let [participant-administrations (assessment-db/db-late-participant-administrations db now)
+        group-administration        (assessment-db/db-late-group-administrations db now)]
     (->> (concat participant-administrations
                  group-administration)
          (map #(assoc % ::remind-type ::late)))))
@@ -146,13 +95,13 @@
   [db potential-assessments]
   (let [assessment-series       (->> potential-assessments
                                      (map :user-id)
-                                     (db-users-assessment-series-id db))
+                                     (assessment-db/db-users-assessment-series-id db))
         user+assessments+series (->> potential-assessments
                                      (map #(vector (:user-id %)
                                                    (:assessment-id %)
                                                    (get assessment-series (:user-id %))))
                                      (into #{}))
-        administrations         (db-participant-administrations-by-user+assessment+series
+        administrations         (assessment-db/db-participant-administrations-by-user+assessment+series
                                   db user+assessments+series)]
     (group-by #(vector (:user-id %) (:assessment-id %)) administrations)))
 
@@ -163,13 +112,13 @@
   (let [potential-assessments     (filter :group-id potential-assessments)
         assessment-series         (->> potential-assessments
                                        (map :group-id)
-                                       (db-groups-assessment-series-id db))
+                                       (assessment-db/db-groups-assessment-series-id db))
         groups+assessments+series (->> potential-assessments
                                        (map #(vector (:group-id %)
                                                      (:assessment-id %)
                                                      (get assessment-series (:group-id %))))
                                        (into #{}))
-        administrations           (db-group-administrations-by-group+assessment+series
+        administrations           (assessment-db/db-group-administrations-by-group+assessment+series
                                     db groups+assessments+series)]
     (group-by #(vector (:group-id %) (:assessment-id %)) administrations)))
 
@@ -222,9 +171,9 @@
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
         group-administrations-grouped       (when-not (empty? user-groups)
                                               (group-administrations-from-potential-assessments db potentials))
-        assessments'                        (db-assessments db (->> potentials
-                                                                    (map :assessment-id)
-                                                                    (into #{})))
+        assessments'                        (assessment-db/db-assessments db (->> potentials
+                                                                                  (map :assessment-id)
+                                                                                  (into #{})))
         merged-by-user+assessment           (->> potentials
                                                  (map #(vector (:user-id %) (:assessment-id %)))
                                                  (map (fn [[user-id assessment-id]]
