@@ -5,9 +5,21 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.assessment.db :as assessment-db]))
 
-(defn user-group
+(defn db-user-group
   [db user-id]
   (:group-id (db/get-user-group db {:user-id user-id})))
+
+(defn db-assessment-instruments
+  [db assessment-ids]
+  (db/get-assessments-instruments db {:assessment-ids assessment-ids}))
+
+(defn db-administration-completed-instruments
+  [db administration-ids]
+  (db/get-administration-completed-instruments db {:administration-ids administration-ids}))
+
+(defn db-administration-additional-instruments
+  [db administration-ids]
+  (db/get-administration-additional-instruments db {:administration-ids administration-ids}))
 
 (defn user-assessment-series-id
   [db user-id]
@@ -24,7 +36,7 @@
 
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (user-group db user-id)
+  (let [group-id                    (db-user-group db user-id)
         group-administrations       (when group-id
                                       (assessment-db/group-administrations db group-id assessment-series-id))
         participant-administrations (assessment-db/participant-administrations-by-assessment-series
@@ -34,23 +46,6 @@
     (merge-participant-group-administrations user-id
                                              participant-administrations
                                              group-administrations)))
-
-(defn user-assessments
-  [db user-id assessment-series-ids]
-  (when (seq assessment-series-ids)
-    (db/get-user-assessments db {:assessment-series-ids assessment-series-ids :parent-id user-id})))
-
-(defn assessment-instruments
-  [db assessment-ids]
-  (db/get-assessments-instruments db {:assessment-ids assessment-ids}))
-
-(defn administration-completed-instruments
-  [db administration-ids]
-  (db/get-administration-completed-instruments db {:administration-ids administration-ids}))
-
-(defn administration-additional-instruments
-  [db administration-ids]
-  (db/get-administration-additional-instruments db {:administration-ids administration-ids}))
 
 (defn- get-time-limit
   [{:keys [time-limit is-record repetition-interval repetition-type]}]
@@ -167,17 +162,18 @@
                (not (:clinician-rated? %))))
           assessment-statuses))
 
-(defn- add-instruments [db assessments]
+(defn- add-instruments
+  [db assessments]
   (let [administration-ids     (map :participant-administration-id assessments)
         assessment-instruments (->> assessments
                                     (map :assessment-id)
-                                    (assessment-instruments db)
+                                    (db-assessment-instruments db)
                                     (group-by :assessment-id)
                                     (utils/map-map #(map :instrument-id %)))
-        completed-instruments  (->> (administration-completed-instruments db administration-ids)
+        completed-instruments  (->> (db-administration-completed-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (utils/map-map #(map :instrument-id %)))
-        additional-instruments (->> (administration-additional-instruments db administration-ids)
+        additional-instruments (->> (db-administration-additional-instruments db administration-ids)
                                     (group-by :administration-id)
                                     (utils/map-map #(map :instrument-id %)))]
     (map #(assoc % :instruments (utils/diff
@@ -190,7 +186,7 @@
 
 (defn assessments
   [db user-id assessment-series-ids]
-  (->> (user-assessments db user-id assessment-series-ids)
+  (->> (assessment-db/user-assessments db user-id assessment-series-ids)
        (map #(vector (:assessment-id %) %))
        (into {})))
 
