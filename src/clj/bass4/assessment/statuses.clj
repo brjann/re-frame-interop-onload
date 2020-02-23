@@ -1,18 +1,21 @@
 (ns bass4.assessment.statuses
   (:require [bass4.db.core :as db]
             [bass4.utils :as utils]
-            [bass4.assessment.ongoing :as assessment-ongoing]))
+            [bass4.assessment.ongoing :as assessment-ongoing]
+            [bass4.assessment.db :as assessment-db]))
 
 (defn group-administrations-statuses
   [db now group-id]
-  (let [assessment-series-id (-> (db/get-group-assessment-series db {:group-ids [group-id]})
+  (let [assessment-series-id (-> (assessment-db/group-assessment-series db [group-id])
                                  (first)
                                  :assessment-series-id)
-        administrations      (->> (db/get-group-administrations db {:group-id             group-id
-                                                                    :assessment-series-id assessment-series-id})
+        administrations      (->> (assessment-db/group-administrations db
+                                                                       group-id
+                                                                       assessment-series-id)
                                   (group-by :assessment-id))
-        assessments          (db/get-user-assessments db {:assessment-series-ids [assessment-series-id]
-                                                          :parent-id             group-id})]
+        assessments          (assessment-db/user-assessments db
+                                                             group-id
+                                                             [assessment-series-id])]
     (->> assessments
          (map (fn [assessment] (assessment-ongoing/get-administration-statuses
                                  now
@@ -27,11 +30,11 @@
   [db user-id assessment-series-id]
   (let [group-id                    (assessment-ongoing/db-user-group db user-id)
         group-administrations       (when group-id
-                                      (db/get-group-administrations
+                                      (assessment-db/group-administrations
                                         db
-                                        {:group-id             group-id
-                                         :assessment-series-id assessment-series-id}))
-        participant-administrations (db/get-all-participant-administrations db {:user-id user-id})
+                                        group-id
+                                        assessment-series-id))
+        participant-administrations (assessment-db/user-administrations db user-id)
         merged                      (assessment-ongoing/merge-participant-group-administrations
                                       user-id participant-administrations group-administrations)]
     merged))
