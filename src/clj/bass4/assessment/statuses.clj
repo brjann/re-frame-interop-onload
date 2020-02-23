@@ -25,7 +25,7 @@
 
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (assessment-ongoing/user-group db user-id)
+  (let [group-id                    (assessment-ongoing/db-user-group db user-id)
         group-administrations       (when group-id
                                       (db/get-group-administrations
                                         db

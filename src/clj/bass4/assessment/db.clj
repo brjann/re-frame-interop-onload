@@ -70,3 +70,8 @@
     db
     {:user-id              user-id
      :assessment-series-id assessment-series-id}))
+
+(defn user-assessments
+  [db user-id assessment-series-ids]
+  (when (seq assessment-series-ids)
+    (db/get-user-assessments db {:assessment-series-ids assessment-series-ids :parent-id user-id})))
