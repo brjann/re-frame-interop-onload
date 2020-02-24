@@ -170,6 +170,25 @@
           (visit "/embedded/instrument/1647")
           (has (status? 403))))))
 
+(deftest add-paths
+  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now)) :php-session-id "xx"})]
+    (let [uid (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx"})]
+      (php-interop/add-data-to-uid! uid {:path #{"instrument/1647"}})
+      (php-interop/add-data-to-uid! uid {:path #{"instrument/286"}})
+      (-> *s*
+          ;; First session file gives access to 1647
+          (visit (str "/embedded/create-session?uid=" uid "&redirect=instrument/1647"))
+          (has (status? 302))
+          (follow-redirect)
+          (has (status? 200))
+          (visit "/embedded/instrument/1647")
+          (has (status? 200))
+          (visit (str "/embedded/create-session?uid=" uid "&redirect=instrument/286"))
+          (follow-redirect)
+          (has (status? 200))
+          (visit "/embedded/instrument/286")
+          (has (status? 200))))))
+
 (defn create-user-with-treatment!
   ([treatment-id]
    (create-user-with-treatment! treatment-id false {}))
