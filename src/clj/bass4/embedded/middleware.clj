@@ -8,8 +8,7 @@
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]
             [bass4.clients.core :as clients]
-            [clojure.set :as set]
-            [clojure.tools.logging :as log]))
+            [clojure.set :as set]))
 
 ;; Save path for uids so that user is redirected if uid is reused.
 ;; Old UIDs are valid for 24 hours
