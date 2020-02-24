@@ -23,7 +23,8 @@
 (defn create-embedded-session
   [_ request uid]
   (let [{:keys [user-id path php-session-id authorizations redirect]}
-        (php-interop/data-for-uid! uid)]
+        (php-interop/data-for-uid! uid)
+        query-redirect (get-in request [:params :redirect])]
     (when-not (or (nil? authorizations) (set? authorizations))
       (throw (Exception. "Authorizations must be a set, if set.")))
     (if (every? identity [user-id path php-session-id])
@@ -39,7 +40,7 @@
             prev-authorizations (if (and same-session? (::authorizations session))
                                   (::authorizations session)
                                   #{})
-            redirect            (str "/embedded/" (or redirect path))]
+            redirect            (str "/embedded/" (or query-redirect redirect path))]
         (swap! old-uids assoc uid redirect)
         (-> (http-response/found redirect)
             (assoc :session {:user-id         user-id
@@ -47,9 +48,11 @@
                              :php-session-id  php-session-id
                              ::authorizations (into prev-authorizations authorizations)
                              :external-login? true})))
-      (if (contains? @old-uids uid)
-        (http-response/found (get @old-uids uid))
-        (h-utils/text-response "Wrong uid.")))))
+      (let [redirect (when (contains? @old-uids uid)
+                       (or query-redirect (get @old-uids uid)))]
+        (if (string? redirect)
+          (http-response/found redirect)
+          (h-utils/text-response "Wrong uid."))))))
 
 (defn legal-character
   [c]
