@@ -8,7 +8,8 @@
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]
             [bass4.clients.core :as clients]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.tools.logging :as log]))
 
 ;; Save path for uids so that user is redirected if uid is reused.
 ;; Old UIDs are valid for 24 hours
@@ -40,14 +41,16 @@
             prev-authorizations (if (and same-session? (::authorizations session))
                                   (::authorizations session)
                                   #{})
-            redirect            (str "/embedded/" (or query-redirect redirect path))]
+            redirect            (or query-redirect redirect path)]
         (swap! old-uids assoc uid redirect)
-        (-> (http-response/found redirect)
-            (assoc :session {:user-id         user-id
-                             ::embedded-paths (set/union prev-embedded-paths paths)
-                             :php-session-id  php-session-id
-                             ::authorizations (into prev-authorizations authorizations)
-                             :external-login? true})))
+        (if (string? redirect)
+          (-> (http-response/found redirect)
+              (assoc :session {:user-id         user-id
+                               ::embedded-paths (set/union prev-embedded-paths paths)
+                               :php-session-id  php-session-id
+                               ::authorizations (into prev-authorizations authorizations)
+                               :external-login? true}))
+          (http-response/bad-request "Missing redirect parameter?")))
       (let [redirect (when (contains? @old-uids uid)
                        (or query-redirect (get @old-uids uid)))]
         (if (string? redirect)
