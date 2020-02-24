@@ -7,7 +7,8 @@
             [bass4.http-utils :as h-utils]
             [bass4.php-interop :as php-interop]
             [clojure.core.cache :as cache]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [clojure.set :as set]))
 
 ;; Save path for uids so that user is redirected if uid is reused.
 ;; Old UIDs are valid for 24 hours
@@ -26,7 +27,10 @@
     (when-not (or (nil? authorizations) (set? authorizations))
       (throw (Exception. "Authorizations must be a set, if set.")))
     (if (every? identity [user-id path php-session-id])
-      (let [session             (:session request)
+      (let [paths               (if (set? path)
+                                  path
+                                  #{path})
+            session             (:session request)
             same-session?       (and (= (:user-id session) user-id)
                                      (= (:php-session-id session) php-session-id))
             prev-embedded-paths (if (and same-session? (::embedded-paths session))
@@ -39,7 +43,7 @@
         (swap! old-uids assoc uid redirect)
         (-> (http-response/found redirect)
             (assoc :session {:user-id         user-id
-                             ::embedded-paths (conj prev-embedded-paths path)
+                             ::embedded-paths (set/union prev-embedded-paths paths)
                              :php-session-id  php-session-id
                              ::authorizations (into prev-authorizations authorizations)
                              :external-login? true})))

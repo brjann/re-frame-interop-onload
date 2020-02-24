@@ -52,6 +52,15 @@
   [data]
   (php-interop/uid-for-data! data))
 
+(defapi create-uid-for-session!
+  [user-id php-session-id]
+  (php-interop/uid-for-data! {:user-id        user-id
+                              :php-session-id php-session-id}))
+
+(defapi add-data-to-uid!
+  [uid :- [[api/str? 1 50]] data]
+  (php-interop/add-data-to-uid! uid data))
+
 (defapi send-sms!
   [db-name :- [[api/str? 1 30]] to :- [[api/str? 1 30]] message :- [[api/str? 1 800]]]
   (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]

@@ -133,6 +133,15 @@
     (swap! uids assoc uid data)
     uid))
 
+(defn add-data-to-uid!
+  "Adds data to uid using merge-with into."
+  [uid data]
+  (swap! uids (fn [a] (when (contains? a uid)
+                        (let [content (get a uid)]
+                          (assoc a uid (merge-with into
+                                                   content
+                                                   data)))))))
+
 (defn data-for-uid!
   [uid]
   (let [[old _] (swap-vals! uids dissoc uid)]
