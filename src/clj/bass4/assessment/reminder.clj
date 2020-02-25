@@ -67,8 +67,8 @@
   (let [hour                        (t/hour (t/to-time-zone now tz))
         date-min                    (today-midnight now tz)
         date-max                    (today-last-second now tz)
-        participant-administrations (assessment-db/db-activated-participant-administrations db date-min date-max hour)
-        group-administrations       (assessment-db/db-activated-group-administrations db date-min date-max hour)]
+        participant-administrations (assessment-db/potential-activated-remind-participant-administrations db date-min date-max hour)
+        group-administrations       (assessment-db/potential-activated-remind-group-administrations db date-min date-max hour)]
     (->> (concat participant-administrations
                  group-administrations)
          (map #(assoc % ::remind-type ::activation)))))
@@ -83,8 +83,8 @@
    :assessment-index 1,
    ::remind-type :late}"
   [db now]
-  (let [participant-administrations (assessment-db/db-late-participant-administrations db now)
-        group-administration        (assessment-db/db-late-group-administrations db now)]
+  (let [participant-administrations (assessment-db/potential-late-remind-participant-administrations db now)
+        group-administration        (assessment-db/potential-late-remind-group-administrations db now)]
     (->> (concat participant-administrations
                  group-administration)
          (map #(assoc % ::remind-type ::late)))))

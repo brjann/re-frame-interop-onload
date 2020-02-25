@@ -6,7 +6,7 @@
 
 (defn group-administrations-statuses
   [db now group-id]
-  (let [assessment-series-id (-> (assessment-db/group-assessment-series db [group-id])
+  (let [assessment-series-id (-> (assessment-db/groups-assessment-series db [group-id])
                                  (first)
                                  :assessment-series-id)
         administrations      (->> (assessment-db/group-administrations db

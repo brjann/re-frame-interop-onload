@@ -10,7 +10,7 @@
 --   ACTIVATED ASSESSMENTS
 -- -------------------------
 
--- :name get-activated-participant-administrations :? :*
+-- :name potential-activated-remind-participant-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -45,7 +45,7 @@ WHERE
   AND cpa.Date >= :date-min AND cpa.Date <= :date-max;
 
 
--- :name get-activated-group-administrations :? :*
+-- :name potential-activated-remind-group-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -78,7 +78,7 @@ WHERE
 --     LATE ASSESSMENTS
 -- -------------------------
 
--- :name get-late-participant-administrations :? :*
+-- :name potential-late-remind-participant-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -114,7 +114,7 @@ WHERE
 	AND date_add(from_unixtime(cpa.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
 
 
--- :name get-late-group-administrations :? :*
+-- :name potential-late-remind-group-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
