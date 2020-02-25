@@ -37,7 +37,7 @@
                                 "DateCompleted" 1})
     (create-participant-administration!
       user-id4 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
-    (is (= 3 (count (assessment-db/activated-flag-participant-administrations
+    (is (= 3 (count (assessment-db/potential-activated-flag-participant-administrations
                       *db*
                       *now*
                       *tz*
@@ -47,7 +47,7 @@
              [user-id2 assessment-id 1]
              [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
-    (is (= 0 (count (assessment-db/activated-flag-participant-administrations
+    (is (= 0 (count (assessment-db/potential-activated-flag-participant-administrations
                       *db*
                       *now*
                       *tz*
@@ -81,7 +81,7 @@
       group-id3 assessment-id 1 {"Date" (midnight+d -5 *now*)})
     (create-group-administration!
       group-id1 assessment-id3 1 {"Date" (midnight+d -5 *now*)})
-    (is (= 4 (count (assessment-db/activated-flag-group-administrations
+    (is (= 4 (count (assessment-db/potential-activated-flag-group-administrations
                       *db*
                       *now*
                       *tz*
@@ -92,7 +92,7 @@
              [user-id4 assessment-id 1]
              [user-id4 assessment-id3 1]}
            (flag-activated! *now*)))
-    (is (= 0 (count (assessment-db/activated-flag-group-administrations
+    (is (= 0 (count (assessment-db/potential-activated-flag-group-administrations
                       *db*
                       *now*
                       *tz*

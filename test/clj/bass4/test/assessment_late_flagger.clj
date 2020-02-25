@@ -34,10 +34,10 @@
     (create-participant-administration!
       user-id3 assessment-id 1 {"Date"          (midnight+d -5 *now*)
                                 "DateCompleted" 1})
-    (is (= 2 (count (assessment-db/db-participant-administrations *db*
-                                                                  *now*
-                                                                  late-flagger/flag-issuer
-                                                                  late-flagger/oldest-allowed))))))
+    (is (= 2 (count (assessment-db/potential-late-flag-participant-administrations *db*
+                                                                                   *now*
+                                                                                   late-flagger/flag-issuer
+                                                                                   late-flagger/oldest-allowed))))))
 
 (deftest db-flag-participant-administration-completed
   (let [created-flags     (atom {})
@@ -64,10 +64,10 @@
                                            "ClinicianAssessment"     1})]
     (create-participant-administration!
       user-id1 assessment-id 1 {:date (midnight+d -5 *now*)})
-    (is (= 1 (count (assessment-db/db-participant-administrations *db*
-                                                                  *now*
-                                                                  late-flagger/flag-issuer
-                                                                  late-flagger/oldest-allowed))))))
+    (is (= 1 (count (assessment-db/potential-late-flag-participant-administrations *db*
+                                                                                   *now*
+                                                                                   late-flagger/flag-issuer
+                                                                                   late-flagger/oldest-allowed))))))
 
 (deftest db-flag-group-administration
   (let [group-id1     (create-group!)
@@ -84,10 +84,10 @@
       group-id2 assessment-id 1 {:date (midnight+d -5 *now*)})
     (create-participant-administration!
       user-id2 assessment-id 1 {"DateCompleted" 1})
-    (is (= 2 (count (assessment-db/db-group-administrations *db*
-                                                            *now*
-                                                            late-flagger/flag-issuer
-                                                            late-flagger/oldest-allowed))))))
+    (is (= 2 (count (assessment-db/potential-late-flag-group-administrations *db*
+                                                                             *now*
+                                                                             late-flagger/flag-issuer
+                                                                             late-flagger/oldest-allowed))))))
 
 (deftest flag-participant-administration+reflag
   (let [created-flags (atom {})
@@ -122,12 +122,12 @@
       (orm/update-object-properties! "c_flag"
                                      flag1-id
                                      {"ClosedAt" (utils/to-unix now+1delay)})
-      (is (zero? (count (assessment-db/db-participant-administrations
+      (is (zero? (count (assessment-db/potential-late-flag-participant-administrations
                           *db*
                           now+2delay-1
                           late-flagger/flag-issuer
                           late-flagger/oldest-allowed))))
-      (is (= 1 (count (assessment-db/db-participant-administrations
+      (is (= 1 (count (assessment-db/potential-late-flag-participant-administrations
                         *db*
                         now+2delay
                         late-flagger/flag-issuer
@@ -174,14 +174,14 @@
         (orm/update-object-properties! "c_flag"
                                        flag2-id
                                        {"ClosedAt" (utils/to-unix now+1delay)}))
-      (is (zero? (count (assessment-db/db-group-administrations *db*
-                                                                now+2delay-1
-                                                                late-flagger/flag-issuer
-                                                                late-flagger/oldest-allowed))))
-      (is (= 1 (count (assessment-db/db-group-administrations *db*
-                                                              now+2delay
-                                                              late-flagger/flag-issuer
-                                                              late-flagger/oldest-allowed))))
+      (is (zero? (count (assessment-db/potential-late-flag-group-administrations *db*
+                                                                                 now+2delay-1
+                                                                                 late-flagger/flag-issuer
+                                                                                 late-flagger/oldest-allowed))))
+      (is (= 1 (count (assessment-db/potential-late-flag-group-administrations *db*
+                                                                               now+2delay
+                                                                               late-flagger/flag-issuer
+                                                                               late-flagger/oldest-allowed))))
       (orm/update-object-properties! "c_flag"
                                      flag1-id
                                      {"ReflagDelay" (dec late-flagger/reflag-delay)})

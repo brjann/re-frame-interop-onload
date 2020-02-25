@@ -45,8 +45,8 @@
    :assessment-id 653636,
    :assessment-index 1,}"
   [db now]
-  (let [participant-administrations (assessment-db/db-participant-administrations db now flag-issuer oldest-allowed)
-        group-administration        (assessment-db/db-group-administrations db now flag-issuer oldest-allowed)]
+  (let [participant-administrations (assessment-db/potential-late-flag-participant-administrations db now flag-issuer oldest-allowed)
+        group-administration        (assessment-db/potential-late-flag-group-administrations db now flag-issuer oldest-allowed)]
     (concat participant-administrations
             group-administration)))
 

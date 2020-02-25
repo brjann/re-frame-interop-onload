@@ -17,37 +17,49 @@
          (t/plus (t/days 1))
          (t/minus (t/seconds 1)))]))
 
-(defn activated-flag-group-administrations
+(defn potential-activated-flag-group-administrations
+  "Returns group administrations that are potentially flaggable as activated.
+  Note that it is the participants of the owning groups are returned - rather
+  than one row per group. If the participants lacks a matching participant
+  administration, :participant-administration-id is nil"
   [db now tz flag-issuer oldest-allowed]
   (let [[date-min date-max] (date-intervals now tz oldest-allowed)]
-    (db/get-flagging-activated-group-administrations db {:date-max date-max
-                                                         :date-min date-min
-                                                         :issuer   flag-issuer})))
+    (db/potential-activated-flag-group-administrations db {:date-max date-max
+                                                           :date-min date-min
+                                                           :issuer   flag-issuer})))
 
-(defn activated-flag-participant-administrations
+(defn potential-activated-flag-participant-administrations
+  "Returns participant administrations that are potentially flaggable as activated.
+  If participants' group lacks a matching participant administration,
+  :group-administration-id is nil. If they are not in a group, group-id is nil."
   [db now tz flag-issuer oldest-allowed]
-  (log/debug flag-issuer)
-  (log/debug oldest-allowed)
   (let [[date-min date-max] (date-intervals now tz oldest-allowed)]
-    (db/get-flagging-activated-participant-administrations db {:date-max date-max
-                                                               :date-min date-min
-                                                               :issuer   flag-issuer})))
+    (db/potential-activated-flag-participant-administrations db {:date-max date-max
+                                                                 :date-min date-min
+                                                                 :issuer   flag-issuer})))
 
 ;; ------------------
 ;;     LATE FLAGS
 ;; ------------------
-
-(defn db-participant-administrations
+(defn potential-late-flag-group-administrations
+  "Returns group administrations that are potentially flaggable as late.
+  Note that it is the participants of the owning groups are returned - rather
+  than one row per group. If the participants lacks a matching participant
+  administration, :participant-administration-id is nil"
   [db date flag-issuer oldest-allowed]
-  (db/get-late-flag-participant-administrations db {:date           date
+  (db/potential-late-flag-group-administrations db {:date           date
                                                     :oldest-allowed (t/minus date (t/days oldest-allowed))
                                                     :issuer         flag-issuer}))
 
-(defn db-group-administrations
+
+(defn potential-late-flag-participant-administrations
+  "Returns participant administrations that are potentially flaggable as late.
+  If participants' group lacks a matching participant administration,
+  :group-administration-id is nil. If they are not in a group, group-id is nil."
   [db date flag-issuer oldest-allowed]
-  (db/get-late-flag-group-administrations db {:date           date
-                                              :oldest-allowed (t/minus date (t/days oldest-allowed))
-                                              :issuer         flag-issuer}))
+  (db/potential-late-flag-participant-administrations db {:date           date
+                                                          :oldest-allowed (t/minus date (t/days oldest-allowed))
+                                                          :issuer         flag-issuer}))
 
 ;; ------------------
 ;;       ONGOING
