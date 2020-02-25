@@ -139,7 +139,7 @@ FROM c_assessment as ca
 
 WHERE cpa.ParentId = :user-id;
 
--- :name get-group-administrations :? :*
+-- :name group-administrations-by-assessment-series :? :*
 -- :doc
 SELECT
     ca.Name AS `assessment-name`,

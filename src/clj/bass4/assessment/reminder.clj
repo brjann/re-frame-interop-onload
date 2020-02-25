@@ -114,7 +114,7 @@
                                                    (:assessment-id %)
                                                    (get assessment-series (:user-id %))))
                                      (into #{}))
-        administrations         (assessment-db/db-participant-administrations-by-user+assessment+series
+        administrations         (assessment-db/remind-participant-administrations-by-user+assessment+series
                                   db user+assessments+series)]
     (group-by #(vector (:user-id %) (:assessment-id %)) administrations)))
 
@@ -131,7 +131,7 @@
                                                      (:assessment-id %)
                                                      (get assessment-series (:group-id %))))
                                        (into #{}))
-        administrations           (assessment-db/db-group-administrations-by-group+assessment+series
+        administrations           (assessment-db/remind-group-administrations-by-user+assessment+series
                                     db groups+assessments+series)]
     (group-by #(vector (:group-id %) (:assessment-id %)) administrations)))
 

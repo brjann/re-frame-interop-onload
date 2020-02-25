@@ -147,7 +147,7 @@ WHERE
 --   MASS ADMINISTRATIONS RETRIEVER
 -- ----------------------------------
 
--- :name get-participant-administrations-by-user+assessment :? :*
+-- :name remind-participant-administrations-by-user+assessment+series :? :*
 -- :doc
 SELECT
 	cpa.ParentId AS `user-id`,

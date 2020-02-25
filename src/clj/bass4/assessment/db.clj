@@ -20,7 +20,11 @@
 (defn potential-activated-flag-participant-administrations
   "Returns participant administrations that are potentially flaggable as activated.
   If participants' group lacks a matching participant administration,
-  :group-administration-id is nil. If they are not in a group, group-id is nil."
+  :group-administration-id is nil. If they are not in a group, group-id is nil.
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db now tz flag-issuer oldest-allowed]
   (let [[date-min date-max] (date-intervals now tz oldest-allowed)]
     (db/potential-activated-flag-participant-administrations db {:date-max date-max
@@ -31,7 +35,11 @@
   "Returns group administrations that are potentially flaggable as activated.
   Note that it is the participants of the owning groups are returned - rather
   than one row per group. If the participants lacks a matching participant
-  administration, :participant-administration-id is nil"
+  administration, :participant-administration-id is nil
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db now tz flag-issuer oldest-allowed]
   (let [[date-min date-max] (date-intervals now tz oldest-allowed)]
     (db/potential-activated-flag-group-administrations db {:date-max date-max
@@ -45,7 +53,14 @@
 (defn potential-late-flag-participant-administrations
   "Returns participant administrations that are potentially flaggable as late.
   If participants' group lacks a matching participant administration,
-  :group-administration-id is nil. If they are not in a group, group-id is nil."
+  :group-administration-id is nil. If they are not in a group, group-id is nil.
+  If there is already a flag present, but it is reflaggable, its flag-id is
+  also included, else nil.
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index
+  :flag-id"
   [db date flag-issuer oldest-allowed]
   (db/potential-late-flag-participant-administrations db {:date           date
                                                           :oldest-allowed (t/minus date (t/days oldest-allowed))
@@ -55,7 +70,14 @@
   "Returns group administrations that are potentially flaggable as late.
   Note that it is the participants of the owning groups are returned - rather
   than one row per group. If the participants lacks a matching participant
-  administration, :participant-administration-id is nil"
+  administration, :participant-administration-id is nil
+  If there is already a flag present, but it is reflaggable, its flag-id is
+  also included, else nil.
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index
+  :flag-id"
   [db date flag-issuer oldest-allowed]
   (db/potential-late-flag-group-administrations db {:date           date
                                                     :oldest-allowed (t/minus date (t/days oldest-allowed))
@@ -66,12 +88,13 @@
 ;; ------------------
 
 (defn users-assessment-series
-  "Returns the assessment series for each user."
+  "Returns the assessment series id for each user."
   [db user-ids]
   (when (seq user-ids)
     (db/get-user-assessment-series db {:user-ids user-ids})))
 
 (defn groups-assessment-series
+  "Returns the assessment series id for each group."
   [db group-ids]
   (when (seq group-ids)
     (db/get-group-assessment-series db {:group-ids group-ids})))
@@ -79,7 +102,11 @@
 (defn potential-activated-remind-participant-administrations
   "Returns participant administrations that should potentially receive activation
   reminders. If participants' group lacks a matching participant administration,
-  :group-administration-id is nil. If they are not in a group, group-id is nil."
+  :group-administration-id is nil. If they are not in a group, group-id is nil.
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db date-min date-max hour]
   (db/potential-activated-remind-participant-administrations db {:date-min date-min
                                                                  :date-max date-max
@@ -90,7 +117,11 @@
   "Returns group administrations that should potentially receive activation
   reminders. Note that it is the participants of the owning groups are returned
   - rather than one row per group. If the participants lacks a matching participant
-  administration, :participant-administration-id is nil"
+  administration, :participant-administration-id is nil
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db date-min date-max hour]
   (db/potential-activated-remind-group-administrations db {:date-min date-min
                                                            :date-max date-max
@@ -99,7 +130,11 @@
 (defn potential-late-remind-participant-administrations
   "Returns participant administrations that should potentially receive late
   reminders. If participants' group lacks a matching participant administration,
-  :group-administration-id is nil. If they are not in a group, group-id is nil."
+  :group-administration-id is nil. If they are not in a group, group-id is nil.
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db date]
   (db/potential-late-remind-participant-administrations db {:date date}))
 
@@ -107,18 +142,30 @@
   "Returns group administrations that should potentially receive late
   reminders. Note that it is the participants of the owning groups are returned
   - rather than one row per group. If the participants lacks a matching participant
-  administration, :participant-administration-id is nil"
+  administration, :participant-administration-id is nil
+  KEYS
+  :user-id :group-id
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
   [db date]
   (db/potential-late-remind-group-administrations db {:date date}))
 
-(defn db-participant-administrations-by-user+assessment+series
+(defn remind-participant-administrations-by-user+assessment+series
+  "Receives a vector of vectors
+  [[user-id assessment-id assessment-series-id] ...]
+  and returns their corresponding participant administrations with
+  reminders sent fields."
   [db user+assessments+series]
-  (db/get-participant-administrations-by-user+assessment
-    db
-    {:user-ids+assessment-ids user+assessments+series}))
+  (when (seq user+assessments+series)
+    (db/remind-participant-administrations-by-user+assessment+series
+      db
+      {:user-ids+assessment-ids user+assessments+series})))
 
-(defn db-group-administrations-by-group+assessment+series
+(defn remind-group-administrations-by-user+assessment+series
   [db groups+assessments+series]
+  "Receives a vector of vectors
+  [[group-id assessment-id assessment-series-id] ...]
+  and returns their corresponding group administrations."
   (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
 
 
@@ -137,7 +184,9 @@
   "Returns the assessment series for a user."
   [db user-id]
   (when user-id
-    (:assessment-series-id (first (users-assessment-series db [user-id])))))
+    (-> (users-assessment-series db [user-id])
+        (first)
+        :assessment-series-id)))
 
 (defn merge-participant-group-administrations
   "Merge participant and group administration for a user that belong to the same assessment"
@@ -148,10 +197,10 @@
        (map (partial apply merge))
        (map #(assoc % :user-id user-id))))
 
-(defn group-administrations
+(defn group-administrations-by-assessment-series
   "Returns the group's administrations belonging to an assessment series"
   [db group-id assessment-series-id]
-  (db/get-group-administrations
+  (db/group-administrations-by-assessment-series
     db
     {:group-id             group-id
      :assessment-series-id assessment-series-id}))
