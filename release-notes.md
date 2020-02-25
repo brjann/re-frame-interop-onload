@@ -1,3 +1,13 @@
+## Version 4.5.2
+Bugfix release. Released on 2020-02-25.
+
+The Clojure flagger introduced in 5.1 did not
+- set the parent of new created flags in objectlist  
+- respect the "no reflag"setting, 
+- deflagged all clinician assessments
+
+These bugs have been fixed. 
+
 ## Version 4.5.1
 Bugfix release. Released on 2020-02-10.
 
