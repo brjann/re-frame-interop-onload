@@ -1,6 +1,5 @@
 (ns bass4.assessment.statuses
   (:require [bass4.utils :as utils]
-            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.resolve-status :as status]))
 
@@ -28,24 +27,24 @@
 
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (assessment-ongoing/db-user-group db user-id)
+  (let [group-id                    (assessment-db/db-user-group db user-id)
         group-administrations       (when group-id
                                       (assessment-db/group-administrations
                                         db
                                         group-id
                                         assessment-series-id))
         participant-administrations (assessment-db/user-administrations db user-id)
-        merged                      (assessment-ongoing/merge-participant-group-administrations
+        merged                      (assessment-db/merge-participant-group-administrations
                                       user-id participant-administrations group-administrations)]
     merged))
 
 (defn user-administrations-statuses
   [db now user-id]
-  (let [assessment-series-id     (assessment-ongoing/user-assessment-series-id db user-id)
+  (let [assessment-series-id     (assessment-db/user-assessment-series-id db user-id)
         administrations          (user+group-administrations db user-id assessment-series-id)
-        assessments-map          (assessment-ongoing/assessments db
-                                                                 user-id
-                                                                 (into #{} (map :assessment-series-id administrations)))
+        assessments-map          (assessment-db/assessments db
+                                                            user-id
+                                                            (into #{} (map :assessment-series-id administrations)))
         administrations-statuses (->> administrations
                                       (group-by #(:assessment-id %))
                                       (map (fn [[assessment-id administrations]]

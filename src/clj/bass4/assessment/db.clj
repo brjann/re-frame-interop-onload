@@ -65,10 +65,28 @@
 ;;       ONGOING
 ;; ------------------
 
+(defn db-user-group
+  [db user-id]
+  (:group-id (db/get-user-group db {:user-id user-id})))
+
 (defn users-assessment-series
   "Returns the assessment series for each user."
   [db user-ids]
   (db/get-user-assessment-series db {:user-ids user-ids}))
+
+
+(defn user-assessment-series-id
+  [db user-id]
+  (when user-id
+    (:assessment-series-id (first (users-assessment-series db [user-id])))))
+
+(defn merge-participant-group-administrations
+  [user-id participant-administrations group-administrations]
+  (->> (concat participant-administrations group-administrations) ;; From https://stackoverflow.com/a/20808420
+       (sort-by (juxt :assessment-id :assessment-index))
+       (partition-by (juxt :assessment-id :assessment-index))
+       (map (partial apply merge))
+       (map #(assoc % :user-id user-id))))
 
 (defn group-administrations
   "Returns the group's administrations belonging to an assessment series"
@@ -89,6 +107,22 @@
   [db user-id assessment-series-ids]
   (when (seq assessment-series-ids)
     (db/get-user-assessments db {:assessment-series-ids assessment-series-ids :parent-id user-id})))
+
+(defn assessments
+  [db user-id assessment-series-ids]
+  (->> (user-assessments db user-id assessment-series-ids)
+       (map #(vector (:assessment-id %) %))
+       (into {})))
+
+(defn filter-ongoing-assessments
+  [assessment-statuses include-clinician?]
+  (filter #(and
+             (= :assessment-status/ongoing (:status %))
+             (not (:is-record? %))
+             (if include-clinician?
+               true
+               (not (:clinician-rated? %))))
+          assessment-statuses))
 
 ;; ------------------
 ;;      REMINDER
