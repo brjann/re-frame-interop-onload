@@ -6,10 +6,6 @@
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.resolve-status :as status]))
 
-(defn db-user-group
-  [db user-id]
-  (:group-id (db/get-user-group db {:user-id user-id})))
-
 (defn db-assessment-instruments
   [db assessment-ids]
   (db/get-assessments-instruments db {:assessment-ids assessment-ids}))
@@ -22,41 +18,18 @@
   [db administration-ids]
   (db/get-administration-additional-instruments db {:administration-ids administration-ids}))
 
-(defn user-assessment-series-id
-  [db user-id]
-  (when user-id
-    (:assessment-series-id (first (assessment-db/users-assessment-series db [user-id])))))
-
-(defn merge-participant-group-administrations
-  [user-id participant-administrations group-administrations]
-  (->> (concat participant-administrations group-administrations) ;; From https://stackoverflow.com/a/20808420
-       (sort-by (juxt :assessment-id :assessment-index))
-       (partition-by (juxt :assessment-id :assessment-index))
-       (map (partial apply merge))
-       (map #(assoc % :user-id user-id))))
-
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (db-user-group db user-id)
+  (let [group-id                    (assessment-db/db-user-group db user-id)
         group-administrations       (when group-id
                                       (assessment-db/group-administrations db group-id assessment-series-id))
         participant-administrations (assessment-db/participant-administrations-by-assessment-series
                                       db
                                       user-id
                                       assessment-series-id)]
-    (merge-participant-group-administrations user-id
-                                             participant-administrations
-                                             group-administrations)))
-
-(defn filter-ongoing-assessments
-  [assessment-statuses include-clinician?]
-  (filter #(and
-             (= :assessment-status/ongoing (:status %))
-             (not (:is-record? %))
-             (if include-clinician?
-               true
-               (not (:clinician-rated? %))))
-          assessment-statuses))
+    (assessment-db/merge-participant-group-administrations user-id
+                                                           participant-administrations
+                                                           group-administrations)))
 
 (defn- add-instruments
   [db assessments]
@@ -80,12 +53,6 @@
          assessments)))
 
 
-(defn assessments
-  [db user-id assessment-series-ids]
-  (->> (assessment-db/user-assessments db user-id assessment-series-ids)
-       (map #(vector (:assessment-id %) %))
-       (into {})))
-
 (defn administrations-by-assessment
   [db user-id assessment-series-id]
   (->> (user+group-administrations db user-id assessment-series-id)
@@ -93,9 +60,9 @@
 
 (defn user-administration-statuses+assessments
   [db now user-id]
-  (let [assessment-series-id     (user-assessment-series-id db user-id)
+  (let [assessment-series-id     (assessment-db/user-assessment-series-id db user-id)
         administrations-map      (administrations-by-assessment db user-id assessment-series-id)
-        assessments-map          (assessments db user-id [assessment-series-id])
+        assessments-map          (assessment-db/assessments db user-id [assessment-series-id])
         administrations-statuses (->> administrations-map
                                       (map (fn [[assessment-id administrations]]
                                              (-> administrations
@@ -105,10 +72,11 @@
     [administrations-statuses assessments-map]))
 
 (defn ongoing-assessments*
+  "Returns assessments that are ongoing for user and should be completed now. "
   [db now user-id]
   (binding [db/*db* nil]
     (let [[administrations-statuses assessments-map] (user-administration-statuses+assessments db now user-id)
-          ongoing (filter-ongoing-assessments administrations-statuses false)]
+          ongoing (assessment-db/filter-ongoing-assessments administrations-statuses false)]
       (when (seq ongoing)
         (->> ongoing
              ;; Add any missing administrations

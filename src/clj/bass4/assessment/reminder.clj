@@ -2,7 +2,6 @@
   (:require [clj-time.core :as t]
             [bass4.utils :as utils]
             [bass4.db.core :as db]
-            [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.create-missing :as missing]
             [clojure.string :as str]
             [bass4.routes.quick-login :as quick-login]
@@ -159,7 +158,7 @@
   (-> administrations
       (#(sort-by :assessment-index %))
       (#(status/get-administration-statuses now % assessment))
-      (assessment-ongoing/filter-ongoing-assessments include-clinician?)))
+      (assessment-db/filter-ongoing-assessments include-clinician?)))
 
 (defn- ongoing-from-potentials
   "Returns list of ALL ongoing assessments based on list of potentials.
