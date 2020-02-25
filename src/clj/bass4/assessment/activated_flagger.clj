@@ -38,11 +38,11 @@
                                      "ReflagDelay"    0
                                      "Issuer"         flag-issuer
                                      "ReferenceId"    administration-id
-                                     "ClosedAt"       0}))
-  (orm/set-objectlist-parent!
-    db
-    flag-id
-    user-id))
+                                     "ClosedAt"       0})
+    (orm/set-objectlist-parent!
+      db
+      flag-id
+      user-id)))
 
 (defn- potential-assessments
   "Returns list of potentially flag assessments for users
