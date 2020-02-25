@@ -8,7 +8,7 @@
 ;;  ACTIVATED FLAGS
 ;; ------------------
 
-(defn date-intervals
+(defn- date-intervals
   [now tz oldest-allowed]
   (let [midnight (client-time/local-midnight now tz)]
     [(-> midnight
@@ -66,10 +66,12 @@
 ;; ------------------
 
 (defn users-assessment-series
+  "Returns the assessment series for each user."
   [db user-ids]
   (db/get-user-assessment-series db {:user-ids user-ids}))
 
 (defn group-administrations
+  "Returns the group's administrations belonging to an assessment series"
   [db group-id assessment-series-id]
   (db/get-group-administrations
     db
