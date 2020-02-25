@@ -144,7 +144,7 @@
                                 (into {})
                                 (vals))
         ongoing-by-flag-id (when (seq potentials)
-                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials false)
+                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
     (db-close-flags! db
