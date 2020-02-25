@@ -5,7 +5,8 @@
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.create-missing :as missing]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.assessment.ongoing-many :as ongoing-many]))
 
 (def oldest-allowed 100)
 (def flag-issuer "tLateAdministrationsFlagger")
@@ -117,7 +118,7 @@
   [db now]
   (let [potentials (potential-assessments db now)
         ongoing    (when (seq potentials)
-                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
+                     (->> (ongoing-many/filter-ongoing-assessments db now potentials true)
                           (missing/add-missing-administrations! db)))]
     (let [[have-flags need-flags] (split-with :flag-id ongoing)]
       (when (seq have-flags)
@@ -134,7 +135,7 @@
                                 (into {})
                                 (vals))
         ongoing-by-flag-id (when (seq potentials)
-                             (->> (assessment-reminder/filter-ongoing-assessments db now potentials false)
+                             (->> (ongoing-many/filter-ongoing-assessments db now potentials false)
                                   (group-by :flag-id)))
         inactive           (remove #(contains? ongoing-by-flag-id (:flag-id %)) potentials)]
     (db-close-flags! db

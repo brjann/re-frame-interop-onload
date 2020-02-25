@@ -5,7 +5,8 @@
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.create-missing :as missing]
             [clj-time.format :as tf]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.assessment.ongoing-many :as ongoing-many]))
 
 (def flag-issuer "tActivatedAdministrationsFlagger")
 (def oldest-allowed 100)
@@ -71,7 +72,7 @@
   [db now tz]
   (let [potentials (potential-assessments db now tz)
         ongoing    (when (seq potentials)
-                     (->> (assessment-reminder/filter-ongoing-assessments db now potentials true)
+                     (->> (ongoing-many/filter-ongoing-assessments db now potentials true)
                           (missing/add-missing-administrations! db)))]
     (when (seq ongoing)
       (let [flag-ids (orm/create-bass-objects-without-parent*! db
