@@ -51,7 +51,7 @@
 (defn filter-ongoing-assessments
   [assessment-statuses include-clinician?]
   (filter #(and
-             (= ::as-ongoing (:status %))
+             (= :assessment-status/ongoing (:status %))
              (not (:is-record? %))
              (if include-clinician?
                true

@@ -19,10 +19,10 @@
   (if (nil? next-administration-status)
     false
     (and (= "MANUAL" repetition-type)
-         (or (= next-administration-status ::as-waiting)
-             (= next-administration-status ::as-ongoing)
-             (= next-administration-status ::as-date-passed)
-             (= next-administration-status ::as-completed)))))
+         (or (= next-administration-status :assessment-status/waiting)
+             (= next-administration-status :assessment-status/ongoing)
+             (= next-administration-status :assessment-status/date-passed)
+             (= next-administration-status :assessment-status/completed)))))
 
 (defn- get-administration-status
   "Does not know about assessment series"
@@ -36,17 +36,17 @@
                     (throw (ex-info "No valid administration" administration))
 
                     (:deleted? administration)
-                    ::as-deleted
+                    :assessment-status/deleted
 
                     (and (some? (:date-completed administration))
                          (> (:date-completed administration) 0))
-                    ::as-completed
+                    :assessment-status/completed
 
                     (false? (:participant-administration-active? administration))
-                    ::as-user-inactive
+                    :assessment-status/user-inactive
 
                     (false? (:group-administration-active? administration))
-                    ::as-group-inactive
+                    :assessment-status/group-inactive
 
                     ;(not (and (if (contains? administration :group-administration-active?)
                     ;            (:group-administration-active? administration)
@@ -54,21 +54,21 @@
                     ;          (if (contains? administration :participant-administration-active?)
                     ;            (:participant-administration-active? administration)
                     ;            true)))
-                    ;::as-inactive
+                    ;:assessment-status/inactive
 
                     (and (= (:scope assessment) 0)
                          (nil? (:participant-administration-id administration)))
-                    ::as-scoped-missing
+                    :assessment-status/scoped-missing
 
                     (and (= (:scope assessment) 1)
                          (nil? (:group-administration-id administration)))
-                    ::as-scoped-missing
+                    :assessment-status/scoped-missing
 
                     (> (:assessment-index administration) (:repetitions assessment))
-                    ::as-superfluous
+                    :assessment-status/superfluous
 
                     (next-manual-ongoing? assessment next-administration-status)
-                    ::as-date-passed
+                    :assessment-status/date-passed
 
                     :else
                     (let [activation-date (get-activation-date administration assessment)
@@ -79,16 +79,16 @@
                         ;; NOT local time. Thus, it is sufficient to compare
                         ;; to t/now which returns UTC time
                         (nil? activation-date)
-                        ::as-no-date
+                        :assessment-status/no-date
 
                         (t/before? now activation-date)
-                        ::as-waiting
+                        :assessment-status/waiting
 
                         (and (some? time-limit) (t/after? now (t/plus activation-date (t/days time-limit))))
-                        ::as-date-passed
+                        :assessment-status/date-passed
 
                         :else
-                        ::as-ongoing)))}))
+                        :assessment-status/ongoing)))}))
 
 (defn get-administration-statuses
   "Does not know about assessment series"
