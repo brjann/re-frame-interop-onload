@@ -2,7 +2,7 @@
 --   LATE FLAG ASSESSMENTS
 -- -------------------------
 
--- :name get-late-flag-participant-administrations :? :*
+-- :name potential-late-flag-participant-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -49,7 +49,7 @@ WHERE
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
 
--- :name get-late-flag-group-administrations :? :*
+-- :name potential-late-flag-group-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -154,7 +154,7 @@ WHERE Issuer = :issuer AND ReferenceId IN(:v*:administration-ids)
 --   ACTIVATED ASSESSMENTS FLAG
 -- ------------------------------
 
--- :name get-flagging-activated-participant-administrations :? :*
+-- :name potential-activated-flag-participant-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,
@@ -190,7 +190,7 @@ WHERE
   AND cpa.Date >= UNIX_TIMESTAMP(:date-min) AND cpa.Date <= UNIX_TIMESTAMP(:date-max);
 
 
--- :name get-flagging-activated-group-administrations :? :*
+-- :name potential-activated-flag-group-administrations :? :*
 -- :doc
 SELECT
 	cp.ObjectId AS `user-id`,

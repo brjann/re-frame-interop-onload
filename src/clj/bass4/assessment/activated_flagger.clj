@@ -48,13 +48,13 @@
    :assessment-id 653636,
    :assessment-index 1,}"
   [db now tz]
-  (let [participant-administrations (assessment-db/activated-flag-participant-administrations
+  (let [participant-administrations (assessment-db/potential-activated-flag-participant-administrations
                                       db
                                       now
                                       tz
                                       flag-issuer
                                       oldest-allowed)
-        group-administration        (assessment-db/activated-flag-group-administrations
+        group-administration        (assessment-db/potential-activated-flag-group-administrations
                                       db
                                       now
                                       tz
