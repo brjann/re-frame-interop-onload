@@ -41,7 +41,9 @@
 
   :start
   (when-let [nrepl-port (env :nrepl-port)]
-    (repl/start {:port nrepl-port}))
+    (repl/start (merge {:port nrepl-port}
+                       (when (env :nrepl-bind)
+                         {:bind (env :nrepl-bind)}))))
 
   :stop
   (when repl-server
