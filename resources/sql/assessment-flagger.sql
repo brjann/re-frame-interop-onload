@@ -3,7 +3,7 @@
 -- -------------------------
 
 -- :name get-late-flag-participant-administrations :? :*
--- :doc
+-- :doc NOTE: ReflagDelay = 0 is the "no reflag" setting
 SELECT
 	cp.ObjectId AS `user-id`,
  (CASE
@@ -44,13 +44,13 @@ WHERE
   AND
     (cf.ObjectId IS NULL
     OR
-      (cf.ReflagPossible = 1
+      ((cf.ReflagPossible = 1 AND cf.ReflagDelay > 0)
       AND cf.ClosedAt > 0
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
 
 -- :name get-late-flag-group-administrations :? :*
--- :doc
+-- :doc NOTE: ReflagDelay = 0 is the "no reflag" setting
 SELECT
 	cp.ObjectId AS `user-id`,
   cp.`Group` AS `group-id`,
@@ -85,7 +85,7 @@ WHERE
   AND
     (cf.ObjectId IS NULL
     OR
-      (cf.ReflagPossible = 1
+      ((cf.ReflagPossible = 1 AND cf.ReflagDelay > 0)
       AND cf.ClosedAt > 0
       AND date_add(from_unixtime(cf.ClosedAt), INTERVAL cf.ReflagDelay DAY) <= :date));
 
