@@ -54,6 +54,19 @@
       (utils/to-unix)
       (- 1)))
 
+(defn- assessment-series-id-by-user-id
+  "Returns map with user-id as keys and assessment-series-id as values"
+  [db user-ids]
+  (let [res (assessment-db/users-assessment-series db user-ids)]
+    (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res)))
+
+(defn- assessment-series-id-by-group-id
+  "Returns map with group-id as keys and assessment-series-id as values"
+  [db group-ids]
+  (let [res (assessment-db/groups-assessment-series db group-ids)]
+    (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res)))
+
+
 (defn- potential-activation-reminders
   "Returns list of potentially activated assessments for users
   {:user-id 653692,
@@ -95,7 +108,7 @@
   [db potential-assessments]
   (let [assessment-series       (->> potential-assessments
                                      (map :user-id)
-                                     (assessment-db/db-users-assessment-series-id db))
+                                     (assessment-series-id-by-user-id db))
         user+assessments+series (->> potential-assessments
                                      (map #(vector (:user-id %)
                                                    (:assessment-id %)
@@ -112,7 +125,7 @@
   (let [potential-assessments     (filter :group-id potential-assessments)
         assessment-series         (->> potential-assessments
                                        (map :group-id)
-                                       (assessment-db/db-groups-assessment-series-id db))
+                                       (assessment-series-id-by-group-id db))
         groups+assessments+series (->> potential-assessments
                                        (map #(vector (:group-id %)
                                                      (:assessment-id %)
