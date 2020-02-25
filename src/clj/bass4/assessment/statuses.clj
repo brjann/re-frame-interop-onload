@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [bass4.utils :as utils]
             [bass4.assessment.ongoing :as assessment-ongoing]
-            [bass4.assessment.db :as assessment-db]))
+            [bass4.assessment.db :as assessment-db]
+            [bass4.assessment.resolve-status :as status]))
 
 (defn group-administrations-statuses
   [db now group-id]
@@ -17,7 +18,7 @@
                                                              group-id
                                                              [assessment-series-id])]
     (->> assessments
-         (map (fn [assessment] (assessment-ongoing/get-administration-statuses
+         (map (fn [assessment] (status/get-administration-statuses
                                  now
                                  (get administrations (:assessment-id assessment))
                                  assessment)))
@@ -51,7 +52,7 @@
                                       (map (fn [[assessment-id administrations]]
                                              (-> administrations
                                                  (#(sort-by :assessment-index %))
-                                                 (#(assessment-ongoing/get-administration-statuses
+                                                 (#(status/get-administration-statuses
                                                      now % (get assessments-map assessment-id))))))
                                       (flatten)
                                       (map #(if (or (utils/in? [user-id assessment-series-id] (:assessment-series-id %))
