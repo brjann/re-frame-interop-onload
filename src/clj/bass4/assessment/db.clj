@@ -68,7 +68,8 @@
 (defn users-assessment-series
   "Returns the assessment series for each user."
   [db user-ids]
-  (db/get-user-assessment-series db {:user-ids user-ids}))
+  (when (seq user-ids)
+    (db/get-user-assessment-series db {:user-ids user-ids})))
 
 (defn groups-assessment-series
   [db group-ids]
@@ -109,18 +110,6 @@
   administration, :participant-administration-id is nil"
   [db date]
   (db/potential-late-remind-group-administrations db {:date date}))
-
-(defn db-users-assessment-series-id
-  "Returns map with user-id as keys and assessment-series-id as values"
-  [db user-ids]
-  (when (seq user-ids)
-    (let [res (users-assessment-series db user-ids)]
-      (into {} (map #(vector (:user-id %) (:assessment-series-id %))) res))))
-
-(defn db-groups-assessment-series-id
-  [db group-ids]
-  (let [res (groups-assessment-series db group-ids)]
-    (into {} (map #(vector (:group-id %) (:assessment-series-id %))) res)))
 
 (defn db-participant-administrations-by-user+assessment+series
   [db user+assessments+series]
