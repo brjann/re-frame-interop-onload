@@ -91,7 +91,10 @@
                         :assessment-status/ongoing)))}))
 
 (defn get-administration-statuses
-  "Does not know about assessment series"
+  "Pure function that takes all of a user's or group's administrations
+  for an assessment and returns them with :status key set.
+  Does not know about assessment series, meaning that it does not matter if
+  the assessment is within or outside the user's or group's assessment series."
   [now administrations assessment]
   (when (seq administrations)
     (let [next-administrations   (get-administration-statuses now (rest administrations) assessment)
