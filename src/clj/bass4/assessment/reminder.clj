@@ -11,7 +11,8 @@
             [bass4.external-messages.email-queue :as email-queue]
             [bass4.external-messages.sms-queue :as sms-queue]
             [bass4.services.bass :as bass]
-            [bass4.assessment.db :as assessment-db]))
+            [bass4.assessment.db :as assessment-db]
+            [bass4.assessment.resolve-status :as status]))
 
 (defn- db-activation-reminders-sent!
   [db administrations]
@@ -157,7 +158,7 @@
   [now administrations assessment include-clinician?]
   (-> administrations
       (#(sort-by :assessment-index %))
-      (#(assessment-ongoing/get-administration-statuses now % assessment))
+      (#(status/get-administration-statuses now % assessment))
       (assessment-ongoing/filter-ongoing-assessments include-clinician?)))
 
 (defn- ongoing-from-potentials
