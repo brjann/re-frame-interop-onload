@@ -63,6 +63,13 @@
   [table-name object-id updates]
   (update-object-properties*! db/*db* table-name object-id updates))
 
+(defn set-objectlist-parent!
+  [db object-id parent-id]
+  (db/update-objectlist-parent!
+    db
+    {:object-id object-id
+     :parent-id parent-id}))
+
 (defn create-flag!
   ([user-id issuer flag-text] (create-flag! user-id issuer flag-text ""))
   ([user-id issuer flag-text flag-icon]

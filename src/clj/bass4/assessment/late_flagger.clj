@@ -88,7 +88,10 @@
                                       "ReflagDelay"    reflag-delay
                                       "Issuer"         flag-issuer
                                       "ReferenceId"    administration-id
-                                      "ClosedAt"       0})))
+                                      "ClosedAt"       0})
+    (bass/set-objectlist-parent! db
+                                 flag-id
+                                 user-id)))
 
 (def ^:dynamic *create-flag-chan* nil)
 
