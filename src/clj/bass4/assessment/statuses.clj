@@ -1,6 +1,5 @@
 (ns bass4.assessment.statuses
-  (:require [bass4.db.core :as db]
-            [bass4.utils :as utils]
+  (:require [bass4.utils :as utils]
             [bass4.assessment.ongoing :as assessment-ongoing]
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.resolve-status :as status]))
