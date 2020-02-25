@@ -42,15 +42,15 @@
       group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
     (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-scoped-missing]
-             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
-             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
-             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]}
+    (is (= #{[ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]
+             [ass-G-s-2-3-p0 1 :assessment-status/ongoing]
+             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
+             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]}
            (user-statuses *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]
-             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]
-             [ass-G-week-e+s-3-4-p10 1 ::assessment-ongoing/as-waiting]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-scoped-missing]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]
+             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
+             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]
+             [ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]}
            (group-statuses *now* group-id)))))
 
 (deftest group-assessment-mysql-old-super-join-fail
@@ -64,11 +64,11 @@
       user-id ass-G-week-e+s-3-4-p10 3)
     (is (= #{[ass-G-week-e+s-3-4-p10 4]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
-             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-G-week-e+s-3-4-p10 3 :assessment-status/date-passed]
+             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))
-    (is (= #{[ass-G-week-e+s-3-4-p10 3 ::assessment-ongoing/as-date-passed]
-             [ass-G-week-e+s-3-4-p10 4 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-G-week-e+s-3-4-p10 3 :assessment-status/date-passed]
+             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]}
            (group-statuses *now* group-id)))))
 
 (deftest group-assessment-timelimit
@@ -78,9 +78,9 @@
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -3 *now*)})
     (is (= #{[ass-G-s-2-3-p0 1]} (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]}
            (group-statuses *now* group-id))))
 
   ; Timelimit too late
@@ -89,9 +89,9 @@
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -40 *now*)})
     (is (= #{} (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/date-passed]}
            (user-statuses *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-date-passed]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/date-passed]}
            (group-statuses *now* group-id)))))
 
 (deftest individual-assessment-in-group-completed
@@ -110,10 +110,10 @@
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-I-week-noremind 1]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
-             [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
-             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/scoped-missing]
+             [ass-I-s-0-p100-message 1 :assessment-status/ongoing]
+             [ass-I-week-noremind 1 :assessment-status/ongoing]
+             [ass-I-week-noremind 4 :assessment-status/waiting]}
            (user-statuses *now* user-id)))
     (is (= #{}
            (group-statuses *now* group-id)))
@@ -121,10 +121,10 @@
     (orm/update-object-properties! "c_participantadministration" adm2 {"datecompleted" (utils/to-unix *now*)})
     (is (= #{}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-completed]
-             [ass-I-week-noremind 1 ::assessment-ongoing/as-completed]
-             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/scoped-missing]
+             [ass-I-s-0-p100-message 1 :assessment-status/completed]
+             [ass-I-week-noremind 1 :assessment-status/completed]
+             [ass-I-week-noremind 4 :assessment-status/waiting]}
            (user-statuses *now* user-id)))))
 
 (deftest individual-assessment-no-group
@@ -143,10 +143,10 @@
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-I-week-noremind 1]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-scoped-missing]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
-             [ass-I-week-noremind 1 ::assessment-ongoing/as-ongoing]
-             [ass-I-week-noremind 4 ::assessment-ongoing/as-waiting]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/scoped-missing]
+             [ass-I-s-0-p100-message 1 :assessment-status/ongoing]
+             [ass-I-week-noremind 1 :assessment-status/ongoing]
+             [ass-I-week-noremind 4 :assessment-status/waiting]}
            (user-statuses *now* user-id)))))
 
 (deftest individual+group-assessment
@@ -162,10 +162,10 @@
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-G-s-2-3-p0 1]}
            (ongoing-assessments *now* user-id)))
-    (is (= #{[ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]
-             [ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-I-s-0-p100-message 1 :assessment-status/ongoing]
+             [ass-G-s-2-3-p0 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))
-    (is (= #{[ass-G-s-2-3-p0 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]}
            (group-statuses *now* group-id)))))
 
 (deftest index-overflow-assessment
@@ -303,14 +303,14 @@
                                    adm1-id
                                    {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
-    (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-wrong-series]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[p2-ass-I1 1 :assessment-status/wrong-series]
+             [ass-I-s-0-p100-message 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))
     (orm/update-object-properties! "c_participantadministration"
                                    adm1-id
                                    {"datecompleted" (utils/to-unix *now*)})
-    (is (= #{[p2-ass-I1 1 ::assessment-ongoing/as-completed]
-             [ass-I-s-0-p100-message 1 ::assessment-ongoing/as-ongoing]}
+    (is (= #{[p2-ass-I1 1 :assessment-status/completed]
+             [ass-I-s-0-p100-message 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))))
 
 (deftest custom-assessment

@@ -24,7 +24,7 @@
                                  assessment)))
          (flatten)
          (filter identity)
-         #_(filter #(not= ::assessment-ongoing/as-scoped-missing (:status %))))))
+         #_(filter #(not= :assessment-status/scoped-missing (:status %))))))
 
 
 (defn- user+group-administrations
@@ -56,8 +56,8 @@
                                                      now % (get assessments-map assessment-id))))))
                                       (flatten)
                                       (map #(if (or (utils/in? [user-id assessment-series-id] (:assessment-series-id %))
-                                                    (= ::assessment-ongoing/as-completed (:status %)))
+                                                    (= :assessment-status/completed (:status %)))
                                               %
-                                              (assoc % :status ::assessment-ongoing/as-wrong-series))))]
+                                              (assoc % :status :assessment-status/wrong-series))))]
     administrations-statuses
-    #_(filter #(not= ::assessment-ongoing/as-scoped-missing (:status %)) administrations-statuses)))
+    #_(filter #(not= :assessment-status/scoped-missing (:status %)) administrations-statuses)))
