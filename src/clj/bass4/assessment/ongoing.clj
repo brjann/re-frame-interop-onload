@@ -4,7 +4,8 @@
             [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]
             [bass4.assessment.db :as assessment-db]
-            [bass4.assessment.resolve-status :as status]))
+            [bass4.assessment.resolve-status :as status]
+            [bass4.services.user :as user-service]))
 
 (defn db-assessment-instruments
   [db assessment-ids]
@@ -20,7 +21,7 @@
 
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (assessment-db/db-user-group db user-id)
+  (let [group-id                    (user-service/user-group-id db user-id)
         group-administrations       (when group-id
                                       (assessment-db/group-administrations db group-id assessment-series-id))
         participant-administrations (assessment-db/participant-administrations-by-assessment-series
@@ -59,6 +60,8 @@
        (group-by #(:assessment-id %))))
 
 (defn user-administration-statuses+assessments
+  "Workhorse function that gets the administrations for a user
+  and determines their status."
   [db now user-id]
   (let [assessment-series-id     (assessment-db/user-assessment-series-id db user-id)
         administrations-map      (administrations-by-assessment db user-id assessment-series-id)
@@ -72,7 +75,9 @@
     [administrations-statuses assessments-map]))
 
 (defn ongoing-assessments*
-  "Returns assessments that are ongoing for user and should be completed now. "
+  "Returns assessments that are ongoing for user and should be completed now.
+  Creates missing participant administrations and injects the instruments that
+  should be completed."
   [db now user-id]
   (binding [db/*db* nil]
     (let [[administrations-statuses assessments-map] (user-administration-statuses+assessments db now user-id)

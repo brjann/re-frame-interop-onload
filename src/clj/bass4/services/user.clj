@@ -2,7 +2,6 @@
   (:require [bass4.db.core :as db]
             [buddy.hashers :as hashers]
             [bass4.config :as config]
-            [bass4.clients.time :as client-time]
             [clojure.string :as str]
             [bass4.utils :as utils]
             [bass4.db.orm-classes :as orm]))
@@ -20,6 +19,10 @@
   [participant-id]
   (when-let [users (db/get-user-by-participant-id {:participant-id participant-id})]
     (mapv #(assoc % :user-id (:objectid %)) users)))
+
+(defn user-group-id
+  [db user-id]
+  (:group-id (db/get-user-group db {:user-id user-id})))
 
 (defn password-hasher
   [password]

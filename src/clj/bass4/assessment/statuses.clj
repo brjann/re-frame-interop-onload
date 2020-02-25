@@ -1,7 +1,8 @@
 (ns bass4.assessment.statuses
   (:require [bass4.utils :as utils]
             [bass4.assessment.db :as assessment-db]
-            [bass4.assessment.resolve-status :as status]))
+            [bass4.assessment.resolve-status :as status]
+            [bass4.services.user :as user-service]))
 
 (defn group-administrations-statuses
   [db now group-id]
@@ -27,7 +28,7 @@
 
 (defn- user+group-administrations
   [db user-id assessment-series-id]
-  (let [group-id                    (assessment-db/db-user-group db user-id)
+  (let [group-id                    (user-service/user-group-id db user-id)
         group-administrations       (when group-id
                                       (assessment-db/group-administrations
                                         db

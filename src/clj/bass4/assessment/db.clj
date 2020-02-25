@@ -65,22 +65,19 @@
 ;;       ONGOING
 ;; ------------------
 
-(defn db-user-group
-  [db user-id]
-  (:group-id (db/get-user-group db {:user-id user-id})))
-
 (defn users-assessment-series
   "Returns the assessment series for each user."
   [db user-ids]
   (db/get-user-assessment-series db {:user-ids user-ids}))
 
-
 (defn user-assessment-series-id
+  "Returns the assessment series for a user."
   [db user-id]
   (when user-id
     (:assessment-series-id (first (users-assessment-series db [user-id])))))
 
 (defn merge-participant-group-administrations
+  "Merge participant and group administration that belong to the same assessment"
   [user-id participant-administrations group-administrations]
   (->> (concat participant-administrations group-administrations) ;; From https://stackoverflow.com/a/20808420
        (sort-by (juxt :assessment-id :assessment-index))
