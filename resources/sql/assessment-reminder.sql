@@ -23,7 +23,8 @@ SELECT
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cpa.Assessment AS `assessment-id`,
-  cpa.AssessmentIndex AS `assessment-index`
+  cpa.AssessmentIndex AS `assessment-index`,
+  cpa.RemindersSent AS `late-reminders-sent`
 FROM
 	c_participant AS cp
     JOIN c_participantadministration AS cpa
@@ -53,7 +54,8 @@ SELECT
   cpa.ObjectId AS `participant-administration-id`,
   cga.ObjectId AS `group-administration-id`,
 	cga.Assessment AS `assessment-id`,
-  cga.AssessmentIndex AS `assessment-index`
+  cga.AssessmentIndex AS `assessment-index`,
+  cpa.RemindersSent AS `late-reminders-sent`
 FROM
 	c_participant AS cp
   JOIN c_groupadministration as cga
@@ -121,10 +123,10 @@ SELECT
 	cp.ObjectId AS `user-id`,
   cp.`Group` AS `group-id`,
   cpa.ObjectId AS `participant-administration-id`,
-  cpa.RemindersSent AS `late-reminders-sent`,
   cga.ObjectId AS `group-administration-id`,
 	cga.Assessment AS `assessment-id`,
-  cga.AssessmentIndex AS `assessment-index`
+  cga.AssessmentIndex AS `assessment-index`,
+  cpa.RemindersSent AS `late-reminders-sent`
 FROM
 	c_participant AS cp
   JOIN c_groupadministration as cga
@@ -157,8 +159,6 @@ SELECT
   ca.ObjectId AS `assessment-id`,
 	cpa.AssessmentIndex AS `assessment-index`,
   cpa.Active AS `participant-administration-active?`,
-#   cpa.EmailSent AS `activation-reminder-sent?`,
-#   cpa.RemindersSent AS `late-reminders-sent`,
 
   (CASE
     WHEN cpa.DateCompleted IS NULL
