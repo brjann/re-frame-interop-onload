@@ -111,7 +111,10 @@
                                                     "SendSMSWhenActivated"         1
                                                     "CompetingAssessmentsPriority" 10
                                                     "RepetitionType"               2
-                                                    "Repetitions"                  4})]
+                                                    "Repetitions"                  4})
+        ass-G-s-2-3-p0         (create-assessment! {"Scope"                        1
+                                                    "SendSMSWhenActivated"         1
+                                                    "CompetingAssessmentsPriority" 0})]
     (create-participant-administration!
       user1-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!
