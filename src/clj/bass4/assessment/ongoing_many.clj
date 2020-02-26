@@ -17,7 +17,7 @@
 
 (defn- participant-administrations-from-potential-assessments
   "Returns all administrations for user-assessment combo,
-  grouped by [user-id assessment-id"
+  grouped by [user-id assessment-id]"
   [db potential-assessments]
   (let [assessment-series       (->> potential-assessments
                                      (map :user-id)
@@ -27,9 +27,9 @@
                                                    (:assessment-id %)
                                                    (get assessment-series (:user-id %))))
                                      (into #{}))
-        administrations         (assessment-db/remind-participant-administrations-by-user+assessment+series
+        administrations         (assessment-db/participant-administrations-by-user+assessment+series
                                   db user+assessments+series)]
-    (group-by #(vector (:user-id %) (:assessment-id %)) administrations)))
+    (group-by (juxt :user-id :assessment-id) administrations)))
 
 (defn- group-administrations-from-potential-assessments
   "Returns all administrations for group-assessment combo,
@@ -44,9 +44,9 @@
                                                      (:assessment-id %)
                                                      (get assessment-series (:group-id %))))
                                        (into #{}))
-        administrations           (assessment-db/remind-group-administrations-by-user+assessment+series
+        administrations           (assessment-db/group-administrations-by-user+assessment+series
                                     db groups+assessments+series)]
-    (group-by #(vector (:group-id %) (:assessment-id %)) administrations)))
+    (group-by (juxt :group-id :assessment-id) administrations)))
 
 (defn- merge-participant-group-administrations
   [user-id participant-administrations group-administrations]

@@ -147,11 +147,12 @@ WHERE
   AND date_add(from_unixtime(cga.`date`), INTERVAL ca.RemindInterval DAY) <= :date
 	AND date_add(from_unixtime(cga.`date`), INTERVAL (ca.RemindInterval * ca.MaxRemindCount + 1) DAY) >= :date;
 
+
 -- ----------------------------------
 --   MASS ADMINISTRATIONS RETRIEVER
 -- ----------------------------------
 
--- :name remind-participant-administrations-by-user+assessment+series :? :*
+-- :name participant-administrations-by-user+assessment+series :? :*
 -- :doc
 SELECT
 	cpa.ParentId AS `user-id`,
@@ -178,7 +179,7 @@ FROM c_participantadministration as cpa
 WHERE (cpa.ParentId, cpa.Assessment, ca.ParentId) IN (:t*:user-ids+assessment-ids);
 
 
--- :name get-group-administrations-by-group+assessment :? :*
+-- :name group-administrations-by-user+assessment+series :? :*
 -- :doc
 SELECT
 	cga.ParentId AS `group-id`,

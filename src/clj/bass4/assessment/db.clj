@@ -106,7 +106,8 @@
   KEYS
   :user-id :group-id
   :participant-administration-id :group-administration-id
-  :assessment-id :assessment-index"
+  :assessment-id :assessment-index
+  :late-reminders-sent"
   [db date-min date-max hour]
   (db/potential-activated-remind-participant-administrations db {:date-min date-min
                                                                  :date-max date-max
@@ -121,7 +122,8 @@
   KEYS
   :user-id :group-id
   :participant-administration-id :group-administration-id
-  :assessment-id :assessment-index"
+  :assessment-id :assessment-index
+  :late-reminders-sent"
   [db date-min date-max hour]
   (db/potential-activated-remind-group-administrations db {:date-min date-min
                                                            :date-max date-max
@@ -134,7 +136,8 @@
   KEYS
   :user-id :group-id
   :participant-administration-id :group-administration-id
-  :assessment-id :assessment-index"
+  :assessment-id :assessment-index
+  :late-reminders-sent"
   [db date]
   (db/potential-late-remind-participant-administrations db {:date date}))
 
@@ -146,27 +149,57 @@
   KEYS
   :user-id :group-id
   :participant-administration-id :group-administration-id
-  :assessment-id :assessment-index"
+  :assessment-id :assessment-index
+  :late-reminders-sent"
   [db date]
   (db/potential-late-remind-group-administrations db {:date date}))
 
-(defn remind-participant-administrations-by-user+assessment+series
-  "Receives a vector of vectors
-  [[user-id assessment-id assessment-series-id] ...]
-  and returns their corresponding participant administrations with
-  reminders sent fields."
-  [db user+assessments+series]
-  (when (seq user+assessments+series)
-    (db/remind-participant-administrations-by-user+assessment+series
-      db
-      {:user-ids+assessment-ids user+assessments+series})))
-
-(defn remind-group-administrations-by-user+assessment+series
-  [db groups+assessments+series]
+(defn participant-administrations-by-user+assessment+series
   "Receives a vector of vectors
   [[group-id assessment-id assessment-series-id] ...]
-  and returns their corresponding group administrations."
-  (db/get-group-administrations-by-group+assessment db {:group-ids+assessment-ids groups+assessments+series}))
+  and returns their corresponding group administrations.
+  KEYS
+  :user-id
+  :date-completed :participant-activation-date
+  :participant-administration-active?
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
+  [db user+assessments+series]
+  (when (seq user+assessments+series)
+    (db/participant-administrations-by-user+assessment+series
+      db
+      {:user-ids+assessment-ids user+assessments+series})))
+;cpa.ParentId AS `user-id`,
+;    cpa.ObjectId AS `participant-administration-id`,
+;    ca.ObjectId AS `assessment-id`,
+;    cpa.AssessmentIndex AS `assessment-index`,
+;    cpa.Active AS `participant-administration-active?`,
+;
+;    (CASE
+;      WHEN cpa.DateCompleted IS NULL
+;      THEN 0
+;      ELSE cpa.DateCompleted
+;      END ) AS `date-completed`,
+;
+;    (CASE
+;      WHEN cpa.`Date` IS NULL OR cpa.`Date` = 0
+;      THEN NULL
+;      ELSE from_unixtime(cpa.`Date`)
+;                             END) AS `participant-activation-date`
+
+(defn group-administrations-by-user+assessment+series
+  "Receives a vector of vectors
+  [[group-id assessment-id assessment-series-id] ...]
+  and returns their corresponding group administrations.
+  KEYS
+  :group-id
+  :group-activation-date :group-administration-active?
+  :participant-administration-id :group-administration-id
+  :assessment-id :assessment-index"
+  [db groups+assessments+series]
+  (db/group-administrations-by-user+assessment+series
+    db
+    {:group-ids+assessment-ids groups+assessments+series}))
 
 
 (defn db-assessments
