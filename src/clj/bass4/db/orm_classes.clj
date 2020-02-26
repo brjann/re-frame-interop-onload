@@ -35,6 +35,14 @@
                                                    (map (fn [[k v]] [(keyword k) v])
                                                         updates))}))
 
+(defn create-link!
+  [linker-id linkee-id link-property linker-class linkee-class]
+  (db/create-bass-link! {:linker-id     linker-id
+                         :linkee-id     linkee-id
+                         :link-property link-property
+                         :linker-class  linker-class
+                         :linkee-class  linkee-class}))
+
 (defn update-object-properties!
   "Allows for updating object properties using strings as field names to
   avoid cluttering the keyword namespace."

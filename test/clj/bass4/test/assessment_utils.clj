@@ -26,27 +26,11 @@
 (def project-ass2-id 658098)
 (def project-ass2-pcollection-id 658099)
 
-(def ass-G-s-2-3-p0 653630)
-(def ass-G-week-e+s-3-4-p10 653631)
-(def ass-I-s-0-p100-message 653632)
-(def ass-I-week-noremind 653633)
-(def ass-I-manual-s-5-10-q 653634)
-(def ass-I-clinician 654215)
-(def ass-I-hour8-2-20 654411)
-
 (def p2-ass-I1 658101)
 (def p2-ass-I2 658106)
 (def p2-ass-G 658102)
 
 (def ass-flag-assessment-series 653629)
-
-(def assessment-ids [ass-G-s-2-3-p0
-                     ass-G-week-e+s-3-4-p10
-                     ass-I-s-0-p100-message
-                     ass-I-week-noremind
-                     ass-I-manual-s-5-10-q
-                     ass-I-clinician
-                     ass-I-hour8-2-20])
 
 (defn create-group!
   []
@@ -155,17 +139,6 @@
   (let [assessment-id     (create-custom-assessment*! user-id)
         administration-id (create-participant-administration! user-id assessment-id 1 {:date date})]
     (additional-instruments! administration-id instrument-ids)))
-
-#_(defn clear-administrations!
-    []
-    (let [qmarks (apply str (interpose \, (repeat (count assessment-ids) \?)))]
-      (jdbc/with-db-transaction [db db/*db*])
-      (jdbc/execute! db/*db*
-                     (cons (str "UPDATE c_participantadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                           assessment-ids))
-      (jdbc/execute! db/*db*
-                     (cons (str "UPDATE c_groupadministration SET Date = 0 WHERE assessment IN (" qmarks ")")
-                           assessment-ids))))
 
 (defn clear-administrations!
   []
