@@ -72,7 +72,9 @@
 (deftest db-flag-group-administration
   (let [group-id1     (create-group!)
         group-id2     (create-group!)
+        _             (user-service/create-user! project-ass1-id {:group group-id1})
         user-id2      (user-service/create-user! project-ass1-id {:group group-id1})
+        _             (user-service/create-user! project-ass1-id {:group group-id2})
         assessment-id (create-assessment! {"Scope"                   1
                                            "FlagParticipantWhenLate" 1
                                            "DayCountUntilLate"       5})]
