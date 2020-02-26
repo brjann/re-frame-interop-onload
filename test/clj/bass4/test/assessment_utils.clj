@@ -76,6 +76,10 @@
                                           properties))
     assessment-id))
 
+(defn link-instrument!
+  [assessment-id instrument-id]
+  (orm/create-link! assessment-id instrument-id "Instruments" "cAssessment" "cInstrument"))
+
 (defn additional-instruments!
   [administration-id instruments-ids]
   (doseq [instrument-id instruments-ids]

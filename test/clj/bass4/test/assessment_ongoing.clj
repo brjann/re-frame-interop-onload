@@ -377,8 +377,8 @@
         ass-G-s-2-3-p0 (create-assessment! {"Scope"        1
                                             "WelcomeText"  "welcome"
                                             "ThankYouText" "thankyou"})]
-    (orm/create-link! ass-G-s-2-3-p0 4743 "Instruments" "cAssessment" "cInstrument")
-    (orm/create-link! ass-G-s-2-3-p0 286 "Instruments" "cAssessment" "cInstrument")
+    (link-instrument! ass-G-s-2-3-p0 4743)
+    (link-instrument! ass-G-s-2-3-p0 286)
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     (let [res (first (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id))]
@@ -393,8 +393,8 @@
         ass-I-s-0-p100-message (create-assessment! {"Scope"        0
                                                     "WelcomeText"  "welcome1"
                                                     "ThankYouText" "thankyou1"})]
-    (orm/create-link! ass-I-s-0-p100-message 4458 "Instruments" "cAssessment" "cInstrument")
-    (orm/create-link! ass-I-s-0-p100-message 1609 "Instruments" "cAssessment" "cInstrument")
+    (link-instrument! ass-I-s-0-p100-message 4458)
+    (link-instrument! ass-I-s-0-p100-message 1609)
     ; Today
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
