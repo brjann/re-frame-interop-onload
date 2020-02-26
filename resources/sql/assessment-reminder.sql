@@ -198,7 +198,7 @@ FROM c_groupadministration as cga
         ON (ca.ObjectId = cga.Assessment)
 WHERE (cga.ParentId, cga.Assessment, ca.ParentId) IN (:t*:group-ids+assessment-ids);
 
--- :name get-remind-assessments :? :*
+-- :name assessments :? :*
 -- :doc
 SELECT
     ObjectId AS `assessment-id`,
@@ -250,7 +250,6 @@ SELECT
     SortOrder AS `sort-order`
 FROM c_assessment
 WHERE ObjectId IN(:v*:assessment-ids);
-
 
 -- :name activation-reminders-sent! :! :1
 -- :doc

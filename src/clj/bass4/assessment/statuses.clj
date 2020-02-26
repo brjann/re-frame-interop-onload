@@ -43,9 +43,9 @@
   [db now user-id]
   (let [assessment-series-id     (assessment-db/user-assessment-series-id db user-id)
         administrations          (user+group-administrations db user-id assessment-series-id)
-        assessments-map          (assessment-db/assessments db
-                                                            user-id
-                                                            (into #{} (map :assessment-series-id administrations)))
+        assessments-map          (assessment-db/user-assessments-by-assessment-id db
+                                                                                  user-id
+                                                                                  (into #{} (map :assessment-series-id administrations)))
         administrations-statuses (->> administrations
                                       (group-by #(:assessment-id %))
                                       (map (fn [[assessment-id administrations]]

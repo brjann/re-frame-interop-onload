@@ -202,10 +202,11 @@
     {:group-ids+assessment-ids groups+assessments+series}))
 
 
-(defn db-assessments
+(defn assessments-by-assessment-id
+  "Returns a map of assessments keyed by assessment-id"
   [db assessment-ids]
   (when assessment-ids
-    (->> (db/get-remind-assessments db {:assessment-ids assessment-ids})
+    (->> (db/assessments db {:assessment-ids assessment-ids})
          (map #(vector (:assessment-id %) %))
          (into {}))))
 
@@ -250,7 +251,7 @@
   (when (seq assessment-series-ids)
     (db/get-user-assessments db {:assessment-series-ids assessment-series-ids :parent-id user-id})))
 
-(defn assessments
+(defn user-assessments-by-assessment-id
   [db user-id assessment-series-ids]
   (->> (user-assessments db user-id assessment-series-ids)
        (map #(vector (:assessment-id %) %))

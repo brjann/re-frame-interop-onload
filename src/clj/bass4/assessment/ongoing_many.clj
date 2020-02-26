@@ -74,9 +74,9 @@
         participant-administrations-grouped (participant-administrations-from-potential-assessments db potentials)
         group-administrations-grouped       (when-not (empty? user-groups)
                                               (group-administrations-from-potential-assessments db potentials))
-        assessments'                        (assessment-db/db-assessments db (->> potentials
-                                                                                  (map :assessment-id)
-                                                                                  (into #{})))
+        assessments'                        (assessment-db/assessments-by-assessment-id db (->> potentials
+                                                                                                (map :assessment-id)
+                                                                                                (into #{})))
         merged-by-user+assessment           (->> potentials
                                                  (map #(vector (:user-id %) (:assessment-id %)))
                                                  (map (fn [[user-id assessment-id]]
@@ -101,8 +101,9 @@
     ongoing-assessments))
 
 (defn filter-ongoing-assessments
-  "Receives a sequence of potentially ongoing assessments
-  and returns the ones that are actually ongoing."
+  "Receives a sequence of potentially ongoing administrations.
+  and returns the ones that are actually ongoing.
+  Adds assessment fields to the administration maps"
   ([db now potentials] (filter-ongoing-assessments db now potentials false))
   ([db now potentials include-clinician?]
    (when (seq potentials)

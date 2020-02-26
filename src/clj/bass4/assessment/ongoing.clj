@@ -68,7 +68,7 @@
   [db now user-id]
   (let [assessment-series-id     (assessment-db/user-assessment-series-id db user-id)
         administrations-map      (administrations-by-assessment db user-id assessment-series-id)
-        assessments-map          (assessment-db/assessments db user-id [assessment-series-id])
+        assessments-map          (assessment-db/user-assessments-by-assessment-id db user-id [assessment-series-id])
         administrations-statuses (->> administrations-map
                                       (map (fn [[assessment-id administrations]]
                                              (-> administrations
