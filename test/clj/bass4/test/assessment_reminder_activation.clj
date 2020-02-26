@@ -114,7 +114,11 @@
                                                     "Repetitions"                  4})
         ass-G-s-2-3-p0         (create-assessment! {"Scope"                        1
                                                     "SendSMSWhenActivated"         1
-                                                    "CompetingAssessmentsPriority" 0})]
+                                                    "CompetingAssessmentsPriority" 0})
+        ass-I-week-noremind    (create-assessment! {"Scope"                      0
+                                                    "RemindParticipantsWhenLate" 1
+                                                    "RemindInterval"             5
+                                                    "MaxRemindCount"             10})]
     (create-participant-administration!
       user1-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     (create-participant-administration!

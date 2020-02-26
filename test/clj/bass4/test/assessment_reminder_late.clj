@@ -63,20 +63,29 @@
            (reminders *now*)))))
 
 (deftest late-participant
-  (let [user1-id              (user-service/create-user! project-ass1-id)
-        user2-id              (user-service/create-user! project-ass1-id)
-        ass-I-manual-s-5-10-q (create-assessment! {"Scope"                        0
-                                                   "SendSMSWhenActivated"         1
-                                                   "RemindParticipantsWhenLate"   1
-                                                   "RemindInterval"               5
-                                                   "MaxRemindCount"               10
-                                                   "CompetingAssessmentsPriority" 10
-                                                   "RepetitionType"               2
-                                                   "Repetitions"                  4})
-        ass-I-week-noremind   (create-assessment! {"Scope"                      0
-                                                   "RemindParticipantsWhenLate" 1
-                                                   "RemindInterval"             5
-                                                   "MaxRemindCount"             10})]
+  (let [user1-id               (user-service/create-user! project-ass1-id)
+        user2-id               (user-service/create-user! project-ass1-id)
+        ass-I-manual-s-5-10-q  (create-assessment! {"Scope"                        0
+                                                    "SendSMSWhenActivated"         1
+                                                    "RemindParticipantsWhenLate"   1
+                                                    "RemindInterval"               5
+                                                    "MaxRemindCount"               10
+                                                    "CompetingAssessmentsPriority" 10
+                                                    "RepetitionType"               2
+                                                    "Repetitions"                  4})
+        ass-I-week-noremind    (create-assessment! {"Scope"                      0
+                                                    "RemindParticipantsWhenLate" 1
+                                                    "RemindInterval"             5
+                                                    "MaxRemindCount"             10})
+        ass-I-s-0-p100-message (create-assessment! {"Scope"                        0
+                                                    "SendSMSWhenActivated"         1
+                                                    "CompetingAssessmentsPriority" 100})
+        ass-I-hour8-2-20       (create-assessment! {"Scope"                      0
+                                                    "SendEmailWhenActivated"     1
+                                                    "ActivationHour"             8
+                                                    "RemindParticipantsWhenLate" 1
+                                                    "RemindInterval"             2
+                                                    "MaxRemindCount"             20})]
     (create-participant-administration!
       user1-id ass-I-manual-s-5-10-q 2 {:date (midnight+d -6 *now*)})
     ; Hour does not matter when late
@@ -280,7 +289,12 @@
                                                     "RemindParticipantsWhenLate"   1
                                                     "RemindInterval"               2
                                                     "MaxRemindCount"               3
-                                                    "CompetingAssessmentsPriority" 0})]
+                                                    "CompetingAssessmentsPriority" 0})
+        ass-I-s-0-p100-message (create-assessment! {"Scope"                        0
+                                                    "SendSMSWhenActivated"         1
+                                                    "CompetingAssessmentsPriority" 100
+                                                    "CustomReminderMessage"        "message"
+                                                    "UseStandardMessage"           0})]
 
     (create-group-administration!
       group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
