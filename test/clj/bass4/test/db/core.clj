@@ -21,16 +21,3 @@
       (is (= "" (:subject message)))
       (is (= 1 1))
       (is (= "Message" (:text message))))))
-
-
-(deftest edn-1
-  (is (= (get-edn "edn-1") {:group-name nil :group-id nil})))
-
-#_(defn get-redefs-1
-  []
-  (with-redefs [db/get-user-by-user-id (constantly {:objectid 9})]
-    (user-service/get-user 3443)))
-
-#_(deftest redefs-1
-  (is (= (get-redefs-1) {:objectid 9, :user-id 9})))
-

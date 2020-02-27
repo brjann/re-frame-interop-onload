@@ -42,7 +42,10 @@
                                                    "ThankYouText"                             "TTTP"
                                                    "CompetingAssessmentsPriority"             2
                                                    "CompetingAssessmentsAllowSwallow"         1
-                                                   "CompetingAssessmentsShowTextsIfSwallowed" 0})]
+                                                   "CompetingAssessmentsShowTextsIfSwallowed" 0})
+        no-text               (create-assessment! {"Scope"        0
+                                                   "WelcomeText"  ""
+                                                   "ThankYouText" ""})]
     (link-instrument! top-top-priority 4431)                ; HAD
     (link-instrument! top-top-priority 4743)                ; Agoraphobic Cognitions Questionnaire
     (link-instrument! top-priority 286)                     ; AAQ
@@ -50,7 +53,10 @@
     (link-instrument! top-priority 4568)                    ; PHQ-9
     (link-instrument! second-priority-alone 4488)           ; WHODAS clinician rated
     (link-instrument! second-priority-alone 4431)           ; HAD
+    (link-instrument! no-text 4568)                         ; PHQ-9
+    (link-instrument! no-text 4431)                         ; HAD
 
+    ;; Three ongoing assessments
     (let [user-id1 (user-service/create-user! project-ass1-id)
           adm-ttp  (create-participant-administration!
                      user-id1 top-top-priority 1 {:date (midnight *now*)})
@@ -112,6 +118,8 @@
              (->> (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id1)
                   (administration/generate-assessment-round user-id1)
                   (map #(select-keys % [:batch-id :step :texts :instrument-id :administration-id]))))))
+
+    ;; (Partially) completed assessments
     (let [user-id2 (user-service/create-user! project-ass1-id)
           adm-ttp2 (create-participant-administration!
                      user-id2 top-top-priority 1 {:date (midnight *now*)})
@@ -155,4 +163,21 @@
                     :administration-id nil})
              (->> (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id2)
                   (administration/generate-assessment-round user-id2)
+                  (map #(select-keys % [:batch-id :step :texts :instrument-id :administration-id]))))))
+    ;; No texts
+    (let [user-id3 (user-service/create-user! project-ass1-id)
+          adm-nt   (create-participant-administration!
+                     user-id3 no-text 1 {:date (midnight *now*)})]
+      (is (= (list {:batch-id          0,
+                    :step              0,
+                    :texts             nil,
+                    :instrument-id     4568,
+                    :administration-id adm-nt}
+                   {:batch-id          0,
+                    :step              1,
+                    :texts             nil,
+                    :instrument-id     4431,
+                    :administration-id adm-nt})
+             (->> (assessment-ongoing/ongoing-assessments* db/*db* *now* user-id3)
+                  (administration/generate-assessment-round user-id3)
                   (map #(select-keys % [:batch-id :step :texts :instrument-id :administration-id]))))))))
