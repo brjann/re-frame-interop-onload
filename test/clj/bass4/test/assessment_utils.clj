@@ -33,48 +33,50 @@
 (def ass-flag-assessment-series 653629)
 
 (defn create-group!
-  []
-  (:objectid (db/create-bass-object! {:class-name    "cGroup"
-                                      :parent-id     project-ass1-id
-                                      :property-name "Groups"})))
+  ([] (create-group! project-ass1-id))
+  ([project-id]
+   (:objectid (db/create-bass-object! {:class-name    "cGroup"
+                                       :parent-id     project-id
+                                       :property-name "Groups"}))))
 
 (defn create-assessment!
-  [properties]
-  (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
-                                                          :parent-id     ass-flag-assessment-series
-                                                          :property-name "Assessments"}))]
-    (orm/update-object-properties! "c_assessment"
-                                   assessment-id
-                                   (merge {"Name"                                     (str "Assessment " assessment-id)
-                                           "ShuffleInstruments"                       0
-                                           "Scope"                                    0
-                                           "Type"                                     ""
-                                           "RepetitionType"                           0
-                                           "Repetitions"                              0
-                                           "TimeLimit"                                0
-                                           "SendSMSWhenActivated"                     0
-                                           "SendEmailWhenActivated"                   0
-                                           "RemindParticipantsWhenLate"               0
-                                           "RemindInterval"                           1
-                                           "MaxRemindCount"                           0
-                                           "CustomReminderMessage"                    ""
-                                           "ActivatedEmailSubject"                    "Information"
-                                           "ReminderEmailSubject"                     "Reminder"
-                                           "UseStandardMessage"                       1
-                                           "FlagParticipantWhenActivated"             0
-                                           "FlagParticipantWhenLate"                  0
-                                           "DayCountUntilLate"                        0
-                                           "CustomRepetitionInterval"                 0
-                                           "IsRecord"                                 0
-                                           "CompetingAssessmentsPriority"             10
-                                           "CompetingAssessmentsAllowSwallow"         1
-                                           "CompetingAssessmentsShowTextsIfSwallowed" 0
-                                           "CreateNewQuickLoginOnActivation"          0
-                                           "ClinicianAssessment"                      0
-                                           "ActivationHour"                           0
-                                           "Deleted"                                  0}
-                                          properties))
-    assessment-id))
+  ([properties] (create-assessment! ass-flag-assessment-series properties))
+  ([project-id properties]
+   (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
+                                                           :parent-id     project-id
+                                                           :property-name "Assessments"}))]
+     (orm/update-object-properties! "c_assessment"
+                                    assessment-id
+                                    (merge {"Name"                                     (str "Assessment " assessment-id)
+                                            "ShuffleInstruments"                       0
+                                            "Scope"                                    0
+                                            "Type"                                     ""
+                                            "RepetitionType"                           0
+                                            "Repetitions"                              0
+                                            "TimeLimit"                                0
+                                            "SendSMSWhenActivated"                     0
+                                            "SendEmailWhenActivated"                   0
+                                            "RemindParticipantsWhenLate"               0
+                                            "RemindInterval"                           1
+                                            "MaxRemindCount"                           0
+                                            "CustomReminderMessage"                    ""
+                                            "ActivatedEmailSubject"                    "Information"
+                                            "ReminderEmailSubject"                     "Reminder"
+                                            "UseStandardMessage"                       1
+                                            "FlagParticipantWhenActivated"             0
+                                            "FlagParticipantWhenLate"                  0
+                                            "DayCountUntilLate"                        0
+                                            "CustomRepetitionInterval"                 0
+                                            "IsRecord"                                 0
+                                            "CompetingAssessmentsPriority"             10
+                                            "CompetingAssessmentsAllowSwallow"         1
+                                            "CompetingAssessmentsShowTextsIfSwallowed" 0
+                                            "CreateNewQuickLoginOnActivation"          0
+                                            "ClinicianAssessment"                      0
+                                            "ActivationHour"                           0
+                                            "Deleted"                                  0}
+                                           properties))
+     assessment-id)))
 
 (defn link-instrument!
   [assessment-id instrument-id]

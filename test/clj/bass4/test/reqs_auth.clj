@@ -12,19 +12,6 @@
             [bass4.config :as config]
             [clojure.tools.logging :as log]))
 
-(def project-no-double-auth 536818)
-
-(defn create-user-with-password!
-  ([] (create-user-with-password! {}))
-  ([properties]
-   (let [user-id (user-service/create-user! project-double-auth)]
-     (user-service/update-user-properties!
-       user-id
-       (merge {:username user-id
-               :password user-id}
-              properties))
-     user-id)))
-
 (use-fixtures
   :once
   test-fixtures

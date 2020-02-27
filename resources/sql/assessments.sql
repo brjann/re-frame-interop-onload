@@ -364,13 +364,6 @@ WHERE
   cpa.ParentId = :user-id AND cia.DateCompleted > 0;
 
 
--- :name get-assessments-with-date :? :*
--- :doc used for testing
-SELECT Assessment AS `assessment-id` FROM
-  c_participantadministration
-WHERE
-  parentid = :user-id AND (DateCompleted = 0 OR DateCompleted IS NULL) AND `Date` > 0;
-
 -- :name get-dependent-assessments :? :*
 SELECT
   ca2.ObjectId AS `assessment-id`,

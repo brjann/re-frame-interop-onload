@@ -31,6 +31,8 @@
             [bass4.services.user :as user-service]))
 
 (def project-double-auth 536972)
+(def project-double-auth-assessment-series 536974)
+(def project-no-double-auth 536818)
 (def project-tx 543018)
 (def tx-autoaccess 551356)
 (def tx-ns-tests 642517)
@@ -73,6 +75,17 @@
        (user-service/update-user-properties! user-id {:username user-id
                                                       :password user-id}))
      (link-user-to-treatment! user-id treatment-id access-properties)
+     user-id)))
+
+(defn create-user-with-password!
+  ([] (create-user-with-password! {}))
+  ([properties]
+   (let [user-id (user-service/create-user! project-double-auth)]
+     (user-service/update-user-properties!
+       user-id
+       (merge {:username user-id
+               :password user-id}
+              properties))
      user-id)))
 
 (defmacro fix-time
