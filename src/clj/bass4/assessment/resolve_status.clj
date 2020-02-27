@@ -2,9 +2,10 @@
   (:require [clj-time.core :as t]))
 
 (defn- get-time-limit
-  [{:keys [time-limit is-record repetition-interval repetition-type]}]
-  (when
-    (or (> time-limit 0) (and (not is-record) (= repetition-type "INTERVAL")))
+  [{:keys [time-limit is-record? repetition-interval repetition-type]}]
+  (when (or (> time-limit 0)
+            (and (not is-record?)
+                 (= repetition-type "INTERVAL")))
     (apply min (filter (complement zero?) [time-limit repetition-interval]))))
 
 (defn- get-activation-date
@@ -27,68 +28,72 @@
 (defn- get-administration-status
   "Does not know about assessment series"
   [now administration next-administration-status assessment]
-  (merge administration
-         (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated? :scope])
-         {:status (cond
-                    (= (:participant-administration-id administration)
-                       (:group-administration-id administration)
-                       nil)
-                    (throw (ex-info "No valid administration" administration))
+  (let [res (merge administration
+                   (select-keys assessment [:assessment-id :is-record? :assessment-name :clinician-rated? :scope])
+                   {:status (cond
+                              (:corrupt? assessment)
+                              :assessment-status/corrupt
 
-                    (:deleted? administration)
-                    :assessment-status/deleted
+                              (= (:participant-administration-id administration)
+                                 (:group-administration-id administration)
+                                 nil)
+                              (throw (ex-info "No valid administration" administration))
 
-                    (and (some? (:date-completed administration))
-                         (> (:date-completed administration) 0))
-                    :assessment-status/completed
+                              (:deleted? administration)
+                              :assessment-status/deleted
 
-                    (false? (:participant-administration-active? administration))
-                    :assessment-status/user-inactive
+                              (and (some? (:date-completed administration))
+                                   (> (:date-completed administration) 0))
+                              :assessment-status/completed
 
-                    (false? (:group-administration-active? administration))
-                    :assessment-status/group-inactive
+                              (false? (:participant-administration-active? administration))
+                              :assessment-status/user-inactive
 
-                    ;(not (and (if (contains? administration :group-administration-active?)
-                    ;            (:group-administration-active? administration)
-                    ;            true)
-                    ;          (if (contains? administration :participant-administration-active?)
-                    ;            (:participant-administration-active? administration)
-                    ;            true)))
-                    ;:assessment-status/inactive
+                              (false? (:group-administration-active? administration))
+                              :assessment-status/group-inactive
 
-                    (and (= (:scope assessment) 0)
-                         (nil? (:participant-administration-id administration)))
-                    :assessment-status/scoped-missing
+                              ;(not (and (if (contains? administration :group-administration-active?)
+                              ;            (:group-administration-active? administration)
+                              ;            true)
+                              ;          (if (contains? administration :participant-administration-active?)
+                              ;            (:participant-administration-active? administration)
+                              ;            true)))
+                              ;:assessment-status/inactive
 
-                    (and (= (:scope assessment) 1)
-                         (nil? (:group-administration-id administration)))
-                    :assessment-status/scoped-missing
+                              (and (= (:scope assessment) 0)
+                                   (nil? (:participant-administration-id administration)))
+                              :assessment-status/scoped-missing
 
-                    (> (:assessment-index administration) (:repetitions assessment))
-                    :assessment-status/superfluous
+                              (and (= (:scope assessment) 1)
+                                   (nil? (:group-administration-id administration)))
+                              :assessment-status/scoped-missing
 
-                    (next-manual-ongoing? assessment next-administration-status)
-                    :assessment-status/date-passed
+                              (> (:assessment-index administration) (:repetitions assessment))
+                              :assessment-status/superfluous
 
-                    :else
-                    (let [activation-date (get-activation-date administration assessment)
-                          time-limit      (get-time-limit assessment)]
-                      (cond
-                        ;; REMEMBER:
-                        ;; activation-date is is UTC time of activation,
-                        ;; NOT local time. Thus, it is sufficient to compare
-                        ;; to t/now which returns UTC time
-                        (nil? activation-date)
-                        :assessment-status/no-date
+                              (next-manual-ongoing? assessment next-administration-status)
+                              :assessment-status/date-passed
 
-                        (t/before? now activation-date)
-                        :assessment-status/waiting
+                              :else
+                              (let [activation-date (get-activation-date administration assessment)
+                                    time-limit      (get-time-limit assessment)]
+                                (cond
+                                  ;; REMEMBER:
+                                  ;; activation-date is is UTC time of activation,
+                                  ;; NOT local time. Thus, it is sufficient to compare
+                                  ;; to t/now which returns UTC time
+                                  (nil? activation-date)
+                                  :assessment-status/no-date
 
-                        (and (some? time-limit) (t/after? now (t/plus activation-date (t/days time-limit))))
-                        :assessment-status/date-passed
+                                  (t/before? now activation-date)
+                                  :assessment-status/waiting
 
-                        :else
-                        :assessment-status/ongoing)))}))
+                                  (and (some? time-limit) (t/after? now (t/plus activation-date (t/days time-limit))))
+                                  :assessment-status/date-passed
+
+                                  :else
+                                  :assessment-status/ongoing)))})]
+    res))
 
 (defn get-administration-statuses
   "Pure function that takes all of a user's or group's administrations

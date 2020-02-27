@@ -54,7 +54,13 @@ SELECT
     CompetingAssessmentsShowTextsIfSwallowed AS `show-texts-if-swallowed?`,
     WelcomeText AS `welcome-text`,
     ThankYouText AS `thank-you-text`,
-   ShuffleInstruments AS `shuffle-instruments`
+   ShuffleInstruments AS `shuffle-instruments`,
+   (CASE
+          WHEN (RepetitionType IS NULL)
+            OR (Scope IS NULL)
+              THEN 1
+          ELSE 0
+          END) AS `corrupt?`
 
 FROM c_assessment
 WHERE parentid IN(:v*:assessment-series-ids) OR parentid = :parent-id;

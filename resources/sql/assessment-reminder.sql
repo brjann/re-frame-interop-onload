@@ -247,7 +247,13 @@ SELECT
     ActivatedEmailSubject AS `activation-email-subject`,
     ReminderEmailSubject AS `late-email-subject`,
     CreateNewQuickLoginOnActivation AS `generate-quick-login?`,
-    SortOrder AS `sort-order`
+    SortOrder AS `sort-order`,
+   (CASE
+          WHEN (RepetitionType IS NULL)
+            OR (Scope IS NULL)
+              THEN 1
+          ELSE 0
+          END) AS `corrupt?`
 FROM c_assessment
 WHERE ObjectId IN(:v*:assessment-ids);
 
