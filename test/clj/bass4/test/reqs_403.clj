@@ -13,7 +13,10 @@
                                      poll-message-chan]]
             [bass4.external-messages.async :refer [*debug-chan*]]
             [kerodon.test :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.services.user :as user-service]))
+
+(def project-double-auth 536972)
 
 (use-fixtures
   :once
@@ -37,11 +40,12 @@
       (has (some-text? "Go to"))))
 
 (deftest request-403-get-logged-in
-  (-> *s*
-      (modify-session {:user-id 535771 :double-authed? true})
-      (visit "/debug/403")
-      (has (status? 403))
-      (has (some-text? "go to"))))
+  (let [user-id (user-service/create-user! project-double-auth)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/debug/403")
+        (has (status? 403))
+        (has (some-text? "go to")))))
 
 (deftest request-found
   (-> *s*
@@ -60,8 +64,9 @@
       (has (text? "login"))))
 
 (deftest request-403-ajax-post-reload
-  (-> *s*
-      (modify-session {:user-id 535771 :double-authed? true})
-      (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
-      (has (status? 403))
-      (has (some-text? "reload"))))
+  (let [user-id (user-service/create-user! project-double-auth)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/debug/403" :request-method :post :headers {"x-requested-with" "XMLHttpRequest"})
+        (has (status? 403))
+        (has (some-text? "reload")))))
