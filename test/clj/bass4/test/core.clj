@@ -27,9 +27,13 @@
             [bass4.db.core :as db]
             [net.cgrand.enlive-html :as enlive]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.services.user :as user-service]))
 
 (def project-double-auth 536972)
+(def project-tx 543018)
+(def tx-autoaccess 551356)
+(def tx-ns-tests 642517)
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -41,6 +45,35 @@
   [s session]
   (binding [mw-debug/*session-modification* session]
     (visit s "/debug/nothing")))
+
+(defn link-user-to-treatment!
+  [user-id treatment-id access-properties]
+  (let [treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
+                                                                :parent-id     user-id
+                                                                :property-name "TreatmentAccesses"}))]
+    (db/update-object-properties! {:table-name "c_treatmentaccess"
+                                   :object-id  treatment-access-id
+                                   :updates    (merge {:AccessEnabled true}
+                                                      access-properties)})
+    (db/create-bass-link! {:linker-id     treatment-access-id
+                           :linkee-id     treatment-id
+                           :link-property "Treatment"
+                           :linker-class  "cTreatmentAccess"
+                           :linkee-class  "cTreatment"})))
+
+(defn create-user-with-treatment!
+  ([treatment-id]
+   (create-user-with-treatment! treatment-id false {}))
+  ([treatment-id with-login?]
+   (create-user-with-treatment! treatment-id with-login? {}))
+  ([treatment-id with-login? access-properties]
+   (let [user-id (user-service/create-user! project-tx {:Group     "537404"
+                                                        :firstname "tx-text"})]
+     (when with-login?
+       (user-service/update-user-properties! user-id {:username user-id
+                                                      :password user-id}))
+     (link-user-to-treatment! user-id treatment-id access-properties)
+     user-id)))
 
 (defmacro fix-time
   [body]

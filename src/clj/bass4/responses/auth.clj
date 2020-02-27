@@ -270,9 +270,9 @@
 
       (auth-service/authenticate-by-user-id user-id password)
       (-> (http-response/found "/user")
-          (assoc :session (merge session {:external-login?   nil
-                                          :limited-access?   nil
-                                          :double-authed?    true})))
+          (assoc :session (merge session {:external-login? nil
+                                          :limited-access? nil
+                                          :double-authed?  true})))
 
       :else
       (http-errors/error-422 "error"))))

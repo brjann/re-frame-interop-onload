@@ -9,13 +9,18 @@
 (defn double-auth-code []
   (passwords/letters-digits 3))
 
+
+(defn double-auth-required?* [settings]
+  ":user-skip? :sms? :email? :allow-skip? :allow-both?"
+  (let [{:keys [sms? email? user-skip? allow-skip?]} settings]
+    (cond
+      (and (not sms?) (not email?)) false
+      (and allow-skip? user-skip?) false
+      :else settings)))
+
 (defn double-auth-required? [user-id]
   (if-let [settings (db/get-double-auth-settings {:user-id user-id})]
-    (let [{:keys [sms? email? user-skip? allow-skip?]} settings]
-      (cond
-        (and (not sms?) (not email?)) false
-        (and allow-skip? user-skip?) false
-        :else settings))
+    (double-auth-required?* settings)
     false))
 
 (defn- authenticate-user

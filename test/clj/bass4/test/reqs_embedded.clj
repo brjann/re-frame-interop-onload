@@ -209,11 +209,11 @@
           (visit "/embedded/instrument/1647")
           (has (status? 200))))))
 
-(defn create-user-with-treatment!
+(defn create-user-with-treatment2!
   ([treatment-id]
-   (create-user-with-treatment! treatment-id false {}))
+   (create-user-with-treatment2! treatment-id false {}))
   ([treatment-id with-login?]
-   (create-user-with-treatment! treatment-id with-login? {}))
+   (create-user-with-treatment2! treatment-id with-login? {}))
   ([treatment-id with-login? access-properties]
    (let [user-id             (user-service/create-user! 543018 {:Group     "537404"
                                                                 :firstname "tx-text"})
@@ -238,7 +238,7 @@
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
   (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
-    (let [[user-id treatment-access-id] (create-user-with-treatment! 551356)
+    (let [[user-id treatment-access-id] (create-user-with-treatment2! 551356)
           uid1    (php-interop/uid-for-data! {:user-id 110 :php-session-id "xxx" :path ""})
           uid2    (php-interop/uid-for-data! {:user-id        110
                                               :php-session-id "xxx"
@@ -279,7 +279,7 @@
 
 (deftest embedded-api-ns
   (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
-    (let [[user-id treatment-access-id] (create-user-with-treatment! 642517)
+    (let [[user-id treatment-access-id] (create-user-with-treatment2! 642517)
           api-url (fn [url] (str url "?user-id=" user-id "&treatment-access-id=" treatment-access-id))
           uid     (php-interop/uid-for-data! {:user-id        110
                                               :php-session-id "xxx"
