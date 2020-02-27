@@ -29,6 +29,8 @@
             [bass4.middleware.request-logger :as request-logger]
             [bass4.clients.core :as clients]))
 
+(def project-double-auth 536972)
+
 (def s (atom nil))
 (def ^:dynamic *s* nil)
 

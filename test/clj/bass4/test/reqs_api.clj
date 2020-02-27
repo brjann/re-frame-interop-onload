@@ -4,25 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     debug-headers-text?
-                                     log-return
-                                     log-body
-                                     log-status
-                                     log-headers
-                                     log-session
-                                     disable-attack-detector
-                                     *s*
-                                     modify-session
-                                     poll-message-chan
-                                     messages-are?
-                                     api-response?
-                                     api-response
-                                     fix-time
-                                     advance-time-s!
-                                     ->!
-                                     log-api-response
-                                     pass-by]]
+            [bass4.test.core :refer :all]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clj-time.format :as tf]
@@ -39,19 +21,9 @@
   test-fixtures
   disable-attack-detector)
 
-(deftest request-api-re-auth
-  (fix-time
-    (-> *s*
-        (modify-session {:user-id 536975 :double-authed? true})
-        (visit "/api/user/tx/messages")
-        (has (status? 200))
-        (advance-time-s! (config/env :timeout-soft))
-        (visit "/api/user/tx/messages")
-        (has (status? 440))
-        (visit "/re-auth" :request-method :post :params {:password 536975})
-        (visit "/user/tx/messages")
-        (has (status? 200)))))
-
+(def tx-autoaccess 551356)
+(def tx-ns-tests 642517)
+(def project-tx 543018)
 
 (defn create-user-with-treatment!
   ([treatment-id]
@@ -59,8 +31,8 @@
   ([treatment-id with-login?]
    (create-user-with-treatment! treatment-id with-login? {}))
   ([treatment-id with-login? access-properties]
-   (let [user-id             (user-service/create-user! 543018 {:Group     "537404"
-                                                                :firstname "tx-text"})
+   (let [user-id             (user-service/create-user! project-tx {:Group     "537404"
+                                                                    :firstname "tx-text"})
          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                  :parent-id     user-id
                                                                  :property-name "TreatmentAccesses"}))]
@@ -78,9 +50,22 @@
                             :linkee-class  "cTreatment"})
      user-id)))
 
+(deftest request-api-re-auth
+  (let [user-id (create-user-with-treatment! tx-autoaccess true)]
+    (fix-time
+      (-> *s*
+          (modify-session {:user-id user-id :double-authed? true})
+          (visit "/api/user/tx/messages")
+          (has (status? 200))
+          (advance-time-s! (config/env :timeout-soft))
+          (visit "/api/user/tx/messages")
+          (has (status? 440))
+          (visit "/re-auth" :request-method :post :params {:password user-id})
+          (visit "/user/tx/messages")
+          (has (status? 200))))))
 
 (deftest request-errors
-  (let [user-id (create-user-with-treatment! 551356 false {:MessagesSendDisallow true})]
+  (let [user-id (create-user-with-treatment! tx-autoaccess false {:MessagesSendDisallow true})]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/api/re-auth" :request-method :post :body-params {:module-id 666})
@@ -212,7 +197,7 @@
 (deftest iterate-treatment-no-activate-module
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
-  (let [user-id             (create-user-with-treatment! 551356)
+  (let [user-id             (create-user-with-treatment! tx-autoaccess)
         treatment-access-id (-> (treatment-builder/user-treatment user-id)
                                 :treatment-access
                                 :treatment-access-id)]
@@ -253,7 +238,7 @@
           (has (status? 403))))))
 
 (deftest submit-homework
-  (let [user-id         (create-user-with-treatment! 551356)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
         homework-status (fn [module-id] (fn [res]
                                           (->> res
                                                (filterv #(= module-id (:module-id %)))
@@ -274,7 +259,7 @@
         (has (api-response? (homework-status 4002) "submitted")))))
 
 (deftest module-content-accessed
-  (let [user-id          (create-user-with-treatment! 551356)
+  (let [user-id          (create-user-with-treatment! tx-autoaccess)
         content-accessed (fn [res]
                            (->> res
                                 (filter #(= 4002 (:module-id %)))
@@ -295,7 +280,7 @@
         (has (api-response? :accessed? true)))))
 
 (deftest module-content-last-updated
-  (let [user-id           (create-user-with-treatment! 551356)
+  (let [user-id           (create-user-with-treatment! tx-autoaccess)
         data-last-updated (fn [res]
                             (->> res
                                  (filter #(= 4002 (:module-id %)))
@@ -347,7 +332,7 @@
     message-id))
 
 (deftest send-message
-  (let [user-id    (create-user-with-treatment! 551356)
+  (let [user-id    (create-user-with-treatment! tx-autoaccess)
         message-id (atom nil)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
@@ -371,7 +356,7 @@
         (has (api-response? :new-message? false)))))
 
 (deftest ns-write
-  (let [user-id (create-user-with-treatment! 551356)
+  (let [user-id (create-user-with-treatment! tx-autoaccess)
         data    {:xxx {:www "1"
                        :zzz "2"}
                  :yyy {:www "3"
@@ -388,7 +373,7 @@
         (has (api-response? data)))))
 
 (deftest module-content-tags
-  (let [user-id (create-user-with-treatment! 642517)]
+  (let [user-id (create-user-with-treatment! tx-ns-tests)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
@@ -404,7 +389,7 @@
         (has (some-text? "ctag2")))))
 
 (deftest ns-imports-exports-write-exports
-  (let [user-id (create-user-with-treatment! 642517)]
+  (let [user-id (create-user-with-treatment! tx-ns-tests)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")
@@ -459,7 +444,7 @@
 
 
 (deftest ns-imports-exports-write-imports
-  (let [user-id (create-user-with-treatment! 642517)]
+  (let [user-id (create-user-with-treatment! tx-ns-tests)]
     (-> *s*
         (modify-session {:user-id user-id :double-authed? true})
         (visit "/user/tx")

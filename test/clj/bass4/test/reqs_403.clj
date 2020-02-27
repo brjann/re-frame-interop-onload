@@ -4,19 +4,11 @@
             [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     debug-headers-text?
-                                     *s*
-                                     modify-session
-                                     pass-by
-                                     messages-are?
-                                     poll-message-chan]]
+            [bass4.test.core :refer :all]
             [bass4.external-messages.async :refer [*debug-chan*]]
             [kerodon.test :refer :all]
             [clojure.tools.logging :as log]
             [bass4.services.user :as user-service]))
-
-(def project-double-auth 536972)
 
 (use-fixtures
   :once
