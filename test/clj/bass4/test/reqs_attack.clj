@@ -4,28 +4,13 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     debug-headers-text?
-                                     debug-headers-not-text?
-                                     log-return
-                                     log-body
-                                     log-headers
-                                     *s*
-                                     pass-by
-                                     advance-time-s!
-                                     fix-time
-                                     modify-session]]
+            [bass4.test.core :refer :all]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
             [bass4.services.auth :as auth-service]
-            [bass4.middleware.core :as mw]
-            [bass4.responses.auth :as res-auth]
             [bass4.registration.services :as reg-service]
             [bass4.services.attack-detector :as a-d]
-            [clojure.data.json :as json]
-            [clojure.tools.logging :as log]
-            [bass4.session.timeout :as session-timeout]
             [bass4.config :as config]))
 
 
@@ -84,25 +69,27 @@
 
 
 (deftest attack-login
-  (-> *s*
-      (attack-uri
-        "/login"
-        {:username "%€#&()" :password "%€#&()"}
-        standard-attack)
-      (visit "/login" :request-method :post :params {:username 536975 :password 536975})
-      (has (status? 429))
-      (advance-time-s! a-d/const-ip-block-delay)
-      (visit "/login" :request-method :post :params {:username 536975 :password 536975})
-      (has (status? 302))))
+  (let [user-id (create-user-with-password! {"smsnumber" "00"})]
+    (-> *s*
+        (attack-uri
+          "/login"
+          {:username "%€#&()" :password "%€#&()"}
+          standard-attack)
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 429))
+        (advance-time-s! a-d/const-ip-block-delay)
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 302)))))
 
 
 (deftest attack-double-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> *s*
-                    (visit "/login" :request-method :post :params {:username 536975 :password 536975})
-                    (has (status? 302))
-                    (follow-redirect)
-                    (has (some-text? "666777")))]
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})
+          state   (-> *s*
+                      (visit "/login" :request-method :post :params {:username user-id :password user-id})
+                      (has (status? 302))
+                      (follow-redirect)
+                      (has (some-text? "666777")))]
       (attack-uri
         state
         "/double-auth"
@@ -111,16 +98,18 @@
 
 (deftest attack-re-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> *s*
-                    (modify-session {:user-id 536975 :double-authed? true})
-                    (visit "/user")
-                    (visit "/user/tx/messages")
-                    (has (status? 200))
-                    (modify-session {:auth-re-auth? true})
-                    (visit "/user/tx/messages")
-                    (has (status? 302))
-                    (follow-redirect)
-                    (has (some-text? "Authenticate again")))]
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})
+          _       (link-user-to-treatment! user-id tx-autoaccess {})
+          state   (-> *s*
+                      (modify-session {:user-id user-id :double-authed? true})
+                      (visit "/user")
+                      (visit "/user/tx/messages")
+                      (has (status? 200))
+                      (modify-session {:auth-re-auth? true})
+                      (visit "/user/tx/messages")
+                      (has (status? 302))
+                      (follow-redirect)
+                      (has (some-text? "Authenticate again")))]
       (attack-uri
         state
         "/re-auth"
@@ -129,45 +118,34 @@
 
 (deftest attack-api-re-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> *s*
-                    (modify-session {:user-id 536975 :double-authed? true})
-                    (visit "/user")
-                    (visit "/api/user/tx/messages")
-                    (has (status? 200))
-                    (modify-session {:auth-re-auth? true})
-                    (visit "/api/user/tx/messages")
-                    (has (status? 440)))]
+    (let [user-id (create-user-with-treatment! tx-autoaccess)
+          state   (-> *s*
+                      (modify-session {:user-id user-id :double-authed? true})
+                      (visit "/user")
+                      (visit "/api/user/tx/messages")
+                      (has (status? 200))
+                      (modify-session {:auth-re-auth? true})
+                      (visit "/api/user/tx/messages")
+                      (has (status? 440)))]
       (attack-uri
         state
         "/api/re-auth"
         [:body-params {:password "%€#&()"}]
         standard-attack))))
 
-#_(deftest attack-api-re-auth-xxx
-    (with-redefs [auth-service/double-auth-code (constantly "666777")]
-      (let [state (-> *s*
-                      (modify-session {:user-id 536975 :double-authed? true})
-                      (visit "/user")
-                      (visit "/api/user/tx/messages")
-                      (has (status? 200))
-                      (modify-session {:auth-re-auth? true})
-                      (visit "/api/user/tx/messages")
-                      (has (status? 440))
-                      (visit "/api/re-auth" :request-method :post :body-params {:password "%€#&()"}))]
-        (log/debug state))))
-
 (deftest attack-re-auth-ajax
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [state (-> *s*
-                    (modify-session {:user-id 536975 :double-authed? true})
-                    (visit "/user")
-                    (visit "/user/tx/messages")
-                    (has (status? 200))
-                    (modify-session {:auth-re-auth? true})
-                    (visit "/user/tx/messages")
-                    (has (status? 302))
-                    (follow-redirect)
-                    (has (some-text? "Authenticate again")))]
+    (let [user-id (create-user-with-treatment! tx-autoaccess)
+          state   (-> *s*
+                      (modify-session {:user-id user-id :double-authed? true})
+                      (visit "/user")
+                      (visit "/user/tx/messages")
+                      (has (status? 200))
+                      (modify-session {:auth-re-auth? true})
+                      (visit "/user/tx/messages")
+                      (has (status? 302))
+                      (follow-redirect)
+                      (has (some-text? "Authenticate again")))]
       (attack-uri
         state
         "/re-auth-ajax"
@@ -176,58 +154,61 @@
 
 (deftest attack-login-double-auth
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (-> *s*
-        (attack-uri
-          "/login"
-          {:username "536975" :password "%€#&()"}
-          (repeat 1 [0 422]))
-        (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "666777"))
-        (attack-uri
-          "/double-auth"
-          {:code "%€#&()"}
-          (concat
-            (repeat (dec a-d/const-ip-block-delay) [0 422])
-            [[0 429]
-             [0 429]
-             [0 429]
-             [(dec a-d/const-ip-block-delay) 429]
-             [1 422]]))
-        (advance-time-s! a-d/const-ip-block-delay)
-        (visit "/double-auth" :request-method :post :params {:code "666777"})
-        (has (status? 302))
-        (follow-redirect)
-        (advance-time-s! (config/env :timeout-soft))
-        (visit "/user/tx/messages")
-        (has (status? 302))
-        (attack-uri
-          "/re-auth-ajax"
-          {:password "%€#&()"}
-          (concat
-            (repeat 10 [0 422])
-            (repeat 10 [0 429])))
-        (advance-time-s! a-d/const-ip-block-delay)
-        (visit "/re-auth-ajax" :request-method :post :params {:password "536975"})
-        (has (status? 200)))))
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})]
+      (link-user-to-treatment! user-id tx-autoaccess {})
+      (-> *s*
+          (attack-uri
+            "/login"
+            {:username user-id :password "%€#&()"}
+            (repeat 1 [0 422]))
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "666777"))
+          (attack-uri
+            "/double-auth"
+            {:code "%€#&()"}
+            (concat
+              (repeat (dec a-d/const-ip-block-delay) [0 422])
+              [[0 429]
+               [0 429]
+               [0 429]
+               [(dec a-d/const-ip-block-delay) 429]
+               [1 422]]))
+          (advance-time-s! a-d/const-ip-block-delay)
+          (visit "/double-auth" :request-method :post :params {:code "666777"})
+          (has (status? 302))
+          (follow-redirect)
+          (advance-time-s! (config/env :timeout-soft))
+          (visit "/user/tx/messages")
+          (has (status? 302))
+          (attack-uri
+            "/re-auth-ajax"
+            {:password "%€#&()"}
+            (concat
+              (repeat 10 [0 422])
+              (repeat 10 [0 429])))
+          (advance-time-s! a-d/const-ip-block-delay)
+          (visit "/re-auth-ajax" :request-method :post :params {:password user-id})
+          (has (status? 200))))))
 
 (deftest attack-parallel
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (-> *s*
-        (attack-uri
-          "/login"
-          {:username "536975" :password "%€#&()"}
-          [[0 422]])
-        (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "666777"))
-        (attack-uri
-          "/double-auth"
-          {:code "%€#&()"}
-          [[70 422]
-           [70 422]]))
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})]
+      (-> *s*
+          (attack-uri
+            "/login"
+            {:username user-id :password "%€#&()"}
+            [[0 422]])
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "666777"))
+          (attack-uri
+            "/double-auth"
+            {:code "%€#&()"}
+            [[70 422]
+             [70 422]])))
     (-> *s*
         (attack-uri
           "/login"
@@ -241,20 +222,21 @@
 
 (deftest attack-parallel-different-ips
   (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (-> *s*
-        (attack-uri
-          "/login"
-          {:username "536975" :password "%€#&()"}
-          [[0 422]])
-        (visit "/login" :request-method :post :params {:username "536975" :password "536975"})
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "666777"))
-        (attack-uri
-          "/double-auth"
-          {:code "%€#&()"}
-          [[70 422]
-           [70 422]]))
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})]
+      (-> *s*
+          (attack-uri
+            "/login"
+            {:username user-id :password "%€#&()"}
+            [[0 422]])
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "666777"))
+          (attack-uri
+            "/double-auth"
+            {:code "%€#&()"}
+            [[70 422]
+             [70 422]])))
     (-> *s*
         (attack-uri
           "/login"
