@@ -41,8 +41,8 @@
 
 (deftest browse-treatment
   (let [random-message (str (UUID/randomUUID))
-        user-id        (create-user-with-treatment! 3958 true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
-                                                               "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})]
+        user-id        (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
+                                                                         "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})]
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (follow-redirect)

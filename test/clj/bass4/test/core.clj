@@ -20,6 +20,7 @@
             [bass4.db-common :as db-common]
             [bass4.middleware.debug :as mw-debug]
             [bass4.config :as config]
+            [bass4.i18n :as i18n]
             [clojure.string :as str]
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.sms-sender :as sms]
@@ -30,7 +31,8 @@
             [bass4.middleware.request-logger :as request-logger]
             [bass4.clients.core :as clients]
             [bass4.services.user :as user-service]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [clojure.java.jdbc :as jdbc]))
 
 (def project-double-auth 536972)
 (def project-double-auth-assessment-series 536974)
@@ -40,6 +42,7 @@
 (def project-tx 543018)
 (def tx-autoaccess 551356)
 (def tx-ns-tests 642517)
+(def tx-timelimited 3958)
 
 (def s (atom nil))
 (def ^:dynamic *s* nil)
@@ -147,16 +150,38 @@
       (map (fn [m] (utils/map-map #(if (= java.util.Date (class %)) (tc/from-date %) %) m)) res)
       res)))
 
+#_(defn on-start
+    []
+    (log/error "ON-START")
+    (log/error config/env)
+    (let [x (mount/start
+              #'config/env
+              #'db-common/common-config
+              ;#'bass4.db.core/metrics-reg
+              #'db/db-common
+              #'clients/client-configs
+              #'clients/client-db-connections
+              #'i18n/i18n-map)])
+    (log/error (mount/running-states))
+    (log/error "CURRENT-STATE")
+    #_(log/error (mount/current-state #'config/env))
+    #_(Thread/sleep 1000)
+    (log/error @bass4.clients.core/db-connections*)
+    #_(let [test-db (config/env :test-db)
+            db      @(get clients/client-db-connections test-db)]
+        #_(jdbc/execute! db ["TRUNCATE c_participantadministration"])))
+
+(def first-run (atom true))
 (defn test-fixtures
   [f]
   (mount/start
     #'bass4.config/env
     #'db-common/common-config
     ;#'bass4.db.core/metrics-reg
-    #'bass4.db.core/db-common
+    #'db/db-common
     #'clients/client-configs
     #'clients/client-db-connections
-    #'bass4.i18n/i18n-map)
+    #'i18n/i18n-map)
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
   (let [test-db (config/env :test-db)]
@@ -170,6 +195,16 @@
               request-logger/*request-host*    (config/env :test-host)
               clients/*client-config*          (get clients/client-configs test-db)
               db/*db*                          @(get clients/client-db-connections test-db)]
+      #_(when @first-run
+          (reset! first-run false)
+          (jdbc/execute! db/*db* ["TRUNCATE c_participant"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_participantadministration"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_group"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_groupadministration"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_assessment"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_instrumentanswers"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_treatmentaccess"])
+          (jdbc/execute! db/*db* ["TRUNCATE c_flag"]))
       (f))))
 
 (defn disable-attack-detector [f]
@@ -353,5 +388,5 @@
     (shell/sh "/Applications/MAMP/Library/bin/mysql" "-uroot" "-proot" :in (str "create database `" db-name "`;"))
     (shell/sh "/Applications/MAMP/Library/bin/mysql" "-uroot" "-proot" db-name :in (clojure.java.io/file "/Users/brjljo/Box Sync/BASS Platform/databases/TEST-structure-dump-reduced.sql"))
     (jdbc/with-db-connection [conn {:dbtype "mysql" :port 3300 :dbname db-name :user "root" :password "root" "serverTimezone" "UTC"}]
-                             (binding [db/*db* conn]
-                               (db/create-bass-object! {:class-name "cParticipant" :property-name "XXX" :parent-id 666}))))
+      (binding [db/*db* conn]
+        (db/create-bass-object! {:class-name "cParticipant" :property-name "XXX" :parent-id 666}))))

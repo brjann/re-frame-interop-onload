@@ -2,11 +2,12 @@
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.treatment.builder :as treatment-builder]
-            [bass4.test.core :refer [get-edn test-fixtures]]
+            [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
             [clj-time.coerce :as tc]
-            [bass4.module.services :as module-service]))
+            [bass4.module.services :as module-service]
+            [bass4.utils :as utils]))
 
 (use-fixtures
   :once
@@ -14,11 +15,12 @@
 
 ;; TODO: It's not possible to test :modules-automatic-access because BASS messes it up
 (deftest two-modules
-  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
-    (let [treatments       (treatment-builder/user-treatment 543021)
-          treatment-access (:treatment-access treatments)]
-      (is (= 3958 (:treatment-id treatment-access)))
-      (is (= #{5787 3961} (into #{} (map :module-id (filter :active? (get-in treatments [:tx-components :modules])))))))))
+  (let [user-id          (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
+                                                                           "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})
+        treatments       (treatment-builder/user-treatment user-id)
+        treatment-access (:treatment-access treatments)]
+    (is (= 3958 (:treatment-id treatment-access)))
+    (is (= #{5787 3961} (into #{} (map :module-id (filter :active? (get-in treatments [:tx-components :modules]))))))))
 
 (deftest empty-content
   (let [module (module-service/modules-contents [3961])]
