@@ -4,17 +4,8 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     fn-not-text?
-                                     log-return
-                                     log-headers
-                                     log-body
-                                     disable-attack-detector
-                                     *s*
-                                     fix-time
-                                     advance-time-d!
-                                     modify-session
-                                     advance-time-s!]]
+            [bass4.test.core :refer :all]
+            [bass4.test.assessment-utils :refer :all]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.utils :as utils]
@@ -28,15 +19,18 @@
 
 (use-fixtures
   :each
+  random-date-tz-fixture
   (fn [f]
     (fix-time
       (f))))
 
 (deftest quick-login-assessments
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
-          q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
+    (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [4431 4743 286])
+          user-id  (user-service/create-user! project-reg-allowed {:group group-id})
+          q-id     (str user-id "XXXX")]
+      (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
+                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -45,7 +39,6 @@
           ;; Assessments checked
           (follow-redirect)
           (has (some-text? "Welcome"))
-          (has (some-text? "top top welcome"))
           (visit "/user/assessments")
           (has (some-text? "HAD"))
           (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
@@ -61,14 +54,14 @@
           (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
           (has (status? 302))
           (follow-redirect)
-          (has (some-text? "top top top thanks"))
-          (has (some-text? "Thanks top"))))))
+          (has (some-text? "Thanks"))))))
 
 (deftest quick-login-expired
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
+                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
       (advance-time-d! 11)
       (-> *s*
           (visit (str "/q/" q-id))
@@ -84,7 +77,7 @@
 
 (deftest quick-login-not-allowed
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
-    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
+    (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
       (-> *s*
@@ -101,9 +94,10 @@
 
 (deftest quick-login-no-timeout
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-test"})
-          q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
+    (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
+          user-id  (user-service/create-user! project-reg-allowed {:group group-id})
+          q-id     (str user-id "XXXX")]
+      (user-service/update-user-properties! user-id {"QuickLoginPassword" q-id "QuickLoginTimestamp" (utils/to-unix (t/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -118,20 +112,18 @@
 (deftest quick-login-escalation-re-auth
   []
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
-    (let [user-id             (user-service/create-user! 536103 {:Group "537404" :firstname "quick-login-escalation"})
-          treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                  :parent-id     user-id
-                                                                  :property-name "TreatmentAccesses"}))
-          q-id                (str user-id "XXXX")]
-      (db/create-bass-link! {:linker-id     treatment-access-id
-                             :linkee-id     551356
-                             :link-property "Treatment"
-                             :linker-class  "cTreatmentAccess"
-                             :linkee-class  "cTreatment"})
-      (user-service/update-user-properties! user-id {:username            user-id
-                                             :password                    user-id
-                                             :QuickLoginPassword          q-id
-                                                     :QuickLoginTimestamp (utils/to-unix (t/now))})
+
+
+
+    (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
+          user-id  (user-service/create-user! project-reg-allowed)
+          q-id     (str user-id "XXXX")]
+      (link-user-to-treatment! user-id tx-autoaccess {})
+      (user-service/update-user-properties! user-id {:group                group-id
+                                                     :username             user-id
+                                                     :password             user-id
+                                                     "QuickLoginPassword"  q-id
+                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
       (fix-time
         (-> *s*
             (visit (str "/q/" q-id))
@@ -140,12 +132,9 @@
             (follow-redirect)
             ;; Assessments checked
             (follow-redirect)
-            (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
-            (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"})
-            (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
             (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
             (follow-redirect)
-            (has (some-text? "top top top thanks"))
+            (has (some-text? "Thanks"))
             (visit "/user/assessments")
             (follow-redirect)
             (visit "/user")
