@@ -1,4 +1,5 @@
-(ns bass4.test.assessment-ongoing
+(ns ^:eftest/synchronized
+  bass4.test.assessment-ongoing
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [bass4.db.core :refer [*db*] :as db]

@@ -1,4 +1,5 @@
-(ns bass4.test.session
+(ns ^:eftest/synchronized
+  bass4.test.session
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]

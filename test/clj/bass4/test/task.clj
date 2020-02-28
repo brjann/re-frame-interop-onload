@@ -1,4 +1,5 @@
-(ns bass4.test.task
+(ns ^:eftest/synchronized
+  bass4.test.task
   (:require [clojure.test :refer :all]
             [clojure.core.async :as a :refer [chan put! timeout alts!! dropping-buffer go <! close!]]
             [bass4.test.core :refer :all]

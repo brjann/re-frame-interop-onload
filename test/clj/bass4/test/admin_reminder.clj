@@ -1,4 +1,5 @@
-(ns bass4.test.admin-reminder
+(ns ^:eftest/synchronized
+  bass4.test.admin-reminder
   (:require [clj-time.core :as t]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]

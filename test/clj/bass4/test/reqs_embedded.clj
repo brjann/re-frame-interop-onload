@@ -1,4 +1,5 @@
-(ns bass4.test.reqs-embedded
+(ns ^:eftest/synchronized
+  bass4.test.reqs-embedded
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]

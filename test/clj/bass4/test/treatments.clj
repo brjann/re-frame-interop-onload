@@ -1,4 +1,5 @@
-(ns bass4.test.treatments
+(ns ^:eftest/synchronized
+  bass4.test.treatments
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.treatment.builder :as treatment-builder]

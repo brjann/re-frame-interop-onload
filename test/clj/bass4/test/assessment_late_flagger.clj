@@ -1,4 +1,5 @@
-(ns bass4.test.assessment-late-flagger
+(ns ^:eftest/synchronized
+  bass4.test.assessment-late-flagger
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan go-loop <!]]

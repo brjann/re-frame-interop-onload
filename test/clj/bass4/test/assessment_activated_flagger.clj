@@ -1,4 +1,5 @@
-(ns bass4.test.assessment-activated-flagger
+(ns ^:eftest/synchronized
+  bass4.test.assessment-activated-flagger
   (:require [clojure.test :refer :all]
             [bass4.assessment.activated-flagger :as activated-flagger]
             [bass4.test.assessment-utils :refer :all]

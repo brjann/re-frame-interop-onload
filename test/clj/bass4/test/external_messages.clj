@@ -1,4 +1,5 @@
-(ns bass4.test.external-messages
+(ns ^:eftest/synchronized
+  bass4.test.external-messages
   (:require [clojure.test :refer :all]
             [bass4.test.core :refer [test-fixtures messages-are? *s*]]
             [kerodon.core :refer :all]

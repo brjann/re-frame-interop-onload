@@ -1,4 +1,5 @@
-(ns bass4.test.reqs-registration
+(ns ^:eftest/synchronized
+  bass4.test.reqs-registration
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan dropping-buffer]]

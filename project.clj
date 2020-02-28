@@ -68,7 +68,9 @@
   :target-path "target/%s/"
   :main bass4.core
 
-  :bat-test {:test-matcher #"bass4.test.*"}
+  :bat-test {:test-matcher #"bass4.test.*"
+             :parallel?    true}
+  :eftest {:multithread? false}
 
   ;; Difference between plugins and dependencies:
   ;; https://www.quora.com/In-Clojure-whats-the-difference-between-plugins-dependencies-require-use-import-etc
@@ -95,6 +97,7 @@
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]
                                     [metosin/bat-test "0.4.0"]
+                                    [lein-eftest "0.5.9"]
                                     [lein-ancient "0.6.15"]]
 
                    :source-paths   ["env/dev/clj"]

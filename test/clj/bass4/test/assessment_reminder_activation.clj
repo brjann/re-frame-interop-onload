@@ -1,4 +1,5 @@
-(ns bass4.test.assessment-reminder-activation
+(ns ^:eftest/synchronized
+  bass4.test.assessment-reminder-activation
   (:require [clj-time.core :as t]
             [clojure.core.async :refer [chan alts!! timeout]]
             [bass4.assessment.reminder :as assessment-reminder]

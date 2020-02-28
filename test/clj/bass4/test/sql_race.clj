@@ -1,4 +1,5 @@
-(ns bass4.test.sql-race
+(ns ^:eftest/synchronized
+  bass4.test.sql-race
   (:require [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [thread]]

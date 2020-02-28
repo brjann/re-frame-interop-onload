@@ -1,4 +1,5 @@
-(ns bass4.test.content_data
+(ns ^:eftest/synchronized
+  bass4.test.content_data
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.services.content-data :as content-data]

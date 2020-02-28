@@ -1,4 +1,5 @@
-(ns bass4.test.answers-validation
+(ns ^:eftest/synchronized
+  bass4.test.answers-validation
   (:require [clojure.test :refer :all]
             [bass4.instrument.validation :refer :all]
             [bass4.utils :as utils]

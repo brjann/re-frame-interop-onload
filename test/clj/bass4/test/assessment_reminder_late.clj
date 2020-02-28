@@ -1,4 +1,5 @@
-(ns bass4.test.assessment-reminder-late
+(ns ^:eftest/synchronized
+  bass4.test.assessment-reminder-late
   (:require [clj-time.core :as t]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.assessment-utils :refer :all]

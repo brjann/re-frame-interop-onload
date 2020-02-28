@@ -1,4 +1,5 @@
-(ns bass4.test.db-config
+(ns ^:eftest/synchronized
+  bass4.test.db-config
   (:require [clojure.test :refer :all]
             [bass4.config :as config]
             [bass4.test.core :refer [test-fixtures

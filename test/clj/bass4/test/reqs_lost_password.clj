@@ -1,4 +1,5 @@
-(ns bass4.test.reqs-lost-password
+(ns ^:eftest/synchronized
+  bass4.test.reqs-lost-password
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
