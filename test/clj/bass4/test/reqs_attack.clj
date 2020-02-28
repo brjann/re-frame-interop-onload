@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-attack
+(ns bass4.test.reqs-attack
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -12,24 +11,41 @@
             [bass4.services.auth :as auth-service]
             [bass4.registration.services :as reg-service]
             [bass4.services.attack-detector :as a-d]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [clojure.tools.logging :as log]))
+
 
 
 (use-fixtures
   :once
   test-fixtures)
 
+(def ^:dynamic failed-logins (atom []))
+
+(defn save-failed-login!
+  [record]
+  (swap! failed-logins conj record))
+
+(defn get-failed-logins
+  [now attack-interval]
+  ; `time` > (:time - :attack-interval)
+  (filter #(> (:time %) (- now attack-interval))
+          @failed-logins))
+
 (use-fixtures
   :each
   (fn [f]
-    (db/clear-failed-logins!)
-    (swap! a-d/blocked-ips (constantly {}))
-    (swap! a-d/blocked-last-request (constantly {}))
-    (swap! a-d/global-block (constantly nil))
-    (swap! a-d/global-last-request (constantly nil))
+    #_(db/clear-failed-logins!)
     (fix-time
-      (f))
-    (db/clear-failed-logins!)))
+      (binding [a-d/blocked-ips           (atom {})
+                a-d/blocked-last-request  (atom {})
+                a-d/global-block          (atom nil)
+                a-d/global-last-request   (atom nil)
+                failed-logins             (atom [])
+                a-d/db-save-failed-login! save-failed-login!
+                a-d/db-get-failed-logins  get-failed-logins]
+        (f)))
+    #_(db/clear-failed-logins!)))
 
 
 (defn visit-params
@@ -70,17 +86,20 @@
 
 
 (deftest attack-login
-  (let [user-id (create-user-with-password! {"smsnumber" "00"})]
-    (-> *s*
-        (attack-uri
-          "/login"
-          {:username "%€#&()" :password "%€#&()"}
-          standard-attack)
-        (visit "/login" :request-method :post :params {:username user-id :password user-id})
-        (has (status? 429))
-        (advance-time-s! a-d/const-ip-block-delay)
-        (visit "/login" :request-method :post :params {:username user-id :password user-id})
-        (has (status? 302)))))
+  (binding [failed-logins             (atom [])
+            a-d/db-save-failed-login! save-failed-login!
+            a-d/db-get-failed-logins  get-failed-logins]
+    (let [user-id (create-user-with-password! {"smsnumber" "00"})]
+      (-> *s*
+          (attack-uri
+            "/login"
+            {:username "%€#&()" :password "%€#&()"}
+            standard-attack)
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 429))
+          (advance-time-s! a-d/const-ip-block-delay)
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (has (status? 302))))))
 
 
 (deftest attack-double-auth

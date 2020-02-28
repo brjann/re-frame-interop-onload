@@ -20,12 +20,16 @@
 ;;  MANAGE FAILED LOGINS
 ;; ----------------------
 
-(def blocked-ips (atom {}))
-(def global-block (atom nil))
+(def ^:dynamic blocked-ips (atom {}))
+(def ^:dynamic global-block (atom nil))
 
-(defn get-failed-logins
-  [now]
-  (db/get-failed-logins {:time now :attack-interval const-attack-interval}))
+(defn ^:dynamic db-save-failed-login!
+  [record]
+  (db/save-failed-login! record))
+
+(defn ^:dynamic db-get-failed-logins
+  [now attack-interval]
+  (db/get-failed-logins {:time now :attack-interval attack-interval}))
 
 (defn logins-by-ip
   [logins]
@@ -35,7 +39,7 @@
 
 (defn update-blocked-ips!
   [ip-address now]
-  (let [failed-logins  (get-failed-logins now)
+  (let [failed-logins  (db-get-failed-logins now const-attack-interval)
         failed-from-ip (-> failed-logins
                            (logins-by-ip)
                            (get ip-address))]
@@ -57,7 +61,7 @@
                        :user-id    ""
                        :username   ""}
                       info)]
-    (db/save-failed-login! record)))
+    (db-save-failed-login! record)))
 
 (defn register-failed-login!
   ([type request] (register-failed-login! type request {}))
@@ -88,7 +92,7 @@
   [ip-address]
   (contains? @blocked-ips ip-address))
 
-(def blocked-last-request (atom {}))
+(def ^:dynamic blocked-last-request (atom {}))
 
 (defn get-last-request-time
   [ip-address now]
@@ -116,7 +120,7 @@
 ;;    GLOBAL ATTACK
 ;; --------------------
 
-(def global-last-request (atom nil))
+(def ^:dynamic global-last-request (atom nil))
 
 (defn get-last-request-time-global
   [now]
