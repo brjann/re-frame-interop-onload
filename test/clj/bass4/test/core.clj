@@ -195,7 +195,7 @@
               request-logger/*request-host*    (config/env :test-host)
               clients/*client-config*          (get clients/client-configs test-db)
               db/*db*                          @(get clients/client-db-connections test-db)]
-      #_(when @first-run
+      (when @first-run
           (reset! first-run false)
           (jdbc/execute! db/*db* ["TRUNCATE c_participant"])
           (jdbc/execute! db/*db* ["TRUNCATE c_participantadministration"])
