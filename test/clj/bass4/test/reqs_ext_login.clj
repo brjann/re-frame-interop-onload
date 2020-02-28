@@ -35,32 +35,40 @@
 
 (deftest request-ext-login-x-forwarded-for
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
-    (with-redefs [config/env (merge config/env {:x-forwarded-for-index 0})]
+    (let [user-id (user-service/create-user! project-double-auth)]
+      (user-service/update-user-properties! user-id {"participantid" user-id})
+      (with-redefs [config/env (merge config/env {:x-forwarded-for-index 0})]
+        (-> *s*
+            (visit (str "/ext-login/check-pending/" user-id) :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
+            (has (some-text? "0 External login not allowed from this IP"))))
+      (with-redefs [config/env (merge config/env {:x-forwarded-for-index 1})]
+        (-> *s*
+            (visit (str "/ext-login/check-pending/" user-id) :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
+            (has (some-text? "0 No pending administrations")))))))
+
+(deftest request-ext-login-allowed-ok-ip-double
+  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+    (let [user-id1 (user-service/create-user! project-double-auth)
+          user-id2 (user-service/create-user! project-double-auth)]
+      (user-service/update-user-properties! user-id1 {"participantid" user-id1})
+      (user-service/update-user-properties! user-id2 {"participantid" user-id1})
       (-> *s*
-          (visit "/ext-login/check-pending/ext-login-1" :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
-          (has (some-text? "0 External login not allowed from this IP"))))
-    (with-redefs [config/env (merge config/env {:x-forwarded-for-index 1})]
-      (-> *s*
-          (visit "/ext-login/check-pending/ext-login-1" :headers {"x-forwarded-for" "127.0.0.1 255.255.255.255"})
-          (has (some-text? "0 No pending administrations"))))))
+          (visit (str "/ext-login/check-pending/" user-id1))
+          (has (some-text? "0 More than 1 matching user"))))))
 
 (deftest request-ext-login-allowed-ok-ip-no-user
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (-> *s*
-        (visit "/ext-login/check-pending/ext-login-x")
+        (visit "/ext-login/check-pending/METALLICA")
         (has (some-text? "0 No such user")))))
-
-(deftest request-ext-login-allowed-ok-ip-double
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
-    (-> *s*
-        (visit "/ext-login/check-pending/ext-login-double")
-        (has (some-text? "0 More than 1 matching user")))))
 
 (deftest request-ext-login-allowed-ok-no-pending
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
-    (-> *s*
-        (visit "/ext-login/check-pending/ext-login-1")
-        (has (some-text? "0 No pending administrations")))))
+    (let [user-id (user-service/create-user! project-double-auth)]
+      (user-service/update-user-properties! user-id {"participantid" user-id})
+      (-> *s*
+          (visit (str "/ext-login/check-pending/" user-id))
+          (has (some-text? "0 No pending administrations"))))))
 
 (deftest request-ext-login-assessment-pending
   (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
