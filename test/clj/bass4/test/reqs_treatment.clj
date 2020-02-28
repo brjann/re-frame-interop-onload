@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-treatment
+(ns bass4.test.reqs-treatment
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -25,7 +24,7 @@
 (deftest request-messages
   (let [user-id1 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 1})
         user-id2 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 0})]
-    (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    (binding [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
       (-> *s*
           (modify-session {:user-id user-id1 :double-authed? true})
           (visit "/user")
@@ -154,7 +153,7 @@
       (doseq [[module-id content-id texts] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
               uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
-          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+          (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
             (let [s (visit *s* (str "/embedded/create-session?uid=" uid))]
               (doseq [text texts]
                 (-> s
@@ -231,7 +230,7 @@
       (doseq [[module-id content-id text] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
               uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
-          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+          (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
             (-> *s*
                 (visit (str "/embedded/create-session?uid=" uid))
                 (visit (str "/embedded/" path))

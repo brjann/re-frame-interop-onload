@@ -3,7 +3,7 @@
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.services.content-data :as content-data]
-            [bass4.test.core :refer [get-edn test-fixtures]]
+            [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.module.responses :as modules-response]))
 

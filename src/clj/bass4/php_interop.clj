@@ -10,7 +10,7 @@
   (:import (java.io File)
            (java.util UUID)))
 
-(defn get-php-session
+(defn ^:dynamic get-php-session
   [php-session-id]
   (db/get-php-session {:php-session-id php-session-id}))
 

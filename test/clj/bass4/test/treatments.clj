@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.treatments
+(ns bass4.test.treatments
   (:require [clj-time.core :as t]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.treatment.builder :as treatment-builder]
@@ -46,7 +45,7 @@
       (is (= #{5787 4002 4003 4007} (into #{} (map :module-id (filter :active? (get-in user-treatment [:tx-components :modules])))))))))
 
 (deftest treatment-active-tests
-  (with-redefs [now/now (constantly (t/date-time 2017 06 12 9 40 0))]
+  (binding [now/now (constantly (t/date-time 2017 06 12 9 40 0))]
     (is (= false (treatment-builder/treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
                                                        :end-date        (tc/from-date #inst"2017-06-10T23:00:00.000000000-00:00")
                                                        :access-enabled? true}

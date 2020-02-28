@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-embedded
+(ns bass4.test.reqs-embedded
   (:require [clojure.test :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.handler :refer :all]
@@ -15,8 +14,7 @@
             [bass4.utils :as utils]
             [bass4.php-interop :as php-interop]
             [bass4.services.user :as user-service]
-            [bass4.module.services :as module-service]
-            [clojure.tools.logging :as log])
+            [bass4.module.services :as module-service])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -35,10 +33,9 @@
   (subs (str (UUID/randomUUID)) 0 32))
 
 (deftest wrong-uid
-  (with-redefs [php-interop/read-session-file (constantly {:user-id nil :path "instrument/1647" :php-session-id nil})]
-    (-> *s*
-        (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
-        (has (some-text? "Wrong uid")))))
+  (-> *s*
+      (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
+      (has (some-text? "Wrong uid"))))
 
 (deftest request-post-answers
   (let [php-session-id (get-php-session-id)
@@ -63,7 +60,7 @@
 
 (deftest request-wrong-instrument
   (let [uid (php-interop/uid-for-data! {:user-id 110 :path "instrument/" :php-session-id "xxx"})]
-    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+    (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
       (-> *s*
           (visit (str "/embedded/create-session?uid=" uid))
           (visit "/embedded/instrument/hell-is-here")
@@ -78,7 +75,7 @@
 
 (deftest embedded-render
   (let [uid (php-interop/uid-for-data! {:user-id 110 :path "iframe/render" :php-session-id "xxx"})]
-    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+    (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
       (-> *s*
           (visit "/embedded/iframe/render")
           (has (status? 403))
@@ -173,7 +170,7 @@
           (has (status? 403))))))
 
 (deftest add-paths
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now)) :php-session-id "xx"})]
+  (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now)) :php-session-id "xx"})]
     (let [uid1 (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx" :path "instrument/305"})
           uid  (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx"})
           uid2 (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx" :path "instrument/173"})]
@@ -239,7 +236,7 @@
 (deftest embedded-api
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+  (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
     (let [[user-id treatment-access-id] (create-user-with-treatment2! 551356)
           uid1    (php-interop/uid-for-data! {:user-id 110 :php-session-id "xxx" :path ""})
           uid2    (php-interop/uid-for-data! {:user-id        110
@@ -280,7 +277,7 @@
                 (has (status? 200))))))))))
 
 (deftest embedded-api-ns
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+  (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
     (let [[user-id treatment-access-id] (create-user-with-treatment2! 642517)
           api-url (fn [url] (str url "?user-id=" user-id "&treatment-access-id=" treatment-access-id))
           uid     (php-interop/uid-for-data! {:user-id        110

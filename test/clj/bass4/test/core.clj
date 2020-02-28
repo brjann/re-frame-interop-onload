@@ -48,8 +48,8 @@
 (def s (atom nil))
 (def ^:dynamic *s* nil)
 
-(def test-now (atom nil))
-(def test-current-time (atom nil))
+(def ^:dynamic test-now (atom nil))
+(def ^:dynamic test-current-time (atom nil))
 
 (defn modify-session
   [s session]
@@ -116,9 +116,11 @@
 (defmacro fix-time
   [body]
   `(do
-     (reset! test-current-time (utils/current-time))
-     (reset! test-now (now/now))
-     (binding [now/now            (fn [] @test-now)
+     #_(reset! test-current-time (utils/current-time))
+     #_(reset! test-now (now/now))
+     (binding [test-current-time  (atom (utils/current-time))
+               test-now           (atom (now/now))
+               now/now            (fn [] @test-now)
                utils/current-time (fn [] @test-current-time)]
        ~body)))
 
@@ -140,15 +142,6 @@
   ([state days]
    (advance-time-s! days)
    state))
-
-(defn get-edn
-  [edn]
-  (let [res (-> (io/file (System/getProperty "user.dir") "test/test-edns" (str edn ".edn"))
-                (slurp)
-                (edn/read-string))]
-    (if (list? res)
-      (map (fn [m] (utils/map-map #(if (= java.util.Date (class %)) (tc/from-date %) %) m)) res)
-      res)))
 
 #_(defn on-start
     []
