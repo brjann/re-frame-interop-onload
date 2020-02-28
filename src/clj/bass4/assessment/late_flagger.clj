@@ -14,10 +14,6 @@
 (def flag-reopen-text "Automatically reopened by Flagger")
 (def reflag-delay 7)
 
-(defn- db-open-flags
-  [db]
-  (db/get-open-late-administration-flags db {:issuer flag-issuer}))
-
 (defn- db-reopen-flags!
   [db flag-texts]
   (when (seq flag-texts)
@@ -129,7 +125,7 @@
 
 (defn deflag-assessments!
   [db now]
-  (let [potentials         (->> (db-open-flags db)
+  (let [potentials         (->> (assessment-db/open-late-administration-flags db flag-issuer)
                                 ;; An administration can have multiple flags. Keep only one.
                                 (map (juxt :participant-administration-id identity))
                                 (into {})

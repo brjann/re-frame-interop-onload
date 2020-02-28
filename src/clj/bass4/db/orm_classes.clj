@@ -2,6 +2,7 @@
   (:require [bass4.utils :as utils]
             [bass4.db.core :as db]))
 
+(def ^:dynamic *created-objects* nil)
 
 (defn create-bass-objects-without-parent*!
   [db class-name property-name count]
@@ -10,23 +11,29 @@
                                       db
                                       {:class-name    class-name
                                        :property-name property-name
-                                       :count         count}))]
-      (range (inc (- last-object-id count)) (inc last-object-id)))))
+                                       :count         count}))
+          new-ids        (range (inc (- last-object-id count)) (inc last-object-id))]
+      (when *created-objects*
+        (swap! *created-objects* into new-ids))
+      new-ids)))
 
-;;; TODO: It does not return on form 'object-id'
 (defn create-bass-objects-without-parent!
   [class-name property-name count]
   (create-bass-objects-without-parent*! db/*db* class-name property-name count))
 
-(defn create-bass-object*!
-  [db class-name parent-id property-name]
-  (:objectid (db/create-bass-object! db {:class-name    class-name
-                                         :parent-id     parent-id
-                                         :property-name property-name})))
-
 (defn create-bass-object-map!
   ([map] (create-bass-object-map! db/*db* map))
-  ([db map] (db/create-bass-object! db map)))
+  ([db map] (if *created-objects*
+              (let [id (:objectid (db/create-bass-object! db map))]
+                (swap! *created-objects* conj id)
+                {:objectid id})
+              (db/create-bass-object! db map))))
+
+(defn create-bass-object*!
+  [db class-name parent-id property-name]
+  (:objectid (create-bass-object-map! db {:class-name    class-name
+                                          :parent-id     parent-id
+                                          :property-name property-name})))
 
 (defn update-object-properties*!
   "Allows for updating object properties using strings as field names to

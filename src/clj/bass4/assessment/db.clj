@@ -2,7 +2,8 @@
   (:require [bass4.db.core :as db]
             [bass4.clients.time :as client-time]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.db.orm-classes :as orm]))
 
 ;; ------------------
 ;;  ACTIVATED FLAGS
@@ -17,7 +18,12 @@
          (t/plus (t/days 1))
          (t/minus (t/seconds 1)))]))
 
-(defn potential-activated-flag-participant-administrations
+(defn filter-created-objects
+  [key]
+  #(some @orm/*created-objects*
+         (get % key)))
+
+(defn ^:dynamic potential-activated-flag-participant-administrations
   "Returns participant administrations that are potentially flaggable as activated.
   If participants' group lacks a matching participant administration,
   :group-administration-id is nil. If they are not in a group, group-id is nil.
@@ -31,7 +37,7 @@
                                                                  :date-min date-min
                                                                  :issuer   flag-issuer})))
 
-(defn potential-activated-flag-group-administrations
+(defn ^:dynamic potential-activated-flag-group-administrations
   "Returns group administrations that are potentially flaggable as activated.
   Note that it is the participants of the owning groups are returned - rather
   than one row per group. If the participants lacks a matching participant
@@ -50,7 +56,11 @@
 ;;     LATE FLAGS
 ;; ------------------
 
-(defn potential-late-flag-participant-administrations
+(defn ^:dynamic open-late-administration-flags
+  [db flag-issuer]
+  (db/get-open-late-administration-flags db {:issuer flag-issuer}))
+
+(defn ^:dynamic potential-late-flag-participant-administrations
   "Returns participant administrations that are potentially flaggable as late.
   If participants' group lacks a matching participant administration,
   :group-administration-id is nil. If they are not in a group, group-id is nil.
@@ -66,7 +76,7 @@
                                                           :oldest-allowed (t/minus date (t/days oldest-allowed))
                                                           :issuer         flag-issuer}))
 
-(defn potential-late-flag-group-administrations
+(defn ^:dynamic potential-late-flag-group-administrations
   "Returns group administrations that are potentially flaggable as late.
   Note that it is the participants of the owning groups are returned - rather
   than one row per group. If the participants lacks a matching participant
@@ -99,7 +109,7 @@
   (when (seq group-ids)
     (db/get-group-assessment-series db {:group-ids group-ids})))
 
-(defn potential-activated-remind-participant-administrations
+(defn ^:dynamic potential-activated-remind-participant-administrations
   "Returns participant administrations that should potentially receive activation
   reminders. If participants' group lacks a matching participant administration,
   :group-administration-id is nil. If they are not in a group, group-id is nil.
@@ -114,7 +124,7 @@
                                                                  :hour     hour}))
 
 
-(defn potential-activated-remind-group-administrations
+(defn ^:dynamic potential-activated-remind-group-administrations
   "Returns group administrations that should potentially receive activation
   reminders. Note that it is the participants of the owning groups are returned
   - rather than one row per group. If the participants lacks a matching participant
@@ -129,7 +139,7 @@
                                                            :date-max date-max
                                                            :hour     hour}))
 
-(defn potential-late-remind-participant-administrations
+(defn ^:dynamic potential-late-remind-participant-administrations
   "Returns participant administrations that should potentially receive late
   reminders. If participants' group lacks a matching participant administration,
   :group-administration-id is nil. If they are not in a group, group-id is nil.
@@ -141,7 +151,7 @@
   [db date]
   (db/potential-late-remind-participant-administrations db {:date date}))
 
-(defn potential-late-remind-group-administrations
+(defn ^:dynamic potential-late-remind-group-administrations
   "Returns group administrations that should potentially receive late
   reminders. Note that it is the participants of the owning groups are returned
   - rather than one row per group. If the participants lacks a matching participant

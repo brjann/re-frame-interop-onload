@@ -1,20 +1,23 @@
-(ns ^:eftest/synchronized
-  bass4.test.assessment-reminder-activation
+(ns bass4.test.assessment-reminder-activation
   (:require [clj-time.core :as t]
             [clojure.core.async :refer [chan alts!! timeout]]
             [bass4.assessment.reminder :as assessment-reminder]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.db.orm-classes :as orm]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
   test-fixtures)
 
+
 (use-fixtures
   :each
-  random-date-tz-fixture)
+  random-date-tz-fixture-new
+  filter-created-objects-fixture)
 
 ;; -------------------------
 ;;  SIMPLE ACTIVATION TESTS

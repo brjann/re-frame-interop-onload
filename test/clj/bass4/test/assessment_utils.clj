@@ -14,7 +14,8 @@
             [clojure.tools.logging :as log]
             [bass4.assessment.late-flagger :as late-flagger]
             [bass4.assessment.activated-flagger :as activated-flagger]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.assessment.db :as assessment-db]))
 
 #_(use-fixtures
     :once
@@ -31,16 +32,16 @@
 (defn create-group!
   ([] (create-group! project-ass1-id))
   ([project-id]
-   (:objectid (orm/create-bass-object-map! {:class-name "cGroup"
-                                       :parent-id       project-id
-                                       :property-name   "Groups"}))))
+   (:objectid (orm/create-bass-object-map! {:class-name    "cGroup"
+                                            :parent-id     project-id
+                                            :property-name "Groups"}))))
 
 (defn create-assessment!
   ([properties] (create-assessment! ass-flag-assessment-series properties))
   ([project-id properties]
-   (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name "cAssessment"
-                                                           :parent-id       project-id
-                                                           :property-name   "Assessments"}))]
+   (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name    "cAssessment"
+                                                                :parent-id     project-id
+                                                                :property-name "Assessments"}))]
      (orm/update-object-properties! "c_assessment"
                                     assessment-id
                                     (merge {"Name"                                     (str "Assessment " assessment-id)
@@ -89,9 +90,9 @@
 
 (defn create-group-administration!
   [group-id assessment-id assessment-index & [properties]]
-  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name "cGroupAdministration"
-                                                              :parent-id       group-id
-                                                              :property-name   "Administrations"}))]
+  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name    "cGroupAdministration"
+                                                                   :parent-id     group-id
+                                                                   :property-name "Administrations"}))]
     (when properties
       (orm/update-object-properties! "c_groupadministration"
                                      administration-id
@@ -103,9 +104,9 @@
 
 (defn create-participant-administration!
   [user-id assessment-id assessment-index & [properties]]
-  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name "cParticipantAdministration"
-                                                              :parent-id       user-id
-                                                              :property-name   "Administrations"}))]
+  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name    "cParticipantAdministration"
+                                                                   :parent-id     user-id
+                                                                   :property-name "Administrations"}))]
     (orm/update-object-properties! "c_participantadministration"
                                    administration-id
                                    (merge {"assessment"      assessment-id
@@ -117,9 +118,9 @@
 
 (defn create-custom-assessment*!
   [user-id]
-  (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name "cAssessment"
-                                                          :parent-id       user-id
-                                                          :property-name   "AdHocAssessments"}))]
+  (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name    "cAssessment"
+                                                               :parent-id     user-id
+                                                               :property-name "AdHocAssessments"}))]
     (orm/update-object-properties! "c_assessment"
                                    assessment-id
                                    {"scope"                            0
@@ -188,6 +189,54 @@
         now (random-date)]
     (binding [*tz*  tz
               *now* now]
+      (f))))
+
+(defn random-date-tz-fixture-new
+  [f]
+  #_(clear-administrations!)
+  (let [tz  (t/time-zone-for-id (rand-nth (seq (t/available-ids))))
+        now (random-date)]
+    (binding [*tz*  tz
+              *now* now]
+      (f))))
+
+
+(defn filter-created-objects-fixture
+  [f]
+  (let [bind-fn                      (fn [f key]
+                                       (fn [& args]
+                                         (let [res      (apply f args)
+                                               filtered (filter #(contains? @orm/*created-objects* (get % key))
+                                                                res)]
+                                           filtered)))
+        activated-remind-participant assessment-db/potential-activated-remind-participant-administrations
+        activated-remind-group       assessment-db/potential-activated-remind-group-administrations
+        late-remind-participant      assessment-db/potential-late-remind-participant-administrations
+        late-remind-group            assessment-db/potential-late-remind-group-administrations
+        activated-flag-participant   assessment-db/potential-activated-flag-participant-administrations
+        activated-flag-group         assessment-db/potential-activated-flag-group-administrations
+        late-flag-participant        assessment-db/potential-late-flag-participant-administrations
+        late-flag-group              assessment-db/potential-late-flag-group-administrations
+        open-flags                   assessment-db/open-late-administration-flags]
+    (binding [orm/*created-objects* (atom #{})
+              assessment-db/potential-activated-remind-participant-administrations
+                                    (bind-fn activated-remind-participant :participant-administration-id)
+              assessment-db/potential-activated-remind-group-administrations
+                                    (bind-fn activated-remind-group :group-administration-id)
+              assessment-db/potential-late-remind-participant-administrations
+                                    (bind-fn late-remind-participant :participant-administration-id)
+              assessment-db/potential-late-remind-group-administrations
+                                    (bind-fn late-remind-group :group-administration-id)
+              assessment-db/potential-activated-flag-participant-administrations
+                                    (bind-fn activated-flag-participant :participant-administration-id)
+              assessment-db/potential-activated-flag-group-administrations
+                                    (bind-fn activated-flag-group :group-administration-id)
+              assessment-db/potential-late-flag-participant-administrations
+                                    (bind-fn late-flag-participant :participant-administration-id)
+              assessment-db/potential-late-flag-group-administrations
+                                    (bind-fn late-flag-group :group-administration-id)
+              assessment-db/open-late-administration-flags
+                                    (bind-fn open-flags :participant-administration-id)]
       (f))))
 
 (defn reminders

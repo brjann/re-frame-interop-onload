@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.assessment-activated-flagger
+(ns bass4.test.assessment-activated-flagger
   (:require [clojure.test :refer :all]
             [bass4.assessment.activated-flagger :as activated-flagger]
             [bass4.test.assessment-utils :refer :all]
@@ -14,7 +13,8 @@
 
 (use-fixtures
   :each
-  random-date-tz-fixture)
+  random-date-tz-fixture-new
+  filter-created-objects-fixture)
 
 (deftest db-flag-participant-administration
   (let [user-id1       (user-service/create-user! project-ass1-id)

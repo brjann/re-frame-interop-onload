@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.assessment-late-flagger
+(ns bass4.test.assessment-late-flagger
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan go-loop <!]]
@@ -20,7 +19,8 @@
 
 (use-fixtures
   :each
-  random-date-tz-fixture)
+  filter-created-objects-fixture
+  random-date-tz-fixture-new)
 
 (deftest db-flag-participant-administration
   (let [user-id1      (user-service/create-user! project-ass1-id)
