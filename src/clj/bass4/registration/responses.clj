@@ -25,7 +25,8 @@
             [bass4.services.user :as user-service]
             [bass4.http-errors :as http-errors]
             [bass4.db.core :as db]
-            [bass4.clients.core :as clients])
+            [bass4.clients.core :as clients]
+            [bass4.now :as now])
   (:import (java.util UUID)))
 
 (defn render-page
@@ -346,7 +347,7 @@
     (-> (http-response/found (str "/registration/" project-id "/captcha"))
         (assoc-reg-session session {:captcha-filename  filename
                                     :captcha-digits    digits
-                                    :captcha-timestamp (t/now)
+                                    :captcha-timestamp (now/now)
                                     :captcha-tries     0}))))
 
 (defn- captcha-page
@@ -372,7 +373,7 @@
         timestamp   (:captcha-timestamp reg-session)
         tries       (:captcha-tries reg-session)]
     (when (and timestamp tries)
-      (let [time-elapsed (t/in-seconds (t/interval timestamp (t/now)))]
+      (let [time-elapsed (t/in-seconds (t/interval timestamp (now/now)))]
         (and (> const-captcha-timeout time-elapsed)
              (> const-captcha-tries tries))))))
 
@@ -721,7 +722,7 @@
       (->
         (http-response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session {:study-consent {:consent-id (:consent-id consent-text)
-                                                    :time       (t/now)}})))))
+                                                    :time       (now/now)}})))))
 
 ;; --------------
 ;;    PRIVACY
@@ -742,7 +743,7 @@
       (->
         (http-response/found (str "/registration/" project-id "/form"))
         (assoc-reg-session session {:privacy-consent {:notice-id (:notice-id privacy-notice)
-                                                      :time      (t/now)}})))))
+                                                      :time      (now/now)}})))))
 
 
 ;; --------------

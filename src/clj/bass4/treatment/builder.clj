@@ -6,7 +6,8 @@
             [bass4.services.messages :as messages]
             [bass4.module.services :as module-service]
             [bass4.treatment.services :as treatment-service]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.now :as now]))
 
 
 ;; --------------------------
@@ -51,8 +52,8 @@
 (defn- treatment-ongoing?
   [treatment-access]
   (let [[start-date end-date] [(:start-date treatment-access) (:end-date treatment-access)]]
-    (and (t/before? start-date (t/now))
-         (t/after? (t/plus end-date (t/days 1)) (t/now)))))
+    (and (t/before? start-date (now/now))
+         (t/after? (t/plus end-date (t/days 1)) (now/now)))))
 
 (defn treatment-active?
   [treatment-access treatment]

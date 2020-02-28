@@ -11,6 +11,7 @@
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
+            [bass4.now :as now]
             [bass4.services.bass :as bass-service]
             [clj-time.coerce :as tc]
             [bass4.module.services :as module-service]
@@ -68,9 +69,9 @@
         message2-2 (messages/create-message-placeholder user2-id)
         message3-1 (messages/create-message-placeholder user3-id)
         message3-2 (messages/create-message-placeholder user3-id)
-        t60days    (-ms (t/minus (t/now) (t/days 60)))
-        t45days    (-ms (t/minus (t/now) (t/days 45)))
-        now        (-ms (t/now))]
+        t60days    (-ms (t/minus (now/now) (t/days 60)))
+        t45days    (-ms (t/minus (now/now) (t/days 45)))
+        now        (-ms (now/now))]
     (set-message-properties message1-1 t60days false)
     (set-message-properties message1-2 now false)
     (set-message-properties message2-1 now true)
@@ -116,9 +117,9 @@
   (let [user1-id (user-service/create-user! project-ass1-id)
         user2-id (user-service/create-user! project-ass1-id)
         user3-id (user-service/create-user! project-ass1-id)
-        t60days  (-ms (t/minus (t/now) (t/days 60)))
-        t45days  (-ms (t/minus (t/now) (t/days 45)))
-        now      (-ms (t/now))]
+        t60days  (-ms (t/minus (now/now) (t/days 60)))
+        t45days  (-ms (t/minus (now/now) (t/days 45)))
+        now      (-ms (now/now))]
     (create-flag! db/*db* user1-id t60days true)
     (create-flag! db/*db* user1-id now true)
     (create-flag! db/*db* user2-id t60days true)
@@ -151,9 +152,9 @@
         user2-id (user-service/create-user! project-ass1-id)
         user3-id (user-service/create-user! project-ass1-id)
         user4-id (user-service/create-user! project-ass1-id)
-        t60days  (-ms (t/minus (t/now) (t/days 60)))
-        t45days  (-ms (t/minus (t/now) (t/days 45)))
-        now      (-ms (t/now))]
+        t60days  (-ms (t/minus (now/now) (t/days 60)))
+        t45days  (-ms (t/minus (now/now) (t/days 45)))
+        now      (-ms (now/now))]
     (create-password-flag! db/*db* user1-id t60days true)
     (create-password-flag! db/*db* user1-id now true)
     (create-password-flag! db/*db* user2-id t60days true)
@@ -205,9 +206,9 @@
         t-access1-id (create-treatment-access! user1-id)
         t-access2-id (create-treatment-access! user2-id)
         t-access3-id (create-treatment-access! user3-id)
-        t60days      (-ms (t/minus (t/now) (t/days 60)))
-        t45days      (-ms (t/minus (t/now) (t/days 45)))
-        now          (-ms (t/now))]
+        t60days      (-ms (t/minus (now/now) (t/days 60)))
+        t45days      (-ms (t/minus (now/now) (t/days 45)))
+        now          (-ms (now/now))]
     (submit-homework! t-access1-id t60days 1)
     (submit-homework! t-access1-id now 1)
     (submit-homework! t-access2-id t60days 1)
@@ -264,9 +265,9 @@
         t-access2-id (create-treatment-access! user2-id)
         message1     (messages/create-message-placeholder user1-id)
         message4     (messages/create-message-placeholder user4-id)
-        t60days      (-ms (t/minus (t/now) (t/days 60)))
-        t45days      (-ms (t/minus (t/now) (t/days 45)))
-        now          (-ms (t/now))]
+        t60days      (-ms (t/minus (now/now) (t/days 60)))
+        t45days      (-ms (t/minus (now/now) (t/days 45)))
+        now          (-ms (now/now))]
     (link-to-therapist! user1-id therapist1-id)
     (link-to-therapist! user1-id therapist2-id)
     (link-to-therapist! user2-id therapist1-id)

@@ -5,6 +5,7 @@
             [bass4.treatment.builder :as treatment-builder]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
+            [bass4.now :as now]
             [bass4.services.user :as user-service]
             [clj-time.coerce :as tc]
             [bass4.module.services :as module-service]
@@ -16,8 +17,8 @@
 
 ;; TODO: It's not possible to test :modules-automatic-access because BASS messes it up
 (deftest two-modules
-  (let [user-id          (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
-                                                                           "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})
+  (let [user-id          (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (now/now) (t/days 1)))
+                                                                           "EndDate"   (utils/to-unix (t/plus (now/now) (t/days 1)))})
         treatments       (treatment-builder/user-treatment user-id)
         treatment-access (:treatment-access treatments)]
     (is (= 3958 (:treatment-id treatment-access)))
@@ -45,7 +46,7 @@
       (is (= #{5787 4002 4003 4007} (into #{} (map :module-id (filter :active? (get-in user-treatment [:tx-components :modules])))))))))
 
 (deftest treatment-active-tests
-  (with-redefs [t/now (constantly (t/date-time 2017 06 12 9 40 0))]
+  (with-redefs [now/now (constantly (t/date-time 2017 06 12 9 40 0))]
     (is (= false (treatment-builder/treatment-active? {:start-date      (tc/from-date #inst"2017-02-17T23:00:00.000000000-00:00")
                                                        :end-date        (tc/from-date #inst"2017-06-10T23:00:00.000000000-00:00")
                                                        :access-enabled? true}
@@ -75,14 +76,14 @@
                                                      {:access-enabling-required? true})))))
 
 ;(deftest treatment-multiple-active
-;  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+;  (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
 ;    ;; First and second treatment active
 ;    (is (= 3958 (get-in (treatment-builder/user-treatment 549821) [:treatment :treatment-id])))
 ;    ;; First inactive second active
 ;    (is (= 3972 (get-in (treatment-builder/user-treatment 550132) [:treatment :treatment-id])))))
 ;
 ;(deftest treatment-messaging
-;  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+;  (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
 ;    ;; User not allowed - treatment allows
 ;    (is (= false (get-in (treatment-builder/user-treatment 549821) [:tx-components :send-messages?])))
 ;    ;; User allowed - treatment allows

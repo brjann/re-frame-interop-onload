@@ -81,7 +81,7 @@
                                   ;; REMEMBER:
                                   ;; activation-date is is UTC time of activation,
                                   ;; NOT local time. Thus, it is sufficient to compare
-                                  ;; to t/now which returns UTC time
+                                  ;; to now/now which returns UTC time
                                   (nil? activation-date)
                                   :assessment-status/no-date
 

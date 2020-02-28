@@ -3,6 +3,7 @@
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
+            [bass4.now :as now]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.test.core :refer :all]
@@ -295,7 +296,7 @@
                                    :updates    {:MessageText message-text
                                                 :ReadTime    0
                                                 :Draft       0
-                                                :SendTime    (utils/to-unix (t/now))}})
+                                                :SendTime    (utils/to-unix (now/now))}})
     (db/create-bass-link! {:linker-id     message-id
                            :linkee-id     110
                            :link-property "Sender"

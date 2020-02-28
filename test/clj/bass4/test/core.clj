@@ -20,6 +20,7 @@
             [bass4.db-common :as db-common]
             [bass4.middleware.debug :as mw-debug]
             [bass4.config :as config]
+            [bass4.now :as now]
             [bass4.i18n :as i18n]
             [clojure.string :as str]
             [bass4.external-messages.email-sender :as email]
@@ -109,16 +110,16 @@
          reg-group      (create-group! project)]
      (doseq [instrument-id instruments]
        (link-instrument! reg-assessment instrument-id))     ; AAQ
-     (create-group-administration! reg-group reg-assessment 1 {:date (midnight (t/now))})
+     (create-group-administration! reg-group reg-assessment 1 {:date (midnight (now/now))})
      reg-group)))
 
 (defmacro fix-time
   [body]
   `(do
      (reset! test-current-time (utils/current-time))
-     (reset! test-now (t/now))
+     (reset! test-now (now/now))
      (with-redefs
-       [t/now (fn [] @test-now)]
+       [now/now (fn [] @test-now)]
        (binding [utils/current-time (fn [] @test-current-time)]
          ~body))))
 

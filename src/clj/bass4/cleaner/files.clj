@@ -4,7 +4,8 @@
             [bass4.task.scheduler :as task-scheduler]
             [bass4.clients.core :as clients]
             [bass4.php-interop :as php-interop]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [bass4.now :as now])
   (:import (java.io File)))
 
 (def cleanup-dirs ["sessiondata"
@@ -14,10 +15,10 @@
 
 (defn delete-files!
   [files]
-  (let [start-time (t/now)]
+  (let [start-time (now/now)]
     (loop [files files count 0]
       (if (or (nil? (seq files))
-              (<= 5 (t/in-minutes (t/interval start-time (t/now)))))
+              (<= 5 (t/in-minutes (t/interval start-time (now/now)))))
         count
         (do
           (io/delete-file (first files) true)

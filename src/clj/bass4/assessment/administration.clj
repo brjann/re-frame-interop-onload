@@ -1,5 +1,6 @@
 (ns bass4.assessment.administration
   (:require [bass4.assessment.ongoing :as assessment-ongoing]
+            [bass4.now :as now]
             [clj-time.core :as t]
             [clj-time.coerce :as tc]
             [bass4.db.core :as db]
@@ -22,7 +23,7 @@
   "Activates any assessments depending on completed assessments (by administration id)"
   [user-id administration-ids]
   (let [assessments (->> (db/get-dependent-assessments {:administration-ids administration-ids})
-                         (map #(assoc % :start-time (-> (t/plus (t/now) (t/days (:offset-days %)))
+                         (map #(assoc % :start-time (-> (t/plus (now/now) (t/days (:offset-days %)))
                                                         (start-date-representation)))))]
     (when (seq assessments)
       (->> (missing/create-missing-administrations! (map #(assoc %
@@ -35,7 +36,7 @@
 (defn set-administrations-completed!
   [user-id administration-ids]
   (db/set-administration-complete! {:administration-ids administration-ids})
-  (late-flagger/db-close-flags! db/*db* (t/now) administration-ids false)
+  (late-flagger/db-close-flags! db/*db* (now/now) administration-ids false)
   (db/set-last-assessment! {:administration-id (first administration-ids)})
   (dependent-assessments! user-id administration-ids))
 
@@ -107,7 +108,7 @@
   [user-id]
   (fn [idx step]
     (merge
-      {:time              (t/now) #_(tc/to-sql-date (t/now))
+      {:time              (now/now) #_(tc/to-sql-date (now/now))
        :user-id           user-id
        :batch-id          nil
        :step              idx
@@ -179,7 +180,7 @@
 ;;
 ;; Which means that
 ;; - the start time should be created as UTC corresponding to midnight in selected timezone
-;; - the start time should be compared to (t/now)
+;; - the start time should be compared to (now/now)
 ;;
 
 (defn get-assessment-round [user-id]

@@ -6,6 +6,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.test.core :refer :all]
+            [bass4.now :as now]
             [bass4.external-messages.async :refer [*debug-chan*]]
             [bass4.utils :as utils]
             [clj-time.core :as t]
@@ -41,7 +42,7 @@
 
 (deftest request-post-answers
   (let [php-session-id (get-php-session-id)
-        now            (utils/to-unix (t/now))]
+        now            (utils/to-unix (now/now))]
     (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
     (let [uid (php-interop/uid-for-data! {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})]
       (-> *s*
@@ -62,7 +63,7 @@
 
 (deftest request-wrong-instrument
   (let [uid (php-interop/uid-for-data! {:user-id 110 :path "instrument/" :php-session-id "xxx"})]
-    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
       (-> *s*
           (visit (str "/embedded/create-session?uid=" uid))
           (visit "/embedded/instrument/hell-is-here")
@@ -77,7 +78,7 @@
 
 (deftest embedded-render
   (let [uid (php-interop/uid-for-data! {:user-id 110 :path "iframe/render" :php-session-id "xxx"})]
-    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+    (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
       (-> *s*
           (visit "/embedded/iframe/render")
           (has (status? 403))
@@ -90,7 +91,7 @@
   (fix-time
     (let [php-session-id   (get-php-session-id)
           uid              (php-interop/uid-for-data! {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})
-          now              (utils/to-unix (t/now))
+          now              (utils/to-unix (now/now))
           timeouts         (php-interop/get-staff-timeouts)
           re-auth-timeout  (:re-auth-timeout timeouts)
           absolute-timeout (:absolute-timeout timeouts)]
@@ -105,7 +106,7 @@
           (follow-redirect)
           (has (some-text? "Timeout"))
           ;; Fake re-auth
-          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (now/now))))
           (visit "/embedded/instrument/1647")
           (has (status? 200))
           ;; Advance time to re-auth-timeout in two steps
@@ -113,7 +114,7 @@
           (advance-time-s! 1)
           (visit "/embedded/instrument/1647")
           (has (status? 302))
-          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (now/now))))
           ;; Advance time to almost re-auth-timeout
           (advance-time-s! (dec re-auth-timeout))
           ;; Reload page (updating last activity)
@@ -130,7 +131,7 @@
           (follow-redirect)
           (has (some-text? "No session"))
           ;; Reload page (updating last activity)
-          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (t/now))))
+          (pass-by (php-interop/update-php-session-last-activity! php-session-id (utils/to-unix (now/now))))
           (visit "/embedded/instrument/1647")
           ;; Access error - session was destroyed
           (has (status? 403))))))
@@ -139,7 +140,7 @@
   (fix-time
     (let [php-session-id-1 (get-php-session-id)
           php-session-id-2 (get-php-session-id)
-          now              (utils/to-unix (t/now))
+          now              (utils/to-unix (now/now))
           uid1             (php-interop/uid-for-data! {:user-id 110 :path "instrument/1647" :php-session-id php-session-id-1})
           uid2             (php-interop/uid-for-data! {:user-id 110 :path "instrument/286" :php-session-id php-session-id-1})
           uid3             (php-interop/uid-for-data! {:user-id 110 :path "instrument/286" :php-session-id php-session-id-2})
@@ -172,7 +173,7 @@
           (has (status? 403))))))
 
 (deftest add-paths
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now)) :php-session-id "xx"})]
+  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now)) :php-session-id "xx"})]
     (let [uid1 (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx" :path "instrument/305"})
           uid  (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx"})
           uid2 (php-interop/uid-for-data! {:user-id 110 :php-session-id "xx" :path "instrument/173"})]
@@ -238,7 +239,7 @@
 (deftest embedded-api
   "Iterate all treatment components to ensure that responses
   fulfill schemas"
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
     (let [[user-id treatment-access-id] (create-user-with-treatment2! 551356)
           uid1    (php-interop/uid-for-data! {:user-id 110 :php-session-id "xxx" :path ""})
           uid2    (php-interop/uid-for-data! {:user-id        110
@@ -279,7 +280,7 @@
                 (has (status? 200))))))))))
 
 (deftest embedded-api-ns
-  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+  (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
     (let [[user-id treatment-access-id] (create-user-with-treatment2! 642517)
           api-url (fn [url] (str url "?user-id=" user-id "&treatment-access-id=" treatment-access-id))
           uid     (php-interop/uid-for-data! {:user-id        110

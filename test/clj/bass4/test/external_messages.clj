@@ -10,6 +10,7 @@
             [bass4.external-messages.sms-sender :as sms]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
+            [bass4.now :as now]
             [bass4.external-messages.email-queue :as email-queue]
             [bass4.external-messages.sms-queue :as sms-queue]
             [clj-time.core :as t]
@@ -90,15 +91,15 @@
 (deftest email-queue
   (let [c (chan 3)]
     (binding [email/*email-reroute* c]
-      (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
+      (email-queue/add! db/*db* (now/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
                                          {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
                                          {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
-      (email-queue/send! db/*db* {:name :test} (t/now))
+      (email-queue/send! db/*db* {:name :test} (now/now))
       (is (= #{["mail1@example.com" "s1" "m1"]
                ["mail2@example.com" "s2" "m2"]
                ["mail3@example.com" "s3" "m3"]}
              (into #{} (repeatedly 3 #(butlast (butlast (into [] (poll! c))))))))
-      (email-queue/send! db/*db* {:name :test} (t/now))
+      (email-queue/send! db/*db* {:name :test} (now/now))
       (is (nil? (poll! c))))))
 
 (deftest email-fail
@@ -106,11 +107,11 @@
     (binding [email/*email-reroute*   :exception
               email-queue/max-fails   5
               email/send-error-email! #(put! c %2)]
-      (email-queue/add! db/*db* (t/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
+      (email-queue/add! db/*db* (now/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
                                          {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
                                          {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
       (doseq [n (range 5)]
-        (let [res (email-queue/send! db/*db* {:name :test} (t/now))]
+        (let [res (email-queue/send! db/*db* {:name :test} (now/now))]
           (is (= 3 (count (:exception res))))
           (is (= 0 (:success res)))
           (if (= 4 n)
@@ -118,7 +119,7 @@
             (is (nil? (poll! c)))))
         #_(is (= {:exception nil :fail 3 :success 0} res)))
       (is (= {:exception nil :success 0}
-             (email-queue/send! db/*db* {:name :test} (t/now)))))))
+             (email-queue/send! db/*db* {:name :test} (now/now)))))))
 
 ;; -------------
 ;;   SMS QUEUE
@@ -129,15 +130,15 @@
         sender     (sms/get-sender db/*db*)
         status-url (sms-status/status-url db/*db*)]
     (binding [sms/*sms-reroute* c]
-      (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
+      (sms-queue/add! db/*db* (now/now) [{:user-id 1 :to "1" :message "m1"}
                                        {:user-id 2 :to "2" :message "m2"}
                                        {:user-id 3 :to "3" :message "m3"}])
-      (sms-queue/send! db/*db* {:name :test} (t/now))
+      (sms-queue/send! db/*db* {:name :test} (now/now))
       (is (= #{["1" "m1" sender status-url]
                ["2" "m2" sender status-url]
                ["3" "m3" sender status-url]}
              (into #{} (repeatedly 3 #(into [] (poll! c))))))
-      (sms-queue/send! db/*db* {:name :test} (t/now))
+      (sms-queue/send! db/*db* {:name :test} (now/now))
       (is (nil? (poll! c))))))
 
 (deftest sms-fail
@@ -145,18 +146,18 @@
     (binding [sms/*sms-reroute*       :exception
               sms-queue/max-fails     5
               email/send-error-email! #(put! c %2)]
-      (sms-queue/add! db/*db* (t/now) [{:user-id 1 :to "1" :message "m1"}
+      (sms-queue/add! db/*db* (now/now) [{:user-id 1 :to "1" :message "m1"}
                                        {:user-id 2 :to "2" :message "m2"}
                                        {:user-id 3 :to "3" :message "m3"}])
       (doseq [n (range 5)]
-        (let [res (sms-queue/send! db/*db* {:name :test} (t/now))]
+        (let [res (sms-queue/send! db/*db* {:name :test} (now/now))]
           (is (= 3 (count (:exception res))))
           (is (= 0 (:success res)))
           (if (= 4 n)
             (is (string? (poll! c)))
             (is (nil? (poll! c))))))
       (is (= {:exception nil :success 0}
-             (sms-queue/send! db/*db* {:name :test} (t/now)))))))
+             (sms-queue/send! db/*db* {:name :test} (now/now)))))))
 
 ;; -------------
 ;;   SMS STATUS

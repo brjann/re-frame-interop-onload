@@ -6,6 +6,7 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass]
+            [bass4.now :as now]
             [bass4.i18n :as i18n]
             [bass4.services.user :as user-service]))
 
@@ -54,8 +55,8 @@
   (user-service/set-user-privacy-consent!
     (:user-id user)
     notice-id
-    (t/now))
-  (user-service/close-no-consent-flag! (:user-id user) (t/now))
+    (now/now))
+  (user-service/close-no-consent-flag! (:user-id user) (now/now))
   (http-response/found "/user"))
 
 (defn no-consent-response

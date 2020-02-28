@@ -1,6 +1,7 @@
 (ns bass4.session.create
   (:require [clj-time.core :as t]
             [clojure.tools.logging :as log]
+            [bass4.now :as now]
             [bass4.session.timeout :as session-timeout]))
 
 (defn new
@@ -9,7 +10,7 @@
     {:user-id         (:user-id user)
      :auth-re-auth?   nil
      :last-login-time (:last-login-time user)
-     :session-start   (t/now)}
+     :session-start   (now/now)}
     (session-timeout/re-auth-timeout-map)
     additional))
 

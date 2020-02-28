@@ -6,7 +6,8 @@
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [mount-up.core :as mount-up]
-            [bass4.clients.core :as clients])
+            [bass4.clients.core :as clients]
+            [bass4.now :as now])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -38,7 +39,7 @@
   [scheduling tz]
   (case (first scheduling)
     ::hourly
-    [(- 60 (t/minute (t/now)))
+    [(- 60 (t/minute (now/now)))
      60
      TimeUnit/MINUTES]
 
@@ -53,9 +54,9 @@
      TimeUnit/MILLISECONDS]
 
     ::daily-at
-    (let [wait (let [current-tz-hour (t/hour (t/to-time-zone (t/now) tz))
+    (let [wait (let [current-tz-hour (t/hour (t/to-time-zone (now/now) tz))
                      target-tz-hour  (second scheduling)
-                     current-minute  (t/minute (t/now))
+                     current-minute  (t/minute (now/now))
                      minutes-until   (-> (- target-tz-hour current-tz-hour)
                                          (* 60)
                                          (- current-minute))]
@@ -83,7 +84,7 @@
                                            (fn []
                                              (let [db        @(get clients/client-db-connections db-name)
                                                    db-config (get clients/client-configs db-name)]
-                                               (task-runner/run-db-task! db (t/now) db-name db-config task task-name task-id))))
+                                               (task-runner/run-db-task! db (now/now) db-name db-config task task-name task-id))))
                                          (long time-left)
                                          interval
                                          time-unit)]

@@ -2,6 +2,7 @@
   (:require [clojure.core.async
              :refer [>! <! <!! go chan timeout alts!! dropping-buffer thread]]
             [clj-http.client :as http]
+            [bass4.now :as now]
             [bass4.utils :refer [json-safe filter-map kebab-case-keys]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t])
@@ -151,7 +152,7 @@
 (defn timeout?
   [session]
   (let [start-time (:start-time session)
-        age        (t/in-seconds (t/interval start-time (t/now)))]
+        age        (t/in-seconds (t/interval start-time (now/now)))]
     (< 180 age)))
 
 (defn session-info

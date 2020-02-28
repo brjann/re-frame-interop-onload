@@ -4,6 +4,7 @@
             [bass4.services.bass :as bass]
             [clojure.string :as str]
             [bass4.utils :as utils]
+            [bass4.now :as now]
             [bass4.db.core :as db]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.php_clj.core :refer [clj->php]]
@@ -160,14 +161,14 @@
   (let [module-accesses-string (-> (db/get-module-accesses {:treatment-access-id treatment-access-id})
                                    (:module-accesses)
                                    (php->clj)
-                                   (assoc module-id (utils/to-unix (t/now)))
+                                   (assoc module-id (utils/to-unix (now/now)))
                                    (clj->php))]
     (db/update-module-accesses! {:treatment-access-id treatment-access-id
                                  :module-accesses     module-accesses-string})))
 
 (defn submit-homework!
   ([treatment-access-id module]
-   (submit-homework! treatment-access-id module (t/now)))
+   (submit-homework! treatment-access-id module (now/now)))
   ([treatment-access-id module now]
    (db/submit-homework! {:treatment-access-id treatment-access-id
                          :module-id           (:module-id module)

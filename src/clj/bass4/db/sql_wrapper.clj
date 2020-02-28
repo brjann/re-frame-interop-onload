@@ -1,6 +1,7 @@
 (ns bass4.db.sql-wrapper
   (:require [bass4.utils :as utils]
             [clojure.tools.logging :as log]
+            [bass4.now :as now]
             [hugsql.core :as hugsql]
             [clojure.java.jdbc :as jdbc]
             [bass4.external-messages.email-sender :as email]
@@ -54,7 +55,7 @@
                                           (catch SQLException e
                                             e)))
         error?    (instance? SQLException val)
-        unix      (tc/to-epoch (t/now))
+        unix      (tc/to-epoch (now/now))
         tries     (if error? max-tries (:tries (meta val)))]
     (request-logger/swap-state! :sql-count inc 0)
     (request-logger/swap-state! :sql-times #(conj % time) [])

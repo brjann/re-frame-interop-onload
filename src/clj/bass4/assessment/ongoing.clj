@@ -1,5 +1,6 @@
 (ns bass4.assessment.ongoing
   (:require [clj-time.core :as t]
+            [bass4.now :as now]
             [bass4.db.core :as db]
             [bass4.utils :as utils]
             [bass4.assessment.create-missing :as missing]
@@ -97,4 +98,4 @@
 
 (defn ongoing-assessments
   [user-id]
-  (ongoing-assessments* db/*db* (t/now) user-id))
+  (ongoing-assessments* db/*db* (now/now) user-id))

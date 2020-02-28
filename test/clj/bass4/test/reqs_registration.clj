@@ -10,6 +10,7 @@
             [bass4.test.core :refer :all]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
+            [bass4.now :as now]
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [clojure.string :as string]
@@ -1170,7 +1171,7 @@
       (is (string/includes? (get-in response [:response :headers "Location"]) "/registration/564610/captcha")))))
 
 (deftest captcha-timeout
-  (let [now (t/now)]
+  (let [now (now/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
                   (visit "/registration/564610/captcha")
@@ -1182,7 +1183,7 @@
           (let [x (-> x
                       (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
                       (has (status? 422)))])
-          (with-redefs [t/now (constantly (t/plus now (t/seconds 61)))]
+          (with-redefs [now/now (constantly (t/plus now (t/seconds 61)))]
             (-> x
                 (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
                 ;; Captcha is invalid
@@ -1195,7 +1196,7 @@
                 (has (status? 302)))))))))
 
 (deftest captcha-tries
-  (let [now (t/now)]
+  (let [now (now/now)]
     (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
                   (visit "/registration/564610/captcha")

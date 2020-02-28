@@ -3,6 +3,7 @@
             [clj-time.format :as f]
             [clj-time.core :as t]
             [bass4.utils :as utils]
+            [bass4.now :as now]
             [bass4.db.orm-classes :as orm]
             [bass4.clients.core :as clients])
   (:import (java.util UUID)))
@@ -23,7 +24,7 @@
 (defn create-flag!
   [user]
   (let [date-str (-> (f/formatter "yyyy-MM-dd HH:mm" (t/time-zone-for-id (clients/client-setting [:timezone])))
-                     (f/unparse (t/now)))]
+                     (f/unparse (now/now)))]
     (orm/create-flag!
       (:user-id user)
       "lost-password"

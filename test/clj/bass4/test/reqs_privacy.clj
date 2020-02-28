@@ -8,6 +8,7 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
+            [bass4.now :as now]
             [bass4.services.privacy :as privacy-service]
             [bass4.db.core :as db]
             [clj-time.core :as t]
@@ -99,7 +100,7 @@
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
-                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
+                                                     "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (follow-redirect)
@@ -164,7 +165,7 @@
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
-                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
+                                                     "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (follow-redirect)

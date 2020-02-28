@@ -8,6 +8,7 @@
             [bass4.test.core :refer :all]
             [bass4.test.assessment-utils :refer :all]
             [bass4.db.core :as db]
+            [bass4.now :as now]
             [clj-time.core :as t]
             [bass4.utils :as utils]
             [bass4.services.user :as user-service]
@@ -31,7 +32,7 @@
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
-                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
+                                                     "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -62,7 +63,7 @@
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
-                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
+                                                     "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (advance-time-d! 11)
       (-> *s*
           (visit (str "/q/" q-id))
@@ -80,7 +81,7 @@
   (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (now/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 200))
@@ -98,7 +99,7 @@
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
-      (user-service/update-user-properties! user-id {"QuickLoginPassword" q-id "QuickLoginTimestamp" (utils/to-unix (t/now))})
+      (user-service/update-user-properties! user-id {"QuickLoginPassword" q-id "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (-> *s*
           (visit (str "/q/" q-id))
           (has (status? 302))
@@ -124,7 +125,7 @@
                                                      :username             user-id
                                                      :password             user-id
                                                      "QuickLoginPassword"  q-id
-                                                     "QuickLoginTimestamp" (utils/to-unix (t/now))})
+                                                     "QuickLoginTimestamp" (utils/to-unix (now/now))})
       (fix-time
         (-> *s*
             (visit (str "/q/" q-id))

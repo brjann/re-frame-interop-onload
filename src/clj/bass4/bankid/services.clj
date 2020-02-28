@@ -6,6 +6,7 @@
             [bass4.config :refer [env]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
+            [bass4.now :as now]
             [bass4.clients.core :as clients]))
 
 (defn print-status
@@ -14,7 +15,7 @@
 
 (defn ^:dynamic bankid-now
   []
-  (t/now))
+  (now/now))
 
 ;; -------------------
 ;;   BANKID REQUESTS

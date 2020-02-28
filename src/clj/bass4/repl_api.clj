@@ -4,6 +4,7 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.assessment.statuses :as assessment-statuses]
             [clj-time.core :as t]
+            [bass4.now :as now]
             [bass4.clients.core :as clients]
             [bass4.php-interop :as php-interop]
             [bass4.external-messages.sms-sender :as sms]
@@ -24,7 +25,7 @@
              @db-)]
     (if db
       (->> (assessment-statuses/user-administrations-statuses db
-                                                              (t/now)
+                                                              (now/now)
                                                               user-id)
            (map (fn [assessment]
                   {"assessment-id"     (:assessment-id assessment)
@@ -39,7 +40,7 @@
              @db-)]
     (if db
       (->> (assessment-statuses/group-administrations-statuses db
-                                                               (t/now)
+                                                               (now/now)
                                                                group-id)
            (map (fn [assessment]
                   {"assessment-id"     (:assessment-id assessment)
@@ -81,7 +82,7 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (sms-queue/add! db (t/now) [{:user-id     user-id
+        (sms-queue/add! db (now/now) [{:user-id   user-id
                                      :to          to
                                      :message     message
                                      :redact-text redact-text
@@ -112,7 +113,7 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (email-queue/add! db (t/now) [{:user-id     user-id
+        (email-queue/add! db (now/now) [{:user-id   user-id
                                        :to          to
                                        :subject     subject
                                        :message     message

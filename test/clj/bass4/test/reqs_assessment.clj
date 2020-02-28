@@ -6,6 +6,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
+            [bass4.now :as now]
             [bass4.test.core :refer :all]
             [bass4.services.auth :as auth-service]
             [bass4.services.user :as user-service]
@@ -63,7 +64,7 @@
 
       ;; Login, double auth and then welcome text
       (let [user-id (create-user-with-password! {"SMSNumber" "00"})]
-        (create-participant-administration! user-id top-priority 1 {:date (midnight (t/now))})
+        (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
         (-> *s*
             (visit "/login" :request-method :post :params {:username user-id :password user-id})
             (has (status? 302))
@@ -78,7 +79,7 @@
       ;; Answers validation fail
       (binding [i-validation/*validate-answers? true]
         (let [user-id (create-user-with-password! {"SMSNumber" "00"})]
-          (create-participant-administration! user-id top-priority 1 {:date (midnight (t/now))})
+          (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
           (-> *s*
               (visit "/login" :request-method :post :params {:username user-id :password user-id})
               (visit "/double-auth" :request-method :post :params {:code "666777"})
@@ -96,8 +97,8 @@
       (let [group-id (create-group! project-double-auth)
             user-id  (create-user-with-password! {"SMSNumber" "00"
                                                   "Group"     group-id})]
-        (create-participant-administration! user-id top-priority 1 {:date (midnight (t/now))})
-        (create-group-administration! group-id top-top-priority 1 {:date (midnight (t/now))})
+        (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
+        (create-group-administration! group-id top-top-priority 1 {:date (midnight (now/now))})
         (-> *s*
             (visit "/login" :request-method :post :params {:username user-id :password user-id})
             (visit "/double-auth" :request-method :post :params {:code "666777"})
@@ -129,8 +130,8 @@
       (let [group-id (create-group! project-double-auth)
             user-id  (create-user-with-password! {"SMSNumber" "00"
                                                   "Group"     group-id})]
-        (create-participant-administration! user-id top-priority 1 {:date (midnight (t/now))})
-        (create-group-administration! group-id top-top-priority 1 {:date (midnight (t/now))})
+        (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
+        (create-group-administration! group-id top-top-priority 1 {:date (midnight (now/now))})
         (let [s1 (-> *s*
                      (visit "/login" :request-method :post :params {:username user-id :password user-id})
                      (visit "/double-auth" :request-method :post :params {:code "666777"}))
@@ -206,7 +207,7 @@
       (let [group-id (create-group! project-double-auth)
             user-id  (create-user-with-password! {"SMSNumber" "00"
                                                   "Group"     group-id})]
-        (create-group-administration! group-id merge-hide-texts 1 {:date (midnight (t/now))})
+        (create-group-administration! group-id merge-hide-texts 1 {:date (midnight (now/now))})
         (-> *s*
             (visit "/login" :request-method :post :params {:username user-id :password user-id})
             (visit "/double-auth" :request-method :post :params {:code "666777"})
@@ -223,9 +224,9 @@
       (let [group-id (create-group! project-double-auth)
             user-id  (create-user-with-password! {"SMSNumber" "00"
                                                   "Group"     group-id})]
-        (create-participant-administration! user-id top-priority 1 {:date (midnight (t/now))})
-        (create-group-administration! group-id top-top-priority 1 {:date (midnight (t/now))})
-        (create-group-administration! group-id merge-hide-texts 1 {:date (midnight (t/now))})
+        (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
+        (create-group-administration! group-id top-top-priority 1 {:date (midnight (now/now))})
+        (create-group-administration! group-id merge-hide-texts 1 {:date (midnight (now/now))})
         (-> *s*
             (visit "/login" :request-method :post :params {:username user-id :password user-id})
             (visit "/double-auth" :request-method :post :params {:code "666777"})
@@ -259,7 +260,7 @@
 (deftest custom-assessment
   (let [user-id (user-service/create-user! project-no-double-auth)]
     (user-service/update-user-properties! user-id {:username user-id :password user-id})
-    (create-custom-assessment! user-id [286 4743] (t/now))
+    (create-custom-assessment! user-id [286 4743] (now/now))
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 302))

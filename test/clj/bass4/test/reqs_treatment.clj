@@ -9,6 +9,7 @@
             [bass4.test.core :refer :all]
             [clj-time.core :as t]
             [clojure.data.json :as json]
+            [bass4.now :as now]
             [bass4.responses.error-report :as error-report-response]
             [bass4.services.user :as user-service]
             [bass4.utils :as utils]
@@ -24,7 +25,7 @@
 (deftest request-messages
   (let [user-id1 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 1})
         user-id2 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 0})]
-    (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+    (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
       (-> *s*
           (modify-session {:user-id user-id1 :double-authed? true})
           (visit "/user")
@@ -42,8 +43,8 @@
 
 (deftest browse-treatment
   (let [random-message (str (UUID/randomUUID))
-        user-id        (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
-                                                                         "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})]
+        user-id        (create-user-with-treatment! tx-timelimited true {"StartDate" (utils/to-unix (t/minus (now/now) (t/days 1)))
+                                                                         "EndDate"   (utils/to-unix (t/plus (now/now) (t/days 1)))})]
     (-> *s*
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (follow-redirect)
@@ -153,7 +154,7 @@
       (doseq [[module-id content-id texts] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
               uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
-          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
             (let [s (visit *s* (str "/embedded/create-session?uid=" uid))]
               (doseq [text texts]
                 (-> s
@@ -230,7 +231,7 @@
       (doseq [[module-id content-id text] view-checks]
         (let [path (str "iframe/view-user-content/" treatment-access-id "/" module-id "/" content-id)
               uid  (php-interop/uid-for-data! {:user-id 110 :path path :php-session-id "xxx"})]
-          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (t/now))})]
+          (with-redefs [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
             (-> *s*
                 (visit (str "/embedded/create-session?uid=" uid))
                 (visit (str "/embedded/" path))

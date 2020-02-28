@@ -13,6 +13,7 @@
                                      *s*
                                      advance-time-s!
                                      test-now]]
+            [bass4.now :as now]
             [bass4.config :refer [env]]
             [bass4.test.bankid.mock-collect :as mock-collect]
             [clojure.tools.logging :as log]
@@ -28,7 +29,7 @@
 (use-fixtures
   :each
   (fn [f]
-    (swap! test-now (constantly (t/now)))
+    (swap! test-now (constantly (now/now)))
     (binding [bankid-service/bankid-now (fn [] @test-now)]
       ((mock-collect/wrap-mock :immediate) f))))
 
