@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-403
+(ns bass4.test.reqs-403
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan]]

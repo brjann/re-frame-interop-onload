@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.defapi
+(ns bass4.test.defapi
   (:require [clojure.test :refer :all]
             [bass4.api-coercion :as api :refer [defapi]]
             [clojure.data.json :as json]))

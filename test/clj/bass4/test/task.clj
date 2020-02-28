@@ -9,10 +9,7 @@
 
 (use-fixtures
   :once
-  test-fixtures)
-
-(use-fixtures
-  :once
+  test-fixtures
   (fn [f]
     (binding [task-log/*log?* false]
       (f))))

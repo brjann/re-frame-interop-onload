@@ -1,4 +1,4 @@
-(ns ^:eftest/synchronized
+(ns
   bass4.test.reqs-url
   (:require [bass4.i18n]
             [clojure.test :refer :all]

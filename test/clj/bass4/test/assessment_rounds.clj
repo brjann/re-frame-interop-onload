@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.assessment-rounds
+(ns bass4.test.assessment-rounds
   (:require [clojure.test :refer :all]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.ongoing :as assessment-ongoing]

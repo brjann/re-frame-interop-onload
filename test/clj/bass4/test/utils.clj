@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.utils
+(ns bass4.test.utils
   (:require [clojure.test :refer :all]
             [bass4.utils :refer :all]
             [bass4.i18n :as i18n]))
