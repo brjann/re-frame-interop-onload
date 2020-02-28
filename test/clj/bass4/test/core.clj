@@ -29,7 +29,8 @@
             [net.cgrand.enlive-html :as enlive]
             [bass4.middleware.request-logger :as request-logger]
             [bass4.clients.core :as clients]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.db.orm-classes :as orm]))
 
 (def project-double-auth 536972)
 (def project-double-auth-assessment-series 536974)
@@ -56,10 +57,10 @@
   (let [treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
                                                                 :parent-id     user-id
                                                                 :property-name "TreatmentAccesses"}))]
-    (db/update-object-properties! {:table-name "c_treatmentaccess"
-                                   :object-id  treatment-access-id
-                                   :updates    (merge {:AccessEnabled true}
-                                                      access-properties)})
+    (orm/update-object-properties! "c_treatmentaccess"
+                                   treatment-access-id
+                                   (merge {"AccessEnabled" true}
+                                          access-properties))
     (db/create-bass-link! {:linker-id     treatment-access-id
                            :linkee-id     treatment-id
                            :link-property "Treatment"
@@ -72,8 +73,7 @@
   ([treatment-id with-login?]
    (create-user-with-treatment! treatment-id with-login? {}))
   ([treatment-id with-login? access-properties]
-   (let [user-id (user-service/create-user! project-tx {:Group     "537404"
-                                                        :firstname "tx-text"})]
+   (let [user-id (user-service/create-user! project-tx)]
      (when with-login?
        (user-service/update-user-properties! user-id {:username user-id
                                                       :password user-id}))

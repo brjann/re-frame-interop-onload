@@ -5,15 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.db.core :as db]
-            [bass4.test.core :refer [test-fixtures
-                                     fn-not-text?
-                                     disable-attack-detector
-                                     *s*
-                                     modify-session
-                                     log-body
-                                     log-headers
-                                     log-status
-                                     log-response]]
+            [bass4.test.core :refer :all]
             [clj-time.core :as t]
             [clojure.data.json :as json]
             [bass4.responses.error-report :as error-report-response]
@@ -29,29 +21,33 @@
   disable-attack-detector)
 
 (deftest request-messages
-  (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
-    (-> *s*
-        (modify-session {:user-id 549821 :double-authed? true})
-        (visit "/user")
-        (visit "/user/tx/messages")
-        (fn-not-text? "New message")
-        (visit "/user/tx/messages" :request-method :post :params {:message "xxx"})
-        (has (status? 404))
-        (visit "/user/tx/messages-save-draft" :request-method :post :params {:message "xxx"})
-        (has (status? 404)))
-    (-> *s*
-        (modify-session {:user-id 543021 :double-authed? true})
-        (visit "/user")
-        (visit "/user/tx/messages")
-        (has (some-text? "New message")))))
+  (let [user-id1 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 1})
+        user-id2 (create-user-with-treatment! tx-autoaccess false {"MessagesSendDisallow" 0})]
+    (with-redefs [t/now (constantly (t/date-time 2017 11 30 0 0 0))]
+      (-> *s*
+          (modify-session {:user-id user-id1 :double-authed? true})
+          (visit "/user")
+          (visit "/user/tx/messages")
+          (fn-not-text? "New message")
+          (visit "/user/tx/messages" :request-method :post :params {:message "xxx"})
+          (has (status? 404))
+          (visit "/user/tx/messages-save-draft" :request-method :post :params {:message "xxx"})
+          (has (status? 404)))
+      (-> *s*
+          (modify-session {:user-id user-id2 :double-authed? true})
+          (visit "/user")
+          (visit "/user/tx/messages")
+          (has (some-text? "New message"))))))
 
 (deftest browse-treatment
-  (let [random-message (str (UUID/randomUUID))]
+  (let [random-message (str (UUID/randomUUID))
+        user-id        (create-user-with-treatment! 3958 true {"StartDate" (utils/to-unix (t/minus (t/now) (t/days 1)))
+                                                               "EndDate"   (utils/to-unix (t/plus (t/now) (t/days 1)))})]
     (-> *s*
-        (visit "/login" :request-method :post :params {:username "in-treatment" :password "IN-treatment88"})
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (follow-redirect)
         (follow-redirect)
-        (has (some-text? "Your treatment started"))
+        (has (some-text? "Welcome!"))
         (visit "/user/xxx")
         (has (status? 404))
         (visit "/user/tx/messages")
@@ -82,8 +78,6 @@
         (has (status? 200))
         (visit "/user/tx/module/3961/worksheet/4000")
         (has (status? 404))
-        (visit "/user/tx/module/3974/worksheet/4000")
-        (has (status? 200))
         (visit "/user/tx/error-report")
         (has (some-text? "Problems with website"))
         (visit "/user/tx/error-report" :request-method :post :params {:hello "xxx"})
