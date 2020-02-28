@@ -118,10 +118,9 @@
   `(do
      (reset! test-current-time (utils/current-time))
      (reset! test-now (now/now))
-     (with-redefs
-       [now/now (fn [] @test-now)]
-       (binding [utils/current-time (fn [] @test-current-time)]
-         ~body))))
+     (binding [now/now            (fn [] @test-now)
+               utils/current-time (fn [] @test-current-time)]
+       ~body)))
 
 (defn advance-time-s!
   ([secs]
@@ -197,15 +196,15 @@
               clients/*client-config*          (get clients/client-configs test-db)
               db/*db*                          @(get clients/client-db-connections test-db)]
       (when @first-run
-          (reset! first-run false)
-          (jdbc/execute! db/*db* ["TRUNCATE c_participant"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_participantadministration"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_group"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_groupadministration"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_assessment"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_instrumentanswers"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_treatmentaccess"])
-          (jdbc/execute! db/*db* ["TRUNCATE c_flag"]))
+        (reset! first-run false)
+        (jdbc/execute! db/*db* ["TRUNCATE c_participant"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_participantadministration"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_group"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_groupadministration"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_assessment"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_instrumentanswers"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_treatmentaccess"])
+        (jdbc/execute! db/*db* ["TRUNCATE c_flag"]))
       (f))))
 
 (defn disable-attack-detector [f]

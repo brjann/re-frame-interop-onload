@@ -1,6 +1,6 @@
 (ns bass4.now
   (:require [clj-time.core :as t]))
 
-(defn now
+(defn ^:dynamic now
   []
   (t/now))
