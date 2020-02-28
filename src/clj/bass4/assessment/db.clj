@@ -18,11 +18,6 @@
          (t/plus (t/days 1))
          (t/minus (t/seconds 1)))]))
 
-(defn filter-created-objects
-  [key]
-  #(some @orm/*created-objects*
-         (get % key)))
-
 (defn ^:dynamic potential-activated-flag-participant-administrations
   "Returns participant administrations that are potentially flaggable as activated.
   If participants' group lacks a matching participant administration,

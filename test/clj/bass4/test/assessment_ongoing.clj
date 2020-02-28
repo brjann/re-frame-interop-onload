@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.assessment-ongoing
+(ns bass4.test.assessment-ongoing
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
             [bass4.db.core :refer [*db*] :as db]
@@ -17,11 +16,7 @@
 
 (use-fixtures
   :each
-  random-date-tz-fixture)
-
-(def custom-participant-id 654412)
-(def custom-administration-id 654430)
-(def custom-assessment-id 654429)
+  random-date-tz-fixture-new)
 
 (defn ongoing-assessments
   [now user-id]
