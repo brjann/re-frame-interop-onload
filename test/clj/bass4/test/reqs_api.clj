@@ -1,5 +1,4 @@
-(ns
-  bass4.test.reqs-api
+(ns bass4.test.reqs-api
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -14,7 +13,8 @@
             [bass4.utils :as utils]
             [bass4.module.services :as module-service]
             [bass4.treatment.builder :as treatment-builder]
-            [bass4.config :as config])
+            [bass4.config :as config]
+            [bass4.db.orm-classes :as orm])
   (:import (org.joda.time DateTime)))
 
 
@@ -288,9 +288,9 @@
 
 (defn- send-message-to-user
   [user-id message-text]
-  (let [message-id (:objectid (db/create-bass-object! {:class-name    "cMessage"
-                                                       :parent-id     user-id
-                                                       :property-name "Messages"}))]
+  (let [message-id (:objectid (orm/create-bass-object-map! {:class-name    "cMessage"
+                                                            :parent-id     user-id
+                                                            :property-name "Messages"}))]
     (db/update-object-properties! {:table-name "c_message"
                                    :object-id  message-id
                                    :updates    {:MessageText message-text

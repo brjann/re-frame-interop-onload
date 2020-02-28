@@ -58,9 +58,9 @@
 
 (defn link-user-to-treatment!
   [user-id treatment-id access-properties]
-  (let [treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                :parent-id     user-id
-                                                                :property-name "TreatmentAccesses"}))]
+  (let [treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name "cTreatmentAccess"
+                                                                :parent-id       user-id
+                                                                :property-name   "TreatmentAccesses"}))]
     (orm/update-object-properties! "c_treatmentaccess"
                                    treatment-access-id
                                    (merge {"AccessEnabled" true}
@@ -382,4 +382,4 @@
     (shell/sh "/Applications/MAMP/Library/bin/mysql" "-uroot" "-proot" db-name :in (clojure.java.io/file "/Users/brjljo/Box Sync/BASS Platform/databases/TEST-structure-dump-reduced.sql"))
     (jdbc/with-db-connection [conn {:dbtype "mysql" :port 3300 :dbname db-name :user "root" :password "root" "serverTimezone" "UTC"}]
       (binding [db/*db* conn]
-        (db/create-bass-object! {:class-name "cParticipant" :property-name "XXX" :parent-id 666}))))
+        (orm/create-bass-object-map! {:class-name "cParticipant" :property-name "XXX" :parent-id 666}))))

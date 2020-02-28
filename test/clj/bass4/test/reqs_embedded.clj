@@ -14,7 +14,8 @@
             [bass4.utils :as utils]
             [bass4.php-interop :as php-interop]
             [bass4.services.user :as user-service]
-            [bass4.module.services :as module-service])
+            [bass4.module.services :as module-service]
+            [bass4.db.orm-classes :as orm])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -216,9 +217,9 @@
   ([treatment-id with-login? access-properties]
    (let [user-id             (user-service/create-user! 543018 {:Group     "537404"
                                                                 :firstname "tx-text"})
-         treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                 :parent-id     user-id
-                                                                 :property-name "TreatmentAccesses"}))]
+         treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name    "cTreatmentAccess"
+                                                                      :parent-id     user-id
+                                                                      :property-name "TreatmentAccesses"}))]
      (when with-login?
        (user-service/update-user-properties! user-id {:username user-id
                                                       :password user-id}))

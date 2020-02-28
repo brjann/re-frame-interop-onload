@@ -24,6 +24,10 @@
                                          :parent-id     parent-id
                                          :property-name property-name})))
 
+(defn create-bass-object-map!
+  ([map] (create-bass-object-map! db/*db* map))
+  ([db map] (db/create-bass-object! db map)))
+
 (defn update-object-properties*!
   "Allows for updating object properties using strings as field names to
   avoid cluttering the keyword namespace."
@@ -59,9 +63,9 @@
 (defn create-flag!
   ([user-id issuer flag-text] (create-flag! user-id issuer flag-text ""))
   ([user-id issuer flag-text flag-icon]
-   (let [flag-id (:objectid (db/create-bass-object! {:class-name    "cFlag"
-                                                     :parent-id     user-id
-                                                     :property-name "Flags"}))]
+   (let [flag-id (:objectid (create-bass-object-map! {:class-name    "cFlag"
+                                                      :parent-id     user-id
+                                                      :property-name "Flags"}))]
      (db/update-object-properties! {:table-name "c_flag"
                                     :object-id  flag-id
                                     :updates    {:FlagText   flag-text

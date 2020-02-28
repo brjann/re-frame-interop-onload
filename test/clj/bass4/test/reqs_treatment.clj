@@ -13,7 +13,8 @@
             [bass4.services.user :as user-service]
             [bass4.utils :as utils]
             [bass4.php-interop :as php-interop]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [bass4.db.orm-classes :as orm])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -90,9 +91,9 @@
 
 (deftest ns-imports-exports-write-exports
   (let [user-id             (user-service/create-user! 543018 {:firstname "import-export"})
-        treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                :parent-id     user-id
-                                                                :property-name "TreatmentAccesses"}))]
+        treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name    "cTreatmentAccess"
+                                                                     :parent-id     user-id
+                                                                     :property-name "TreatmentAccesses"}))]
     (db/update-object-properties! {:table-name "c_treatmentaccess"
                                    :object-id  treatment-access-id
                                    :updates    {:AccessEnabled true}})
@@ -162,9 +163,9 @@
 
 (deftest ns-imports-exports-write-imports
   (let [user-id             (user-service/create-user! 543018 {:firstname "import-export"})
-        treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                :parent-id     user-id
-                                                                :property-name "TreatmentAccesses"}))]
+        treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name    "cTreatmentAccess"
+                                                                     :parent-id     user-id
+                                                                     :property-name "TreatmentAccesses"}))]
     (db/update-object-properties! {:table-name "c_treatmentaccess"
                                    :object-id  treatment-access-id
                                    :updates    {:AccessEnabled true}})

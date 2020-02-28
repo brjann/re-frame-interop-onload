@@ -31,16 +31,16 @@
 (defn create-group!
   ([] (create-group! project-ass1-id))
   ([project-id]
-   (:objectid (db/create-bass-object! {:class-name    "cGroup"
-                                       :parent-id     project-id
-                                       :property-name "Groups"}))))
+   (:objectid (orm/create-bass-object-map! {:class-name "cGroup"
+                                       :parent-id       project-id
+                                       :property-name   "Groups"}))))
 
 (defn create-assessment!
   ([properties] (create-assessment! ass-flag-assessment-series properties))
   ([project-id properties]
-   (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
-                                                           :parent-id     project-id
-                                                           :property-name "Assessments"}))]
+   (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name "cAssessment"
+                                                           :parent-id       project-id
+                                                           :property-name   "Assessments"}))]
      (orm/update-object-properties! "c_assessment"
                                     assessment-id
                                     (merge {"Name"                                     (str "Assessment " assessment-id)
@@ -89,9 +89,9 @@
 
 (defn create-group-administration!
   [group-id assessment-id assessment-index & [properties]]
-  (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cGroupAdministration"
-                                                              :parent-id     group-id
-                                                              :property-name "Administrations"}))]
+  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name "cGroupAdministration"
+                                                              :parent-id       group-id
+                                                              :property-name   "Administrations"}))]
     (when properties
       (orm/update-object-properties! "c_groupadministration"
                                      administration-id
@@ -103,9 +103,9 @@
 
 (defn create-participant-administration!
   [user-id assessment-id assessment-index & [properties]]
-  (let [administration-id (:objectid (db/create-bass-object! {:class-name    "cParticipantAdministration"
-                                                              :parent-id     user-id
-                                                              :property-name "Administrations"}))]
+  (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name "cParticipantAdministration"
+                                                              :parent-id       user-id
+                                                              :property-name   "Administrations"}))]
     (orm/update-object-properties! "c_participantadministration"
                                    administration-id
                                    (merge {"assessment"      assessment-id
@@ -117,9 +117,9 @@
 
 (defn create-custom-assessment*!
   [user-id]
-  (let [assessment-id (:objectid (db/create-bass-object! {:class-name    "cAssessment"
-                                                          :parent-id     user-id
-                                                          :property-name "AdHocAssessments"}))]
+  (let [assessment-id (:objectid (orm/create-bass-object-map! {:class-name "cAssessment"
+                                                          :parent-id       user-id
+                                                          :property-name   "AdHocAssessments"}))]
     (orm/update-object-properties! "c_assessment"
                                    assessment-id
                                    {"scope"                            0

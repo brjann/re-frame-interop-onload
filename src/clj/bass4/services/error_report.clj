@@ -9,9 +9,9 @@
                   "error-report"
                   "User has reported an error"
                   "alert.gif")]
-    (let [comment-id (:objectid (db/create-bass-object! {:class-name    "cComment"
-                                                         :parent-id     flag-id
-                                                         :property-name "Comments"}))]
+    (let [comment-id (:objectid (orm/create-bass-object-map! {:class-name "cComment"
+                                                         :parent-id       flag-id
+                                                         :property-name   "Comments"}))]
       (db/update-object-properties! {:table-name "c_comment"
                                      :object-id  comment-id
                                      :updates    {:Text (str "ERROR REPORT\n" error-description)}}))))

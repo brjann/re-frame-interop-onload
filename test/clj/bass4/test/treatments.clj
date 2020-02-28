@@ -8,7 +8,8 @@
             [bass4.services.user :as user-service]
             [clj-time.coerce :as tc]
             [bass4.module.services :as module-service]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.db.orm-classes :as orm]))
 
 (use-fixtures
   :once
@@ -33,9 +34,9 @@
 
 (deftest auto-modules-test
   (let [user-id             (user-service/create-user! 543018)
-        treatment-access-id (:objectid (db/create-bass-object! {:class-name    "cTreatmentAccess"
-                                                                :parent-id     user-id
-                                                                :property-name "TreatmentAccesses"}))]
+        treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name    "cTreatmentAccess"
+                                                                     :parent-id     user-id
+                                                                     :property-name "TreatmentAccesses"}))]
     (db/create-bass-link! {:linker-id     treatment-access-id
                            :linkee-id     551356
                            :link-property "Treatment"

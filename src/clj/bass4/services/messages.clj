@@ -1,15 +1,16 @@
 (ns bass4.services.messages
   (:require [bass4.db.core :as db]
             [bass4.utils :refer [map-map]]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.db.orm-classes :as orm]))
 
 (defn create-message-placeholder
   [user-id]
   (let [message-id
         ((keyword "objectid")
-          (db/create-bass-object! {:class-name "cMessage"
-                                   :parent-id user-id
-                                   :property-name "Messages"}))]
+         (orm/create-bass-object-map! {:class-name    "cMessage"
+                                       :parent-id     user-id
+                                       :property-name "Messages"}))]
     (db/set-message-sender! {:message-id message-id :user-id user-id})
     message-id))
 
