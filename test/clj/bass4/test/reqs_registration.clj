@@ -44,22 +44,9 @@
       (visit "/registration/666/info")
       (has (status? 404))))
 
-(defn create-registration-group!
-  ([project assessment-series] (create-registration-group! project assessment-series [286]))
-  ([project assessment-series instruments]
-   (let [reg-assessment (create-assessment! assessment-series
-                                            {"Scope"        1
-                                             "WelcomeText"  "Welcome"
-                                             "ThankYouText" "Thanks"})
-         reg-group      (create-group! project)]
-     (doseq [instrument-id instruments]
-       (link-instrument! reg-assessment instrument-id))     ; AAQ
-     (create-group-administration! reg-group reg-assessment 1 {:date (midnight (t/now))})
-     reg-group)))
-
 (deftest registration-flow+renew
   (fix-time
-    (let [reg-group         (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)
+    (let [reg-group         (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           timeout-hard      (session-timeout/timeout-hard-limit)
           timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
       (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
@@ -177,7 +164,7 @@
             (has (some-text? "finished")))))))
 
 (deftest registration-no-study-consent
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
@@ -214,7 +201,7 @@
           (has (status? 400))))))
 
 (deftest registration-change-sms
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
@@ -285,7 +272,7 @@
           (has (some-text? "AAQ"))))))
 
 (deftest registration-back-to-registration-at-validation
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
@@ -316,7 +303,7 @@
           (has (status? 200))))))
 
 (deftest registration-back-try-to-access-user
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
@@ -341,7 +328,7 @@
 
 (deftest registration-auto-id
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
-        reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+        reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number}
@@ -410,7 +397,7 @@
 (deftest registration-auto-id-email-username-own-password-with-assessments
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")
-        reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+        reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number :password}
@@ -488,7 +475,7 @@
           (has (some-text? "we promise"))))))
 
 (deftest registration-auto-id-no-prefix-0-length-password
-  (let [reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)
+  (let [reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
         participant-id (reg-service/generate-participant-id 564610 "" 0)
         password       (passwords/password)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
@@ -523,7 +510,7 @@
         (is (= 1 (count by-participant-id)))))))
 
 (deftest registration-auto-password
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email}
@@ -857,7 +844,7 @@
 (deftest registration-duplicate-resume-allowed-assessments
   (let [sms-number (random-sms)
         email      (random-email)
-        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
+        reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
@@ -928,7 +915,7 @@
         email      (random-email)
         password1  (str (passwords/password) "1")
         password2  (str (passwords/password) "2")
-        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
+        reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
@@ -1012,7 +999,7 @@
         email      (random-email)
         password1  (str (passwords/password) "X1")
         password2  (str (passwords/password) "X2")
-        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
+        reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
@@ -1091,7 +1078,7 @@
 (deftest registration-duplicate-login-resume-not-allowed
   (let [sms-number (random-sms)
         email      (random-email)
-        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+        reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :auto-username          :none
@@ -1142,7 +1129,7 @@
 (deftest registration-duplicate-login-resume-mismatch
   (let [sms-number (random-sms)
         email      (random-email)
-        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+        reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (user-service/create-user! 564610 {:SMSNumber sms-number
                                        :Email     "brjann@gmail.com"
                                        :group     reg-group
@@ -1243,7 +1230,7 @@
               (has (some-text? "Who is collecting"))))))))
 
 (deftest registration-privacy-notice-disabled
-  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+  (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
                   privacy-service/privacy-notice-disabled? (constantly true)
                   reg-service/registration-params          (constantly {:allowed?               true

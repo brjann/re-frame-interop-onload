@@ -4,7 +4,6 @@
             [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [clj-time.coerce :as tc]
-            [bass4.test.core :refer :all]
             [bass4.utils :as utils]
             [bass4.db.core :refer [*db*] :as db]
             [bass4.assessment.reminder :as assessment-reminder]

@@ -15,6 +15,7 @@
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
             [bass4.services.attack-detector :as a-d]
+            [bass4.test.assessment-utils :refer :all]
             [clj-time.core :as t]
             [bass4.db-common :as db-common]
             [bass4.middleware.debug :as mw-debug]
@@ -89,6 +90,24 @@
                :password user-id}
               properties))
      user-id)))
+
+(defn create-assessment-group!
+  ([project assessment-series] (create-assessment-group! project assessment-series [286]))
+  ([project assessment-series instruments]
+   (create-assessment-group! project
+                             assessment-series
+                             instruments
+                             {"WelcomeText"  "Welcome"
+                              "ThankYouText" "Thanks"}))
+  ([project assessment-series instruments texts]
+   (let [reg-assessment (create-assessment! assessment-series
+                                            (merge {"Scope" 1}
+                                                   texts))
+         reg-group      (create-group! project)]
+     (doseq [instrument-id instruments]
+       (link-instrument! reg-assessment instrument-id))     ; AAQ
+     (create-group-administration! reg-group reg-assessment 1 {:date (midnight (t/now))})
+     reg-group)))
 
 (defmacro fix-time
   [body]
