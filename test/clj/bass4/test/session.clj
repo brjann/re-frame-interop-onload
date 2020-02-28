@@ -4,23 +4,7 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     debug-headers-text?
-                                     log-return
-                                     log-body
-                                     log-status
-                                     log-headers
-                                     log-session
-                                     api-response?
-                                     log-api-response
-                                     disable-attack-detector
-                                     fix-time
-                                     advance-time-s!
-                                     *s*
-                                     modify-session
-                                     poll-message-chan
-                                     messages-are?
-                                     pass-by]]
+            [bass4.test.core :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.session.create :as session-create]
             [bass4.session.timeout :as session-timeout]))
@@ -36,10 +20,11 @@
       (has (status? 404))))
 
 (deftest hard-timeout
-  (let [timeout-hard (session-timeout/timeout-hard-limit)]
+  (let [user-id      (create-user-with-treatment! tx-autoaccess)
+        timeout-hard (session-timeout/timeout-hard-limit)]
     (fix-time
       (-> *s*
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/user/tx/messages")
           (has (status? 200))
           (advance-time-s! (dec timeout-hard))
@@ -55,13 +40,14 @@
           (has (status? 403))))))
 
 (deftest session-status-time-passes-re-auth
-  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
+        timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
@@ -83,13 +69,14 @@
           (has (status? 440))))))
 
 (deftest session-status-time-passes-hard
-  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
+        timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
@@ -113,13 +100,14 @@
           (has (status? 403))))))
 
 (deftest session-status-logout
-  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
+        timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session {:user-id 536975 :double-authed? true})
+          (modify-session {:user-id user-id :double-authed? true})
           (visit "/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
@@ -131,24 +119,26 @@
           (has (api-response? nil))))))
 
 (deftest session-status-no-re-auth-path
-  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
+        timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/api/session/status")
           (has (api-response? {:hard    timeout-hard
                                :re-auth timeout-re-auth}))))))
 
 (deftest session-status-ext-login
-  (let [timeout-hard (session-timeout/timeout-hard-limit)]
+  (let [user-id      (create-user-with-treatment! tx-autoaccess)
+        timeout-hard (session-timeout/timeout-hard-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975}
+          (modify-session (session-create/new {:user-id user-id}
                                               {:double-authed?  true
                                                :external-login? true}))
           (visit "/user/tx/messages")
@@ -158,13 +148,14 @@
                                :re-auth nil}))))))
 
 (deftest session-timeout-modification
-  (let [timeout-hard    (session-timeout/timeout-hard-limit)
+  (let [user-id         (create-user-with-treatment! tx-autoaccess)
+        timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
@@ -179,24 +170,26 @@
           (has (status? 440))))))
 
 (deftest session-user-id
-  (-> *s*
-      (visit "/api/session/user-id")
-      (has (api-response? nil))
-      (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
-      (visit "/api/user/tx/messages")
-      (has (status? 200))
-      (visit "/api/session/user-id")
-      (has (api-response? {:user-id 536975}))))
+  (let [user-id (create-user-with-treatment! tx-autoaccess)]
+    (-> *s*
+        (visit "/api/session/user-id")
+        (has (api-response? nil))
+        (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
+        (visit "/api/user/tx/messages")
+        (has (status? 200))
+        (visit "/api/session/user-id")
+        (has (api-response? {:user-id user-id})))))
 
 (deftest session-timeout-timeout-soon
-  (let [timeout-hard      (session-timeout/timeout-hard-limit)
+  (let [user-id           (create-user-with-treatment! tx-autoaccess true)
+        timeout-hard      (session-timeout/timeout-hard-limit)
         timeout-re-auth   (session-timeout/timeout-re-auth-limit)
         timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:double-authed? true}))
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
@@ -218,7 +211,7 @@
           ;; Timeout should not reset because request was made
           (has (api-response? {:hard    (dec timeout-hard-soon)
                                :re-auth 0}))
-          (visit "/re-auth" :request-method :post :params {:password "536975"})
+          (visit "/re-auth" :request-method :post :params {:password user-id})
           (has (status? 302))
           (visit "/api/session/status")
           ;; Timeout should now be reset
@@ -231,7 +224,7 @@
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))
-          (modify-session (session-create/new {:user-id 536975} {:external-login? true}))
+          (modify-session (session-create/new {:user-id user-id} {:external-login? true}))
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
