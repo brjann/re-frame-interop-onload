@@ -5,7 +5,7 @@
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
             [bass4.middleware.core :as mw]
-            [bass4.test.core :refer [test-fixtures fn-not-text? log-return disable-attack-detector *s*]]
+            [bass4.test.core :refer :all]
             [bass4.services.user :as user-service]
             [bass4.db.core :as db]))
 
@@ -19,17 +19,15 @@
 
 (deftest test-csrf
   (binding [mw/*skip-csrf* false]
-    (let [user-id (user-service/create-user! 536103 {:Group "537404" :firstname "csrf-test"})]
-      (user-service/update-user-properties! user-id {:username user-id :password user-id})
+    (let [user-id (create-user-with-treatment! tx-autoaccess true)]
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (has (status? 302))
           (follow-redirect)
           (follow-redirect)
           (has (some-text? "Welcome"))
-          (has (some-text? "top top welcome"))
-          (visit "/user/assessments")
-          (has (some-text? "HAD"))
-          (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (visit "/user/tx/messages")
+          (has (status? 200))
+          (visit "/user/tx/messages" :request-method :post :params {:text "{}"})
           (has (status? 403))
           (has (some-text? "Invalid anti-forgery token"))))))
