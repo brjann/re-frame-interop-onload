@@ -340,12 +340,13 @@
 
 (deftest change-project
   (let [user-id                (user-service/create-user! project-ass2-id)
+        ass1-id                (create-assessment! project-ass2-assessment-series {"Scope" 0})
         adm1-id                (create-participant-administration!
-                                 user-id p2-ass-I1 1 {:date (midnight *now*)})
+                                 user-id ass1-id 1 {:date (midnight *now*)})
         ass-I-s-0-p100-message (create-assessment! {"Scope" 0})]
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
-    (is (= #{[p2-ass-I1 1]} (ongoing-assessments *now* user-id)))
+    (is (= #{[ass1-id 1]} (ongoing-assessments *now* user-id)))
     (orm/update-object-properties! "c_participant"
                                    user-id
                                    {"parentid"        project-ass2-pcollection-id
@@ -354,22 +355,21 @@
                                    adm1-id
                                    {"parentinterface" project-ass1-id})
     (is (= #{[ass-I-s-0-p100-message 1]} (ongoing-assessments *now* user-id)))
-    (is (= #{[p2-ass-I1 1 :assessment-status/wrong-series]
+    (is (= #{[ass1-id 1 :assessment-status/wrong-series]
              [ass-I-s-0-p100-message 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))
     (orm/update-object-properties! "c_participantadministration"
                                    adm1-id
                                    {"datecompleted" (utils/to-unix *now*)})
-    (is (= #{[p2-ass-I1 1 :assessment-status/completed]
+    (is (= #{[ass1-id 1 :assessment-status/completed]
              [ass-I-s-0-p100-message 1 :assessment-status/ongoing]}
            (user-statuses *now* user-id)))))
 
 (deftest custom-assessment
-  (db/update-object-properties! {:table-name "c_participantadministration"
-                                 :object-id  custom-administration-id
-                                 :updates    {:date (midnight *now*)}})
-  (is (= #{[custom-assessment-id 1]}
-         (ongoing-assessments *now* custom-participant-id))))
+  (let [user-id (user-service/create-user! project-double-auth)
+        ass-id  (create-custom-assessment! user-id [] (midnight *now*))]
+    (is (= #{[ass-id 1]}
+           (ongoing-assessments *now* user-id)))))
 
 (deftest full-return-assessment-group-assessment
   (let [group-id       (create-group!)

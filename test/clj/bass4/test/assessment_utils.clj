@@ -23,11 +23,8 @@
 (def project-ass1-id 653627)
 (def project-ass1-pcollection-id 653628)
 (def project-ass2-id 658098)
+(def project-ass2-assessment-series 658100)
 (def project-ass2-pcollection-id 658099)
-
-(def p2-ass-I1 658101)
-(def p2-ass-I2 658106)
-(def p2-ass-G 658102)
 
 (def ass-flag-assessment-series 653629)
 
@@ -143,7 +140,8 @@
   [user-id instrument-ids date]
   (let [assessment-id     (create-custom-assessment*! user-id)
         administration-id (create-participant-administration! user-id assessment-id 1 {:date date})]
-    (additional-instruments! administration-id instrument-ids)))
+    (additional-instruments! administration-id instrument-ids)
+    assessment-id))
 
 (defn clear-administrations!
   []
