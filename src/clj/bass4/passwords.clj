@@ -7,7 +7,7 @@
 
 (def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
 
-(defn letters-digits
+(defn ^:dynamic letters-digits
   ([length] (letters-digits length password-chars))
   ([length chars]
    (clojure.string/join
@@ -36,7 +36,7 @@
   [words]
   (get words (rand-int (count words))))
 
-(defn password
+(defn ^:dynamic password
   ([] (password :word 3 :word))
   ([& config]
    (let [words (words (clients/client-setting [:language]))]

@@ -50,6 +50,6 @@
       (:exists?)
       (utils/val-to-bool)))
 
-(defn privacy-notice-disabled?
+(defn ^:dynamic privacy-notice-disabled?
   []
   (-> (:disabled? (db/privacy-notice-disabled?))))

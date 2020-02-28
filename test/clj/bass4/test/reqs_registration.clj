@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-registration
+(ns bass4.test.reqs-registration
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [clojure.core.async :refer [chan dropping-buffer]]
@@ -51,16 +50,16 @@
     (let [reg-group         (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           timeout-hard      (session-timeout/timeout-hard-limit)
           timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
-      (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                    reg-service/registration-params (constantly {:allowed?               true
-                                                                 :fields                 #{:email :sms-number}
-                                                                 :group                  reg-group
-                                                                 :allow-duplicate-email? true
-                                                                 :allow-duplicate-sms?   true
-                                                                 :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                 :auto-username          :none
-                                                                 :study-consent?         true})
-                    passwords/letters-digits        (constantly "METALLICA")]
+      (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                reg-service/registration-params (constantly {:allowed?               true
+                                                             :fields                 #{:email :sms-number}
+                                                             :group                  reg-group
+                                                             :allow-duplicate-email? true
+                                                             :allow-duplicate-sms?   true
+                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                             :auto-username          :none
+                                                             :study-consent?         true})
+                passwords/letters-digits        (constantly "METALLICA")]
 
         (-> *s*
             (visit "/registration/564610")
@@ -167,16 +166,16 @@
 
 (deftest registration-no-study-consent
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :study-consent?         false})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none
+                                                           :study-consent?         false})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -204,19 +203,19 @@
 
 (deftest registration-change-sms
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none})
-                  passwords/letters-digits        (let [pos (atom 0)]
-                                                    (fn [& _]
-                                                      (let [code (int (Math/floor (/ @pos 2)))]
-                                                        (swap! pos inc)
-                                                        (str "code-" code))))]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none})
+              passwords/letters-digits        (let [pos (atom 0)]
+                                                (fn [& _]
+                                                  (let [code (int (Math/floor (/ @pos 2)))]
+                                                    (swap! pos inc)
+                                                    (str "code-" code))))]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -275,15 +274,15 @@
 
 (deftest registration-back-to-registration-at-validation
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610")
           ;; Redirected to info page
@@ -306,15 +305,15 @@
 
 (deftest registration-back-try-to-access-user
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -331,19 +330,19 @@
 (deftest registration-auto-id
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:allowed?               true
-                                                                   :fields                 #{:email :sms-number}
-                                                                   :group                  reg-group
-                                                                   :allow-duplicate-email? true
-                                                                   :allow-duplicate-sms?   true
-                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                   :auto-username          :participant-id
-                                                                   :auto-id-prefix         "xxx-"
-                                                                   :auto-id-length         3
-                                                                   :auto-id?               true})
-                  reg-service/generate-participant-id (constantly participant-id)
-                  passwords/letters-digits            (constantly "METALLICA")]
+    (binding [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params     (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :participant-id
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         3
+                                                               :auto-id?               true})
+              reg-service/generate-participant-id (constantly participant-id)
+              passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -363,19 +362,19 @@
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")
         reg-group      (create-group! project-reg-allowed)]
-    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:allowed?               true
-                                                                   :fields                 #{:email :sms-number :password}
-                                                                   :group                  reg-group ;;No assessments in this group
-                                                                   :allow-duplicate-email? false
-                                                                   :allow-duplicate-sms?   true
-                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                   :auto-username          :email
-                                                                   :auto-id-prefix         "xxx-"
-                                                                   :auto-id-length         3
-                                                                   :auto-id?               true})
-                  reg-service/generate-participant-id (constantly participant-id)
-                  passwords/letters-digits            (constantly "METALLICA")]
+    (binding [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params     (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number :password}
+                                                               :group                  reg-group ;;No assessments in this group
+                                                               :allow-duplicate-email? false
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :email
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         3
+                                                               :auto-id?               true})
+              reg-service/generate-participant-id (constantly participant-id)
+              passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
@@ -400,19 +399,19 @@
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
         email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")
         reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:allowed?               true
-                                                                   :fields                 #{:email :sms-number :password}
-                                                                   :group                  reg-group
-                                                                   :allow-duplicate-email? false
-                                                                   :allow-duplicate-sms?   true
-                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                   :auto-username          :email
-                                                                   :auto-id-prefix         "xxx-"
-                                                                   :auto-id-length         3
-                                                                   :auto-id?               true})
-                  reg-service/generate-participant-id (constantly participant-id)
-                  passwords/letters-digits            (constantly "METALLICA")]
+    (binding [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params     (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number :password}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? false
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :email
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         3
+                                                               :auto-id?               true})
+              reg-service/generate-participant-id (constantly participant-id)
+              passwords/letters-digits            (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
@@ -429,18 +428,18 @@
 
 (deftest registration-no-credentials-no-assessments
   (let [reg-group (create-group! project-reg-allowed)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:first-name :last-name :email}
-                                                               :group                  reg-group ;;No assessments in this group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :auto-id-prefix         "xxx-"
-                                                               :auto-id-length         3
-                                                               :auto-id?               true})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:first-name :last-name :email}
+                                                           :group                  reg-group ;;No assessments in this group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none
+                                                           :auto-id-prefix         "xxx-"
+                                                           :auto-id-length         3
+                                                           :auto-id?               true})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
@@ -454,18 +453,18 @@
 
 (deftest registration-no-validation-no-credentials-no-assessments
   (let [reg-group (create-group! project-reg-allowed)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:first-name :last-name}
-                                                               :group                  reg-group ;;No assessments in this group
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   true
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                               :auto-username          :none
-                                                               :auto-id-prefix         "xxx-"
-                                                               :auto-id-length         3
-                                                               :auto-id?               true})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:first-name :last-name}
+                                                           :group                  reg-group ;;No assessments in this group
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   true
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                           :auto-username          :none
+                                                           :auto-id-prefix         "xxx-"
+                                                           :auto-id-length         3
+                                                           :auto-id?               true})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -480,21 +479,21 @@
   (let [reg-group      (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
         participant-id (reg-service/generate-participant-id 564610 "" 0)
         password       (passwords/password)]
-    (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params     (constantly {:allowed?               true
-                                                                   :fields                 #{:email :sms-number}
-                                                                   :group                  reg-group
-                                                                   :allow-duplicate-email? true
-                                                                   :allow-duplicate-sms?   true
-                                                                   :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                   :auto-username          :participant-id
-                                                                   :auto-password?         true
-                                                                   :auto-id-prefix         ""
-                                                                   :auto-id-length         0
-                                                                   :auto-id?               true})
-                  reg-service/generate-participant-id (constantly participant-id)
-                  passwords/letters-digits            (constantly "METALLICA")
-                  passwords/password                  (constantly password)]
+    (binding [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params     (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :participant-id
+                                                               :auto-password?         true
+                                                               :auto-id-prefix         ""
+                                                               :auto-id-length         0
+                                                               :auto-id?               true})
+              reg-service/generate-participant-id (constantly participant-id)
+              passwords/letters-digits            (constantly "METALLICA")
+              passwords/password                  (constantly password)]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -513,17 +512,17 @@
 
 (deftest registration-auto-password
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? true
-                                                               :auto-username          :participant-id
-                                                               :auto-password?         true
-                                                               :auto-id-prefix         "xxx-"
-                                                               :auto-id-length         4
-                                                               :auto-id?               true})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? true
+                                                           :auto-username          :participant-id
+                                                           :auto-password?         true
+                                                           :auto-id-prefix         "xxx-"
+                                                           :auto-id-length         4
+                                                           :auto-id?               true})
+              passwords/letters-digits        (constantly "METALLICA")]
       (let [x        (-> *s*
                          (visit "/registration/564610/captcha")
                          ;; Captcha session is created
@@ -555,14 +554,14 @@
 
 (deftest registration-duplicate-info
   (let [reg-group (create-group! project-reg-allowed)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se" "gb" "dk" "no" "fi"]})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -793,15 +792,15 @@
     (user-service/create-user! 564610 {:SMSNumber sms-number
                                        :Email     email
                                        :group     564616})
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  nil
-                                                               :allow-duplicate-email? true
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  nil
+                                                           :allow-duplicate-email? true
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se"]
+                                                           :allow-resume?          true})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -821,15 +820,15 @@
     (user-service/create-user! 564610 {:SMSNumber sms-number
                                        :Email     email
                                        :group     reg-group})
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se"]
+                                                           :allow-resume?          true})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -847,16 +846,16 @@
   (let [sms-number (random-sms)
         email      (random-email)
         reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true
-                                                               :auto-username          :none})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se"]
+                                                           :allow-resume?          true
+                                                           :auto-username          :none})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -919,18 +918,18 @@
         password2  (str (passwords/password) "2")
         reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :auto-username          :email
-                                                               :auto-password?         true
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true})
-                  passwords/letters-digits        (constantly "METALLICA")]
-      (with-redefs [passwords/password (constantly password1)]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :auto-username          :email
+                                                           :auto-password?         true
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se"]
+                                                           :allow-resume?          true})
+              passwords/letters-digits        (constantly "METALLICA")]
+      (binding [passwords/password (constantly password1)]
         (-> *s*
             (visit "/registration/564610/captcha")
             ;; Captcha session is created
@@ -963,7 +962,7 @@
           (has (status? 302))
           (visit "/login" :request-method :post :params {:username email :password password2})
           (has (status? 422)))
-      (with-redefs [passwords/password (constantly password2)]
+      (binding [passwords/password (constantly password2)]
         (-> *s*
             (visit "/registration/564610/captcha")
             ;; Captcha session is created
@@ -1003,17 +1002,17 @@
         password2  (str (passwords/password) "X2")
         reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number :password}
-                                                               :group                  reg-group
-                                                               :auto-username          :email
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :sms-countries          ["se"]
-                                                               :allow-resume?          true})
-                  passwords/letters-digits        (constantly "METALLICA")]
-      (with-redefs [passwords/password (constantly password1)]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number :password}
+                                                           :group                  reg-group
+                                                           :auto-username          :email
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :sms-countries          ["se"]
+                                                           :allow-resume?          true})
+              passwords/letters-digits        (constantly "METALLICA")]
+      (binding [passwords/password (constantly password1)]
         (-> *s*
             (visit "/registration/564610/captcha")
             ;; Captcha session is created
@@ -1044,7 +1043,7 @@
           (has (status? 302))
           (visit "/login" :request-method :post :params {:username email :password password2})
           (has (status? 422)))
-      (with-redefs [passwords/password (constantly password2)]
+      (binding [passwords/password (constantly password2)]
         (-> *s*
             (visit "/registration/564610/captcha")
             ;; Captcha session is created
@@ -1081,16 +1080,16 @@
   (let [sms-number (random-sms)
         email      (random-email)
         reg-group  (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :auto-username          :none
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :allow-resume?          false
-                                                               :sms-countries          ["se"]})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :auto-username          :none
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :allow-resume?          false
+                                                           :sms-countries          ["se"]})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -1137,15 +1136,15 @@
                                        :group     reg-group
                                        :password  "xxx"
                                        :username  "xxx"})
-    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                  reg-service/registration-params (constantly {:allowed?               true
-                                                               :fields                 #{:email :sms-number}
-                                                               :group                  reg-group
-                                                               :allow-duplicate-email? false
-                                                               :allow-duplicate-sms?   false
-                                                               :allow-resume?          true
-                                                               :sms-countries          ["se"]})
-                  passwords/letters-digits        (constantly "METALLICA")]
+    (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+              reg-service/registration-params (constantly {:allowed?               true
+                                                           :fields                 #{:email :sms-number}
+                                                           :group                  reg-group
+                                                           :allow-duplicate-email? false
+                                                           :allow-duplicate-sms?   false
+                                                           :allow-resume?          true
+                                                           :sms-countries          ["se"]})
+              passwords/letters-digits        (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -1165,25 +1164,25 @@
 
 
 (deftest registration-captcha-not-created
-  (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
+  (binding [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
     (let [response (-> *s*
                        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"}))]
       (is (string/includes? (get-in response [:response :headers "Location"]) "/registration/564610/captcha")))))
 
 (deftest captcha-timeout
   (let [now (now/now)]
-    (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
+    (binding [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
                   (visit "/registration/564610/captcha")
                   ;; Captcha session is created
                   (follow-redirect)
                   (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
                   (has (status? 422)))]
-        (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
+        (binding [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
           (let [x (-> x
                       (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"})
                       (has (status? 422)))])
-          (with-redefs [now/now (constantly (t/plus now (t/seconds 61)))]
+          (binding [now/now (constantly (t/plus now (t/seconds 61)))]
             (-> x
                 (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
                 ;; Captcha is invalid
@@ -1197,12 +1196,12 @@
 
 (deftest captcha-tries
   (let [now (now/now)]
-    (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
+    (binding [captcha/captcha! (constantly {:filename "xxx" :digits "6666"})]
       (let [x (-> *s*
                   (visit "/registration/564610/captcha")
                   ;; Captcha session is created
                   (follow-redirect))]
-        (with-redefs [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
+        (binding [captcha/captcha! (constantly {:filename "xxx" :digits "8888"})]
           (-> x
               (visit "/registration/564610/captcha" :request-method :post :params {:captcha "8888"}) ;; 1
               (has (status? 422))
@@ -1233,16 +1232,16 @@
 
 (deftest registration-privacy-notice-disabled
   (let [reg-group (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)]
-    (with-redefs [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
-                  privacy-service/privacy-notice-disabled? (constantly true)
-                  reg-service/registration-params          (constantly {:allowed?               true
-                                                                        :fields                 #{:email :sms-number}
-                                                                        :group                  reg-group
-                                                                        :allow-duplicate-email? true
-                                                                        :allow-duplicate-sms?   true
-                                                                        :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                        :auto-username          :none})
-                  passwords/letters-digits                 (constantly "METALLICA")]
+    (binding [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
+              privacy-service/privacy-notice-disabled? (constantly true)
+              reg-service/registration-params          (constantly {:allowed?               true
+                                                                    :fields                 #{:email :sms-number}
+                                                                    :group                  reg-group
+                                                                    :allow-duplicate-email? true
+                                                                    :allow-duplicate-sms?   true
+                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                    :auto-username          :none})
+              passwords/letters-digits                 (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           ;; Captcha session is created
@@ -1281,20 +1280,20 @@
 
 (deftest registration-all-fields-sql-query-no-assessments
   (let [email (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
-    (with-redefs [captcha/captcha!         (constantly {:filename "xxx" :digits "6666"})
-                  db/registration-params   (constantly {:allowed?               true,
-                                                        :allow-duplicate-sms?   true,
-                                                        :group                  nil,
-                                                        :sms-countries          "se",
-                                                        :fields                 "a:6:{s:5:\"Email\";b:1;s:9:\"FirstName\";b:1;s:8:\"LastName\";b:1;s:12:\"Personnummer\";b:1;s:9:\"SMSNumber\";b:1;s:8:\"Password\";b:1;}",
-                                                        :bankid-change-names?   false,
-                                                        :auto-username          "email",
-                                                        :bankid?                false,
-                                                        :study-consent?         false,
-                                                        :auto-id-length         3,
-                                                        :allow-duplicate-email? false,
-                                                        :auto-id-prefix         "xxx-"})
-                  passwords/letters-digits (constantly "METALLICA")]
+    (binding [captcha/captcha!                   (constantly {:filename "xxx" :digits "6666"})
+              reg-service/db-registration-params (constantly {:allowed?               true,
+                                                              :allow-duplicate-sms?   true,
+                                                              :group                  nil,
+                                                              :sms-countries          "se",
+                                                              :fields                 "a:6:{s:5:\"Email\";b:1;s:9:\"FirstName\";b:1;s:8:\"LastName\";b:1;s:12:\"Personnummer\";b:1;s:9:\"SMSNumber\";b:1;s:8:\"Password\";b:1;}",
+                                                              :bankid-change-names?   false,
+                                                              :auto-username          "email",
+                                                              :bankid?                false,
+                                                              :study-consent?         false,
+                                                              :auto-id-length         3,
+                                                              :allow-duplicate-email? false,
+                                                              :auto-id-prefix         "xxx-"})
+              passwords/letters-digits           (constantly "METALLICA")]
       (-> *s*
           (visit "/registration/564610/captcha")
           (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})

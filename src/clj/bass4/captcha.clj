@@ -13,7 +13,7 @@
       #(get captcha-chars %1)
       (repeatedly length #(rand-int (- (count captcha-chars) 1))))))
 
-(defn captcha!
+(defn ^:dynamic captcha!
   []
   (let [captcha-path (io/file (env :bass-path) "system/CaptchaGenerator.php")
         filename     (str "captcha_" (java.util.UUID/randomUUID) ".jpg")

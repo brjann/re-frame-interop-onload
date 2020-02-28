@@ -93,9 +93,13 @@
             :allow-duplicate-email? duplicate-email?
             :allow-resume?          allow-resume?})))
 
-(defn registration-params
+(defn ^:dynamic db-registration-params
   [project-id]
-  (if-let [params (db/registration-params {:project-id project-id})]
+  (db/registration-params {:project-id project-id}))
+
+(defn ^:dynamic registration-params
+  [project-id]
+  (if-let [params (db-registration-params project-id)]
     (let [params        (consolidate-params params)
           sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
       (merge
@@ -147,7 +151,7 @@
       (db/increment-auto-id! conn {:project-id project-id})
       id)))
 
-(defn generate-participant-id
+(defn ^:dynamic generate-participant-id
   [project-id prefix length]
   (let [id             (str (next-auto-id project-id))
         zeroes         (string/join (repeat length "0"))
