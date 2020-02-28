@@ -5,23 +5,8 @@
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.test.core :refer [test-fixtures
-                                     debug-headers-text?
-                                     log-return
-                                     log-headers
-                                     log-body
-                                     log-status
-                                     disable-attack-detector
-                                     *s*
-                                     pass-by
-                                     messages-are?
-                                     api-response?
-                                     fix-time
-                                     advance-time-s!
-                                     modify-session
-                                     fn-not-text?
-                                     not-text?
-                                     poll-message-chan]]
+            [bass4.test.assessment-utils :refer :all]
+            [bass4.test.core :refer :all]
             [bass4.captcha :as captcha]
             [bass4.config :refer [env]]
             [bass4.db.core :as db]
@@ -45,6 +30,7 @@
 
 (use-fixtures
   :each
+  random-date-tz-fixture
   (fn [f]
     (binding [*debug-chan* (chan 2)]
       (f))))
@@ -58,20 +44,35 @@
       (visit "/registration/666/info")
       (has (status? 404))))
 
+(defn create-registration-group!
+  ([project assessment-series] (create-registration-group! project assessment-series [286]))
+  ([project assessment-series instruments]
+   (let [reg-assessment (create-assessment! assessment-series
+                                            {"Scope"        1
+                                             "WelcomeText"  "Welcome"
+                                             "ThankYouText" "Thanks"})
+         reg-group      (create-group! project)]
+     (doseq [instrument-id instruments]
+       (link-instrument! reg-assessment instrument-id))     ; AAQ
+     (create-group-administration! reg-group reg-assessment 1 {:date (midnight (t/now))})
+     reg-group)))
+
 (deftest registration-flow+renew
   (fix-time
-    (let [timeout-hard      (session-timeout/timeout-hard-limit)
+    (let [reg-group         (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)
+          timeout-hard      (session-timeout/timeout-hard-limit)
           timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
       (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                     reg-service/registration-params (constantly {:allowed?               true
                                                                  :fields                 #{:email :sms-number}
-                                                                 :group                  564616
+                                                                 :group                  reg-group
                                                                  :allow-duplicate-email? true
                                                                  :allow-duplicate-sms?   true
                                                                  :sms-countries          ["se" "gb" "dk" "no" "fi"]
                                                                  :auto-username          :none
                                                                  :study-consent?         true})
                     passwords/letters-digits        (constantly "METALLICA")]
+
         (-> *s*
             (visit "/registration/564610")
             (follow-redirect)
@@ -176,170 +177,175 @@
             (has (some-text? "finished")))))))
 
 (deftest registration-no-study-consent
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none
-                                                             :study-consent?         false})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (follow-redirect)
-        (has (some-text? "Who is collecting the data"))
-        (visit "/registration/564610/privacy" :request-method :post :params {})
-        (pass-by (messages-are?
-                   [[:email "API"]]
-                   (poll-message-chan *debug-chan*)))
-        (has (status? 400))
-        (visit "/registration/564610/form")
-        (has (status? 302))
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (has (status? 302))
-        (follow-redirect)
-        (has (some-text? "Enter your"))
-        (visit "/registration/564610/study-consent")
-        (follow-redirect)
-        (has (some-text? "Enter your"))
-        (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
-        (has (status? 400)))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none
+                                                               :study-consent?         false})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (has (some-text? "code below"))
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (follow-redirect)
+          (has (some-text? "Who is collecting the data"))
+          (visit "/registration/564610/privacy" :request-method :post :params {})
+          (pass-by (messages-are?
+                     [[:email "API"]]
+                     (poll-message-chan *debug-chan*)))
+          (has (status? 400))
+          (visit "/registration/564610/form")
+          (has (status? 302))
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (has (status? 302))
+          (follow-redirect)
+          (has (some-text? "Enter your"))
+          (visit "/registration/564610/study-consent")
+          (follow-redirect)
+          (has (some-text? "Enter your"))
+          (visit "/registration/564610/study-consent" :request-method :post :params {:i-consent "i-consent"})
+          (has (status? 400))))))
 
 (deftest registration-change-sms
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                passwords/letters-digits        (let [pos (atom 0)]
-                                                  (fn [& _]
-                                                    (let [code (int (Math/floor (/ @pos 2)))]
-                                                      (swap! pos inc)
-                                                      (str "code-" code))))]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
-        (has (status? 400))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (has (status? 302))
-        (pass-by (messages-are?
-                   [[:email "code-0"]
-                    [:sms "code-0"]]
-                   (poll-message-chan *debug-chan* 2)))
-        (follow-redirect)
-        (has (some-text? "Validate"))
-        (visit "/registration/564610/form")
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "3434"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "code-0" :code-sms "345345"})
-        (has (status? 200))
-        (visit "/registration/564610/form")
-        (has (status? 200))
-        (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
-                                                                          :sms-number "+46070717652"})
-        (has (status? 400))
-        (visit "/registration/564610/form" :request-method :post :params {:sms-number "+460707000000"})
-        (has (status? 302))
-        (pass-by (messages-are?
-                   [[:sms "code-1"]]
-                   (poll-message-chan *debug-chan* 1)))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-0"})
-        (has (status? 422))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-1"})
-        (has (status? 302))
-        ;; Redirect to finish
-        (follow-redirect)
-        ;; Session created
-        (follow-redirect)
-        ;; Redirect to pending assessments
-        (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/user/assessments")
-        (has (some-text? "AAQ")))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none})
+                  passwords/letters-digits        (let [pos (atom 0)]
+                                                    (fn [& _]
+                                                      (let [code (int (Math/floor (/ @pos 2)))]
+                                                        (swap! pos inc)
+                                                        (str "code-" code))))]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (has (some-text? "code below"))
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:captcha "234234"})
+          (has (status? 400))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
+          (has (status? 400))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+11343454354"})
+          (has (status? 422))
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
+          (has (status? 400))
+          (visit "/registration/564610/validate-email" :request-method :post :params {:something-happened "3434"})
+          (has (status? 400))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (has (status? 302))
+          (pass-by (messages-are?
+                     [[:email "code-0"]
+                      [:sms "code-0"]]
+                     (poll-message-chan *debug-chan* 2)))
+          (follow-redirect)
+          (has (some-text? "Validate"))
+          (visit "/registration/564610/form")
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "3434"})
+          (has (status? 422))
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "3434"})
+          (has (status? 422))
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "code-0" :code-sms "345345"})
+          (has (status? 200))
+          (visit "/registration/564610/form")
+          (has (status? 200))
+          (visit "/registration/564610/form" :request-method :post :params {:email      "brjann@gmail.com"
+                                                                            :sms-number "+46070717652"})
+          (has (status? 400))
+          (visit "/registration/564610/form" :request-method :post :params {:sms-number "+460707000000"})
+          (has (status? 302))
+          (pass-by (messages-are?
+                     [[:sms "code-1"]]
+                     (poll-message-chan *debug-chan* 1)))
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-0"})
+          (has (status? 422))
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "code-1"})
+          (has (status? 302))
+          ;; Redirect to finish
+          (follow-redirect)
+          ;; Session created
+          (follow-redirect)
+          ;; Redirect to pending assessments
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/user/assessments")
+          (has (some-text? "AAQ"))))))
 
 (deftest registration-back-to-registration-at-validation
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610")
-        ;; Redirected to info page
-        (follow-redirect)
-        (visit "/registration/564610/form")
-        ;; Redirected to captcha page
-        (follow-redirect)
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (follow-redirect)
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
-        (has (status? 422))
-        (visit "/registration/564610/form")
-        (has (status? 200))
-        (has (some-text? "Mobile phone"))
-        (visit "/registration/564610/validate")
-        (has (status? 200)))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610")
+          ;; Redirected to info page
+          (follow-redirect)
+          (visit "/registration/564610/form")
+          ;; Redirected to captcha page
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (follow-redirect)
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
+          (has (status? 422))
+          (visit "/registration/564610/form")
+          (has (status? 200))
+          (has (some-text? "Mobile phone"))
+          (visit "/registration/564610/validate")
+          (has (status? 200))))))
 
 (deftest registration-back-try-to-access-user
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (follow-redirect)
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
-        (has (status? 422))
-        (visit "/user")
-        (has (status? 403)))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (follow-redirect)
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "345345"})
+          (has (status? 422))
+          (visit "/user")
+          (has (status? 403))))))
 
 (deftest registration-auto-id
-  (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)]
+  (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
+        reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number}
-                                                                   :group                  564616
+                                                                   :group                  reg-group
                                                                    :allow-duplicate-email? true
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
@@ -366,11 +372,12 @@
 
 (deftest registration-auto-id-email-username-own-password-no-assessments
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
-        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
+        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")
+        reg-group      (create-group! project-reg-allowed)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number :password}
-                                                                   :group                  570281 ;;No assessments in this group
+                                                                   :group                  reg-group ;;No assessments in this group
                                                                    :allow-duplicate-email? false
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
@@ -402,11 +409,12 @@
 
 (deftest registration-auto-id-email-username-own-password-with-assessments
   (let [participant-id (reg-service/generate-participant-id 564610 "test-" 4)
-        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
+        email          (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")
+        reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number :password}
-                                                                   :group                  653388
+                                                                   :group                  reg-group
                                                                    :allow-duplicate-email? false
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
@@ -431,59 +439,62 @@
           (has (some-text? "login address"))))))
 
 (deftest registration-no-credentials-no-assessments
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:first-name :last-name :email}
-                                                             :group                  570281 ;;No assessments in this group
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none
-                                                             :auto-id-prefix         "xxx-"
-                                                             :auto-id-length         3
-                                                             :auto-id?               true})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
-        (follow-redirect)
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "we promise")))))
+  (let [reg-group (create-group! project-reg-allowed)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:first-name :last-name :email}
+                                                               :group                  reg-group ;;No assessments in this group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         3
+                                                               :auto-id?               true})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse" :email "brjann@gmail.com"})
+          (follow-redirect)
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "we promise"))))))
 
 (deftest registration-no-validation-no-credentials-no-assessments
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:first-name :last-name}
-                                                             :group                  570281 ;;No assessments in this group
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none
-                                                             :auto-id-prefix         "xxx-"
-                                                             :auto-id-length         3
-                                                             :auto-id?               true})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
-        (follow-redirect)
-        (follow-redirect)
-        (has (some-text? "we promise")))))
+  (let [reg-group (create-group! project-reg-allowed)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:first-name :last-name}
+                                                               :group                  reg-group ;;No assessments in this group
+                                                               :allow-duplicate-email? true
+                                                               :allow-duplicate-sms?   true
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                               :auto-username          :none
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         3
+                                                               :auto-id?               true})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:first-name "Lasse" :last-name "Basse"})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "we promise"))))))
 
 (deftest registration-auto-id-no-prefix-0-length-password
-  (let [participant-id (reg-service/generate-participant-id 564610 "" 0)
+  (let [reg-group      (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)
+        participant-id (reg-service/generate-participant-id 564610 "" 0)
         password       (passwords/password)]
     (with-redefs [captcha/captcha!                    (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params     (constantly {:allowed?               true
                                                                    :fields                 #{:email :sms-number}
-                                                                   :group                  564616
+                                                                   :group                  reg-group
                                                                    :allow-duplicate-email? true
                                                                    :allow-duplicate-sms?   true
                                                                    :sms-countries          ["se" "gb" "dk" "no" "fi"]
@@ -512,66 +523,68 @@
         (is (= 1 (count by-participant-id)))))))
 
 (deftest registration-auto-password
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? true
-                                                             :auto-username          :participant-id
-                                                             :auto-password?         true
-                                                             :auto-id-prefix         "xxx-"
-                                                             :auto-id-length         4
-                                                             :auto-id?               true})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (let [x        (-> *s*
-                       (visit "/registration/564610/captcha")
-                       ;; Captcha session is created
-                       (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-                       (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-                       (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
-                       (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-                       (follow-redirect))
-          username (-> x
-                       :enlive
-                       (enlive/select [[:span :.username]])
-                       (first)
-                       :content
-                       (first)
-                       (string/trim))
-          password (-> x
-                       :enlive
-                       (enlive/select [[:span :.password]])
-                       (first)
-                       :content
-                       (first)
-                       (string/trim))]
-      (-> *s*
-          (visit "/login" :request-method :post :params {:username username :password password})
-          (has (status? 302))
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Welcome"))))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? true
+                                                               :auto-username          :participant-id
+                                                               :auto-password?         true
+                                                               :auto-id-prefix         "xxx-"
+                                                               :auto-id-length         4
+                                                               :auto-id?               true})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (let [x        (-> *s*
+                         (visit "/registration/564610/captcha")
+                         ;; Captcha session is created
+                         (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+                         (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+                         (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com"})
+                         (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+                         (follow-redirect))
+            username (-> x
+                         :enlive
+                         (enlive/select [[:span :.username]])
+                         (first)
+                         :content
+                         (first)
+                         (string/trim))
+            password (-> x
+                         :enlive
+                         (enlive/select [[:span :.password]])
+                         (first)
+                         :content
+                         (first)
+                         (string/trim))]
+        (-> *s*
+            (visit "/login" :request-method :post :params {:username username :password password})
+            (has (status? 302))
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Welcome")))))))
 
 (deftest registration-duplicate-info
-  (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:email :sms-number}
-                                                             :group                  564616
-                                                             :allow-duplicate-email? false
-                                                             :allow-duplicate-sms?   false
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]})
-                passwords/letters-digits        (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-        (follow-redirect)
-        (has (some-text? "already exists")))))
+  (let [reg-group (create-group! project-reg-allowed)]
+    (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
+                  reg-service/registration-params (constantly {:allowed?               true
+                                                               :fields                 #{:email :sms-number}
+                                                               :group                  reg-group
+                                                               :allow-duplicate-email? false
+                                                               :allow-duplicate-sms?   false
+                                                               :sms-countries          ["se" "gb" "dk" "no" "fi"]})
+                  passwords/letters-digits        (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (visit "/registration/564610/privacy" :request-method :post :params {:i-consent "i-consent"})
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (follow-redirect)
+          (has (some-text? "already exists"))))))
 
 ;; ----------------------
 ;;   DUPLICATES TESTING
@@ -794,7 +807,7 @@
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  564616
+                                                               :group                  nil
                                                                :allow-duplicate-email? true
                                                                :allow-duplicate-sms?   false
                                                                :sms-countries          ["se"]
@@ -814,14 +827,15 @@
 
 (deftest registration-duplicate-resume-allowed-no-assessments
   (let [sms-number (random-sms)
-        email      (random-email)]
+        email      (random-email)
+        reg-group  (create-group! project-reg-allowed)]
     (user-service/create-user! 564610 {:SMSNumber sms-number
                                        :Email     email
-                                       :group     570281})
+                                       :group     reg-group})
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  570281
+                                                               :group                  reg-group
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
                                                                :sms-countries          ["se"]
@@ -842,11 +856,12 @@
 
 (deftest registration-duplicate-resume-allowed-assessments
   (let [sms-number (random-sms)
-        email      (random-email)]
+        email      (random-email)
+        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  653388
+                                                               :group                  reg-group
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
                                                                :sms-countries          ["se"]
@@ -912,12 +927,13 @@
   (let [sms-number (random-sms)
         email      (random-email)
         password1  (str (passwords/password) "1")
-        password2  (str (passwords/password) "2")]
+        password2  (str (passwords/password) "2")
+        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  653388
+                                                               :group                  reg-group
                                                                :auto-username          :email
                                                                :auto-password?         true
                                                                :allow-duplicate-email? false
@@ -995,12 +1011,13 @@
   (let [sms-number (random-sms)
         email      (random-email)
         password1  (str (passwords/password) "X1")
-        password2  (str (passwords/password) "X2")]
+        password2  (str (passwords/password) "X2")
+        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series [286 4743])]
     (is (false? (= password1 password2)))
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number :password}
-                                                               :group                  653388
+                                                               :group                  reg-group
                                                                :auto-username          :email
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
@@ -1073,12 +1090,13 @@
 
 (deftest registration-duplicate-login-resume-not-allowed
   (let [sms-number (random-sms)
-        email      (random-email)]
+        email      (random-email)
+        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :auto-username          :none
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  564616
+                                                               :group                  reg-group
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
                                                                :allow-resume?          false
@@ -1123,16 +1141,17 @@
 
 (deftest registration-duplicate-login-resume-mismatch
   (let [sms-number (random-sms)
-        email      (random-email)]
+        email      (random-email)
+        reg-group  (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
     (user-service/create-user! 564610 {:SMSNumber sms-number
                                        :Email     "brjann@gmail.com"
-                                       :group     564616
+                                       :group     reg-group
                                        :password  "xxx"
                                        :username  "xxx"})
     (with-redefs [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                   reg-service/registration-params (constantly {:allowed?               true
                                                                :fields                 #{:email :sms-number}
-                                                               :group                  564616
+                                                               :group                  reg-group
                                                                :allow-duplicate-email? false
                                                                :allow-duplicate-sms?   false
                                                                :allow-resume?          true
@@ -1224,58 +1243,59 @@
               (has (some-text? "Who is collecting"))))))))
 
 (deftest registration-privacy-notice-disabled
-  (with-redefs [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
-                privacy-service/privacy-notice-disabled? (constantly true)
-                reg-service/registration-params          (constantly {:allowed?               true
-                                                                      :fields                 #{:email :sms-number}
-                                                                      :group                  564616
-                                                                      :allow-duplicate-email? true
-                                                                      :allow-duplicate-sms?   true
-                                                                      :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                                      :auto-username          :none})
-                passwords/letters-digits                 (constantly "METALLICA")]
-    (-> *s*
-        (visit "/registration/564610/captcha")
-        ;; Captcha session is created
-        (follow-redirect)
-        (has (some-text? "code below"))
-        (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
-        (has (status? 302))
-        (visit "/registration/564610/privacy")
-        (has (status? 302))
-        (visit "/registration/564610/form")
-        (has (status? 200))
-        (has (some-text? "Enter your"))
-        (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
-        (has (status? 302))
-        (pass-by (messages-are?
-                   [[:email "METALLICA"]
-                    [:sms "METALLICA"]]
-                   (poll-message-chan *debug-chan* 2)))
-        (follow-redirect)
-        (has (some-text? "Validate"))
-        (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
-        (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
-        (has (status? 302))
-        ;; Redirect to finish
-        (follow-redirect)
-        ;; Session created
-        (follow-redirect)
-        ;; Redirect to pending assessments
-        (follow-redirect)
-        (has (some-text? "Welcome"))
-        (visit "/user/assessments")
-        (has (some-text? "AAQ"))
-        (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
-        (follow-redirect)
-        (has (some-text? "Thanks")))))
+  (let [reg-group (create-registration-group! project-reg-allowed project-reg-allowed-ass-series)]
+    (with-redefs [captcha/captcha!                         (constantly {:filename "xxx" :digits "6666"})
+                  privacy-service/privacy-notice-disabled? (constantly true)
+                  reg-service/registration-params          (constantly {:allowed?               true
+                                                                        :fields                 #{:email :sms-number}
+                                                                        :group                  reg-group
+                                                                        :allow-duplicate-email? true
+                                                                        :allow-duplicate-sms?   true
+                                                                        :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                                        :auto-username          :none})
+                  passwords/letters-digits                 (constantly "METALLICA")]
+      (-> *s*
+          (visit "/registration/564610/captcha")
+          ;; Captcha session is created
+          (follow-redirect)
+          (has (some-text? "code below"))
+          (visit "/registration/564610/captcha" :request-method :post :params {:captcha "6666"})
+          (has (status? 302))
+          (visit "/registration/564610/privacy")
+          (has (status? 302))
+          (visit "/registration/564610/form")
+          (has (status? 200))
+          (has (some-text? "Enter your"))
+          (visit "/registration/564610/form" :request-method :post :params {:email "brjann@gmail.com" :sms-number "+46070717652"})
+          (has (status? 302))
+          (pass-by (messages-are?
+                     [[:email "METALLICA"]
+                      [:sms "METALLICA"]]
+                     (poll-message-chan *debug-chan* 2)))
+          (follow-redirect)
+          (has (some-text? "Validate"))
+          (visit "/registration/564610/validate-sms" :request-method :post :params {:code-sms "METALLICA"})
+          (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
+          (has (status? 302))
+          ;; Redirect to finish
+          (follow-redirect)
+          ;; Session created
+          (follow-redirect)
+          ;; Redirect to pending assessments
+          (follow-redirect)
+          (has (some-text? "Welcome"))
+          (visit "/user/assessments")
+          (has (some-text? "AAQ"))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
+          (follow-redirect)
+          (has (some-text? "Thanks"))))))
 
 (deftest registration-all-fields-sql-query-no-assessments
   (let [email (str (apply str (take 20 (repeatedly #(char (+ (rand 26) 65))))) "@example.com")]
     (with-redefs [captcha/captcha!         (constantly {:filename "xxx" :digits "6666"})
                   db/registration-params   (constantly {:allowed?               true,
                                                         :allow-duplicate-sms?   true,
-                                                        :group                  570281,
+                                                        :group                  nil,
                                                         :sms-countries          "se",
                                                         :fields                 "a:6:{s:5:\"Email\";b:1;s:9:\"FirstName\";b:1;s:8:\"LastName\";b:1;s:12:\"Personnummer\";b:1;s:9:\"SMSNumber\";b:1;s:8:\"Password\";b:1;}",
                                                         :bankid-change-names?   false,
@@ -1316,17 +1336,18 @@
           (has (some-text? "No activities"))))))
 
 (deftest already-logged-in
-  (-> *s*
-      (modify-session {:user-id 536975 :double-authed? true})
-      (visit "/user/tx/messages")
-      (has (status? 200))
-      (visit "/registration/564610")
-      (follow-redirect)
-      (follow-redirect)
-      (has (some-text? "Already"))
-      (visit "/registration/564610/clear-session")
-      (follow-redirect)
-      (has (some-text? "Welcome"))))
+  (let [user-id (create-user-with-treatment! tx-autoaccess)]
+    (-> *s*
+        (modify-session {:user-id user-id :double-authed? true})
+        (visit "/user/tx/messages")
+        (has (status? 200))
+        (visit "/registration/564610")
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "Already"))
+        (visit "/registration/564610/clear-session")
+        (follow-redirect)
+        (has (some-text? "Welcome")))))
 
 (deftest session-has-data
   ;; Doesn't have data - 1 redirect

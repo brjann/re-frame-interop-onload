@@ -33,6 +33,8 @@
 (def project-double-auth 536972)
 (def project-double-auth-assessment-series 536974)
 (def project-no-double-auth 536818)
+(def project-reg-allowed 564610)
+(def project-reg-allowed-ass-series 564612)
 (def project-tx 543018)
 (def tx-autoaccess 551356)
 (def tx-ns-tests 642517)
