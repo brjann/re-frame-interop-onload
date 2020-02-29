@@ -184,7 +184,7 @@
 
 (defn random-date-tz-fixture
   [f]
-  (clear-administrations!)
+  #_(clear-administrations!)
   (let [tz  (t/time-zone-for-id (rand-nth (seq (t/available-ids))))
         now (random-date)]
     (binding [*tz*  tz
