@@ -37,18 +37,22 @@
             row))
         row))))
 
+(def exception (atom nil))
+
 (defn- try-query
   ([query n] (try-query query n 1))
   ([query n try#]
    (if (= 1 n)
      (with-meta (query) {:tries try#})
      (try (with-meta (query) {:tries try#})
-          (catch SQLException _
-            (try-query query (dec n) (inc try#)))))))
+          (catch SQLException e
+            (if (= "40001" (.getSQLState e))
+              (try-query query (dec n) (inc try#))
+              (throw e)))))))
 
 (defn sql-wrapper
   [f this db sqlvec options]
-  (let [max-tries 3
+  (let [max-tries 5
         query     #(apply f [this db sqlvec options])
         {:keys [val time]} (utils/time+ (try
                                           (try-query query max-tries)
@@ -79,7 +83,7 @@
       (email/async-email!
         db/*db*
         (config/env :error-email)
-        "SQL required more than 1 try to succeed"
+        (str "SQL required " tries " tries to succeed")
         (str "DB: " (clients/client-setting [:name]) "\n"
              "Time: " unix)))
     val))
