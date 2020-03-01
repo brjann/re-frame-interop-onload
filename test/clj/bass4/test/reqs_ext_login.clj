@@ -1,7 +1,10 @@
 (ns ^:eftest/synchronized
+  ;; redefs env and I'm not sure if it's worth it to refactor that into a
+  ;; rebindable function.
   bass4.test.reqs-ext-login
   (:require [bass4.i18n]
             [clojure.test :refer :all]
+            [bass4.routes.ext-login :as ext-login]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
@@ -21,21 +24,20 @@
 (use-fixtures
   :each
   random-date-tz-fixture)
-
 (deftest request-ext-login-not-allowed
-  (with-redefs [db/ext-login-settings (constantly {:allowed? false :ips ""})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? false :ips ""})]
     (-> *s*
         (visit "/ext-login/check-pending/900")
         (has (some-text? "0 External login not allowed")))))
 
 (deftest request-ext-login-allowed-wrong-ip
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips ""})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips ""})]
     (-> *s*
         (visit "/ext-login/check-pending/900")
         (has (some-text? "0 External login not allowed from this IP")))))
 
 (deftest request-ext-login-x-forwarded-for
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [user-id (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id {"participantid" user-id})
       (with-redefs [config/env (merge config/env {:x-forwarded-for-index 0})]
@@ -48,7 +50,7 @@
             (has (some-text? "0 No pending administrations")))))))
 
 (deftest request-ext-login-allowed-ok-ip-double
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [user-id1 (user-service/create-user! project-double-auth)
           user-id2 (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id1 {"participantid" user-id1})
@@ -58,13 +60,13 @@
           (has (some-text? "0 More than 1 matching user"))))))
 
 (deftest request-ext-login-allowed-ok-ip-no-user
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (-> *s*
         (visit "/ext-login/check-pending/METALLICA")
         (has (some-text? "0 No such user")))))
 
 (deftest request-ext-login-allowed-ok-no-pending
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [user-id (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id {"participantid" user-id})
       (-> *s*
@@ -72,7 +74,7 @@
           (has (some-text? "0 No pending administrations"))))))
 
 (deftest request-ext-login-assessment-pending
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [286 4431])
           user-id  (user-service/create-user! project-double-auth {"group" group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -108,7 +110,7 @@
             (has (status? 403)))))))
 
 (deftest request-ext-login-assessment-pending-logout-url
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [4431 286])
           user-id  (user-service/create-user! project-double-auth {:group group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -134,7 +136,7 @@
             (has (status? 403)))))))
 
 (deftest request-ext-login-empty-assessment-pending2
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [] {})
           user-id  (user-service/create-user! project-double-auth {:group group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -155,7 +157,7 @@
 
 
 (deftest request-ext-login-error-uid
-  (with-redefs [db/ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (with-redefs [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
     (let [session  *s*
           redirect (-> session
                        (visit "/ext-login/do-login?uid=666&returnURL=http://www.dn.se")
