@@ -47,7 +47,9 @@
      (try (with-meta (query) {:tries try#})
           (catch SQLException e
             (if (= "40001" (.getSQLState e))
-              (try-query query (dec n) (inc try#))
+              (do
+                (log/info "Deadlock found - retrying SQL.")
+                (try-query query (dec n) (inc try#)))
               (throw e)))))))
 
 (defn sql-wrapper
