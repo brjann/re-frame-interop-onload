@@ -20,6 +20,10 @@
             [bass4.php-interop :as php-interop]))
 
 
+(defn db-ext-login-settings
+  [db]
+  (db/ext-login-settings db {}))
+
 ;; ------------
 ;;  MIDDLEWARE
 ;; ------------
@@ -40,7 +44,7 @@
 
 (defn check-ip-mw
   [handler request]
-  (let [{:keys [allowed? ips]} (db/ext-login-settings)]
+  (let [{:keys [allowed? ips]} (db-ext-login-settings db/*db*)]
     (cond
       (not allowed?)
       (logged-response "0 External login not allowed")
