@@ -17,7 +17,6 @@
             [bass4.registration.services :as reg-service]
             [clojure.tools.logging :as log]))
 
-
 (use-fixtures
   :once
   test-fixtures)
@@ -217,17 +216,19 @@
 (def sms-email-counter (atom 0))
 (defn random-sms []
   (swap! sms-email-counter inc)
-  (str "+46" (System/currentTimeMillis) @sms-email-counter))
+    (str "+46" @sms-email-counter (System/currentTimeMillis)))
 
 (defn random-email []
   (swap! sms-email-counter inc)
-  (str (System/currentTimeMillis) @sms-email-counter "@example.com"))
+    (str @sms-email-counter (System/currentTimeMillis) "@example.com"))
 
 (def pnr-counter (atom 0))
 (defn random-pnr []
   (swap! pnr-counter inc)
-  (let [pnr (str (System/currentTimeMillis) @pnr-counter)]
-    (subs pnr (- (count pnr) 12))))
+    (let [pnr (str @pnr-counter (System/currentTimeMillis))
+          res (subs pnr 0 12)]
+        (log/debug res)
+        res))
 
 (deftest registration-flow-bankid-resume2
   (let [pnr       (random-pnr)
@@ -282,8 +283,12 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (has (status? 302))
           ;; Redirect to finish
+          ;(log-session)
+          ;(log-body)
           (follow-redirect)
           ;; Session created
+          ;(log-session)
+          ;(log-body)
           (follow-redirect)
           (has (some-text? "exact"))
           (visit "/user")
@@ -397,8 +402,12 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (has (status? 302))
           ;; Redirect to finish
+          ;(log-session)
+          ;(log-body)
           (follow-redirect)
           ;; Session created
+          ;(log-session)
+          ;(log-body)
           (follow-redirect)
           (has (some-text? "exact"))
           (visit "/user")
