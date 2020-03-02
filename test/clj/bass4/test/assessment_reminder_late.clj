@@ -5,16 +5,10 @@
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
             [bass4.services.user :as user-service]
-            [bass4.db.core :as db]
             [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [bass4.routes.quick-login :as quick-login]
-            [clj-time.coerce :as tc]
-            [clojure.java.jdbc :as jdbc]
-            [bass4.task.runner :as task-runner]
-            [bass4.config :as config]
-            [bass4.external-messages.queue-tasks :as queue-tasks])
-  (:import (org.joda.time.tz CachedDateTimeZone)))
+            [clj-time.coerce :as tc]))
 
 (use-fixtures
   :once
@@ -103,6 +97,33 @@
     (is (= #{[user1-id true ass-I-manual-s-5-10-q 2 ::assessment-reminder/late 1]
              [user1-id true ass-I-hour8-2-20 1 ::assessment-reminder/late 10]
              [user2-id true ass-I-manual-s-5-10-q 4 ::assessment-reminder/late 1]}
+           (reminders *now*)))))
+
+(deftest late-group-clinician-no-reminder
+  (let [group1-id     (create-group!)
+        _             (user-service/create-user! project-ass1-id {:group group1-id})
+        ass-clinician (create-assessment! {"Scope"                      1
+                                           "SendSMSWhenActivated"       1
+                                           "RemindParticipantsWhenLate" 1
+                                           "RemindInterval"             2
+                                           "MaxRemindCount"             3
+                                           "ClinicianAssessment"        1})]
+    (create-group-administration!
+      group1-id ass-clinician 1 {:date (midnight+d -2 *now*)})
+    (is (= #{}
+           (reminders *now*)))))
+
+(deftest late-participant-clinician-no-reminder
+  (let [user1-id      (user-service/create-user! project-ass1-id)
+        ass-clinician (create-assessment! {"Scope"                      0
+                                           "SendSMSWhenActivated"       1
+                                           "RemindParticipantsWhenLate" 1
+                                           "RemindInterval"             5
+                                           "MaxRemindCount"             10
+                                           "ClinicianAssessment"        1})]
+    (create-participant-administration!
+      user1-id ass-clinician 1 {:date (midnight+d -6 *now*)})
+    (is (= #{}
            (reminders *now*)))))
 
 (deftest late-group-boundaries
