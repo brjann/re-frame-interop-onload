@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-quick-login
+(ns bass4.test.reqs-quick-login
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -7,12 +6,11 @@
             [kerodon.test :refer :all]
             [bass4.test.core :refer :all]
             [bass4.test.assessment-utils :refer :all]
-            [bass4.db.core :as db]
             [bass4.now :as now]
-            [clj-time.core :as t]
             [bass4.utils :as utils]
             [bass4.services.user :as user-service]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [bass4.routes.quick-login :as quick-login]))
 
 (use-fixtures
   :once
@@ -27,7 +25,7 @@
       (f))))
 
 (deftest quick-login-assessments
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [4431 4743 286])
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
@@ -59,7 +57,7 @@
           (has (some-text? "Thanks"))))))
 
 (deftest quick-login-expired
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
@@ -71,14 +69,14 @@
           (has (some-text? "expired"))))))
 
 (deftest quick-login-invalid
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (-> *s*
         (visit "/q/123456789012345")
         (has (status? 200))
         (has (some-text? "Invalid")))))
 
 (deftest quick-login-not-allowed
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? false :expiration-days 11})]
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {:QuickLoginPassword q-id :QuickLoginTimestamp (utils/to-unix (now/now))})
@@ -88,14 +86,14 @@
           (has (some-text? "not allowed"))))))
 
 (deftest quick-login-too-long
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (-> *s*
         (visit "/q/1234567890123456")
         (has (status? 200))
         (has (some-text? "too long")))))
 
 (deftest quick-login-no-timeout
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
@@ -113,7 +111,7 @@
 
 (deftest quick-login-escalation-re-auth
   []
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
 
 
 
