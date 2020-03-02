@@ -1,4 +1,4 @@
-(ns ^:eftest/synchronized
+(ns
     bass4.test.reqs-registration-bankid
   (:require [bass4.i18n]
             [clojure.test :refer :all]
@@ -8,14 +8,14 @@
             [bass4.test.core :refer :all]
             [bass4.passwords :as passwords]
             [bass4.test.assessment-utils :refer :all]
-            [bass4.test.bankid.mock-collect :as mock-collect]
             [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer [wait
                                                                         collect+wait
                                                                         user-opens-app!
                                                                         user-authenticates!
                                                                         user-cancels!]]
             [bass4.registration.services :as reg-service]
-            [clojure.tools.logging :as log]))
+            [clojure.string :as str])
+    (:import (java.util UUID)))
 
 (use-fixtures
   :once
@@ -213,21 +213,19 @@
           ;; Redirect to finish
           (follow-redirect)))))
 
-(def sms-email-counter (atom 0))
+(defonce sms-email-counter (atom 0))
+
 (defn random-sms []
-  (swap! sms-email-counter inc)
-    (str "+46" @sms-email-counter (System/currentTimeMillis)))
+    (let [u (swap! sms-email-counter inc)]
+        (str "+46" u (str/reverse (str (System/currentTimeMillis))))))
 
 (defn random-email []
-  (swap! sms-email-counter inc)
-    (str @sms-email-counter (System/currentTimeMillis) "@example.com"))
+    (str (UUID/randomUUID) "@example.com"))
 
-(def pnr-counter (atom 0))
 (defn random-pnr []
-  (swap! pnr-counter inc)
-    (let [pnr (str @pnr-counter (System/currentTimeMillis))
+    (let [u   (swap! sms-email-counter inc)
+          pnr (str u (str/reverse (str (System/currentTimeMillis))))
           res (subs pnr 0 12)]
-        (log/debug res)
         res))
 
 (deftest registration-flow-bankid-resume2
@@ -283,12 +281,8 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (has (status? 302))
           ;; Redirect to finish
-          ;(log-session)
-          ;(log-body)
           (follow-redirect)
           ;; Session created
-          ;(log-session)
-          ;(log-body)
           (follow-redirect)
           (has (some-text? "exact"))
           (visit "/user")
@@ -402,12 +396,8 @@
           (visit "/registration/564610/validate-email" :request-method :post :params {:code-email "METALLICA"})
           (has (status? 302))
           ;; Redirect to finish
-          ;(log-session)
-          ;(log-body)
           (follow-redirect)
           ;; Session created
-          ;(log-session)
-          ;(log-body)
           (follow-redirect)
           (has (some-text? "exact"))
           (visit "/user")
