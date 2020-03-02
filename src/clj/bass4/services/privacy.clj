@@ -38,13 +38,13 @@
           (first)
           (val)))
 
-(defn user-must-consent?
+(defn ^:dynamic user-must-consent?
   ([] (db-user-must-consent?))
   ([project-id]
    (or (db-user-must-consent?)
        (project-user-must-consent? project-id))))
 
-(defn privacy-notice-exists?
+(defn ^:dynamic privacy-notice-exists?
   [project-id]
   (-> (db/privacy-notice-exists? {:project-id project-id})
       (:exists?)

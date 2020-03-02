@@ -23,7 +23,7 @@
 ;;   SERVICES
 ;; ------------
 
-(defn db-quick-login-settings
+(defn ^:dynamic db-quick-login-settings
   [db]
   (db/get-quick-login-settings db {}))
 

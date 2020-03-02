@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-privacy
+(ns bass4.test.reqs-privacy
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -12,7 +11,9 @@
             [bass4.services.privacy :as privacy-service]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [bass4.routes.ext-login :as ext-login]
+            [bass4.routes.quick-login :as quick-login]))
 
 (use-fixtures
   :once
@@ -24,7 +25,7 @@
   random-date-tz-fixture)
 
 (deftest privacy-consent-no-consent-then-consent-logout-complete-assessments
-  (with-redefs [privacy-service/user-must-consent? (constantly true)]
+  (binding [privacy-service/user-must-consent? (constantly true)]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series [4431 4743 4568 286])
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})]
       (user-service/update-user-properties! user-id {:username user-id :password user-id})
@@ -65,7 +66,7 @@
           (has (some-text? "Thanks"))))))
 
 (deftest privacy-consent-consent-before-treatment
-  (with-redefs [privacy-service/user-must-consent? (constantly true)]
+  (binding [privacy-service/user-must-consent? (constantly true)]
     (let [user-id (create-user-with-treatment! tx-autoaccess true)]
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
@@ -86,7 +87,7 @@
           (has (status? 302))))))
 
 (deftest login-no-privacy-notice
-  (with-redefs [privacy-service/privacy-notice-exists? (constantly false)]
+  (binding [privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! project-reg-allowed)]
       (user-service/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
@@ -95,8 +96,8 @@
           (has (some-text? "User cannot login"))))))
 
 (deftest quick-login-no-privacy-notice
-  (with-redefs [db/get-quick-login-settings            (constantly {:allowed? true :expiration-days 11})
-                privacy-service/privacy-notice-exists? (constantly false)]
+  (binding [quick-login/db-quick-login-settings    (constantly {:allowed? true :expiration-days 11})
+            privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! project-reg-allowed)
           q-id    (str user-id "XXXX")]
       (user-service/update-user-properties! user-id {"QuickLoginPassword"  q-id
@@ -107,8 +108,8 @@
           (has (some-text? "User cannot login"))))))
 
 (deftest request-ext-login-no-privacy-notice
-  (with-redefs [db/ext-login-settings                  (constantly {:allowed? true :ips "localhost"})
-                privacy-service/privacy-notice-exists? (constantly false)]
+  (binding [ext-login/db-ext-login-settings        (constantly {:allowed? true :ips "localhost"})
+            privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! project-reg-allowed)]
       (user-service/update-user-properties! user-id {"participantid" user-id})
       (-> *s*
@@ -120,8 +121,8 @@
 ;; -----------------------
 
 (deftest privacy-consent-notice-disabled
-  (with-redefs [privacy-service/user-must-consent?       (constantly true)
-                privacy-service/privacy-notice-disabled? (constantly true)]
+  (binding [privacy-service/user-must-consent?       (constantly true)
+            privacy-service/privacy-notice-disabled? (constantly true)]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})]
       (user-service/update-user-properties! user-id {:username user-id :password user-id})
@@ -136,8 +137,8 @@
           (has (status? 400))))))
 
 (deftest privacy-consent-consent-before-treatment-notice-disabled
-  (with-redefs [privacy-service/user-must-consent?       (constantly true)
-                privacy-service/privacy-notice-disabled? (constantly true)]
+  (binding [privacy-service/user-must-consent?       (constantly true)
+            privacy-service/privacy-notice-disabled? (constantly true)]
     (let [user-id (create-user-with-treatment! tx-autoaccess true)]
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
@@ -148,8 +149,8 @@
           (has (status? 200))))))
 
 (deftest login-no-privacy-notice-notice-disabled
-  (with-redefs [privacy-service/privacy-notice-exists?   (constantly false)
-                privacy-service/privacy-notice-disabled? (constantly true)]
+  (binding [privacy-service/privacy-notice-exists?   (constantly false)
+            privacy-service/privacy-notice-disabled? (constantly true)]
     (let [user-id (create-user-with-treatment! tx-autoaccess true)]
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
@@ -158,9 +159,9 @@
           (has (some-text? "Welcome!"))))))
 
 (deftest quick-login-no-privacy-notice-notice-disabled
-  (with-redefs [db/get-quick-login-settings              (constantly {:allowed? true :expiration-days 11})
-                privacy-service/privacy-notice-exists?   (constantly false)
-                privacy-service/privacy-notice-disabled? (constantly true)]
+  (binding [quick-login/db-quick-login-settings      (constantly {:allowed? true :expiration-days 11})
+            privacy-service/privacy-notice-exists?   (constantly false)
+            privacy-service/privacy-notice-disabled? (constantly true)]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
           q-id     (str user-id "XXXX")]
@@ -173,9 +174,9 @@
           (has (some-text? "Welcome"))))))
 
 (deftest request-ext-login-no-privacy-notice-notice-disabled
-  (with-redefs [db/ext-login-settings                    (constantly {:allowed? true :ips "localhost"})
-                privacy-service/privacy-notice-exists?   (constantly false)
-                privacy-service/privacy-notice-disabled? (constantly true)]
+  (binding [ext-login/db-ext-login-settings          (constantly {:allowed? true :ips "localhost"})
+            privacy-service/privacy-notice-exists?   (constantly false)
+            privacy-service/privacy-notice-disabled? (constantly true)]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -184,7 +185,7 @@
           (has (some-text? "do-login?uid="))))))
 
 (deftest api-privacy-notice
-  (with-redefs [privacy-service/privacy-notice-exists? (constantly true)]
+  (binding [privacy-service/privacy-notice-exists? (constantly true)]
     (let [user-id (create-user-with-treatment! tx-autoaccess true)]
       (-> *s*
           (visit "/api/user/privacy-notice-html")

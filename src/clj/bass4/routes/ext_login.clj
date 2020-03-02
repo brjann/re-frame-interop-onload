@@ -20,7 +20,7 @@
             [bass4.php-interop :as php-interop]))
 
 
-(defn db-ext-login-settings
+(defn ^:dynamic db-ext-login-settings
   [db]
   (db/ext-login-settings db {}))
 
