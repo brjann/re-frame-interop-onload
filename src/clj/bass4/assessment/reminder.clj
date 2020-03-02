@@ -32,11 +32,11 @@
          (map #(vector (:user-id %) %))
          (into {}))))
 
-(defn- db-standard-messages
+(defn ^:dynamic db-standard-messages
   [db]
   (db/get-standard-messages db {}))
 
-(defn db-reminder-start-and-stop
+(defn ^:dynamic db-reminder-start-and-stop
   [db]
   (db/get-reminder-start-and-stop db {}))
 

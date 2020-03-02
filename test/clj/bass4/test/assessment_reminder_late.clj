@@ -458,7 +458,7 @@
       (is (= #{} (reminders now+))))))
 
 (deftest quick-login
-  (with-redefs [db/get-quick-login-settings (constantly {:allowed? true :expiration-days 14})]
+  (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 14})]
     (let [user1-id               (user-service/create-user! project-ass1-id)
           user2-id               (user-service/create-user! project-ass1-id {"QuickLoginPassword"  "xxx"
                                                                              "QuickLoginTimestamp" (utils/to-unix (t/minus *now* (t/days 7)))})
@@ -484,8 +484,8 @@
       (is (= #{user1-id user3-id} (remind!-quick-logins-created *now*))))))
 
 (deftest late+activation-messages
-  (with-redefs [db/get-standard-messages  (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
-                quick-login/quicklogin-id (constantly "xxx")]
+  (binding [assessment-reminder/db-standard-messages (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
+            quick-login/quicklogin-id                (constantly "xxx")]
     (let [group1-id              (create-group!)
           user1-id               (user-service/create-user! project-ass1-id {:group      group1-id
                                                                              :email      "user1@example.com"

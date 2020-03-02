@@ -58,9 +58,9 @@
 
 (defn link-user-to-treatment!
   [user-id treatment-id access-properties]
-  (let [treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name "cTreatmentAccess"
-                                                                :parent-id       user-id
-                                                                :property-name   "TreatmentAccesses"}))]
+  (let [treatment-access-id (:objectid (orm/create-bass-object-map! {:class-name    "cTreatmentAccess"
+                                                                     :parent-id     user-id
+                                                                     :property-name "TreatmentAccesses"}))]
     (orm/update-object-properties! "c_treatmentaccess"
                                    treatment-access-id
                                    (merge {"AccessEnabled" true}
@@ -201,8 +201,8 @@
       (f))))
 
 (defn disable-attack-detector [f]
-  (with-redefs [a-d/get-delay-time         (constantly nil)
-                a-d/register-failed-login! (constantly nil)]
+  (binding [a-d/get-delay-time         (constantly nil)
+            a-d/register-failed-login! (constantly nil)]
     (f)))
 
 (defn debug-headers-not-text?

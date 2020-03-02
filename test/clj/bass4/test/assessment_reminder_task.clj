@@ -24,9 +24,9 @@
   filter-created-objects-fixture)
 
 (deftest reminder+queue-tasks
-  (with-redefs [db/get-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
-                db/get-reminder-start-and-stop (constantly {:start-hour 0 :stop-hour 25})
-                quick-login/quicklogin-id      (constantly "xxx")]
+  (binding [assessment-reminder/db-standard-messages       (constantly {:sms "{FIRSTNAME} {LASTNAME}" :email "{EMAIL} {URL}"})
+            assessment-reminder/db-reminder-start-and-stop (constantly {:start-hour 0 :stop-hour 25})
+            quick-login/quicklogin-id                      (constantly "xxx")]
 
     (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_email")
     (jdbc/execute! db/*db* "TRUNCATE TABLE external_message_sms")
@@ -102,7 +102,7 @@
       (is (= 0 (cycles (run-db-task! #'queue-tasks/sms-task)))))))
 
 (deftest reminder-task-start-hour
-  (with-redefs [db/get-reminder-start-and-stop (constantly {:start-hour 8 :stop-hour 20})]
+  (binding [assessment-reminder/db-reminder-start-and-stop (constantly {:start-hour 8 :stop-hour 20})]
     (let [reminder-task          (fn [now]
                                    (:cycles (assessment-reminder/reminder-task
                                               db/*db*
@@ -134,7 +134,6 @@
         group1-id ass-G-week-e+s-3-4-p10 2 {:date (midnight+d -3 *now*)})
 
       ;; ACTIVATION
-
       (let [now (t/plus (midnight-joda *now*) (t/hours 7))]
         (is (= nil (reminder-task now))))
       (let [now (t/plus (midnight-joda *now*) (t/hours 20))]

@@ -41,7 +41,7 @@
 (def quicklogin-chars
   (vec "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"))
 
-(defn quicklogin-id
+(defn ^:dynamic quicklogin-id
   [user-id]
   (let [base64-id (->> (Integer/toBinaryString user-id)
                        (partition 6 6 [])

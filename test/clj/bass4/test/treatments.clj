@@ -76,14 +76,14 @@
                                                      {:access-enabling-required? true})))))
 
 ;(deftest treatment-multiple-active
-;  (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
+;  (binding [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
 ;    ;; First and second treatment active
 ;    (is (= 3958 (get-in (treatment-builder/user-treatment 549821) [:treatment :treatment-id])))
 ;    ;; First inactive second active
 ;    (is (= 3972 (get-in (treatment-builder/user-treatment 550132) [:treatment :treatment-id])))))
 ;
 ;(deftest treatment-messaging
-;  (with-redefs [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
+;  (binding [now/now (constantly (t/date-time 2017 11 30 0 0 0))]
 ;    ;; User not allowed - treatment allows
 ;    (is (= false (get-in (treatment-builder/user-treatment 549821) [:tx-components :send-messages?])))
 ;    ;; User allowed - treatment allows

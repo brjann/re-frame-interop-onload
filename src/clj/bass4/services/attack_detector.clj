@@ -63,7 +63,7 @@
                       info)]
     (db-save-failed-login! record)))
 
-(defn register-failed-login!
+(defn ^:dynamic register-failed-login!
   ([type request] (register-failed-login! type request {}))
   ([type request info]
    (let [now        (utils/current-time)
@@ -147,7 +147,7 @@
 ;;    ATTACK VECTORS
 ;; --------------------
 
-(defn get-delay-time
+(defn ^:dynamic get-delay-time
   [request]
   (or (delay-ip! request) (delay-global!)))
 
