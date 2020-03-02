@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-auth
+(ns bass4.test.reqs-auth
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -26,7 +25,7 @@
 
 (deftest double-auth-generator
   []
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"SMSNumber" "070-7176562"})]
       ;; double auth
       (-> *s*
@@ -72,7 +71,7 @@
 (deftest double-auth-to-email
   (let [user-id (create-user-with-password! {"DoubleAuthUseBoth" true
                                              "email"             "example@example.com"})]
-    (with-redefs [auth-service/double-auth-code (constantly "777666")]
+    (binding [auth-service/double-auth-code (constantly "777666")]
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (pass-by (messages-are? [[:email "777666"]] (poll-message-chan *debug-chan*)))))))
@@ -85,7 +84,7 @@
         (has (some-text? "message")))))
 
 #_(deftest double-auth-send-fail
-    (with-redefs [debug/new-sms-in-header!  (constantly false)
+    (binding [debug/new-sms-in-header!      (constantly false)
                   debug/new-mail-in-header! (constantly false)]
       (-> *s*
           (visit "/login" :request-method :post :params {:username "send-fail" :password "send-fail"})
@@ -95,7 +94,7 @@
           (has (some-text? "activities")))))
 
 (deftest double-auth-sms-priority
-  (with-redefs [auth-service/double-auth-code (constantly "777666")]
+  (binding [auth-service/double-auth-code (constantly "777666")]
     (let [user-id (create-user-with-password! {"DoubleAuthUseBoth" true
                                                "email"             "example@example.com"
                                                "SMSNumber"         "666"})]
@@ -104,7 +103,7 @@
           (pass-by (messages-are? [[:sms "777666"]] (poll-message-chan *debug-chan*)))))))
 
 #_(deftest double-auth-mail-fallback
-    (with-redefs [debug/new-sms-in-header!      (constantly false)
+    (binding [debug/new-sms-in-header!          (constantly false)
                   auth-service/double-auth-code (constantly "777666")]
       (-> *s*
           (visit "/login" :request-method :post :params {:username "to-mail-fallback" :password "to-mail-fallback"})

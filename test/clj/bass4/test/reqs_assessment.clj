@@ -1,11 +1,9 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-assessment
+(ns bass4.test.reqs-assessment
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
             [kerodon.core :refer :all]
             [kerodon.test :refer :all]
-            [bass4.middleware.core :as mw]
             [bass4.now :as now]
             [bass4.test.core :refer :all]
             [bass4.services.auth :as auth-service]
@@ -13,7 +11,6 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log]
             [bass4.instrument.validation :as i-validation]))
 
 (use-fixtures
@@ -26,7 +23,7 @@
   random-date-tz-fixture)
 
 (deftest assessment-requests
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [top-priority     (create-assessment! project-double-auth-assessment-series
                                                {"Scope"                                    0
                                                 "WelcomeText"                              "Welcome top-priority"
@@ -247,10 +244,8 @@
             (fn-not-text? "no-thanks"))))))
 
 (deftest empty-assessment
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
-    (let [empty-ass (create-assessment! project-double-auth-assessment-series
-                                        {"Scope" 0})
-          user-id   (user-service/create-user! project-double-auth)]
+  (binding [auth-service/double-auth-code (constantly "666777")]
+    (let [user-id (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id {:username user-id :password user-id})
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})

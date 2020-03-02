@@ -6,7 +6,7 @@
             [bass4.services.user :as user-service]
             [bass4.passwords :as passwords]))
 
-(defn double-auth-code []
+(defn ^:dynamic double-auth-code []
   (passwords/letters-digits 3))
 
 
