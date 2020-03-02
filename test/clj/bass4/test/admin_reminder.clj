@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.admin-reminder
+(ns bass4.test.admin-reminder
   (:require [clj-time.core :as t]
             [bass4.test.core :refer :all]
             [clojure.test :refer :all]
@@ -8,11 +7,9 @@
             [bass4.test.assessment-utils :refer [project-ass1-id project-ass2-id]]
             [bass4.db.core :as db]
             [bass4.services.messages :as messages]
-            [clojure.tools.logging :as log]
             [bass4.utils :as utils]
             [clojure.java.jdbc :as jdbc]
             [bass4.now :as now]
-            [bass4.services.bass :as bass-service]
             [clj-time.coerce :as tc]
             [bass4.module.services :as module-service]
             [bass4.db.orm-classes :as orm]))
@@ -21,17 +18,23 @@
   :once
   test-fixtures)
 
+(use-fixtures
+  :each
+  (fn [f]
+    (binding [orm/*created-objects* (atom #{})]
+      (f))))
+
 (defn clear-flags!
   []
-  (jdbc/execute! db/*db* ["TRUNCATE c_flag"]))
+  #_(jdbc/execute! db/*db* ["TRUNCATE c_flag"]))
 
 (defn clear-messages!
   []
-  (jdbc/execute! db/*db* ["TRUNCATE c_message"]))
+  #_(jdbc/execute! db/*db* ["TRUNCATE c_message"]))
 
 (defn clear-homework!
   []
-  (jdbc/execute! db/*db* ["TRUNCATE content_data_homework"]))
+  #_(jdbc/execute! db/*db* ["TRUNCATE content_data_homework"]))
 
 (defn -ms
   [time]
@@ -55,6 +58,7 @@
   [time-limit]
   (let [res (admin-reminder/db-unread-messages db/*db* time-limit)]
     (->> res
+         (filter #(contains? @orm/*created-objects* (:user-id %)))
          (map (juxt :user-id :time :count))
          (into #{}))))
 
@@ -109,6 +113,7 @@
   [time-limit]
   (let [res (admin-reminder/db-open-flags db/*db* time-limit)]
     (->> res
+         (filter #(contains? @orm/*created-objects* (:user-id %)))
          (map (juxt :user-id :time :count))
          (into #{}))))
 
@@ -143,6 +148,7 @@
   [time-limit]
   (let [res (admin-reminder/db-lost-password-flags db/*db* time-limit)]
     (->> res
+         (filter #(contains? @orm/*created-objects* (:user-id %)))
          (map (juxt :user-id :time :count))
          (into #{}))))
 
@@ -195,6 +201,7 @@
   [time-limit]
   (let [res (admin-reminder/db-unread-homework db/*db* time-limit)]
     (->> res
+         (filter #(contains? @orm/*created-objects* (:user-id %)))
          (map (juxt :user-id :time :count))
          (into #{}))))
 
@@ -248,6 +255,7 @@
 (defn check-all
   [time-limit]
   (->> (admin-reminder/collect-reminders db/*db* time-limit)
+       (filter (fn [x] (contains? @orm/*created-objects* (key x))))
        (utils/map-map (fn [l] (->> l
                                    (map (juxt :type :time :count))
                                    (into #{}))))))
@@ -296,8 +304,10 @@
     (is (= [{[therapist1-id "therapist1@bass4.com"] #{user1-id user2-id}
              [therapist2-id "therapist2@bass4.com"] #{user1-id user3-id}}
             {[0 "project@bass4.com"] #{user4-id user5-id}}]
-           (let [reminders-by-participants (admin-reminder/collect-reminders db/*db*
-                                                                             t60days)
+           (let [reminders-by-participants (->> (admin-reminder/collect-reminders db/*db*
+                                                                                  t60days)
+                                                (filter (fn [x] (contains? @orm/*created-objects* (key x))))
+                                                (into {}))
                  participant-ids           (into #{} (keys reminders-by-participants))
                  therapists                (admin-reminder/db-therapists db/*db* participant-ids)]
              [(admin-reminder/collapse-therapists therapists)
