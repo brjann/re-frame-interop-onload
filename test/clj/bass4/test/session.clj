@@ -218,6 +218,17 @@
           (has (api-response? {:hard    timeout-hard
                                :re-auth timeout-re-auth}))
           (visit "/api/user/tx/messages")
+          (has (status? 200))
+          ;; API re-auth
+          (visit "/api/session/timeout-re-auth")
+          (has (status? 200))
+          (visit "/api/user/tx/messages")
+          (has (status? 440))
+          (visit "/api/re-auth" :request-method :post :body-params {:password "wrong"})
+          (has (status? 422))
+          (visit "/api/re-auth" :request-method :post :body-params {:password (str user-id)})
+          (has (status? 200))
+          (visit "/api/user/tx/messages")
           (has (status? 200))))
 
     (fix-time
