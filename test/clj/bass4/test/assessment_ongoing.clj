@@ -297,6 +297,16 @@
         group1-id ass-I-manual-s-5-10-q 4 {:active 0})
       (is (= #{[ass-I-manual-s-5-10-q 2]} (ongoing-assessments *now* user1-id))))))
 
+(deftest group-assessment-clinician-not-ongoing
+  (let [group-id      (create-group!)
+        user-id       (user-service/create-user! project-ass1-id {:group group-id})
+        ass-clinician (create-assessment! {"Scope"               1
+                                           "ClinicianAssessment" 1})]
+    ; Today
+    (create-group-administration!
+      group-id ass-clinician 1 {:date (midnight *now*)})
+    (is (= #{} (ongoing-assessments *now* user-id)))))
+
 (deftest clinician-assessment
   (let [user-id         (user-service/create-user! project-ass1-id)
         ass-I-clinician (create-assessment! {"Scope"               0
