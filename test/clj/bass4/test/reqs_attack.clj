@@ -103,7 +103,7 @@
 
 
 (deftest attack-double-auth
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})
           state   (-> *s*
                       (visit "/login" :request-method :post :params {:username user-id :password user-id})
@@ -117,7 +117,7 @@
         standard-attack))))
 
 (deftest attack-re-auth
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})
           _       (link-user-to-treatment! user-id tx-autoaccess {})
           state   (-> *s*
@@ -137,7 +137,7 @@
         standard-attack))))
 
 (deftest attack-api-re-auth
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-treatment! tx-autoaccess)
           state   (-> *s*
                       (modify-session {:user-id user-id :double-authed? true})
@@ -154,7 +154,7 @@
         standard-attack))))
 
 (deftest attack-re-auth-ajax
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-treatment! tx-autoaccess)
           state   (-> *s*
                       (modify-session {:user-id user-id :double-authed? true})
@@ -173,7 +173,7 @@
         standard-attack))))
 
 (deftest attack-login-double-auth
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})]
       (link-user-to-treatment! user-id tx-autoaccess {})
       (-> *s*
@@ -213,7 +213,7 @@
           (has (status? 200))))))
 
 (deftest attack-parallel
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})]
       (-> *s*
           (attack-uri
@@ -241,7 +241,7 @@
              [a-d/const-ip-block-delay 422]])))))
 
 (deftest attack-parallel-different-ips
-  (with-redefs [auth-service/double-auth-code (constantly "666777")]
+  (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})]
       (-> *s*
           (attack-uri
@@ -266,17 +266,17 @@
 
 
 (deftest attack-registration
-  (with-redefs [captcha/captcha!                (constantly {:filename "%€#&()" :digits "6666"})
-                reg-service/registration-params (constantly {:allowed?               true
-                                                             :fields                 #{:first-name :last-name}
-                                                             :group                  570281 ;;No assessments in this group
-                                                             :allow-duplicate-email? true
-                                                             :allow-duplicate-sms?   true
-                                                             :sms-countries          ["se" "gb" "dk" "no" "fi"]
-                                                             :auto-username          :none
-                                                             :auto-id-prefix         "xxx-"
-                                                             :auto-id-length         3
-                                                             :auto-id?               true})]
+  (binding [captcha/captcha!                (constantly {:filename "%€#&()" :digits "6666"})
+            reg-service/registration-params (constantly {:allowed?               true
+                                                         :fields                 #{:first-name :last-name}
+                                                         :group                  570281 ;;No assessments in this group
+                                                         :allow-duplicate-email? true
+                                                         :allow-duplicate-sms?   true
+                                                         :sms-countries          ["se" "gb" "dk" "no" "fi"]
+                                                         :auto-username          :none
+                                                         :auto-id-prefix         "xxx-"
+                                                         :auto-id-length         3
+                                                         :auto-id?               true})]
     (-> *s*
         (visit "/registration/564610/captcha")
         ;; Captcha session is created
