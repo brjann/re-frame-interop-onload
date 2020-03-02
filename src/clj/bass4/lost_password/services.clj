@@ -8,7 +8,7 @@
             [bass4.clients.core :as clients])
   (:import (java.util UUID)))
 
-(defn lost-password-method []
+(defn ^:dynamic lost-password-method []
   (let [method (->
                  (db/get-lost-password-method)
                  first

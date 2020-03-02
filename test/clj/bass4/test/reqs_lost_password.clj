@@ -1,5 +1,4 @@
-(ns ^:eftest/synchronized
-  bass4.test.reqs-lost-password
+(ns bass4.test.reqs-lost-password
   (:require [bass4.i18n]
             [clojure.test :refer :all]
             [bass4.handler :refer :all]
@@ -16,20 +15,20 @@
             [bass4.lost-password.responses :as lpw-response]
             [bass4.external-messages.async :refer [*debug-chan*]]))
 
-
 (use-fixtures
   :once
   test-fixtures
   disable-attack-detector)
 
+(def ^:dynamic uid)
+
 (use-fixtures
   :each
   (fn [f]
-    (binding [*debug-chan* (chan)]
+    (binding [uid          (atom nil)
+              *debug-chan* (chan)]
       (fix-time
         (f)))))
-
-(def uid (atom nil))
 
 (defn has-flag?
   [user-id]
@@ -47,17 +46,17 @@
   messages)
 
 (deftest lost-password-router
-  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+  (binding [lpw-service/lost-password-method (constantly :report)]
     (-> *s*
         (visit "/lost-password/request-email")
         (has (status? 403))))
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (-> *s*
         (visit "/lost-password/report")
         (has (status? 403)))))
 
 (deftest lost-password-request-email-flow
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password")
@@ -82,7 +81,7 @@
       (is (has-flag? user-id)))))
 
 (deftest lost-password-request-email-email
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password/request-email" :request-method :post :params {:username user-id})
@@ -94,7 +93,7 @@
       (is (has-flag? user-id)))))
 
 (deftest lost-password-request-email-wrong-uid
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password/request-email" :request-method :post :params {:username user-id})
@@ -105,7 +104,7 @@
       (is (false? (has-flag? user-id))))))
 
 (deftest lost-password-request-email-old-uid
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password/request-email" :request-method :post :params {:username user-id})
@@ -117,7 +116,7 @@
       (is (false? (has-flag? user-id))))))
 
 (deftest lost-password-request-email-uid-expired
-  (with-redefs [lpw-service/lost-password-method (constantly :request-email)]
+  (binding [lpw-service/lost-password-method (constantly :request-email)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password/request-email" :request-method :post :params {:username user-id})
@@ -129,7 +128,7 @@
       (is (false? (has-flag? user-id))))))
 
 (deftest lost-password-report-flow
-  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+  (binding [lpw-service/lost-password-method (constantly :report)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password")
@@ -142,7 +141,7 @@
       (is (has-flag? user-id)))))
 
 (deftest lost-password-report-flow-email
-  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+  (binding [lpw-service/lost-password-method (constantly :report)]
     (let [user-id (create-user-with-password! {:email "example@example.com"})]
       (-> *s*
           (visit "/lost-password/report" :request-method :post :params {:username user-id})
@@ -151,7 +150,7 @@
       (is (has-flag? user-id)))))
 
 (deftest lost-password-report-no-user
-  (with-redefs [lpw-service/lost-password-method (constantly :report)]
+  (binding [lpw-service/lost-password-method (constantly :report)]
     (-> *s*
         (visit "/lost-password/report" :request-method :post :params {:username "////////////"})
         (follow-redirect)
