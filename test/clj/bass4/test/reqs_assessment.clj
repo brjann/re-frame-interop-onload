@@ -12,7 +12,6 @@
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.instrument.validation :as i-validation]
-            [clojure.tools.logging :as log]
             [bass4.assessment.statuses :as assessment-statuses]))
 
 (use-fixtures
