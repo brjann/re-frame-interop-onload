@@ -290,6 +290,7 @@
     (create-flag! db/*db* user5-id t45days true)
     (set-message-properties message1 t45days false)
     (set-message-properties message4 t45days false)
+    ;; The 2 unread homework was not present in failed tests
     (is (= {user1-id #{[::admin-reminder/unread-homework t45days 2]
                        [::admin-reminder/unread-messages t45days 1]}
             user2-id #{[::admin-reminder/open-flags now 1]
