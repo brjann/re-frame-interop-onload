@@ -232,6 +232,19 @@
           (has (status? 200))))
 
     (fix-time
+      ;; Test bug where session timeout was not activated immediately
+      (-> *s*
+          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
+          (visit "/api/session/timeout-re-auth")
+          (has (status? 200))
+          (visit "/api/re-auth" :request-method :post :body-params {:password "wrong"})
+          (has (status? 422))
+          (visit "/api/re-auth" :request-method :post :body-params {:password (str user-id)})
+          (has (status? 200))
+          (visit "/api/user/tx/messages")
+          (has (status? 200))))
+
+    (fix-time
       (-> *s*
           (visit "/api/session/status")
           (has (api-response? nil))

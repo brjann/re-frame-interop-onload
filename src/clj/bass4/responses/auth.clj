@@ -16,7 +16,8 @@
             [bass4.session.timeout :as session-timeout]
             [bass4.session.create :as session-create]
             [bass4.db.core :as db]
-            [bass4.clients.core :as clients])
+            [bass4.clients.core :as clients]
+            [bass4.utils :as utils])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -213,7 +214,7 @@
 
 (defapi re-auth
   [session :- [:? map?] return-url :- [:? [api/str? 1 2000]]]
-  (if (:auth-re-auth? session)
+  (if (session-timeout/should-re-auth? session (utils/current-time))
     (re-auth-page return-url)
     (if (:user-id session)
       (http-response/found "/user/")
@@ -222,7 +223,7 @@
 (defn handle-re-auth
   [session password response]
   (if-let [user-id (:user-id session)]
-    (if (:auth-re-auth? session)
+    (if (session-timeout/should-re-auth? session (utils/current-time))
       (if (auth-service/authenticate-by-user-id user-id password)
         (-> response
             (assoc :session (session-timeout/reset-re-auth session)))

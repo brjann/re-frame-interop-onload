@@ -48,19 +48,20 @@
        (when-let [query (:query-string request)]
          (str "?" query))))
 
-(defn- should-re-auth?
-  [session now soft-timeout-at]
-  (cond
-    (:auth-re-auth? session)
-    true
+(defn should-re-auth?
+  [session time]
+  (let [re-auth-timeout-at (::re-auth-timeout-at session)]
+    (cond
+      (:auth-re-auth? session)
+      true
 
-    (nil? soft-timeout-at)
-    false
+      (nil? re-auth-timeout-at)
+      false
 
-    (>= now soft-timeout-at)
-    true
+      (>= time re-auth-timeout-at)
+      true
 
-    :else false))
+      :else false)))
 
 (defn- re-auth-response
   [request session]
@@ -77,11 +78,8 @@
   (if (or (str/starts-with? (:uri request) "/user/ui")
           (:external-login? (:session request)))
     (handler request)
-    (let [session-in         (:session request)
-          now                (utils/current-time)
-          re-auth-timeout-at (::re-auth-timeout-at session-in)
-          re-auth?           (should-re-auth? session-in now re-auth-timeout-at)]
-      (if re-auth?
+    (let [session-in (:session request)]
+      (if (should-re-auth? session-in (utils/current-time))
         (re-auth-response request session-in)
         (no-re-auth-response handler request session-in)))))
 
