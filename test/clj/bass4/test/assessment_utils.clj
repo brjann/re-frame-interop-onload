@@ -107,6 +107,7 @@
   (let [administration-id (:objectid (orm/create-bass-object-map! {:class-name    "cParticipantAdministration"
                                                                    :parent-id     user-id
                                                                    :property-name "Administrations"}))]
+    (log/debug properties)
     (orm/update-object-properties! "c_participantadministration"
                                    administration-id
                                    (merge {"assessment"      assessment-id

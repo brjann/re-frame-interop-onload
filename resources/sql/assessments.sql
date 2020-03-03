@@ -112,7 +112,8 @@ FROM c_assessment as ca
     JOIN (c_participantadministration as cpa)
         ON (ca.ObjectId = cpa.Assessment AND cpa.ParentId = :user-id AND cpa.Deleted = 0)
 WHERE
-    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id);
+    (ca.ParentId = :assessment-series-id OR ca.ParentId = :user-id)
+    AND (ca.ClinicianAssessment = 0);
 
 
 -- :name get-all-participant-administrations :? :*
@@ -167,7 +168,8 @@ FROM c_assessment as ca
   JOIN (c_groupadministration AS cga)
     ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id)
 WHERE
-    ca.ParentId = :assessment-series-id;
+    ca.ParentId = :assessment-series-id
+    AND (ca.ClinicianAssessment = 0);
 
 
 -- :name create-participant-administrations! :! :1

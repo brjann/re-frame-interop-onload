@@ -245,6 +245,7 @@
      :assessment-series-id assessment-series-id}))
 
 (defn participant-administrations-by-assessment-series
+  "Returns the participants's administrations belonging to an assessment series"
   [db user-id assessment-series-id]
   (db/get-participant-administrations-by-assessment-series
     db
@@ -263,13 +264,10 @@
        (into {})))
 
 (defn filter-ongoing-assessments
-  [assessment-statuses include-clinician?]
+  [assessment-statuses]
   (filter #(and
              (= :assessment-status/ongoing (:status %))
-             (not (:is-record? %))
-             (if include-clinician?
-               true
-               (not (:clinician-rated? %))))
+             (not (:is-record? %)))
           assessment-statuses))
 
 ;; ------------------

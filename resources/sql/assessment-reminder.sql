@@ -40,6 +40,7 @@ WHERE
 	ca.Scope = 0
   AND ca.ActivationHour <= :hour
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+	AND (ca.ClinicianAssessment = 0)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
@@ -70,6 +71,7 @@ WHERE
 	ca.Scope = 1
   AND ca.ActivationHour <= :hour
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
+	AND (ca.ClinicianAssessment = 0)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND (cpa.EmailSent = 0 OR cpa.EmailSent IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
@@ -110,6 +112,7 @@ WHERE
 	ca.Scope = 0
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
   AND (ca.RemindParticipantsWhenLate = 1)
+	AND (ca.ClinicianAssessment = 0)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cpa.Active = 1 AND (cga.Active = 1 OR cga.Active IS NULL)
   AND cpa.Date >= 0
@@ -141,6 +144,7 @@ WHERE
 	ca.Scope = 1
   AND (ca.SendSMSWhenActivated = 1 OR ca.SendEmailWhenActivated = 1)
   AND (ca.RemindParticipantsWhenLate = 1)
+	AND (ca.ClinicianAssessment = 0)
 	AND (cpa.DateCompleted = 0 OR cpa.DateCompleted IS NULL)
 	AND cga.Active = 1 AND (cpa.Active = 1 OR cpa.Active IS NULL)
 	AND cga.Date >= 0

@@ -85,7 +85,7 @@
   [db now user-id]
   (binding [db/*db* nil]
     (let [[administrations-statuses assessments-map] (user-administration-statuses+assessments db now user-id)
-          ongoing (assessment-db/filter-ongoing-assessments administrations-statuses false)]
+          ongoing (assessment-db/filter-ongoing-assessments administrations-statuses)]
       (when (seq ongoing)
         (->> ongoing
              ;; Add any missing administrations

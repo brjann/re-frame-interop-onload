@@ -11,7 +11,9 @@
             [bass4.test.assessment-utils :refer :all]
             [bass4.db.core :as db]
             [clj-time.core :as t]
-            [bass4.instrument.validation :as i-validation]))
+            [bass4.instrument.validation :as i-validation]
+            [clojure.tools.logging :as log]
+            [bass4.assessment.statuses :as assessment-statuses]))
 
 (use-fixtures
   :once
@@ -245,12 +247,67 @@
 
 (deftest empty-assessment
   (binding [auth-service/double-auth-code (constantly "666777")]
-    (let [user-id (user-service/create-user! project-double-auth)]
-      (user-service/update-user-properties! user-id {:username user-id :password user-id})
+    (let [user-id   (user-service/create-user! project-double-auth)
+          empty-ass (create-assessment! project-double-auth-assessment-series
+                                        {"Scope" 0})]
+      (create-participant-administration! user-id empty-ass 1 {:date (midnight (now/now))})
+      (user-service/update-user-properties! user-id {:username user-id :password user-id "SMSNumber" "000"})
+      (let [statuses (assessment-statuses/user-administrations-statuses db/*db*
+                                                                        (now/now)
+                                                                        user-id)]
+        (is (= 1 (count statuses)))
+        (is (zero? (-> statuses
+                       (first)
+                       :date-completed))))
       (-> *s*
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (visit "/double-auth" :request-method :post :params {:code "666777"})
-          (has (status? 302))))))
+          (follow-redirect)
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "no activities")))
+      (let [statuses (assessment-statuses/user-administrations-statuses db/*db*
+                                                                        (now/now)
+                                                                        user-id)]
+        (is (= 1 (count statuses)))
+        (is (< 0 (-> statuses
+                     (first)
+                     :date-completed)))))))
+
+(deftest clinician-rated-assessment
+  (binding [auth-service/double-auth-code (constantly "666777")]
+    (let [group      (create-group! project-double-auth)
+          user-id    (user-service/create-user! project-double-auth {:group group})
+          clin-ass-p (create-assessment! project-double-auth-assessment-series
+                                         {"Scope"               0
+                                          "ClinicianAssessment" 1})
+          clin-ass-g (create-assessment! project-double-auth-assessment-series
+                                         {"Scope"               1
+                                          "ClinicianAssessment" 1})]
+      (link-instrument! clin-ass-p 4431)                    ; HAD
+      (link-instrument! clin-ass-g 286)                     ; AAQ
+      (create-participant-administration! user-id clin-ass-p 1 {:date (midnight (now/now))})
+      (create-participant-administration! user-id clin-ass-g 1)
+      (create-group-administration! user-id clin-ass-g 1 {:date (midnight (now/now))})
+
+      (user-service/update-user-properties! user-id {:username user-id :password user-id "SMSNumber" "000"})
+      (let [statuses (assessment-statuses/user-administrations-statuses db/*db*
+                                                                        (now/now)
+                                                                        user-id)]
+        (is (= 2 (count statuses)))
+        (is [0 0] (map :date-completed statuses)))
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (visit "/double-auth" :request-method :post :params {:code "666777"})
+          (follow-redirect)
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "no activities")))
+      (let [statuses (assessment-statuses/user-administrations-statuses db/*db*
+                                                                        (now/now)
+                                                                        user-id)]
+        (is (= 2 (count statuses)))
+        (is [0 0] (map :date-completed statuses))))))
 
 (deftest custom-assessment
   (let [user-id (user-service/create-user! project-no-double-auth)]
