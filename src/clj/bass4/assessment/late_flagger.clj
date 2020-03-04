@@ -85,6 +85,7 @@
 (defn reopen-flags!
   [db now reopen-flags]
   (db-reopen-flags! db (map (juxt :flag-id #(flag-text now %)) reopen-flags))
+  ;; TODO: These comments do not get a parentid in the objectlist table. Maybe has no effect.
   (let [comment-ids (orm/create-bass-objects-without-parent*! db
                                                               "cComment"
                                                               "Comments"
