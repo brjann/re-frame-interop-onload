@@ -263,6 +263,7 @@
           (user-authenticates! pnr)
           (collect+wait)
           (visit "/e-auth/bankid/collect" :request-method :post)
+          ;; Failed test - not redirect
           (follow-redirect)
           (follow-redirect)
           (has (some-text? "Who is collecting the data"))
