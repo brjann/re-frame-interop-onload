@@ -2,7 +2,8 @@
   (:require
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
-    [bass4.clients.core :as clients]))
+    [bass4.clients.core :as clients]
+    [bass4.now :as now]))
 
 (defn day-diff-since
   [today then]
@@ -24,7 +25,7 @@
 (defn days-since
   [then time-zone]
   (day-diff-since
-    (t/to-time-zone (t/now) time-zone)
+    (t/to-time-zone (now/now) time-zone)
     (t/to-time-zone then time-zone)))
 
 (defn days-since-tz
@@ -32,7 +33,7 @@
   (days-since then (t/time-zone-for-id (clients/client-setting [:timezone]))))
 
 (defn local-midnight
-  ([] (local-midnight (t/now)))
+  ([] (local-midnight (now/now)))
   ([date-time]
    (local-midnight date-time (t/time-zone-for-id (clients/client-setting [:timezone]))))
   ([date-time time-zone]
