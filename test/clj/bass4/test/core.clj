@@ -33,6 +33,7 @@
             [bass4.clients.core :as clients]
             [bass4.services.user :as user-service]
             [bass4.db.orm-classes :as orm]
+            [bass4.db.sql-wrapper :as sql-wrapper]
             [clojure.java.jdbc :as jdbc]))
 
 (def project-double-auth 536972)
@@ -178,7 +179,8 @@
   (when (nil? @s)
     (swap! s (constantly (session (app)))))
   (let [test-db (config/env :test-db)]
-    (binding [email/*email-reroute*            :void
+    (binding [sql-wrapper/*email-deadlock*     false
+              email/*email-reroute*            :void
               sms/*sms-reroute*                :void
               clojure.test/*stack-trace-depth* 10
               mw/*skip-csrf*                   true

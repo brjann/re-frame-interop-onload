@@ -15,6 +15,7 @@
 
 
 (def ^:dynamic *log-queries* false)
+(def ^:dynamic *email-deadlock* true)
 
 (defn- bool-cols-row-fn
   []
@@ -81,7 +82,7 @@
       (log/info (pr-str val)))
     (when error?
       (throw val))
-    (when (< 1 tries)
+    (when (and (< 1 tries) *email-deadlock*)
       (email/async-email!
         db/*db*
         (config/env :error-email)

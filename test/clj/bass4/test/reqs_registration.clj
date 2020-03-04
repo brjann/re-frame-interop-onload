@@ -88,7 +88,6 @@
             (has (api-response? {:hard    timeout-hard
                                  :re-auth nil}))
             (visit "/registration/564610/privacy" :request-method :post :params {})
-            ;; This test fails if there was a MySQL deadlock - because that also sends an email.
             (pass-by (messages-are?
                        [[:email "API"]]
                        (poll-message-chan *debug-chan*)))
