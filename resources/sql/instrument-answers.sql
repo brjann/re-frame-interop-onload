@@ -36,3 +36,10 @@ SET
   DateCompleted = unix_timestamp(now()),
   Changed = unix_timestamp(now())
 WHERE ObjectId = :answers-id;
+
+-- :name answers-flagging-specs :? :1
+-- :doc
+SELECT
+  AnswersFlaggingTestExpressions AS `test`,
+  AnswersFlaggingExpressions AS `projects`
+FROM c_project
