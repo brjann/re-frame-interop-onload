@@ -46,7 +46,7 @@
             ()
             items)))
 
-(defn- merge-items-answers
+(defn merge-items-answers
   [instrument answers]
   (let [items (checkboxize instrument)]
     (when items

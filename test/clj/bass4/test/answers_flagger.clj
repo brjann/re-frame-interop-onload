@@ -5,7 +5,25 @@
 
 (def parse-spec @#'answers-flagger/parse-spec)
 (def eval-condition @#'answers-flagger/eval-condition)
-(def checboxize @#'instruments/checkboxize)
+(def checkboxize @#'instruments/checkboxize)
+(def namespace-map @#'answers-flagger/namespace-map)
+
+(def test-instrument {:elements  [{:name "2", :item-id 1569, :response-id 1569}
+                                  {:name "12", :item-id 1568, :response-id 1568}]
+                      :responses {1568 {:response-type "RD",
+                                        :options       [{:value          "1",
+                                                         :specification? true,}
+                                                        {:value          "0",
+                                                         :specification? false,}],},
+                                  1569 {:response-type "CB", :options [{:value "e"} {:value "mb"} {:value "sm"} {:value "xx"}]}}})
+
+(def test-answers {:items          {"1568"    "1",
+                                    "1569_sm" "0",
+                                    "1569_e"  "0",
+                                    "1569_mb" "1",
+                                    "1569_xx" "0"},
+                   :specifications {"1568_1" "spec2", "1569_mb" "spec1"},
+                   :sums           {"sum" 50.0, "subscale1" 24, "subscale2" 36}})
 
 (deftest parse-spec-test
   (is (= {:instrument "123"
@@ -29,13 +47,32 @@
   (is (= 1 (eval-condition "@8==10||sum==2" {"@8" 11 "sum" 2}))))
 
 (deftest checkboxize-test
-  (= [{:item-id 1569, :checkbox-id "1569_e", :name "2_e", :value "e"}
-      {:item-id 1569, :checkbox-id "1569_mb", :name "2_mb", :value "mb"}
-      {:item-id 1569, :checkbox-id "1569_sm", :name "2_sm", :value "sm"}
-      {:item-id 1569, :checkbox-id "1569_xx", :name "2_xx", :value "xx"}
-      {:name "12", :item-id 1581, :response-id 1581}]
-     (checboxize
-       {:elements  [{:name "2", :item-id 1569, :response-id 1569}
-                    {:name "12", :item-id 1581, :response-id 1581}]
-        :responses {1581 {:response-type "RD"},
-                    1569 {:response-type "CB", :options [{:value "e"} {:value "mb"} {:value "sm"} {:value "xx"}]}}})))
+  (is (= [{:item-id 1569, :checkbox-id "1569_e", :name "2_e", :value "e"}
+          {:item-id 1569, :checkbox-id "1569_mb", :name "2_mb", :value "mb"}
+          {:item-id 1569, :checkbox-id "1569_sm", :name "2_sm", :value "sm"}
+          {:item-id 1569, :checkbox-id "1569_xx", :name "2_xx", :value "xx"}
+          {:name "12", :item-id 1568, :response-id 1568}]
+         (checkboxize test-instrument))))
+
+(deftest merge-items-answers-test
+  (is (= {:items          [{:item-id 1569, :checkbox-id "1569_e", :name "2_e", :value "0", :specification nil}
+                           {:item-id 1569, :checkbox-id "1569_mb", :name "2_mb", :value "1", :specification "spec1"}
+                           {:item-id 1569, :checkbox-id "1569_sm", :name "2_sm", :value "0", :specification nil}
+                           {:item-id 1569, :checkbox-id "1569_xx", :name "2_xx", :value "0", :specification nil}
+                           {:name "12", :item-id 1568, :response-id 1568, :value "1", :specification "spec2"}],
+          :specifications {"1568_1" "spec2", "1569_mb" "spec1"},
+          :sums           {"sum" 50.0, "subscale1" 24, "subscale2" 36}}
+         (instruments/merge-items-answers test-instrument test-answers))))
+
+(deftest namespace-map-test
+  (is (= {"1569_mb_spec" "spec1",
+          "sum"          50.0,
+          "@2_e"         "0",
+          "subscale2"    36,
+          "@2_mb"        "1",
+          "@2_sm"        "0",
+          "1568_1_spec"  "spec2",
+          "subscale1"    24,
+          "@2_xx"        "0",
+          "@12"          "1"}
+         (namespace-map test-instrument test-answers))))

@@ -4,13 +4,8 @@
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.utils :as utils]
             [clojure.string :as str]
-            [bass4.infix-parser :as infix]))
-
-(defn db-instrument-item-names
-  [db instrument-id]
-  (->> (db/instrument-item-names db {:instrument-id instrument-id})
-       (map (juxt :name :item-id))
-       (into {})))
+            [bass4.infix-parser :as infix]
+            [bass4.instrument.preview :as instruments]))
 
 (defn db-flagging-specs
   [db]
@@ -36,8 +31,13 @@
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
 
-(defn answers-map
-  [answers])
+(defn- namespace-map
+  [instrument answers]
+  (let [merged (instruments/merge-items-answers instrument answers)]
+    (merge (:sums merged)
+           (->> (concat (map (juxt #(str "@" (:name %)) :value) (:items merged))
+                        (map (juxt #(str (first %) "_spec") second) (:specifications merged)))
+                (into {})))))
 
 (defn eval-condition
   [condition namespace]
