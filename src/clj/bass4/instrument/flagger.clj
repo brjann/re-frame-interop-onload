@@ -6,6 +6,12 @@
             [clojure.string :as str]
             [bass4.infix-parser :as infix]))
 
+(defn db-instrument-item-names
+  [db instrument-id]
+  (->> (db/instrument-item-names db {:instrument-id instrument-id})
+       (map (juxt :name :item-id))
+       (into {})))
+
 (defn db-flagging-specs
   [db]
   (let [res (db/answers-flagging-specs db {})]
@@ -30,7 +36,14 @@
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
 
+(defn answers-map
+  [answers])
+
 (defn eval-condition
   [condition namespace]
   (let [resolver (infix/token-resolver namespace)]
     (infix/calc condition resolver)))
+
+
+
+

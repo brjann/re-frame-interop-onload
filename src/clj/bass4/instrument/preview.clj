@@ -46,12 +46,11 @@
             ()
             items)))
 
-(defn- get-test-answers
-  [instrument-id]
-  (let [items (checkboxize (instruments/get-instrument instrument-id))]
+(defn- merge-items-answers
+  [instrument answers]
+  (let [items (checkboxize instrument)]
     (when items
-      (let [answers        (instruments/get-instrument-test-answers instrument-id)
-            item-answers   (->> answers
+      (let [item-answers   (->> answers
                                 :items
                                 (map #(vector (str (first %)) (second %)))
                                 (into {}))
@@ -72,7 +71,9 @@
 
 (defapi summary-page
   [instrument-id :- api/->int]
-  (let [answers (get-test-answers instrument-id)]
+  (let [answers (merge-items-answers
+                  (instruments/get-instrument instrument-id)
+                  (instruments/get-instrument-test-answers instrument-id))]
     (when (:items answers)
       (bass4.layout/render
         "instrument-answers.html"

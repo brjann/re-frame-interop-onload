@@ -43,3 +43,10 @@ SELECT
   AnswersFlaggingTestExpressions AS `test`,
   AnswersFlaggingExpressions AS `projects`
 FROM c_project
+
+-- :name instrument-item-names :? :*
+-- :doc
+SELECT
+  ObjectId AS `item-id`,
+  `name`
+FROM c_instrumentitemelement WHERE ParentId=:instrument-id;
