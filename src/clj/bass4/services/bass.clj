@@ -30,6 +30,12 @@
   ([project-id]
    (db-contact-info* db/*db* project-id)))
 
+(defn project-names
+  [db]
+  (->> (db/project-names db {})
+       (map (juxt :project-id :name))
+       (into {})))
+
 (declare local-midnight)
 
 (defn- inc-external-message-count!

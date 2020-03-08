@@ -49,11 +49,16 @@ WHERE ObjectId=100;
 INSERT IGNORE INTO links_properties_reverse
 (LinkeeId, PropertyName, LinkerClass) VALUES (:linkee-id, :property-name, :linker-class);
 
-
 -- :name get-project-participant-collection :? :1
 SELECT ObjectId AS `collection-id`
 FROM c_participantscollection
 WHERE ParentId=:project-id;
+
+-- :name project-names :? :*
+SELECT
+  ObjectId AS `project-id`,
+  Title AS `name`
+FROM c_treatmentinterface;
 
 
 -- :name update-user-properties! :! :1
