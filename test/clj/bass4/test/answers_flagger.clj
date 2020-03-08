@@ -35,10 +35,10 @@
           :condition  "@8==10"
           :msg        "hejsan"})
       (parse-spec " 123 : @8==10: hejsan"))
-  (is (= {:instrument "123"
+  (is (= {:instrument "MADRS-S"
           :condition  "@8==10"
           :msg        "hejsan: hoppsan"})
-      (parse-spec " 123 : @8==10: hejsan: hoppsan")))
+      (parse-spec " MADRS-S : @8==10: hejsan: hoppsan")))
 
 (deftest eval-condition-test
   (is (= 1 (eval-condition "@8==10" {"@8" 10})))
@@ -77,6 +77,7 @@
           "@2_xx"        "0",
           "@12"          "1"}
          (namespace-map test-instrument test-answers))))
+
 
 (deftest eval-answers-condition-test
   {"1569_mb_spec" "spec1",
