@@ -44,6 +44,7 @@
   (let [resolver (infix/token-resolver namespace)]
     (infix/calc condition resolver)))
 
-
-
-
+(defn- eval-answers-condition
+  [instrument answers condition]
+  (let [namespace-map' (namespace-map instrument answers)]
+    (eval-condition condition namespace-map')))

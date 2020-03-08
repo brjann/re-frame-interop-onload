@@ -7,6 +7,7 @@
 (def eval-condition @#'answers-flagger/eval-condition)
 (def checkboxize @#'instruments/checkboxize)
 (def namespace-map @#'answers-flagger/namespace-map)
+(def eval-answers-condition @#'answers-flagger/eval-answers-condition)
 
 (def test-instrument {:elements  [{:name "2", :item-id 1569, :response-id 1569}
                                   {:name "12", :item-id 1568, :response-id 1568}]
@@ -76,3 +77,20 @@
           "@2_xx"        "0",
           "@12"          "1"}
          (namespace-map test-instrument test-answers))))
+
+(deftest eval-answers-condition-test
+  {"1569_mb_spec" "spec1",
+   "sum"          50.0,
+   "@2_e"         "0",
+   "subscale2"    36,
+   "@2_mb"        "1",
+   "@2_sm"        "0",
+   "1568_1_spec"  "spec2",
+   "subscale1"    24,
+   "@2_xx"        "0",
+   "@12"          "1"}
+  (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==0")))
+  (is (= 0 (eval-answers-condition test-instrument test-answers "@2_e==1")))
+  (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==0 && subscale1==24")))
+  (is (= 0 (eval-answers-condition test-instrument test-answers "@2_e==1 && subscale1==24")))
+  (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==1 || subscale1==24"))))
