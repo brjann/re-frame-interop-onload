@@ -80,3 +80,50 @@
            {:items          (php->clj (:items answers))
             :specifications (php->clj (:specifications answers))
             :sums           (php->clj (:sums answers))})))
+
+
+;; ------------------------------
+;;     ITEMS INTO NAMESPACE
+;; ------------------------------
+
+(defn- checkboxize
+  "Makes checkbox items into one item per checkbox option."
+  [instrument]
+  (let [items (->> instrument
+                   (:elements)
+                   (filter :item-id))]
+    (reduce (fn [coll item]
+              (let [response (get (:responses instrument) (:response-id item))
+                    res      (if (= "CB" (:response-type response))
+                               (map #(merge
+                                       {:item-id     (:item-id item)
+                                        :checkbox-id (str (:item-id item) "_" (:value %))
+                                        :name        (str (:name item) "_" (:value %))} %)
+                                    (:options response))
+                               (list item))]
+                (concat coll res)))
+            ()
+            items)))
+
+(defn merge-items-answers
+  [instrument answers]
+  (let [items (checkboxize instrument)]
+    (when items
+      (let [item-answers   (->> answers
+                                :items
+                                (map #(vector (str (first %)) (second %)))
+                                (into {}))
+            specifications (into {} (:specifications answers))]
+        (assoc answers
+          :specifications specifications
+          :items
+          (map
+            (fn [item]
+              (let [value (get item-answers (str (or (:checkbox-id item) (:item-id item))))]
+                (merge
+                  item
+                  {:value         value
+                   :specification (get specifications (or
+                                                        (:checkbox-id item)
+                                                        (str (:item-id item) "_" value)))})))
+            items))))))

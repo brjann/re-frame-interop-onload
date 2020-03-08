@@ -1,11 +1,15 @@
 (ns bass4.instrument.preview
   (:require [bass4.instrument.services :as instruments]
+            [bass4.instrument.flagger :as answers-flagger]
             [ring.util.http-response :as http-response]
             [bass4.utils :refer [map-map str->int]]
             [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
-            [bass4.middleware.request-logger :as request-logger]))
+            [bass4.middleware.request-logger :as request-logger]
+            [bass4.db.core :as db]
+            [bass4.services.bass :as bass-service]
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (defapi instrument-page
   [instrument-id :- api/->int]
@@ -27,51 +31,16 @@
       (request-logger/record-error! (str "Instrument " instrument-id " does not exist"))
       (http-response/bad-request))))
 
-(defn- checkboxize
-  "Makes checkbox items into one item per checkbox option."
-  [instrument]
-  (let [items (->> instrument
-                   (:elements)
-                   (filter :item-id))]
-    (reduce (fn [coll item]
-              (let [response (get (:responses instrument) (:response-id item))
-                    res      (if (= "CB" (:response-type response))
-                               (map #(merge
-                                       {:item-id     (:item-id item)
-                                        :checkbox-id (str (:item-id item) "_" (:value %))
-                                        :name        (str (:name item) "_" (:value %))} %)
-                                    (:options response))
-                               (list item))]
-                (concat coll res)))
-            ()
-            items)))
-
-(defn merge-items-answers
-  [instrument answers]
-  (let [items (checkboxize instrument)]
-    (when items
-      (let [item-answers   (->> answers
-                                :items
-                                (map #(vector (str (first %)) (second %)))
-                                (into {}))
-            specifications (into {} (:specifications answers))]
-        (assoc answers
-          :specifications specifications
-          :items
-          (map
-            (fn [item]
-              (let [value (get item-answers (str (or (:checkbox-id item) (:item-id item))))]
-                (merge
-                  item
-                  {:value         value
-                   :specification (get specifications (or
-                                                        (:checkbox-id item)
-                                                        (str (:item-id item) "_" value)))})))
-            items))))))
+(defn- apply-project-conditions
+  [instrument-id answers]
+  (let [instrument         (instruments/get-instrument instrument-id)
+        project-conditions (answers-flagger/flagging-specs db/*db*)
+        project-names      (bass-service/project-names db/*db*)]
+    ))
 
 (defapi summary-page
   [instrument-id :- api/->int]
-  (let [answers (merge-items-answers
+  (let [answers (instrument-answers/merge-items-answers
                   (instruments/get-instrument instrument-id)
                   (instruments/get-instrument-test-answers instrument-id))]
     (when (:items answers)

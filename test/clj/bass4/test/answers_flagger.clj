@@ -1,11 +1,11 @@
 (ns bass4.test.answers-flagger
   (:require [clojure.test :refer :all]
             [bass4.instrument.flagger :as answers-flagger]
-            [bass4.instrument.preview :as instruments]))
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (def parse-spec @#'answers-flagger/parse-spec)
 (def eval-condition @#'answers-flagger/eval-condition)
-(def checkboxize @#'instruments/checkboxize)
+(def checkboxize @#'instrument-answers/checkboxize)
 (def namespace-map @#'answers-flagger/namespace-map)
 (def eval-answers-condition @#'answers-flagger/eval-answers-condition)
 
@@ -27,17 +27,20 @@
                    :sums           {"sum" 50.0, "subscale1" 24, "subscale2" 36}})
 
 (deftest parse-spec-test
-  (is (= {:instrument "123"
-          :condition  "@8==10"
-          :msg        nil})
+  (is (= {:instrument-id           123
+          :instrument-abbreviation nil
+          :condition               "@8==10"
+          :msg                     nil})
       (parse-spec " 123 : @8==10:"))
-  (is (= {:instrument "123"
-          :condition  "@8==10"
-          :msg        "hejsan"})
+  (is (= {:instrument-id           123
+          :instrument-abbreviation nil
+          :condition               "@8==10"
+          :msg                     "hejsan"})
       (parse-spec " 123 : @8==10: hejsan"))
-  (is (= {:instrument "MADRS-S"
-          :condition  "@8==10"
-          :msg        "hejsan: hoppsan"})
+  (is (= {:instrument-id           nil
+          :instrument-abbreviation "MADRS-S"
+          :condition               "@8==10"
+          :msg                     "hejsan: hoppsan"})
       (parse-spec " MADRS-S : @8==10: hejsan: hoppsan")))
 
 (deftest eval-condition-test
@@ -63,7 +66,7 @@
                            {:name "12", :item-id 1568, :response-id 1568, :value "1", :specification "spec2"}],
           :specifications {"1568_1" "spec2", "1569_mb" "spec1"},
           :sums           {"sum" 50.0, "subscale1" 24, "subscale2" 36}}
-         (instruments/merge-items-answers test-instrument test-answers))))
+         (instrument-answers/merge-items-answers test-instrument test-answers))))
 
 (deftest namespace-map-test
   (is (= {"1569_mb_spec" "spec1",

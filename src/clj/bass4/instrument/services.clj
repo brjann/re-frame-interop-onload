@@ -5,12 +5,7 @@
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [bass4.infix-parser :as infix]
             [bass4.instrument.answers-services :as instrument-answers]
-            [clojure.string :as s]
-            [clojure.tools.logging :as log]
-            [bass4.utils :as utils]
-            [clojure.string :as str]
-            [clojure.set :as set]
-            [clojure.walk :as walk]))
+            [clojure.string :as s]))
 
 
 ;; ------------------------

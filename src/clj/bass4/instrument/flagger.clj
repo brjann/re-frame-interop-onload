@@ -5,7 +5,8 @@
             [bass4.utils :as utils]
             [clojure.string :as str]
             [bass4.infix-parser :as infix]
-            [bass4.instrument.preview :as instruments]))
+            [bass4.api-coercion :as api]
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (defn db-flagging-specs
   [db]
@@ -19,12 +20,16 @@
 (defn- parse-spec
   [spec]
   (let [[instrument condition & msgv] (str/split spec #":")
-        msg (when msgv
-              (str/trim (str/join ":" msgv)))]
+        msg                   (when msgv
+                                (str/trim (str/join ":" msgv)))
+        instrument-identifier (str/trim instrument)
+        instrument-id         (api/->int instrument-identifier)]
     (when (and (not-empty instrument) condition)
-      {:instrument (str/trim instrument)
-       :condition  (str/trim condition)
-       :message    msg})))
+      {:instrument-id           instrument-id
+       :instrument-abbreviation (when-not instrument-id
+                                  instrument-identifier)
+       :condition               (str/trim condition)
+       :message                 msg})))
 
 (defn flagging-specs
   [db]
@@ -33,7 +38,7 @@
 
 (defn- namespace-map
   [instrument answers]
-  (let [merged (instruments/merge-items-answers instrument answers)]
+  (let [merged (instrument-answers/merge-items-answers instrument answers)]
     (merge (:sums merged)
            (->> (concat (map (juxt #(str "@" (:name %)) :value) (:items merged))
                         (map (juxt #(str (first %) "_spec") second) (:specifications merged)))
@@ -48,3 +53,4 @@
   [instrument answers condition]
   (let [namespace-map' (namespace-map instrument answers)]
     (eval-condition condition namespace-map')))
+

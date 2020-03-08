@@ -1,7 +1,7 @@
 (ns bass4.embedded.routes
   (:require [bass4.layout :as layout]
             [compojure.core :refer [defroutes routes context GET POST ANY]]
-            [bass4.instrument.preview :as instruments]
+            [bass4.instrument.preview :as instrument-preview]
             [bass4.responses.content-example :as content-example]
             [bass4.module.responses :as modules]
             [bass4.utils :refer [str->int json-safe]]
@@ -18,11 +18,11 @@
       (GET "/pluggable-ui*" []
         (pluggable-ui/pluggable-ui request "/embedded/pluggable-ui"))
       (GET "/instrument/:instrument-id" [instrument-id]
-        (instruments/instrument-page instrument-id))
+        (instrument-preview/instrument-page instrument-id))
       (POST "/instrument/:instrument-id" [instrument-id & params]
-        (instruments/post-answers instrument-id (:items params) (:specifications params)))
+        (instrument-preview/post-answers instrument-id (:items params) (:specifications params)))
       (GET "/instrument/:instrument-id/summary" [instrument-id]
-        (instruments/summary-page instrument-id))
+        (instrument-preview/summary-page instrument-id))
       (GET "/content-example/:content-id" [content-id]
         (content-example/edit-example content-id))
       (POST "/content-example/:content-id" [content-id content-data]
