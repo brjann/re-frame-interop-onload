@@ -25,16 +25,27 @@
         instrument-identifier (str/trim instrument)
         instrument-id         (api/->int instrument-identifier)]
     (when (and (not-empty instrument) condition)
-      {:instrument-id           instrument-id
-       :instrument-abbreviation (when-not instrument-id
-                                  instrument-identifier)
-       :condition               (str/trim condition)
-       :message                 msg})))
+      {:instrument-id instrument-id
+       :abbreviation  (when-not instrument-id
+                        instrument-identifier)
+       :condition     (str/trim condition)
+       :message       msg})))
 
 (defn flagging-specs
   [db]
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
+
+(defn- filter-specs
+  [instrument project-specs]
+  (->> project-specs
+       (utils/map-map (fn [p]
+                        (filter #(or (and (:instrument-id %)
+                                          (= (:instrument-id %) (:instrument-id instrument)))
+                                     (and (:abbreviation % %)
+                                          (= (:abbreviation % %) (:abbreviation instrument))))
+                                p)))
+       (utils/filter-map seq)))
 
 (defn- namespace-map
   [instrument answers]

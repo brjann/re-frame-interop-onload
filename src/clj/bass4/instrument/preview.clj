@@ -7,7 +7,6 @@
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.instrument.validation :as validation]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.db.core :as db]
             [bass4.services.bass :as bass-service]
             [bass4.instrument.answers-services :as instrument-answers]))
 
@@ -32,10 +31,10 @@
       (http-response/bad-request))))
 
 (defn- apply-project-conditions
-  [instrument-id answers]
+  [db instrument-id answers]
   (let [instrument         (instruments/get-instrument instrument-id)
-        project-conditions (answers-flagger/flagging-specs db/*db*)
-        project-names      (bass-service/project-names db/*db*)]
+        project-conditions (answers-flagger/flagging-specs db)
+        project-names      (bass-service/project-names db)]
     ))
 
 (defapi summary-page
