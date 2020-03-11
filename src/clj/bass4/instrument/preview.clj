@@ -8,7 +8,9 @@
             [bass4.instrument.validation :as validation]
             [bass4.middleware.request-logger :as request-logger]
             [bass4.services.bass :as bass-service]
-            [bass4.instrument.answers-services :as instrument-answers]))
+            [bass4.instrument.answers-services :as instrument-answers]
+            [bass4.utils :as utils]
+            [bass4.db.core :as db]))
 
 (defapi instrument-page
   [instrument-id :- api/->int]
@@ -30,20 +32,47 @@
       (request-logger/record-error! (str "Instrument " instrument-id " does not exist"))
       (http-response/bad-request))))
 
-(defn- apply-project-conditions
-  [db instrument-id answers]
-  (let [instrument         (instruments/get-instrument instrument-id)
-        project-conditions (answers-flagger/flagging-specs db)
-        project-names      (bass-service/project-names db)]
-    ))
+(defn- apply-project-specs
+  [db instrument answers]
+  (let [projects-specs (answers-flagger/filter-specs
+                         instrument
+                         (answers-flagger/flagging-specs db))
+        namespace      (answers-flagger/namespace-map answers)]
+    (utils/map-map
+      (fn [specs]
+        (map (fn [spec]
+               (answers-flagger/eval-spec spec namespace))
+             specs))
+      projects-specs)))
+
+(defn- sort-projects
+  [[x _] [y _]]
+  (cond
+    (= :test x)
+    -1
+
+    (= :test y)
+    1
+
+    :else
+    (compare x y)))
 
 (defapi summary-page
   [instrument-id :- api/->int]
-  (let [answers (instrument-answers/merge-items-answers
-                  (instruments/get-instrument instrument-id)
-                  (instruments/get-instrument-test-answers instrument-id))]
-    (when (:items answers)
+  (let [instrument    (instruments/get-instrument instrument-id)
+        item-answers  (instrument-answers/merge-items-answers
+                        instrument
+                        (instruments/get-instrument-test-answers instrument-id))
+        project-names (assoc
+                        (bass-service/project-names db/*db*)
+                        :test
+                        "Test conditions")
+        flag-specs    (->> (apply-project-specs db/*db* instrument item-answers)
+                           (sort sort-projects))]
+    (when (:items item-answers)
       (bass4.layout/render
         "instrument-answers.html"
-        {:items (:items answers)
-         :sums  (:sums answers)}))))
+        {:items         (:items item-answers)
+         :sums          (:sums item-answers)
+         :flag-specs    flag-specs
+         :project-names project-names}))))

@@ -1,23 +1,26 @@
 (ns bass4.test.answers-flagger
   (:require [clojure.test :refer :all]
             [bass4.instrument.flagger :as answers-flagger]
-            [bass4.instrument.answers-services :as instrument-answers]
-            [bass4.instrument.preview :as instrument-preview]))
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (def parse-spec @#'answers-flagger/parse-spec)
 (def eval-condition @#'answers-flagger/eval-condition)
 (def checkboxize @#'instrument-answers/checkboxize)
 (def namespace-map @#'answers-flagger/namespace-map)
-(def eval-answers-condition @#'answers-flagger/eval-answers-condition)
 (def filter-specs @#'answers-flagger/filter-specs)
+
+(defn eval-answers-condition
+  [instrument answers condition]
+  (let [namespace-map' (namespace-map (instrument-answers/merge-items-answers instrument answers))]
+    (eval-condition condition namespace-map')))
 
 (def test-instrument {:elements  [{:name "2", :item-id 1569, :response-id 1569}
                                   {:name "12", :item-id 1568, :response-id 1568}]
                       :responses {1568 {:response-type "RD",
-                                        :options       [{:value          "1",
-                                                         :specification? true,}
-                                                        {:value          "0",
-                                                         :specification? false,}],},
+                                        :options       [{:value          "1"
+                                                         :specification? true}
+                                                        {:value          "0"
+                                                         :specification? false}]},
                                   1569 {:response-type "CB", :options [{:value "e"} {:value "mb"} {:value "sm"} {:value "xx"}]}}})
 
 (def test-answers {:items          {"1568"    "1",
@@ -79,17 +82,17 @@
          (instrument-answers/merge-items-answers test-instrument test-answers))))
 
 (deftest namespace-map-test
-  (is (= {"1569_mb_spec" "spec1",
-          "sum"          50.0,
-          "@2_e"         "0",
-          "subscale2"    36,
-          "@2_mb"        "1",
-          "@2_sm"        "0",
-          "1568_1_spec"  "spec2",
-          "subscale1"    24,
-          "@2_xx"        "0",
-          "@12"          "1"}
-         (namespace-map test-instrument test-answers))))
+  (is (= {"@2_mb_spec" "spec1",
+          "sum"        50.0,
+          "@2_e"       "0",
+          "subscale2"  36,
+          "@2_mb"      "1",
+          "@2_sm"      "0",
+          "@12_spec"   "spec2",
+          "subscale1"  24,
+          "@2_xx"      "0",
+          "@12"        "1"}
+         (namespace-map (instrument-answers/merge-items-answers test-instrument test-answers)))))
 
 
 (deftest eval-answers-condition-test
@@ -99,7 +102,7 @@
   (is (= 0 (eval-answers-condition test-instrument test-answers "@2_e==1 && subscale1==24")))
   (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==1 || subscale1==24"))))
 
-(deftest filter-specs-test
+(deftest filter-specs-testT
   (is (= {101 [{:instrument-id nil, :abbreviation "MADRS-S"}
                {:instrument-id 1, :abbreviation nil}]
           102 [{:instrument-id nil, :abbreviation "MADRS-S"}]}
@@ -108,3 +111,14 @@
          (filter-specs {:instrument-id 2} test-filter-conditions)))
   (is (= {:test [{:instrument-id nil, :abbreviation "GAD-7"}]}
          (filter-specs {:abbreviation "GAD-7"} test-filter-conditions))))
+
+(deftest eval-spec-test
+  (let [namespace (namespace-map (instrument-answers/merge-items-answers test-instrument test-answers))]
+    (is (false? (:match? (answers-flagger/eval-spec {:condition "@12==10"}
+                                                    namespace))))
+    (is (true? (:match? (answers-flagger/eval-spec {:condition "@12==1"}
+                                                   namespace))))
+    (is (nil? (:error (answers-flagger/eval-spec {:condition "@12==1"}
+                                                 namespace))))
+    (is (string? (:error (answers-flagger/eval-spec {:condition "@2==1"}
+                                                    namespace))))))

@@ -217,3 +217,8 @@
   :nice-date
   (fn [val]
     (str (date-nice-str val))))
+
+(filters/add-filter!
+  :get
+  (fn [val arg]
+    (get val arg)))

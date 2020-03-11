@@ -5,8 +5,7 @@
             [bass4.utils :as utils]
             [clojure.string :as str]
             [bass4.infix-parser :as infix]
-            [bass4.api-coercion :as api]
-            [bass4.instrument.answers-services :as instrument-answers]))
+            [bass4.api-coercion :as api]))
 
 (defn db-flagging-specs
   [db]
@@ -36,7 +35,7 @@
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
 
-(defn- filter-specs
+(defn filter-specs
   [instrument project-specs]
   (->> project-specs
        (utils/map-map (fn [p]
@@ -47,21 +46,26 @@
                                 p)))
        (utils/filter-map seq)))
 
-(defn- namespace-map
-  [instrument answers]
-  (let [merged (instrument-answers/merge-items-answers instrument answers)]
-    (merge (:sums merged)
-           (->> (concat (map (juxt #(str "@" (:name %)) :value) (:items merged))
-                        (map (juxt #(str (first %) "_spec") second) (:specifications merged)))
-                (into {})))))
+(defn namespace-map
+  [item-answers]
+  (merge (->> (concat (map (juxt #(str "@" (:name %)) :value) (:items item-answers))
+                      (->> (:items item-answers)
+                           (filter :specification)
+                           (map (juxt #(str "@" (:name %) "_spec") :specification))))
+              (into {}))
+         (:sums item-answers)))
 
 (defn eval-condition
   [condition namespace]
   (let [resolver (infix/token-resolver namespace)]
     (infix/calc condition resolver)))
 
-(defn- eval-answers-condition
-  [instrument answers condition]
-  (let [namespace-map' (namespace-map instrument answers)]
-    (eval-condition condition namespace-map')))
+(defn eval-spec
+  [spec namespace]
+  (let [condition (:condition spec)]
+    (try
+      (let [res (eval-condition condition namespace)]
+        (assoc spec :match? (not (zero? res))))
+      (catch Exception e
+        (assoc spec :error (.getMessage e))))))
 

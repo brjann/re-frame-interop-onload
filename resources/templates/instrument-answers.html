@@ -1,6 +1,6 @@
 {% extends "simple.html" %}
 {% block content %}
-
+<h1>Items</h1>
 <table>
     <thead>
     <tr>
@@ -19,6 +19,8 @@
     </tr>
     {% endfor %}
 </table>
+
+<h1>Sums</h1>
 <table>
     <thead>
     <tr>
@@ -33,5 +35,24 @@
     </tr>
     {% endfor %}
 </table>
+
+<h1>Flags</h1>
+{% for project-id, specs in flag-specs %}
+<h2>{{project-names|get:@project-id}}</h2>
+{% for spec in specs %}
+<p>
+    <code>{{spec.condition}}</code>
+    {% if spec.error %}
+    ERROR: "{{spec.error}}"
+    {% else %}
+    {% if spec.match? %}
+    Answers match condition. Message: "{{spec.message}}"
+    {% else %}
+    Answers do not match condition.
+    {% endif %}
+    {% endif %}
+</p>
+{% endfor %}
+{% endfor %}
 
 {% endblock %}
