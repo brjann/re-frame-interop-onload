@@ -94,7 +94,7 @@
                     (str->num (namespace token))
                     (str->num (missing-fn token)))]
        res
-       (throw (Exception. (str "Var " token " not found")))))))
+       (throw (Exception. (str "Var \"" token "\" not found")))))))
 
 (defn rpn
   ([tokens] (rpn tokens (token-resolver {})))

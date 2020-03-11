@@ -43,10 +43,10 @@
 <p>
     <code>{{spec.condition}}</code>
     {% if spec.error %}
-    ERROR: "{{spec.error}}"
+    ERROR: <samp>{{spec.error}}</samp>
     {% else %}
     {% if spec.match? %}
-    Answers match condition. Message: "{{spec.message}}"
+    Answers match condition. Message: <samp>{{spec.message}}</samp>
     {% else %}
     Answers do not match condition.
     {% endif %}
