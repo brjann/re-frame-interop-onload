@@ -13,9 +13,7 @@
             [bass4.api-coercion :as api]
             [bass4.treatment.builder :as treatment-builder]
             [bass4.i18n :as i18n]
-            [bass4.responses.error-report :as error-report-response]))
-            [bass4.session.timeout :as session-timeout]
-            [bass4.utils :as utils]
+            [bass4.responses.error-report :as error-report-response]
             [bass4.i18n :as i18n]
             [bass4.clients.core :as clients]
             [bass4.embedded.api :as embedded-api]))

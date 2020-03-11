@@ -14,11 +14,11 @@
             [bass4.module.services :as module-service]
             [bass4.treatment.builder :as treatment-builder]
             [bass4.config :as config]
-            [bass4.db.orm-classes :as orm])
+            [bass4.db.orm-classes :as orm]
+            [bass4.responses.error-report :as error-report-response]
             [bass4.config :as config]
             [bass4.responses.error-report :as error-report-response])
   (:import (org.joda.time DateTime)))
-
 
 (use-fixtures
   :once
