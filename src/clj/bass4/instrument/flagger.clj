@@ -55,17 +55,23 @@
               (into {}))
          (:sums item-answers)))
 
-(defn eval-condition
-  [condition namespace]
-  (let [resolver (infix/token-resolver namespace)]
-    (infix/calc condition resolver)))
-
 (defn eval-spec
   [spec namespace]
   (let [condition (:condition spec)]
     (try
-      (let [res (eval-condition condition namespace)]
-        (assoc spec :match? (not (zero? res))))
+      (let [resolver (infix/token-resolver namespace)
+            parsed   (-> condition
+                         (infix/tokenize)
+                         (infix/parse-tokens))
+            res      (infix/rpn parsed resolver)
+            message  (or (:message spec)
+                         (-> (apply str "Answers were " (->> parsed
+                                                             (filter #(contains? namespace %))
+                                                             (map #(str % "=" (get namespace %)))
+                                                             (interpose ", ")))
+                             (str/replace #"@" "item ")))]
+        (assoc spec :match? (not (zero? res))
+                    :message message))
       (catch Exception e
         (assoc spec :error (.getMessage e))))))
 

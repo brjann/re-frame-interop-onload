@@ -1,13 +1,21 @@
 (ns bass4.test.answers-flagger
   (:require [clojure.test :refer :all]
             [bass4.instrument.flagger :as answers-flagger]
-            [bass4.instrument.answers-services :as instrument-answers]))
+            [bass4.instrument.answers-services :as instrument-answers]
+            [bass4.infix-parser :as infix]))
 
 (def parse-spec @#'answers-flagger/parse-spec)
-(def eval-condition @#'answers-flagger/eval-condition)
 (def checkboxize @#'instrument-answers/checkboxize)
 (def namespace-map @#'answers-flagger/namespace-map)
 (def filter-specs @#'answers-flagger/filter-specs)
+
+(defn eval-condition
+  [condition namespace]
+  (let [resolver (infix/token-resolver namespace)
+        parsed   (-> condition
+                     (infix/tokenize)
+                     (infix/parse-tokens))]
+    (infix/rpn parsed resolver)))
 
 (defn eval-answers-condition
   [instrument answers condition]
