@@ -14,9 +14,11 @@
             [bass4.module.services :as module-service]
             [bass4.treatment.builder :as treatment-builder]
             [bass4.config :as config]
-            [bass4.db.orm-classes :as orm])
+            [bass4.db.orm-classes :as orm]
+            [bass4.responses.error-report :as error-report-response]
+            [bass4.config :as config]
+            [bass4.responses.error-report :as error-report-response])
   (:import (org.joda.time DateTime)))
-
 
 (use-fixtures
   :once
@@ -127,7 +129,13 @@
         (visit "/api/user/tx/content-data" :request-method :put :body-params {:data {"xxx" "yyy"}})
         (has (status? 400))
         (visit "/api/user/tx/message" :request-method :post :body-params {:message "xxx"})
-        (has (status? 404)))))
+        (has (status? 404))
+        (visit "/api/user/error-report" :request-method :post :body-params {:hello "xxx"})
+        (has (status? 400))
+        (visit "/api/user/error-report" :request-method :post :body-params {:description (apply str (repeat (* 2 error-report-response/max-chars) "x"))})
+        (has (status? 400))
+        (visit "/api/user/error-report" :request-method :post :body-params {:description (apply str (repeat error-report-response/max-chars "x"))})
+        (has (status? 200)))))
 
 #_(deftest iterate-treatment
     "Iterate all treatment components to ensure that responses

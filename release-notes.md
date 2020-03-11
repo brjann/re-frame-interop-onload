@@ -1,3 +1,8 @@
+## Version 4.5.3
+Released on 2020-03-11.
+
+- Add api method for error reporting.
+
 ## Version 4.5.2
 Bugfix release. Released on 2020-02-25.
 
