@@ -13,9 +13,8 @@
             [bass4.module.api :as module-api]
             [bass4.api-coercion :as api]
             [bass4.treatment.builder :as treatment-builder]
-            [bass4.session.timeout :as session-timeout]
-            [bass4.utils :as utils]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [bass4.responses.error-report :as error-report-response]))
 
 (defn treatment-mw
   [handler]
@@ -189,6 +188,17 @@
           :summary "Name of the database's timezone."
           :return String
           (layout/text-response (db-config/time-zone)))
+
+        (POST "/error-report" []
+          :summary "If the user is experiencing problems with the platform, this method can be used to post an
+                    error report. The `description` should describe the error. Max length of `description` is
+                    500 characters."
+          :body-params [description :- String]
+          :return {:result String}
+          (let [res (error-report-response/handle-error-report user description)]
+            (if (= 200 (:status res))
+              (http-response/ok {:result "ok"})
+              res)))
 
         (context "/tx" [:as
                         {{:keys [treatment]}                     :db
