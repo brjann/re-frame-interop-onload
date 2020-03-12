@@ -87,8 +87,7 @@
 (defn token-resolver
   ([namespace] (token-resolver namespace (constantly nil)))
   ([namespace missing-fn]
-   (let [namespace (zipmap (map str/lower-case (keys namespace))
-                           (vals namespace))]
+   (let [namespace (into {} (map (fn [[k v]] [(str/lower-case k) v]) namespace))]
      (fn
        [token]
        (if-let [res (or

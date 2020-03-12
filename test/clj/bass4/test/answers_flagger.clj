@@ -114,7 +114,7 @@
   (is (= 0 (eval-answers-condition test-instrument test-answers "@2_e==1 && subscale1==24")))
   (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==1 || subscale1==24"))))
 
-(deftest filter-specs-testT
+(deftest filter-specs-test
   (is (= {101 [{:instrument-id nil, :abbreviation "MADRS-S"}
                {:instrument-id 1, :abbreviation nil}]
           102 [{:instrument-id nil, :abbreviation "MADRS-S"}]}
