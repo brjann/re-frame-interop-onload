@@ -195,8 +195,7 @@
         exports (scoring-exports lines)]
     (when exports
       {:statements (remove nil? (mapv scoring-parse-statement (scoring-statements lines)))
-       :exports    exports}
-      )))
+       :exports    exports})))
 
 (defn get-scoring
   [instrument-id]

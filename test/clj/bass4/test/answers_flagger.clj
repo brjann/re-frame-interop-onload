@@ -69,7 +69,11 @@
   (is (= 0 (eval-condition "@8==10" {"@8" 11})))
   (is (= 1 (eval-condition "@8==10&&sum==2" {"@8" 10 "sum" 2})))
   (is (= 0 (eval-condition "@8==10&&sum==2" {"@8" 10 "sum" 3})))
-  (is (= 1 (eval-condition "@8==10||sum==2" {"@8" 11 "sum" 2}))))
+  (is (= 1 (eval-condition "@8==10||sum==2" {"@8" 11 "sum" 2})))
+  (is (= 1 (eval-condition "@8==10||SUM==2" {"@8" 11 "sum" 2})))
+  (is (= 1 (eval-condition "@8==10||sum==2" {"@8" 11 "SUM" 2})))
+  (is (= 1 (eval-condition "@8a==10" {"@8A" 10})))
+  (is (= 1 (eval-condition "@8A==10" {"@8a" 10}))))
 
 (deftest checkboxize-test
   (is (= [{:item-id 1569, :checkbox-id "1569_e", :name "2_e", :value "e"}
