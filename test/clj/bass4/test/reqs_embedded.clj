@@ -137,32 +137,33 @@
           (has (status? 403))))))
 
 (deftest preview-instrument
-  (binding [answers-flagger/flagging-specs (constantly {:test               [{:instrument-id 286
-                                                                              :condition     "sum==39"}]
-                                                        project-double-auth [{:abbreviation "AAQ-2"
-                                                                              :condition    "@1==1"
-                                                                              :message      "Hell satan"}
-                                                                             {:abbreviation "AAQ-2"
-                                                                              :condition    "sum==38"
-                                                                              :message      "Metallica"}]})]
-    (let [php-session-id (get-php-session-id)
-          uid            (php-interop/uid-for-data! {:user-id 110 :path "instrument/286" :php-session-id php-session-id})
-          answers        {"300" "4", "295" "4", "302" "4", "299" "4", "296" "3", "294" "2", "293" "2", "301" "4", "298" "3", "292" "1"}]
-      (jdbc/insert! db/*db* "sessions" {"SessId"       php-session-id
-                                        "UserId"       110
-                                        "LastActivity" (utils/to-unix (now/now))
-                                        "SessionStart" (utils/to-unix (now/now))})
-      (-> *s*
-          (visit (str "/embedded/create-session?uid=" uid))
-          (visit "/embedded/instrument/286")
-          (has (status? 200))
-          (visit "/embedded/instrument/286" :request-method :post :params {:items          (json/write-str answers)
-                                                                           :specifications "{}"})
-          (follow-redirect)
-          (has (status? 200))
-          (has (some-text? "sum=39"))
-          (has (some-text? "Hell satan"))
-          (has (not-text? "Metallica"))))))
+  (let [item2 (inc (rand-int 7))]
+    (binding [answers-flagger/flagging-specs (constantly {:test               [{:instrument-id 286
+                                                                                :condition     (str "sum==" (+ item2 37))}]
+                                                          project-double-auth [{:abbreviation "AAQ-2"
+                                                                                :condition    "@1==1"
+                                                                                :message      "Hell satan"}
+                                                                               {:abbreviation "AAQ-2"
+                                                                                :condition    "sum==37"
+                                                                                :message      "Metallica"}]})]
+      (let [php-session-id (get-php-session-id)
+            uid            (php-interop/uid-for-data! {:user-id 110 :path "instrument/286" :php-session-id php-session-id})
+            answers        {"293" (str item2), "300" "4", "295" "4", "302" "4", "299" "4", "296" "3", "294" "2", "301" "4", "298" "3", "292" "1"}]
+        (jdbc/insert! db/*db* "sessions" {"SessId"       php-session-id
+                                          "UserId"       110
+                                          "LastActivity" (utils/to-unix (now/now))
+                                          "SessionStart" (utils/to-unix (now/now))})
+        (-> *s*
+            (visit (str "/embedded/create-session?uid=" uid))
+            (visit "/embedded/instrument/286")
+            (has (status? 200))
+            (visit "/embedded/instrument/286" :request-method :post :params {:items          (json/write-str answers)
+                                                                             :specifications "{}"})
+            (follow-redirect)
+            (has (status? 200))
+            (has (some-text? (str "sum=" (+ item2 37))))
+            (has (some-text? "Hell satan"))
+            (has (not-text? "Metallica")))))))
 
 (deftest path-merge
   (fix-time
