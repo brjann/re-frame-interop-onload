@@ -68,7 +68,7 @@
   (administration/step-completed! step)
   (layout/render "assessment-text.html"
                  {:texts (try (clojure.edn/read-string (:texts step))
-                                    (catch Exception _ ""))}))
+                              (catch Exception _ ""))}))
 
 (defn- instrument-page
   [step]
@@ -77,9 +77,9 @@
     (if-let [instrument (instruments/get-instrument instrument-id)]
       (layout/render "assessment-instrument.html"
                      {:instrument    instrument
-                            :instrument-id instrument-id
-                            :order         (:instrument-order step)
-                            :count         (:instrument-count step)})
+                      :instrument-id instrument-id
+                      :order         (:instrument-order step)
+                      :count         (:instrument-count step)})
       (do
         ;; Could not find instrument - record error and mark step as completed
         (administration/step-completed! step)
@@ -103,14 +103,14 @@
       (assoc :session (merge session {:assessments-pending? false}))))
 
 (defn- instrument-completed
-  [user-id round instrument-id items specifications]
+  [user round instrument-id items specifications]
   (if-let [administration-ids (map :administration-id (filter #(= (:instrument-id %) instrument-id) round))]
     (if-let [instrument (instruments/get-instrument instrument-id)]
       (do
         (validation/validate-answers instrument items specifications)
         (let [answers-map (instruments/score-instrument instrument-id items specifications)]
-          (administration/instrument-completed! user-id administration-ids instrument-id answers-map)
-          (administration/check-completed-administrations! user-id round instrument-id)
+          (administration/instrument-completed! user administration-ids instrument answers-map)
+          (administration/check-completed-administrations! (:user-id user) round instrument-id)
           (-> (http-response/found "/user/assessments"))))
       (do
         (request-logger/record-error! (str "Instrument " instrument-id " does not exist."))
@@ -133,8 +133,8 @@
       (assessment-page round))))
 
 (defapi post-instrument-answers
-  [user-id :- integer? session :- [:? map?] instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
-  (let [round (administration/get-assessment-round user-id)]
+  [user :- map? session :- [:? map?] instrument-id :- api/->int items :- [api/->json map?] specifications :- [api/->json map?]]
+  (let [round (administration/get-assessment-round (:user-id user))]
     (if-not (seq round)
       (assessments-completed session)
-      (instrument-completed user-id round instrument-id items specifications))))
+      (instrument-completed user round instrument-id items specifications))))

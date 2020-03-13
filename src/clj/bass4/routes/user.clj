@@ -154,7 +154,7 @@
     (GET "/" [] (assessments-response/handle-assessments (:user-id user) (:session request)))
     (POST "/" [instrument-id items specifications]
       (assessments-response/post-instrument-answers
-        (:user-id user)
+        user
         (:session request)
         instrument-id
         items
