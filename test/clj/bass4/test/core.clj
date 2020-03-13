@@ -39,6 +39,7 @@
 (def project-double-auth 536972)
 (def project-double-auth-assessment-series 536974)
 (def project-no-double-auth 536818)
+(def project-no-double-auth-ass-series 536820)
 (def project-reg-allowed 564610)
 (def project-reg-allowed-ass-series 564612)
 (def project-tx 543018)
@@ -316,10 +317,8 @@
       (str/join)
       (str/replace #"\s+" " ")))
 
-;; TODO: This macro does not generate an test fail logo in Cursive - neither does some-text?
 (defmacro not-text?
   [expected]
-  #_(kerodon.test/validate-text ~'not-text? #(not (.contains ^String %1 ^CharSequence %2)) ~expected)
   `(kerodon.test/validate #(not (.contains ^String %1 ^CharSequence %2))
                           ~collapse-extra-whitespace
                           ~expected
