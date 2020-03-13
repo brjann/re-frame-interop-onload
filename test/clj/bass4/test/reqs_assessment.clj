@@ -12,7 +12,9 @@
             [bass4.db.core :as db]
             [clj-time.core :as t]
             [bass4.instrument.validation :as i-validation]
-            [bass4.assessment.statuses :as assessment-statuses]))
+            [bass4.assessment.statuses :as assessment-statuses]
+            [clojure.data.json :as json]
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (use-fixtures
   :once
@@ -327,3 +329,28 @@
         (follow-redirect)
         (follow-redirect)
         (has (some-text? "no more activities")))))
+
+(deftest answers-saved
+  (let [user-id (user-service/create-user! project-no-double-auth)
+        ass-id  (create-assessment! project-no-double-auth-ass-series
+                                    {"Scope" 0})
+        adm-id  (create-participant-administration! user-id ass-id 1 {:date (midnight (now/now))})
+        item2   (inc (rand-int 7))]
+    (link-instrument! ass-id 286)                           ; AAQ
+    (user-service/update-user-properties! user-id {:username user-id :password user-id})
+    (-> *s*
+        (visit "/login" :request-method :post :params {:username user-id :password user-id})
+        (has (status? 302))
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "AAQ"))
+        (visit "/user/assessments" :request-method :post :params {:instrument-id  286
+                                                                  :items          (json/write-str {"293" (str item2), "300" "4", "295" "4", "302" "4", "299" "4", "296" "3", "294" "2", "301" "4", "298" "3", "292" "1"})
+                                                                  :specifications "{}"})
+        (follow-redirect)
+        (follow-redirect)
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "no more activities")))
+    (let [answers (instrument-answers/get-answers adm-id 286)]
+      (is (= (+ item2 37) (get (:sums answers) "sum"))))))
