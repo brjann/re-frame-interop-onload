@@ -34,7 +34,7 @@
        :condition     (str/trim condition)
        :message       msg})))
 
-(defn flagging-specs
+(defn ^:dynamic flagging-specs
   [db]
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
