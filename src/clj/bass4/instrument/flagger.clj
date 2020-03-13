@@ -9,10 +9,14 @@
 
 (defn db-flagging-specs
   [db]
-  (let [res (db/answers-flagging-specs db {})]
+  (let [res      (db/answers-flagging-specs db {})
+        projects (let [x (php->clj (:projects res))]
+                   (if-not (map? x)
+                     {}
+                     x))]
     (->> (merge
            {:test (:test res)}
-           (php->clj (:projects res)))
+           projects)
          (utils/filter-map not-empty)
          (utils/map-map str/split-lines))))
 

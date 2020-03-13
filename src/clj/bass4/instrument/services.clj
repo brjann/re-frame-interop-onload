@@ -246,7 +246,9 @@
 
 (defn save-test-answers!
   [instrument-id answers-map]
-  (when-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
+  (let [answers-id (if-let [answers-id (:answers-id (instrument-answers/get-answers instrument-id instrument-id))]
+                     answers-id
+                     (instrument-answers/create-answers! instrument-id instrument-id))]
     (instrument-answers/save-answers! answers-id answers-map)))
 
 

@@ -24,6 +24,7 @@
   (db/delete-instrument-answers! {:answers-id answers-id}))
 
 (defn- update-created-answers!
+  "Points answers to administration and instrument and gracefully handles race conditions"
   [answers-id administration-id instrument-id]
   (try
     (db/create-instrument-answers! {:answers-id answers-id :administration-id administration-id :instrument-id instrument-id})
@@ -33,7 +34,7 @@
     (catch Exception e (delete-answers! answers-id)
                        (:answers-id (db/get-instrument-answers-by-administration {:administration-id administration-id :instrument-id instrument-id})))))
 
-(defn- create-answers!
+(defn create-answers!
   [administration-id instrument-id]
   (-> (create-answers-object!)
       (first)
