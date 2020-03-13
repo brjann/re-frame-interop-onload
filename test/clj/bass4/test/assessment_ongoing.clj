@@ -99,8 +99,10 @@
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight+d -40 *now*)})
     (is (= #{} (ongoing-assessments *now* user-id)))
+    ;; Async FAIL with :assessment-status/no-date
     (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/date-passed]}
            (user-statuses *now* user-id)))
+    ;; Async FAIL with :assessment-status/no-date
     (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/date-passed]}
            (group-statuses *now* group-id)))))
 
