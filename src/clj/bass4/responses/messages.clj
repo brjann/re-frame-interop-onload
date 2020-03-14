@@ -1,6 +1,6 @@
 (ns bass4.responses.messages
   (:require [bass4.services.messages :as messages-service]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [ring.util.http-response :as http-response]
             [schema.core :as s]
             [bass4.layout :as layout]
@@ -13,7 +13,7 @@
 (defapi messages-page [render-map :- map? user :- map?]
   (let [user-id  (:user-id user)
         messages (->> (messages-service/get-all-messages user-id)
-                      (map #(assoc % :text (string/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
+                      (map #(assoc % :text (str/escape (:text %) {\< "&lt;", \> "&gt;", \& "&amp;"}))))
         draft    (messages-service/get-draft user-id)]
     (layout/render "messages.html"
                    (merge render-map

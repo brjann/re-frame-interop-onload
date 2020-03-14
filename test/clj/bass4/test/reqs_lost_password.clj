@@ -6,13 +6,10 @@
             [kerodon.test :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.test.core :refer :all]
-            [bass4.middleware.debug :as debug]
-            [clojure.tools.logging :as log]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
             [bass4.lost-password.services :as lpw-service]
-            [bass4.lost-password.responses :as lpw-response]
             [bass4.external-messages.async :refer [*debug-chan*]]))
 
 (use-fixtures
@@ -39,7 +36,7 @@
   [messages]
   (let [mail (:message (first messages))
         url  (second (re-matches #"[\s\S]*?(http.*)[\s\S]*" mail))
-        uid* (subs url (inc (s/last-index-of url "/")))]
+        uid* (subs url (inc (str/last-index-of url "/")))]
     (when-not uid*
       (throw (Exception. "No UID found in " messages)))
     (swap! uid (constantly uid*)))

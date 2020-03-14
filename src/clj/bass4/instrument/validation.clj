@@ -2,11 +2,9 @@
   (:require [bass4.php_clj.core :refer [clj->php]]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [bass4.utils :as utils]
             [clojure.set :as set]
-            [clojure.string :as str]
-            [bass4.api-coercion :as api]
             [clojure.tools.logging :as log]
             [bass4.middleware.request-logger :as request-logger]))
 
@@ -54,7 +52,7 @@
                                                   (map-options))]
                                     item)))))]
     (->> items
-         (filter #(s/includes? (:layout %) "[X]"))
+         (filter #(str/includes? (:layout %) "[X]"))
          (map (fn [item] [(:item-id item) item]))
          (into {}))))
 

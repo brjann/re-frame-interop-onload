@@ -7,10 +7,9 @@
             [bass4.layout :as layout]
             [bass4.utils :refer [kebab-case-keyword]]
             [bass4.http-utils :as h-utils]
-            [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
             [bass4.i18n :as i18n]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [clojure.data.json :as json]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.clients.core :as clients]))
@@ -284,7 +283,7 @@
                           "/e-auth/bankid/cancel"
                           "/e-auth/bankid/reset"}
                         (:uri request)))
-        (not (string/starts-with? (:uri request) "/debug/")))
+        (not (str/starts-with? (:uri request) "/debug/")))
     (http-response/found (str "/e-auth/bankid/ongoing?return-url=" (h-utils/url-escape (:uri request))))
     (handler request)))
 

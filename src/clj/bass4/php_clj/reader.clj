@@ -3,7 +3,7 @@
 ;; http://www.eclipse.org/legal/epl-v10.html
 
 (ns bass4.php_clj.reader
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as str])
   (:import [java.io ByteArrayInputStream BufferedInputStream]))
 
 (defn buffered-input-stream
@@ -33,5 +33,5 @@
   (loop [acc []]
     (let [c (read-char reader)]
       (if (= delimiter c)
-          (s/join acc)
-          (recur (conj acc c))))))
+        (str/join acc)
+        (recur (conj acc c))))))

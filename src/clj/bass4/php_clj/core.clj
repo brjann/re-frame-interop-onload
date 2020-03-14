@@ -4,7 +4,7 @@
 
 (ns bass4.php_clj.core
   (:require [bass4.php_clj.reader :as r]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [flatland.ordered.map :refer [ordered-map]]))
 
 (declare reader->clj)
@@ -111,7 +111,7 @@
 (defn- encode-collection [clj]
   (str "a:"
        (count clj) ":{"
-       (s/join (map-indexed #(str (clj->php %) (clj->php %2)) clj))
+       (str/join (map-indexed #(str (clj->php %) (clj->php %2)) clj))
        "}"))
 
 (defn clj->php

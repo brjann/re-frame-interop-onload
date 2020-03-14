@@ -1,13 +1,13 @@
 (ns bass4.services.privacy
   (:require [bass4.db.core :as db]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [bass4.utils :as utils]))
 
 (defn- trim-sql-notice
   [privacy-notice]
   (let [notice-text (some-> privacy-notice
                             (:notice-text)
-                            (s/trim))]
+                            (str/trim))]
     (when-not (empty? notice-text)
       {:notice-id   (:id privacy-notice)
        :notice-text notice-text})))

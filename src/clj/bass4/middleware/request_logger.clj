@@ -2,8 +2,7 @@
   (:require [bass4.db.core :as db]
             [bass4.utils :refer [filter-map time+ nil-zero?]]
             [clj-time.coerce :as tc]
-            [clojure.string :as string]
-            [clojure.string :as s]
+            [clojure.string :as str]
             [bass4.config :as config]
             [bass4.http-utils :as h-utils]
             [bass4.utils :as utils]))
@@ -32,7 +31,7 @@
   (swap-state! :error-count inc 0)
   (swap-state! :error-messages
                #(if %
-                  (clojure.string/join "\n----------------\n" [% (str error)])
+                  (str/join "\n----------------\n" [% (str error)])
                   (str error))))
 
 (defn get-state
@@ -65,7 +64,7 @@
                       :method          method
                       :status          status
                       :info            (->> (:info req-state)
-                                            (s/join "\n"))}))
+                                            (str/join "\n"))}))
 
 (defn wrap-logger
   [handler request]
@@ -90,5 +89,5 @@
       ;;val
       (let [response (dissoc response ::no-log?)]
         (if (:debug-headers req-state)
-          (assoc response :headers (assoc (:headers response) "X-Debug-Headers" (string/join "\n" (:debug-headers req-state))))
+          (assoc response :headers (assoc (:headers response) "X-Debug-Headers" (str/join "\n" (:debug-headers req-state))))
           response)))))

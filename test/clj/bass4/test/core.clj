@@ -1,7 +1,5 @@
 (ns bass4.test.core
-  (:require [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [mount.core :as mount]
+  (:require [mount.core :as mount]
             [clojure.core.async :refer [alts!! timeout]]
             [bass4.db.core]
             [bass4.db.sql-wrapper]
@@ -10,7 +8,7 @@
             [kerodon.test]
             [bass4.handler :refer :all]
             [clj-time.coerce :as tc]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [clojure.tools.logging :as log]
             [bass4.middleware.core :as mw]
@@ -216,7 +214,7 @@
                                          :fail
                                          :pass)
                              :message  ""
-                             :expected (str "Not any of " (string/join ", " strs))}))
+                             :expected (str "Not any of " (str/join ", " strs))}))
   response)
 
 (defn debug-headers-text?
@@ -227,7 +225,7 @@
                                          :pass
                                          :fail)
                              :message  ""
-                             :expected (string/join ", " strs)}))
+                             :expected (str/join ", " strs)}))
   response)
 
 (defn fn-not-text?

@@ -1,5 +1,5 @@
 (ns bass4.api-coercion
-  (:require [clojure.string :as s]
+  (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
             [bass4.utils :as utils :refer [map-map]]
@@ -50,7 +50,7 @@
             (integer? i)
             i
 
-            (re-find #"^\d+$" (s/trim i))
+            (re-find #"^\d+$" (str/trim i))
             (read-string i)
 
             :else

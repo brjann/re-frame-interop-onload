@@ -14,7 +14,7 @@
             [clj-time.core :as t]
             [clj-time.format :as f]
             [bass4.services.bass :as bass-service]
-            [clojure.string :as string]
+            [clojure.string :as str]
             [clojure.java.io :as io]
             [ring.util.http-response :refer [content-type ok] :as http-response]
             [clj-time.coerce :as tc]
@@ -28,7 +28,7 @@
 (defn only-ul [text {:keys [code codeblock last-line-empty? eof lists] :as state}]
   (cond
 
-    (and last-line-empty? (string/blank? text))
+    (and last-line-empty? (str/blank? text))
     [(str (close-lists (reverse lists)) text)
      (-> state (dissoc :lists) (assoc :last-line-empty? false))]
 
@@ -40,12 +40,12 @@
 
     (and (not eof)
          lists
-         (string/blank? text))
+         (str/blank? text))
     [text (assoc state :last-line-empty? true)]
 
     :else
     (let [indents  (if last-line-empty? 0 (count (take-while (partial = \space) text)))
-          trimmed  (string/trim text)
+          trimmed  (str/trim text)
           in-list? (:lists state)]
       (cond
         (re-find #"^[\*\+-] " trimmed)
@@ -67,7 +67,7 @@
 
 (defn remove-comments [text state]
   "Remove one-line html comments from markdown"
-  [(clojure.string/replace text #"<!--(.*?)-->" "") state])
+  [(str/replace text #"<!--(.*?)-->" "") state])
 
 (def new-transformer-vector
   (let [li-index (first (keep-indexed #(when (= markdown.lists/li %2) %1) md-transformers/transformer-vector))]
@@ -83,7 +83,7 @@
 ;; https://stackoverflow.com/questions/2965293/javascript-parse-error-on-u2028-unicode-character
 (filters/add-filter! :json (fn [x] (-> x
                                        (json/write-str)
-                                       (string/replace #"[\u2028\u2029]" ""))))
+                                       (str/replace #"[\u2028\u2029]" ""))))
 
 #_(filters/add-filter! :markdown (fn [content] [:safe (md-to-html-string content :replacement-transformers new-transformer-vector)]))
 

@@ -5,7 +5,7 @@
             [bass4.utils :refer [unserialize-key map-map subs+ keep-matching key-map-list json-safe]]
             [bass4.infix-parser :as infix]
             [bass4.instrument.answers-services :as instrument-answers]
-            [clojure.string :as s]))
+            [clojure.string :as str]))
 
 
 ;; ------------------------
@@ -168,15 +168,15 @@
   (when-let [sums-line (first (filterv #(= (subs+ % 0 5) "#sums") lines))]
     (-> sums-line
         (subs 5)
-        (s/replace #" " "")
-        (s/split #","))))
+        (str/replace #" " "")
+        (str/split #","))))
 
 (defn- scoring-parse-statement
   [statement-line]
-  (let [[var expression] (mapv s/trim (s/split statement-line #"=" 2))]
+  (let [[var expression] (mapv str/trim (str/split statement-line #"=" 2))]
     (when (and (> (count var) 0) (> (count expression) 0))
       (if (= (subs+ expression 0 2) "if")
-        (let [if-expr (s/split (subs expression 2) #",")]
+        (let [if-expr (str/split (subs expression 2) #",")]
           (when (= (count if-expr) 3)
             {:var   var
              :test  (if-expr 0)
@@ -191,7 +191,7 @@
 
 (defn- parse-scoring
   [scoring-string]
-  (let [lines   (filterv #(not= (count %) 0) (mapv (comp s/lower-case s/trim) (s/split-lines scoring-string)))
+  (let [lines   (filterv #(not= (count %) 0) (mapv (comp str/lower-case str/trim) (str/split-lines scoring-string)))
         exports (scoring-exports lines)]
     (when exports
       {:statements (remove nil? (mapv scoring-parse-statement (scoring-statements lines)))
