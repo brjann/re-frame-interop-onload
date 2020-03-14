@@ -7,7 +7,9 @@
             [bass4.infix-parser :as infix]
             [bass4.api-coercion :as api]
             [bass4.instrument.answers-services :as instrument-answers]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.layout :as layout]
+            [bass4.now :as now]))
 
 (defn db-flagging-specs
   [db]
@@ -112,6 +114,8 @@
       (doseq [match matches]
         (orm/create-flag! (:user-id user)
                           "AnswersFlagger"
-                          (str "Answers on instrument " (:name instrument) " flagged. Reason: " (:message match))
+                          (str "Answers on instrument " (:name instrument) " flagged.\n"
+                               "Reason: " (:message match) ".\n"
+                               "Date " (layout/datetime-str (now/now) :date-time/datetime-ns))
                           {"CustomIcon"  "flag-high.gif"
                            "ReferenceId" (:answers-id answers-map)})))))
