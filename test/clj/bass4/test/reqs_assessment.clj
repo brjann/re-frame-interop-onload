@@ -14,7 +14,9 @@
             [bass4.instrument.validation :as i-validation]
             [bass4.assessment.statuses :as assessment-statuses]
             [clojure.data.json :as json]
-            [bass4.instrument.answers-services :as instrument-answers]))
+            [bass4.instrument.answers-services :as instrument-answers]
+            [bass4.instrument.flagger :as answers-flagger]
+            [clojure.java.jdbc :as jdbc]))
 
 (use-fixtures
   :once
@@ -354,3 +356,38 @@
         (has (some-text? "no more activities")))
     (let [answers (instrument-answers/get-answers adm-id 286)]
       (is (= (+ item2 37) (get (:sums answers) "sum"))))))
+
+(deftest answers-flagged!
+  (let [item2 (inc (rand-int 7))]
+    (binding [answers-flagger/flagging-specs (constantly {project-no-double-auth [{:abbreviation "AAQ-2"
+                                                                                   :condition    "@1==1"
+                                                                                   :message      "Hell satan"}]
+                                                          :global                [{:instrument-id 286
+                                                                                   :condition     (str "sum==" (+ item2 37))}]})]
+      (let [user-id (user-service/create-user! project-no-double-auth)
+            ass-id  (create-assessment! project-no-double-auth-ass-series
+                                        {"Scope" 0})
+            ass-id2 (create-assessment! project-no-double-auth-ass-series
+                                        {"Scope" 0})
+            adm-id1 (create-participant-administration! user-id ass-id 1 {:date (midnight (now/now))})
+            adm-id2 (create-participant-administration! user-id ass-id2 1 {:date (midnight (now/now))})]
+        (link-instrument! ass-id 286)                       ; AAQ
+        (link-instrument! ass-id2 286)                      ; AAQ
+        (user-service/update-user-properties! user-id {:username user-id :password user-id})
+        (-> *s*
+            (visit "/login" :request-method :post :params {:username user-id :password user-id})
+            (has (status? 302))
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "AAQ"))
+            (visit "/user/assessments" :request-method :post :params {:instrument-id  286
+                                                                      :items          (json/write-str {"293" (str item2), "300" "4", "295" "4", "302" "4", "299" "4", "296" "3", "294" "2", "301" "4", "298" "3", "292" "1"})
+                                                                      :specifications "{}"})
+            (follow-redirect)
+            (follow-redirect)
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "no more activities")))
+        (is (= 2 (count (jdbc/query db/*db* ["SELECT * FROM c_flag WHERE ParentId = ?" user-id]))))
+        (is (= 1 (count (jdbc/query db/*db* ["SELECT * FROM c_instrumentanswers WHERE ParentId = ?" adm-id1]))))
+        (is (= 1 (count (jdbc/query db/*db* ["SELECT * FROM c_instrumentanswers WHERE ParentId = ?" adm-id2]))))))))

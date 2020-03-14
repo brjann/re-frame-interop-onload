@@ -72,7 +72,8 @@
         copy-ofs    (if (> (count answers-ids) 1)
                       (cons (second answers-ids) (repeat (dec (count answers-ids)) (first answers-ids)))
                       '(nil))]
-    (mapv #(save-answers! %1 answers-map %2) answers-ids copy-ofs)))
+    (mapv #(save-answers! %1 answers-map %2) answers-ids copy-ofs)
+    (first answers-ids)))
 
 (defn get-answers
   [administration-id instrument-id]

@@ -9,6 +9,8 @@
 (def checkboxize @#'instrument-answers/checkboxize)
 (def namespace-map @#'answers-flagger/namespace-map)
 (def filter-specs @#'answers-flagger/filter-specs)
+(def project-instrument-specs @#'answers-flagger/project-instrument-specs)
+(def apply-instrument-specs @#'answers-flagger/apply-instrument-specs)
 
 (defn eval-condition
   [condition namespace]
@@ -156,7 +158,7 @@
 
 (deftest project-instrument-specs-test
   (is (= #{"sum==4" "sum==5" "sum==7"}
-         (->> (answers-flagger/project-instrument-specs
+         (->> (project-instrument-specs
                 project-instrument-specs-conditions
                 102
                 {:instrument-id 3 :abbreviation "MADRS-S"})
@@ -165,10 +167,10 @@
 
 (deftest answer-flags-test
   (is (= ["sum==1"]
-         (->> (answers-flagger/apply-instrument-specs [{:condition "sum==1"}
-                                                       {:condition "sum==2"}
-                                                       ;; This one causes error which should be caught
-                                                       {:condition "@2==2"}]
-                                                      {"sum" 1
-                                                       "@1"  10})
+         (->> (apply-instrument-specs [{:condition "sum==1"}
+                                       {:condition "sum==2"}
+                                       ;; This one causes error which should be caught
+                                       {:condition "@2==2"}]
+                                      {"sum" 1
+                                       "@1"  10})
               (map :condition)))))

@@ -7,7 +7,7 @@
             [bass4.infix-parser :as infix]
             [bass4.api-coercion :as api]
             [bass4.instrument.answers-services :as instrument-answers]
-            [clojure.tools.logging :as log]))
+            [bass4.db.orm-classes :as orm]))
 
 (defn db-flagging-specs
   [db]
@@ -42,7 +42,7 @@
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
 
-(defn instrument-specs
+(defn- instrument-specs
   [instrument]
   (fn [specs]
     (filter #(or (and (:instrument-id %)
@@ -86,27 +86,32 @@
       (catch Exception e
         (assoc spec :error (.getMessage e))))))
 
-(defn project-instrument-specs
+(defn- project-instrument-specs
   [flagging-specs project-id instrument]
   (apply concat (vals (filter-specs
                         instrument
                         (select-keys flagging-specs [project-id :global])))))
 
-(defn apply-instrument-specs
+(defn- apply-instrument-specs
   [instrument-specs namespace]
   (->> instrument-specs
        (map #(eval-spec % namespace))
        (filter :match?)))
 
-(defn flag-answer!
-  [db project-id instrument answers-map]
+(defn flag-answers!
+  [db user instrument answers-map]
   (let [instrument-specs (project-instrument-specs
                            (flagging-specs db)
-                           project-id
+                           (:project-id user)
                            instrument)
         item-answers     (instrument-answers/merge-items-answers
                            instrument
                            answers-map)
         namespace        (namespace-map item-answers)]
     (let [matches (apply-instrument-specs instrument-specs namespace)]
-      )))
+      (doseq [match matches]
+        (orm/create-flag! (:user-id user)
+                          "AnswersFlagger"
+                          (str "Answers on instrument " (:name instrument) " flagged. Reason: " (:message match))
+                          {"CustomIcon"  "flag-high.gif"
+                           "ReferenceId" (:answers-id answers-map)})))))

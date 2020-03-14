@@ -50,7 +50,8 @@
 (defn instrument-completed!
   [user administration-ids instrument answers-map]
   (db/set-instrument-completed! {:user-id (:user-id user) :instrument-id (:instrument-id instrument)})
-  (instrument-answers/save-administrations-answers! administration-ids (:instrument-id instrument) answers-map))
+  (let [answers-id (instrument-answers/save-administrations-answers! administration-ids (:instrument-id instrument) answers-map)]
+    (answers-flagger/flag-answers! db/*db* user instrument (assoc answers-map :answers-id answers-id))))
 
 (defn check-completed-administrations!
   [user-id round completed-instrument-id]
