@@ -162,3 +162,11 @@
                 {:instrument-id 3 :abbreviation "MADRS-S"})
               (map :condition)
               (into #{})))))
+
+(deftest answer-flags-test
+  (is (= ["sum==1"]
+         (->> (answers-flagger/apply-instrument-specs [{:condition "sum==1"}
+                                                       {:condition "sum==2"}]
+                                                      {"sum" 1
+                                                       "@1"  10})
+              (map :condition)))))

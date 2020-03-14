@@ -91,16 +91,21 @@
                         instrument
                         (select-keys flagging-specs [project-id :global])))))
 
+(defn apply-instrument-specs
+  [instrument-specs namespace]
+  (->> instrument-specs
+       (map #(eval-spec % namespace))
+       (filter :match?)))
+
 (defn flag-answer!
   [db project-id instrument answers-map]
-  (let [item-answers     (instrument-answers/merge-items-answers
+  (let [instrument-specs (project-instrument-specs
+                           (flagging-specs db)
+                           project-id
+                           instrument)
+        item-answers     (instrument-answers/merge-items-answers
                            instrument
                            answers-map)
-        instrument-specs ()
         namespace        (namespace-map item-answers)]
-    (utils/map-map
-      (fn [specs]
-        (map (fn [spec]
-               (eval-spec spec namespace))
-             specs))
-      instrument-specs)))
+    (let [matches (apply-instrument-specs instrument-specs namespace)]
+      )))
