@@ -47,7 +47,15 @@
 
 (defn- sort-projects
   [[x _] [y _]]
+  ;; No need to check for :global because if both are keywords then
+  ;; one of :test checks will return true
   (cond
+    (and (keyword? x) (not (keyword y)))
+    -1
+
+    (and (keyword? y) (not (keyword x)))
+    1
+
     (= :test x)
     -1
 
@@ -65,8 +73,8 @@
                         (instruments/get-instrument-test-answers instrument-id))
         project-names (assoc
                         (bass-service/project-names db/*db*)
-                        :test
-                        "Test conditions")
+                        :test "Test conditions"
+                        :global "Global conditions")
         flag-specs    (->> (apply-project-specs db/*db* instrument item-answers)
                            (sort sort-projects))]
     (when (:items item-answers)

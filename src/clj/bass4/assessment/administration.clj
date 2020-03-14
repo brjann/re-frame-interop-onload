@@ -9,9 +9,7 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.assessment.late-flagger :as late-flagger]
             [bass4.clients.time :as client-time]
-            [clojure.tools.logging :as log]
-            [bass4.instrument.flagger :as answers-flagger]
-            [bass4.instrument.services :as instruments]))
+            [bass4.instrument.flagger :as answers-flagger]))
 
 
 ;; ------------------------------
@@ -52,20 +50,7 @@
 (defn instrument-completed!
   [user administration-ids instrument answers-map]
   (db/set-instrument-completed! {:user-id (:user-id user) :instrument-id (:instrument-id instrument)})
-  (instrument-answers/save-administrations-answers! administration-ids (:instrument-id instrument) answers-map)
-  #_(let [item-answers   (instrument-answers/merge-items-answers
-                           instrument
-                           answers-map)
-          projects-specs (answers-flagger/filter-specs
-                           instrument
-                           (answers-flagger/flagging-specs db/*db*))
-          namespace      (answers-flagger/namespace-map item-answers)]
-      (utils/map-map
-        (fn [specs]
-          (map (fn [spec]
-                 (answers-flagger/eval-spec spec namespace))
-               specs))
-        projects-specs)))
+  (instrument-answers/save-administrations-answers! administration-ids (:instrument-id instrument) answers-map))
 
 (defn check-completed-administrations!
   [user-id round completed-instrument-id]

@@ -5,7 +5,8 @@
             [bass4.utils :as utils]
             [clojure.string :as str]
             [bass4.infix-parser :as infix]
-            [bass4.api-coercion :as api]))
+            [bass4.api-coercion :as api]
+            [bass4.instrument.answers-services :as instrument-answers]))
 
 (defn db-flagging-specs
   [db]
@@ -15,8 +16,9 @@
                      {}
                      x))]
     (->> (merge
-           {:test (:test res)}
-           projects)
+           {:test   (:test res)
+            :global (get projects 100)}
+           (dissoc projects 100))
          (utils/filter-map not-empty)
          (utils/map-map str/split-lines))))
 
@@ -39,15 +41,19 @@
   (let [specs-per-project (db-flagging-specs db)]
     (utils/map-map #(map parse-spec %) specs-per-project)))
 
+(defn instrument-specs
+  [instrument]
+  (fn [specs]
+    (filter #(or (and (:instrument-id %)
+                      (= (:instrument-id %) (:instrument-id instrument)))
+                 (and (:abbreviation % %)
+                      (= (:abbreviation % %) (:abbreviation instrument))))
+            specs)))
+
 (defn filter-specs
   [instrument project-specs]
   (->> project-specs
-       (utils/map-map (fn [p]
-                        (filter #(or (and (:instrument-id %)
-                                          (= (:instrument-id %) (:instrument-id instrument)))
-                                     (and (:abbreviation % %)
-                                          (= (:abbreviation % %) (:abbreviation instrument))))
-                                p)))
+       (utils/map-map (instrument-specs instrument))
        (utils/filter-map seq)))
 
 (defn namespace-map
@@ -79,3 +85,18 @@
       (catch Exception e
         (assoc spec :error (.getMessage e))))))
 
+(defn flag-answer!
+  [db project-id instrument answers-map]
+  (let [item-answers   (instrument-answers/merge-items-answers
+                         instrument
+                         answers-map)
+        projects-specs (filter-specs
+                         instrument
+                         (get (flagging-specs db) project-id))
+        namespace      (namespace-map item-answers)]
+    (utils/map-map
+      (fn [specs]
+        (map (fn [spec]
+               (eval-spec spec namespace))
+             specs))
+      projects-specs)))
