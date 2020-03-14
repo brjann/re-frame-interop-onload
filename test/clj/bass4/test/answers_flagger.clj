@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [bass4.instrument.flagger :as answers-flagger]
             [bass4.instrument.answers-services :as instrument-answers]
-            [bass4.infix-parser :as infix]))
+            [bass4.infix-parser :as infix]
+            [clojure.tools.logging :as log]))
 
 (def parse-spec @#'answers-flagger/parse-spec)
 (def checkboxize @#'instrument-answers/checkboxize)
@@ -38,14 +39,6 @@
                                     "1569_xx" "0"},
                    :specifications {"1568_1" "spec2", "1569_mb" "spec1"},
                    :sums           {"sum" 50.0, "subscale1" 24, "subscale2" 36}})
-
-(def test-filter-conditions {101   [{:instrument-id nil, :abbreviation "MADRS-S"}
-                                    {:instrument-id 1, :abbreviation nil}],
-                             102   [{:instrument-id nil, :abbreviation "PHQ-9"}
-                                    {:instrument-id nil, :abbreviation "MADRS-S"}
-                                    {:instrument-id 2, :abbreviation nil}],
-                             :test [{:instrument-id nil, :abbreviation "GAD-7"}
-                                    {:instrument-id 3, :abbreviation nil}]})
 
 (deftest parse-spec-test
   (is (= {:instrument-id 123
@@ -114,15 +107,6 @@
   (is (= 0 (eval-answers-condition test-instrument test-answers "@2_e==1 && subscale1==24")))
   (is (= 1 (eval-answers-condition test-instrument test-answers "@2_e==1 || subscale1==24"))))
 
-(deftest filter-specs-test
-  (is (= {101 [{:instrument-id nil, :abbreviation "MADRS-S"}
-               {:instrument-id 1, :abbreviation nil}]
-          102 [{:instrument-id nil, :abbreviation "MADRS-S"}]}
-         (filter-specs {:instrument-id 1 :abbreviation "MADRS-S"} test-filter-conditions)))
-  (is (= {102 [{:instrument-id 2, :abbreviation nil}]}
-         (filter-specs {:instrument-id 2} test-filter-conditions)))
-  (is (= {:test [{:instrument-id nil, :abbreviation "GAD-7"}]}
-         (filter-specs {:abbreviation "GAD-7"} test-filter-conditions))))
 
 (deftest eval-spec-test
   (let [namespace (namespace-map (instrument-answers/merge-items-answers test-instrument test-answers))]
@@ -134,3 +118,47 @@
                                                  namespace))))
     (is (string? (:error (answers-flagger/eval-spec {:condition "@2==1"}
                                                     namespace))))))
+
+;; ---------------------------------
+;;    FILTER SPECS ON INSTRUMENT
+;; ---------------------------------
+
+(def test-filter-conditions {101   [{:instrument-id nil, :abbreviation "MADRS-S"}
+                                    {:instrument-id 1, :abbreviation nil}],
+                             102   [{:instrument-id nil, :abbreviation "PHQ-9"}
+                                    {:instrument-id nil, :abbreviation "MADRS-S"}
+                                    {:instrument-id 2, :abbreviation nil}],
+                             :test [{:instrument-id nil, :abbreviation "GAD-7"}
+                                    {:instrument-id 3, :abbreviation nil}]})
+
+(deftest filter-specs-test
+  (is (= {101 [{:instrument-id nil, :abbreviation "MADRS-S"}
+               {:instrument-id 1, :abbreviation nil}]
+          102 [{:instrument-id nil, :abbreviation "MADRS-S"}]}
+         (filter-specs {:instrument-id 1 :abbreviation "MADRS-S"} test-filter-conditions)))
+  (is (= {102 [{:instrument-id 2, :abbreviation nil}]}
+         (filter-specs {:instrument-id 2} test-filter-conditions)))
+  (is (= {:test [{:instrument-id nil, :abbreviation "GAD-7"}]}
+         (filter-specs {:abbreviation "GAD-7"} test-filter-conditions))))
+
+
+;; ---------------------------------------------
+;;    FILTER SPECS ON INSTRUMENT AND PROJECT
+;; ---------------------------------------------
+
+(def project-instrument-specs-conditions {101     [{:instrument-id 3, :abbreviation nil :condition "sum==1"}],
+                                          102     [{:instrument-id nil, :abbreviation "PHQ-9" :condition "sum==3"}
+                                                   {:instrument-id nil, :abbreviation "MADRS-S" :condition "sum==4"}
+                                                   {:instrument-id nil, :abbreviation "MADRS-S" :condition "sum==5"}],
+                                          :test   [{:instrument-id 3, :abbreviation nil :condition "sum==7"}]
+                                          :global [{:instrument-id nil, :abbreviation "GAD-7" :condition "sum==8"}
+                                                   {:instrument-id 3, :abbreviation nil :condition "sum==7"}]})
+
+(deftest project-instrument-specs-test
+  (is (= #{"sum==4" "sum==5" "sum==7"}
+         (->> (answers-flagger/project-instrument-specs
+                project-instrument-specs-conditions
+                102
+                {:instrument-id 3 :abbreviation "MADRS-S"})
+              (map :condition)
+              (into #{})))))

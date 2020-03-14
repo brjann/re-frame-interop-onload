@@ -85,18 +85,22 @@
       (catch Exception e
         (assoc spec :error (.getMessage e))))))
 
+(defn project-instrument-specs
+  [flagging-specs project-id instrument]
+  (apply concat (vals (filter-specs
+                        instrument
+                        (select-keys flagging-specs [project-id :global])))))
+
 (defn flag-answer!
   [db project-id instrument answers-map]
-  (let [item-answers   (instrument-answers/merge-items-answers
-                         instrument
-                         answers-map)
-        projects-specs (filter-specs
-                         instrument
-                         (get (flagging-specs db) project-id))
-        namespace      (namespace-map item-answers)]
+  (let [item-answers     (instrument-answers/merge-items-answers
+                           instrument
+                           answers-map)
+        instrument-specs ()
+        namespace        (namespace-map item-answers)]
     (utils/map-map
       (fn [specs]
         (map (fn [spec]
                (eval-spec spec namespace))
              specs))
-      projects-specs)))
+      instrument-specs)))
