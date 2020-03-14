@@ -166,7 +166,9 @@
 (deftest answer-flags-test
   (is (= ["sum==1"]
          (->> (answers-flagger/apply-instrument-specs [{:condition "sum==1"}
-                                                       {:condition "sum==2"}]
+                                                       {:condition "sum==2"}
+                                                       ;; This one causes error which should be caught
+                                                       {:condition "@2==2"}]
                                                       {"sum" 1
                                                        "@1"  10})
               (map :condition)))))

@@ -6,7 +6,8 @@
             [clojure.string :as str]
             [bass4.infix-parser :as infix]
             [bass4.api-coercion :as api]
-            [bass4.instrument.answers-services :as instrument-answers]))
+            [bass4.instrument.answers-services :as instrument-answers]
+            [clojure.tools.logging :as log]))
 
 (defn db-flagging-specs
   [db]
