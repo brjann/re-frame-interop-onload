@@ -1,6 +1,6 @@
 (ns bass4.module.api
   (:require [ring.util.http-response :as http-response]
-            [schema.core :as s]
+            [schema.core :as schema]
             [bass4.http-utils :refer [url-escape]]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.services.content-data :as content-data-service]
@@ -10,48 +10,48 @@
   (:import (org.joda.time DateTime)))
 
 (def HomeworkStatus
-  (s/maybe (s/enum :ok :submitted :not-submitted)))
+  (schema/maybe (schema/enum :ok :submitted :not-submitted)))
 
-(s/defschema ContentInfo
-  {:content-id   s/Int
+(schema/defschema ContentInfo
+  {:content-id   schema/Int
    :content-name String
    :accessed?    Boolean
    :namespace    String
-   :has-text?    s/Bool
-   :data-updated (s/maybe DateTime)
+   :has-text?    schema/Bool
+   :data-updated (schema/maybe DateTime)
    :tags         [String]})
 
-(s/defschema ModuleInfo
-  {:module-id       s/Int
+(schema/defschema ModuleInfo
+  {:module-id       schema/Int
    :module-name     String
    :active?         Boolean
-   :activation-date (s/maybe DateTime)
+   :activation-date (schema/maybe DateTime)
    :homework-status HomeworkStatus
    :tags            [String]})
 
-(s/defschema ModuleWithContent
+(schema/defschema ModuleWithContent
   (merge ModuleInfo
-         {:main-text  (s/maybe ContentInfo)
+         {:main-text  (schema/maybe ContentInfo)
           :worksheets [ContentInfo]
-          :homework   (s/maybe ContentInfo)}))
+          :homework   (schema/maybe ContentInfo)}))
 
-(s/defschema MainText
-  {:content-id   s/Int
+(schema/defschema MainText
+  {:content-id   schema/Int
    :content-name String
    :data-imports [String]
    :markdown?    Boolean
    :accessed?    Boolean
    :namespace    String
-   :text         (s/maybe String)
-   :file-path    (s/maybe String)
+   :text         (schema/maybe String)
+   :file-path    (schema/maybe String)
    :tags         [String]})
 
-(s/defschema Homework
+(schema/defschema Homework
   (merge
     MainText
     {:status HomeworkStatus}))
 
-(s/defschema Worksheet
+(schema/defschema Worksheet
   MainText)
 
 (defapi modules-list

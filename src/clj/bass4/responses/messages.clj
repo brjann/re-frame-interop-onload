@@ -2,12 +2,10 @@
   (:require [bass4.services.messages :as messages-service]
             [clojure.string :as str]
             [ring.util.http-response :as http-response]
-            [schema.core :as s]
+            [schema.core :as schema]
             [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.i18n :as i18n]
-            [clojure.tools.logging :as log]
-            [bass4.http-utils :as h-utils])
+            [bass4.i18n :as i18n])
   (:import (org.joda.time DateTime)))
 
 (defapi messages-page [render-map :- map? user :- map?]
@@ -47,9 +45,9 @@
   (messages-service/save-message! user-id text)
   (http-response/ok {:result "ok"}))
 
-(s/defschema Message
-  {:message-id    s/Int
-   :unread?       (s/maybe Boolean)
+(schema/defschema Message
+  {:message-id    schema/Int
+   :unread?       (schema/maybe Boolean)
    :message       String
    :sender-name   String
    :send-datetime DateTime

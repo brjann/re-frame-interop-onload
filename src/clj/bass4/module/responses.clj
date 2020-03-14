@@ -1,6 +1,5 @@
 (ns bass4.module.responses
   (:require [ring.util.http-response :as http-response]
-            [schema.core :as s]
             [clojure.string :as str]
             [bass4.http-utils :refer [url-escape]]
             [bass4.api-coercion :as api :refer [defapi]]

@@ -1,12 +1,10 @@
 (ns bass4.treatment.responses
   (:require [ring.util.http-response :as http-response]
-            [schema.core :as s]
+            [schema.core :as schema]
             [ring.middleware.anti-forgery :as anti-forgery]
             [bass4.utils :refer [json-safe]]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.treatment.builder :as treatment-builder]
-            [clojure.tools.logging :as log]
-            [bass4.module.responses :as modules-response]
             [bass4.module.api :as module-api])
   (:import (org.joda.time DateTime)))
 
@@ -43,10 +41,10 @@
       x
       "")))
 
-(s/defschema TreatmentInfo
-  {:last-login-time (s/maybe DateTime)
-   :start-date      (s/maybe DateTime)
-   :end-date        (s/maybe DateTime)
+(schema/defschema TreatmentInfo
+  {:last-login-time (schema/maybe DateTime)
+   :start-date      (schema/maybe DateTime)
+   :end-date        (schema/maybe DateTime)
    :modules         [module-api/ModuleInfo]
    :new-message?    Boolean
    :messaging?      Boolean

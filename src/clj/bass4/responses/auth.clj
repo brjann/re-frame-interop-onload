@@ -2,7 +2,6 @@
   (:require [bass4.services.auth :as auth-service]
             [bass4.http-errors :as http-errors]
             [ring.util.http-response :as http-response]
-            [schema.core :as s]
             [bass4.i18n :as i18n]
             [bass4.config :refer [env]]
             [clj-time.core :as t]

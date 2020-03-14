@@ -1,8 +1,6 @@
 (ns bass4.responses.error-report
-  (:require [clojure.string :as string]
-            [ring.util.http-response :as http-response]
+  (:require [ring.util.http-response :as http-response]
             [bass4.services.error-report :as error-report-service]
-            [schema.core :as s]
             [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.i18n :as i18n]))

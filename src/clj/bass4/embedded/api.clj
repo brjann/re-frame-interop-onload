@@ -1,6 +1,6 @@
 (ns bass4.embedded.api
   (:require [compojure.api.sweet :refer :all]
-            [schema.core :as s]
+            [schema.core :as schema]
             [ring.util.http-response :as http-response]
             [bass4.embedded.middleware :as embedded-mw]
             [bass4.route-rules :as route-rules]
@@ -86,8 +86,8 @@
         (http-response/forbidden "Not in debug or dev mode")))
 
     (context "/user-tx" [:as {{:keys [user-treatment user]} :api-request}]
-      :query-params [user-id :- s/Int
-                     treatment-access-id :- s/Int]
+      :query-params [user-id :- schema/Int
+                     treatment-access-id :- schema/Int]
 
       ;; --------------
       ;;    MODULES
@@ -107,7 +107,7 @@
 
       (GET "/module-main/:module-id" []
         :summary "Main text of module."
-        :path-params [module-id :- s/Int]
+        :path-params [module-id :- schema/Int]
         :return module-api/MainText
         (module-api/main-text
           module-id
@@ -116,7 +116,7 @@
 
       (GET "/module-homework/:module-id" []
         :summary "Homework of module."
-        :path-params [module-id :- s/Int]
+        :path-params [module-id :- schema/Int]
         :return module-api/Homework
         (module-api/homework
           module-id
@@ -125,8 +125,8 @@
 
       (GET "/module-worksheet/:module-id/:worksheet-id" []
         :summary "Worksheet of module."
-        :path-params [module-id :- s/Int
-                      worksheet-id :- s/Int]
+        :path-params [module-id :- schema/Int
+                      worksheet-id :- schema/Int]
         :return module-api/Worksheet
         (module-api/worksheet
           module-id
@@ -145,9 +145,9 @@
                           "                    \"key2\": \"value2\"}\n"
                           "     \"namespace2\": {\"key3\": \"value3\"\n"
                           "                    \"key4\": \"value4\"}}\n")
-        :path-params [module-id :- s/Int
-                      content-id :- s/Int]
-        :return (s/maybe {String {String String}})
+        :path-params [module-id :- schema/Int
+                      content-id :- schema/Int]
+        :return (schema/maybe {String {String String}})
         (module-api/get-module-content-data
           module-id
           content-id
@@ -169,7 +169,7 @@
                           "     \"namespace2\": {\"key3\": \"value3\"\n"
                           "                    \"key4\": \"value4\"}}\n")
         :query-params [namespaces :- [String]]
-        :return (s/maybe {String {String String}})
+        :return (schema/maybe {String {String String}})
         (module-api/get-content-data
           namespaces
           treatment-access-id))
@@ -185,5 +185,5 @@
 
       (GET "/user-id" []
         :summary "Returns the request user-id. Dummy function."
-        :return {:result s/Int}
+        :return {:result schema/Int}
         (http-response/ok {:result user-id})))))

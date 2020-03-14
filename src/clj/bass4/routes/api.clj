@@ -1,6 +1,6 @@
 (ns bass4.routes.api
   (:require [compojure.api.sweet :refer :all]
-            [schema.core :as s]
+            [schema.core :as schema]
             [ring.util.http-response :as http-response]
             [bass4.layout :as layout]
             [bass4.route-rules :as route-rules]
@@ -53,8 +53,8 @@
     #'treatment-mw))
 
 
-(s/defschema User {:name s/Str
-                   :sex  (s/enum :male :female)})
+(schema/defschema User {:name schema/Str
+                        :sex  (schema/enum :male :female)})
 
 (def api-routes
   (api
@@ -97,13 +97,13 @@
         ;; This is a mock api declaration. session-timeout handles the responses
         (GET "/user-id" []
           :summary "Returns current user-id."
-          :return {:user-id (s/maybe Long)}
+          :return {:user-id (schema/maybe Long)}
           (throw (Exception. "This method should never be called.")))
 
         (GET "/status" []
           :summary "Returns number of seconds until session dies and needs re-authentication."
-          :return (s/maybe {:hard    (s/maybe Long)
-                            :re-auth (s/maybe Long)})
+          :return (schema/maybe {:hard    (schema/maybe Long)
+                                 :re-auth (schema/maybe Long)})
           (throw (Exception. "This method should never be called.")))
 
         (POST "/timeout-re-auth" []
@@ -223,7 +223,7 @@
 
           (GET "/module-main/:module-id" []
             :summary "Main text of module."
-            :path-params [module-id :- s/Int]
+            :path-params [module-id :- schema/Int]
             :return module-api/MainText
             (module-api/main-text
               module-id
@@ -232,7 +232,7 @@
 
           (GET "/module-homework/:module-id" []
             :summary "Homework of module."
-            :path-params [module-id :- s/Int]
+            :path-params [module-id :- schema/Int]
             :return module-api/Homework
             (module-api/homework
               module-id
@@ -241,7 +241,7 @@
 
           (PUT "/module-homework-submit" []
             :summary "Mark homework as submitted."
-            :body-params [module-id :- s/Int]
+            :body-params [module-id :- schema/Int]
             :return {:result String}
             (module-api/homework-submit
               module-id
@@ -250,8 +250,8 @@
 
           (GET "/module-worksheet/:module-id/:worksheet-id" []
             :summary "Worksheet of module."
-            :path-params [module-id :- s/Int
-                          worksheet-id :- s/Int]
+            :path-params [module-id :- schema/Int
+                          worksheet-id :- schema/Int]
             :return module-api/Worksheet
             (module-api/worksheet
               module-id
@@ -264,8 +264,8 @@
             :description (str "Mark content as accessed by user. "
                               "Should be called the first time a user accesses the content "
                               "(i.e., when the `accessed?` property is false.")
-            :body-params [module-id :- s/Int
-                          content-id :- s/Int]
+            :body-params [module-id :- schema/Int
+                          content-id :- schema/Int]
             :return {:result String}
             (module-api/module-content-access
               module-id
@@ -275,7 +275,7 @@
 
           #_(PUT "/activate-module" []
               :summary "Grants user access to a module."
-              :body-params [module-id :- s/Int]
+              :body-params [module-id :- schema/Int]
               :return {:result String}
               (module-api/activate-module
                 module-id
@@ -294,9 +294,9 @@
                               "                    \"key2\": \"value2\"}\n"
                               "     \"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}}\n")
-            :path-params [module-id :- s/Int
-                          content-id :- s/Int]
-            :return (s/maybe {String {String String}})
+            :path-params [module-id :- schema/Int
+                          content-id :- schema/Int]
+            :return (schema/maybe {String {String String}})
             (module-api/get-module-content-data
               module-id
               content-id
@@ -311,7 +311,7 @@
                               "                             \"key2\": \"value2\"},\n"
                               "              \"namespace2\": {\"key3\": \"value3\",\n"
                               "                             \"key4\": \"value4\"}}}\n")
-            :path-params [module-id :- s/Int content-id :- s/Int]
+            :path-params [module-id :- schema/Int content-id :- schema/Int]
             :body-params [data]
             ;:return {:result String}
             (module-api/save-module-content-data
@@ -337,7 +337,7 @@
                               "     \"namespace2\": {\"key3\": \"value3\"\n"
                               "                    \"key4\": \"value4\"}}\n")
             :query-params [namespaces :- [String]]
-            :return (s/maybe {String {String String}})
+            :return (schema/maybe {String {String String}})
             (module-api/get-content-data
               namespaces
               (:treatment-access-id treatment-access)))
@@ -374,7 +374,7 @@
 
           (PUT "/message-read" []
             :summary "Mark message with message id as read."
-            :body-params [message-id :- s/Int]
+            :body-params [message-id :- schema/Int]
             :return {:result String}
             (messages-response/api-message-read (:user-id user) message-id)))))
     embedded-api/api-routes))
