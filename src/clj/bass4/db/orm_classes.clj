@@ -68,16 +68,18 @@
      :parent-id parent-id}))
 
 (defn create-flag!
-  ([user-id issuer flag-text] (create-flag! user-id issuer flag-text ""))
-  ([user-id issuer flag-text flag-icon]
+  ([user-id issuer flag-text] (create-flag! user-id issuer flag-text {}))
+  ([user-id issuer flag-text properties]
    (let [flag-id (:objectid (create-bass-object-map! {:class-name    "cFlag"
                                                       :parent-id     user-id
                                                       :property-name "Flags"}))]
-     (db/update-object-properties! {:table-name "c_flag"
-                                    :object-id  flag-id
-                                    :updates    {:FlagText   flag-text
-                                                 :CustomIcon flag-icon
-                                                 :Open       1
-                                                 :Issuer     issuer
-                                                 :ClosedAt   0}})
+     (update-object-properties! "c_flag"
+                                flag-id
+                                (merge
+                                  {"FlagText"   flag-text
+                                   "CustomIcon" ""
+                                   "Open"       1
+                                   "Issuer"     issuer
+                                   "ClosedAt"   0}
+                                  properties))
      flag-id)))

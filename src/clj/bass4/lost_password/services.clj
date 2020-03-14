@@ -29,7 +29,7 @@
       (:user-id user)
       "lost-password"
       (str "User reported lost password on " date-str)
-      "questionmark.png")))
+      {"CustomIcon" "questionmark.png"})))
 
 (defn get-user-by-username-or-email
   [username-or-email]

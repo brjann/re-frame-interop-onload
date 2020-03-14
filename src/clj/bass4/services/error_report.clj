@@ -8,7 +8,7 @@
                   user-id
                   "error-report"
                   "User has reported an error"
-                  "alert.gif")]
+                  {"CustomIcon" "alert.gif"})]
     (let [comment-id (:objectid (orm/create-bass-object-map! {:class-name "cComment"
                                                          :parent-id       flag-id
                                                          :property-name   "Comments"}))]

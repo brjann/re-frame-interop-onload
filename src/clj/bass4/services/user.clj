@@ -59,9 +59,9 @@
   ([project-id] (create-user! project-id nil))
   ([project-id properties]
    (let [collection-id (:collection-id (db/get-project-participant-collection {:project-id project-id}))
-         user-id       (:objectid (orm/create-bass-object-map! {:class-name "cParticipant"
-                                                           :parent-id       collection-id
-                                                           :property-name   "Participants"}))]
+         user-id       (:objectid (orm/create-bass-object-map! {:class-name    "cParticipant"
+                                                                :parent-id     collection-id
+                                                                :property-name "Participants"}))]
      (when properties
        (update-user-properties! user-id properties))
      user-id)))
@@ -81,9 +81,9 @@
 (defn close-no-consent-flag!
   [user-id now]
   (let [close-fn (fn [flag-id]
-                   (let [comment-id (:objectid (orm/create-bass-object-map! {:class-name "cComment"
-                                                                        :parent-id       flag-id
-                                                                        :property-name   "Comments"}))]
+                   (let [comment-id (:objectid (orm/create-bass-object-map! {:class-name    "cComment"
+                                                                             :parent-id     flag-id
+                                                                             :property-name "Comments"}))]
                      (db/update-object-properties! {:table-name "c_comment"
                                                     :object-id  comment-id
                                                     :updates    {:Text "User consented"}})
@@ -99,4 +99,4 @@
     user-id
     "no-consent"
     (str "User did not consent to Privacy Notice")
-    "flag-high"))
+    {"CustomIcon" "flag-high"}))
