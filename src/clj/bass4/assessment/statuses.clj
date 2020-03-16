@@ -1,6 +1,5 @@
 (ns bass4.assessment.statuses
   (:require [bass4.utils :as utils]
-            [debux.core :refer [dbg dbgn]]
             [bass4.assessment.db :as assessment-db]
             [bass4.assessment.resolve-status :as status]
             [bass4.services.user :as user-service]))
