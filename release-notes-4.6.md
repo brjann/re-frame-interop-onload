@@ -2,13 +2,27 @@
 This version includes many improvements under the hood. Primarily, the 
 move of logic from PHP to Clojure continues.
 
-## Unhandled participants tasks email
+## Unhandled participants tasks email moved from PHP to Clojure
 - The unhandled participant tasks email reminder is now sent by Clojure
   instead of PHP. 
 - It has been improved so that unhandled tasks for participants without 
   an assigned therapist are sent by email to project or database email 
   addresses.
-- The emails contain a bit more information about the unhandled tasks. 
+- The emails contain a bit more information about the unhandled tasks.
+
+## Answers flagger moved from PHP to Clojure
+The answers flagger (e.g. "high depression total score") has been 
+rewritten in Clojure. This has resulted in a few improvements and 
+changes:
+- Answers are flagged immediately instead of a few hours after the
+  participant has completed an instrument.
+- The syntax for flagging is the same as the scoring syntax, which means
+  that flags can be triggered by multiple conditions (e.g., sum > 30 and
+  item 1 > 3). This has led to some changes in syntax - the syntax of 
+  your current flag settings has been automatically adjusted.
+- The testing of flag conditions has changed. Instead of testing on 
+  answers already in the database, the conditions are applied when 
+  previewing instruments.
 
 ## Moved tasks from PHP to Clojure
 - Unhandled participant tasks mailer.
@@ -31,3 +45,5 @@ move of logic from PHP to Clojure continues.
 - (A temporary task was added to 4.5 and removed in 4.6. The task 
   collects all non-final statuses for SMS and emails instead of waiting
   for a therapist to view the until status collection.)
+- Rewrite of tests to allow async test and reliance on objects present 
+  in the test database.
