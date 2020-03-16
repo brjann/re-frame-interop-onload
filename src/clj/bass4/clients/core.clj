@@ -65,6 +65,14 @@
      (:name *client-config*)
      (client-setting* (keyword (:name *client-config*)) setting-keys default))))
 
+(defn client-host
+  [db]
+  (let [[db-name _] (->>
+                      client-db-connections
+                      (filter #(= db @(second %)))
+                      (first))]
+    (:bass4-host (get client-configs db-name))))
+
 (defn debug-mode?
   []
   (or (client-setting [:debug-mode] false) (:dev config/env)))

@@ -301,13 +301,6 @@ SELECT
 FROM c_project WHERE ObjectId = 100;
 
 
--- :name get-db-url :? :1
--- :doc
-SELECT
- BASS4_URL AS `url`
-FROM c_project WHERE ObjectId = 100;
-
-
 -- :name get-reminder-start-and-stop :? :1
 -- :doc
 SELECT

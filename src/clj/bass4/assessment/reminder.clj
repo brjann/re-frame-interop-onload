@@ -11,7 +11,8 @@
             [bass4.external-messages.sms-queue :as sms-queue]
             [bass4.services.bass :as bass]
             [bass4.assessment.db :as assessment-db]
-            [bass4.assessment.ongoing-many :as ongoing-many]))
+            [bass4.assessment.ongoing-many :as ongoing-many]
+            [bass4.clients.core :as clients]))
 
 (defn- db-activation-reminders-sent!
   [db administrations]
@@ -282,7 +283,7 @@
 (defn- messages
   [db message-assessments users-info]
   (let [standard-messages (db-standard-messages db)
-        db-url            (-> (bass/db-url db)
+        db-url            (-> (clients/client-host db)
                               (str/replace #"/$" ""))
         emails            (->> message-assessments
                                (filter #(= :email (::message-type %)))

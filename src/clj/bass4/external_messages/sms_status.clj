@@ -7,7 +7,8 @@
             [bass4.db.core :as db]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [bass4.clients.core :as clients]))
 
 (defn db-update-status!
   [db provider-id status time]
@@ -35,7 +36,7 @@
 
 (defn status-url
   [db]
-  (let [db-url (-> (bass/db-url db)
+  (let [db-url (-> (clients/client-host db)
                    (str/replace #"/$" ""))]
     (str db-url "/sms-status")))
 
