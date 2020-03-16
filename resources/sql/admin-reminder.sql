@@ -70,7 +70,7 @@ FROM c_therapist as ct
   JOIN links_c_therapist lt
   ON (ct.ObjectId = lt.LinkerId
     AND lt.PropertyName = 'myparticipants')
-WHERE ct.Enabled = 1 AND lt.LinkeeId IN(:v*:participant-ids);
+WHERE ct.Enabled = 1 AND lt.LinkeeId IN(:v*:participant-ids) AND ct.Email LIKE "%@%";
 
 -- :name admin-reminder-get-projects :? :*
 -- :doc HOORAY, NO PARENT INTERFACE HERE (but sadly c_participantscollection)

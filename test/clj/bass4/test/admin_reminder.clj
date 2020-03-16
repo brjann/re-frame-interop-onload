@@ -241,8 +241,21 @@
 ;;        CHECK ALL
 ;; ------------------------
 
-(def therapist1-id 1562)
-(def therapist2-id 1955)
+(defn create-therapist!
+  [email]
+  (let [collection-id (-> (jdbc/query db/*db* "SELECT ObjectId AS `object-id` FROM c_therapistscollection")
+                          (first)
+                          (:object-id))
+        object-id     (orm/create-bass-object*! db/*db*
+                                                "cTherapist"
+                                                collection-id
+                                                "Therapists")]
+    (orm/update-object-properties*! db/*db*
+                                    "c_therapist"
+                                    object-id
+                                    {"email"   email
+                                     "enabled" 1})
+    object-id))
 
 (defn link-to-therapist!
   [participant-id therapist-id]
@@ -264,22 +277,26 @@
   (clear-flags!)
   (clear-messages!)
   (clear-homework!)
-  (let [user1-id     (user-service/create-user! project-ass1-id)
-        user2-id     (user-service/create-user! project-ass1-id)
-        user3-id     (user-service/create-user! project-ass1-id)
-        user4-id     (user-service/create-user! project-ass1-id)
-        user5-id     (user-service/create-user! project-ass2-id)
-        t-access1-id (create-treatment-access! user1-id)
-        t-access2-id (create-treatment-access! user2-id)
-        message1     (messages/create-message-placeholder user1-id)
-        message4     (messages/create-message-placeholder user4-id)
-        t60days      (-ms (t/minus (now/now) (t/days 60)))
-        t45days      (-ms (t/minus (now/now) (t/days 45)))
-        now          (-ms (now/now))]
+  (let [user1-id      (user-service/create-user! project-ass1-id)
+        user2-id      (user-service/create-user! project-ass1-id)
+        user3-id      (user-service/create-user! project-ass1-id)
+        user4-id      (user-service/create-user! project-ass1-id)
+        user5-id      (user-service/create-user! project-ass2-id)
+        therapist1-id (create-therapist! "therapist1@bass4.com")
+        therapist2-id (create-therapist! "therapist2@bass4.com")
+        therapist3-id (create-therapist! "")
+        t-access1-id  (create-treatment-access! user1-id)
+        t-access2-id  (create-treatment-access! user2-id)
+        message1      (messages/create-message-placeholder user1-id)
+        message4      (messages/create-message-placeholder user4-id)
+        t60days       (-ms (t/minus (now/now) (t/days 60)))
+        t45days       (-ms (t/minus (now/now) (t/days 45)))
+        now           (-ms (now/now))]
     (link-to-therapist! user1-id therapist1-id)
     (link-to-therapist! user1-id therapist2-id)
     (link-to-therapist! user2-id therapist1-id)
     (link-to-therapist! user3-id therapist2-id)
+    (link-to-therapist! user3-id therapist3-id)             ; No email address for therapist 3
     (submit-homework! t-access1-id now 1)
     (submit-homework! t-access1-id t45days 2)
     (submit-homework! t-access2-id t45days 1)
