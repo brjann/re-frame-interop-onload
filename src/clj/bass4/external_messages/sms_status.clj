@@ -42,4 +42,6 @@
 
 (defroutes route
   (POST "/sms-status" [nr ref state text datetime]
+    (update-status ref state datetime))
+  (POST "/sms-status/sms-teknik" [nr ref state text datetime]
     (update-status ref state datetime)))

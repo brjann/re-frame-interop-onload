@@ -48,11 +48,6 @@
      :message                 message
      :recipient               recipient}))
 
-
-;; ---------------------
-;;   ACTUAL SMS SENDER
-;; ---------------------
-
 ; SMS-teknik return values
 ; 0:Access denied                 		No customer of the service or wrong id, username or password.
 ; 0:Parse error, [cause]			      	Parse error or no valid XML-data.
@@ -82,7 +77,7 @@
                   to
                   message
                   sender
-                  status-url)]
+                  (str status-url "/sms-teknik"))]
      (try
        (let [res     (:body (http/post url {:body xml}))
              res-int (utils/str->int (subs res 0 1))]

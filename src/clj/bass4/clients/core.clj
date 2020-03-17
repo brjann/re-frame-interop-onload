@@ -3,7 +3,8 @@
             [bass4.db.core :as db]
             [bass4.config :as config]
             [bass4.utils :as utils]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [bass4.db-common :as db-common]))
 
 (def ^:dynamic *client-config* {})
 
@@ -65,14 +66,29 @@
      (:name *client-config*)
      (client-setting* (keyword (:name *client-config*)) setting-keys default))))
 
+(defn db->client-name
+  [db]
+  (let [[client-name _] (->>
+                          client-db-connections
+                          (filter #(= db @(second %)))
+                          (first))]
+    client-name))
+
 (defn client-host
   [db]
-  (let [[db-name _] (->>
-                      client-db-connections
-                      (filter #(= db @(second %)))
-                      (first))]
-    (:bass4-host (get client-configs db-name))))
+  (:bass4-host (get client-configs (db->client-name db))))
 
 (defn debug-mode?
   []
   (or (client-setting [:debug-mode] false) (:dev config/env)))
+
+(defn sms-config
+  [db]
+  (let [client-name  (db->client-name db)
+        sms-settings (client-setting* client-name [:sms-settings] nil)]
+    (if sms-settings
+      sms-settings
+      (let [config db-common/common-config]
+        (assoc
+          (select-keys config [:smsteknik-id :smsteknik-user :smsteknik-password])
+          :provider :sms-teknik)))))
