@@ -64,28 +64,26 @@
 ;     and format the response with semicolon as delimiter)
 
 (defn send-sms*!
-  ([to message sender] (send-sms*! to message sender ""))
-  ([to message sender status-url]
-   (when (env :dev)
-     (log/info (str "Sent sms to " to)))
-   (let [config db-common/common-config
-         url    (smsteknik-url
-                  (:smsteknik-id config)
-                  (:smsteknik-user config)
-                  (:smsteknik-password config))
-         xml    (smsteknik-xml
-                  to
-                  message
-                  sender
-                  (str status-url "/sms-teknik"))]
-     (try
-       (let [res     (:body (http/post url {:body xml}))
-             res-int (utils/str->int (subs res 0 1))]
-         (if (zero? res-int)
-           (throw (ex-info "SMS service returned zero" {:res res}))
-           (utils/str->int res)))
-       (catch Exception e
-         (throw (ex-info "SMS sending error" {:exception e})))))))
+  [to message sender config]
+  (when (env :dev)
+    (log/info (str "Sent sms to " to)))
+  (let [url (smsteknik-url
+              (:smsteknik-id config)
+              (:smsteknik-user config)
+              (:smsteknik-password config))
+        xml (smsteknik-xml
+              to
+              message
+              sender
+              (str (:status-url config) "/sms-teknik"))]
+    (try
+      (let [res     (:body (http/post url {:body xml}))
+            res-int (utils/str->int (subs res 0 1))]
+        (if (zero? res-int)
+          (throw (ex-info "SMS service returned zero" {:res res}))
+          (utils/str->int res)))
+      (catch Exception e
+        (throw (ex-info "SMS sending error" {:exception e}))))))
 
 
 ;; ----------------------
@@ -110,9 +108,9 @@
 
 
 (defmethod send-sms! :redirect-sms
-  [recipient message sender status-url]
+  [recipient message sender config]
   (let [reroute-sms (or *sms-reroute* (env :dev-reroute-sms))]
-    (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender status-url)))
+    (send-sms*! reroute-sms (str "SMS to: " recipient "\n" message) sender config)))
 
 (defmethod send-sms! :redirect-email
   [recipient message & _]
@@ -139,21 +137,34 @@
   666)
 
 (defmethod send-sms! :default
-  [to message sender status-url]
-  (send-sms*! to message sender status-url))
+  [to message sender config]
+  (send-sms*! to message sender config))
 
 ;; -------------------------------------
 ;;       ASYNC SEND METHOD FOR SMS
 ;; -------------------------------------
 
 (defmethod external-messages/async-message-sender :sms
-  [{:keys [to message sender status-url]}]
-  (send-sms! to message sender status-url))
+  [{:keys [to message sender config]}]
+  (send-sms! to message sender config))
 
 
 ;; ----------------------
 ;;        SMS API
 ;; ----------------------
+
+(defn sms-config
+  [db]
+  (let [client-name  (clients/db->client-name db)
+        sms-settings (clients/client-setting* client-name [:sms-settings] nil)]
+    (assoc
+      (if sms-settings
+        sms-settings
+        (let [config db-common/common-config]
+          (assoc
+            (select-keys config [:smsteknik-id :smsteknik-user :smsteknik-password])
+            :provider :sms-teknik)))
+      :status-url (sms-status/status-url db))))
 
 (defn is-sms-number?
   [number]
@@ -170,9 +181,8 @@
   [db to message]
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
-  (let [sender     (get-sender db)
-        status-url (sms-status/status-url db)
-        res        (send-sms! to message sender status-url)]
+  (let [sender (get-sender db)
+        res    (send-sms! to message sender (sms-config db))]
     (assert (integer? res))
     (when res
       (if db
@@ -188,13 +198,12 @@
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender     (get-sender db)
-        status-url (sms-status/status-url db)
         error-chan (external-messages/async-error-chan email/error-sender (clients/client-setting [:name]))
         own-chan   (external-messages/queue-message! {:type       :sms
                                                       :to         to
                                                       :message    message
                                                       :sender     sender
-                                                      :status-url status-url
+                                                      :config     (sms-config db)
                                                       :error-chan error-chan})]
     (go
       (let [res (<! own-chan)]

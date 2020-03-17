@@ -6,7 +6,6 @@
             [clojure.string :as str]
             [bass4.db.core :as db]
             [bass4.layout :as layout]
-            [bass4.services.bass :as bass]
             [clj-time.core :as t]
             [bass4.clients.core :as clients]))
 
