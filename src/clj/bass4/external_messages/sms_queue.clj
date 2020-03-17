@@ -65,12 +65,12 @@
         smses   (db-queued-smses db now)
         res     (->> (doall (map (fn [sms]
                                    (try
-                                     (let [res (sms/send-sms-now! db
-                                                                  (:to sms)
-                                                                  (:message sms))]
+                                     (let [sms-id (sms/send-sms-now! db
+                                                                     (:to sms)
+                                                                     (:message sms))]
                                        (merge sms
                                               {:result      :success
-                                               :provider-id res}))
+                                               :provider-id sms-id}))
                                      (catch Exception e
                                        (merge sms
                                               {:result    :exception

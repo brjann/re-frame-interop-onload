@@ -14,17 +14,19 @@
     [bass4.config :as config]
     [bass4.external-messages.sms-status :as sms-status]
     [bass4.external-messages.api-sms-teknik :as sms-teknik]
+    [bass4.external-messages.api-twilio :as twilio]
     [bass4.clients.core :as clients])
   (:import (clojure.core.async.impl.channels ManyToManyChannel)))
 
 
 (defn send-sms*!
   [to message sender config]
-  (when (env :dev)
-    (log/info (str "Sent sms to " to)))
   (case (:provider config)
     :sms-teknik
     (sms-teknik/send! to message sender config)
+
+    :twilio
+    (twilio/send! to message sender config)
 
     (throw (ex-info "Unknown provider" config))))
 
@@ -99,18 +101,21 @@
 (defn sms-config
   ([] (sms-config nil))
   ([db]
-   (let [sms-settings (when db
-                        (clients/client-setting* (clients/db->client-name db)
-                                                 [:sms-settings]
-                                                 nil))]
+   (let [config (when db
+                  (clients/client-setting* (clients/db->client-name db)
+                                           [:sms-config]
+                                           nil))]
      (assoc
-       (if sms-settings
-         sms-settings
+       (if config
+         config
          (let [config db-common/common-config]
            (assoc
              (select-keys config [:smsteknik-id :smsteknik-user :smsteknik-password])
              :provider :sms-teknik)))
-       :status-url (when db (sms-status/status-url db))))))
+       :status-url (when db (str (if (config/env :ssl)
+                                   "https://"
+                                   "http://")
+                                 (sms-status/status-url db)))))))
 
 (defn is-sms-number?
   [number]
@@ -128,13 +133,12 @@
   (when-not (is-sms-number? to)
     (throw (throw (Exception. (str "Not valid sms number: " to)))))
   (let [sender (get-sender db)
-        res    (send-sms! to message sender (sms-config db))]
-    (assert (integer? res))
-    (when res
+        sms-id (send-sms! to message sender (sms-config db))]
+    (when sms-id
       (if db
         (bass/inc-sms-count! db)
         (log/info "No DB selected for SMS count update.")))
-    res))
+    sms-id))
 
 (defn async-sms!
   "Throws if to is not valid mobile phone number.

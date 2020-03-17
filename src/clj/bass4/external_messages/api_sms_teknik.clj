@@ -54,7 +54,7 @@
 (defn send!
   [to message sender config]
   (when (config/env :dev)
-    (log/info (str "Sent sms to " to)))
+    (log/info (str "Sent sms using SMS-teknik to " to)))
   (let [url (smsteknik-url
               (:smsteknik-id config)
               (:smsteknik-user config)

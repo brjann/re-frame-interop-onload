@@ -24,15 +24,16 @@
 (defn send!
   [to message sender config]
   (when (config/env :dev)
-    (log/info (str "Sent twilio sms to " to)))
+    (log/info (str "Sent sms using Twilio to " to)))
   (let [{:keys [account-sid auth-token]} config
         url (url account-sid)]
     (try
       (let [res (-> (http/post url
                                {:basic-auth  [account-sid auth-token]
-                                :form-params {"To"   to
-                                              "Body" message
-                                              "From" "+12015080358"}})
+                                :form-params {"To"             to
+                                              "Body"           message
+                                              "StatusCallback" (:status-url config)
+                                              "From"           "+12015080358"}})
                     :body
                     (json/read-str))]
         (if (get res "error_code")
