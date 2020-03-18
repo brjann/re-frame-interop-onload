@@ -7,4 +7,4 @@
   :start (task-scheduler/schedule-db-task! #'queue-tasks/email-task ::task-scheduler/by-minute 5))
 
 (defstate sms-task*
-  :start (task-scheduler/schedule-db-task! #'queue-tasks/sms-task ::task-scheduler/by-minute 5))
+  :start (task-scheduler/schedule-db-task! #'queue-tasks/sms-task ::task-scheduler/by-minute 1))

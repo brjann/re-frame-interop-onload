@@ -22,20 +22,23 @@
        "/Messages.json"))
 
 (defn send!
-  [to message sender config]
+  [to message _ config]
   (when (config/env :dev)
     (log/info (str "Sent sms using Twilio to " to)))
-  (let [{:keys [account-sid auth-token]} config
+  (let [{:keys [account-sid auth-token from]} config
         url (url account-sid)]
     (try
-      (let [res (-> (http/post url
-                               {:basic-auth  [account-sid auth-token]
-                                :form-params {"To"             to
-                                              "Body"           message
-                                              "StatusCallback" (:status-url config)
-                                              "From"           "+12015080358"}})
-                    :body
-                    (json/read-str))]
+      (let [form-params (merge {"To"   to
+                                "Body" (str message
+                                            "\n\nYou cannot reply to this message.")
+                                "From" from}
+                               (when (:status-url config)
+                                 {"StatusCallback" (str (:status-url config) "/twilio")}))
+            res         (-> (http/post url
+                                       {:basic-auth  [account-sid auth-token]
+                                        :form-params form-params})
+                            :body
+                            (json/read-str))]
         (if (get res "error_code")
           (throw (ex-info (str "Twilio returned error code " (get res "error_code")) res))
           (get res "sid")))
