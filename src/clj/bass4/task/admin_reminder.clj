@@ -38,11 +38,13 @@
 
 (defn db-therapists
   [db participant-ids]
-  (db/admin-reminder-get-therapists db {:participant-ids participant-ids}))
+  (when participant-ids
+    (db/admin-reminder-get-therapists db {:participant-ids participant-ids})))
 
 (defn db-projects
   [db participant-ids]
-  (db/admin-reminder-get-projects db {:participant-ids participant-ids}))
+  (when participant-ids
+    (db/admin-reminder-get-projects db {:participant-ids participant-ids})))
 
 (defn collect-reminders
   [db time-limit]
