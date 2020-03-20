@@ -2,6 +2,14 @@
 This version includes many improvements under the hood. Primarily, the 
 move of logic from PHP to Clojure continues.
 
+## SMS can be sent through Twilio
+We have had problems with sending SMS to the United States. We have
+therefore implemented an integration to the American SMS provider 
+Twilio.
+- Databases can now use Twilio or SMS-teknik (not both)
+- It is now also possible for a database to have their own SMS-teknik 
+  or Twilio account.   
+
 ## Unhandled participants tasks email moved from PHP to Clojure
 - The unhandled participant tasks email reminder is now sent by Clojure
   instead of PHP. 
