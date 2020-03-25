@@ -277,15 +277,15 @@
                                               :authorizations #{[:treatment/user-id user-id]}})
           api-url (fn [url] (str url "?user-id=" user-id "&treatment-access-id=" treatment-access-id))]
       (let [s           (-> *s*
-                            (visit "/embedded/api/user-tx/modules")
+                            (visit "/embedded/api/user/tx/modules")
                             (has (status? 403))
                             (visit (str "/embedded/create-session?uid=" uid1))
-                            (visit "/embedded/api/user-tx/modules")
+                            (visit "/embedded/api/user/tx/modules")
                             (has (status? 400))
-                            (visit (api-url "/embedded/api/user-tx/modules"))
+                            (visit (api-url "/embedded/api/user/tx/modules"))
                             (has (status? 403))
                             (visit (str "/embedded/create-session?uid=" uid2))
-                            (visit (api-url "/embedded/api/user-tx/modules"))
+                            (visit (api-url "/embedded/api/user/tx/modules"))
                             (has (status? 200)))
             module-list (api-response s)]
         (doseq [module module-list]
@@ -295,17 +295,17 @@
             (when (:main-text module)
               (->
                 s
-                (visit (api-url (str "/embedded/api/user-tx/module-main/" module-id)))
+                (visit (api-url (str "/embedded/api/user/tx/module-main/" module-id)))
                 (has (status? 200))))
             (doseq [worksheet (:worksheets module)]
               (->
                 s
-                (visit (api-url (str "/embedded/api/user-tx/module-worksheet/" module-id "/" (:content-id worksheet))))
+                (visit (api-url (str "/embedded/api/user/tx/module-worksheet/" module-id "/" (:content-id worksheet))))
                 (has (status? 200))))
             (when (:homework module)
               (->
                 s
-                (visit (api-url (str "/embedded/api/user-tx/module-homework/" module-id)))
+                (visit (api-url (str "/embedded/api/user/tx/module-homework/" module-id)))
                 (has (status? 200))))))))))
 
 (deftest embedded-api-ns
@@ -323,13 +323,13 @@
                                                                                                             :alias             {:export "3"}}})
           (has (status? 200)))
       (-> *s*
-          (visit (api-url "/embedded/api/user-tx/module-content-data/642529/642519"))
+          (visit (api-url "/embedded/api/user/tx/module-content-data/642529/642519"))
           (has (status? 403))
           (visit (str "/embedded/create-session?uid=" uid))
-          (visit (api-url "/embedded/api/user-tx/module-content-data/642529/642519"))
+          (visit (api-url "/embedded/api/user/tx/module-content-data/642529/642519"))
           (has (status? 200))
           (has (api-response? {:export-content-ws {:export "1"}}))
-          (visit (api-url "/embedded/api/user-tx/module-content-data/642529/642520"))
+          (visit (api-url "/embedded/api/user/tx/module-content-data/642529/642520"))
           (has (api-response? {:export-module-ws {:export "2"}}))
-          (visit (api-url "/embedded/api/user-tx/module-content-data/642529/642521"))
+          (visit (api-url "/embedded/api/user/tx/module-content-data/642529/642521"))
           (has (api-response? {:export-alias-ws {:export "3"}}))))))

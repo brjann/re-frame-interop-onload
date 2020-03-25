@@ -69,7 +69,7 @@
   [handler]
   (route-rules/wrap-route-mw
     handler
-    ["/embedded/api/user-tx/*"]
+    ["/embedded/api/user/tx/*"]
     #'user-treatment-mw))
 
 (def api-routes
@@ -85,7 +85,7 @@
                                     ::embedded-mw/allow-all? true})))
         (http-response/forbidden "Not in debug or dev mode")))
 
-    (context "/user-tx" [:as {{:keys [user-treatment user]} :api-request}]
+    (context "/user/tx" [:as {{:keys [user-treatment user]} :api-request}]
       :query-params [user-id :- schema/Int
                      treatment-access-id :- schema/Int]
 
