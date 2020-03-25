@@ -50,7 +50,7 @@
 
 (defn status-url
   [db]
-  (let [db-url (-> (clients/client-host db)
+  (let [db-url (-> (clients/client-scheme+host db)
                    (str/replace #"/$" ""))]
     (str db-url "/sms-status")))
 

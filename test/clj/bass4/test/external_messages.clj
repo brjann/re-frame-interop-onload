@@ -92,8 +92,8 @@
   (let [c (chan 3)]
     (binding [email/*email-reroute* c]
       (email-queue/add! db/*db* (now/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
-                                         {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
-                                         {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
+                                           {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
+                                           {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
       (email-queue/send! db/*db* {:name :test} (now/now))
       (is (= #{["mail1@example.com" "s1" "m1"]
                ["mail2@example.com" "s2" "m2"]
@@ -108,8 +108,8 @@
               email-queue/max-fails   5
               email/send-error-email! #(put! c %2)]
       (email-queue/add! db/*db* (now/now) [{:user-id 1 :to "mail1@example.com" :subject "s1" :message "m1"}
-                                         {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
-                                         {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
+                                           {:user-id 2 :to "mail2@example.com" :subject "s2" :message "m2"}
+                                           {:user-id 3 :to "mail3@example.com" :subject "s3" :message "m3"}])
       (doseq [n (range 5)]
         (let [res (email-queue/send! db/*db* {:name :test} (now/now))]
           (is (= 3 (count (:exception res))))
@@ -131,13 +131,16 @@
         status-url (sms-status/status-url db/*db*)]
     (binding [sms/*sms-reroute* c]
       (sms-queue/add! db/*db* (now/now) [{:user-id 1 :to "1" :message "m1"}
-                                       {:user-id 2 :to "2" :message "m2"}
-                                       {:user-id 3 :to "3" :message "m3"}])
+                                         {:user-id 2 :to "2" :message "m2"}
+                                         {:user-id 3 :to "3" :message "m3"}])
       (sms-queue/send! db/*db* {:name :test} (now/now))
       (is (= #{["1" "m1" sender status-url]
                ["2" "m2" sender status-url]
                ["3" "m3" sender status-url]}
-             (into #{} (repeatedly 3 #(into [] (poll! c))))))
+             (into #{} (repeatedly 3 (fn [] (let [x (->> (poll! c)
+                                                         (into []))]
+                                              (conj (subvec x 0 3)
+                                                    (:status-url (get x 3)))))))))
       (sms-queue/send! db/*db* {:name :test} (now/now))
       (is (nil? (poll! c))))))
 
@@ -147,8 +150,8 @@
               sms-queue/max-fails     5
               email/send-error-email! #(put! c %2)]
       (sms-queue/add! db/*db* (now/now) [{:user-id 1 :to "1" :message "m1"}
-                                       {:user-id 2 :to "2" :message "m2"}
-                                       {:user-id 3 :to "3" :message "m3"}])
+                                         {:user-id 2 :to "2" :message "m2"}
+                                         {:user-id 3 :to "3" :message "m3"}])
       (doseq [n (range 5)]
         (let [res (sms-queue/send! db/*db* {:name :test} (now/now))]
           (is (= 3 (count (:exception res))))

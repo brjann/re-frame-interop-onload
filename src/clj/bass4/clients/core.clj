@@ -73,9 +73,12 @@
                           (first))]
     client-name))
 
-(defn client-host
+(defn client-scheme+host
   [db]
-  (:bass4-host (get client-configs (db->client-name db))))
+  (str (if (config/env :ssl)
+         "https://"
+         "http://")
+       (:bass4-host (get client-configs (db->client-name db)))))
 
 (defn debug-mode?
   []

@@ -283,7 +283,7 @@
 (defn- messages
   [db message-assessments users-info]
   (let [standard-messages (db-standard-messages db)
-        db-url            (-> (clients/client-host db)
+        db-url            (-> (clients/client-scheme+host db)
                               (str/replace #"/$" ""))
         emails            (->> message-assessments
                                (filter #(= :email (::message-type %)))

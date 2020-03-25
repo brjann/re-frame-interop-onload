@@ -112,10 +112,7 @@
            (assoc
              (select-keys config [:smsteknik-id :smsteknik-user :smsteknik-password])
              :provider :sms-teknik)))
-       :status-url (when db (str (if (config/env :ssl)
-                                   "https://"
-                                   "http://")
-                                 (sms-status/status-url db)))))))
+       :status-url (when db (sms-status/status-url db))))))
 
 (defn is-sms-number?
   [number]
