@@ -9,9 +9,9 @@
   (let [assessment-series-id (-> (assessment-db/groups-assessment-series db [group-id])
                                  (first)
                                  :assessment-series-id)
-        administrations      (->> (assessment-db/group-administrations-by-assessment-series db
-                                                                                            group-id
-                                                                                            assessment-series-id)
+        administrations      (->> (assessment-db/group-administrations db
+                                                                       group-id
+                                                                       assessment-series-id)
                                   (group-by :assessment-id))
         assessments          (assessment-db/user-assessments db
                                                              group-id
@@ -30,7 +30,7 @@
   [db user-id assessment-series-id]
   (let [group-id                    (user-service/user-group-id db user-id)
         group-administrations       (when group-id
-                                      (assessment-db/group-administrations-by-assessment-series
+                                      (assessment-db/group-administrations
                                         db
                                         group-id
                                         assessment-series-id))

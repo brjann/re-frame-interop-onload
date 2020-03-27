@@ -1,9 +1,7 @@
 (ns bass4.assessment.db
   (:require [bass4.db.core :as db]
             [bass4.clients.time :as client-time]
-            [clj-time.core :as t]
-            [clojure.tools.logging :as log]
-            [bass4.db.orm-classes :as orm]))
+            [clj-time.core :as t]))
 
 ;; ------------------
 ;;  ACTIVATED FLAGS
@@ -237,7 +235,8 @@
        (map #(assoc % :user-id user-id))))
 
 (defn group-administrations-by-assessment-series
-  "Returns the group's administrations belonging to an assessment series"
+  "Returns the group's administrations belonging to an assessment series.
+  Clinician rated are not included because they cannot be ongoing for a user."
   [db group-id assessment-series-id]
   (db/group-administrations-by-assessment-series
     db
@@ -245,7 +244,8 @@
      :assessment-series-id assessment-series-id}))
 
 (defn participant-administrations-by-assessment-series
-  "Returns the participants's administrations belonging to an assessment series"
+  "Returns the participants's administrations belonging to an assessment series
+  Clinician rated are not included because they cannot be ongoing for a user."
   [db user-id assessment-series-id]
   (db/get-participant-administrations-by-assessment-series
     db
@@ -277,3 +277,12 @@
 (defn user-administrations
   [db user-id]
   (db/get-all-participant-administrations db {:user-id user-id}))
+
+(defn group-administrations
+  "Returns the group's administrations belonging to an assessment series.
+  Both clinician rated and non-clinician rated are included."
+  [db group-id assessment-series-id]
+  (db/all-group-administrations-by-assessment-series
+    db
+    {:group-id             group-id
+     :assessment-series-id assessment-series-id}))

@@ -31,7 +31,9 @@
                                                     "RepetitionType"           3
                                                     "Repetitions"              4
                                                     "CustomRepetitionInterval" 7})
-        ass-I-s-0-p100-message (create-assessment! {"Scope" 0})]
+        ass-I-s-0-p100-message (create-assessment! {"Scope" 0})
+        ass-clinician          (create-assessment! {"Scope"               1
+                                                    "ClinicianAssessment" 1})]
     ; Today
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
@@ -43,17 +45,22 @@
     ; Tomorrow
     (create-group-administration!
       group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
+    ; Clinician with no date
+    (create-group-administration!
+      group-id ass-clinician 1 {})
     (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]
              [ass-G-s-2-3-p0 1 :assessment-status/ongoing]
              [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
-             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]}
+             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]
+             [ass-clinician 1 :assessment-status/no-date]}
            (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]
              [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
              [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]
-             [ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]}
+             [ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]
+             [ass-clinician 1 :assessment-status/no-date]}
            (group-statuses *now* group-id)))))
 
 (deftest group-assessment-mysql-old-super-join-fail
@@ -153,7 +160,9 @@
                                                     "RepetitionType"           3
                                                     "Repetitions"              4
                                                     "CustomRepetitionInterval" 7})
-        ass-G-s-2-3-p0         (create-assessment! {"Scope" 1})]
+        ass-G-s-2-3-p0         (create-assessment! {"Scope" 1})
+        ass-clinician          (create-assessment! {"Scope"               0
+                                                    "ClinicianAssessment" 1})]
     ; Today
     (create-participant-administration!
       user-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
@@ -165,13 +174,16 @@
     ; Tomorrow
     (create-participant-administration!
       user-id ass-I-week-noremind 4 {:date (midnight+d 1 *now*)})
+    (create-participant-administration!
+      user-id ass-clinician 1 {})
     (is (= #{[ass-I-s-0-p100-message 1]
              [ass-I-week-noremind 1]}
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/scoped-missing]
              [ass-I-s-0-p100-message 1 :assessment-status/ongoing]
              [ass-I-week-noremind 1 :assessment-status/ongoing]
-             [ass-I-week-noremind 4 :assessment-status/waiting]}
+             [ass-I-week-noremind 4 :assessment-status/waiting]
+             [ass-clinician 1 :assessment-status/no-date]}
            (user-statuses *now* user-id)))))
 
 (deftest individual+group-assessment

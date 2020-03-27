@@ -171,6 +171,30 @@ WHERE
     ca.ParentId = :assessment-series-id
     AND (ca.ClinicianAssessment = 0);
 
+-- :name all-group-administrations-by-assessment-series :? :*
+-- :doc
+SELECT
+    ca.Name AS `assessment-name`,
+    ca.ObjectId AS `assessment-id`,
+    ca.ParentId AS `assessment-series-id`,
+    cga.AssessmentIndex AS `assessment-index`,
+	  cga.Active AS `group-administration-active?`,
+    cga.ObjectId AS `group-administration-id`,
+
+  (CASE
+   WHEN cga.Date IS NULL OR cga.Date = 0
+     THEN
+       NULL
+   ELSE
+     from_unixtime(cga.Date)
+   END) AS `group-activation-date`
+
+FROM c_assessment as ca
+  JOIN (c_groupadministration AS cga)
+    ON (ca.ObjectId = cga.Assessment AND cga.ParentId = :group-id)
+WHERE
+    ca.ParentId = :assessment-series-id;
+
 
 -- :name create-participant-administrations! :! :1
 -- :doc Update created administration placeholders with assessmentindex some defaults
