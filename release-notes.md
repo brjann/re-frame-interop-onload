@@ -1,6 +1,11 @@
+## Version 4.6.1
+Bugfix release. Released on 2020-03-27.
+- Fix missing assessment status for clinician assessments
+- Fix bug in instrument preview when instrument has no summary score
+
 # Version 4.6
 This version includes many improvements under the hood. Primarily, the
-move of logic from PHP to Clojure continues.
+move of logic from PHP to Clojure continues. Released on 2020-03-27.
 
 ## SMS can be sent through Twilio
 We have had problems with sending SMS to the United States. We have

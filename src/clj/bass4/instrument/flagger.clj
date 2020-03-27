@@ -1,6 +1,5 @@
 (ns bass4.instrument.flagger
   (:require [bass4.db.core :as db]
-            [clj-time.core :as t]
             [bass4.php-clj.safe :refer [php->clj]]
             [bass4.utils :as utils]
             [clojure.string :as str]
@@ -66,7 +65,8 @@
                            (filter :specification)
                            (map (juxt #(str "@" (:name %) "_spec") :specification))))
               (into {}))
-         (:sums item-answers)))
+         ;; This is a workaround because php->clj returns [] for empty array instead of {}
+         (into {} (:sums item-answers))))
 
 (defn eval-spec
   [spec namespace]

@@ -300,6 +300,6 @@
           ;; The validation is inactivated because it fails on answers that js accepts.
           ;; - Check regex compatibility (what happens if valid js regex is invalid in java?)
           ;; - Trim strings before testing or submitting them
-          (request-logger/record-error! "Instrument answers validation failed - answers accepted")
+          #_(request-logger/record-error! "Instrument answers validation failed - answers accepted")
           (log/error res)
           #_(throw (api/api-exception "Instrument answers validation failed" res)))))))
