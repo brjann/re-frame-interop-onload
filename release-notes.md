@@ -1,3 +1,7 @@
+## Version 4.6.2
+Bugfix release. Released on 2020-04-07.
+- Protect SQL IN() from empty seq
+
 ## Version 4.6.1
 Bugfix release. Released on 2020-03-27.
 - Fix missing assessment status for clinician assessments
