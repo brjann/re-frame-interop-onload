@@ -1,3 +1,9 @@
+## Version 4.6.3
+Bugfix release. Released on 2020-04-15.
+- Fix negative item score bug in instrument summary scoring. The bug
+  caused negative item scores to be interpreted as 0 by the scoring
+  algorithm.
+
 ## Version 4.6.2
 Bugfix release. Released on 2020-04-07.
 - Protect SQL IN() from empty seq
