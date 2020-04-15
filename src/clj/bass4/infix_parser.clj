@@ -82,7 +82,7 @@
   (cond
     (number? s) s
     (nil? s) nil
-    (re-find #"^\d+\.?\d*$" (str/trim s)) (read-string s)))
+    (re-find #"^-?\d+\.?\d*$" (str/trim s)) (read-string s)))
 
 (defn token-resolver
   ([namespace] (token-resolver namespace (constantly nil)))

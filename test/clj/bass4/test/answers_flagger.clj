@@ -1,6 +1,7 @@
 (ns bass4.test.answers-flagger
   (:require [clojure.test :refer :all]
             [bass4.instrument.flagger :as answers-flagger]
+            [bass4.instrument.services :as instruments]
             [bass4.instrument.answers-services :as instrument-answers]
             [bass4.infix-parser :as infix]
             [clojure.tools.logging :as log]))
@@ -68,7 +69,8 @@
   (is (= 1 (eval-condition "@8==10||SUM==2" {"@8" 11 "sum" 2})))
   (is (= 1 (eval-condition "@8==10||sum==2" {"@8" 11 "SUM" 2})))
   (is (= 1 (eval-condition "@8a==10" {"@8A" 10})))
-  (is (= 1 (eval-condition "@8A==10" {"@8a" 10}))))
+  (is (= 1 (eval-condition "@8A==10" {"@8a" 10})))
+  (is (= 1 (eval-condition "@8A==-10" {"@8a" "-10"}))))
 
 (deftest checkboxize-test
   (is (= [{:item-id 1569, :checkbox-id "1569_e", :name "2_e", :value "e"}
@@ -174,3 +176,18 @@
                                       {"sum" 1
                                        "@1"  10})
               (map :condition)))))
+
+;; -------------------------------------------------
+;;   INSTRUMENT SCORING (MOVE TO SEPARATE TEST NS)
+;; -------------------------------------------------
+
+(def expression-resolver @#'instruments/expression-resolver)
+
+(deftest test-scoring-expressions
+  (let [evaluator (expression-resolver 20)]
+    (is (= 20 (evaluator "$8+10" {"$8" "10"})))
+    (is (= 0 (evaluator "$8+10" {"$8" "-10"})))
+    ;; Missing $items scored as 20
+    (is (= 30 (evaluator "$8+10" {})))
+    ;; Missing sums scored as 0
+    (is (= 10 (evaluator "x+10" {})))))
