@@ -1,7 +1,8 @@
 (ns bass4.test.utils
   (:require [clojure.test :refer :all]
             [bass4.utils :refer :all]
-            [bass4.i18n :as i18n]))
+            [bass4.i18n :as i18n]
+            [clojure.data.json :as json]))
 
 (deftest t-unserialize-key
   (is (= {:hej {"hej" "då"}} (unserialize-key {:hej "a:1:{s:3:\"hej\";s:3:\"då\";}"} :hej)))
@@ -44,3 +45,15 @@
 
 (deftest i18n-map-to-list
   (is (= [:x "y" :s [:s "x"]] (i18n/i18n-map-to-list "{:x\"y\":s{:s\"x\"}}"))))
+
+(deftest zipmap-keys-vals
+  ; https://stackoverflow.com/questions/10772384/clojures-maps-are-keys-and-vals-in-same-order
+  (let [n  (+ 20 (rand-int 50))
+        ks (map str (sort (repeatedly n #(rand-int 1e9))))
+        vs (repeatedly n #(rand-int 1e9))
+        m  (zipmap ks vs)
+        j  (json/read-str (json/write-str m))]
+    (is (= m (zipmap (keys m) (vals m))))
+    (is (= j (zipmap (keys j) (vals j))))
+    ;; Seems that the order is deterministic
+    (is (= m (zipmap (keys j) (vals j))))))
