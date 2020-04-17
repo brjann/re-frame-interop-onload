@@ -55,5 +55,4 @@
         j  (json/read-str (json/write-str m))]
     (is (= m (zipmap (keys m) (vals m))))
     (is (= j (zipmap (keys j) (vals j))))
-    ;; Seems that the order is deterministic
     (is (= m (zipmap (keys j) (vals j))))))
