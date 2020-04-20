@@ -106,8 +106,8 @@
                    :must-specify-m  "Bitte geben Sie diese zusätzlichen Informationen für ihre Antwort ein."
                    :order-count     "Fragebogen %1 von %2"
                    :page-count      "Seite %s von %s"}
- :date-time       {:datetime-ns "JJJJ-MM-TT HH:mm"
-                   :date        "JJJJ-MM-TT"
+ :date-time       {:datetime-ns "yyyy-MM-dd HH:mm"
+                   :date        "yyyy-MM-dd"
                    :time-ns     "HH:mm"
                    :today       "heute"
                    :tomorrow    "morgen"
