@@ -427,15 +427,28 @@ function parse_response(element, response) {
    }
 
    // VAS
-   if (response_type == "VS") {
-      return sprintf("<div class='slider-container'>" +
-         "<div class='slider-label-left-mobile mobile-only'>%1$s</div>" +
-         "<div class='slider-label-right-mobile mobile-only'>%3$s</div>" +
-         "<div class='slider-label-left desktop-only'>%1$s</div>" +
-         "<div data-input = '%2$s' class = 'slider'></div>" +
-         "<div class='slider-label-right desktop-only'>%3$s</div>" +
-         "<input type = 'hidden' class = 'vas' name = '%2$s' value = '-1'></div>",
-         response["vas-min-label"], name, response["vas-max-label"]);
+   if (response_type === "VS") {
+      if (instrument.responsive) {
+         return sprintf("<div class='slider-container'>" +
+            "<div class='slider-label-left-mobile mobile-only'>%1$s</div>" +
+            "<div class='slider-label-right-mobile mobile-only'>%3$s</div>" +
+            "<div class='slider-label-left desktop-only'>%1$s</div>" +
+            "<div data-input = '%2$s' class = 'slider'></div>" +
+            "<div class='slider-label-right desktop-only'>%3$s</div>" +
+            "<input type = 'hidden' class = 'vas' name = '%2$s' value = '-1'></div>",
+            response["vas-min-label"],
+            name,
+            response["vas-max-label"]);
+      } else {
+         return sprintf("<div class='slider-container'>" +
+            "<div class='slider-label-left'>%1$s</div>" +
+            "<div data-input = '%2$s' class = 'slider'></div>" +
+            "<div class='slider-label-right'>%3$s</div>" +
+            "<input type = 'hidden' class = 'vas' name = '%2$s' value = '-1'></div>",
+            response["vas-min-label"],
+            name,
+            response["vas-max-label"]);
+      }
    }
 }
 
