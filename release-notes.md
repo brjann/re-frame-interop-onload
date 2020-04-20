@@ -1,3 +1,8 @@
+## Version 4.6.4
+Bugfix release. Released on 2020-04-20.
+- Fix double labels for VAS scales in non-responsive instruments.
+- Fix VAS scales styling issues.
+
 ## Version 4.6.3
 Bugfix release. Released on 2020-04-15.
 - Fix negative item score bug in instrument summary scoring. The bug
