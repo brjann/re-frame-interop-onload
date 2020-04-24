@@ -3,7 +3,7 @@
 -- :doc get info about instrument
 SELECT
   ObjectId as `instrument-id`,
-  FullName AS name,
+  Name AS `name`,
   ShowName AS `show-name`,
   Abbreviation AS `abbreviation`,
 

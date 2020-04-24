@@ -1,3 +1,9 @@
+## Version 4.6.5
+Bugfix release. Released on 2020-04-24.
+- Fix wrong instrument name (legacy FullName property) shown in answers
+  flagging.
+- Removed the "FullName" field from cInstrument class
+
 ## Version 4.6.4
 Bugfix release. Released on 2020-04-20.
 - Fix double labels for VAS scales in non-responsive instruments.
