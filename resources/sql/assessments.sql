@@ -277,6 +277,12 @@ WHERE linkerid IN(:v*:administration-ids)
       AND (ci.ClinicianAssessed = 0 OR ci.ClinicianAssessed IS NULL)
 ORDER BY lcp.SortOrder;
 
+
+
+-- -------------------------------
+--     BEGIN ASSESSMENT ROUNDS
+-- -------------------------------
+
 -- :name insert-assessment-round! :! :n
 -- :doc insert assessment rounds from tuple param list
 INSERT INTO assessment_rounds (RoundId, Time, UserId, BatchId, Step, Texts, InstrumentId, AdministrationId)
@@ -314,9 +320,9 @@ FROM assessment_rounds
 WHERE
 --  (Completed = 0 OR Completed IS NULL)
 --  AND
-  RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
+--  RoundId = (SELECT max(RoundId) FROM assessment_rounds WHERE UserId = :user-id)
+UserId = :user-id
 ORDER BY step;
-
 
 -- :name set-step-completed! :! :n
 -- :doc
@@ -329,7 +335,8 @@ UPDATE assessment_rounds SET Completed = UTC_TIMESTAMP()
 WHERE
   (InstrumentId = :instrument-id)
   AND
-  RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id);
+--    RoundId = (SELECT max(RoundId) FROM (SELECT * FROM assessment_rounds) AS xxx WHERE UserId = :user-id);
+  UserId = :user-id;
 
 -- :name set-batch-must-show-texts! :! :n
 -- :doc
@@ -337,9 +344,16 @@ UPDATE assessment_rounds SET MustShowTexts = 1
 WHERE
   (BatchId = :batch-id)
   AND
-  (RoundId = :round-id)
+--  (RoundId = :round-id)
+  UserId = :user-id
   AND
   (Texts != "");
+
+-- ----------------------------
+--     END ASSESSMENT ROUNDS
+-- -----------------------------
+
+
 
 -- :name get-administration-completed-instruments :? :*
 SELECT

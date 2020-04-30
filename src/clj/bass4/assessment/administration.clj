@@ -9,7 +9,8 @@
             [bass4.assessment.create-missing :as missing]
             [bass4.assessment.late-flagger :as late-flagger]
             [bass4.clients.time :as client-time]
-            [bass4.instrument.flagger :as answers-flagger]))
+            [bass4.instrument.flagger :as answers-flagger]
+            [clojure.java.jdbc :as jdbc]))
 
 
 ;; ------------------------------
@@ -121,8 +122,9 @@
 
 (defn- save-round!
   [round]
-  (let [{:keys [round-id]} (db/get-new-round-id!)]
-    (db/insert-assessment-round! {:rows (map #(cons round-id %) (map vals round))})))
+  (jdbc/execute! db/*db* ["DELETE FROM assessment_rounds WHERE userid = ? " (:user-id (first round))])
+  ;; TOOD: Relies on map values being sorted!! Must fix!!!
+  (db/insert-assessment-round! {:rows (map #(cons 0 %) (map vals round))}))
 
 (defn generate-assessment-round
   [user-id pending-assessments]
@@ -208,7 +210,8 @@
 
 (defn batch-must-show-texts!
   [step]
-  (db/set-batch-must-show-texts! {:round-id (:round-id step) :batch-id (:batch-id step)}))
+  #_(db/set-batch-must-show-texts! {:round-id (:round-id step) :batch-id (:batch-id step)})
+  (db/set-batch-must-show-texts! {:user-id (:user-id step) :batch-id (:batch-id step)}))
 
 (defn step-completed!
   [step]
