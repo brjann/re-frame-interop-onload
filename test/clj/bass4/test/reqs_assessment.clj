@@ -27,39 +27,45 @@
   :each
   random-date-tz-fixture)
 
-(defn create-assessments!
+(defn top-priority-assessment!
   []
-  (let [top-priority     (create-assessment! project-double-auth-assessment-series
-                                             {"Scope"                                    0
-                                              "WelcomeText"                              "Welcome top-priority"
-                                              "ThankYouText"                             "Thanks top"
-                                              "CompetingAssessmentsPriority"             10
-                                              "CompetingAssessmentsAllowSwallow"         1
-                                              "CompetingAssessmentsShowTextsIfSwallowed" 1})
-        top-top-priority (create-assessment! project-double-auth-assessment-series
+  (let [top-priority (create-assessment! project-double-auth-assessment-series
+                                         {"Scope"                                    0
+                                          "WelcomeText"                              "Welcome top-priority"
+                                          "ThankYouText"                             "Thanks top"
+                                          "CompetingAssessmentsPriority"             10
+                                          "CompetingAssessmentsAllowSwallow"         1
+                                          "CompetingAssessmentsShowTextsIfSwallowed" 1})]
+    (link-instrument! top-priority 286)                     ; AAQ
+    (link-instrument! top-priority 4743)                    ; Agoraphobic Cognitions Questionnaire
+    (link-instrument! top-priority 4568)                    ; PHQ-9
+    top-priority))
+
+(defn top-top-priority-assessment!
+  []
+  (let [top-top-priority (create-assessment! project-double-auth-assessment-series
                                              {"Scope"                                    1
                                               "WelcomeText"                              "top top welcome"
                                               "ThankYouText"                             "top top top thanks"
                                               "CompetingAssessmentsPriority"             2
                                               "CompetingAssessmentsAllowSwallow"         1
-                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})
-        merge-hide-texts (create-assessment! project-double-auth-assessment-series
+                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})]
+    (link-instrument! top-top-priority 4431)                ; HAD
+    (link-instrument! top-top-priority 4743)                ; Agoraphobic Cognitions Questionnaire
+    top-top-priority))
+
+(defn merge-hide-texts-assessment!
+  []
+  (let [merge-hide-texts (create-assessment! project-double-auth-assessment-series
                                              {"Scope"                                    1
                                               "WelcomeText"                              "no-welcome"
                                               "ThankYouText"                             "no-thanks"
                                               "CompetingAssessmentsPriority"             20
                                               "CompetingAssessmentsAllowSwallow"         1
                                               "CompetingAssessmentsShowTextsIfSwallowed" 0})]
-    (link-instrument! top-top-priority 4431)                ; HAD
-    (link-instrument! top-top-priority 4743)                ; Agoraphobic Cognitions Questionnaire
-    (link-instrument! top-priority 286)                     ; AAQ
-    (link-instrument! top-priority 4743)                    ; Agoraphobic Cognitions Questionnaire
-    (link-instrument! top-priority 4568)                    ; PHQ-9
     (link-instrument! merge-hide-texts 4488)                ; WHODAS clinician rated
     (link-instrument! merge-hide-texts 4431)                ; HAD
-    {:top-priority     top-priority
-     :top-top-priority top-top-priority
-     :merge-hide-texts merge-hide-texts}))
+    merge-hide-texts))
 
 (defn concurrent-test
   [user-id group-id top-priority top-top-priority]
@@ -136,10 +142,19 @@
           (visit "/user")
           (has (status? 403))))))
 
+(deftest concurrent
+  (binding [auth-service/double-auth-code (constantly "666777")]
+    (let [group-id         (create-group! project-double-auth)
+          user-id          (create-user-with-password! {"SMSNumber" "00"
+                                                        "Group"     group-id})
+          top-priority     (top-priority-assessment!)
+          top-top-priority (top-top-priority-assessment!)]
+      (concurrent-test user-id group-id top-priority top-top-priority))))
+
 (deftest assessment-requests
-  (let [{:keys [top-priority
-                top-top-priority
-                merge-hide-texts]} (create-assessments!)]
+  (let [top-priority     (top-priority-assessment!)
+        top-top-priority (top-top-priority-assessment!)
+        merge-hide-texts (merge-hide-texts-assessment!)]
     (binding [auth-service/double-auth-code (constantly "666777")]
 
       ;; Login, double auth and then welcome text
@@ -247,13 +262,7 @@
             (follow-redirect)
             (has (some-text? "top top top thanks"))
             (has (some-text? "Thanks top"))
-            (fn-not-text? "no-thanks")))
-
-      ;; Concurrent
-      (let [group-id (create-group! project-double-auth)
-            user-id  (create-user-with-password! {"SMSNumber" "00"
-                                                  "Group"     group-id})]
-        (concurrent-test user-id group-id top-priority top-top-priority)))))
+            (fn-not-text? "no-thanks"))))))
 
 (deftest no-texts
   (binding [auth-service/double-auth-code (constantly "666777")]
