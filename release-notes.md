@@ -1,3 +1,8 @@
+## Version 4.6.6
+Released on 2020-05-01.
+- Improve assessment round database logic to decrease db ops duration
+  and risk of deadlocks.
+
 ## Version 4.6.5
 Bugfix release. Released on 2020-04-24.
 - Fix wrong instrument name (legacy FullName property) shown in answers
