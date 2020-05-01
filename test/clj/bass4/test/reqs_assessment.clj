@@ -27,42 +27,127 @@
   :each
   random-date-tz-fixture)
 
+(defn create-assessments!
+  []
+  (let [top-priority     (create-assessment! project-double-auth-assessment-series
+                                             {"Scope"                                    0
+                                              "WelcomeText"                              "Welcome top-priority"
+                                              "ThankYouText"                             "Thanks top"
+                                              "CompetingAssessmentsPriority"             10
+                                              "CompetingAssessmentsAllowSwallow"         1
+                                              "CompetingAssessmentsShowTextsIfSwallowed" 1})
+        top-top-priority (create-assessment! project-double-auth-assessment-series
+                                             {"Scope"                                    1
+                                              "WelcomeText"                              "top top welcome"
+                                              "ThankYouText"                             "top top top thanks"
+                                              "CompetingAssessmentsPriority"             2
+                                              "CompetingAssessmentsAllowSwallow"         1
+                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})
+        merge-hide-texts (create-assessment! project-double-auth-assessment-series
+                                             {"Scope"                                    1
+                                              "WelcomeText"                              "no-welcome"
+                                              "ThankYouText"                             "no-thanks"
+                                              "CompetingAssessmentsPriority"             20
+                                              "CompetingAssessmentsAllowSwallow"         1
+                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})
+        no-text          (create-assessment! project-double-auth-assessment-series
+                                             {"Scope"        0
+                                              "WelcomeText"  ""
+                                              "ThankYouText" ""})]
+    (link-instrument! top-top-priority 4431)                ; HAD
+    (link-instrument! top-top-priority 4743)                ; Agoraphobic Cognitions Questionnaire
+    (link-instrument! top-priority 286)                     ; AAQ
+    (link-instrument! top-priority 4743)                    ; Agoraphobic Cognitions Questionnaire
+    (link-instrument! top-priority 4568)                    ; PHQ-9
+    (link-instrument! merge-hide-texts 4488)                ; WHODAS clinician rated
+    (link-instrument! merge-hide-texts 4431)                ; HAD
+    (link-instrument! no-text 4568)                         ; PHQ-9
+    (link-instrument! no-text 4431)                         ; HAD
+    {:top-priority     top-priority
+     :top-top-priority top-top-priority
+     :merge-hide-texts merge-hide-texts
+     :no-text          no-text}))
+
+(defn concurrent-test
+  [user-id group-id top-priority top-top-priority]
+  (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
+  (create-group-administration! group-id top-top-priority 1 {:date (midnight (now/now))})
+  (let [s1 (-> *s*
+               (visit "/login" :request-method :post :params {:username user-id :password user-id})
+               (visit "/double-auth" :request-method :post :params {:code "666777"}))
+        s2 (-> *s*
+               (visit "/login" :request-method :post :params {:username user-id :password user-id})
+               (visit "/double-auth" :request-method :post :params {:code "666777"}))]
+    (-> s1
+        (has (status? 302))
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (has (some-text? "top top welcome")))
+    (-> s2
+        (has (status? 302))
+        (follow-redirect)
+        (follow-redirect)
+        (has (some-text? "Welcome"))
+        (has (some-text? "top top welcome"))
+        (visit "/user/assessments")
+        (has (some-text? "HAD")))
+    (-> s1
+        (visit "/user/assessments")
+        (has (some-text? "HAD")))
+    (-> s2
+        (visit "/user/assessments")
+        (has (some-text? "HAD"))
+        ;; Posting answers to wrong instrument. Silently fails but "Something went wrong" is recorded
+        ;; in request log.
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 6371 :items "{}" :specifications "{}"})
+        (has (status? 302)))
+    (-> s2
+        (visit "/user/assessments")
+        (has (some-text? "HAD"))
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"}))
+    (-> s1
+        (visit "/user/assessments")
+        (has (some-text? "Agoraphobic"))
+        (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"}))
+    (-> s2
+        (visit "/user/assessments")
+        (has (some-text? "AAQ")))
+    (let [s3 (-> *s*
+                 (visit "/login" :request-method :post :params {:username user-id :password user-id})
+                 (visit "/double-auth" :request-method :post :params {:code "666777"}))]
+      (-> s3
+          (has (status? 302))
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome top"))
+          (visit "/user/assessments")
+          (has (some-text? "AAQ")))
+      (-> s1
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"}))
+      (-> s3
+          (visit "/user/assessments")
+          (has (some-text? "PHQ"))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"}))
+      (-> s2
+          (visit "/user/assessments")
+          (has (some-text? "Thanks top"))
+          (visit "/user/assessments")
+          ;; The assessment is now marked as completed and user is redirected...
+          (follow-redirect)
+          ;; ...to the user page, which redirects to the to-finished page
+          (follow-redirect)
+          ;; ...which clears the session and redirects to activities-finished page
+          (follow-redirect)
+          (has (some-text? "finished"))
+          (visit "/user")
+          (has (status? 403))))))
+
 (deftest assessment-requests
-  (binding [auth-service/double-auth-code (constantly "666777")]
-    (let [top-priority     (create-assessment! project-double-auth-assessment-series
-                                               {"Scope"                                    0
-                                                "WelcomeText"                              "Welcome top-priority"
-                                                "ThankYouText"                             "Thanks top"
-                                                "CompetingAssessmentsPriority"             10
-                                                "CompetingAssessmentsAllowSwallow"         1
-                                                "CompetingAssessmentsShowTextsIfSwallowed" 1})
-          top-top-priority (create-assessment! project-double-auth-assessment-series
-                                               {"Scope"                                    1
-                                                "WelcomeText"                              "top top welcome"
-                                                "ThankYouText"                             "top top top thanks"
-                                                "CompetingAssessmentsPriority"             2
-                                                "CompetingAssessmentsAllowSwallow"         1
-                                                "CompetingAssessmentsShowTextsIfSwallowed" 0})
-          merge-hide-texts (create-assessment! project-double-auth-assessment-series
-                                               {"Scope"                                    1
-                                                "WelcomeText"                              "no-welcome"
-                                                "ThankYouText"                             "no-thanks"
-                                                "CompetingAssessmentsPriority"             20
-                                                "CompetingAssessmentsAllowSwallow"         1
-                                                "CompetingAssessmentsShowTextsIfSwallowed" 0})
-          no-text          (create-assessment! project-double-auth-assessment-series
-                                               {"Scope"        0
-                                                "WelcomeText"  ""
-                                                "ThankYouText" ""})]
-      (link-instrument! top-top-priority 4431)              ; HAD
-      (link-instrument! top-top-priority 4743)              ; Agoraphobic Cognitions Questionnaire
-      (link-instrument! top-priority 286)                   ; AAQ
-      (link-instrument! top-priority 4743)                  ; Agoraphobic Cognitions Questionnaire
-      (link-instrument! top-priority 4568)                  ; PHQ-9
-      (link-instrument! merge-hide-texts 4488)              ; WHODAS clinician rated
-      (link-instrument! merge-hide-texts 4431)              ; HAD
-      (link-instrument! no-text 4568)                       ; PHQ-9
-      (link-instrument! no-text 4431)                       ; HAD
+  (let [{:keys [top-priority
+                top-top-priority
+                merge-hide-texts]} (create-assessments!)]
+    (binding [auth-service/double-auth-code (constantly "666777")]
 
       ;; Login, double auth and then welcome text
       (let [user-id (create-user-with-password! {"SMSNumber" "00"})]
@@ -128,83 +213,6 @@
         (is (= {:assessment-id top-priority, :assessment-index 1} (db/get-last-assessment {:user-id user-id})))
         (is (= 5 (count (db/get-completed-answers {:user-id user-id})))))
 
-      ;; assessment-concurrent
-      (let [group-id (create-group! project-double-auth)
-            user-id  (create-user-with-password! {"SMSNumber" "00"
-                                                  "Group"     group-id})]
-        (create-participant-administration! user-id top-priority 1 {:date (midnight (now/now))})
-        (create-group-administration! group-id top-top-priority 1 {:date (midnight (now/now))})
-        (let [s1 (-> *s*
-                     (visit "/login" :request-method :post :params {:username user-id :password user-id})
-                     (visit "/double-auth" :request-method :post :params {:code "666777"}))
-              s2 (-> *s*
-                     (visit "/login" :request-method :post :params {:username user-id :password user-id})
-                     (visit "/double-auth" :request-method :post :params {:code "666777"}))]
-          (-> s1
-              (has (status? 302))
-              (follow-redirect)
-              (follow-redirect)
-              (has (some-text? "Welcome"))
-              (has (some-text? "top top welcome")))
-          (-> s2
-              (has (status? 302))
-              (follow-redirect)
-              (follow-redirect)
-              (has (some-text? "Welcome"))
-              (has (some-text? "top top welcome"))
-              (visit "/user/assessments")
-              (has (some-text? "HAD")))
-          (-> s1
-              (visit "/user/assessments")
-              (has (some-text? "HAD")))
-          (-> s2
-              (visit "/user/assessments")
-              (has (some-text? "HAD"))
-              ;; Posting answers to wrong instrument. Silently fails but "Something went wrong" is recorded
-              ;; in request log.
-              (visit "/user/assessments" :request-method :post :params {:instrument-id 6371 :items "{}" :specifications "{}"})
-              (has (status? 302)))
-          (-> s2
-              (visit "/user/assessments")
-              (has (some-text? "HAD"))
-              (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"}))
-          (-> s1
-              (visit "/user/assessments")
-              (has (some-text? "Agoraphobic"))
-              (visit "/user/assessments" :request-method :post :params {:instrument-id 4743 :items "{}" :specifications "{}"}))
-          (-> s2
-              (visit "/user/assessments")
-              (has (some-text? "AAQ")))
-          (let [s3 (-> *s*
-                       (visit "/login" :request-method :post :params {:username user-id :password user-id})
-                       (visit "/double-auth" :request-method :post :params {:code "666777"}))]
-            (-> s3
-                (has (status? 302))
-                (follow-redirect)
-                (follow-redirect)
-                (has (some-text? "Welcome top"))
-                (visit "/user/assessments")
-                (has (some-text? "AAQ")))
-            (-> s1
-                (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"}))
-            (-> s3
-                (visit "/user/assessments")
-                (has (some-text? "PHQ"))
-                (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"}))
-            (-> s2
-                (visit "/user/assessments")
-                (has (some-text? "Thanks top"))
-                (visit "/user/assessments")
-                ;; The assessment is now marked as completed and user is redirected...
-                (follow-redirect)
-                ;; ...to the user page, which redirects to the to-finished page
-                (follow-redirect)
-                ;; ...which clears the session and redirects to activities-finished page
-                (follow-redirect)
-                (has (some-text? "finished"))
-                (visit "/user")
-                (has (status? 403))))))
-
       ;; Swallow texts - show when not merged
       (let [group-id (create-group! project-double-auth)
             user-id  (create-user-with-password! {"SMSNumber" "00"
@@ -246,7 +254,13 @@
             (follow-redirect)
             (has (some-text? "top top top thanks"))
             (has (some-text? "Thanks top"))
-            (fn-not-text? "no-thanks"))))))
+            (fn-not-text? "no-thanks")))
+
+      ;; Concurrent
+      (let [group-id (create-group! project-double-auth)
+            user-id  (create-user-with-password! {"SMSNumber" "00"
+                                                  "Group"     group-id})]
+        (concurrent-test user-id group-id top-priority top-top-priority)))))
 
 (deftest empty-assessment
   (binding [auth-service/double-auth-code (constantly "666777")]
