@@ -49,11 +49,7 @@
                                               "ThankYouText"                             "no-thanks"
                                               "CompetingAssessmentsPriority"             20
                                               "CompetingAssessmentsAllowSwallow"         1
-                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})
-        no-text          (create-assessment! project-double-auth-assessment-series
-                                             {"Scope"        0
-                                              "WelcomeText"  ""
-                                              "ThankYouText" ""})]
+                                              "CompetingAssessmentsShowTextsIfSwallowed" 0})]
     (link-instrument! top-top-priority 4431)                ; HAD
     (link-instrument! top-top-priority 4743)                ; Agoraphobic Cognitions Questionnaire
     (link-instrument! top-priority 286)                     ; AAQ
@@ -61,12 +57,9 @@
     (link-instrument! top-priority 4568)                    ; PHQ-9
     (link-instrument! merge-hide-texts 4488)                ; WHODAS clinician rated
     (link-instrument! merge-hide-texts 4431)                ; HAD
-    (link-instrument! no-text 4568)                         ; PHQ-9
-    (link-instrument! no-text 4431)                         ; HAD
     {:top-priority     top-priority
      :top-top-priority top-top-priority
-     :merge-hide-texts merge-hide-texts
-     :no-text          no-text}))
+     :merge-hide-texts merge-hide-texts}))
 
 (defn concurrent-test
   [user-id group-id top-priority top-top-priority]
@@ -261,6 +254,33 @@
             user-id  (create-user-with-password! {"SMSNumber" "00"
                                                   "Group"     group-id})]
         (concurrent-test user-id group-id top-priority top-top-priority)))))
+
+(deftest no-texts
+  (binding [auth-service/double-auth-code (constantly "666777")]
+    (let [no-text (create-assessment! project-double-auth-assessment-series
+                                      {"Scope"        0
+                                       "WelcomeText"  ""
+                                       "ThankYouText" ""})
+          user-id (user-service/create-user! project-double-auth)]
+      (link-instrument! no-text 4568)                       ; PHQ-9
+      (link-instrument! no-text 4431)                       ; HAD
+      (create-participant-administration! user-id no-text 1 {:date (midnight (now/now))})
+      (user-service/update-user-properties! user-id {:username user-id :password user-id "SMSNumber" "000"})
+      (-> *s*
+          (visit "/login" :request-method :post :params {:username user-id :password user-id})
+          (visit "/double-auth" :request-method :post :params {:code "666777"})
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "PHQ-9"))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 4568 :items "{}" :specifications "{}"})
+          (follow-redirect)
+          (has (some-text? "HAD"))
+          (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
+          (follow-redirect)
+          (follow-redirect)
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "no more activities"))))))
 
 (deftest empty-assessment
   (binding [auth-service/double-auth-code (constantly "666777")]
