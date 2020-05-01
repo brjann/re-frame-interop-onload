@@ -16,7 +16,9 @@
             [clojure.data.json :as json]
             [bass4.instrument.answers-services :as instrument-answers]
             [bass4.instrument.flagger :as answers-flagger]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :as a]
+            [bass4.config :as config]))
 
 (use-fixtures
   :once
@@ -150,6 +152,35 @@
           top-priority     (top-priority-assessment!)
           top-top-priority (top-top-priority-assessment!)]
       (concurrent-test user-id group-id top-priority top-top-priority))))
+
+(deftest concurrent-concurrent
+  (binding [auth-service/double-auth-code (constantly "666777")]
+    (let [top-priority     (top-priority-assessment!)
+          top-top-priority (top-top-priority-assessment!)
+          ;; 10 threads seems to "crash" the Cursive test runner and the whole test suite gives no output
+          n                (if (config/env :dev-test) 10 2)
+          tuples           (repeatedly n #(let [group-id (create-group! project-double-auth)
+                                                user-id  (create-user-with-password! {"SMSNumber" "00"
+                                                                                      "Group"     group-id})]
+                                            [user-id group-id]))
+          cs               (mapv (fn [[user-id group-id]]
+                                   (a/thread
+                                     (concurrent-test user-id group-id top-priority top-top-priority)
+                                     user-id))
+                                 tuples)
+          _                (mapv #(a/<!! %) cs)
+          user-ids         (map first tuples)
+          res              (jdbc/query db/*db*
+                                       (apply vector
+                                              (str "SELECT count(*) FROM
+                                      c_participantadministration AS cpa
+                                      JOIN c_instrumentanswers AS cia
+                                      ON cpa.ObjectId = cia.ParentId
+                                      WHERE cpa.ParentId IN("
+                                                   (apply str (interpose "," (repeat n "?")))
+                                                   ") AND cia.DateCompleted > 0")
+                                              user-ids))]
+      (is (= (* n 5) (first (vals (first res))))))))
 
 (deftest assessment-requests
   (let [top-priority     (top-priority-assessment!)

@@ -77,32 +77,31 @@
   :plugins [[lein-cprop "1.0.3"]
             [lein-immutant "2.1.0"]]
 
-  :profiles
-  {:uberjar       {:omit-source    true
-                   :aot            :all
-                   :uberjar-name   "bass4.jar"
-                   :source-paths   ["env/prod/clj"]
-                   :resource-paths ["env/prod/resources"]}
+  :profiles {:uberjar       {:omit-source    true
+                             :aot            :all
+                             :uberjar-name   "bass4.jar"
+                             :source-paths   ["env/prod/clj"]
+                             :resource-paths ["env/prod/resources"]}
 
-   :dev           [:project/dev :profiles/dev]
-   :test          [:project/dev :project/test :profiles/test]
+             :dev           [:project/dev :profiles/dev]
+             :test          [:project/dev :project/test :profiles/test]
 
-   ;; These dependencies are only compiled into the development app
-   :project/dev   {:dependencies   [[ring/ring-devel "1.8.0"] ; Used for reloading namespaces before web requests
-                                    [peridot "0.5.2"]       ; https://github.com/xeqi/peridot
-                                    [kerodon "0.9.1"]       ; https://github.com/xeqi/kerodon
-                                    [philoskim/debux "0.6.4"] ; https://github.com/philoskim/debux
-                                    [enlive "1.1.6"]        ; https://github.com/cgrand/enlive
-                                    [org.clojure/tools.namespace "1.0.0"]]
+             ;; These dependencies are only compiled into the development app
+             :project/dev   {:dependencies   [[ring/ring-devel "1.8.0"] ; Used for reloading namespaces before web requests
+                                              [peridot "0.5.2"] ; https://github.com/xeqi/peridot
+                                              [kerodon "0.9.1"] ; https://github.com/xeqi/kerodon
+                                              [philoskim/debux "0.6.4"] ; https://github.com/philoskim/debux
+                                              [enlive "1.1.6"] ; https://github.com/cgrand/enlive
+                                              [org.clojure/tools.namespace "1.0.0"]]
 
-                   :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]
-                                    [metosin/bat-test "0.4.0"]
-                                    [lein-eftest "0.5.9"]
-                                    [lein-ancient "0.6.15"]]
+                             :plugins        [[com.jakemccrary/lein-test-refresh "0.20.0"]
+                                              [metosin/bat-test "0.4.0"]
+                                              [lein-eftest "0.5.9"]
+                                              [lein-ancient "0.6.15"]]
 
-                   :source-paths   ["env/dev/clj"]
-                   :resource-paths ["env/dev/resources"]
-                   :repl-options   {:init-ns user}}
-   :project/test  {:resource-paths ["env/test/resources"]}
-   :profiles/dev  {}
-   :profiles/test {}})
+                             :source-paths   ["env/dev/clj"]
+                             :resource-paths ["env/dev/resources"]
+                             :repl-options   {:init-ns user}}
+             :project/test  {:resource-paths ["env/test/resources"]}
+             :profiles/dev  {}
+             :profiles/test {}})
