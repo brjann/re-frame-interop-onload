@@ -1,12 +1,11 @@
 (ns bass4.middleware.core
   (:require [bass4.env :refer [defaults]]
-            [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-            [ring.middleware.webjars :refer [wrap-webjars]]
-            [ring.middleware.format :refer [wrap-restful-format]]
+            [ring.middleware.webjars :as webjars]
+            [ring.middleware.format :as format]
             [ring.util.http-response :as http-response]
             [bass4.session.storage :as session-storage]
             [bass4.session.timeout :as session-timeout]
-            [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
+            [ring.middleware.defaults :as defaults]
             [bass4.db.middleware :as db-middleware]
             [bass4.middleware.emoticon-remover :as emoticons]
             [bass4.middleware.debug :as debug-mw]
@@ -21,11 +20,12 @@
             [bass4.routes.ext-login :as ext-login]
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [ring.middleware.anti-forgery :as anti-forgery]))
 
 
 (defn wrap-formats [handler]
-  (let [wrapped (wrap-restful-format
+  (let [wrapped (format/wrap-restful-format
                   handler
                   {:formats [:json-kw :transit-json :transit-msgpack]})]
     (fn [request]
@@ -99,7 +99,7 @@
   [handler request]
   (if (or *skip-csrf* (:csrf-disabled (:session request)))
     (handler request)
-    ((wrap-anti-forgery
+    ((anti-forgery/wrap-anti-forgery
        handler
        {:error-handler csrf-error}) request)))
 
@@ -184,9 +184,9 @@
       (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
       (wrap-mw-fn #'security-headers-mw)
-      wrap-webjars
-      (wrap-defaults
-        (-> site-defaults
+      webjars/wrap-webjars
+      (defaults/wrap-defaults
+        (-> defaults/site-defaults
             (assoc-in [:security :anti-forgery] false)
             (dissoc :session)))
       (wrap-mw-fn #'embedded-mw/embedded-iframe)            ;; Removes X-Frame-Options SAMEORIGIN from requests to embedded
