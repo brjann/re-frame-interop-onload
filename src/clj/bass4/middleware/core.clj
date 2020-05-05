@@ -4,13 +4,10 @@
             [ring.middleware.webjars :refer [wrap-webjars]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [ring.util.http-response :as http-response]
-            [bass4.utils :refer [filter-map time+ nil-zero? fnil+]]
             [bass4.session.storage :as session-storage]
             [bass4.session.timeout :as session-timeout]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults secure-site-defaults]]
-            [cprop.tools]
             [bass4.db.middleware :as db-middleware]
-            [bass4.config :refer [env]]
             [bass4.middleware.emoticon-remover :as emoticons]
             [bass4.middleware.debug :as debug-mw]
             [bass4.middleware.request-logger :as request-logger]
@@ -23,7 +20,8 @@
             [bass4.responses.e-auth :as e-auth]
             [bass4.routes.ext-login :as ext-login]
             [bass4.responses.auth :as auth-response]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.config :as config]))
 
 
 (defn wrap-formats [handler]
@@ -64,15 +62,22 @@
 
 (defn security-headers-mw
   [handler request]
-  (let [response (handler request)]
+  (let [response    (handler request)
+        default-csp {"default-src" #{"'self"}
+                     "script-src"  #{"'unsafe-inline'" "'unsafe-eval'"}
+                     "style-src"   #{"'unsafe-inline'"}
+                     "img-src"     #{"*" "data:"}}
+        config-csp  (config/env :content-security-policy)
+        csp         (merge-with into default-csp config-csp)
+        csp-string  (apply str
+                           (map (fn [[k v]]
+                                  (str k " "
+                                       (apply str (interpose " " (conj v "'self'")))
+                                       ";"))
+                                csp))]
     (update-in response
                [:headers] #(merge %1
-                                  {"Content-Security-Policy"   (str "default-src 'self';"
-                                                                    "frame-src https://*.vimeo.com https://*.ki.se 'self';"
-                                                                    "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
-                                                                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;"
-                                                                    "img-src * data:;"
-                                                                    "font-src 'self' https://fonts.gstatic.com;")
+                                  {"Content-Security-Policy"   csp-string
                                    "Server"                    ""
                                    "Strict-Transport-Security" "max-age=7776000; includeSubDomains"}))))
 
