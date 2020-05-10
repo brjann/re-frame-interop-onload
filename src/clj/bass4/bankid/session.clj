@@ -105,7 +105,7 @@
     (log-bankid-event! {:uid uid :personal-number personnummer :status :before-loop})
     (bankid-service/launch-bankid personnummer user-ip config-key wait-fn res-chan)
     (go-loop []
-      (let [info      (first (alts! [res-chan (timeout 20000)]))
+      (let [info      (first (alts! [res-chan (timeout 60000)]))
             order-ref (:order-ref info)]
         (set-session-status!
           uid
