@@ -1,3 +1,8 @@
+## Version 4.6.7
+Released on 2020-05-10.
+- Content-Security-Policy header in local.edn instead of hardcoded.
+- Increase BankID request timeout from 20 s to 60 s.
+
 ## Version 4.6.6
 Released on 2020-05-01.
 - Improve assessment round database logic to decrease db ops duration
