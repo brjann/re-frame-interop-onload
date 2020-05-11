@@ -285,6 +285,7 @@
                  "m21"         "application/mp21",
                  "m3u"         "audio/x-mpegurl",
                  "m3u8"        "application/vnd.apple.mpegurl",
+                 "m4a"         "audio/mp4"
                  "m4v"         "video/x-m4v",
                  "ma"          "application/mathematica",
                  "mads"        "application/mads+xml",
