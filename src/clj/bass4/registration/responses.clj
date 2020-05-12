@@ -638,9 +638,6 @@
                                       (i18n/tr [:registration/personnummer])
                                       (:pid-name reg-content))}))))
 
-(def country-codes
-  (group-by #(string/lower-case (get % "code")) (json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
-
 (defn- check-sms
   [sms-number sms-countries]
   (cond
@@ -651,7 +648,7 @@
     false
 
     :else
-    (let [matching (-> (select-keys country-codes sms-countries)
+    (let [matching (-> (select-keys reg-service/country-codes sms-countries)
                        vals
                        flatten)]
       (some

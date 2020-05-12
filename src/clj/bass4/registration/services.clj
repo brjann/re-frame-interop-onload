@@ -9,7 +9,9 @@
             [clojure.set :as set]
             [bass4.clients.time :as client-time]
             [bass4.services.user :as user-service]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [clojure.pprint :as pprint]
+            [clojure.java.io :as io]))
 
 (defn captcha-content
   [project-id]
@@ -107,12 +109,19 @@
         {:fields        (:fields params)
          :sms-countries sms-countries}))))
 
+(def country-codes
+  (group-by #(string/lower-case (get % "code")) (utils/json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
+
 (defn registration-content
   [project-id]
   (let [params        (db/registration-content {:project-id project-id})
         fields        (transform-fields (:fields params))
         group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
-        sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
+        sms-countries (or (->> (string/split-lines (:sms-countries params))
+                               (mapv string/lower-case)
+                               (filter #(contains? country-codes %))
+                               (not-empty))
+                          ["se"])]
     (merge
       {:fields fields :group group :sms-countries sms-countries}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
