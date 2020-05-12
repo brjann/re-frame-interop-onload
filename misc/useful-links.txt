@@ -1,0 +1,4 @@
+https://juxt.pro/blog/posts/cljs-apps.html
+
+Deflet
+http://www.learningclojure.com/2010/09/astonishing-macro-of-narayan-singhal.html?m=1
