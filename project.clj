@@ -6,12 +6,12 @@
   :dependencies [
                  ; Clojure libraries
                  [org.clojure/clojure "1.10.1"]             ; https://github.com/clojure/clojure
-                 [org.clojure/core.async "1.0.567"]         ; https://github.com/clojure/core.async
+                 [org.clojure/core.async "1.2.603"]         ; https://github.com/clojure/core.async
                  [org.clojure/tools.cli "1.0.194"]          ; https://github.com/clojure/tools.cli
-                 [org.clojure/tools.logging "1.0.0"]        ; https://github.com/clojure/tools.logging
+                 [org.clojure/tools.logging "1.1.0"]        ; https://github.com/clojure/tools.logging
                  [org.clojure/math.numeric-tower "0.0.4"]   ; https://github.com/clojure/math.numeric-tower
                  [org.clojure/data.json "1.0.0"]            ; https://github.com/clojure/data.json
-                 [org.clojure/core.cache "0.8.2"]
+                 [org.clojure/core.cache "1.0.207"]
 
                  ; Web server libraries
                  [luminus-immutant "0.2.5"]                 ; https://github.com/luminus-framework/luminus-immutant
