@@ -2,3 +2,70 @@ https://juxt.pro/blog/posts/cljs-apps.html
 
 Deflet
 http://www.learningclojure.com/2010/09/astonishing-macro-of-narayan-singhal.html?m=1
+
+
+(use 'clojure.tools.namespace.move)
+(clojure.tools.namespace.move/move-ns
+'bass4.services.assessments 'bass4.assessment.services "/Users/brjljo/Dropbox/clojure/bass4/src/clj/" ["/Users/brjljo/Dropbox/clojure/bass4/src/clj/" "/Users/brjljo/Dropbox/clojure/bass4/test/clj/"])
+
+
+
+tp://www.luminusweb.net/docs/useful_libraries.html
+
+Could not get timbre log library working (did not capture all logging)
+
+@brjann
+
+Author
+brjann commented on 20 Oct 2018
+https://github.com/aphyr/tea-time
+
+@brjann
+
+Author
+brjann commented on 24 Oct 2018
+https://github.com/overtone/at-at/blob/master/README.md
+
+@brjann
+
+Author
+brjann commented on 24 Oct 2018
+https://github.com/vodori/chronology/blob/develop/readme.md
+
+@brjann
+
+Author
+brjann commented on 24 Oct 2018
+https://github.com/amalloy/chronicle/blob/master/README.md
+
+@brjann
+
+Author
+brjann commented on 28 Oct 2018
+https://github.com/domainlanguage/time-count
+
+@brjann
+
+Author
+brjann commented on 28 Oct 2018
+https://github.com/juxt/tick/blob/master/README.adoc
+
+@brjann
+
+Author
+brjann commented on 28 Oct 2018
+https://github.com/jarohen/chime/blob/master/README.org
+
+@brjann
+
+Author
+brjann commented on 17 Dec 2018
+https://github.com/overtone/at-at/blob/master/README.md
+
+@brjann
+
+Author
+brjann commented on 18 Dec 2018
+https://github.com/AdamClements/schejulure
+
+https://github.com/AvisoNovate/pretty/blob/master/README.md
