@@ -21,13 +21,24 @@
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
             [bass4.config :as config]
-            [ring.middleware.anti-forgery :as anti-forgery]))
+            [ring.middleware.anti-forgery :as anti-forgery])
+  (:import (com.fasterxml.jackson.core.io JsonEOFException)))
 
+(defn json-request-error-handler*
+  [e _ _]
+  (if (= (class e) JsonEOFException)
+    (http-response/bad-request "Bad JSON")
+    (throw e)))
+
+(defn json-request-error-handler
+  [e handler req]
+  (json-request-error-handler* e handler req))
 
 (defn wrap-formats [handler]
   (let [wrapped (format/wrap-restful-format
                   handler
-                  {:formats [:json-kw :transit-json :transit-msgpack]})]
+                  {:formats               [:json-kw :transit-json :transit-msgpack]
+                   :request-error-handler json-request-error-handler})]
     (fn [request]
       ;; disable wrap-formats for websockets
       ;; since they're not compatible with this middleware
