@@ -21,7 +21,7 @@
         msg  (.getMessage e)]
     (log/error msg)
     (log/error data)
-    (request-logger/record-error! msg))
+    #_(request-logger/record-error! msg))
   (http-response/bad-request (when (clients/debug-mode?)
                                (.getMessage e))))
 
