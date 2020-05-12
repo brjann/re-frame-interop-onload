@@ -38,7 +38,8 @@
 (deftest wrong-uid
   (-> *s*
       (visit "/embedded/create-session?uid=8&redirect=https://www.dn.se")
-      (has (some-text? "Wrong uid"))))
+      (has (status? 403))
+      (has (some-text? "Bad uid"))))
 
 (deftest request-post-answers
   (let [php-session-id (get-php-session-id)

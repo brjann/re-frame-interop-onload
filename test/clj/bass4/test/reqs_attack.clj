@@ -102,7 +102,6 @@
           (visit "/login" :request-method :post :params {:username user-id :password user-id})
           (has (status? 302))))))
 
-
 (deftest attack-double-auth
   (binding [auth-service/double-auth-code (constantly "666777")]
     (let [user-id (create-user-with-password! {"smsnumber" "00"})
@@ -346,4 +345,13 @@
         (has (status? 200))))
   (-> *s*
       (visit "/q/xx" :request-method :get)
+      (has (status? 429))))
+
+(deftest attack-embedded
+  (dotimes [_ 10]
+    (-> *s*
+        (visit "/embedded/create-session" :request-method :get :params {"UID" "XXX"})
+        (has (status? 403))))
+  (-> *s*
+      (visit "/embedded/create-session" :request-method :get :params {"UID" "XXX"})
       (has (status? 429))))

@@ -69,3 +69,6 @@ brjann commented on 18 Dec 2018
 https://github.com/AdamClements/schejulure
 
 https://github.com/AvisoNovate/pretty/blob/master/README.md
+
+Kaocha
+https://quanttype.net/posts/2019-01-29-revisiting-clojure-testing.html

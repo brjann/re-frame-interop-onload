@@ -54,7 +54,8 @@
                        (or query-redirect (get @old-uids uid)))]
         (if (string? redirect)
           (http-response/found redirect)
-          (h-utils/text-response "Wrong uid."))))))
+          (-> (http-response/forbidden "Bad uid.")
+              (http-response/content-type "text/plain; charset=utf-8")))))))
 
 (defn legal-character
   [c]

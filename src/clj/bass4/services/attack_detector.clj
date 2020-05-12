@@ -211,6 +211,13 @@
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
+                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}
+                        {:method         :get
+                         :route          #"/embedded/create-session"
+                         :success        (fn [in out]
+                                           (contains? out :user-id))
+                         :fail           (fn [response]
+                                           (not (contains? (:session response) :user-id)))
                          :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
     (->> attack-routes
          (filter #(and (= (:request-method request) (:method %))
