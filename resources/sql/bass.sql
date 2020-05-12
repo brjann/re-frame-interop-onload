@@ -123,7 +123,7 @@ UPDATE sessions
   SET LastActivity = :now
 WHERE SessId = :php-session-id;
 
--- :name get-staff-timeouts :? :1
+-- :name get-admin-timeouts :? :1
 -- :doc
 SELECT
   (CASE

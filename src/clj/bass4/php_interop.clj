@@ -18,9 +18,9 @@
   [php-session-id now]
   (db/update-php-session-last-activity! {:php-session-id php-session-id :now now}))
 
-(defn get-staff-timeouts
+(defn get-admin-timeouts
   []
-  (db/get-staff-timeouts))
+  (db/get-admin-timeouts))
 
 (defn check-php-session
   [timeouts {:keys [user-id php-session-id]}]

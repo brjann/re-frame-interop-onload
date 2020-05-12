@@ -92,7 +92,7 @@
     (let [php-session-id   (get-php-session-id)
           uid              (php-interop/uid-for-data! {:user-id 110 :path "instrument/1647" :php-session-id php-session-id})
           now              (utils/to-unix (now/now))
-          timeouts         (php-interop/get-staff-timeouts)
+          timeouts         (php-interop/get-admin-timeouts)
           re-auth-timeout  (:re-auth-timeout timeouts)
           absolute-timeout (:absolute-timeout timeouts)]
       (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})

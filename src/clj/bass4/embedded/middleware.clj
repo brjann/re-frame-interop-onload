@@ -79,7 +79,7 @@
         session        (:session request)
         embedded-paths (::embedded-paths session)
         php-session-id (:php-session-id session)
-        timeouts       (php-interop/get-staff-timeouts)]
+        timeouts       (php-interop/get-admin-timeouts)]
     (cond
       (and (= current-path "/embedded/api/unlock-api")
            (clients/debug-mode?))
