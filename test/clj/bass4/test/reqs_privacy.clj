@@ -108,7 +108,7 @@
           (has (some-text? "User cannot login"))))))
 
 (deftest request-ext-login-no-privacy-notice
-  (binding [ext-login/db-ext-login-settings        (constantly {:allowed? true :ips "localhost"})
+  (binding [ext-login/db-ext-login-settings        (constantly {:allowed? true :ips "127.0.0.1"})
             privacy-service/privacy-notice-exists? (constantly false)]
     (let [user-id (user-service/create-user! project-reg-allowed)]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -174,7 +174,7 @@
           (has (some-text? "Welcome"))))))
 
 (deftest request-ext-login-no-privacy-notice-notice-disabled
-  (binding [ext-login/db-ext-login-settings          (constantly {:allowed? true :ips "localhost"})
+  (binding [ext-login/db-ext-login-settings          (constantly {:allowed? true :ips "127.0.0.1"})
             privacy-service/privacy-notice-exists?   (constantly false)
             privacy-service/privacy-notice-disabled? (constantly true)]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)

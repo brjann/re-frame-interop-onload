@@ -14,7 +14,8 @@
             [bass4.services.user :as user-service]
             [clj-time.core :as t]
             [clojure.string :as string]
-            [bass4.config :as config]))
+            [bass4.config :as config]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -50,7 +51,7 @@
             (has (some-text? "0 No pending administrations")))))))
 
 (deftest request-ext-login-allowed-ok-ip-double
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [user-id1 (user-service/create-user! project-double-auth)
           user-id2 (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id1 {"participantid" user-id1})
@@ -60,13 +61,13 @@
           (has (some-text? "0 More than 1 matching user"))))))
 
 (deftest request-ext-login-allowed-ok-ip-no-user
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (-> *s*
         (visit "/ext-login/check-pending/METALLICA")
         (has (some-text? "0 No such user")))))
 
 (deftest request-ext-login-allowed-ok-no-pending
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [user-id (user-service/create-user! project-double-auth)]
       (user-service/update-user-properties! user-id {"participantid" user-id})
       (-> *s*
@@ -74,22 +75,24 @@
           (has (some-text? "0 No pending administrations"))))))
 
 (deftest request-ext-login-assessment-pending
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [286 4431])
           user-id  (user-service/create-user! project-double-auth {"group" group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
       (let [session  *s*
             uri      (-> session
                          (visit (str "/ext-login/check-pending/" user-id))
+                         (log-body)
                          (get-in [:response :body])
                          (string/split #"localhost")
                          (second))
+            _        (log/debug uri)
             redirect (-> session
-                         (visit (str uri "&returnURL=htp://www.dn.se"))
+                         (visit (str uri "&returnURL=htp%3A%2F%2Fwww.dn.se"))
                          (has (status? 400))
-                         (visit (str uri "&returnURL=http:/www.dn.se"))
+                         (visit (str uri "&returnURL=http%3A%2Fwww.dn.se"))
                          (has (status? 400))
-                         (visit (str uri "&returnURL=http://www.dn.se"))
+                         (visit (str uri "&returnURL=http%3A%2F%2Fwww.dn.se"))
                          (visit "/user")
                          (follow-redirect)
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 286 :items "{}" :specifications "{}"})
@@ -110,7 +113,7 @@
             (has (status? 403)))))))
 
 (deftest request-ext-login-assessment-pending-logout-url
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [4431 286])
           user-id  (user-service/create-user! project-double-auth {:group group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -121,7 +124,7 @@
                          (string/split #"localhost")
                          (second))
             redirect (-> session
-                         (visit (str uri "&returnURL=http://www.dn.se&logoutURL=http://www.svd.se"))
+                         (visit (str uri "&returnURL=http%3A%2F%2Fwww.dn.se&logoutURL=http%3A%2F%2Fwww.svd.se"))
                          (visit "/user")
                          (follow-redirect)
                          (visit "/user/assessments" :request-method :post :params {:instrument-id 4431 :items "{}" :specifications "{}"})
@@ -136,7 +139,7 @@
             (has (status? 403)))))))
 
 (deftest request-ext-login-empty-assessment-pending2
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [group-id (create-assessment-group! project-double-auth project-double-auth-assessment-series [] {})
           user-id  (user-service/create-user! project-double-auth {:group group-id})]
       (user-service/update-user-properties! user-id {"participantid" user-id})
@@ -147,7 +150,7 @@
                          (string/split #"localhost")
                          (second))
             redirect (-> session
-                         (visit (str uri "&returnURL=http://www.dn.se"))
+                         (visit (str uri "&returnURL=http%3A%2F%2Fwww.dn.se"))
                          (visit "/user")
                          (has (status? 302))
                          ;; ext-login middleware catches the change in assessments-pending?
@@ -157,10 +160,10 @@
 
 
 (deftest request-ext-login-error-uid
-  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "localhost"})]
+  (binding [ext-login/db-ext-login-settings (constantly {:allowed? true :ips "127.0.0.1"})]
     (let [session  *s*
           redirect (-> session
-                       (visit "/ext-login/do-login?uid=666&returnURL=http://www.dn.se")
+                       (visit "/ext-login/do-login?uid=666&returnURL=http%3A%2F%2Fwww.dn.se")
                        (has (status? 302))
                        (get-in [:response :headers "Location"]))]
       (is (= "http://www.dn.se" redirect))

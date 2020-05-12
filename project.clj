@@ -20,7 +20,7 @@
                   :exclusions [ring/ring-codec]]
                  [ring-middleware-format "0.7.4"]           ; https://github.com/ngrunwald/ring-middleware-format
                  [ring-webjars "0.2.0"]                     ; https://github.com/weavejester/ring-webjars
-                 [ring/ring-core "1.8.0"]                   ; https://github.com/ring-clojure/ring
+                 [ring/ring-core "1.8.1"]                   ; https://github.com/ring-clojure/ring
                  [ring/ring-defaults "0.3.2"]               ; https://github.com/ring-clojure/ring-defaults
                  [prone "2020-01-17"]                       ; https://github.com/magnars/prone
                  [metosin/ring-http-response "0.9.1"]       ; https://github.com/metosin/ring-http-response
@@ -29,22 +29,23 @@
                  [com.taoensso/nippy "2.14.0"]              ; https://github.com/ptaoussanis/nippy
 
                  ; Database and state management libraries
+                 ; conman 0.8.5 switches to next-jdbc - which does not work.
                  [conman "0.8.4"]                           ; https://github.com/luminus-framework/conman
                  [mount "0.1.16"]                           ; https://github.com/tolitius/mount
-                 [tolitius/mount-up "0.1.2"]                ; https://github.com/tolitius/mount-up
-                 [mysql/mysql-connector-java "8.0.19"]      ; https://mvnrepository.com/artifact/mysql/mysql-connector-java
-                 [cprop "0.1.16"]                           ; https://github.com/tolitius/cprop
+                 [tolitius/mount-up "0.1.3"]                ; https://github.com/tolitius/mount-up
+                 [mysql/mysql-connector-java "8.0.20"]      ; https://mvnrepository.com/artifact/mysql/mysql-connector-java
+                 [cprop "0.1.17"]                           ; https://github.com/tolitius/cprop
                  [luminus-nrepl "0.1.6"]                    ; https://github.com/luminus-framework/luminus-nrepl
 
                  ; HTML and language libraries
-                 [selmer "1.12.18"]                         ; https://github.com/yogthos/Selmer
-                 [markdown-clj "1.10.2"]                    ; https://github.com/yogthos/markdown-clj
+                 [selmer "1.12.23"]                         ; https://github.com/yogthos/Selmer
+                 [markdown-clj "1.10.4"]                    ; https://github.com/yogthos/markdown-clj
                  [com.taoensso/tempura "1.2.1"]             ; https://github.com/ptaoussanis/tempura
 
                  ; Utility libraries
                  [buddy/buddy-hashers "1.4.0"]              ; https://github.com/funcool/buddy-hashers
-                 [clj-http "3.10.0"]                        ; https://github.com/dakrone/clj-http
-                 [org.flatland/ordered "1.5.7"]             ; https://github.com/amalloy/ordered
+                 [clj-http "3.10.1"]                        ; https://github.com/dakrone/clj-http
+                 [org.flatland/ordered "1.5.9"]             ; https://github.com/amalloy/ordered
                  [clj-time "0.15.2"]                        ; https://github.com/clj-time/clj-time
                  [camel-snake-kebab "0.4.1"]                ; https://github.com/qerub/camel-snake-kebab
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
@@ -87,10 +88,10 @@
              :test          [:project/dev :project/test :profiles/test]
 
              ;; These dependencies are only compiled into the development app
-             :project/dev   {:dependencies   [[ring/ring-devel "1.8.0"] ; Used for reloading namespaces before web requests
-                                              [peridot "0.5.2"] ; https://github.com/xeqi/peridot
+             :project/dev   {:dependencies   [[ring/ring-devel "1.8.1"] ; Used for reloading namespaces before web requests
+                                              [peridot "0.5.3"] ; https://github.com/xeqi/peridot
                                               [kerodon "0.9.1"] ; https://github.com/xeqi/kerodon
-                                              [philoskim/debux "0.6.4"] ; https://github.com/philoskim/debux
+                                              [philoskim/debux "0.6.5"] ; https://github.com/philoskim/debux
                                               [enlive "1.1.6"] ; https://github.com/cgrand/enlive
                                               [org.clojure/tools.namespace "1.0.0"]]
 

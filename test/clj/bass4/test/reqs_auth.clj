@@ -10,7 +10,9 @@
             [bass4.services.user :as user-service]
             [bass4.external-messages.async :as external-messages :refer [*debug-chan*]]
             [bass4.config :as config]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.java.jdbc :as jdbc]
+            [bass4.db.core :as db]))
 
 (use-fixtures
   :once

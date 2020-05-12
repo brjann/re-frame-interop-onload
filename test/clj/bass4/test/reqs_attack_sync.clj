@@ -34,7 +34,8 @@
         (attack-uri
           "/login"
           {:username "%€#&()" :password "%€#&()"}
-          standard-attack)
+          standard-attack
+          "127.0.0.1")
         (visit "/login" :request-method :post :params {:username user-id :password user-id})
         (has (status? 429))
         (advance-time-s! a-d/const-ip-block-delay)
