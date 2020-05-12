@@ -53,6 +53,10 @@
   [data]
   (php-interop/uid-for-data! data))
 
+(defapi data-for-uid!
+  [data]
+  (php-interop/data-for-uid! data))
+
 (defapi create-uid-for-session!
   [user-id php-session-id]
   (php-interop/uid-for-data! {:user-id        user-id
