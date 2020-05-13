@@ -2,9 +2,8 @@
   (:require
     [clojure.core.async :refer [go <! chan put!]]
     [bass4.config :refer [env]]
-    [ring.util.codec :as codec]
     [bass4.services.bass :as bass-service]
-    [selmer.parser :as parser]
+    [bass4.external-messages.sms-counter :as sms-counter]
     [bass4.db-common :as db-common]
     [clojure.tools.logging :as log]
     [bass4.services.bass :as bass]
@@ -133,6 +132,7 @@
   (let [sender (get-sender db)
         sms-id (send-sms! to message sender (sms-config db))]
     (when sms-id
+      (sms-counter/inc!)
       (if db
         (bass/inc-sms-count! db)
         (log/info "No DB selected for SMS count update.")))
@@ -156,6 +156,7 @@
     (go
       (let [res (<! own-chan)]
         (when-not (= :error (:result res))
+          (sms-counter/inc!)
           (if db
             (bass/inc-sms-count! db)
             (log/info "No DB selected for SMS count update.")))
