@@ -12,7 +12,9 @@
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.email-queue :as email-queue]
             [bass4.responses.pluggable-ui :as pluggable-ui]
-            [bass4.middleware.lockdown :as lockdown]))
+            [bass4.middleware.lockdown :as lockdown]
+            [bass4.config :as config]
+            [bass4.external-messages.sms-counter :as sms-counter]))
 
 (defonce orig-out *out*)
 
@@ -87,11 +89,11 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (sms-queue/add! db (now/now) [{:user-id   user-id
-                                     :to          to
-                                     :message     message
-                                     :redact-text redact-text
-                                     :sender-id   sender-id}]))
+        (sms-queue/add! db (now/now) [{:user-id     user-id
+                                       :to          to
+                                       :message     message
+                                       :redact-text redact-text
+                                       :sender-id   sender-id}]))
       "No such DB")))
 
 (defapi send-email!
@@ -119,12 +121,27 @@
     (if db
       (binding [*out* orig-out]
         (email-queue/add! db (now/now) [{:user-id     user-id
-                                       :to            to
-                                       :subject       subject
-                                       :message       message
+                                         :to          to
+                                         :subject     subject
+                                         :message     message
                                          :redact-text redact-text
                                          :sender-id   sender-id}]))
       "No such DB")))
+
+(defapi status-email!
+  [db-name :- [[api/str? 1 30]]]
+  (if-let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
+                @db-)]
+    (let [sms-count (sms-counter/count)]
+      (email-queue/add!
+        db/*db*
+        (now/now)
+        [{:user-id     0
+          :to          (config/env :error-email)
+          :subject     "BASS up and running"
+          :message     (str "Number of SMS sent " sms-count)
+          :redact-text ""
+          :sender-id   0}]))))
 
 (defapi pluggable-ui?
   [db-name :- [[api/str? 1 30]]]
