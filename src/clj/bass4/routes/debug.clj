@@ -34,6 +34,12 @@
   (context "/debug" [:as request]
     (if (or (clients/debug-mode?))
       (routes
+        ;; params routes are used for emoji testing
+        (ANY "/params" [] (layout/text-response (pr-str (:params request))))
+        (GET "/query-params" [] (layout/text-response (pr-str (:query-params request))))
+        (POST "/body-params" [] (layout/text-response (pr-str (:body-params request))))
+        (POST "/form-params" [] (layout/text-response (pr-str (:form-params request))))
+
         (GET "/nothing" [] (layout/text-response "nothing"))
         (GET "/timezone" [:as req] (layout/print-var-response (clients/client-setting [:timezone])))
         (GET "/session" [:as req] (layout/print-var-response (:session req)))
