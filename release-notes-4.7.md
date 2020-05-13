@@ -1,6 +1,7 @@
 # Version 4.7
 
  - Registration: Include Swedish country code "se" as default allowed SMS number
+ - Bump jQuery and jQuery UI version numbers (may cause issues).
  - Add proper MIME type for .m4a files
  - CSRF-like protection for some $_POST database mutations in PHP
  - Improve therapist editing
