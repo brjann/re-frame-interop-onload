@@ -17,7 +17,8 @@
             [bass4.module.services :as module-service]
             [bass4.db.orm-classes :as orm]
             [clojure.data.json :as json]
-            [bass4.instrument.flagger :as answers-flagger])
+            [bass4.instrument.flagger :as answers-flagger]
+            [bass4.middleware.lockdown :as lockdown])
   (:import (java.util UUID)))
 
 (use-fixtures
@@ -336,3 +337,33 @@
           (has (api-response? {:export-module-ws {:export "2"}}))
           (visit (api-url "/embedded/api/user/tx/module-content-data/642529/642521"))
           (has (api-response? {:export-alias-ws {:export "3"}}))))))
+
+(deftest admin-panel-lockdown
+  (binding [lockdown/locked-down? (atom false)]
+    (-> *s*
+        (visit "/embedded/admin/lock-down" :request-method :post)
+        (has (status? 403))
+        (visit "/login")
+        (has (status? 200)))
+    ;; Any embedded access does not give access to lockdown
+    (let [uid (php-interop/uid-for-data! {:user-id 110 :path "iframe/render" :php-session-id "xxx"})]
+      (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+        (-> *s*
+            (visit (str "/embedded/create-session?uid=" uid))
+            (visit "/embedded/iframe/render" :request-method :post :params {:text "Hejsan"})
+            (has (status? 200))
+            (visit "/embedded/admin/lock-down" :request-method :post)
+            (has (status? 403))
+            (visit "/login")
+            (has (status? 200)))))
+    (let [uid (php-interop/uid-for-data! {:user-id 110 :path "admin/" :php-session-id "xxx"})]
+      (binding [php-interop/get-php-session (constantly {:user-id 110 :last-activity (utils/to-unix (now/now))})]
+        (-> *s*
+            (visit (str "/embedded/create-session?uid=" uid))
+            (visit "/embedded/admin/lock-down" :request-method :post)
+            (has (status? 200))
+            (visit "/login")
+            (has (status? 503))
+            (visit "/embedded/admin/cancel-lockdown" :request-method :post)
+            (visit "/login")
+            (has (status? 200)))))))
