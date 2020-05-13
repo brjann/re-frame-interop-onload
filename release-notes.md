@@ -2,6 +2,7 @@
 Released on 2020-05-13.
 - Added MIME type for m4a-files
 - Don't send error email on API error
+- Fix Content-Security-Policy header bug
 
 ## Version 4.6.7
 Released on 2020-05-10.

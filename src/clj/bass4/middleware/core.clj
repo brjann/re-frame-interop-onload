@@ -63,7 +63,7 @@
 (defn security-headers-mw
   [handler request]
   (let [response    (handler request)
-        default-csp {"default-src" #{"'self"}
+        default-csp {"default-src" #{"'self'"}
                      "script-src"  #{"'unsafe-inline'" "'unsafe-eval'"}
                      "style-src"   #{"'unsafe-inline'"}
                      "img-src"     #{"*" "data:"}}
