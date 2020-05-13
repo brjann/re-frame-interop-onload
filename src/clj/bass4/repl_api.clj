@@ -11,7 +11,8 @@
             [bass4.external-messages.sms-queue :as sms-queue]
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.email-queue :as email-queue]
-            [bass4.responses.pluggable-ui :as pluggable-ui]))
+            [bass4.responses.pluggable-ui :as pluggable-ui]
+            [bass4.middleware.lockdown :as lockdown]))
 
 (defonce orig-out *out*)
 
@@ -117,12 +118,12 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (email-queue/add! db (now/now) [{:user-id   user-id
-                                       :to          to
-                                       :subject     subject
-                                       :message     message
-                                       :redact-text redact-text
-                                       :sender-id   sender-id}]))
+        (email-queue/add! db (now/now) [{:user-id     user-id
+                                       :to            to
+                                       :subject       subject
+                                       :message       message
+                                         :redact-text redact-text
+                                         :sender-id   sender-id}]))
       "No such DB")))
 
 (defapi pluggable-ui?
@@ -131,6 +132,10 @@
     (if (get clients/client-db-connections db-name-kw)
       (pluggable-ui/pluggable-ui*? db-name-kw)
       "No such DB")))
+
+(defapi locked-down?
+  []
+  @lockdown/locked-down?)
 
 (defapi mirror
   [arg :- [[api/str? 0 1000]]]
