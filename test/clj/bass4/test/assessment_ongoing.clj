@@ -27,7 +27,7 @@
   (let [group-id               (create-group!)
         user-id                (user-service/create-user! project-ass1-id {:group group-id})
         ass-G-s-2-3-p0         (create-assessment! {"Scope" 1})
-        ass-G-week-e+s-3-4-p10 (create-assessment! {"Scope"                    1
+        group-weekly           (create-assessment! {"Scope"                    1
                                                     "RepetitionType"           3
                                                     "Repetitions"              4
                                                     "CustomRepetitionInterval" 7})
@@ -38,29 +38,56 @@
     (create-group-administration!
       group-id ass-G-s-2-3-p0 1 {:date (midnight *now*)})
     (create-group-administration!
-      group-id ass-G-week-e+s-3-4-p10 4 {:date (midnight *now*)})
+      group-id group-weekly 4 {:date (midnight *now*)})
     ; Wrong scope
     (create-group-administration!
       group-id ass-I-s-0-p100-message 1 {:date (midnight *now*)})
     ; Tomorrow
     (create-group-administration!
-      group-id ass-G-week-e+s-3-4-p10 1 {:date (+ (midnight+d 1 *now*))})
+      group-id group-weekly 1 {:date (+ (midnight+d 1 *now*))})
     ; Clinician with no date
     (create-group-administration!
       group-id ass-clinician 1 {})
-    (is (= #{[ass-G-s-2-3-p0 1] [ass-G-week-e+s-3-4-p10 4]}
+    (is (= #{[ass-G-s-2-3-p0 1] [group-weekly 4]}
            (ongoing-assessments *now* user-id)))
     (is (= #{[ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]
              [ass-G-s-2-3-p0 1 :assessment-status/ongoing]
-             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
-             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]
+             [group-weekly 4 :assessment-status/ongoing]
+             [group-weekly 1 :assessment-status/waiting]
              [ass-clinician 1 :assessment-status/no-date]}
            (user-statuses *now* user-id)))
     (is (= #{[ass-G-s-2-3-p0 1 :assessment-status/ongoing]
-             [ass-G-week-e+s-3-4-p10 4 :assessment-status/ongoing]
-             [ass-G-week-e+s-3-4-p10 1 :assessment-status/waiting]
+             [group-weekly 4 :assessment-status/ongoing]
+             [group-weekly 1 :assessment-status/waiting]
              [ass-I-s-0-p100-message 1 :assessment-status/scoped-missing]
              [ass-clinician 1 :assessment-status/no-date]}
+           (group-statuses *now* group-id)))))
+
+(deftest group-assessment-repeated-boundary
+  (let [group-id        (create-group!)
+        user-id         (user-service/create-user! project-ass1-id {:group group-id})
+        interval        (inc (rand-int 10))
+        group-repeated1 (create-assessment! {"Scope"                    1
+                                             "RepetitionType"           3
+                                             "Repetitions"              4
+                                             "CustomRepetitionInterval" interval})
+        group-repeated2 (create-assessment! {"Scope"                    1
+                                             "RepetitionType"           3
+                                             "Repetitions"              4
+                                             "CustomRepetitionInterval" interval})]
+    ; Last day
+    (create-group-administration!
+      group-id group-repeated1 4 {:date (midnight+d (- (dec interval)) *now*)})
+    ; Too late
+    (create-group-administration!
+      group-id group-repeated2 4 {:date (midnight+d (- interval) *now*)})
+    (is (= #{[group-repeated1 4]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[group-repeated1 4 :assessment-status/ongoing]
+             [group-repeated2 4 :assessment-status/date-passed]}
+           (user-statuses *now* user-id)))
+    (is (= #{[group-repeated1 4 :assessment-status/ongoing]
+             [group-repeated2 4 :assessment-status/date-passed]}
            (group-statuses *now* group-id)))))
 
 (deftest group-assessment-mysql-old-super-join-fail
@@ -184,6 +211,29 @@
              [ass-I-week-noremind 1 :assessment-status/ongoing]
              [ass-I-week-noremind 4 :assessment-status/waiting]
              [ass-clinician 1 :assessment-status/no-date]}
+           (user-statuses *now* user-id)))))
+
+(deftest individual-assessment-repeated-boundary
+  (let [user-id   (user-service/create-user! project-ass1-id)
+        interval  (inc (rand-int 10))
+        repeated1 (create-assessment! {"Scope"                    0
+                                       "RepetitionType"           3
+                                       "Repetitions"              4
+                                       "CustomRepetitionInterval" interval})
+        repeated2 (create-assessment! {"Scope"                    0
+                                       "RepetitionType"           3
+                                       "Repetitions"              4
+                                       "CustomRepetitionInterval" interval})]
+    ; Last day
+    (create-participant-administration!
+      user-id repeated1 4 {:date (midnight+d (- (dec interval)) *now*)})
+    ; Too late
+    (create-participant-administration!
+      user-id repeated2 4 {:date (midnight+d (- interval) *now*)})
+    (is (= #{[repeated1 4]}
+           (ongoing-assessments *now* user-id)))
+    (is (= #{[repeated1 4 :assessment-status/ongoing]
+             [repeated2 4 :assessment-status/date-passed]}
            (user-statuses *now* user-id)))))
 
 (deftest individual+group-assessment
