@@ -88,9 +88,10 @@
             (has (api-response? {:hard    timeout-hard
                                  :re-auth nil}))
             (visit "/registration/564610/privacy" :request-method :post :params {})
-            (pass-by (messages-are?
-                       [[:email "API"]]
-                       (poll-message-chan *debug-chan*)))
+            ;; No API error emails
+            #_(pass-by (messages-are?
+                         [[:email "API"]]
+                         (poll-message-chan *debug-chan*)))
             (has (status? 400))
             (visit "/registration/564610/form")
             (has (status? 302))
@@ -185,9 +186,10 @@
           (follow-redirect)
           (has (some-text? "Who is collecting the data"))
           (visit "/registration/564610/privacy" :request-method :post :params {})
-          (pass-by (messages-are?
-                     [[:email "API"]]
-                     (poll-message-chan *debug-chan*)))
+          ;; No API error emails
+          #_(pass-by (messages-are?
+                       [[:email "API"]]
+                       (poll-message-chan *debug-chan*)))
           (has (status? 400))
           (visit "/registration/564610/form")
           (has (status? 302))
