@@ -21,6 +21,7 @@
             [bass4.responses.auth :as auth-response]
             [bass4.services.user :as user-service]
             [bass4.config :as config]
+            [bass4.middleware.lockdown :as lockdown]
             [ring.middleware.anti-forgery :as anti-forgery])
   (:import (com.fasterxml.jackson.core.io JsonEOFException)))
 
@@ -191,9 +192,11 @@
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (wrap-mw-fn #'file-php/File-php)                      ; Must be directly after db resolve so path restrictions (e.g., /embedded) are not applied
       (session-storage/wrap-db-session)
+      (wrap-mw-fn #'lockdown/sms-lockdown-mw)
       (wrap-mw-fn #'db-middleware/db-middleware)
       (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
+      (wrap-mw-fn #'lockdown/lockdown-mw)
       (wrap-mw-fn #'security-headers-mw)
       webjars/wrap-webjars
       (defaults/wrap-defaults

@@ -132,6 +132,17 @@
    (advance-time-s! secs)
    state))
 
+(defn advance-time-h!
+  ([hours]
+   (swap! test-now #(t/plus % (t/hours hours)))
+   (swap! test-current-time (fn [ct]
+                              (let [ct-time  (tc/from-epoch ct)
+                                    new-time (t/plus ct-time (t/hours hours))]
+                                (tc/to-epoch new-time)))))
+  ([state hours]
+   (advance-time-s! hours)
+   state))
+
 (defn advance-time-d!
   ([days]
    (swap! test-now #(t/plus % (t/days days)))
