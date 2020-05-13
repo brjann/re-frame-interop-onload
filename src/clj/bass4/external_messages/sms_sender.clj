@@ -118,7 +118,8 @@
   [number]
   (re-matches #"^\+{0,1}[0-9()./\- ]+$" number))
 
-(defn get-sender [db]
+(defn get-sender
+  [db]
   (let [sender (when db (bass-service/db-sms-sender db))]
     (if-not (zero? (count sender))
       sender
