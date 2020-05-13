@@ -10,7 +10,6 @@
             [bass4.responses.pluggable-ui :as pluggable-ui]
             [bass4.http-utils :as h-utils]))
 
-
 ;; TODO: Wrap only user requests in timeout/re-auth
 (def embedded-routes
   (context "/embedded" [:as request]
@@ -55,4 +54,8 @@
           (GET "/states" []
             (admin-panel/states-page))
           (POST "/states" [state-name]
-            (admin-panel/reset-state state-name)))))))
+            (admin-panel/reset-state state-name))
+          (POST "/cancel-lockdown" []
+            (admin-panel/cancel-lockdown!))
+          (POST "/lock-down" []
+            (admin-panel/lock-down!)))))))

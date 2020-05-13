@@ -1,15 +1,8 @@
 (ns bass4.responses.admin-panel
-  (:require [clj-time.core :as t]
-            [bass4.services.bass :as bass]
-            [bass4.layout :as layout]
-            [bass4.clients.time :as client-time]
-            [clojure.tools.logging :as log]
+  (:require [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
-            [bass4.i18n :as i18n]
             [mount.core :as mount]
-            [ring.util.http-response :as http-response]))
-
-
+            [bass4.middleware.lockdown :as lockdown]))
 
 (defapi reset-state
   [state-name :- [[api/str? 1 100]]]
@@ -24,4 +17,16 @@
     #_(http-response/found "states")))
 
 (defapi states-page []
-  (layout/render "states.html" {:states (mapv #(subs % 2) (mount/find-all-states))}))
+  (layout/render "states.html"
+                 {:states       (mapv #(subs % 2) (mount/find-all-states))
+                  :locked-down? @lockdown/locked-down?}))
+
+(defapi lock-down!
+  []
+  (reset! lockdown/locked-down? true)
+  (layout/text-response (str "BASS is locked down!")))
+
+(defapi cancel-lockdown!
+  []
+  (reset! lockdown/locked-down? false)
+  (layout/text-response (str "BASS is not locked down!")))

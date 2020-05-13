@@ -5,14 +5,30 @@
 {% for state-name in states %}
 <p><a href="#" onclick="post_state('{{ state-name }}');">Reset state {{ state-name }}</a></p>
 {% endfor %}
+<p>{% if locked-down? %}
+    <a href="#" onclick="cancel_lockdown();">Cancel lockdown</a>
+    {% else %}
+    <a href="#" onclick="lock_down();">Lock down BASS</a>
+    {% endif %}
+</p>
 <form id="state-poster" method="post" class="no-ajax">
     <input type="hidden" name="state-name" id="state-name">
 </form>
 <script type="application/javascript">
-	function post_state(state_name) {
-		$('#state-name').val(state_name);
-		$('#state-poster').submit();
-	}
+   function post_state(state_name) {
+      $('#state-name').val(state_name);
+      $('#state-poster').submit();
+   }
+
+   function cancel_lockdown() {
+      $('#state-poster').prop('action', 'cancel-lockdown');
+      $('#state-poster').submit();
+   }
+
+   function lock_down() {
+      $('#state-poster').prop('action', 'lock-down');
+      $('#state-poster').submit();
+   }
 </script>
 
 {% endblock %}
