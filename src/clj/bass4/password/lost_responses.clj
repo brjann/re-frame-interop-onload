@@ -1,4 +1,4 @@
-(ns bass4.password.responses
+(ns bass4.password.lost-responses
   (:require [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass-service]
@@ -13,7 +13,7 @@
 
 
 ;; -------------------
-;;    NO ACTIVITIES
+;;    LOST-PASSWORD
 ;; -------------------
 
 (defapi request-page []
