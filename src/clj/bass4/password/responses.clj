@@ -71,8 +71,3 @@
   []
   (layout/render "lpw-report-received.html"
                  {:email (:email (bass-service/db-contact-info))}))
-
-;; TODO: Tests
-;; - Flow post - sms - request - flag created
-;; - Flow post - sms - request after timeout - no flag created
-;; - No email / sms - flag created anyway
