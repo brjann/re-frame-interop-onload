@@ -1,11 +1,11 @@
-(ns bass4.lost-password.responses
+(ns bass4.password.responses
   (:require [bass4.api-coercion :as api :refer [defapi]]
             [bass4.layout :as layout]
             [bass4.services.bass :as bass-service]
             [bass4.services.user :as user-service]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.lost-password.services :as lpw-service]
+            [bass4.password.services :as lpw-service]
             [bass4.external-messages.email-sender :as mailer]
             [bass4.i18n :as i18n]
             [bass4.http-utils :as h-utils]

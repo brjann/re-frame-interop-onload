@@ -11,7 +11,7 @@
             [bass4.routes.quick-login :as quick-login]
             [bass4.routes.debug :refer [debug-routes]]
             [bass4.routes.e-auth :refer [e-auth-routes]]
-            [bass4.lost-password.routes :as lost-password]
+            [bass4.password.routes :as lost-password]
             [bass4.external-messages.sms-status :as sms-status]
             [bass4.env :refer [defaults]]
             [bass4.middleware.core :as middleware :refer [wrap-mw-fn]]
