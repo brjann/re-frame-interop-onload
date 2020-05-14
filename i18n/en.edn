@@ -189,6 +189,8 @@
                    :again                   "Request a new password again."
                    :forgot-username         "If you don't know your username or registered email address, contact support at "
                    :close-window            "You can close this browser window"}
+ :set-password    {:title  "Select your password"
+                   :update "Your password has been updated"}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

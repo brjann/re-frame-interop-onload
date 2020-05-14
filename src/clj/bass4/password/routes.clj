@@ -1,6 +1,7 @@
 (ns bass4.password.routes
   (:require [compojure.core :refer [defroutes context GET POST routes]]
             [bass4.password.lost-responses :as lpw-res]
+            [bass4.password.set-responses :as set-pw-response]
             [ring.util.http-response :as http-response]
             [bass4.password.lost-services :as lpw-service]
             [bass4.route-rules :as route-rules]))
@@ -58,4 +59,8 @@
       (POST "/" [username]
         (lpw-res/handle-report username))
       (GET "/received" []
-        (lpw-res/report-received)))))
+        (lpw-res/report-received))))
+  (GET "/p/:uid" [uid]
+    (set-pw-response/set-pw-page uid))
+  (POST "/p/:uid" [uid password]
+    (set-pw-response/handle-pw uid password)))
