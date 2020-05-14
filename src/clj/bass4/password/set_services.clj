@@ -4,7 +4,8 @@
             [bass4.now :as now]
             [clj-time.core :as t]
             [clojure.string :as str]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [bass4.services.user :as user-service]))
 
 (defn gen-uid
   []
@@ -18,14 +19,22 @@
                        uid user-id valid-until])
     uid))
 
-(defn link
-  [db user-id]
-  (let [url (-> (clients/client-scheme+host db)
-                (str/replace #"/$" ""))
-        uid (create-uid! db user-id)]
-    (str url "/p/" uid)))
+(defn user-id
+  [db uid]
+  (-> (jdbc/query db ["SELECT `user-id` FROM password_uid WHERE `uid` = ? AND `valid-until` > ?"
+                      uid (now/now)])
+      (first)
+      :user-id))
 
 (defn valid?
   [db uid]
-  (some? (seq (jdbc/query db ["SELECT `uid` FROM password_uid WHERE `uid` = ? AND `valid-until` > ?"
-                              uid (now/now)]))))
+  (some? (user-id db uid)))
+
+(defn set-password!
+  [db uid password]
+  (when-let [user-id (user-id db uid)]
+    (jdbc/execute! db ["DELETE FROM password_uid WHERE `uid` = ?"
+                       uid])
+    (jdbc/execute! db ["UPDATE c_participant SET `Password` = ? WHERE `ObjectId` = ?"
+                       (user-service/password-hasher password) user-id])
+    true))
