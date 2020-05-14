@@ -5,8 +5,8 @@
             [bass4.utils :as utils]
             [bass4.now :as now]
             [bass4.db.orm-classes :as orm]
-            [bass4.clients.core :as clients])
-  (:import (java.util UUID)))
+            [bass4.clients.core :as clients]
+            [bass4.passwords :as passwords]))
 
 (defn ^:dynamic lost-password-method []
   (let [method (->
@@ -37,7 +37,7 @@
 
 (defn create-request-uid!
   [user]
-  (let [uid (str (subs (str (UUID/randomUUID)) 0 13) "-" (:user-id user))]
+  (let [uid (str (passwords/letters-digits 13 passwords/url-safe-chars) "-" (:user-id user))]
     (db/set-lost-password-request-uid! {:user-id (:user-id user) :uid uid :now (utils/current-time)})
     uid))
 
