@@ -18,7 +18,7 @@
                 (jdbc/execute! db ["DELETE FROM singleobjectaccesses WHERE `time` < ?" i24hrs])
                 (jdbc/execute! db ["DELETE FROM assessment_rounds WHERE `Time` < ?" t24hrs])
                 (jdbc/execute! db/db-common ["DELETE FROM common_log_failed_logins where `Time` < ?" t7days])
-                (jdbc/execute! db/db-common ["DELETE FROM passwords where `valid-until` < ?" t7days])]]
+                (jdbc/execute! db ["DELETE FROM password_uid where `valid-until` < ?" t7days])]]
     {:cycles (->> counts
                   (map first)
                   (reduce +))}))
