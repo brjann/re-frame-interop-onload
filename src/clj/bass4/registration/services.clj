@@ -99,31 +99,33 @@
   [project-id]
   (db/registration-params {:project-id project-id}))
 
-(defn ^:dynamic registration-params
-  [project-id]
-  (if-let [params (db-registration-params project-id)]
-    (let [params        (consolidate-params params)
-          sms-countries (mapv string/lower-case (string/split-lines (:sms-countries params)))]
-      (merge
-        params
-        {:fields        (:fields params)
-         :sms-countries sms-countries}))))
-
 (def country-codes
   (group-by #(string/lower-case (get % "code")) (utils/json-safe (slurp (io/resource "docs/country-calling-codes.json")))))
 
+(defn sms-countries
+  [params]
+  (or (->> (string/split-lines (:sms-countries params))
+           (mapv string/lower-case)
+           (filter #(contains? country-codes %))
+           (not-empty))
+      ["se"]))
+
+(defn ^:dynamic registration-params
+  [project-id]
+  (if-let [params (db-registration-params project-id)]
+    (let [params (consolidate-params params)]
+      (merge
+        params
+        {:fields        (:fields params)
+         :sms-countries (sms-countries params)}))))
+
 (defn registration-content
   [project-id]
-  (let [params        (db/registration-content {:project-id project-id})
-        fields        (transform-fields (:fields params))
-        group         (#(if (or (nil? %) (zero? %)) nil %) (:group params))
-        sms-countries (or (->> (string/split-lines (:sms-countries params))
-                               (mapv string/lower-case)
-                               (filter #(contains? country-codes %))
-                               (not-empty))
-                          ["se"])]
+  (let [params (db/registration-content {:project-id project-id})
+        fields (transform-fields (:fields params))
+        group  (#(if (or (nil? %) (zero? %)) nil %) (:group params))]
     (merge
-      {:fields fields :group group :sms-countries sms-countries}
+      {:fields fields :group group :sms-countries (sms-countries params)}
       (select-keys params [:pid-name :pid-format :pid-validator :info :markdown? :bankid? :bankid-change-names?]))))
 
 (defn registration-study-consent
