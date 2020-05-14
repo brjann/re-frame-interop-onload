@@ -35,6 +35,7 @@
   (when-let [user-id (user-id db uid)]
     (jdbc/execute! db ["DELETE FROM password_uid WHERE `uid` = ?"
                        uid])
-    (jdbc/execute! db ["UPDATE c_participant SET `Password` = ? WHERE `ObjectId` = ?"
-                       (user-service/password-hasher password) user-id])
-    true))
+    (-> (jdbc/execute! db ["UPDATE c_participant SET `Password` = ? WHERE `ObjectId` = ?"
+                           (user-service/password-hasher password) user-id])
+        (first)
+        (= 1))))
