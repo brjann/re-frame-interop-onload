@@ -36,9 +36,6 @@
                         {:logout-path      (str "/registration/" project-id)
                          :logout-path-text (i18n/tr [:registration/register-again])})))
 
-(def password-regex
-  #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
-
 (defn all-fields?
   [fields field-values]
   (if (seq field-values)
@@ -633,7 +630,7 @@
                     :sms-countries  sms-countries
                     :sms?           (or (contains? fields-map :sms-number)
                                         (contains? fields-map :sms-number-value))
-                    :password-regex password-regex
+                    :password-regex passwords/password-regex
                     :pid-name       (if (:bankid? reg-content)
                                       (i18n/tr [:registration/personnummer])
                                       (:pid-name reg-content))}))))
@@ -660,7 +657,7 @@
 (defn- password-valid?
   [field-values]
   (if (:password field-values)
-    (re-matches password-regex (:password field-values))
+    (passwords/password-valid? (:password field-values))
     true))
 
 (defapi handle-registration

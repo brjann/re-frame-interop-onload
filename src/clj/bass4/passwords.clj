@@ -51,3 +51,10 @@
                           (random-number x)
                           (random-word words)))
                       config)))))
+
+(def password-regex
+  #"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$")
+
+(defn password-valid?
+  [password]
+  (re-matches password-regex password))
