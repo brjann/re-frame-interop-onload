@@ -41,21 +41,24 @@
 
 (def ^:dynamic last-send (atom nil))
 (def send-interval 2)
-(def too-many 10000)
+
+(defn too-many
+  []
+  (config/env :sms-count-lockdown 10000))
 
 (defn sms-lockdown-mw
   [handler request]
   (let [sms-count (sms-counter/count)]
     (cond
-      (> (/ too-many 2) sms-count)
+      (> (/ (too-many) 2) sms-count)
       (handler request)
 
-      (<= too-many sms-count)
+      (<= (too-many) sms-count)
       (do
         (lock-down! (str sms-count " sms have been sent in 24 hrs!"))
         (response))
 
-      (<= (/ too-many 2) sms-count)
+      (<= (/ (too-many) 2) sms-count)
       (if (or (nil? @last-send)
               (t/after? (now/now) (t/plus @last-send (t/hours send-interval))))
         (let [message (str sms-count " sms have been sent in 24 hrs!")]

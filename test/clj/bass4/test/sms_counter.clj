@@ -46,7 +46,7 @@
 (deftest lockdown
   (fix-time
     (let [c         (chan 2)
-          too-many  lockdown/too-many
+          too-many  (lockdown/too-many)
           half-many (/ too-many 2)]
       (when-not (even? (int too-many))
         (throw (Exception. "Too many sms must be even! " too-many)))
