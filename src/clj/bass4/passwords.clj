@@ -5,7 +5,13 @@
             [bass4.utils :refer [map-map map-map-keys filter-map]]
             [bass4.clients.core :as clients]))
 
-(def password-chars [2 3 4 6 7 8 9 "a" "b" "d" "e" "g" "h" "p" "r" "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
+(def password-chars
+  [2 3 4 6 7 8 9
+   "a" "b" "d" "e" "g" "h" "p" "r"
+   "A" "B" "C" "D" "E" "F" "G" "H" "J" "K" "L" "M" "N" "P" "Q" "R" "T" "W" "X" "Y" "Z"])
+
+(def url-safe-chars
+  (vec "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"))
 
 (defn ^:dynamic letters-digits
   ([length] (letters-digits length password-chars))

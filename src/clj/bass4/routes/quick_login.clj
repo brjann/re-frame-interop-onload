@@ -38,17 +38,14 @@
         (put! *quick-login-updates-chan* (into #{} (map :user-id users))))
       (db/update-users-quick-login! db {:quick-logins updates}))))
 
-(def quicklogin-chars
-  (vec "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"))
-
 (defn ^:dynamic quicklogin-id
   [user-id]
   (let [base64-id (->> (Integer/toBinaryString user-id)
                        (partition 6 6 [])
                        (map (comp #(Integer/parseInt % 2) #(apply str %)))
-                       (map #(get quicklogin-chars %))
+                       (map #(get passwords/url-safe-chars %))
                        (apply str))
-        rest      (passwords/letters-digits (- 11 (count base64-id)) quicklogin-chars)]
+        rest      (passwords/letters-digits (- 11 (count base64-id)) passwords/url-safe-chars)]
     (subs (str base64-id "." rest) 0 11)))
 
 (defn recent-quick-login?
