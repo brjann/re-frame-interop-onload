@@ -5,7 +5,7 @@
             [bass4.services.user :as user-service]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.password.services :as lpw-service]
+            [bass4.password.lost-services :as lpw-service]
             [bass4.external-messages.email-sender :as mailer]
             [bass4.i18n :as i18n]
             [bass4.http-utils :as h-utils]

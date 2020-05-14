@@ -9,7 +9,7 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [bass4.db.core :as db]
-            [bass4.password.services :as lpw-service]
+            [bass4.password.lost-services :as lpw-service]
             [bass4.external-messages.async :refer [*debug-chan*]]))
 
 (use-fixtures

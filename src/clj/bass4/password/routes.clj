@@ -2,9 +2,7 @@
   (:require [compojure.core :refer [defroutes context GET POST routes]]
             [bass4.password.lost-responses :as lpw-res]
             [ring.util.http-response :as http-response]
-            [bass4.layout :as layout]
-            [clojure.tools.logging :as log]
-            [bass4.password.services :as lpw-service]
+            [bass4.password.lost-services :as lpw-service]
             [bass4.route-rules :as route-rules]))
 
 (def rules
