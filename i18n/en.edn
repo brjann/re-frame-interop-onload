@@ -189,8 +189,10 @@
                    :again                   "Request a new password again."
                    :forgot-username         "If you don't know your username or registered email address, contact support at "
                    :close-window            "You can close this browser window"}
- :set-password    {:title   "Select your password"
-                   :success "Your password has been changed. You will now be redirected to the login page."}
+ :set-password    {:title             "Select your password"
+                   :success           "Your password has been changed. You will now be redirected to the login page."
+                   :invalid-uid-title "Invalid link"
+                   :invalid-uid-info  "The link that you clicked is not valid. Links last for two days and can only be used once."}
  :error           {:something-happened    "Something bad happened!"
                    :page-not-found        "Page not found"
                    :page-not-found-longer "The page you requested could not be found."

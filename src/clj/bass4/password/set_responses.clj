@@ -31,7 +31,9 @@
     (layout/render "set-password.html"
                    {:password-regex passwords/password-regex
                     :in-session?    false})
-    (layout/text-response "Not valid")))
+    (layout/render "set-password-invalid-uid.html"
+                   {:email       (:email (bass-service/db-contact-info))
+                    :in-session? false})))
 
 (defapi handle-pw
   [uid :- [[api/str? 13 13]] password :- [[api/str? 8 20]]]
