@@ -5,9 +5,11 @@
             [clj-time.core :as t]
             [bass4.services.user :as user-service]))
 
+(def uid-length 13)
+
 (defn gen-uid
   []
-  (passwords/letters-digits 13 passwords/url-safe-chars))
+  (passwords/letters-digits uid-length passwords/url-safe-chars))
 
 (defn create-uid!
   [db user-id]

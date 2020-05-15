@@ -6,7 +6,8 @@
             [bass4.handler :refer :all]
             [bass4.test.core :refer :all]
             [bass4.db.core :as db]
-            [bass4.password.set-responses :as set-pw-response])
+            [bass4.password.set-responses :as set-pw-response]
+            [bass4.password.set-services :as set-pw-service])
   (:import (java.net URL)))
 
 (use-fixtures
@@ -17,8 +18,8 @@
 (deftest invalid
   (-> *s*
       (visit "/p/xx")
-      (has (status? 400))
-      (visit (str "/p/" (apply str (repeat 13 "x"))))
+      (has (status? 404))
+      (visit (str "/p/" (apply str (repeat set-pw-service/uid-length "x"))))
       (has (status? 404))))
 
 (deftest set-password

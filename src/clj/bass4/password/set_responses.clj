@@ -22,8 +22,14 @@
         uid (set-pw-service/create-uid! db user-id)]
     (str url "/p/" uid)))
 
+(defn link-length
+  [db]
+  (let [url (-> (clients/client-scheme+host db)
+                (str/replace #"/$" ""))]
+    (+ set-pw-service/uid-length (count url) (count "/p/"))))
+
 (defapi set-pw-page
-  [uid :- [[api/str? 13 13]]]
+  [uid :- [[api/str? 0 100]]]
   (if (set-pw-service/valid? db/*db* uid)
     (layout/render "set-password.html"
                    {:password-regex passwords/password-regex
@@ -35,7 +41,7 @@
       :status 404)))
 
 (defapi handle-pw
-  [uid :- [[api/str? 13 13]] password :- [[api/str? 8 20]]]
+  [uid :- [[api/str? 0 100]] password :- [[api/str? 0 100]]]
   (if (passwords/password-valid? password)
     (if (set-pw-service/set-password! db/*db* uid password)
       (layout/text-response "OK")
