@@ -40,5 +40,5 @@
   (if (passwords/password-valid? password)
     (if (set-pw-service/set-password! db/*db* uid password)
       (layout/text-response "OK")
-      (http-response/not-found "No such user"))
+      (http-response/bad-request))
     (http-response/bad-request)))
