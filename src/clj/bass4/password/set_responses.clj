@@ -29,7 +29,8 @@
   [uid :- [[api/str? 13 13]]]
   (if (set-pw-service/valid? db/*db* uid)
     (layout/render "set-password.html"
-                   {:password-regex passwords/password-regex})
+                   {:password-regex passwords/password-regex
+                    :in-session?    false})
     (layout/text-response "Not valid")))
 
 (defapi handle-pw
