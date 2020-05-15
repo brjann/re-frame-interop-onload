@@ -3,7 +3,8 @@
             [bass4.error-pages :as error-pages]
             [bass4.utils :as utils]
             [ring.util.http-response :as http-response]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.tools.logging :as log]))
 
 
 ;; ----------------
@@ -50,8 +51,12 @@
         ajax-post? (and ajax? post?)
         response   (handler request)
         status     (:status response)
-        user-id    (get-in request [:session :user-id])]
+        user-id    (get-in request [:session :user-id])
+        html?      (= "text/html; charset=utf-8" (get-in response [:headers "Content-Type"]))]
     (cond
+      html?
+      response
+
       (= 440 status)
       (if (or api? ajax?)
         (assoc response :body "")

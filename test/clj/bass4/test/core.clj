@@ -151,7 +151,7 @@
                                     new-time (t/plus ct-time (t/days days))]
                                 (tc/to-epoch new-time)))))
   ([state days]
-   (advance-time-s! days)
+   (advance-time-d! days)
    state))
 
 #_(defn on-start

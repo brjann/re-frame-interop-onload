@@ -3,8 +3,6 @@
             [clojure.java.jdbc :as jdbc]
             [bass4.now :as now]
             [clj-time.core :as t]
-            [clojure.string :as str]
-            [bass4.clients.core :as clients]
             [bass4.services.user :as user-service]))
 
 (defn gen-uid
