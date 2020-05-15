@@ -20,20 +20,27 @@
                        uid user-id valid-until])
     uid))
 
-(defn user-id
+(defn uid->user-id
   [db uid]
   (-> (jdbc/query db ["SELECT `user-id` FROM password_uid WHERE `uid` = ? AND `valid-until` > ?"
                       uid (now/now)])
       (first)
       :user-id))
 
+(defn user?
+  [db user-id]
+  (when user-id
+    (-> (jdbc/query db ["SELECT `ObjectId` FROM c_participant WHERE ObjectId = ?" user-id])
+        (seq)
+        (some?))))
+
 (defn valid?
   [db uid]
-  (some? (user-id db uid)))
+  (user? db (uid->user-id db uid)))
 
 (defn set-password!
   [db uid password]
-  (when-let [user-id (user-id db uid)]
+  (when-let [user-id (uid->user-id db uid)]
     (jdbc/execute! db ["DELETE FROM password_uid WHERE `uid` = ?"
                        uid])
     (-> (jdbc/execute! db ["UPDATE c_participant SET `Password` = ? WHERE `ObjectId` = ?"
