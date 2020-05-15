@@ -15,7 +15,8 @@
   [db user-id]
   (let [uid         (gen-uid)
         valid-until (t/plus (now/now) (t/days 2))]
-    (jdbc/execute! db ["INSERT INTO password_uid (`uid`, `user-id`, `valid-until`) VALUES (?,?,?)"
+    (jdbc/execute! db [(str "INSERT INTO password_uid (`uid`, `user-id`, `valid-until`) VALUES (?,?,?) "
+                            "ON DUPLICATE KEY UPDATE `uid` = VALUES(`uid`), `valid-until` = VALUES(`valid-until`)")
                        uid user-id valid-until])
     uid))
 
