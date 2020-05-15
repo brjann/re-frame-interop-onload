@@ -20,6 +20,10 @@
                        uid user-id valid-until])
     uid))
 
+(defn delete-uid!
+  [db uid]
+  (jdbc/execute! db ["DELETE FROM password_uid WHERE uid = ?" uid]))
+
 (defn uid->user-id
   [db uid]
   (-> (jdbc/query db ["SELECT `user-id` FROM password_uid WHERE `uid` = ? AND `valid-until` > ?"
@@ -36,7 +40,11 @@
 
 (defn valid?
   [db uid]
-  (user? db (uid->user-id db uid)))
+  (if-not (user? db (uid->user-id db uid))
+    (do
+      (delete-uid! db uid)
+      false)
+    true))
 
 (defn set-password!
   [db uid password]
