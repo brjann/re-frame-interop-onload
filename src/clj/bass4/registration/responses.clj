@@ -225,7 +225,7 @@
                                     (if-let [password (get-in session [:registration :field-values :password])]
                                       password
                                       (throw (ex-info "Password not present in registration" (:registration session)))))]
-                     (user-service/update-user-properties! user-id {:password password})
+                     (user-service/update-user-properties! user-id {:password password} "resume registration")
                      password))]
     (if (not (empty? (:username user)))
       (->

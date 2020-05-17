@@ -135,16 +135,18 @@
 (defn create-user!
   [project-id field-values privacy-consent study-consent username participant-id group]
   (let [insert-values (filter-map identity (map-map #(get field-values %) field-translation))]
-    (user-service/create-user! project-id (merge insert-values
-                                                 (when privacy-consent
-                                                   {:PrivacyNoticeId          (:notice-id privacy-consent)
-                                                    :PrivacyNoticeConsentTime (utils/to-unix (:time privacy-consent))})
-                                                 (when study-consent
-                                                   {:StudyConsentId   (:consent-id study-consent)
-                                                    :StudyConsentTime (utils/to-unix (:time study-consent))})
-                                                 (when username {:username username})
-                                                 (when participant-id {:participantid participant-id})
-                                                 (when group {:group group})))))
+    (user-service/create-user! project-id
+                               (merge insert-values
+                                      (when privacy-consent
+                                        {"PrivacyNoticeId"          (:notice-id privacy-consent)
+                                         "PrivacyNoticeConsentTime" (utils/to-unix (:time privacy-consent))})
+                                      (when study-consent
+                                        {"StudyConsentId"   (:consent-id study-consent)
+                                         "StudyConsentTime" (utils/to-unix (:time study-consent))})
+                                      (when username {:username username})
+                                      (when participant-id {"participantid" participant-id})
+                                      (when group {:group group}))
+                               "registration")))
 
 (defn duplicate-participants
   [{:keys [email sms-number pid-number]}]

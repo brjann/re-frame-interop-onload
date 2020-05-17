@@ -60,4 +60,4 @@
   (when-let [user-id (uid->user-id db uid)]
     (jdbc/execute! db ["DELETE FROM password_uid WHERE `uid` = ?"
                        uid])
-    (= 1 (user-service/update-user-properties! user-id {:password password}))))
+    (= 1 (user-service/update-user-properties! user-id {:password password} "set password link"))))

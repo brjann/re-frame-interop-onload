@@ -190,6 +190,7 @@
     (swap! s (constantly (session (app)))))
   (let [test-db (config/env :test-db)]
     (binding [sql-wrapper/*email-deadlock*     false
+              user-service/*log-user-changes*  false
               email/*email-reroute*            :void
               sms/*sms-reroute*                :void
               clojure.test/*stack-trace-depth* 10
