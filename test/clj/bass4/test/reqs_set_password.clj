@@ -78,9 +78,10 @@
         php-session-id (reqs-embedded/get-php-session-id)
         now            (utils/to-unix (now/now))]
     (jdbc/insert! db/*db* "sessions" {"SessId" php-session-id "UserId" 110 "LastActivity" now "SessionStart" now})
-    (let [uid (php-interop/uid-for-data! {:user-id        110
-                                          :path           (str "iframe/send-password-link/" user-id)
-                                          :php-session-id php-session-id})]
+    (let [uid        (php-interop/uid-for-data! {:user-id        110
+                                                 :path           (str "iframe/send-password-link/" user-id)
+                                                 :php-session-id php-session-id})
+          sms-length (- 150 (set-pw-response/link-length db/*db*))]
       (-> *s*
           (visit (str "/embedded/create-session?uid=" uid))
           (visit (str "/embedded/iframe/send-password-link/" user-id))
@@ -97,6 +98,20 @@
           ;; Missing {LINK}
           (visit (str "/embedded/iframe/send-password-link/" user-id) :request-method :post :params {:type    "sms"
                                                                                                      :message "LINK"})
+          (has (status? 400))
+
+          ;; Not too long
+          (visit (str "/embedded/iframe/send-password-link/" user-id) :request-method :post
+                 :params {:type    "sms"
+                          :message (str "{LINK}"
+                                        (apply str (repeat sms-length "X")))})
+          (has (status? 200))
+
+          ;; Too long
+          (visit (str "/embedded/iframe/send-password-link/" user-id) :request-method :post
+                 :params {:type    "sms"
+                          :message (str "{LINK}"
+                                        (apply str (repeat (inc sms-length) "X")))})
           (has (status? 400))
 
           ;; No SMS number
