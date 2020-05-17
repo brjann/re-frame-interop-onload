@@ -1,6 +1,5 @@
 (ns bass4.repl-api
   (:require [bass4.services.user :as user-service]
-            [bass4.db.core :as db]
             [bass4.api-coercion :as api :refer [defapi]]
             [bass4.assessment.statuses :as assessment-statuses]
             [clj-time.core :as t]
@@ -89,11 +88,7 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (sms-queue/add! db (now/now) [{:user-id     user-id
-                                       :to          to
-                                       :message     message
-                                       :redact-text redact-text
-                                       :sender-id   sender-id}]))
+        (sms-queue/queue-1! db user-id to message redact-text sender-id))
       "No such DB")))
 
 (defapi send-email!
@@ -120,12 +115,7 @@
              @db-)]
     (if db
       (binding [*out* orig-out]
-        (email-queue/add! db (now/now) [{:user-id     user-id
-                                         :to          to
-                                         :subject     subject
-                                         :message     message
-                                         :redact-text redact-text
-                                         :sender-id   sender-id}]))
+        (email-queue/queue-1! db user-id to subject message redact-text sender-id))
       "No such DB")))
 
 (defapi status-email!
@@ -133,15 +123,13 @@
   (if-let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
                 @db-)]
     (let [sms-count (sms-counter/count)]
-      (email-queue/add!
-        db/*db*
-        (now/now)
-        [{:user-id     0
-          :to          (config/env :error-email)
-          :subject     "BASS up and running"
-          :message     (str "Number of SMS sent " sms-count)
-          :redact-text ""
-          :sender-id   0}]))))
+      (email-queue/queue-1! db
+                            0
+                            (config/env :error-email)
+                            "BASS up and running"
+                            (str "Number of SMS sent " sms-count)
+                            ""
+                            0))))
 
 (defapi pluggable-ui?
   [db-name :- [[api/str? 1 30]]]

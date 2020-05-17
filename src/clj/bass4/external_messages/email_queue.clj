@@ -2,11 +2,11 @@
   (:require [bass4.db.core :as db]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [thread <!!]]
-            [clojure.tools.logging :as log]
             [clj-time.coerce :as tc]
             [bass4.external-messages.email-sender :as mailer]
             [bass4.external-messages.email-sender :as email]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.now :as now]))
 
 (defn- db-queue-emails!
   [db email-vector]
@@ -55,6 +55,15 @@
                                      (or (:reply-to %) ""))
                             emails)]
       (db-queue-emails! db email-vector))))
+
+(defn queue-1!
+  [db user-id to subject message redact-text sender-id]
+  (add! db (now/now) [{:user-id     user-id
+                       :to          to
+                       :subject     subject
+                       :message     message
+                       :redact-text redact-text
+                       :sender-id   sender-id}]))
 
 (defn send!
   [db local-config now]

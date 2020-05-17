@@ -6,7 +6,7 @@
             [bass4.external-messages.sms-sender :as sms]
             [clojure.string :as str]
             [bass4.external-messages.email-sender :as email]
-            [clojure.tools.logging :as log]))
+            [bass4.now :as now]))
 
 (defn- db-queue-smses!
   [db sms-vector]
@@ -58,6 +58,14 @@
                                    (:sender-id %))
                           smses)]
       (db-queue-smses! db sms-vector))))
+
+(defn queue-1!
+  [db user-id to message redact-text sender-id]
+  (add! db (now/now) [{:user-id     user-id
+                       :to          to
+                       :message     message
+                       :redact-text redact-text
+                       :sender-id   sender-id}]))
 
 (defn send!
   [db local-config now]
