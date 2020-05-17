@@ -10,39 +10,55 @@
         {% if all email sms-number %}
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="type"
-                   id="message-type-email" value="email" checked>
+                   id="message-type-email" value="email" onchange="type_change();" checked>
             <label class="form-check-label" for="message-type-email">
                 Email: {{email}}
             </label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="type" id="message-type-sms" value="sms">
+            <input class="form-check-input" type="radio" name="type"
+                   id="message-type-sms" value="sms" onchange="type_change();">
             <label class="form-check-label" for="message-type-sms">
                 SMS: {{sms-number}}
             </label>
+        </div>
+        {% elif email %}
+        <div class="form-check form-check-inline">
+            <label class="form-check-label">Email: {{email}}</label>
+        </div>
+        {% else %}
+        <div class="form-check form-check-inline">
+            <label class="form-check-label">SMS: {{sms-number}}</label>
         </div>
         {% endif %}
     </div>
     {% if email %}
     <div class="form-group">
         <label for="message-subject">Subject</label>
-        <input type="text" class="form-control" name="subject" id="message-subject" placeholder="Subject">
+        <input type="text" class="form-control" name="subject"
+               id="message-subject" placeholder="Subject" required>
     </div>
     {% endif %}
     <div class="form-group">
         <label for="message">Message</label>
         <textarea class="form-control"
-                  name="message" rows="10" id="message"
+                  name="message" rows="4" id="message"
                   onkeyup="update_character_count();" onchange="update_character_count();"
-                  maxlength="{{max-chars}}" required></textarea>
+                  maxlength="{{max-chars}}" required>{LINK}</textarea>
         <small class="form-text">Characters left <span id="error-description-chars">{{max-chars}}</span></small>
     </div>
-    <button type="submit" class="btn btn-fill btn-primary">{%tr submit %}</button>
+    <button type="submit" class="btn btn-fill btn-primary" id="message-submit">Send password link</button>
 </form>
 {% endblock %}
 
 {% block page-scripts %}
 <script type="text/javascript">
+   // @formatter:off
+   var link_length = {{link-length}} - '{LINK}'.length;
+   var sms_max_length = {{sms-max-length}} - link_length;
+   var email_max_length = {{email-max-length}} - link_length;
+   // @formatter:on
+
    function error_report_success() {
       var text_thank_you = "{%tr error-report/thank-you %}";
       $('#error-description').val('');
@@ -51,18 +67,51 @@
    }
 
    function update_character_count() {
-      return;
-      var text_too_long = "{%tr too-long! %}";
-      var $error_description = $('#error-description');
-      var max_length = $error_description.prop('maxlength');
-      var text_length = $error_description.val().length;
+      var $message = $('#message');
       var $chars_left = $('#error-description-chars');
-      if (text_length <= max_length) {
-         $chars_left.text(max_length - text_length);
+      var valid = true;
+      var $submit = $('#message-submit');
+      if ($message.val().indexOf('{LINK}') === -1) {
+         $chars_left.text('Message must include "{LINK}"');
+         valid = false;
       } else {
-         $chars_left.text(text_too_long);
+         var max_length = $message.prop('maxlength');
+         var text_length = $message.val().length;
+         if (text_length <= max_length) {
+            $chars_left.text(max_length - text_length);
+         } else {
+            $chars_left.text('too long');
+            valid = false;
+         }
+      }
+      if (valid) {
+         $submit.prop('disabled', false);
+      } else {
+         $submit.prop('disabled', true);
       }
    }
 
+   var old_subject = '';
+
+   function type_change() {
+      var type = $('input[name=type]:checked').val();
+      var $message = $('#message');
+      var $subject = $('#message-subject');
+      if (type === 'sms') {
+         old_subject = $subject.val();
+         $subject.val('');
+         $subject.prop('placeholder', 'Subject not used for SMS');
+         $subject.prop('disabled', true);
+         $message.prop('maxlength', sms_max_length);
+      } else {
+         $subject.val(old_subject);
+         $subject.prop('placeholder', 'Subject');
+         $subject.prop('disabled', false);
+         $message.prop('maxlength', email_max_length);
+      }
+      update_character_count();
+   }
+
+   $().ready(type_change);
 </script>
 {% endblock %}

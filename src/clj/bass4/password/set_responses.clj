@@ -53,8 +53,11 @@
   [user-id :- api/->int]
   (if-let [user (user-service/get-user user-id)]
     (layout/render "admin/send-pwd-link.html"
-                   {:sms-number (not-empty (:sms-number user))
-                    :email      (not-empty (:email user))})
+                   {:sms-number       (not-empty (:sms-number user))
+                    :email            (not-empty (:email user))
+                    :sms-max-length   150
+                    :email-max-length 1000
+                    :link-length      (link-length db/*db*)})
     (http-response/not-found "No such user")))
 
 (defn sms-or-email?
