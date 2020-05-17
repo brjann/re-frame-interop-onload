@@ -13,8 +13,7 @@
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.sms-queue :as sms-queue]
-            [bass4.external-messages.email-queue :as email-queue]
-            [clojure.java.jdbc :as jdbc]))
+            [bass4.external-messages.email-queue :as email-queue]))
 
 
 (defn link!
@@ -91,7 +90,7 @@
            (str/blank? subject))
       (http-response/bad-request "Subject missing")
 
-      (and (= "email")
+      (and (= "email" type)
            (not (email/is-email? (:email user))))
       (http-response/bad-request "User has no valid email address")
 

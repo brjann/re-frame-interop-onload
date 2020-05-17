@@ -34,10 +34,12 @@
         {% elif email %}
         <div class="form-check form-check-inline">
             <label class="form-check-label">Email: {{email}}</label>
+            <input type="hidden" name="type" value="email">
         </div>
         {% else %}
         <div class="form-check form-check-inline">
             <label class="form-check-label">SMS: {{sms-number}}</label>
+            <input type="hidden" name="type" value="sms">
         </div>
         {% endif %}
     </div>
@@ -101,7 +103,13 @@
    var old_subject = '';
 
    function type_change() {
-      var type = $('input[name=type]:checked').val();
+      var type;
+      var $type_radio = $('input[name=type]:checked');
+      if ($type_radio.length > 0) {
+         type = $type_radio.val();
+      } else {
+         type = $('input[name=type]').val();
+      }
       var $message = $('#message');
       var $subject = $('#message-subject');
       if (type === 'sms') {
