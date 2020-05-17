@@ -4,7 +4,9 @@
             [bass4.config :as config]
             [clojure.string :as str]
             [bass4.utils :as utils]
-            [bass4.db.orm-classes :as orm]))
+            [bass4.db.orm-classes :as orm]
+            [bass4.now :as now]
+            [clojure.tools.logging :as log]))
 
 (defn get-user
   [user-id]
@@ -51,7 +53,9 @@
                      (let [password-hash (-> (:password properties)
                                              (str)
                                              (password-hasher))]
-                       (assoc properties :password password-hash))
+                       (merge properties
+                              {:password                      password-hash
+                               (keyword "LastPasswordChange") (utils/to-unix (now/now))}))
                      properties)]
     (db/update-user-properties! {:user-id user-id :updates properties})))
 
