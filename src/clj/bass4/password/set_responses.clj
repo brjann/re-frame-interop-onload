@@ -99,5 +99,5 @@
         (if (= "sms" type)
           (sms-queue/queue-1! db/*db* user-id (:sms-number user) message redact sender-id)
           (email-queue/queue-1! db/*db* user-id (:email user) subject message redact sender-id))
-        (http-response/ok)))
+        (http-response/ok "ok")))
     (http-response/not-found "No such user")))

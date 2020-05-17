@@ -60,10 +60,8 @@
    // @formatter:on
 
    function error_report_success() {
-      var text_thank_you = "{%tr error-report/thank-you %}";
-      $('#error-description').val('');
-      update_character_count();
-      alert(text_thank_you);
+      alert('Link has been sent to user. You can close this window.');
+      location.reload();
    }
 
    function update_character_count() {
