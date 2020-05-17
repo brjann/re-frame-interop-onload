@@ -13,7 +13,8 @@
             [bass4.external-messages.email-sender :as email]
             [bass4.external-messages.sms-sender :as sms]
             [bass4.external-messages.sms-queue :as sms-queue]
-            [bass4.external-messages.email-queue :as email-queue]))
+            [bass4.external-messages.email-queue :as email-queue]
+            [clojure.java.jdbc :as jdbc]))
 
 
 (defn link!
@@ -52,12 +53,15 @@
 (defapi send-link-page
   [user-id :- api/->int]
   (if-let [user (user-service/get-user user-id)]
-    (layout/render "admin/send-pwd-link.html"
-                   {:sms-number       (not-empty (:sms-number user))
-                    :email            (not-empty (:email user))
-                    :sms-max-length   150
-                    :email-max-length 1000
-                    :link-length      (link-length db/*db*)})
+    (let [valid-until (set-pw-service/user-valid-until db/*db* user-id)]
+      (layout/render "admin/send-pwd-link.html"
+                     {:sms-number       (not-empty (:sms-number user))
+                      :email            (not-empty (:email user))
+                      :sms-max-length   150
+                      :email-max-length 1000
+                      :link-length      (link-length db/*db*)
+                      :valid-until      (when valid-until
+                                          (layout/datetime-str* valid-until "yyyy-MM-dd HH:mm"))}))
     (http-response/not-found "No such user")))
 
 (defn sms-or-email?

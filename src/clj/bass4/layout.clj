@@ -124,12 +124,15 @@
       (http-response/ok)
       (http-response/content-type "text/plain")))
 
+(defn datetime-str*
+  [val format]
+  (-> format
+      (f/formatter (t/time-zone-for-id (clients/client-setting [:timezone])))
+      (f/unparse val)))
 
 (defn datetime-str
   [val resource-id]
-  (-> (i18n/tr [resource-id])
-      (f/formatter (t/time-zone-for-id (clients/client-setting [:timezone])))
-      (f/unparse val)))
+  (datetime-str* val (i18n/tr [resource-id])))
 
 (defn day-diff-str
   [day-diff]

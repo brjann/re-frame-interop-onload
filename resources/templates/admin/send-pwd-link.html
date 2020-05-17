@@ -2,6 +2,15 @@
 {% block content %}
 
 <h1>Send update password link</h1>
+<p>
+    Links are valid for 48 hours.
+</p>
+{% if valid-until %}
+<div class="alert alert-primary" role="alert">
+    User has been sent a password link that is valid until {{valid-until}}.
+    If you send a new link, the old link will become unusable.
+</div>
+{% endif %}
 <form method="post" data-on-success="error_report_success">
     <div class="form-group">
         <div class="form-check form-check-inline">

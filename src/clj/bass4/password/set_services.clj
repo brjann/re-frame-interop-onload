@@ -3,7 +3,8 @@
             [clojure.java.jdbc :as jdbc]
             [bass4.now :as now]
             [clj-time.core :as t]
-            [bass4.services.user :as user-service]))
+            [bass4.services.user :as user-service]
+            [bass4.db.core :as db]))
 
 (def uid-length 13)
 
@@ -19,6 +20,14 @@
                             "ON DUPLICATE KEY UPDATE `uid` = VALUES(`uid`), `valid-until` = VALUES(`valid-until`)")
                        uid user-id valid-until])
     uid))
+
+(defn user-valid-until
+  [db user-id]
+  (-> (jdbc/query db ["SELECT `valid-until` FROM password_uid WHERE `user-id` = ? AND `valid-until` > ?"
+                      user-id (now/now)])
+      (first)
+      (vals)
+      (first)))
 
 (defn delete-uid!
   [db uid]
