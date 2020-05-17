@@ -66,7 +66,7 @@
    user-id :- api/->int
    type :- sms-or-email?
    message :- [[api/str? 0 1000]]
-   subject :- [[api/str? 0 100]]]
+   subject :- [:? [api/str? 0 100]]]
   (if-let [user (user-service/get-user user-id)]
     (cond
       (not (str/includes? message "{LINK}"))
@@ -76,7 +76,7 @@
            (< 150 (+ (count message) (link-length db/*db*) (- (count "{LINK}")))))
       (http-response/bad-request "SMS too long")
 
-      (and (= "sms")
+      (and (= "sms" type)
            (not (sms/is-sms-number? (:sms-number user))))
       (http-response/bad-request "User has no valid SMS number")
 
