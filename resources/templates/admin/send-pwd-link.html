@@ -1,0 +1,68 @@
+{% extends "simple.html" %}
+{% block content %}
+
+<h1>Send update password link</h1>
+<form method="post" data-on-success="error_report_success">
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <label class="form-check-label">Send by</label>
+        </div>
+        {% if all email sms-number %}
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="type"
+                   id="message-type-email" value="email" checked>
+            <label class="form-check-label" for="message-type-email">
+                Email: {{email}}
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="type" id="message-type-sms" value="sms">
+            <label class="form-check-label" for="message-type-sms">
+                SMS: {{sms-number}}
+            </label>
+        </div>
+        {% endif %}
+    </div>
+    {% if email %}
+    <div class="form-group">
+        <label for="message-subject">Subject</label>
+        <input type="text" class="form-control" name="subject" id="message-subject" placeholder="Subject">
+    </div>
+    {% endif %}
+    <div class="form-group">
+        <label for="message">Message</label>
+        <textarea class="form-control"
+                  name="message" rows="10" id="message"
+                  onkeyup="update_character_count();" onchange="update_character_count();"
+                  maxlength="{{max-chars}}" required></textarea>
+        <small class="form-text">Characters left <span id="error-description-chars">{{max-chars}}</span></small>
+    </div>
+    <button type="submit" class="btn btn-fill btn-primary">{%tr submit %}</button>
+</form>
+{% endblock %}
+
+{% block page-scripts %}
+<script type="text/javascript">
+   function error_report_success() {
+      var text_thank_you = "{%tr error-report/thank-you %}";
+      $('#error-description').val('');
+      update_character_count();
+      alert(text_thank_you);
+   }
+
+   function update_character_count() {
+      return;
+      var text_too_long = "{%tr too-long! %}";
+      var $error_description = $('#error-description');
+      var max_length = $error_description.prop('maxlength');
+      var text_length = $error_description.val().length;
+      var $chars_left = $('#error-description-chars');
+      if (text_length <= max_length) {
+         $chars_left.text(max_length - text_length);
+      } else {
+         $chars_left.text(text_too_long);
+      }
+   }
+
+</script>
+{% endblock %}

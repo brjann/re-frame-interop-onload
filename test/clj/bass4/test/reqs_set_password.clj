@@ -15,6 +15,10 @@
   test-fixtures
   disable-attack-detector)
 
+;; ----------------
+;;   SET PASSWORD
+;; ----------------
+
 (deftest invalid
   (-> *s*
       (visit "/p/xx")
@@ -25,7 +29,7 @@
 (deftest set-password
   (let [user-id  (create-user-with-password! {:email      "example@example.com"
                                               "smsnumber" "00"})
-        link     (set-pw-response/link db/*db* user-id)
+        link     (set-pw-response/link! db/*db* user-id)
         path     (.getPath (URL. link))
         password "Metallica2020"]
     (-> *s*
@@ -46,7 +50,7 @@
 (deftest expired
   (fix-time
     (let [user-id (create-user-with-password!)
-          link    (set-pw-response/link db/*db* user-id)
+          link    (set-pw-response/link! db/*db* user-id)
           path    (.getPath (URL. link))]
       (-> *s*
           (visit path)
@@ -59,3 +63,7 @@
           (advance-time-s! 2)
           (visit path)
           (has (status? 404))))))
+
+;; ----------------
+;;  PASSWORD LINK
+;; ----------------

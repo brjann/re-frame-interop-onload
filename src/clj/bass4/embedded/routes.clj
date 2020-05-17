@@ -8,7 +8,8 @@
             [bass4.responses.admin-panel :as admin-panel]
             [ring.util.http-response :as http-response]
             [bass4.responses.pluggable-ui :as pluggable-ui]
-            [bass4.http-utils :as h-utils]))
+            [bass4.http-utils :as h-utils]
+            [bass4.password.set-responses :as set-pw-response]))
 
 ;; TODO: Wrap only user requests in timeout/re-auth
 (def embedded-routes
@@ -37,7 +38,11 @@
             (h-utils/text-response ""))
           (GET "/view-user-content/:treatment-access-id/:module-id/:content-id"
                [treatment-access-id module-id content-id]
-            (modules/view-user-content treatment-access-id module-id content-id))))
+            (modules/view-user-content treatment-access-id module-id content-id))
+          (GET "/send-password-link/:user-id" [user-id]
+            (set-pw-response/send-link-page user-id))
+          (POST "/send-password-link/:user-id" [user-id type message subject]
+            (set-pw-response/handle-send-link request user-id type message subject))))
       (context "/error" []
         (routes
           (GET "/re-auth" []

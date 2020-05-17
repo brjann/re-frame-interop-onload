@@ -17,7 +17,7 @@
     #_(http-response/found "states")))
 
 (defapi states-page []
-  (layout/render "states.html"
+  (layout/render "admin/states.html"
                  {:states       (mapv #(subs % 2) (mount/find-all-states))
                   :locked-down? @lockdown/locked-down?}))
 
