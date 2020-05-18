@@ -4,10 +4,29 @@
  - Bump jQuery and jQuery UI version numbers (may cause issues).
  - Add proper MIME type for .m4a files
  - CSRF-like protection for some $_POST database mutations in PHP
+ - Therapists now have a login expiration date.
+    - For active therapists, automatically set to 6 months from now
+    - Expiration date cannot be more than 6 months in the future.
+    - Warning 30 days before login expires
+    - Therapists who are admins or project admins can prolong their expiration date themselves.
  - Improve therapist editing
+    - Show more info about therapists (role + days since last login + days until expiration)
     - Fix annoying bug where newly created therapist has to be clicked again after first save
     - Fix annoying bug where setting a password would remove the "Must change password" setting
- - Increase two-factor authentication code for admins to 5 characters
+ - Increase length of two-factor authentication codes to 6 characters
  - More help when uploading files
     - Max file size for uploads is given
     - Information if file extension is illegal
+ - Lock BASS participant UI down if too many SMS are sent during 24 hrs
+ - New status email with number of SMS sent last 24 hrs implemented
+ - Increase REPL API timeout to 40 secs
+ - Participants can now change their own password
+    - It's no longer possible to send passwords to participants through SMS
+    - Instead, you can send a link through SMS or email that allows participants to
+      change their password. These links are valid for 48 hrs.
+    - Participant editing screen shows when participant password was last changed
+ - More database changes are logged
+    - All database fields that include HTML
+    - All relevant participant and therapist fields (including changes made by clojure app)
+ - Double authentication screen is shown before password change screen
+ - Increase complexity of QuickLogin ID

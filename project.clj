@@ -38,7 +38,7 @@
                  [luminus-nrepl "0.1.6"]                    ; https://github.com/luminus-framework/luminus-nrepl
 
                  ; HTML and language libraries
-                 [selmer "1.12.23"]                         ; https://github.com/yogthos/Selmer
+                 [selmer "1.12.24"]                         ; https://github.com/yogthos/Selmer
                  [markdown-clj "1.10.4"]                    ; https://github.com/yogthos/markdown-clj
                  [com.taoensso/tempura "1.2.1"]             ; https://github.com/ptaoussanis/tempura
 
@@ -51,9 +51,9 @@
                  [clj-logging-config "1.9.12"]              ; https://github.com/malcolmsparks/clj-logging-config
 
                  ; Webjars
-                 [org.webjars/bootstrap "4.3.1"]            ; https://github.com/twbs/bootstrap
+                 [org.webjars/bootstrap "4.5.0"]            ; https://github.com/twbs/bootstrap
                  [org.webjars/font-awesome "4.7.0"]         ; https://fontawesome.com/
-                 ;[org.webjars/jquery "3.3.1"]               ; https://jquery.com/
+                 [org.webjars/jquery "3.5.1"]               ; https://jquery.com/
                  [org.webjars/jquery-ui "1.12.1"]           ; https://jqueryui.com/
                  [org.webjars.bower/jquery-color "2.1.2"]   ; https://github.com/jquery/jquery-color
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]]
