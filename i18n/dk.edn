@@ -186,14 +186,14 @@
                    :report-info             "Indtast dit brugernavn eller din e-mailadresse."
                    :report-received-info-1  "Du vil blive kontaktet angående din nye adgangskode."
                    :report-received-info-2  "Hvis du ikke bliver kontaktet indenfor de næste dage, har du måske indtastet et forkert brugernavn eller adgangskode. Kontakt da support på"
-                   :again                   "Anmod om nyt password igen."
+                   :again                   "Anmod om en ny adgangskode igen."
                    :forgot-username         "Hvis du ikke kan huske dit brugernavn eller registrerede e-mailadresse, så kontakt venligst support på "
                    :close-window            "Du kan lukke dette browser vindue"}
- :set-password    {:title               "MISSING:Select your password"
-                   :success             "MISSING:Your password has been changed. You will now be redirected to the login page."
-                   :invalid-uid-title   "MISSING:Invalid link"
-                   :invalid-uid-info    "MISSING:The link that you entered is not valid. Please check that you have entered the correct link."
-                   :invalid-uid-expired "MISSING:The link may also have expired, password links last for two days and can only be used once."}
+ :set-password    {:title               "Vælg din adgangskode"
+                   :success             "Din adgangskode er blevet ændret. Du vil nu blive dirigeret til login siden."
+                   :invalid-uid-title   "Ugyldigt link"
+                   :invalid-uid-info    "Det link som du har angivet er ugyldigt. Tjek venligst, at du har indsat det korrekte link."
+                   :invalid-uid-expired "Dit link kan være udløbet, da links til adgangskoder kun varer i to dage og kun kan anvendes én gang."}
  :error           {:something-happened    "Der skete noget dårligt!"
                    :page-not-found        "Siden findes ikke"
                    :page-not-found-longer "Den ønskede side findes ikke."
