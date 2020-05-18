@@ -38,7 +38,8 @@
     (assoc
       (layout/render "set-password-invalid-uid.html"
                      {:email       (:email (bass-service/db-contact-info))
-                      :in-session? false})
+                      :in-session? false
+                      :correct?    (set-pw-service/correct? uid)})
       :status 404)))
 
 (defapi handle-pw

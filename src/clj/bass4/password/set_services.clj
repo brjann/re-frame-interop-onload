@@ -55,6 +55,12 @@
       false)
     true))
 
+(defn correct?
+  [uid]
+  (let [cs (apply str (remove #{\-} passwords/url-safe-chars))
+        r  (re-pattern (str "^[" cs "\\-]{13}$"))]
+    (boolean (re-matches r uid))))
+
 (defn set-password!
   [db uid password]
   (when-let [user-id (uid->user-id db uid)]
