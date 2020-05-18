@@ -19,9 +19,9 @@
  :characters-left "Tegn tilbage"
  :too-long!       "for langt!"
  :return-to-login "Tilbage til login"
- :quick-login     {:expired-titel           "Login udløbet"
+ :quick-login     {:expired-title           "Login udløbet"
                    :expired-text            "Din adgangskode er udløbet."
-                   :invalid-titel           "Ugyldig adgangskode"
+                   :invalid-title           "Ugyldig adgangskode"
                    :invalid-text            "Din adgangskode er ugyldig."
                    :contact-project-manager "Hvis du har brug for en nye adgangskode, så kontakt projektleder på"
                    :username-password       "Hvis du har et brugernavn og en adgangskode:"}
@@ -189,6 +189,11 @@
                    :again                   "Anmod om nyt password igen."
                    :forgot-username         "Hvis du ikke kan huske dit brugernavn eller registrerede e-mailadresse, så kontakt venligst support på "
                    :close-window            "Du kan lukke dette browser vindue"}
+ :set-password    {:title               "MISSING:Select your password"
+                   :success             "MISSING:Your password has been changed. You will now be redirected to the login page."
+                   :invalid-uid-title   "MISSING:Invalid link"
+                   :invalid-uid-info    "MISSING:The link that you entered is not valid. Please check that you have entered the correct link."
+                   :invalid-uid-expired "MISSING:The link may also have expired, password links last for two days and can only be used once."}
  :error           {:something-happened    "Der skete noget dårligt!"
                    :page-not-found        "Siden findes ikke"
                    :page-not-found-longer "Den ønskede side findes ikke."

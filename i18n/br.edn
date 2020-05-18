@@ -189,6 +189,11 @@
                    :again                   "Solicite uma nova senha novamente."
                    :forgot-username         "Se você não souber seu nome de usuário ou endereço de e-mail registrado, entre em contato com o suporte em "
                    :close-window            "Você pode fechar esta janela do navegador"}
+ :set-password    {:title               "MISSING:Select your password"
+                   :success             "MISSING:Your password has been changed. You will now be redirected to the login page."
+                   :invalid-uid-title   "MISSING:Invalid link"
+                   :invalid-uid-info    "MISSING:The link that you entered is not valid. Please check that you have entered the correct link."
+                   :invalid-uid-expired "MISSING:The link may also have expired, password links last for two days and can only be used once."}
  :error           {:something-happened    "Algo ruim aconteceu!"
                    :page-not-found        "Página não encontrada"
                    :page-not-found-longer "A página solicitada não foi encontrada."
