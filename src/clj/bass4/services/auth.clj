@@ -7,7 +7,7 @@
             [bass4.passwords :as passwords]))
 
 (defn ^:dynamic double-auth-code []
-  (passwords/letters-digits 3))
+  (passwords/letters-digits 6))
 
 
 (defn double-auth-required?* [settings]
