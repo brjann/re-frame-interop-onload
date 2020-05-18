@@ -27,7 +27,7 @@
 (deftest invalid
   (-> *s*
       (visit "/p/xx")
-      (has (status? 400))
+      (has (status? 404))
       (visit (str "/p/" (apply str (repeat set-pw-service/uid-length "x"))))
       (has (status? 404))))
 
