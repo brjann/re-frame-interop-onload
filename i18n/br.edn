@@ -194,7 +194,6 @@
                    :invalid-uid-title   "Link inválido"
                    :invalid-uid-info    "O link que você digitou não é válido. Verifique se você inseriu o link correto"
                    :invalid-uid-expired "O link também pode ter expirado, os links de senha duram dois dias e podem ser usados apenas uma vez."}
-                   
  :error           {:something-happened    "Algo ruim aconteceu!"
                    :page-not-found        "Página não encontrada"
                    :page-not-found-longer "A página solicitada não foi encontrada."
