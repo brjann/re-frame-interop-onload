@@ -1,3 +1,12 @@
+# Version 4.7
+
+- More database changes are logged
+  - All database fields that include HTML
+  - All relevant participant and therapist fields (including changes made by clojure app)
+- CSRF-like protection for some $_POST database mutations in PHP
+- Lock BASS participant UI down if too many SMS are sent during 24 hrs
+- New status email with number of SMS sent last 24 hrs implemented
+
 # Version 4.4
 This release fixes some minor security issues in BASS. None of the fixes should have any practical impact on the use of BASS. 
 
