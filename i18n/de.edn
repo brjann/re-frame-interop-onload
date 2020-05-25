@@ -189,11 +189,11 @@
                    :again                   "Noch mal ein neues Passwort anfordern."
                    :forgot-username         "Wenn Sie Ohren Benutzernamen oder Ihre Emailadresse nicht wissen, melden sie sich bitte bei den Studienmitarbeitern "
                    :close-window            "Sie können das Fenster schließen"}
- :set-password    {:title               "MISSING:Select your password"
-                   :success             "MISSING:Your password has been changed. You will now be redirected to the login page."
-                   :invalid-uid-title   "MISSING:Invalid link"
-                   :invalid-uid-info    "MISSING:The link that you entered is not valid. Please check that you have entered the correct link."
-                   :invalid-uid-expired "MISSING:The link may also have expired, password links last for two days and can only be used once."}
+ :set-password    {:title               "Wählen Sie Ihr Passwort"
+                   :success             "Ihr Passwort wurde geändert. Sie werden jetzt zur Login-Seite weitergeleitet."
+                   :invalid-uid-title   "Ungültiger Link"
+                   :invalid-uid-info    "Der Link ist ungültig. Bitte überprüfen Sie, ob Sie den richtigen Link eingegeben haben."
+                   :invalid-uid-expired "Der Link scheint ungültig zu sein, Passwort Links sind immer zwei Tage gültig und können nur einmalig benutzt werden."}
  :error           {:something-happened    "Da ist leider etwas schief gelaufen!"
                    :page-not-found        "Seite nicht gefunden"
                    :page-not-found-longer "Die Seite konnte leider nicht gefunden werden."
