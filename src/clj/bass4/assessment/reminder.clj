@@ -169,8 +169,8 @@
   ;; 1 if x comes after y, or
   ;; 0 if they are equal
   [x y]
-  (let [quick-url-x? (quick-url? (:remind-message x))
-        quick-url-y? (quick-url? (:remind-message y))]
+  (let [quick-url-x? (quick-url? x)
+        quick-url-y? (quick-url? y)]
     (cond
       ;; {QUICKURL} wins
       (and quick-url-x?
