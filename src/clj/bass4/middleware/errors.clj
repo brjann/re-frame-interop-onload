@@ -10,7 +10,9 @@
 
 (defn mail-request-error!
   [req-state]
-  (email/send-error-email! (:name req-state) (:error-messages req-state)))
+  (email/send-error-email! (:name req-state)
+                           (apply str (interpose "\n------------\n"
+                                                 (into ["Errors"] (map #(.getMessage %) (:exceptions req-state)))))))
 
 (defn catch-request-error
   [handler req]

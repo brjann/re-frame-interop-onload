@@ -29,6 +29,7 @@
 (defn record-error!
   [error]
   (swap-state! :error-count inc 0)
+  (add-to-state-key! :exceptions error)
   (swap-state! :error-messages
                #(if %
                   (str/join "\n----------------\n" [% (str error)])

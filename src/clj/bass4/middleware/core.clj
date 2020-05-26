@@ -183,7 +183,7 @@
       (wrap-mw-fn #'ext-login/return-url-mw)
       (wrap-mw-fn #'e-auth/bankid-middleware)
       (wrap-mw-fn #'request-db-user-mw)
-      debug-mw/wrap-prone-debug-exceptions
+      debug-mw/wrap-prone-debug-exceptions                  ; GOTCHA: Catches exceptions in dev mode and present the stack trace
       (wrap-mw-fn #'request-state-session-info)
       (wrap-mw-fn #'auth/session-user-id-mw)
       debug-mw/wrap-session-modification

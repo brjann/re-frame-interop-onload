@@ -118,6 +118,8 @@
           (layout/print-var-response params))
         (GET "/exception" []
           (throw (Exception. "Your exception as requested.")))
+        (GET "/ex-info" []
+          (throw (ex-info "Your ex info as requested." {:info "Secret stuff"})))
         (GET "/ext-login/:participant-id" [participant-id]
           (check-pending-http participant-id request))
         (GET "/i18n-merge/:lang" [lang]
