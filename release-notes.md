@@ -53,7 +53,6 @@ experience:
 
 # Under the hood
  - Registration: Include Swedish country code "se" as default allowed SMS number.
- - Add proper MIME type for .m4a files, so they can be played in th browser.
  - Increase REPL API timeout to 40 secs.
 
 ## Version 4.6.8
