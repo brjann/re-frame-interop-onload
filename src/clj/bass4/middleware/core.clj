@@ -191,10 +191,10 @@
       (session-timeout/wrap-session-hard-timeout)
       (wrap-mw-fn #'embedded-mw/wrap-embedded-request)      ; Must be before timeout handler to override hard-timeout
       (wrap-mw-fn #'file-php/File-php)                      ; Must be directly after db resolve so path restrictions (e.g., /embedded) are not applied
+      (wrap-mw-fn #'a-d/attack-detector-mw)
       (session-storage/wrap-db-session)
       (wrap-mw-fn #'lockdown/sms-lockdown-mw)
       (wrap-mw-fn #'db-middleware/db-middleware)
-      (wrap-mw-fn #'a-d/attack-detector-mw)
       wrap-reload-headers
       (wrap-mw-fn #'lockdown/lockdown-mw)
       (wrap-mw-fn #'security-headers-mw)

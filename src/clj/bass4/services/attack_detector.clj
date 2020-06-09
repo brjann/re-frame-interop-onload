@@ -158,49 +158,68 @@
         delay-response (fn [delay] (http-errors/too-many-requests-429 delay))
         default-config {:method         :post
                         :fail           fail-fn
-                        :delay-response delay-response}
-        attack-routes  [{:route   #"/login"
-                         :success (fn [in out]
-                                    (and (:user-id out)
-                                         (not= (:user-id in) (:user-id out))))}
-                        {:route   #"/double-auth"
-                         :success (fn [in out]
-                                    (and (not (:double-authed? in))
-                                         (:double-authed? out)))}
-                        {:route   #"/re-auth"
-                         :success (fn [in out]
-                                    (and (:auth-re-auth? in)
-                                         (nil? (:auth-re-auth? out))))}
-                        {:route   #"/api/re-auth"
-                         :success (fn [in out]
-                                    (and (:auth-re-auth? in)
-                                         (nil? (:auth-re-auth? out))))}
-                        {:route   #"/escalate"
-                         :success (fn [in out]
-                                    (and (:limited-access? in)
-                                         (nil? (:limited-access? out))))}
-                        {:route   #"/re-auth-ajax"
-                         :success (fn [in out]
-                                    (and (:auth-re-auth? in)
-                                         (nil? (:auth-re-auth? out))))}
-                        {:route   #"/registration/[0-9]+/captcha"
-                         :success (fn [in out]
-                                    (and (not (:captcha-ok? in))
-                                         (:captcha-ok? out)))}
+                        :delay-response delay-response
+                        :fail-info      (constantly nil)}
+        attack-routes  [{:route     #"/login"
+                         :success   (fn [in out]
+                                      (and (:user-id out)
+                                           (not= (:user-id in) (:user-id out))))
+                         :fail-info (fn [request]
+                                      {:username (get-in request [:params :username])})}
+                        {:route     #"/double-auth"
+                         :success   (fn [in out]
+                                      (and (not (:double-authed? in))
+                                           (:double-authed? out)))
+                         :fail-info (fn [request]
+                                      {:user-id (get-in request [:session :user-id])})}
+                        {:route     #"/re-auth"
+                         :success   (fn [in out]
+                                      (and (:auth-re-auth? in)
+                                           (nil? (:auth-re-auth? out))))
+                         :fail-info (fn [request]
+                                      {:user-id (get-in request [:session :user-id])})}
+                        {:route     #"/api/re-auth"
+                         :success   (fn [in out]
+                                      (and (:auth-re-auth? in)
+                                           (nil? (:auth-re-auth? out))))
+                         :fail-info (fn [request]
+                                      {:user-id (get-in request [:session :user-id])})}
+                        {:route     #"/escalate"
+                         :success   (fn [in out]
+                                      (and (:limited-access? in)
+                                           (nil? (:limited-access? out))))
+                         :fail-info (fn [request]
+                                      {:user-id (get-in request [:session :user-id])})}
+                        {:route     #"/re-auth-ajax"
+                         :success   (fn [in out]
+                                      (and (:auth-re-auth? in)
+                                           (nil? (:auth-re-auth? out))))
+                         :fail-info (fn [request]
+                                      {:user-id (get-in request [:session :user-id])})}
+                        {:route     #"/registration/[0-9]+/captcha"
+                         :success   (fn [in out]
+                                      (and (not (:captcha-ok? in))
+                                           (:captcha-ok? out)))
+                         :fail-info (fn [request]
+                                      {:username (get-in request [:params :captcha])})}
                         {:method         :get
-                         :route          #"/q/[a-zA-Z0-9]+"
+                         :route          #"/q/.+"
                          :success        (fn [_ out]
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}
+                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))
+                         :fail-info      (fn [request]
+                                           {:username (:uri request)})}
                         {:method         :get
                          :route          #"/embedded/create-session"
-                         :success        (fn [in out]
+                         :success        (fn [_ out]
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
-                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
+                         :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))
+                         :fail-info      (fn [request]
+                                           {:username (get-in request [:params :uid])})}]]
     (->> attack-routes
          (map #(merge default-config %))
          (filter #(and (= (:request-method request) (:method %))
@@ -218,8 +237,9 @@
       (let [response (handler request)]
         (cond
           ((:fail attack-vector) response)
-          (do
-            (register-failed-login! :login request)
+          (let [info (or ((:fail-info attack-vector) request)
+                         {})]
+            (register-failed-login! :login request info)
             (delay-ip! request)
             (delay-global!)
             response)
