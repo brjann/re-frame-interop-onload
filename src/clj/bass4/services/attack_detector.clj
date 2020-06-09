@@ -151,63 +151,45 @@
   [request]
   (or (delay-ip! request) (delay-global!)))
 
-(defn- route-success-fn
+(defn- match-attack-vector
   [request]
   (let [fail-fn        (fn [response]
                          (= 422 (:status response)))
         delay-response (fn [delay] (http-errors/too-many-requests-429 delay))
-        attack-routes  [{:method         :post
-                         :route          #"/login"
-                         :success        (fn [in out]
-                                           (and (:user-id out)
-                                                (not= (:user-id in) (:user-id out))))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/double-auth"
-                         :success        (fn [in out]
-                                           (and (not (:double-authed? in))
-                                                (:double-authed? out)))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/re-auth"
-                         :success        (fn [in out]
-                                           (and (:auth-re-auth? in)
-                                                (nil? (:auth-re-auth? out))))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/api/re-auth"
-                         :success        (fn [in out]
-                                           (and (:auth-re-auth? in)
-                                                (nil? (:auth-re-auth? out))))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/escalate"
-                         :success        (fn [in out]
-                                           (and (:limited-access? in)
-                                                (nil? (:limited-access? out))))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/re-auth-ajax"
-                         :success        (fn [in out]
-                                           (and (:auth-re-auth? in)
-                                                (nil? (:auth-re-auth? out))))
-                         :fail           fail-fn
-                         :delay-response delay-response}
-                        {:method         :post
-                         :route          #"/registration/[0-9]+/captcha"
-                         :success        (fn [in out]
-                                           (and (not (:captcha-ok? in))
-                                                (:captcha-ok? out)))
-                         :fail           fail-fn
-                         :delay-response delay-response}
+        default-config {:method         :post
+                        :fail           fail-fn
+                        :delay-response delay-response}
+        attack-routes  [{:route   #"/login"
+                         :success (fn [in out]
+                                    (and (:user-id out)
+                                         (not= (:user-id in) (:user-id out))))}
+                        {:route   #"/double-auth"
+                         :success (fn [in out]
+                                    (and (not (:double-authed? in))
+                                         (:double-authed? out)))}
+                        {:route   #"/re-auth"
+                         :success (fn [in out]
+                                    (and (:auth-re-auth? in)
+                                         (nil? (:auth-re-auth? out))))}
+                        {:route   #"/api/re-auth"
+                         :success (fn [in out]
+                                    (and (:auth-re-auth? in)
+                                         (nil? (:auth-re-auth? out))))}
+                        {:route   #"/escalate"
+                         :success (fn [in out]
+                                    (and (:limited-access? in)
+                                         (nil? (:limited-access? out))))}
+                        {:route   #"/re-auth-ajax"
+                         :success (fn [in out]
+                                    (and (:auth-re-auth? in)
+                                         (nil? (:auth-re-auth? out))))}
+                        {:route   #"/registration/[0-9]+/captcha"
+                         :success (fn [in out]
+                                    (and (not (:captcha-ok? in))
+                                         (:captcha-ok? out)))}
                         {:method         :get
                          :route          #"/q/[a-zA-Z0-9]+"
-                         :success        (fn [in out]
+                         :success        (fn [_ out]
                                            (contains? out :user-id))
                          :fail           (fn [response]
                                            (not (contains? (:session response) :user-id)))
@@ -220,28 +202,29 @@
                                            (not (contains? (:session response) :user-id)))
                          :delay-response (constantly (http-errors/too-many-requests-429 "Too many requests"))}]]
     (->> attack-routes
+         (map #(merge default-config %))
          (filter #(and (= (:request-method request) (:method %))
                        (re-matches (:route %) (:uri request))))
          (first))))
 
 (defn attack-detector-mw
   [handler request]
-  (if-let [check-fns (route-success-fn request)]
+  (if-let [attack-vector (match-attack-vector request)]
     (if-let [delay (get-delay-time request)]
       (do
         (when-not config/test-mode?
           (log/info "Possible attack detected - delaying response"))
-        ((:delay-response check-fns) delay))
+        ((:delay-response attack-vector) delay))
       (let [response (handler request)]
         (cond
-          ((:fail check-fns) response)
+          ((:fail attack-vector) response)
           (do
             (register-failed-login! :login request)
             (delay-ip! request)
             (delay-global!)
             response)
 
-          ((:success check-fns) (:session request) (:session response))
+          ((:success attack-vector) (:session request) (:session response))
           (do
             (register-successful-login! request)
             response)
