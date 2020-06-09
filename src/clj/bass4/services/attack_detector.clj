@@ -161,48 +161,56 @@
                         :delay-response delay-response
                         :fail-info      (constantly nil)}
         attack-routes  [{:route     #"/login"
+                         :name      "login"
                          :success   (fn [in out]
                                       (and (:user-id out)
                                            (not= (:user-id in) (:user-id out))))
                          :fail-info (fn [request]
                                       {:username (get-in request [:params :username])})}
                         {:route     #"/double-auth"
+                         :name      "doubleauth"
                          :success   (fn [in out]
                                       (and (not (:double-authed? in))
                                            (:double-authed? out)))
                          :fail-info (fn [request]
                                       {:user-id (get-in request [:session :user-id])})}
                         {:route     #"/re-auth"
+                         :name      "reauth"
                          :success   (fn [in out]
                                       (and (:auth-re-auth? in)
                                            (nil? (:auth-re-auth? out))))
                          :fail-info (fn [request]
                                       {:user-id (get-in request [:session :user-id])})}
                         {:route     #"/api/re-auth"
+                         :name      "reauth"
                          :success   (fn [in out]
                                       (and (:auth-re-auth? in)
                                            (nil? (:auth-re-auth? out))))
                          :fail-info (fn [request]
                                       {:user-id (get-in request [:session :user-id])})}
                         {:route     #"/escalate"
+                         :name      "escalate"
                          :success   (fn [in out]
                                       (and (:limited-access? in)
                                            (nil? (:limited-access? out))))
                          :fail-info (fn [request]
                                       {:user-id (get-in request [:session :user-id])})}
                         {:route     #"/re-auth-ajax"
+                         :name      "reauth"
                          :success   (fn [in out]
                                       (and (:auth-re-auth? in)
                                            (nil? (:auth-re-auth? out))))
                          :fail-info (fn [request]
                                       {:user-id (get-in request [:session :user-id])})}
                         {:route     #"/registration/[0-9]+/captcha"
+                         :name      "captcha"
                          :success   (fn [in out]
                                       (and (not (:captcha-ok? in))
                                            (:captcha-ok? out)))
                          :fail-info (fn [request]
                                       {:username (get-in request [:params :captcha])})}
                         {:method         :get
+                         :name           "quicklogin"
                          :route          #"/q/.+"
                          :success        (fn [_ out]
                                            (contains? out :user-id))
@@ -212,6 +220,7 @@
                          :fail-info      (fn [request]
                                            {:username (:uri request)})}
                         {:method         :get
+                         :name           "embedded"
                          :route          #"/embedded/create-session"
                          :success        (fn [_ out]
                                            (contains? out :user-id))
@@ -239,7 +248,7 @@
           ((:fail attack-vector) response)
           (let [info (or ((:fail-info attack-vector) request)
                          {})]
-            (register-failed-login! :login request info)
+            (register-failed-login! (:name attack-vector) request info)
             (delay-ip! request)
             (delay-global!)
             response)
