@@ -1,5 +1,9 @@
+# Version 4.7.1
+Released on 2020-06-09
+- Improve attack detector logging.
+
 # Version 4.7
-Will be released on 2020-06-02
+Released on 2020-06-02
 
 Version 4.7 is focused on security improvements and fixes some long-
 standing annoying issues with therapist editing and the file uploader.
