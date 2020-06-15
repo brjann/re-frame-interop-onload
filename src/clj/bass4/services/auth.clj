@@ -9,7 +9,7 @@
 (defn ^:dynamic double-auth-code []
   (passwords/letters-digits 6))
 
-(defn db-bankid-login?
+(defn ^:dynamic db-bankid-login?
   []
   (:bankid-login? (db/get-bankid-login db/*db*)))
 
