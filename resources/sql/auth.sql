@@ -27,7 +27,7 @@ FROM c_participant
 WHERE ParticipantId = :participant-id;
 
 
--- :name get-user-by-pid-number :? :1
+-- :name get-user-by-pid-number :? :*
 -- :doc retrieve a user given the id.
 SELECT
   /*~

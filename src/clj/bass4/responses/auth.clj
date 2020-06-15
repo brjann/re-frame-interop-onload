@@ -225,7 +225,7 @@
 (defapi bankid-finished
   [session]
   (if-let [personnummer (get-in session [:e-auth :personnummer])]
-    (if-let [user (user-service/get-user-by-pid-number personnummer)]
+    (if-let [user (user-service/get-1-user-by-pid-number personnummer)]
       (-> (http-response/found "/user")
           (assoc :session (create-new-session user {:double-authed? true})))
       (-> (http-response/found "/bankid-no-match")
