@@ -1,6 +1,5 @@
 (ns bass4.responses.e-auth
   (:require [ring.util.http-response :as http-response]
-            [schema.core :as schema]
             [bass4.config :refer [env]]
             [bass4.bankid.session :as bankid-session]
             [bass4.bankid.services :as bankid-service]
@@ -214,11 +213,8 @@
 ;;   TESTING - CALLED FROM DEBUG
 ;; --------------------------------
 
-;; TODO: Why is s/defn used here?
-(schema/defn
-  ^:always-validate
-  launch-bankid-test
-  [request personnummer :- schema/Str redirect-success :- schema/Str redirect-fail :- schema/Str]
+(defn launch-bankid-test
+  [request personnummer redirect-success redirect-fail]
   (launch-bankid request personnummer redirect-success redirect-fail :test))
 
 (defn bankid-success
