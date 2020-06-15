@@ -1,3 +1,8 @@
+# Version 4.7.2
+Released on 2020-XX-XX
+- Pluggable UI can be disabled for specific participants
+- Allow login with BankID
+
 # Version 4.7.1
 Released on 2020-06-09
 - Improve attack detector logging.
