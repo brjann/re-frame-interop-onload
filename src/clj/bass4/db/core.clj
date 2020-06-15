@@ -27,6 +27,7 @@
   from_unixtime(LastLogin) AS `last-login-time`,
   `Password`,
   `OldPassword` AS `old-password`,
+  `DisablePluggableUI` as `disable-pluggable-ui?`,
   Personnummer as `pid-number`,
   `Group` AS `group`,
   CASE

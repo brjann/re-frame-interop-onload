@@ -9,13 +9,14 @@
        (clients/client-setting* client-name [:use-pluggable-ui?] false)))
 
 (defn pluggable-ui?
-  [& _]
+  [request & _]
   (and (some? (clients/client-setting [:pluggable-ui-path]))
-       (clients/client-setting [:use-pluggable-ui?])))
+       (clients/client-setting [:use-pluggable-ui?])
+       (not (get-in request [:db :user :disable-pluggable-ui?]))))
 
 (defn pluggable-ui
   [request base-path]
-  (if-not (pluggable-ui?)
+  (if-not (pluggable-ui? request)
     (http-response/not-found "This DB does not use pluggable UI.")
     (let [path (subs (:uri request) (count base-path))]
       (if (= "" path)
