@@ -9,6 +9,9 @@
 (defn ^:dynamic double-auth-code []
   (passwords/letters-digits 6))
 
+(defn db-bankid-login?
+  []
+  (:bankid-login? (db/get-bankid-login db/*db*)))
 
 (defn double-auth-required?* [settings]
   ":user-skip? :sms? :email? :allow-skip? :allow-both?"

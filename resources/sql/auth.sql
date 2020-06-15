@@ -70,6 +70,11 @@ UPDATE c_participant
 SET LoginCount = LoginCount + 1
 WHERE ObjectId=:user-id;
 
+-- :name get-bankid-login :? :1
+SELECT ParticipantBankIDLogin AS `bankid-login?`
+FROM c_project
+WHERE ObjectId=100;
+
 
 -- :name get-user-by-quick-login-id :? :*
 -- :doc

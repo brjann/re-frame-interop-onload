@@ -179,7 +179,8 @@
 (defapi login-page []
   (layout/render
     "auth/login.html"
-    {:in-session? false}))
+    {:in-session?   false
+     :bankid-login? (auth-service/db-bankid-login?)}))
 
 (defn create-new-session
   [user additional]

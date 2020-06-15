@@ -3,7 +3,25 @@
             [compojure.core :refer [defroutes context GET POST routes]]
             [ring.util.http-response :as http-response]
             [bass4.responses.auth :as auth-response]
-            [buddy.hashers :as hashers]))
+            [buddy.hashers :as hashers]
+            [bass4.route-rules :as route-rules]
+            [bass4.services.auth :as auth-service]))
+
+(defn bankid-login?
+  [& _]
+  (auth-service/db-bankid-login?))
+
+(def route-rules
+  [{:uri   "/bankid*"
+    :rules [[#'bankid-login? :ok 403]]}])
+
+(defn auth-routes-bankid-mw
+  "Middleware for all /auth routes"
+  [handler]
+  (route-rules/wrap-route-mw
+    handler
+    ["/bankid-*"]
+    (route-rules/wrap-rules route-rules)))
 
 (defroutes auth-routes
   (GET "/logout" [:as {:keys [session]}]

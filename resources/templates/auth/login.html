@@ -28,5 +28,8 @@
     <button type="submit" class="btn btn-primary">{%tr login/login %}</button>
 </form>
 <p><a href="/lost-password/">{%tr login/lost-password %}</a></p>
+{% if bankid-login? %}
+<p><a href="/bankid-login">Logga in med BankID</a></p>
+{% endif %}
 
 {% endblock %}

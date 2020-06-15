@@ -3,7 +3,7 @@
             [mount.core :as mount]
             [clojure.tools.logging :as log]
             [ring.util.http-response :as http-response]
-            [bass4.routes.auth :refer [auth-routes]]
+            [bass4.routes.auth :as auth-routes]
             [bass4.routes.user :as user-routes]
             [bass4.embedded.routes :refer [embedded-routes]]
             [bass4.registration.routes :refer [registration-routes] :as reg-routes]
@@ -28,6 +28,7 @@
        embedded-api/api-tx-routes-mw
        api/api-tx-routes-mw
        api/swagger-mw
+       auth-routes/auth-routes-bankid-mw
        user-routes/user-tx-routes-mw
        user-routes/assessment-routes-mw
        user-routes/root-reroute-mw
@@ -47,7 +48,7 @@
   (routes
     #'sms-status/route
     #'api/api-routes
-    #'auth-routes
+    #'auth-routes/auth-routes
     #'lost-password/lost-password-routes
     #'user-routes/pluggable-ui
     #'user-routes/assessment-routes
