@@ -1,0 +1,26 @@
+{% extends "simple.html" %}
+
+{% block content %}
+<div>
+    <h3>Logga in med BankID</h3>
+    <form method="post" class="no-validate">
+        <input type="hidden" name="personnummer" id="personnummer">
+        <div class="form-group row">
+            <label for="personnummer-input" class="col-sm-2 col-form-label">Personnummer</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="personnummer-input"
+                       placeholder="19121212-1212" oninput="validate_personnummer(event);" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Starta inloggning</button>
+        <button onclick="document.location = '/login'; return false;" class="btn btn-warning">
+            Tillbaka till vanlig inloggning
+        </button>
+    </form>
+</div>
+
+{% script-modified "/js/personnummer.js" %}
+<script type="application/javascript">
+   var text_personnummer_error = "{%tr registration/personnummer-error %}";
+</script>
+{% endblock %}

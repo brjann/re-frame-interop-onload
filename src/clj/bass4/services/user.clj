@@ -17,6 +17,9 @@
 (defn get-user-by-username [username]
   (db/get-user-by-username {:username username}))
 
+(defn get-user-by-pid-number [pid-number]
+  (db/get-user-by-pid-number {:pid-number pid-number}))
+
 (defn get-users-by-participant-id
   [participant-id]
   (when-let [users (db/get-user-by-participant-id {:participant-id participant-id})]

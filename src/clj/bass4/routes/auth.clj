@@ -19,6 +19,15 @@
   (POST "/login" [username password]
     (auth-response/handle-login username password))
 
+  (GET "/bankid-login" []
+    (auth-response/bankid-page))
+  (POST "/bankid-login" [personnummer :as request]
+    (auth-response/start-bankid personnummer request))
+  (GET "/bankid-login-finished" [:as {:keys [session]}]
+    (auth-response/bankid-finished session))
+  (GET "/bankid-no-match" []
+    (auth-response/bankid-no-match))
+
   (POST "/password-hash" [password]
     (layout/text-response (hashers/derive password)))
 

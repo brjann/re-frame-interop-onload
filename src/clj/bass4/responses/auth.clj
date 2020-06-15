@@ -16,7 +16,9 @@
             [bass4.session.create :as session-create]
             [bass4.db.core :as db]
             [bass4.clients.core :as clients]
-            [bass4.utils :as utils])
+            [bass4.utils :as utils]
+            [bass4.responses.e-auth :as e-auth]
+            [bass4.services.user :as user-service])
   (:import (clojure.lang ExceptionInfo)))
 
 
@@ -199,6 +201,41 @@
             (assoc :session (create-new-session user session)))))
     (http-errors/error-422 "error")))
 
+
+;; ------------------
+;;    BANKID LOGIN
+;; ------------------
+
+(defapi bankid-page []
+  (layout/render
+    "auth/bankid-login.html"
+    {:in-session? false}))
+
+(defapi start-bankid
+  [personnummer :- [[api/str? 1 30]] request]
+  (if (e-auth/personnummer-valid? personnummer)
+    (e-auth/launch-bankid
+      request
+      personnummer
+      "/bankid-login-finished"
+      "/bankid-login")
+    (http-response/bad-request (str "Personnummer does not have valid format " personnummer))))
+
+(defapi bankid-finished
+  [session]
+  (if-let [personnummer (get-in session [:e-auth :personnummer])]
+    (if-let [user (user-service/get-user-by-pid-number personnummer)]
+      (-> (http-response/found "/user")
+          (assoc :session (create-new-session user {:double-authed? true})))
+      (-> (http-response/found "/bankid-no-match")
+          (assoc :session {})))
+    (layout/text-response "No BankID session")))
+
+(defapi bankid-no-match
+  []
+  (layout/render
+    "auth/bankid-no-match.html"
+    {:in-session? false}))
 
 ;; -------------
 ;;    RE-AUTH
