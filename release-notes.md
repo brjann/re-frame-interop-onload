@@ -2,6 +2,16 @@
 Released on 2020-XX-XX
 - Pluggable UI can be disabled for specific participants
 - Allow login with BankID
+- New shorter hard session timeout limit setting. This timeout is used
+  when the user cannot enter their password to prolong their session if
+  they have been inactive. Before, the session would stay active for
+  several hours in case it was impossible to ask the user to
+  re-authenticate. This was not a good solution. The shorter hard timeout
+  setting applies in the following cases:
+    - During registration
+    - If user has logged in using quicklogin
+    - If user has logged in through the ext-login interface
+    - If user has logged in using BankID
 
 # Version 4.7.1
 Released on 2020-06-09
