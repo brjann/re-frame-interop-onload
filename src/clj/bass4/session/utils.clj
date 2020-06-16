@@ -10,3 +10,8 @@
       (assoc response :session (merge (or session-out
                                           session-in)
                                       merge-map)))))
+
+(defn no-re-auth?
+  [session]
+  (or (not (:user-id session))
+      (:external-login? session)))
