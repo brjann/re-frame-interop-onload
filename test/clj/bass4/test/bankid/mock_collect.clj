@@ -83,6 +83,7 @@
                  bankid-service/bankid-collect      (collect-logger collect-counts max-collects)
                  bankid-service/bankid-cancel       backend/api-cancel
                  bankid-session/log-bankid-event!   (constantly nil)
+                 bankid-session/session-statuses    (atom {})
                  #_bankid-session/get-collected-info  #_(if (= :manual collect-method)
                                                           get-collected-info-mock
                                                           bankid-session/get-collected-info)

@@ -22,13 +22,13 @@
 (use-fixtures
   :each
   (fn [f]
-    (binding [bankid-service/bankid-now (fn [] @test-now)]
-      ((mock-collect/wrap-mock :immediate) f))))
+    ((mock-collect/wrap-mock :immediate) f)))
 
 
 (deftest loop-timeout
   (fix-time
-    (binding [bankid-service/collect-waiter nil]
+    (binding [bankid-service/bankid-now     (fn [] @test-now)
+              bankid-service/collect-waiter nil]
       (let [res-chan  (chan)
             wait-chan (chan)]
         (bankid-service/launch-bankid "191212121212" "127.0.0.1" :prod (fn [] wait-chan) res-chan)

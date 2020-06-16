@@ -8,7 +8,7 @@
             [clojure.tools.logging :as log])
   (:import (java.util UUID)))
 
-(def session-statuses (atom {}))
+(def ^:dynamic session-statuses (atom {}))
 
 (defn remove-old-sessions!
   "Deletes sessions older than 10 minutes."

@@ -8,10 +8,10 @@
             [bass4.services.auth :as auth-service]
             [bass4.test.assessment-utils :refer :all]
             [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer :all]
-            [bass4.now :as now]
             [clj-time.core :as t]
             [clojure.string :as str]
-            [bass4.session.timeout :as session-timeout]))
+            [bass4.session.timeout :as session-timeout]
+            [bass4.now :as now]))
 
 (use-fixtures
   :once
@@ -112,26 +112,24 @@
           user-id    (create-user-with-password! {"personnummer" pnr})
           hard-short (session-timeout/timeout-hard-short-limit)]
       (link-user-to-treatment! user-id tx-autoaccess {})
-      #_(fix-time)
-      (-> *s*
-          (visit "/bankid-login" :request-method :post :params {:personnummer pnr})
-          (follow-redirect)
-          (has (some-text? "Contacting"))
-          (user-authenticates! pnr)
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/api/session/status")
-          (log-body)
-          ;(has (api-response? {:hard    hard-short
-          ;                     :re-auth nil}))
-          ;(advance-time-s! (dec hard-short))
-          ;(visit "/user/tx/")
-          ;(has (status? 200))
-          ;(advance-time-s! hard-short)
-          ;(visit "/user/tx/")
-          ;(has (status? 403))
-          ))))
+      (fix-time
+        (-> *s*
+            (visit "/bankid-login" :request-method :post :params {:personnummer pnr})
+            (follow-redirect)
+            (has (some-text? "Contacting"))
+            (user-authenticates! pnr)
+            (collect+wait)
+            (visit "/e-auth/bankid/collect" :request-method :post)
+            (follow-redirect)
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Welcome"))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    hard-short
+                                 :re-auth nil}))
+            (advance-time-s! (dec hard-short))
+            (visit "/user/tx/")
+            (has (status? 200))
+            (advance-time-s! hard-short)
+            (visit "/user/tx/")
+            (has (status? 403)))))))
