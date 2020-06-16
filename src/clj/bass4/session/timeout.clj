@@ -1,16 +1,15 @@
 (ns bass4.session.timeout
   "Adapted from https://github.com/ring-clojure/ring-session-timeout"
   (:require [clojure.string :as str]
+            [clojure.data.json :as json]
+            [ring.util.http-response :as http-response]
             [bass4.http-errors :as http-errors]
             [bass4.config :refer [env]]
             [bass4.session.utils :as session-utils]
             [bass4.utils :as utils]
-            [ring.util.http-response :as http-response]
-            [clojure.data.json :as json]
             [bass4.http-utils :as h-utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients.core :as clients]
-            [clojure.tools.logging :as log]))
+            [bass4.clients.core :as clients]))
 
 (def ^:dynamic *in-session?* false)
 (def ^:dynamic *user-id* false)
@@ -26,6 +25,10 @@
 (defn timeout-re-auth-limit
   []
   (clients/client-setting [:timeout-soft]))
+
+(defn timeout-hard-short-limit
+  []
+  (clients/client-setting [:timeout-hard-short]))
 
 ;; -------------------
 ;;   RE-AUTH TIMEOUT
@@ -199,7 +202,7 @@
   {::hard-timeout-at (+ (utils/current-time)
                         (if external-login?
                           (timeout-re-auth-limit)
-                          (timeout-hard-limit)))})
+                          (timeout-hard-short-limit)))})
 
 (defn- no-hard-timeout-response
   [handler request session-in now hard-timeout]
@@ -223,7 +226,7 @@
     (let [hard-timeout    (or *timeout-hard-override*
                               #_(timeout-hard-limit)
                               (if (no-re-auth? (:session request))
-                                (timeout-re-auth-limit)
+                                (timeout-hard-short-limit)
                                 (timeout-hard-limit)))
           session-in      (:session request)
           now             (utils/current-time)

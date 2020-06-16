@@ -48,7 +48,7 @@
 (deftest registration-flow+renew
   (fix-time
     (let [reg-group         (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
-          timeout-hard      (session-timeout/timeout-re-auth-limit)
+          timeout-hard      (session-timeout/timeout-hard-short-limit)
           timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
       (binding [captcha/captcha!                (constantly {:filename "xxx" :digits "6666"})
                 reg-service/registration-params (constantly {:allowed?               true

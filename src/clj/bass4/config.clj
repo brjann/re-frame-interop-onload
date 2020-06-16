@@ -12,9 +12,10 @@
 
 (def ^:dynamic test-mode? false)
 
-(def ^:const defaults {:timeout-hard      (* 4 60 60)
-                       :timeout-hard-soon (* 1 60 60)
-                       :timeout-soft      (* 1 60 60)})
+(def ^:const defaults {:timeout-hard       (* 4 60 60)
+                       :timeout-hard-short (* 2 60 60)
+                       :timeout-hard-soon  (* 1 60 60)
+                       :timeout-soft       (* 1 60 60)})
 
 (defn merge-args
   []

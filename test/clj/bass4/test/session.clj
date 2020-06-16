@@ -7,8 +7,7 @@
             [bass4.test.core :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.session.create :as session-create]
-            [bass4.session.timeout :as session-timeout]
-            [clojure.tools.logging :as log]))
+            [bass4.session.timeout :as session-timeout]))
 
 (use-fixtures
   :once
@@ -123,7 +122,7 @@
 
 (deftest session-status-no-re-auth-path
   (let [user-id         (create-user-with-treatment! tx-autoaccess)
-        timeout-hard    (session-timeout/timeout-hard-limit)
+        timeout-hard    (session-timeout/timeout-hard-short-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
       (-> *s*
@@ -136,8 +135,8 @@
 
 (deftest session-status-ext-login
   (let [user-id      (create-user-with-treatment! tx-autoaccess)
-        timeout-hard (session-timeout/timeout-re-auth-limit)]
-    ;; re-auth timelimit used when user cannot re-auth
+        timeout-hard (session-timeout/timeout-hard-short-limit)]
+    ;; short hard timelimit used when user cannot re-auth
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -185,11 +184,11 @@
         (has (api-response? {:user-id user-id})))))
 
 (deftest session-timeout-timeout-soon
-  (let [user-id           (create-user-with-treatment! tx-autoaccess true)
-        timeout-hard      (session-timeout/timeout-hard-limit)
-        timeout-re-auth   (session-timeout/timeout-re-auth-limit)
-        timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
-    (log/debug timeout-hard-soon)
+  (let [user-id            (create-user-with-treatment! tx-autoaccess true)
+        timeout-hard       (session-timeout/timeout-hard-limit)
+        timeout-re-auth    (session-timeout/timeout-re-auth-limit)
+        timeout-hard-soon  (session-timeout/timeout-hard-soon-limit)
+        timeout-hard-short (session-timeout/timeout-hard-short-limit)]
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -257,8 +256,8 @@
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
-          ;; Uses re-auth timeout as hard timeout when user cannot re-auth
-          (has (api-response? {:hard    timeout-re-auth
+          ;; Uses short hard timeout as hard timeout when user cannot re-auth
+          (has (api-response? {:hard    timeout-hard-short
                                :re-auth nil}))
           (visit "/api/session/timeout-hard-soon")
           (has (status? 200))
@@ -268,5 +267,5 @@
           (visit "/api/session/renew")
           (has (status? 200))
           (visit "/api/session/status")
-          (has (api-response? {:hard    timeout-re-auth
+          (has (api-response? {:hard    timeout-hard-short
                                :re-auth nil}))))))

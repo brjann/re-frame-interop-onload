@@ -92,7 +92,7 @@
         (has (status? 200))
         (has (some-text? "too long")))))
 
-(deftest quick-login-no-timeout
+(deftest quick-login-no-short-timeout
   (binding [quick-login/db-quick-login-settings (constantly {:allowed? true :expiration-days 11})]
     (let [group-id (create-assessment-group! project-reg-allowed project-reg-allowed-ass-series)
           user-id  (user-service/create-user! project-reg-allowed {:group group-id})
@@ -104,7 +104,7 @@
           (follow-redirect)
           (visit "/user/assessments")
           (has (status? 200))
-          (advance-time-s! (config/env :timeout-soft))
+          (advance-time-s! (config/env :timeout-hard-short))
           (visit "/user/assessments")
           (has (status? 403))))))
 
