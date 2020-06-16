@@ -73,17 +73,12 @@
   (let [response (handler (assoc request :session (dissoc session-in :auth-re-auth?)))]
     (session-utils/assoc-out-session response session-in (re-auth-timeout-map))))
 
-(defn no-re-auth?
-  [session]
-  (or (not (:user-id session))
-      (:external-login? session)))
-
 (defn- wrap-session-re-auth-timeout*
   [handler request]
   ;; Pass through requests to pluggable ui, it won't be
   ;; able to access API if re-auth has happened
   (if (or (str/starts-with? (:uri request) "/user/ui")
-          (no-re-auth? (:session request)))
+          (session-utils/no-re-auth? (:session request)))
     (handler request)
     (let [session-in (:session request)]
       (if (should-re-auth? session-in (utils/current-time))
@@ -118,7 +113,7 @@
 
 (defn session-api
   "Please note that these methods should be declared in the API"
-  [request hard-timeout-at hard-timeout? timeout-hard-limit]
+  [request hard-timeout-at hard-timeout? timeout-hard-limit timeout-hard-soon-limit]
   (let [response (case (:uri request)
                    "/api/session/user-id"
                    (http-response/ok
@@ -147,7 +142,7 @@
                          (assoc :session
                                 (merge (:session request)
                                        {::hard-timeout-at (+ (utils/current-time)
-                                                             (timeout-hard-soon-limit))}
+                                                             timeout-hard-soon-limit)}
                                        (when re-auth-timeout-at
                                          {::re-auth-timeout-at 0
                                           :auth-re-auth?       true})))))
@@ -213,7 +208,7 @@
         hard-timeout-at (::hard-timeout-at session-in)
         hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
     (if (str/starts-with? (:uri request) "/api/session/")
-      (session-api request hard-timeout-at hard-timeout? hard-timeout)
+      (session-api request hard-timeout-at hard-timeout? hard-timeout (timeout-hard-soon-limit))
       (if hard-timeout?
         (let [response (handler (assoc request :session nil))]
           (binding [*in-session?* false]
