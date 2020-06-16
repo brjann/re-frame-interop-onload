@@ -9,7 +9,8 @@
             [clojure.data.json :as json]
             [bass4.http-utils :as h-utils]
             [bass4.middleware.request-logger :as request-logger]
-            [bass4.clients.core :as clients]))
+            [bass4.clients.core :as clients]
+            [clojure.tools.logging :as log]))
 
 (def ^:dynamic *in-session?* false)
 (def ^:dynamic *user-id* false)
@@ -193,6 +194,13 @@
 
 (def ^:dynamic *timeout-hard-override* nil)
 
+(defn hard-timeout-map
+  [external-login?]
+  {::hard-timeout-at (+ (utils/current-time)
+                        (if external-login?
+                          (timeout-re-auth-limit)
+                          (timeout-hard-limit)))})
+
 (defn- no-hard-timeout-response
   [handler request session-in now hard-timeout]
   (let [response        (handler request)
@@ -207,7 +215,10 @@
 (defn- wrap-session-hard-timeout*
   [handler request]
   (let [hard-timeout    (or *timeout-hard-override*
-                            (timeout-hard-limit))
+                            (timeout-hard-limit)
+                            #_(if (no-re-auth? (:session request))
+                                (timeout-re-auth-limit)
+                                (timeout-hard-limit)))
         session-in      (:session request)
         now             (utils/current-time)
         hard-timeout-at (::hard-timeout-at session-in)
