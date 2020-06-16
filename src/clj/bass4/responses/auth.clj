@@ -227,7 +227,8 @@
   (if-let [personnummer (get-in session [:e-auth :personnummer])]
     (if-let [user (user-service/get-1-user-by-pid-number personnummer)]
       (-> (http-response/found "/user")
-          (assoc :session (create-new-session user {:double-authed? true})))
+          (assoc :session (create-new-session user {:double-authed?  true
+                                                    :external-login? true})))
       (-> (http-response/found "/bankid-no-match")
           (assoc :session {})))
     (layout/text-response "No BankID session")))

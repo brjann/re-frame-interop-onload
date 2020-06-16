@@ -103,3 +103,21 @@
           (follow-redirect)
           (follow-redirect)
           (has (some-text? "Användare saknas"))))))
+
+(deftest bankid-login-timeout
+  (binding [auth-service/db-bankid-login? (constantly true)
+            *tz*                          (t/time-zone-for-id "Europe/Stockholm")]
+    (let [pnr     (random-pnr)
+          user-id (create-user-with-password! {"personnummer" pnr})]
+      (link-user-to-treatment! user-id tx-autoaccess {})
+      (-> *s*
+          (visit "/bankid-login" :request-method :post :params {:personnummer pnr})
+          (follow-redirect)
+          (has (some-text? "Contacting"))
+          (user-authenticates! pnr)
+          (collect+wait)
+          (visit "/e-auth/bankid/collect" :request-method :post)
+          (follow-redirect)
+          (follow-redirect)
+          (follow-redirect)
+          (has (some-text? "Welcome"))))))
