@@ -63,6 +63,11 @@
 
       :else false)))
 
+(defn no-re-auth?
+  [session]
+  (or (not (:user-id session))
+      (:external-login? session)))
+
 (defn- re-auth-response
   [request session]
   (-> (http-errors/re-auth-440 (str "/re-auth?return-url=" (request-string request)))
@@ -78,7 +83,7 @@
   ;; Pass through requests to pluggable ui, it won't be
   ;; able to access API if re-auth has happened
   (if (or (str/starts-with? (:uri request) "/user/ui")
-          (session-utils/no-re-auth? (:session request)))
+          (no-re-auth? (:session request)))
     (handler request)
     (let [session-in (:session request)]
       (if (should-re-auth? session-in (utils/current-time))
@@ -107,13 +112,13 @@
                              {:hard    (when hard-timeout-at
                                          (- hard-timeout-at now))
                               :re-auth (when (and re-auth-timeout-at
-                                                  (not (session-utils/no-re-auth? session)))
+                                                  (not (no-re-auth? session)))
                                          (max 0 (- re-auth-timeout-at now)))})]
     res))
 
 (defn session-api
   "Please note that these methods should be declared in the API"
-  [request hard-timeout-at hard-timeout? timeout-hard-limit timeout-hard-soon-limit]
+  [request hard-timeout-at hard-timeout? timeout-hard-limit]
   (let [response (case (:uri request)
                    "/api/session/user-id"
                    (http-response/ok
@@ -142,7 +147,7 @@
                          (assoc :session
                                 (merge (:session request)
                                        {::hard-timeout-at (+ (utils/current-time)
-                                                             timeout-hard-soon-limit)}
+                                                             (timeout-hard-soon-limit))}
                                        (when re-auth-timeout-at
                                          {::re-auth-timeout-at 0
                                           :auth-re-auth?       true})))))
@@ -208,7 +213,7 @@
         hard-timeout-at (::hard-timeout-at session-in)
         hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
     (if (str/starts-with? (:uri request) "/api/session/")
-      (session-api request hard-timeout-at hard-timeout? hard-timeout (timeout-hard-soon-limit))
+      (session-api request hard-timeout-at hard-timeout? hard-timeout)
       (if hard-timeout?
         (let [response (handler (assoc request :session nil))]
           (binding [*in-session?* false]

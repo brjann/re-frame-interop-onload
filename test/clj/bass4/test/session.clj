@@ -7,7 +7,8 @@
             [bass4.test.core :refer :all]
             [clojure.core.async :refer [chan]]
             [bass4.session.create :as session-create]
-            [bass4.session.timeout :as session-timeout]))
+            [bass4.session.timeout :as session-timeout]
+            [clojure.tools.logging :as log]))
 
 (use-fixtures
   :once
@@ -185,6 +186,7 @@
         timeout-hard      (session-timeout/timeout-hard-limit)
         timeout-re-auth   (session-timeout/timeout-re-auth-limit)
         timeout-hard-soon (session-timeout/timeout-hard-soon-limit)]
+    (log/debug timeout-hard-soon)
     (fix-time
       (-> *s*
           (visit "/api/session/status")
