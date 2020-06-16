@@ -224,7 +224,6 @@
           (http-response/content-type "application/json"))
       (handler request))
     (let [hard-timeout    (or *timeout-hard-override*
-                              #_(timeout-hard-limit)
                               (if (no-re-auth? (:session request))
                                 (timeout-hard-short-limit)
                                 (timeout-hard-limit)))
