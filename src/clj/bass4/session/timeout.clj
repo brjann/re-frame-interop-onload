@@ -75,6 +75,8 @@
 
 (defn- wrap-session-re-auth-timeout*
   [handler request]
+  ;; Pass through requests to pluggable ui, it won't be
+  ;; able to access API if re-auth has happened
   (if (or (str/starts-with? (:uri request) "/user/ui")
           (:external-login? (:session request)))
     (handler request)
@@ -83,6 +85,7 @@
         (re-auth-response request session-in)
         (no-re-auth-response handler request session-in)))))
 
+;; Only included in "/user/*" "/user" "/api/user/*" paths
 (defn wrap-session-re-auth-timeout
   ([handler]
    (fn [request]

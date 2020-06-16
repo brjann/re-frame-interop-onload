@@ -120,4 +120,6 @@
           (follow-redirect)
           (follow-redirect)
           (follow-redirect)
-          (has (some-text? "Welcome"))))))
+          (has (some-text? "Welcome"))
+          (visit "/api/session/status")
+          (log-body)))))
