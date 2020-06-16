@@ -42,5 +42,7 @@
 (defn collect+wait
   [state]
   (put! collect-chan true)
-  (alts!! [bankid-session/debug-chan (timeout 5000)])
-  state)
+  (let [[v _] (alts!! [bankid-session/debug-chan (timeout 5000)])]
+    (when (nil? v)
+      (throw (Exception. "Debug chan timed out")))
+    state))
