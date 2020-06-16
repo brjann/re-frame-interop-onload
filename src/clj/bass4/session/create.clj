@@ -12,7 +12,7 @@
      :last-login-time (:last-login-time user)
      :session-start   (now/now)}
     (session-timeout/re-auth-timeout-map)
-    #_(session-timeout/hard-timeout-map (:external-login? additional))
+    (session-timeout/hard-timeout-map (:external-login? additional))
     additional))
 
 (defn assoc-out-session
