@@ -10,7 +10,8 @@
             [bass4.test.bankid.mock-reqs-utils :as bankid-utils :refer :all]
             [bass4.now :as now]
             [clj-time.core :as t]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [bass4.session.timeout :as session-timeout]))
 
 (use-fixtures
   :once
@@ -107,19 +108,28 @@
 (deftest bankid-login-timeout
   (binding [auth-service/db-bankid-login? (constantly true)
             *tz*                          (t/time-zone-for-id "Europe/Stockholm")]
-    (let [pnr     (random-pnr)
-          user-id (create-user-with-password! {"personnummer" pnr})]
+    (let [pnr        (random-pnr)
+          user-id    (create-user-with-password! {"personnummer" pnr})
+          hard-short (session-timeout/timeout-hard-short-limit)]
       (link-user-to-treatment! user-id tx-autoaccess {})
-      (-> *s*
-          (visit "/bankid-login" :request-method :post :params {:personnummer pnr})
-          (follow-redirect)
-          (has (some-text? "Contacting"))
-          (user-authenticates! pnr)
-          (collect+wait)
-          (visit "/e-auth/bankid/collect" :request-method :post)
-          (follow-redirect)
-          (follow-redirect)
-          (follow-redirect)
-          (has (some-text? "Welcome"))
-          (visit "/api/session/status")
-          (log-body)))))
+      (fix-time
+        (-> *s*
+            (visit "/bankid-login" :request-method :post :params {:personnummer pnr})
+            (follow-redirect)
+            (has (some-text? "Contacting"))
+            (user-authenticates! pnr)
+            (collect+wait)
+            (visit "/e-auth/bankid/collect" :request-method :post)
+            (follow-redirect)
+            (follow-redirect)
+            (follow-redirect)
+            (has (some-text? "Welcome"))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    hard-short
+                                 :re-auth nil}))
+            (advance-time-s! (dec hard-short))
+            (visit "/user/tx/")
+            (has (status? 200))
+            (advance-time-s! hard-short)
+            (visit "/user/tx/")
+            (has (status? 403)))))))
