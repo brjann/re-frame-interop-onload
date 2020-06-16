@@ -16,9 +16,11 @@
   disable-attack-detector)
 
 (deftest not-found
-  (-> *s*
-      (visit "/api/session/xxx")
-      (has (status? 404))))
+  (let [user-id (create-user-with-treatment! tx-autoaccess)]
+    (-> *s*
+        (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
+        (visit "/api/session/xxx")
+        (has (status? 404)))))
 
 (deftest hard-timeout
   (let [user-id      (create-user-with-treatment! tx-autoaccess)

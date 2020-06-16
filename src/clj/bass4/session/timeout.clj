@@ -214,24 +214,30 @@
 
 (defn- wrap-session-hard-timeout*
   [handler request]
-  (let [hard-timeout    (or *timeout-hard-override*
-                            (timeout-hard-limit)
-                            #_(if (no-re-auth? (:session request))
-                                (timeout-re-auth-limit)
-                                (timeout-hard-limit)))
-        session-in      (:session request)
-        now             (utils/current-time)
-        hard-timeout-at (::hard-timeout-at session-in)
-        hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
+  (if (empty? (:session request))
     (if (str/starts-with? (:uri request) "/api/session/")
-      (session-api request hard-timeout-at hard-timeout? hard-timeout)
-      (if hard-timeout?
-        (let [response (handler (assoc request :session nil))]
-          (binding [*in-session?* false]
-            (assoc response :session nil)))
-        (binding [*in-session?* (not (empty? session-in))
-                  *user-id*     (:user-id session-in)]
-          (no-hard-timeout-response handler request session-in now hard-timeout))))))
+      (-> (http-response/ok)
+          (assoc :body (json/write-str nil))
+          (http-response/content-type "application/json"))
+      (handler request))
+    (let [hard-timeout    (or *timeout-hard-override*
+                              (timeout-hard-limit)
+                              #_(if (no-re-auth? (:session request))
+                                  (timeout-re-auth-limit)
+                                  (timeout-hard-limit)))
+          session-in      (:session request)
+          now             (utils/current-time)
+          hard-timeout-at (::hard-timeout-at session-in)
+          hard-timeout?   (and hard-timeout-at (>= now hard-timeout-at))]
+      (if (str/starts-with? (:uri request) "/api/session/")
+        (session-api request hard-timeout-at hard-timeout? hard-timeout)
+        (if hard-timeout?
+          (let [response (handler (assoc request :session nil))]
+            (binding [*in-session?* false]
+              (assoc response :session nil)))
+          (binding [*in-session?* (not (empty? session-in))
+                    *user-id*     (:user-id session-in)]
+            (no-hard-timeout-response handler request session-in now hard-timeout)))))))
 
 (defn wrap-session-hard-timeout
   [handler]
