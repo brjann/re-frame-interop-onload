@@ -241,7 +241,7 @@
           (has (status? 200))
           (advance-time-s! (config/env :timeout-soft))
           (visit "/user/tx/messages")
-          (has (status? 200))))
+          (has (status? 403))))
     ;; request-re-auth-timeout-re-auth
     (fix-time
       (-> *s*

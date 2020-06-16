@@ -106,7 +106,7 @@
           (has (status? 200))
           (advance-time-s! (config/env :timeout-soft))
           (visit "/user/assessments")
-          (has (status? 200))))))
+          (has (status? 403))))))
 
 
 (deftest quick-login-escalation-re-auth

@@ -136,7 +136,8 @@
 
 (deftest session-status-ext-login
   (let [user-id      (create-user-with-treatment! tx-autoaccess)
-        timeout-hard (session-timeout/timeout-hard-limit)]
+        timeout-hard (session-timeout/timeout-re-auth-limit)]
+    ;; re-auth timelimit used when user cannot re-auth
     (fix-time
       (-> *s*
           (visit "/api/session/status")
@@ -256,7 +257,8 @@
           (visit "/api/user/tx/messages")
           (has (status? 200))
           (visit "/api/session/status")
-          (has (api-response? {:hard    timeout-hard
+          ;; Uses re-auth timeout as hard timeout when user cannot re-auth
+          (has (api-response? {:hard    timeout-re-auth
                                :re-auth nil}))
           (visit "/api/session/timeout-hard-soon")
           (has (status? 200))
@@ -266,5 +268,5 @@
           (visit "/api/session/renew")
           (has (status? 200))
           (visit "/api/session/status")
-          (has (api-response? {:hard    timeout-hard
+          (has (api-response? {:hard    timeout-re-auth
                                :re-auth nil}))))))
