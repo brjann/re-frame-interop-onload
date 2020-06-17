@@ -43,7 +43,6 @@
 (defn bankid-request
   [endpoint form-params config-key]
   #_(log/debug "XXXXXXX XXXXXX running request")
-  (log/info "BankID request" form-params)
   (try (let [bankid-config (clients/client-setting [:bankid :configs config-key])
              cert-params   (:cert-params bankid-config)
              url           (:url bankid-config)
@@ -51,7 +50,6 @@
                                       (merge cert-params
                                              {:form-params  form-params
                                               :content-type :json}))]
-         (log/info "BankID responded" form-params)
          (if (= 200 (:status response))
            (response-body response)
            (do
