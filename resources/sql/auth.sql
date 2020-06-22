@@ -27,14 +27,14 @@ FROM c_participant
 WHERE ParticipantId = :participant-id;
 
 
--- :name get-user-by-pid-number :? :*
--- :doc retrieve a user given the id.
+-- :name get-users-by-pid-numbers :? :*
+-- :doc
 SELECT
   /*~
   bass4.db.core/sql-user-fields
   ~*/
 FROM c_participant
-WHERE Personnummer = :pid-number;
+WHERE Personnummer IN(:v*:pid-numbers);
 
 
 -- :name get-double-auth-settings :? :1

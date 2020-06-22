@@ -17,10 +17,13 @@
 (defn get-user-by-username [username]
   (db/get-user-by-username {:username username}))
 
-(defn get-1-user-by-pid-number [pid-number]
-  (let [users (db/get-user-by-pid-number {:pid-number pid-number})]
-    (when (= 1 (count users))
-      (first users))))
+(defn get-1-user-by-pid-numbers [pid-numbers]
+  (when-not (coll? pid-numbers)
+    (throw (ex-info "Argument must be collection" {:arg pid-numbers})))
+  (when (seq pid-numbers)
+    (let [users (db/get-users-by-pid-numbers {:pid-numbers pid-numbers})]
+      (when (= 1 (count users))
+        (first users)))))
 
 (defn get-users-by-participant-id
   [participant-id]

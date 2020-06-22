@@ -222,10 +222,23 @@
       "/bankid-login")
     (http-response/bad-request (str "Personnummer does not have valid format " personnummer))))
 
+(defn personnummer-variants
+  "Takes personnummer on form YYYYMMDDXXXX and returns
+  YYYYMMDDXXXX
+  YYMMDDXXXX
+  YYYYMMDD-XXXX
+  YYMMDD-XXXX"
+  [personnummer]
+  [personnummer
+   (subs personnummer 2)
+   (str (subs personnummer 0 8) "-" (subs personnummer 8))
+   (str (subs personnummer 2 8) "-" (subs personnummer 8))])
+
 (defapi bankid-finished
   [session]
   (if-let [personnummer (get-in session [:e-auth :personnummer])]
-    (if-let [user (user-service/get-1-user-by-pid-number personnummer)]
+    (if-let [user (user-service/get-1-user-by-pid-numbers
+                    (personnummer-variants personnummer))]
       (-> (http-response/found "/user")
           (assoc :session (create-new-session user {:double-authed?  true
                                                     :external-login? true})))
