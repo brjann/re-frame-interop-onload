@@ -122,12 +122,14 @@
   [db-name :- [[api/str? 1 30]]]
   (if-let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
                 @db-)]
-    (let [sms-count (sms-counter/count)]
+    (let [sms-count (sms-counter/count)
+          uid-count (count @php-interop/uids)]
       (email-queue/queue-1! db
                             0
                             (config/env :error-email)
                             "BASS up and running"
-                            (str "Number of SMS sent " sms-count)
+                            (str "Number of SMS sent " sms-count "\n"
+                                 "Number of UIDs " uid-count)
                             ""
                             0))))
 
