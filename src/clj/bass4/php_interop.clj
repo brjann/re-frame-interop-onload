@@ -6,7 +6,8 @@
             [bass4.config :as config]
             [clojure.data.json :as json]
             [bass4.utils :as utils]
-            [clojure.core.cache :as cache])
+            [clojure.core.cache :as cache]
+            [bass4.passwords :as passwords])
   (:import (java.io File)
            (java.util UUID)))
 
@@ -129,7 +130,7 @@
 
 (defn uid-for-data!
   [data]
-  (let [uid (str (UUID/randomUUID))]
+  (let [uid (passwords/letters-digits 36 passwords/url-safe-chars)]
     (swap! uids assoc uid data)
     uid))
 

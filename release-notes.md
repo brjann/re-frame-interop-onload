@@ -1,4 +1,4 @@
-# Version 4.7.2
+# Version 4.8
 Released on 2020-XX-XX
 - Pluggable UI can be disabled for specific participants
 - Allow login with BankID
@@ -12,6 +12,8 @@ Released on 2020-XX-XX
     - If user has logged in using quicklogin
     - If user has logged in through the ext-login interface
     - If user has logged in using BankID
+- Number of php interop uids included in new status email
+- Remove old status email
 
 # Version 4.7.1
 Released on 2020-06-09
