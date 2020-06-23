@@ -1,19 +1,40 @@
 # Version 4.8
 Released on 2020-XX-XX
+
+Version 4.8 brings one major new function. Participants can now login
+using BankID. This has also led to a shorter session timeout limit when
+users have not logged in with password.
+
+## Allow login with BankID
+- Has to be enabled under Security Settings
+- A link on the regular login page takes the user to BankID login
+- The user's personnummer has to match exactly 1 personnummer in
+  the database, else the login fails.
+- The match is made against four forms of personnummer
+    - YYYYMMDDXXXX
+    - YYYYMMDD-XXXX
+    - YYMMDDXXXX
+    - YYMMDD-XXXX
+
+## Shorter timeout limit
+New shorter hard session timeout limit setting. This timeout is used
+when the user cannot enter their password to prolong their session if
+they have been inactive. Before, the session would stay active for
+several hours in case it was impossible to ask the user to
+re-authenticate. This was not a good solution. The shorter hard timeout
+setting applies in the following cases:
+- During registration
+- If user has logged in using quicklogin
+- If user has logged in through the ext-login interface
+- If user has logged in using BankID
+
+## Misc
 - Pluggable UI can be disabled for specific participants
-- Allow login with BankID
-- New shorter hard session timeout limit setting. This timeout is used
-  when the user cannot enter their password to prolong their session if
-  they have been inactive. Before, the session would stay active for
-  several hours in case it was impossible to ask the user to
-  re-authenticate. This was not a good solution. The shorter hard timeout
-  setting applies in the following cases:
-    - During registration
-    - If user has logged in using quicklogin
-    - If user has logged in through the ext-login interface
-    - If user has logged in using BankID
 - Number of php interop uids included in new status email
 - Remove old status email
+
+## Under the hood
+- Better random UIDs
 
 # Version 4.7.1
 Released on 2020-06-09
@@ -27,7 +48,7 @@ standing annoying issues with therapist editing and the file uploader.
 The most pertinent changes are that therapist logins now have an
 expiration date and that participants can set/change their own passwords.
 
-# Login expiration date for therapists
+## Login expiration date for therapists
 There is now a date for how long a therapist's login is valid. This date
 is automatically set to 6 months from now for all therapists whose
 accounts have not been disabled.
@@ -36,7 +57,7 @@ accounts have not been disabled.
 - Therapists who are admins or project admins can prolong their
   expiration date themselves.
 
-# Improved therapist editing
+## Improved therapist editing
 - Show more info about therapists in therapist overview. This gives
   administrators improved overview over what privileges therapists have
   and how active they are. The following fields have been added:
@@ -50,7 +71,7 @@ after first save.
 - Fix annoying bug where setting a password would remove the "Must change
 password" setting.
 
-# Participants can now change their own password
+## Participants can now change their own password
 Because participants have not been able to set/change their own passwords,
 passwords have been sent through SMS or email to them. This is not good
 practice.
@@ -59,20 +80,20 @@ practice.
   change their password. These links are valid for 48 hrs.
 - Participant editing screen shows when participant password was last changed.
 
-# File uploader improvements
+## File uploader improvements
 Failed file uploads are a constant issue. Two changes to improve the
 experience:
 - Max file size for uploads is given.
 - Information if file extension is illegal.
 
-# Other security fixes
+## Other security fixes
 - Bump JS libraries: jQuery, jQuery UI, and Bootstrap versions.
 - Increase length of two-factor authentication codes to 6 characters.
 - More database changes are logged.
 - Double authentication screen is shown before password change screen.
 - Increase complexity of QuickLogin ID.
 
-# Under the hood
+## Under the hood
  - Registration: Include Swedish country code "se" as default allowed SMS number.
  - Increase REPL API timeout to 40 secs.
 
