@@ -75,31 +75,49 @@
         timeout-hard    (session-timeout/timeout-hard-limit)
         timeout-re-auth (session-timeout/timeout-re-auth-limit)]
     (fix-time
-      (-> *s*
-          (visit "/api/session/status")
-          (has (api-response? nil))
-          (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
-          (visit "/api/user/tx/messages")
-          (has (status? 200))
-          (visit "/api/session/status")
-          (has (api-response? {:hard    timeout-hard
-                               :re-auth timeout-re-auth}))
-          (advance-time-s! (dec timeout-hard))
-          (visit "/api/session/status")
-          (has (api-response? {:hard    1
+        (-> *s*
+            (visit "/api/session/status")
+            (has (api-response? nil))
+            (modify-session (session-create/new {:user-id user-id} {:double-authed? true}))
+            (visit "/api/user/tx/messages")
+            (has (status? 200))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard
+                                 :re-auth timeout-re-auth}))
+            ;; Check that regular UI resets timeout
+            (advance-time-s! (dec timeout-re-auth))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    (inc (- timeout-hard timeout-re-auth))
+                                 :re-auth 1}))
+            (visit "/user/tx/messages")
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard
+                                 :re-auth timeout-re-auth}))
+            ;; Check that API resets timeout
+            (advance-time-s! (dec timeout-re-auth))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    (inc (- timeout-hard timeout-re-auth))
+                                 :re-auth 1}))
+            (visit "/api/user/tx/messages")
+            (visit "/api/session/status")
+            (has (api-response? {:hard    timeout-hard
+                                 :re-auth timeout-re-auth}))
+            (advance-time-s! (dec timeout-hard))
+            (visit "/api/session/status")
+            (has (api-response? {:hard    1
+                                 :re-auth 0}))
+            (visit "/user/tx/messages")
+            (has (status? 302))
+            (visit "/api/session/status")
+            (advance-time-s! (dec timeout-hard))
+            (visit "/api/session/status")
+            (has (api-response? {:hard  1
                                :re-auth 0}))
-          (visit "/user/tx/messages")
-          (has (status? 302))
-          (visit "/api/session/status")
-          (advance-time-s! (dec timeout-hard))
-          (visit "/api/session/status")
-          (has (api-response? {:hard    1
-                               :re-auth 0}))
-          (advance-time-s! 1)
-          (visit "/api/session/status")
-          (has (api-response? nil))
-          (visit "/api/user/tx/messages")
-          (has (status? 403))))))
+            (advance-time-s! 1)
+            (visit "/api/session/status")
+            (has (api-response? nil))
+            (visit "/api/user/tx/messages")
+            (has (status? 403))))))
 
 (deftest session-status-logout
   (let [user-id         (create-user-with-treatment! tx-autoaccess)
@@ -146,6 +164,23 @@
                                                :external-login? true}))
           (visit "/user/tx/messages")
           (has (status? 200))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    timeout-hard
+                               :re-auth nil}))
+          (advance-time-s! (dec timeout-hard))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    1
+                               :re-auth nil}))
+          (visit "/user/tx/messages")
+          (visit "/api/session/status")
+          (has (api-response? {:hard    timeout-hard
+                               :re-auth nil}))
+          (advance-time-s! (dec timeout-hard))
+          (visit "/api/session/status")
+          (has (api-response? {:hard    1
+                               :re-auth nil}))
+          ;; Check that API renews timeout
+          (visit "/api/user/tx/messages")
           (visit "/api/session/status")
           (has (api-response? {:hard    timeout-hard
                                :re-auth nil}))))))
