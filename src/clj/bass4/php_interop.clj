@@ -8,8 +8,7 @@
             [bass4.utils :as utils]
             [clojure.core.cache :as cache]
             [bass4.passwords :as passwords])
-  (:import (java.io File)
-           (java.util UUID)))
+  (:import (java.io File)))
 
 (defn ^:dynamic get-php-session
   [php-session-id]
@@ -89,7 +88,8 @@
 (defn write-session-file
   ([contents] (write-session-file contents nil))
   ([contents prefix]
-   (let [filename (str (when prefix (str prefix "_")) (UUID/randomUUID))
+   (let [filename (str (when prefix (str prefix "_"))
+                       (passwords/letters-digits 36 passwords/url-safe-chars))
          file     (db-dir "sessiondata" filename)]
      (spit file (json/write-str contents))
      filename)))

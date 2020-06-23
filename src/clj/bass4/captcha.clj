@@ -2,7 +2,8 @@
   (:require [bass4.config :refer [env]]
             [clojure.java.io :as io]
             [bass4.php_clj.core :refer [clj->php]]
-            [clojure.java.shell :as shell]))
+            [clojure.java.shell :as shell])
+  (:import (java.util UUID)))
 
 (def captcha-chars [1 2 3 4 6 7 8 9])
 
@@ -16,7 +17,7 @@
 (defn ^:dynamic captcha!
   []
   (let [captcha-path (io/file (env :bass-path) "system/CaptchaGenerator.php")
-        filename     (str "captcha_" (java.util.UUID/randomUUID) ".jpg")
+        filename     (str "captcha_" (UUID/randomUUID) ".jpg")
         path         (io/file (env :bass-path) "projects/temp" filename)
         digits       (captcha-number 5)
         args         {"filename" (str path) "digits" digits}
