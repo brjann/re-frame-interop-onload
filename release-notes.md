@@ -37,6 +37,10 @@ setting applies in the following cases:
 - Better random UIDs.
 - Catching of all unhandled task exceptions.
 
+# Version 4.7.2
+Released on 2020-06-24
+- Log memory usage in page loads log.
+
 # Version 4.7.1
 Released on 2020-06-09
 - Improve attack detector logging.
