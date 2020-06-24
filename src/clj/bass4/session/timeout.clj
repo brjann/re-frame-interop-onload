@@ -201,8 +201,8 @@
   [external-login?]
   {::hard-timeout-at (+ (utils/current-time)
                         (if external-login?
-                          (timeout-re-auth-limit)
-                          (timeout-hard-short-limit)))})
+                          (timeout-hard-short-limit)
+                          (timeout-hard-limit)))})
 
 (defn- no-hard-timeout-response
   [handler request session-in now hard-timeout]
