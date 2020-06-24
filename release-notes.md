@@ -35,6 +35,7 @@ setting applies in the following cases:
 
 ## Under the hood
 - Better random UIDs
+- Catching of all unhandled task exceptions
 
 # Version 4.7.1
 Released on 2020-06-09
