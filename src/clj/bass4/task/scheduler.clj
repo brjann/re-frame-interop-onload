@@ -7,7 +7,8 @@
             [bass4.utils :as utils]
             [mount-up.core :as mount-up]
             [bass4.clients.core :as clients]
-            [bass4.now :as now])
+            [bass4.now :as now]
+            [bass4.external-messages.email-sender :as email])
   (:import [java.util.concurrent Executors TimeUnit ScheduledExecutorService ScheduledThreadPoolExecutor$ScheduledFutureTask]
            (clojure.lang Var)))
 
@@ -82,9 +83,15 @@
             handle (.scheduleAtFixedRate schedule-pool
                                          (bound-fn*
                                            (fn []
-                                             (let [db        @(get clients/client-db-connections db-name)
-                                                   db-config (get clients/client-configs db-name)]
-                                               (task-runner/run-db-task! db (now/now) db-name db-config task task-name task-id))))
+                                             (try
+                                               (let [db        @(get clients/client-db-connections db-name)
+                                                     db-config (get clients/client-configs db-name)]
+                                                 (task-runner/run-db-task! db (now/now) db-name db-config task task-name task-id))
+                                               (catch Throwable e
+                                                 (log/error "UNCAUGHT TASK EXCEPTION")
+                                                 (log/error "DB:" db-name "Task:" task-name)
+                                                 (log/error e)
+                                                 (email/send-error-email! "Task handler" "Uncaught exception in task handler. See log for details.")))))
                                          (long time-left)
                                          interval
                                          time-unit)]
