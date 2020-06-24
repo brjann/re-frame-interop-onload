@@ -11,7 +11,8 @@
      :auth-re-auth?   nil
      :last-login-time (:last-login-time user)
      :session-start   (now/now)}
-    (session-timeout/re-auth-timeout-map)
+    (when-not (:external-login? additional)
+      (session-timeout/re-auth-timeout-map))
     (session-timeout/hard-timeout-map (:external-login? additional))
     additional))
 
