@@ -24,7 +24,10 @@ INSERT INTO common_log_pageloads
   UserAgent,
   Method,
   `Status`,
-  Info)
+  Info,
+  MemoryUsage,
+  MemoryAvailable
+  )
 VALUES
   (unix_timestamp(now()),
   :db-name,
@@ -43,4 +46,6 @@ VALUES
   :user-agent,
   :method,
   :status,
-  :info);
+  :info,
+  :memory-usage,
+  :memory-available);

@@ -46,26 +46,31 @@
 
 (defn save-log!
   [req-state request time method status response-size]
-  (db/save-pageload! {:db-name         (:name req-state),
-                      :remote-ip       (hash (h-utils/get-client-ip request)),
-                      :sql-time        (when (:sql-times req-state)
-                                         (/ (apply + (:sql-times req-state)) 1000)),
-                      :sql-max-time    (when (:sql-times req-state)
-                                         (/ (apply max (:sql-times req-state)) 1000)),
-                      :sql-ops         (count (:sql-times req-state))
-                      :user-id         (:user-id req-state),
-                      :render-time     (/ time 1000),
-                      :response-size   response-size,
-                      :clojure-version (str "Clojure " (clojure-version)),
-                      :error-count     (:error-count req-state)
-                      :error-messages  (:error-messages req-state)
-                      :source-file     (:uri request),
-                      :session-start   (tc/to-epoch (:session-start req-state)),
-                      :user-agent      (get-in request [:headers "user-agent"])
-                      :method          method
-                      :status          status
-                      :info            (->> (:info req-state)
-                                            (str/join "\n"))}))
+  (let [memory-total     (float (/ (-> (Runtime/getRuntime) (.totalMemory)) 1024))
+        memory-available (float (/ (-> (Runtime/getRuntime) (.freeMemory)) 1024))
+        memory-usage     (- memory-total memory-available)]
+    (db/save-pageload! {:db-name          (:name req-state),
+                        :remote-ip        (hash (h-utils/get-client-ip request)),
+                        :sql-time         (when (:sql-times req-state)
+                                            (/ (apply + (:sql-times req-state)) 1000)),
+                        :sql-max-time     (when (:sql-times req-state)
+                                            (/ (apply max (:sql-times req-state)) 1000)),
+                        :sql-ops          (count (:sql-times req-state))
+                        :user-id          (:user-id req-state),
+                        :render-time      (/ time 1000),
+                        :response-size    response-size,
+                        :clojure-version  (str "Clojure " (clojure-version)),
+                        :error-count      (:error-count req-state)
+                        :error-messages   (:error-messages req-state)
+                        :source-file      (:uri request),
+                        :session-start    (tc/to-epoch (:session-start req-state)),
+                        :user-agent       (get-in request [:headers "user-agent"])
+                        :method           method
+                        :status           status
+                        :info             (->> (:info req-state)
+                                               (str/join "\n"))
+                        :memory-usage     memory-usage
+                        :memory-available memory-available})))
 
 (defn wrap-logger
   [handler request]
