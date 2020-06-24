@@ -1,13 +1,13 @@
 # Version 4.8
-Released on 2020-XX-XX
+Released on 2020-06-30
 
 Version 4.8 brings one major new function. Participants can now login
 using BankID. This has also led to a shorter session timeout limit when
 users have not logged in with password.
 
 ## Allow login with BankID
-- Has to be enabled under Security Settings
-- A link on the regular login page takes the user to BankID login
+- Has to be enabled manually in database.
+- A link on the regular login page takes the user to BankID login.
 - The user's personnummer has to match exactly 1 personnummer in
   the database, else the login fails.
 - The match is made against four forms of personnummer
@@ -24,18 +24,18 @@ several hours in case it was impossible to ask the user to
 re-authenticate. This was not a good solution. The shorter hard timeout
 setting applies in the following cases:
 - During registration
-- If user has logged in using quicklogin
-- If user has logged in through the ext-login interface
-- If user has logged in using BankID
+- If user has logged in using quicklogin.
+- If user has logged in through the ext-login interface.
+- If user has logged in using BankID.
 
 ## Misc
-- Pluggable UI can be disabled for specific participants
-- Number of php interop uids included in new status email
-- Remove old status email
+- Pluggable UI can be disabled for specific participants.
+- Number of php interop uids included in new status email.
+- Remove old status email.
 
 ## Under the hood
-- Better random UIDs
-- Catching of all unhandled task exceptions
+- Better random UIDs.
+- Catching of all unhandled task exceptions.
 
 # Version 4.7.1
 Released on 2020-06-09
