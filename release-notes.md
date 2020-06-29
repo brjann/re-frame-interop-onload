@@ -37,6 +37,10 @@ setting applies in the following cases:
 - Better random UIDs.
 - Catching of all unhandled task exceptions.
 
+## Bugfix
+- Send External Message in admin interface to email bugged
+  out if email addresses where more than 30 chars. Fixed.
+
 # Version 4.7.2
 Released on 2020-06-24
 - Log memory usage in page loads log.
