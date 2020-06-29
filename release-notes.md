@@ -1,5 +1,5 @@
 # Version 4.8
-Released on 2020-06-30
+Released on 2020-06-29
 
 Version 4.8 brings one major new function. Participants can now login
 using BankID. This has also led to a shorter session timeout limit when
