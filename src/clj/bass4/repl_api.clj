@@ -93,7 +93,7 @@
 
 (defapi send-email!
   [db-name :- [[api/str? 1 30]]
-   to :- [[api/str? 1 30]]
+   to :- [[api/str? 1 200]]
    subject :- [[api/str? 1 200]]
    message :- [[api/str? 1 5000]]]
   (let [db (when-let [db- (get clients/client-db-connections (keyword db-name))]
@@ -106,7 +106,7 @@
 (defapi queue-email!
   [db-name :- [[api/str? 1 30]]
    user-id :- api/->int
-   to :- [[api/str? 1 30]]
+   to :- [[api/str? 1 200]]
    subject :- [[api/str? 1 200]]
    message :- [[api/str? 1 800]]
    redact-text :- [:? [api/str? 1 800]]
