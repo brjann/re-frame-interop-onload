@@ -2,7 +2,8 @@
   (:require [bass4.layout :as layout]
             [bass4.api-coercion :as api :refer [defapi]]
             [mount.core :as mount]
-            [bass4.middleware.lockdown :as lockdown]))
+            [bass4.middleware.lockdown :as lockdown]
+            [nrepl.middleware.session]))
 
 (defapi reset-state
   [state-name :- [[api/str? 1 100]]]
@@ -18,8 +19,9 @@
 
 (defapi states-page []
   (layout/render "admin/states.html"
-                 {:states       (mapv #(subs % 2) (mount/find-all-states))
-                  :locked-down? @lockdown/locked-down?}))
+                 {:states        (mapv #(subs % 2) (mount/find-all-states))
+                  :locked-down?  @lockdown/locked-down?
+                  :repl-sessions (count @@#'nrepl.middleware.session/sessions)}))
 
 (defapi lock-down!
   []

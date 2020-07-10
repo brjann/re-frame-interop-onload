@@ -5,7 +5,8 @@
             [clojure.string :as str]
             [bass4.config :as config]
             [bass4.http-utils :as h-utils]
-            [bass4.utils :as utils]))
+            [bass4.utils :as utils]
+            [nrepl.middleware.session]))
 
 
 (def ^:dynamic *request-state* nil)
@@ -48,7 +49,8 @@
   [req-state request time method status response-size]
   (let [memory-total     (float (/ (-> (Runtime/getRuntime) (.totalMemory)) 1024))
         memory-available (float (/ (-> (Runtime/getRuntime) (.freeMemory)) 1024))
-        memory-usage     (- memory-total memory-available)]
+        memory-usage     (- memory-total memory-available)
+        repl-sessions    (count @@#'nrepl.middleware.session/sessions)]
     (db/save-pageload! {:db-name          (:name req-state),
                         :remote-ip        (hash (h-utils/get-client-ip request)),
                         :sql-time         (when (:sql-times req-state)
@@ -70,7 +72,8 @@
                         :info             (->> (:info req-state)
                                                (str/join "\n"))
                         :memory-usage     memory-usage
-                        :memory-available memory-available})))
+                        :memory-available memory-available
+                        :repl-sessions    repl-sessions})))
 
 (defn wrap-logger
   [handler request]

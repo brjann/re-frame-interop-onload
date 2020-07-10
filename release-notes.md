@@ -1,3 +1,7 @@
+# Version 4.8.1
+Released on 2020-07-10
+- Add repl session count to page loads log and admin panel
+
 # Version 4.8
 Released on 2020-06-29
 

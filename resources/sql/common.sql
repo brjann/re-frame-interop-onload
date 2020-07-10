@@ -26,7 +26,8 @@ INSERT INTO common_log_pageloads
   `Status`,
   Info,
   MemoryUsage,
-  MemoryAvailable
+  MemoryAvailable,
+  RetrievedObjects
   )
 VALUES
   (unix_timestamp(now()),
@@ -48,4 +49,5 @@ VALUES
   :status,
   :info,
   :memory-usage,
-  :memory-available);
+  :memory-available,
+  :repl-sessions);

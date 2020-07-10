@@ -2,6 +2,7 @@
 {% block content %}
 
 <h1>App states</h1>
+<p>REPL sessions: {{ repl-sessions }}</p>
 {% for state-name in states %}
 <p><a href="#" onclick="post_state('{{ state-name }}');">Reset state {{ state-name }}</a></p>
 {% endfor %}
